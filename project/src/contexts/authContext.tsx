@@ -1,3 +1,4 @@
+// project/src/contexts/authContext
 "use client";
 import { createContext, ReactNode, useEffect, useState } from "react";
 import { makeRequest } from "../util/axios";
@@ -22,16 +23,12 @@ export interface User {
 }
 
 interface AuthContextType {
-  currentProject: number | null;
-  setCurrentProject: React.Dispatch<React.SetStateAction<number | null>>;
   currentUser: User | null;
   handleLogout: () => void;
   isLoadingCurrentUserData: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType>({
-  currentProject: null,
-  setCurrentProject: () => {},
   currentUser: null,
   handleLogout: () => {},
   isLoadingCurrentUserData: false,
@@ -100,13 +97,9 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     }
   };
 
-  const [currentProject, setCurrentProject] = useState<number | null>(null);
-
   return (
     <AuthContext.Provider
       value={{
-        currentProject,
-        setCurrentProject,
         currentUser,
         handleLogout,
         isLoadingCurrentUserData,

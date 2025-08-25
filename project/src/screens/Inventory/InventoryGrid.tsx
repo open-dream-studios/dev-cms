@@ -1,5 +1,5 @@
 "use client";
-import ProductsHeader from "@/components/ProductsHeader/ProductsHeader";
+import ProductsHeader from "@/screens/Inventory/ProductsHeader";
 import { useAppContext } from "@/contexts/appContext";
 import { AuthContext } from "@/contexts/authContext";
 import { Product, useContextQueries } from "@/contexts/queryContext";

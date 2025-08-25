@@ -27,7 +27,7 @@ import {
 import { useAppContext } from "@/contexts/appContext";
 import InventoryRow from "./InventoryRow";
 import { toast } from "react-toastify";
-import CustomInventoryFrame from "@/components/CustomInventoryFrame/CustomInventoryFrame";
+import CustomInventoryFrame from "./CustomInventoryFrame/CustomInventoryFrame";
 import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
 

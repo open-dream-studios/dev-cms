@@ -2,7 +2,7 @@
 import { Product, useContextQueries } from "@/contexts/queryContext";
 import { useProductForm } from "@/hooks/useProductForm";
 import { appTheme } from "@/util/appTheme";
-import ProductInputCell from "@/components/Forms/ProductInputCell";
+import ProductInputCell from "@/screens/Inventory/Forms/ProductInputCell";
 import { useContext, useEffect, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { ProductFormData } from "@/util/schemas/productSchema";

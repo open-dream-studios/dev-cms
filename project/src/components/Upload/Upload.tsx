@@ -5,7 +5,7 @@ import { appTheme } from "@/util/appTheme";
 import React, { useContext, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { UseFormGetValues, UseFormSetValue } from "react-hook-form";
-import { ProductFormData } from "../ProductPage/ProductPage";
+import { ProductFormData } from "../../screens/Inventory/ProductPage/ProductPage";
 
 interface UploadProps {
   handleFiles: (files: File[]) => void;

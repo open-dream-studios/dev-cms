@@ -14,12 +14,13 @@ import {
   UseFormReturn,
   UseFormSetValue,
 } from "react-hook-form";
-import { ProductFormData } from "@/components/ProductPage/ProductPage";
+import { ProductFormData } from "@/screens/Inventory/ProductPage/ProductPage";
 import { Product, useContextQueries } from "./queryContext";
 import { toast } from "react-toastify";
 import { usePathname, useRouter } from "next/navigation";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
+import { Project } from "@/types/project";
 
 type AppContextType = {
   localData: Product[];
@@ -56,6 +57,8 @@ type AppContextType = {
   submitProductForm: () => Promise<boolean>;
   resetTimer: (fast: boolean) => void;
   checkForUnsavedChanges: () => boolean;
+  currentProject: Project | null;
+  setCurrentProject: (project: Project | null) => void;
 };
 
 export type FileImage = {
@@ -176,7 +179,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
         const newFileName = file.name.slice(0, lastDotIndex);
         let sanitizedFileName = newFileName.replace(/[^a-zA-Z0-9]/g, "_");
-        const extention = file.type.startsWith("image/") ? "webp" : file.name.split(".").pop();
+        const extention = file.type.startsWith("image/")
+          ? "webp"
+          : file.name.split(".").pop();
         const timeStamp = getCurrentTimestamp();
 
         sanitizedFileName = `${timeStamp}--${sanitizedFileName}.${extention}`;
@@ -445,6 +450,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+
   return (
     <AppContext.Provider
       value={{
@@ -475,6 +482,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         submitProductForm,
         resetTimer,
         checkForUnsavedChanges,
+        currentProject,
+        setCurrentProject,
       }}
     >
       {children}

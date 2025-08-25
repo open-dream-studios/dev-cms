@@ -1,3 +1,4 @@
+// project/src/layouts/appLayout.tsx
 "use client";
 import {
   ReactNode,
@@ -110,8 +111,9 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   } = useAppContext();
   const { productsData } = useContextQueries();
   const pathName = usePathname();
-  const { currentUser, currentProject } = useContext(AuthContext);
-
+  const { currentUser } = useContext(AuthContext);
+  const { currentProject } = useAppContext();
+  
   useEffect(() => {
     setSelectedProducts([]);
     setEditMode(false);

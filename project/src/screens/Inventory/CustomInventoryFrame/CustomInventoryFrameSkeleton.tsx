@@ -2,7 +2,7 @@
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext } from "react";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "../../../components/ui/skeleton";
 
 const CustomInventoryFrameSkeleton = () => {
   const { currentUser } = useContext(AuthContext);

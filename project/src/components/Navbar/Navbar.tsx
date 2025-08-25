@@ -17,8 +17,8 @@ import { useAppContext } from "@/contexts/appContext";
 import "./Navbar.css";
 
 const Navbar = () => {
-  const { currentUser, currentProject } = useContext(AuthContext);
-  const { editingLock, pageClick } = useAppContext();
+  const { currentUser } = useContext(AuthContext);
+  const { editingLock, pageClick, currentProject } = useAppContext();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);

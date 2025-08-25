@@ -1,3 +1,4 @@
+// project/next.config.ts
 /** @type {import('next').NextConfig} */
 const isPlayer = process.env.PLAYER === "true";
 

@@ -6,8 +6,8 @@ import { useAppContext } from "@/contexts/appContext";
 import CustomInventoryFrameSkeleton from "@/components/CustomInventoryFrame/CustomInventoryFrameSkeleton";
 import "react-datepicker/dist/react-datepicker.css";
 import { Product, useContextQueries } from "@/contexts/queryContext";
-import ProductPage from "../../../components/ProductPage/ProductPage";
-import ProductsHeader from "@/components/ProductsHeader/ProductsHeader";
+import ProductPage from "../../../screens/Inventory/ProductPage/ProductPage";
+import ProductsHeader from "@/screens/Inventory/ProductsHeader";
 import DraggableProductsGrid from "@/screens/Inventory/DraggableProductsGrid";
 
 const ProductsPage = () => {
