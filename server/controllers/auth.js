@@ -198,10 +198,20 @@ export const register = async (req, res) => {
 };
 
 // Login Function
-export const login = (req, res) => {
+export const login = async (req, res) => {
+  const { email } = req.body;
+  const validEmails = await getValidEmails();
+  if (!validEmails.includes(email)) {
+    return res.status(403).json({
+      message: "Unauthorized gmail, please ask host for permission",
+    });
+  }
+
+  // const permission = 
+
   const q = "SELECT * FROM users WHERE email = ?";
 
-  db.query(q, [req.body.email], (err, data) => {
+  db.query(q, [email], (err, data) => {
     // If there is an error
     if (err) {
       console.error("Login error:", err);

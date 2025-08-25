@@ -19,6 +19,7 @@ import {
 } from "./functions/google.js";
 import imageRouter from "./routes/images.js";
 import userRoutes from "./routes/users.js";
+import projectRoutes from "./routes/projects.js";
 import { db } from "./connection/connect.js";
 import { google } from "googleapis";
 dotenv.config();
@@ -78,6 +79,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/images", imageRouter);
+app.use("/api/projects", projectRoutes);
 
 // Database
 db.getConnection((err, connection) => {

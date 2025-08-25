@@ -1,3 +1,4 @@
+// server/connection/connect.js
 import mysql from "mysql2";
 import "../env.js";
 

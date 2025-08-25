@@ -1,3 +1,4 @@
+// server/routes/products.js
 import express from "express";
 import {
   getProducts,
