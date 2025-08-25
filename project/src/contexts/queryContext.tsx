@@ -48,7 +48,7 @@ export type QueryContextType = {
   refetchProductsData: () => Promise<QueryObserverResult<Product[], Error>>;
   updateProducts: (updatedProducts: Product[]) => void;
   deleteProducts: (serial_numbers: string[]) => void;
-  projects: Project[];
+  projectsData: Project[];
   isLoadingProjects: boolean;
   refetchProjects: () => void;
   addProject: (projectData: AddProjectInput) => Promise<void>;
@@ -179,7 +179,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const isOptimisticUpdate = useRef(false);
 
   const {
-    data: projects = [],
+    data: projectsData = [],
     isLoading: isLoadingProjects,
     refetch: refetchProjects,
   } = useQuery<Project[]>({
@@ -188,6 +188,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await makeRequest.post("/api/projects");
       return res.data.projects;
     },
+    enabled: isLoggedIn,
   });
 
   const mutation = useMutation({
@@ -279,7 +280,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchProductsData,
         updateProducts,
         deleteProducts,
-        projects,
+        projectsData,
         isLoadingProjects,
         refetchProjects,
         addProject,

@@ -89,7 +89,7 @@ const ProjectItem = ({ project }: { project: Project }) => {
 const ProjectSelection = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
-  const { projects, addProject, isLoadingProjects } = useContextQueries();
+  const { projectsData, addProject, isLoadingProjects } = useContextQueries();
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -155,7 +155,7 @@ const ProjectSelection = () => {
 
       <div className="w-[100%] h-[100%] px-[100px] pt-[60px] flex flex-col overflow-y-scroll">
         <div className="max-w-[1200px] mb-[50px] w-[100%] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[21px]">
-          {projects.map((project: Project, index: number) => (
+          {projectsData.map((project: Project, index: number) => (
             <ProjectItem key={index} project={project} />
           ))}
         </div>

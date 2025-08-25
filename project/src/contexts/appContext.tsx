@@ -1,3 +1,4 @@
+// project/src/contexts/appContext.tsx
 "use client";
 import React, {
   createContext,
@@ -77,7 +78,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { productsData, isOptimisticUpdate } = useContextQueries();
+  const { productsData, isOptimisticUpdate, projectsData } =
+    useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
   const lastPathRef = useRef<string | null>(null);
@@ -85,6 +87,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
+
+  useEffect(() => {
+    if (projectsData.length === 1) {
+      setCurrentProject(projectsData[0]);
+    }
+  }, [projectsData]);
 
   const [localData, setLocalDataState] = useState<Product[]>([]);
   const localDataRef = useRef<Product[]>([]);
@@ -488,7 +496,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         currentProject,
         setCurrentProject,
         productTableView,
-        setProductTableView
+        setProductTableView,
       }}
     >
       {children}

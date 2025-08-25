@@ -19,7 +19,6 @@ import Navbar from "@/components/Navbar/Navbar";
 import LeftBar from "@/components/LeftBar/LeftBar";
 import { appTheme } from "@/util/appTheme";
 import { io, Socket } from "socket.io-client";
-import { handleUpdateUser } from "@/util/functions/User";
 import Modals from "@/modals/Modals";
 import appDetails from "@/util/appDetails.json";
 import { usePathname, useRouter } from "next/navigation";
@@ -56,6 +55,7 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
   const queryClientRef = useRef(queryClient);
   const { currentUser, isLoadingCurrentUserData } = useContext(AuthContext);
+  const { setCurrentProject } = useAppContext();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -80,6 +80,7 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
       router.push("/");
     }
   }, [currentUser, isLoadingCurrentUserData, pathname]);
+
 
   if (isLoadingCurrentUserData) return null;
   if (!currentUser && pathname !== "/") return null;
@@ -113,7 +114,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   const pathName = usePathname();
   const { currentUser } = useContext(AuthContext);
   const { currentProject } = useAppContext();
-  
+
   useEffect(() => {
     setSelectedProducts([]);
     setEditMode(false);
