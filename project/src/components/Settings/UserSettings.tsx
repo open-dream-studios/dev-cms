@@ -1,52 +1,75 @@
+// project/src/components/Settings/UserSettings.tsx
 "use client";
+import { useAppContext } from "@/contexts/appContext";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme, ThemeType } from "@/util/appTheme";
-import { makeRequest } from "@/util/axios";
-import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { User } from "firebase/auth";
+import { useContextQueries } from "@/contexts/queryContext";
+import Modal2MultiStepModalInput, {
+  StepConfig,
+} from "@/modals/Modal2MultiStepInput";
+import { useModal1Store, useModal2Store } from "@/store/useModalStore";
+import { ProjectUser, UserRole, validUserRoles } from "@/types/project";
+import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
-import { IoMoonOutline } from "react-icons/io5";
-import { LuSun } from "react-icons/lu";
 
 const UserSettings = () => {
   const { currentUser } = useContext(AuthContext);
-  const queryClient = useQueryClient();
+  const { currentProject, setCurrentProject } = useAppContext();
+  const { projectUsers, updateProjectUser } = useContextQueries();
+  const modal1 = useModal1Store((state: any) => state.modal1);
+  const setModal1 = useModal1Store((state: any) => state.setModal1);
 
-  const toggleThemeMutation = useMutation<
-    void,
-    Error,
-    ThemeType,
-    { previousUser: User | null }
-  >({
-    mutationFn: async (newTheme) => {
-      await makeRequest.put("/api/users/update-current", { theme: newTheme });
-    },
-    onMutate: (newTheme) => {
-      queryClient.cancelQueries({ queryKey: ["currentUser"] });
-      const previousUser =
-        queryClient.getQueryData<User | null>(["currentUser"]) ?? null;
+  const modal2 = useModal2Store((state: any) => state.modal2);
+  const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-      // Optimistically update UI
-      queryClient.setQueryData(["currentUser"], (oldData: User | null) =>
-        oldData ? { ...oldData, theme: newTheme } : oldData
-      );
-      return { previousUser };
-    },
-    onError: (_, __, context) => {
-      if (context?.previousUser) {
-        queryClient.setQueryData(["currentUser"], context.previousUser);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-    },
-  });
+  const handleClearProject = () => {
+    setModal1({ ...modal1, open: false });
+    setCurrentProject(null);
+  };
 
-  const handleThemeChange = () => {
-    if (!currentUser) return null;
-    const newTheme = currentUser.theme === "light" ? "dark" : "light";
-    toggleThemeMutation.mutate(newTheme);
+  const handleAddUser = () => {
+    const steps: StepConfig[] = [
+      {
+        name: "email",
+        placeholder: "Enter User Email",
+        validate: (val) =>
+          /\S+@\S+\.\S+/.test(val) ? true : "Must be a valid email",
+      },
+      {
+        name: "role",
+        placeholder: "Assign a Role (owner, editor, viewer, admin)",
+        validate: (val) =>
+          validUserRoles.includes(val as UserRole)
+            ? true
+            : "Role must be one of: owner, editor, viewer, admin",
+      },
+    ];
+
+    if (!currentProject || !currentUser) return null;
+
+    setModal2({
+      ...modal2,
+      open: true,
+      showClose: false,
+      offClickClose: true,
+      width: "w-[300px]",
+      maxWidth: "max-w-[400px]",
+      aspectRatio: "aspect-[5/2]",
+      borderRadius: "rounded-[12px] md:rounded-[15px]",
+      content: (
+        <Modal2MultiStepModalInput
+          steps={steps}
+          onComplete={async (values) => {
+            await updateProjectUser({
+              id: currentProject.id,
+              project_id: currentProject.project_id,
+              project_name: currentProject.name,
+              email: values.email,
+              role: values.role,
+            } as ProjectUser);
+          }}
+        />
+      ),
+    });
   };
 
   if (!currentUser) return null;
@@ -60,11 +83,11 @@ const UserSettings = () => {
       </div>
 
       <div
-        onClick={handleThemeChange}
-        className="cursor-pointer w-[160px] h-[40px] rounded-[10px] transition-colors duration-500 group"
+        onClick={handleClearProject}
+        className="flex w-[auto] cursor-pointer h-[40px] rounded-[10px] transition-colors duration-500 group"
       >
         <div
-          className="gap-[12px] w-full h-full group-hover:border-0 group-hover:bg-[var(--hover-bg)] rounded-[10px] flex justify-left items-center px-[15px] truncate font-[500] text-[16px]"
+          className="gap-[12px] h-full group-hover:border-0 group-hover:bg-[var(--hover-bg)] rounded-[10px] flex justify-left items-center px-[15px] truncate font-[500] text-[16px]"
           style={
             {
               border: "0.5px solid " + appTheme[currentUser.theme].text_4,
@@ -73,51 +96,41 @@ const UserSettings = () => {
             } as React.CSSProperties
           }
         >
-          {currentUser.theme === "dark" ? (
-            <LuSun
-              size={20}
-              title="Light Mode"
-              className=""
-              color={appTheme[currentUser.theme].text_3}
-            />
-          ) : (
-            <IoMoonOutline
-              size={20}
-              title="Dark Mode"
-              className=""
-              color={appTheme[currentUser.theme].text_3}
-            />
-          )}
           <p
             style={{
               color: appTheme[currentUser.theme].text_2,
             }}
           >
-            {capitalizeFirstLetter(currentUser.theme === "dark" ? "light" : "dark")} Mode
+            Switch Project
           </p>
         </div>
       </div>
 
-      {/* <div
-        className="dim cursor-pointer hover:brightness-75"
-        onClick={handleThemeChange}
-      >
-        {currentUser.theme === "dark" ? (
-          <LuSun
-            size={23}
-            title="Light Mode"
-            className=""
-            color={appTheme[currentUser.theme].text_1}
-          />
-        ) : (
-          <IoMoonOutline
-            size={23}
-            title="Dark Mode"
-            className=""
-            color={appTheme[currentUser.theme].text_1}
-          />
-        )}
-      </div> */}
+      {currentProject !== null && (
+        <div
+          onClick={handleAddUser}
+          className="flex w-[auto] cursor-pointer h-[40px] rounded-[10px] transition-colors duration-500 group"
+        >
+          <div
+            className="gap-[12px] h-full group-hover:border-0 group-hover:bg-[var(--hover-bg)] rounded-[10px] flex justify-left items-center px-[15px] truncate font-[500] text-[16px]"
+            style={
+              {
+                border: "0.5px solid " + appTheme[currentUser.theme].text_4,
+                transition: "background-color 0.2s ease-in-out",
+                "--hover-bg": appTheme[currentUser.theme].background_2,
+              } as React.CSSProperties
+            }
+          >
+            <p
+              style={{
+                color: appTheme[currentUser.theme].text_2,
+              }}
+            >
+              Add User
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

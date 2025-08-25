@@ -16,7 +16,7 @@ import {
 } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { AuthContext } from "./authContext";
-import { AddProjectInput, Project } from "@/types/project";
+import { AddProjectInput, Project, ProjectUser } from "@/types/project";
 
 export type Product = {
   serial_number: string;
@@ -53,6 +53,10 @@ export type QueryContextType = {
   refetchProjects: () => void;
   addProject: (projectData: AddProjectInput) => Promise<void>;
   deleteProject: (project: Project) => Promise<void>;
+  projectUsers: ProjectUser[];
+  isLoadingProjectUsers: boolean;
+  refetchProjectUsers: () => void;
+  updateProjectUser: (projectUser: ProjectUser) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -174,7 +178,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const isOptimisticUpdate = useRef(false);
 
-  // 1. Fetch projects
   const {
     data: projects = [],
     isLoading: isLoadingProjects,
@@ -182,15 +185,14 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: async () => {
-      const res = await makeRequest.get("/api/projects");
+      const res = await makeRequest.post("/api/projects");
       return res.data.projects;
     },
   });
 
-  // 2. Mutation to add a project
   const mutation = useMutation({
     mutationFn: async (projectData: AddProjectInput) => {
-      await makeRequest.post("/api/projects", projectData);
+      await makeRequest.post("/api/projects/add", projectData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -220,7 +222,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!previousData) return { previousData, queryKey };
 
       const newData = previousData.filter(
-        (project) => !ids.includes(project.id)
+        (project) => !ids.includes(project.project_id)
       );
       queryClient.setQueryData(queryKey, newData);
       return { previousData, queryKey };
@@ -238,7 +240,34 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const deleteProject = async (project: Project) => {
-    await deleteProjectsMutation.mutateAsync([project.id]);
+    await deleteProjectsMutation.mutateAsync([project.project_id]);
+  };
+
+  const {
+    data: projectUsers = [],
+    isLoading: isLoadingProjectUsers,
+    refetch: refetchProjectUsers,
+  } = useQuery<ProjectUser[]>({
+    queryKey: ["projectUsers"],
+    queryFn: async () => {
+      const res = await makeRequest.get("/api/projects/project-users");
+      console.log(res.data.projectUsers);
+      return res.data.projectUsers;
+    },
+    enabled: isLoggedIn,
+  });
+
+  const updateProjectUserMutation = useMutation({
+    mutationFn: async (data: ProjectUser) => {
+      await makeRequest.post("/api/projects/update-project-user", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projectUsers"] });
+    },
+  });
+
+  const updateProjectUser = async (projectUser: ProjectUser) => {
+    await updateProjectUserMutation.mutateAsync(projectUser);
   };
 
   return (
@@ -255,6 +284,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchProjects,
         addProject,
         deleteProject,
+        projectUsers,
+        isLoadingProjectUsers,
+        refetchProjectUsers,
+        updateProjectUser,
       }}
     >
       {children}

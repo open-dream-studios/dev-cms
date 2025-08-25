@@ -10,6 +10,7 @@ import MultiStepModalInput, { StepConfig } from "@/modals/Modal2MultiStepInput";
 import { useModal2Store } from "@/store/useModalStore";
 import { IoCloseOutline } from "react-icons/io5";
 import Modal2Continue from "@/modals/Modal2Continue";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ProjectItem = ({ project }: { project: Project }) => {
   const { currentUser } = useContext(AuthContext);
@@ -57,7 +58,7 @@ const ProjectItem = ({ project }: { project: Project }) => {
             border: `1px solid ${appTheme[currentUser.theme].text_4}`,
             backgroundColor: appTheme[currentUser.theme].background_1,
           }}
-          className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+          className="absolute top-[-8px] right-[-9px] z-[350] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
           onClick={handleConfirmDelete}
         >
           <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
@@ -78,7 +79,7 @@ const ProjectItem = ({ project }: { project: Project }) => {
           className="text-[15px] font-[300] truncate"
           style={{ color: appTheme[currentUser.theme].text_1 }}
         >
-          {project.domain}
+          {project.project_id}
         </p>
       </div>
     </div>
@@ -86,6 +87,7 @@ const ProjectItem = ({ project }: { project: Project }) => {
 };
 
 const ProjectSelection = () => {
+  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const { projects, addProject, isLoadingProjects } = useContextQueries();
 
@@ -131,6 +133,7 @@ const ProjectSelection = () => {
   const addNewProject = async (name: string, domain?: string) => {
     if (!name) return;
     await addProject({ name, domain: domain || undefined });
+    queryClient.invalidateQueries({ queryKey: ["projectUsers"] });
   };
 
   if (!currentUser) return null;

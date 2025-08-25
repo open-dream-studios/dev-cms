@@ -120,7 +120,7 @@ const InventoryGrid = () => {
   return (
     <div className="relative w-[100%] h-[100%] overflow-hidden">
       <div className="z-[800] absolute top-0 left-0 h-[60px] w-[100%]">
-        <ProductsHeader title={"TSA Data"} />
+        <ProductsHeader title={"Products"} />
       </div>
 
       <div className="absolute w-[100%] h-[100%] left-0 top-0 px-[20px]">

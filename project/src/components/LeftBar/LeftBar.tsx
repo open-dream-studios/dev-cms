@@ -15,11 +15,12 @@ import { BiWindows } from "react-icons/bi";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import { usePathname } from "next/navigation";
 import { useAppContext } from "@/contexts/appContext";
+import { FaHome } from "react-icons/fa";
 
 const LeftBar = () => {
   const pathname = usePathname();
   const { currentUser, handleLogout } = useContext(AuthContext);
-  const { pageClick } = useAppContext();
+  const { pageClick, productTableView, setProductTableView } = useAppContext();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarRef = useRef<HTMLDivElement>(null);
@@ -190,7 +191,9 @@ const LeftBar = () => {
               className="flex lg:hidden flex-row mt-[22px] gap-[5px] mb-[18px] items-center cursor-pointer dim hover:brightness-75 pr-[6px]"
             >
               <img
-                src={"https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"}
+                src={
+                  "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
+                }
                 alt="logo"
                 className={`select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
               />
@@ -219,8 +222,8 @@ const LeftBar = () => {
                   color: appTheme[currentUser.theme].text_1,
                 }}
               >
-                <BiWindows className="w-[17px] h-[17px]" />
-                <p>Data</p>
+                <FaHome className="w-[17px] h-[17px]" />
+                <p>Website</p>
               </div>
               <LuPanelLeftClose
                 style={{ color: appTheme[currentUser.theme].text_4 }}
@@ -239,19 +242,37 @@ const LeftBar = () => {
             ></div>
 
             <div
-              className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[7px] items-center rounded-[10px] px-[12px] py-[5px]"
+              className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[8px] items-center rounded-[10px] px-[12px] py-[5px]"
               style={{
                 backgroundColor:
-                  pathname === "/products"
+                  pathname === "/products" && !productTableView
                     ? appTheme[currentUser.theme].background_2
                     : "transparent",
               }}
               onClick={() => {
+                setProductTableView(false)
                 handlePageClick("/products");
               }}
             >
-              <MdLibraryBooks className="w-[17px] h-[17px]" />
-              <p>Products</p>
+              <MdLibraryBooks className="w-[17px] h-[17px] brightness-75" />
+              <p className="brightness-[55%] text-[15.6px] font-[400]">Products</p>
+            </div>
+
+            <div
+              className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[9px] items-center rounded-[10px] px-[12px] py-[5px]"
+              style={{
+                backgroundColor:
+                  pathname === "/products" && productTableView
+                    ? appTheme[currentUser.theme].background_2
+                    : "transparent",
+              }}
+              onClick={() => {
+                setProductTableView(true)
+                handlePageClick("/products");
+              }}
+            >
+              <BiWindows className="w-[17px] h-[17px] brightness-75" />
+              <p className="brightness-[55%] text-[15.6px] font-[400]">Data</p>
             </div>
           </div>
 

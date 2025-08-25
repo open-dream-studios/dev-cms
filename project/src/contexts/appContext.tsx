@@ -59,6 +59,8 @@ type AppContextType = {
   checkForUnsavedChanges: () => boolean;
   currentProject: Project | null;
   setCurrentProject: (project: Project | null) => void;
+  productTableView: boolean;
+  setProductTableView: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export type FileImage = {
@@ -451,6 +453,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [productTableView, setProductTableView] = useState<boolean>(true);
 
   return (
     <AppContext.Provider
@@ -484,6 +487,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         checkForUnsavedChanges,
         currentProject,
         setCurrentProject,
+        productTableView,
+        setProductTableView
       }}
     >
       {children}

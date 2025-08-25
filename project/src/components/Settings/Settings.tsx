@@ -9,14 +9,14 @@ type SettingsProps = {
   initialPage: SettingsPages | null;
 };
 
-type SettingsPages = "Account";
+type SettingsPages = "Account" | "Settings";
 
 const Settings = ({ initialPage }: SettingsProps) => {
   const { currentUser } = useContext(AuthContext);
   const [selectedPage, setSelectedPage] = useState<SettingsPages>(
     initialPage === null ? "Account" : initialPage
   );
-  const settingsPages: SettingsPages[] = ["Account"];
+  const settingsPages: SettingsPages[] = ["Account", "Settings"];
 
   if (!currentUser) return null;
 
@@ -36,13 +36,11 @@ const Settings = ({ initialPage }: SettingsProps) => {
               <div
                 key={index}
                 onClick={() => setSelectedPage(settingsPages[index])}
-                className="cursor-pointer w-full h-[40px] rounded-[10px]"
-                // transition-colors duration-500 group
+                className="cursor-pointer w-full h-[40px] rounded-[10px] transition-colors duration-200 group"
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2_2,
-                  // backgroundColor: isSelected
-                  //   ? appTheme[currentUser.theme].background_2_2
-                  //   : appTheme[currentUser.theme].background_1_2,
+                  backgroundColor: isSelected
+                    ? appTheme[currentUser.theme].background_2_2
+                    : appTheme[currentUser.theme].background_1_2,
                 }}
               >
                 <div
@@ -60,21 +58,10 @@ const Settings = ({ initialPage }: SettingsProps) => {
             );
           })}
         </div>
-
-        {/* <div
-          // onClick={handleSignOut}
-          className="dim select-none cursor-pointer m-[-10px] w-[calc(25%-10px)] hover:brightness-75 h-[40px] absolute bottom-[29px] flex items-center justify-center font-[600]"
-          style={{
-            borderRadius: "6px",
-            backgroundColor: appTheme[currentUser.theme].background_2,
-            color: appTheme[currentUser.theme].text_2,
-          }}
-        >
-          Sign out
-        </div> */}
       </div>
       <div className="w-[100%] sm:w-[75%] pl-[30px] sm:pl-0 h-full sm:max-w-[calc(100%-200px)]">
         {selectedPage === "Account" && <Account />}
+        {selectedPage === "Settings" && <UserSettings />}
       </div>
     </div>
   );

@@ -1,13 +1,10 @@
 // project/src/app/page.tsx
 "use client";
 import React from "react";
-import InventoryGrid from "@/screens/Inventory/InventoryGrid";
-import { useAppContext } from "@/contexts/appContext";
+import Dashboard from "@/screens/Dashboard/Dashboard";
 
 const HomePage = () => {
-  const { currentProject } = useAppContext();
-  console.log(currentProject);
-  return <InventoryGrid />;
+  return <Dashboard />;
 };
 
 export default HomePage;

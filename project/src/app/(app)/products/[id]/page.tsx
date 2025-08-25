@@ -2,7 +2,7 @@
 import { useContext } from "react";
 import { useParams } from "next/navigation";
 import { AuthContext } from "@/contexts/authContext";
-import ProductsPage from "@/components/ProductPage/ProductPage";
+import ProductsPage from "@/screens/Inventory/ProductPage/ProductPage";
 
 const Product = () => {
   const { currentUser } = useContext(AuthContext);
