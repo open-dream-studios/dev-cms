@@ -1,4 +1,4 @@
-//project/src/screens/ProjectSelection/ProjectSelection.tsx
+//project/src/screens/AdminHome/AdminHome.tsx
 import { AuthContext } from "@/contexts/authContext";
 import { Project } from "@/types/project";
 import { appTheme } from "@/util/appTheme";

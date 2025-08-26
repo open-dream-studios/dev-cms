@@ -444,10 +444,11 @@ const ModuleSettings = () => {
 
   return (
     <div className="ml-[5px] md:ml-[8px] w-full h-full flex flex-col pt-[50px]">
-      <div className="flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]">
-        <p className="font-[600] text-[29px] md:text-[32px]">Modules</p>
-
-        <div
+      <div className="ml-[1px] flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]">
+        <p className="mt-[-2px] font-[600] text-[29px] leading-[29px] h-[36px] md:text-[32px] md:leading-[32px]">
+          Modules
+        </p>
+        {/* <div
           onClick={() =>
             addProjectModule({
               project_idx: currentProject.id,
@@ -461,7 +462,7 @@ const ModuleSettings = () => {
             color={appTheme[currentUser.theme].text_3}
             size={29}
           />
-        </div>
+        </div> */}
       </div>
 
       <div className="flex flex-row gap-4 mb-4">
@@ -514,7 +515,6 @@ const ModuleSettings = () => {
             </div>
           ))}
 
-          {/* Add New Key/Value */}
           {showAddInput && (
             <div className="flex flex-row gap-2 mt-2">
               <input
@@ -539,7 +539,6 @@ const ModuleSettings = () => {
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex flex-row gap-2 mt-4">
             <button
               type="button"

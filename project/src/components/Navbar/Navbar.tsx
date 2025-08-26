@@ -152,7 +152,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        <div className="h-[100%] mr-[12px] flex flex-row items-center gap-[18px]">
+        <div className="h-[100%] mr-[12px] flex flex-row items-center gap-[12.5px]">
           {editingLock && (
             <div
               style={{

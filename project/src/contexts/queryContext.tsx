@@ -19,13 +19,13 @@ import { AuthContext } from "./authContext";
 import {
   AddProjectInput,
   Integration,
+  Module,
   Project,
   ProjectModule,
   ProjectUser,
 } from "@/types/project";
 import { Product } from "@/types/products";
 import { useProjectContext } from "./projectContext";
-import Module from "module";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -479,7 +479,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     queryKey: ["modules"],
     queryFn: async () => {
       const res = await makeRequest.post("/api/modules/get-all");
-      console.log("MODULES", res.data.modules);
       return res.data.modules;
     },
     enabled: isLoggedIn,
