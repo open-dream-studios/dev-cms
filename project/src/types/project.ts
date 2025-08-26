@@ -39,6 +39,6 @@ export type ProjectModule = {
 
 export type Integration = {
   project_idx: number;
-  module: string;
+  module_id: number;
   config: Record<string, string>;
 };

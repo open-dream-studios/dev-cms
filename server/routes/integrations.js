@@ -1,3 +1,4 @@
+// server/routes/integrations.js
 import express from "express";
 import {
   getIntegrations,
@@ -9,6 +10,6 @@ const router = express.Router();
 
 router.post("/", getIntegrations);
 router.post("/update", addOrUpdateIntegration);
-router.delete("/key", deleteIntegrationKey);
+router.post("/key", deleteIntegrationKey);
 
 export default router;

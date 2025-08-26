@@ -2,11 +2,10 @@
 import { db } from "../connection/connect.js";
 import { encrypt, decrypt } from "../util/crypto.js";
 
-// Insert or update integration
 export const addOrUpdateIntegration = (req, res) => {
-  const { project_idx, module, config } = req.body;
+  const { project_idx, module_id, config } = req.body;
 
-  if (!project_idx || !module || !config) {
+  if (!project_idx || !module_id || !config) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
@@ -16,24 +15,28 @@ export const addOrUpdateIntegration = (req, res) => {
   }
 
   const q = `
-    INSERT INTO project_integrations (project_idx, module, config)
+    INSERT INTO project_integrations (project_idx, module_id, config)
     VALUES (?, ?, ?)
     ON DUPLICATE KEY UPDATE config = VALUES(config), updated_at = CURRENT_TIMESTAMP
   `;
 
-  db.query(q, [project_idx, module, JSON.stringify(encryptedConfig)], (err) => {
-    if (err) {
-      console.error("Integration save error:", err);
-      return res.status(500).json({ message: "Server error" });
+  db.query(
+    q,
+    [project_idx, module_id, JSON.stringify(encryptedConfig)],
+    (err) => {
+      if (err) {
+        console.error("Integration save error:", err);
+        return res.status(500).json({ message: "Server error" });
+      }
+      return res.status(200).json({ message: "Integration saved" });
     }
-    return res.status(200).json({ message: "Integration saved" });
-  });
+  );
 };
 
 export const getIntegrations = (req, res) => {
   const { project_idx } = req.body;
 
-  const q = `SELECT module, config FROM project_integrations WHERE project_idx = ?`;
+  const q = `SELECT module_id, config FROM project_integrations WHERE project_idx = ? ORDER BY created_at DESC`;
 
   db.query(q, [project_idx], (err, rows) => {
     if (err) {
@@ -47,12 +50,17 @@ export const getIntegrations = (req, res) => {
 
     try {
       const integrations = rows.map((row) => {
-        const encryptedConfig = JSON.parse(row.config);
+        let encryptedConfig = row.config;
+        if (typeof encryptedConfig === "string") {
+          encryptedConfig = JSON.parse(encryptedConfig);
+        }
+
         const decryptedConfig = {};
         for (const [key, value] of Object.entries(encryptedConfig)) {
           decryptedConfig[key] = decrypt(value);
         }
-        return { module: row.module, config: decryptedConfig };
+
+        return { module_id: row.module_id, config: decryptedConfig };
       });
 
       return res.json({ integrations });
@@ -64,15 +72,15 @@ export const getIntegrations = (req, res) => {
 };
 
 export const deleteIntegrationKey = (req, res) => {
-  const { project_idx, module, key } = req.body;
+  const { project_idx, module_id, key } = req.body;
 
-  if (!project_idx || !module || !key) {
+  if (!project_idx || !module_id || !key) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  const q = `SELECT config FROM project_integrations WHERE project_idx = ? AND module = ? LIMIT 1`;
+  const q = `SELECT config FROM project_integrations WHERE project_idx = ? AND module_id = ? LIMIT 1`;
 
-  db.query(q, [project_idx, module], (err, rows) => {
+  db.query(q, [project_idx, module_id], (err, rows) => {
     if (err) {
       console.error("Fetch error:", err);
       return res.status(500).json({ message: "Server error" });
@@ -83,24 +91,27 @@ export const deleteIntegrationKey = (req, res) => {
     }
 
     try {
-      const encryptedConfig = JSON.parse(rows[0].config);
+      let encryptedConfig = rows[0].config;
+      if (typeof encryptedConfig === "string") {
+        encryptedConfig = JSON.parse(encryptedConfig);
+      }
 
       if (!(key in encryptedConfig)) {
+        console.log("Key not found in config");
         return res.status(404).json({ message: "Key not found" });
       }
 
-      // remove the key
       delete encryptedConfig[key];
 
       const updateQ = `
-        UPDATE project_integrations 
-        SET config = ?, updated_at = CURRENT_TIMESTAMP 
-        WHERE project_idx = ? AND module = ?
-      `;
+    UPDATE project_integrations 
+    SET config = ?, updated_at = CURRENT_TIMESTAMP 
+    WHERE project_idx = ? AND module_id = ?
+  `;
 
       db.query(
         updateQ,
-        [JSON.stringify(encryptedConfig), project_idx, module],
+        [JSON.stringify(encryptedConfig), project_idx, module_id],
         (updateErr) => {
           if (updateErr) {
             console.error("Delete key error:", updateErr);

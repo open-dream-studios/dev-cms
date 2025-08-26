@@ -63,12 +63,12 @@ export type QueryContextType = {
   refetchIntegrations: () => Promise<any>;
   upsertIntegration: (data: {
     project_idx: number;
-    module: string;
+    module_id: number;
     config: Record<string, string>;
   }) => Promise<void>;
   deleteIntegrationKey: (data: {
     project_idx: number;
-    module: string;
+    module_id: number;
     key: string;
   }) => Promise<void>;
   modules: Module[];
@@ -417,7 +417,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await makeRequest.post("/api/integrations", {
         project_idx: currentProject.id,
       });
-      console.log("Integrations", res.data.integrations);
 
       return res.data.integrations || [];
     },
@@ -427,7 +426,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const upsertIntegrationMutation = useMutation({
     mutationFn: async (data: {
       project_idx: number;
-      module: string;
+      module_id: number;
       config: Record<string, string>;
     }) => {
       await makeRequest.post("/api/integrations/update", data);
@@ -440,23 +439,53 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const deleteIntegrationKeyMutation = useMutation({
-    mutationFn: async (data: {
+    mutationFn: async (integration: {
       project_idx: number;
-      module: string;
+      module_id: number;
       key: string;
     }) => {
-      await makeRequest.delete("/api/integrations/key", { data });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["integrations", currentProject?.id],
+      await makeRequest.post("/api/integrations/key", {
+        project_idx: integration.project_idx,
+        module_id: integration.module_id,
+        key: integration.key,
       });
+      return integration;
+    },
+    onMutate: async (deletedIntegration) => {
+      const queryKey = ["integrations", currentProject?.id];
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData<any[]>(queryKey);
+      if (!previousData) return { previousData, queryKey };
+
+      const newData = previousData.map((integration) => {
+        if (integration.module_id !== deletedIntegration.module_id)
+          return integration;
+
+        const newConfig = { ...integration.config };
+        delete newConfig[deletedIntegration.key];
+
+        return { ...integration, config: newConfig };
+      });
+
+      queryClient.setQueryData(queryKey, newData);
+      return { previousData, queryKey };
+    },
+    onError: (_err, _deletedIntegration, context) => {
+      if (context?.previousData && context?.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
+      }
+    },
+    onSettled: (_data, _err, _deletedIntegration, context) => {
+      if (context?.queryKey) {
+        queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
     },
   });
 
   const upsertIntegration = async (data: {
     project_idx: number;
-    module: string;
+    module_id: number;
     config: Record<string, string>;
   }) => {
     await upsertIntegrationMutation.mutateAsync(data);
@@ -464,7 +493,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const deleteIntegrationKey = async (data: {
     project_idx: number;
-    module: string;
+    module_id: number;
     key: string;
   }) => {
     await deleteIntegrationKeyMutation.mutateAsync(data);
