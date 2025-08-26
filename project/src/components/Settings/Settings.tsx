@@ -4,20 +4,21 @@ import { appTheme } from "../../util/appTheme";
 import { AuthContext } from "../../contexts/authContext";
 import PrivacySettings from "./UserAccess";
 import { useContextQueries } from "@/contexts/queryContext";
-import { useAppContext } from "@/contexts/appContext";
 import SiteSettings from "./SiteSettings";
 import AccountSettings from "./AccountSettings";
+import { useProjectContext } from "@/contexts/projectContext";
+import ModuleSettings from "./ModuleSettings";
 
 type SettingsProps = {
   initialPage: SettingsPages | null;
 };
 
-type SettingsPages = "Site" | "Users" | "Account";
+type SettingsPages = "Site" | "Users" | "Account" | "Modules";
 
 const Settings = ({ initialPage }: SettingsProps) => {
   const { currentUser } = useContext(AuthContext);
   const { projectsData } = useContextQueries();
-  const { currentProject } = useAppContext();
+  const { currentProject } = useProjectContext();
   const [selectedPage, setSelectedPage] = useState<SettingsPages>(
     initialPage === null ? "Site" : initialPage
   );
@@ -26,7 +27,9 @@ const Settings = ({ initialPage }: SettingsProps) => {
 
   const settingsPages: SettingsPages[] =
     currentProject !== null && projectsData.length >= 1
-      ? ["Site", "Users", "Account"]
+      ? currentUser.admin === 1
+        ? ["Site", "Modules", "Users", "Account"]
+        : ["Site", "Users", "Account"]
       : ["Account"];
 
   return (
@@ -75,6 +78,9 @@ const Settings = ({ initialPage }: SettingsProps) => {
         {currentProject !== null &&
           projectsData.length >= 1 &&
           selectedPage === "Users" && <PrivacySettings />}
+        {currentProject !== null &&
+          projectsData.length >= 1 &&
+          selectedPage === "Modules" && <ModuleSettings />}
         {selectedPage === "Account" && <AccountSettings />}
       </div>
     </div>

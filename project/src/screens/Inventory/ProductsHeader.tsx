@@ -18,6 +18,7 @@ import { useModal2Store } from "@/store/useModalStore";
 import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { Product } from "@/types/products";
+import { useProjectContext } from "@/contexts/projectContext";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const pathName = usePathname();
@@ -32,12 +33,16 @@ const ProductsHeader = ({ title }: { title: String }) => {
     setSelectedProducts,
     setAddProductPage,
     saveProducts,
-    localData
+    localData,
+    productTableView
   } = useAppContext();
+  const { currentProject } = useProjectContext();
   const { deleteProducts } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const pathname = usePathname();
+
+  if (!currentProject) return null;
 
   const handleWixSync = async () => {
     if (!currentUser) return null;
@@ -63,7 +68,9 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const wixSync = async () => {
     setEditingLock(true);
     try {
-      await makeRequest.post("/api/products/wix-sync");
+      await makeRequest.post("/api/products/wix-sync", {
+        project_idx: currentProject.id,
+      });
       toast.success("Updated Wix data");
     } catch (e) {
       toast.error("Wix sync failed");
@@ -75,7 +82,9 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const handleGoogleExport = async () => {
     setEditingLock(true);
     try {
-      await makeRequest.post("/api/products/google-sync");
+      await makeRequest.post("/api/products/google-sync", {
+        project_idx: currentProject.id,
+      });
       window.open(GOOGLE_SHEET_URL, "_blank");
     } catch (e) {
       toast.error("Export failed");
@@ -129,7 +138,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
   const handleAddRow = () => {
     setEditMode(false);
-    if (pathname.startsWith("/products")) {
+    if (!productTableView) {
       setAddProductPage(true);
     } else {
       if (!currentUser) return null;
@@ -168,7 +177,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
     const newProduct: Product = {
       serial_number: newSerial,
       name: "",
-      project_idx: currentProject.project_idx,
+      project_idx: currentProject.id,
       highlight: null,
       price: 0,
       make: newMake,

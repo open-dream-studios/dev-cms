@@ -16,12 +16,13 @@ import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import { usePathname } from "next/navigation";
 import { useAppContext } from "@/contexts/appContext";
 import { FaHome } from "react-icons/fa";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useProjectContext } from "@/contexts/projectContext";
 
 const LeftBar = () => {
   const pathname = usePathname();
   const { currentUser, handleLogout } = useContext(AuthContext);
-  const { pageClick, productTableView, setProductTableView, currentProject } =
+  const { currentProject } = useProjectContext();
+  const { pageClick, productTableView, setProductTableView } =
     useAppContext();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -194,7 +195,7 @@ const LeftBar = () => {
             >
               <img
                 src={
-                  currentProject
+                  currentProject && currentProject.logo !== null
                     ? currentProject.logo
                     : "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
                 }

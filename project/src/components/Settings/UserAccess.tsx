@@ -1,6 +1,5 @@
 // project/src/components/Settings/PrivacySettings.tsx
 "use client";
-import { useAppContext } from "@/contexts/appContext";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
@@ -13,18 +12,16 @@ import { useProjectUserForm } from "@/hooks/useProjectUserForm";
 import { ProjectUserFormData } from "@/util/schemas/projectUserSchema";
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
+import { useProjectContext } from "@/contexts/projectContext";
 
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject, setCurrentProject } = useAppContext();
-  const { projectsData, updateProjectUser, projectUsers, deleteProjectUser } =
+  const { currentProject, setCurrentProject } = useProjectContext();
+  const { updateProjectUser, projectUsers, deleteProjectUser } =
     useContextQueries();
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
-
   if (!currentUser || !currentProject) return null;
 
   const emailsInProject = projectUsers
@@ -203,7 +200,7 @@ const UserAccess = () => {
                     appTheme[currentUser.theme].background_4
                   }`,
                 }}
-                className="cursor-pointer hover:brightness-75 w-[61px] text-center custom-select input px-[12px] py-[4px] text-[12px] rounded-[5px]"
+                className="cursor-pointer hover:brightness-75 w-[61px] text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
               >
                 {validUserRoles &&
                   validUserRoles
@@ -252,7 +249,7 @@ const UserAccess = () => {
                               appTheme[currentUser.theme].background_4
                             }`,
                           }}
-                          className="cursor-pointer hover:brightness-75 dim w-[61px] text-center custom-select input px-[12px] py-[4px] text-[12px] rounded-[5px]"
+                          className="cursor-pointer hover:brightness-75 dim w-[61px] text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
                           onChange={async (e) => {
                             const newRole = e.target.value;
                             await updateProjectUser({

@@ -5,16 +5,18 @@ import { appTheme } from "@/util/appTheme";
 import React, { useContext, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useContextQueries } from "@/contexts/queryContext";
-import { useAppContext } from "@/contexts/appContext";
 import MultiStepModalInput, { StepConfig } from "@/modals/Modal2MultiStepInput";
-import { useModal2Store } from "@/store/useModalStore";
+import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { IoCloseOutline } from "react-icons/io5";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useQueryClient } from "@tanstack/react-query";
+import { useProjectContext } from "@/contexts/projectContext";
+import { LuBlocks } from "react-icons/lu";
+import EditModules from "./EditModules";
 
 const ProjectItem = ({ project }: { project: Project }) => {
   const { currentUser } = useContext(AuthContext);
-  const { setCurrentProject } = useAppContext();
+  const { setCurrentProject } = useProjectContext();
   const { deleteProject } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -86,11 +88,13 @@ const ProjectItem = ({ project }: { project: Project }) => {
   );
 };
 
-const ProjectSelection = () => {
+const AdminHome = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const { projectsData, addProject, isLoadingProjects } = useContextQueries();
 
+  const modal1 = useModal1Store((state: any) => state.modal1);
+  const setModal1 = useModal1Store((state: any) => state.setModal1);
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
@@ -136,20 +140,59 @@ const ProjectSelection = () => {
     queryClient.invalidateQueries({ queryKey: ["projectUsers"] });
   };
 
+  const handleEditModulesClick = () => {
+    setModal1({
+      ...modal1,
+      open: !modal1.open,
+      showClose: true,
+      offClickClose: true,
+      width: "w-[90vw] md:w-[80vw]",
+      maxWidth: "md:max-w-[1000px]",
+      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+      borderRadius: "rounded-[15px] md:rounded-[20px]",
+      content: <EditModules />,
+    });
+  };
+
   if (!currentUser) return null;
 
   return (
     <div className="w-[100%] h-[100%] relative">
-      {true && (
-        <div
-          onClick={handleAddProjectClick}
-          className="dim hover:brightness-75 cursor-pointer absolute top-[30px] right-[30px] w-[50px] h-[50px] rounded-[30px] flex items-center justify-center"
-          style={{
-            backgroundColor: appTheme[currentUser.theme].text_1,
-            color: appTheme[currentUser.theme].background_1,
-          }}
-        >
-          <FaPlus color={appTheme[currentUser.theme].background_1} size={24} />
+      {currentUser.admin === 1 && (
+        <div className="flex flex-row justify-between w-[100%] h-[70px] items-center px-[50px]">
+          <div
+            // onClick={() => setEditListMode((prev) => !prev)}
+            className="select-none dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
+            style={{
+              backgroundColor: appTheme[currentUser.theme].background_1_2,
+              // border: editListMode
+              //   ? "1px solid " + appTheme[currentUser.theme].text_3
+              //   : "none",
+            }}
+          >
+            {/* <FiEdit size={16} /> */}
+          </div>
+          <div className="flex flex-row gap-[11.5px] ">
+            <div
+              onClick={handleEditModulesClick}
+              className="select-none dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_1_2,
+              }}
+            >
+              <LuBlocks size={16} />
+            </div>
+
+            <div
+              onClick={handleAddProjectClick}
+              className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_1_2,
+              }}
+            >
+              <FaPlus size={16} />
+            </div>
+          </div>
         </div>
       )}
 
@@ -164,4 +207,4 @@ const ProjectSelection = () => {
   );
 };
 
-export default ProjectSelection;
+export default AdminHome;

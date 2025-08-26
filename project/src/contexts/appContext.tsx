@@ -16,12 +16,13 @@ import {
   UseFormSetValue,
 } from "react-hook-form";
 import { ProductFormData } from "@/screens/Inventory/ProductPage/ProductPage";
-import { Product, useContextQueries } from "./queryContext";
+import { useContextQueries } from "./queryContext";
 import { toast } from "react-toastify";
 import { usePathname, useRouter } from "next/navigation";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
-import { Project } from "@/types/project";
+import { Product } from "@/types/products";
+import { useProjectContext } from "./projectContext";
 
 type AppContextType = {
   localData: Product[];
@@ -58,8 +59,6 @@ type AppContextType = {
   submitProductForm: () => Promise<boolean>;
   resetTimer: (fast: boolean) => void;
   checkForUnsavedChanges: () => boolean;
-  currentProject: Project | null;
-  setCurrentProject: (project: Project | null) => void;
   productTableView: boolean;
   setProductTableView: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -78,6 +77,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { currentProject, setCurrentProject } = useProjectContext();
   const { productsData, isOptimisticUpdate, projectsData } =
     useContextQueries();
   const pathname = usePathname();
@@ -383,6 +383,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     data: ProductFormData,
     overrideNewProduct?: boolean
   ): Promise<boolean> => {
+    if (!currentProject) return false;
     try {
       const isNew = overrideNewProduct ?? addProductPage;
 
@@ -403,6 +404,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       const ordinal = existing?.ordinal ?? getNextOrdinal(productsData);
       const normalizedData: Product = {
         ...data,
+        project_idx: currentProject.id,
         highlight: existing?.highlight ?? null,
         description: data.description ?? null,
         note: data.note ?? null,
@@ -460,7 +462,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [productTableView, setProductTableView] = useState<boolean>(true);
 
   return (
@@ -493,8 +494,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         submitProductForm,
         resetTimer,
         checkForUnsavedChanges,
-        currentProject,
-        setCurrentProject,
         productTableView,
         setProductTableView,
       }}

@@ -24,16 +24,17 @@ import appDetails from "@/util/appDetails.json";
 import { usePathname, useRouter } from "next/navigation";
 import LandingNav from "@/screens/Landing/LandingNav/LandingNav";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import {
-  QueryProvider,
-  useContextQueries,
-} from "@/contexts/queryContext";
+import { QueryProvider, useContextQueries } from "@/contexts/queryContext";
 import CustomToast from "@/components/CustomToast";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import LandingPage from "@/screens/Landing/LandingPage/LandingPage";
-import ProjectSelection from "@/screens/ProjectSelection/ProjectSelection";
+import ProjectSelection from "@/screens/AdminHome/AdminHome";
 import DynamicTitle from "@/components/DynamicTitle";
 import { Product } from "@/types/products";
+import {
+  ProjectContextProvider,
+  useProjectContext,
+} from "@/contexts/projectContext";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -41,13 +42,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthContextProvider>
-        <QueryProvider>
-          <AppContextProvider>
-            <CustomToast />
-            <DynamicTitle />
-            <AppRoot>{children}</AppRoot>
-          </AppContextProvider>
-        </QueryProvider>
+        <ProjectContextProvider>
+          <QueryProvider>
+            <AppContextProvider>
+              <CustomToast />
+              <DynamicTitle />
+              <AppRoot>{children}</AppRoot>
+            </AppContextProvider>
+          </QueryProvider>
+        </ProjectContextProvider>
       </AuthContextProvider>
     </QueryClientProvider>
   );
@@ -57,7 +60,6 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
   const queryClientRef = useRef(queryClient);
   const { currentUser, isLoadingCurrentUserData } = useContext(AuthContext);
-  const { setCurrentProject } = useAppContext();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -82,7 +84,6 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
       router.push("/");
     }
   }, [currentUser, isLoadingCurrentUserData, pathname]);
-
 
   if (isLoadingCurrentUserData) return null;
   if (!currentUser && pathname !== "/") return null;
@@ -115,7 +116,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   const { productsData } = useContextQueries();
   const pathName = usePathname();
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useAppContext();
+  const { currentProject } = useProjectContext();
 
   useEffect(() => {
     setSelectedProducts([]);

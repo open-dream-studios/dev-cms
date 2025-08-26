@@ -16,8 +16,16 @@ import {
 } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { AuthContext } from "./authContext";
-import { AddProjectInput, Project, ProjectUser } from "@/types/project";
+import {
+  AddProjectInput,
+  Integration,
+  Project,
+  ProjectModule,
+  ProjectUser,
+} from "@/types/project";
 import { Product } from "@/types/products";
+import { useProjectContext } from "./projectContext";
+import Module from "module";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -36,6 +44,42 @@ export type QueryContextType = {
   refetchProjectUsers: () => void;
   updateProjectUser: (projectUser: ProjectUser) => Promise<void>;
   deleteProjectUser: (projectUser: ProjectUser) => Promise<void>;
+  projectModules: ProjectModule[];
+  isLoadingProjectModules: boolean;
+  refetchProjectModules: () => Promise<
+    QueryObserverResult<ProjectModule[], Error>
+  >;
+  addProjectModule: (data: {
+    project_idx: number;
+    module_id: number;
+    settings?: any;
+  }) => Promise<void>;
+  deleteProjectModule: (data: {
+    project_idx: number;
+    module_id: number;
+  }) => Promise<void>;
+  integrations: Integration[];
+  isLoadingIntegrations: boolean;
+  refetchIntegrations: () => Promise<any>;
+  upsertIntegration: (data: {
+    project_idx: number;
+    module: string;
+    config: Record<string, string>;
+  }) => Promise<void>;
+  deleteIntegrationKey: (data: {
+    project_idx: number;
+    module: string;
+    key: string;
+  }) => Promise<void>;
+  modules: Module[];
+  isLoadingModules: boolean;
+  refetchModules: () => Promise<any>;
+  upsertModule: (data: {
+    id?: number;
+    name: string;
+    description?: string;
+  }) => Promise<void>;
+  deleteModule: (id: number) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -43,6 +87,7 @@ const QueryContext = createContext<QueryContextType | undefined>(undefined);
 export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { currentProject } = useProjectContext();
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const isLoggedIn = useMemo(
@@ -55,25 +100,25 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     isLoading: isLoadingProductsData,
     refetch: refetchProductsData,
   } = useQuery<Product[]>({
-    queryKey: ["products"],
+    queryKey: ["products", currentProject?.id], // 🔹 tie cache to project
     queryFn: async () => {
-      const res = await makeRequest.get("/api/products/get", {});
+      if (!currentProject) return [];
+      const res = await makeRequest.get("/api/products/get", {
+        params: { project_idx: currentProject.id }, // 🔹 send project
+      });
       const result = res.data.products || [];
-      const sorted = result.sort(
+      return result.sort(
         (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
       );
-      // console.log(sorted);
-      return sorted;
     },
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 10,
-    refetchOnMount: true,
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && !!currentProject, // 🔹 only run if project chosen
   });
 
   const updateProductsMutation = useMutation({
     mutationFn: async (products: Product[]) => {
+      if (!currentProject) return;
       await makeRequest.post("/api/products/update", {
+        project_idx: currentProject.id, // 🔹 backend now needs this
         products,
       });
     },
@@ -117,8 +162,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     DeleteContext
   >({
     mutationFn: async (serial_numbers: string[]) => {
+      if (!currentProject) return;
       await makeRequest.delete("/api/products/delete", {
-        data: { serial_numbers },
+        data: { project_idx: currentProject.id, serial_numbers },
       });
     },
     onMutate: async (serial_numbers: string[]) => {
@@ -186,7 +232,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteProjectsMutation = useMutation<
     void,
     Error,
-    number[], // ids
+    number[],
     { previousData: Project[] | undefined; queryKey: string[] }
   >({
     mutationFn: async (ids: number[]) => {
@@ -318,6 +364,161 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     await deleteProjectUserMutation.mutateAsync(user);
   };
 
+  const {
+    data: projectModules = [],
+    isLoading: isLoadingProjectModules,
+    refetch: refetchProjectModules,
+  } = useQuery<ProjectModule[]>({
+    queryKey: ["projectModules", currentProject?.id],
+    queryFn: async () => {
+      if (!currentProject) return [];
+      const res = await makeRequest.post("/api/modules/get", {
+        project_idx: currentProject.id,
+      });
+      console.log("PROJECT MODULES", res.data.projectModules);
+      return res.data.projectModules;
+    },
+    enabled: isLoggedIn && !!currentProject,
+  });
+
+  const addProjectModuleMutation = useMutation({
+    mutationFn: async (data: {
+      project_idx: number;
+      module_id: number;
+      settings?: any;
+    }) => {
+      await makeRequest.post("/api/modules/add", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["projectModules", currentProject?.id],
+      });
+    },
+  });
+
+  const deleteProjectModuleMutation = useMutation({
+    mutationFn: async (data: { project_idx: number; module_id: number }) => {
+      await makeRequest.delete("/api/modules/delete", { data });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["projectModules", currentProject?.id],
+      });
+    },
+  });
+
+  const {
+    data: integrations = [],
+    isLoading: isLoadingIntegrations,
+    refetch: refetchIntegrations,
+  } = useQuery<Integration[]>({
+    queryKey: ["integrations", currentProject?.id],
+    queryFn: async () => {
+      if (!currentProject) return [];
+      const res = await makeRequest.post("/api/integrations", {
+        project_idx: currentProject.id,
+      });
+      console.log("Integrations", res.data.integrations);
+
+      return res.data.integrations || [];
+    },
+    enabled: isLoggedIn && !!currentProject,
+  });
+
+  const upsertIntegrationMutation = useMutation({
+    mutationFn: async (data: {
+      project_idx: number;
+      module: string;
+      config: Record<string, string>;
+    }) => {
+      await makeRequest.post("/api/integrations/update", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["integrations", currentProject?.id],
+      });
+    },
+  });
+
+  const deleteIntegrationKeyMutation = useMutation({
+    mutationFn: async (data: {
+      project_idx: number;
+      module: string;
+      key: string;
+    }) => {
+      await makeRequest.delete("/api/integrations/key", { data });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["integrations", currentProject?.id],
+      });
+    },
+  });
+
+  const upsertIntegration = async (data: {
+    project_idx: number;
+    module: string;
+    config: Record<string, string>;
+  }) => {
+    await upsertIntegrationMutation.mutateAsync(data);
+  };
+
+  const deleteIntegrationKey = async (data: {
+    project_idx: number;
+    module: string;
+    key: string;
+  }) => {
+    await deleteIntegrationKeyMutation.mutateAsync(data);
+  };
+
+  const {
+    data: modules = [],
+    isLoading: isLoadingModules,
+    refetch: refetchModules,
+  } = useQuery<Module[]>({
+    queryKey: ["modules"],
+    queryFn: async () => {
+      const res = await makeRequest.post("/api/modules/get-all");
+      console.log("MODULES", res.data.modules);
+      return res.data.modules;
+    },
+    enabled: isLoggedIn,
+  });
+
+  const upsertModuleMutation = useMutation({
+    mutationFn: async (data: {
+      id?: number;
+      name: string;
+      description?: string;
+    }) => {
+      await makeRequest.post("/api/modules/upsert", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+    },
+  });
+
+  const upsertModule = async (data: {
+    id?: number;
+    name: string;
+    description?: string;
+  }) => {
+    await upsertModuleMutation.mutateAsync(data);
+  };
+
+  const deleteModuleMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await makeRequest.delete("/api/modules/delete-module", { data: { id } });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+    },
+  });
+
+  const deleteModule = async (id: number) => {
+    await deleteModuleMutation.mutateAsync(id);
+  };
+
   return (
     <QueryContext.Provider
       value={{
@@ -337,6 +538,28 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchProjectUsers,
         updateProjectUser,
         deleteProjectUser,
+        projectModules,
+        isLoadingProjectModules,
+        refetchProjectModules,
+        addProjectModule: (data: {
+          project_idx: number;
+          module_id: number;
+          settings?: any;
+        }) => addProjectModuleMutation.mutateAsync(data),
+        deleteProjectModule: (data: {
+          project_idx: number;
+          module_id: number;
+        }) => deleteProjectModuleMutation.mutateAsync(data),
+        integrations,
+        isLoadingIntegrations,
+        refetchIntegrations,
+        upsertIntegration,
+        deleteIntegrationKey,
+        modules,
+        isLoadingModules,
+        refetchModules,
+        upsertModule,
+        deleteModule,
       }}
     >
       {children}

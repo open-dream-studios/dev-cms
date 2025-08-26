@@ -19,7 +19,9 @@ import {
 } from "./functions/google.js";
 import imageRouter from "./routes/images.js";
 import userRoutes from "./routes/users.js";
-import projectRoutes from "./routes/projects.js";
+import projectRoutes from "./routes/projects.js"
+import integrationRoutes from "./routes/integrations.js";
+import projectModulesRoutes from "./routes/modules.js";
 import { db } from "./connection/connect.js";
 import { google } from "googleapis";
 dotenv.config();
@@ -80,6 +82,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/images", imageRouter);
 app.use("/api/projects", projectRoutes);
+app.use("/api/integrations", integrationRoutes);;
+app.use("/api/modules", projectModulesRoutes);
 
 // Database
 db.getConnection((err, connection) => {

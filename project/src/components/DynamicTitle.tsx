@@ -2,10 +2,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAppContext } from "@/contexts/appContext";
+import { useProjectContext } from "@/contexts/projectContext";
 
 export default function DynamicTitle() {
-  const { currentProject } = useAppContext();
+  const { currentProject } = useProjectContext();
 
   useEffect(() => {
     if (currentProject) {

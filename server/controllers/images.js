@@ -58,16 +58,17 @@ export const compressAndUploadFiles = async (filePaths) => {
         });
       }
 
+      const folderBase = "open_dream/dev-cms/projects";
       if (resourceType === "video") {
         const result = await uploadLargeAsync(fileToUpload, {
-          folder: "tsa",
+          folder: `${folderBase}/videos`,
           resource_type: "video",
-          chunk_size: 6000000, // 6 MB chunks
+          chunk_size: 6000000,
         });
         uploadUrls.push(result.secure_url);
       } else {
         const result = await cloudinary.uploader.upload(fileToUpload, {
-          folder: "tsa",
+          folder: `${folderBase}/images`,
           resource_type: resourceType,
         });
         uploadUrls.push(result.secure_url);

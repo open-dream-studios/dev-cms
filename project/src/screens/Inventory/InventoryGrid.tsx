@@ -3,10 +3,12 @@
 import ProductsHeader from "@/screens/Inventory/ProductsHeader";
 import { useAppContext } from "@/contexts/appContext";
 import { AuthContext } from "@/contexts/authContext";
-import { Product, useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import DraggableProductsGrid from "./DraggableProductsGrid";
+import { Product } from "@/types/products";
+import { useProjectContext } from "@/contexts/projectContext";
 
 export type InventoryDataItem = {
   title: string;
@@ -96,6 +98,7 @@ export const inventoryDataLayout: InventoryDataItem[] = [
 
 const InventoryGrid = () => {
   const { currentUser } = useContext(AuthContext);
+  const { currentProject } = useProjectContext();
   const { productsData } = useContextQueries();
   const { filteredProducts, selectedProducts, setSelectedProducts, localData } =
     useAppContext();
@@ -116,7 +119,7 @@ const InventoryGrid = () => {
     }
   };
 
-  if (!currentUser) return null;
+  if (!currentUser || !currentProject) return null;
 
   return (
     <div className="relative w-[100%] h-[100%] overflow-hidden">

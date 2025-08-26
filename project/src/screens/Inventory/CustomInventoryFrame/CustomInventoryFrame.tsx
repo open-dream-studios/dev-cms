@@ -1,13 +1,13 @@
 // project/src/screens/Inventory/CustomInventoryFrame/CustomInventoryFrame.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { Product } from "@/contexts/queryContext";
 import { appTheme } from "@/util/appTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import Link from "next/link";
 import { useContext } from "react";
 import app_details from "@/util/appDetails.json";
 import { useRouter } from "next/navigation";
+import { Product } from "@/types/products";
+import { useProjectContext } from "@/contexts/projectContext";
 
 const CustomInventoryFrame = ({
   item,
@@ -17,6 +17,7 @@ const CustomInventoryFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
+  const { currentProject } = useProjectContext();
   const router = useRouter();
   const TubTitle = item.name;
   const TubMake = item.make;
@@ -103,7 +104,11 @@ const CustomInventoryFrame = ({
           <img
             draggable={false}
             className="w-[100%] h-[100%] p-[5px] object-contain"
-            src={"/assets/logo-black.png"}
+            src={
+              currentProject && currentProject.logo !== null
+                ? currentProject.logo
+                : "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
+            }
           />
         </div>
         <div

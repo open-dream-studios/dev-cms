@@ -1,6 +1,5 @@
 // project/src/components/Settings/SiteSettings.tsx
 "use client";
-import { useAppContext } from "@/contexts/appContext";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
@@ -14,10 +13,11 @@ import { FiEdit } from "react-icons/fi";
 import { FaPlus, FaRegCircleCheck } from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
+import { useProjectContext } from "@/contexts/projectContext";
 
 const SiteSettings = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject, setCurrentProject } = useAppContext();
+  const { currentProject, setCurrentProject } = useProjectContext();
   const { projectsData, updateProjectUser, projectUsers, deleteProjectUser } =
     useContextQueries();
 
