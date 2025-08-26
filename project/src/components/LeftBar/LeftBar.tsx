@@ -17,13 +17,14 @@ import { usePathname } from "next/navigation";
 import { useAppContext } from "@/contexts/appContext";
 import { FaHome } from "react-icons/fa";
 import { useProjectContext } from "@/contexts/projectContext";
+import { useContextQueries } from "@/contexts/queryContext";
 
 const LeftBar = () => {
   const pathname = usePathname();
   const { currentUser, handleLogout } = useContext(AuthContext);
   const { currentProject } = useProjectContext();
-  const { pageClick, productTableView, setProductTableView } =
-    useAppContext();
+  const { pageClick, productTableView, setProductTableView } = useAppContext();
+  const { hasProjectModule } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarRef = useRef<HTMLDivElement>(null);
@@ -246,41 +247,47 @@ const LeftBar = () => {
               className="w-[100%] h-[1px] rounded-[1px] my-[15px]"
             ></div>
 
-            <div
-              className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[8px] items-center rounded-[10px] px-[12px] py-[5px]"
-              style={{
-                backgroundColor:
-                  pathname === "/products" && !productTableView
-                    ? appTheme[currentUser.theme].background_2
-                    : "transparent",
-              }}
-              onClick={() => {
-                setProductTableView(false);
-                handlePageClick("/products");
-              }}
-            >
-              <MdLibraryBooks className="w-[17px] h-[17px] brightness-75" />
-              <p className="brightness-[55%] text-[15.6px] font-[400]">
-                Products
-              </p>
-            </div>
+            {hasProjectModule("products-module") && (
+              <div>
+                <div
+                  className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[8px] items-center rounded-[10px] px-[12px] py-[5px]"
+                  style={{
+                    backgroundColor:
+                      pathname === "/products" && !productTableView
+                        ? appTheme[currentUser.theme].background_2
+                        : "transparent",
+                  }}
+                  onClick={() => {
+                    setProductTableView(false);
+                    handlePageClick("/products");
+                  }}
+                >
+                  <MdLibraryBooks className="w-[17px] h-[17px] brightness-75" />
+                  <p className="brightness-[55%] text-[15.6px] font-[400]">
+                    Products
+                  </p>
+                </div>
 
-            <div
-              className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[9px] items-center rounded-[10px] px-[12px] py-[5px]"
-              style={{
-                backgroundColor:
-                  pathname === "/products" && productTableView
-                    ? appTheme[currentUser.theme].background_2
-                    : "transparent",
-              }}
-              onClick={() => {
-                setProductTableView(true);
-                handlePageClick("/products");
-              }}
-            >
-              <BiWindows className="w-[17px] h-[17px] brightness-75" />
-              <p className="brightness-[55%] text-[15.6px] font-[400]">Data</p>
-            </div>
+                <div
+                  className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[9px] items-center rounded-[10px] px-[12px] py-[5px]"
+                  style={{
+                    backgroundColor:
+                      pathname === "/products" && productTableView
+                        ? appTheme[currentUser.theme].background_2
+                        : "transparent",
+                  }}
+                  onClick={() => {
+                    setProductTableView(true);
+                    handlePageClick("/products");
+                  }}
+                >
+                  <BiWindows className="w-[17px] h-[17px] brightness-75" />
+                  <p className="brightness-[55%] text-[15.6px] font-[400]">
+                    Data
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div

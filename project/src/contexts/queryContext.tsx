@@ -58,6 +58,7 @@ export type QueryContextType = {
     project_idx: number;
     module_id: number;
   }) => Promise<void>;
+  hasProjectModule: (identifier: string) => boolean;
   integrations: Integration[];
   isLoadingIntegrations: boolean;
   refetchIntegrations: () => Promise<any>;
@@ -78,6 +79,7 @@ export type QueryContextType = {
     id?: number;
     name: string;
     description?: string;
+    identifier: string;
   }) => Promise<void>;
   deleteModule: (id: number) => Promise<void>;
 };
@@ -409,6 +411,12 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     },
   });
 
+  const hasProjectModule = (identifier: string): boolean => {
+    console.log(identifier, projectModules);
+    console.log(projectModules?.some((pm) => pm.identifier === identifier))
+    return projectModules?.some((pm) => pm.identifier === identifier);
+  };
+
   const {
     data: integrations = [],
     isLoading: isLoadingIntegrations,
@@ -520,6 +528,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       id?: number;
       name: string;
       description?: string;
+      identifier: string;
     }) => {
       await makeRequest.post("/api/modules/upsert", data);
     },
@@ -532,13 +541,14 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     id?: number;
     name: string;
     description?: string;
+    identifier: string;
   }) => {
     await upsertModuleMutation.mutateAsync(data);
   };
 
   const deleteModuleMutation = useMutation({
     mutationFn: async (id: number) => {
-      await makeRequest.post("/api/modules/delete-module", { data: { id } });
+      await makeRequest.post("/api/modules/delete-module", { id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modules"] });
@@ -580,6 +590,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
           project_idx: number;
           module_id: number;
         }) => deleteProjectModuleMutation.mutateAsync(data),
+        hasProjectModule,
         integrations,
         isLoadingIntegrations,
         refetchIntegrations,

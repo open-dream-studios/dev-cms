@@ -9,6 +9,7 @@ export function useModulesForm(defaultValues?: Partial<ModuleFormData>) {
     defaultValues: {
       name: defaultValues?.name || "",
       description: defaultValues?.description || "",
+      identifier: defaultValues?.identifier || "",
     },
   });
 }

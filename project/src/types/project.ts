@@ -26,6 +26,7 @@ export type ProjectUser = {
 export type Module = {
   id: number;
   name: string;
+  identifier: string;
   description: string | null;
 };
 
@@ -34,6 +35,7 @@ export type ProjectModule = {
   module_id: number;
   name: string;
   description: string | null;
+  identifier: string;
   settings: any;
 };
 

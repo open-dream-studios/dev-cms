@@ -99,7 +99,7 @@ export const inventoryDataLayout: InventoryDataItem[] = [
 const InventoryGrid = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProject } = useProjectContext();
-  const { productsData } = useContextQueries();
+  const { productsData, hasProjectModule } = useContextQueries();
   const { filteredProducts, selectedProducts, setSelectedProducts, localData } =
     useAppContext();
 
@@ -127,7 +127,7 @@ const InventoryGrid = () => {
         <ProductsHeader title={"Products"} />
       </div>
 
-      <div className="absolute w-[100%] h-[100%] left-0 top-0 px-[20px]">
+      {hasProjectModule("products-module") && <div className="absolute w-[100%] h-[100%] left-0 top-0 px-[20px]">
         <div className="mt-[75px] h-[calc(100%-75px)] w-[100%] min-h-[101px] relative rounded-t-[13px]">
           <div
             style={{
@@ -177,7 +177,7 @@ const InventoryGrid = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };

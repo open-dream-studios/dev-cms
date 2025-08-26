@@ -15,17 +15,13 @@ export const addProjectModule = (req, res) => {
     ON DUPLICATE KEY UPDATE settings = VALUES(settings)
   `;
 
-  db.query(
-    q,
-    [project_idx, module_id, JSON.stringify(settings || {})],
-    (err) => {
-      if (err) {
-        console.error("Add project module error:", err);
-        return res.status(500).json({ message: "Server error" });
-      }
-      return res.status(200).json({ message: "Module added" });
+  db.query(q, [project_idx, module_id, JSON.stringify(settings || {})], (err) => {
+    if (err) {
+      console.error("Add project module error:", err);
+      return res.status(500).json({ message: "Server error" });
     }
-  );
+    return res.status(200).json({ message: "Module added" });
+  });
 };
 
 // Delete (disable) module for a project
@@ -52,7 +48,13 @@ export const getProjectModules = (req, res) => {
   const { project_idx } = req.body;
 
   const q = `
-    SELECT pm.project_idx, pm.module_id, m.name, m.description, pm.settings
+    SELECT 
+      pm.project_idx, 
+      pm.module_id, 
+      m.name, 
+      m.description, 
+      m.identifier,   -- ✅ added missing comma
+      pm.settings
     FROM project_modules pm
     JOIN modules m ON pm.module_id = m.id
     WHERE pm.project_idx = ?
@@ -68,9 +70,7 @@ export const getProjectModules = (req, res) => {
 };
 
 export const getAllModules = (req, res) => {
-  const q = `
-    SELECT * from modules
-  `;
+  const q = `SELECT * from modules`;
 
   db.query(q, (err, rows) => {
     if (err) {
@@ -82,19 +82,22 @@ export const getAllModules = (req, res) => {
 };
 
 export const upsertModule = (req, res) => {
-  const { id, name, description } = req.body;
+  const { id, name, description, identifier } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ message: "Missing name" });
+  if (!name || !identifier) {
+    return res.status(400).json({ message: "Missing data" });
   }
 
   const q = `
-    INSERT INTO modules (id, name, description)
-    VALUES (?, ?, ?)
-    ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description)
+    INSERT INTO modules (id, name, description, identifier)
+    VALUES (?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE 
+      name = VALUES(name), 
+      description = VALUES(description), 
+      identifier = VALUES(identifier)
   `;
 
-  db.query(q, [id || null, name, description || null], (err) => {
+  db.query(q, [id || null, name, description || null, identifier], (err) => {
     if (err) {
       console.error("Upsert module error:", err);
       return res.status(500).json({ message: "Server error" });

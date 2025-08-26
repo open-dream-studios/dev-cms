@@ -113,3 +113,4 @@ export const getNextOrdinal = (productsData: Product[]): number => {
   const ordinals = productsData.map((p) => p.ordinal);
   return ordinals.length > 0 ? Math.max(...ordinals) + 1 : 0;
 };
+

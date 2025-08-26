@@ -32,6 +32,7 @@ const EditModules = () => {
       id: editingModule || undefined,
       name: data.name,
       description: data.description,
+      identifier: data.identifier,
     });
     setEditingModule(null);
     setShowForm(false);
@@ -39,7 +40,11 @@ const EditModules = () => {
   };
 
   const handleShowForm = () => {
-    form.reset();
+    form.reset({
+      name: "",
+      description: "",
+      identifier: ""
+    });
     setShowForm(true);
     setEditingModule(null);
   };
@@ -131,10 +136,17 @@ const EditModules = () => {
               />
             </p>
             <p className="text-sm text-gray-500">
-              {" "}
               <input
                 {...form.register("description")}
                 placeholder="Description..."
+                className="input outline-none px-2 py-1 w-[100%]"
+              />
+            </p>
+
+            <p className="text-sm text-gray-500">
+              <input
+                {...form.register("identifier")}
+                placeholder="Identifier..."
                 className="input outline-none px-2 py-1 w-[100%]"
               />
             </p>
@@ -157,7 +169,9 @@ const EditModules = () => {
               >
                 <div>
                   <p className="font-semibold">{mod.name}</p>
-                  <p className="text-sm text-gray-500">{mod.description}</p>
+                  <p className="text-sm text-gray-500">
+                    {mod.identifier} | {mod.description}
+                  </p>
                 </div>
 
                 {!showForm && (
@@ -168,6 +182,7 @@ const EditModules = () => {
                         form.reset({
                           name: mod.name,
                           description: mod.description || "",
+                          identifier: mod.identifier || "",
                         });
                         setShowForm(true);
                       }}
