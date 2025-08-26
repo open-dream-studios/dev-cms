@@ -1,3 +1,4 @@
+// project/src/screens/Inventory/ProductsHeader.tsx
 "use client";
 import React, { useContext } from "react";
 import { FiEdit } from "react-icons/fi";
@@ -10,12 +11,13 @@ import { DataFilters, useAppContext } from "@/contexts/appContext";
 import { makeRequest } from "@/util/axios";
 import { GOOGLE_SHEET_URL } from "@/util/config";
 import { IoTrashSharp } from "react-icons/io5";
-import { Product, useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext";
 import { usePathname } from "next/navigation";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
+import { Product } from "@/types/products";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const pathName = usePathname();
@@ -166,6 +168,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
     const newProduct: Product = {
       serial_number: newSerial,
       name: "",
+      project_idx: currentProject.project_idx,
       highlight: null,
       price: 0,
       make: newMake,

@@ -1,4 +1,3 @@
-// server/controllers/products.js
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { db } from "../connection/connect.js";

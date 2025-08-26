@@ -1,5 +1,6 @@
+// project/src/screens/Inventory/InventoryRowForm.tsx
 "use client";
-import { Product, useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext";
 import { useProductForm } from "@/hooks/useProductForm";
 import { appTheme } from "@/util/appTheme";
 import ProductInputCell from "@/screens/Inventory/Forms/ProductInputCell";
@@ -14,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/appContext";
 import { useModal2Store } from "@/store/useModalStore";
 import Modal2Continue from "@/modals/Modal2Continue";
+import { Product } from "@/types/products";
 
 type InventoryRowFormProps = {
   product: Product;

@@ -79,7 +79,7 @@ const ProjectItem = ({ project }: { project: Project }) => {
           className="text-[15px] font-[300] truncate"
           style={{ color: appTheme[currentUser.theme].text_1 }}
         >
-          {project.project_id}
+          {project.domain}
         </p>
       </div>
     </div>

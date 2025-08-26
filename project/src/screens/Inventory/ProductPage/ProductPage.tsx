@@ -1,3 +1,4 @@
+// project/src/screens/Inventory/ProductPage/ProductImages.tsx
 "use client";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "../../../contexts/authContext";

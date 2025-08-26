@@ -20,6 +20,7 @@ export interface User {
   credits: string;
   auth_provider: string;
   created_at: string;
+  admin?: number;
 }
 
 interface AuthContextType {

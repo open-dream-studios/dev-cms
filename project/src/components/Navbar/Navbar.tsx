@@ -9,16 +9,19 @@ import {
 } from "../../store/useLeftBarOpenStore";
 import { useModal1Store } from "../../store/useModalStore";
 import appDetails from "../../util/appDetails.json";
-import Settings from "../Settings/Settings";
 import { removeWhiteSpace } from "../../util/functions/Data";
 import Link from "next/link";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import { useAppContext } from "@/contexts/appContext";
 import "./Navbar.css";
+import { IoMdSettings } from "react-icons/io";
+import Settings from "../Settings/Settings";
+import { useContextQueries } from "@/contexts/queryContext";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
   const { editingLock, pageClick, currentProject } = useAppContext();
+  const { projectsData } = useContextQueries()
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -64,6 +67,20 @@ const Navbar = () => {
     });
   };
 
+  const handleSettingsClick = () => {
+    setModal1({
+      ...modal1,
+      open: !modal1.open,
+      showClose: true,
+      offClickClose: true,
+      width: "w-[90vw] md:w-[80vw]",
+      maxWidth: "md:max-w-[1000px]",
+      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+      borderRadius: "rounded-[15px] md:rounded-[20px]",
+      content: <Settings initialPage={"Site"} />,
+    });
+  };
+
   if (!currentUser) return null;
 
   return (
@@ -103,7 +120,9 @@ const Navbar = () => {
           >
             <img
               src={
-                "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
+                currentProject
+                  ? currentProject.logo
+                  : "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
               }
               alt="logo"
               className={`${
@@ -121,8 +140,12 @@ const Navbar = () => {
                 color: appTheme[currentUser.theme].text_1,
               }}
             >
-              <p className="hidden sm:block">Client CMS</p>
-              <p className="block sm:hidden">CMS</p>
+              <p className="hidden sm:block">
+                {currentProject ? currentProject.name : "Client CMS"}
+              </p>
+              <p className="block sm:hidden">
+                {currentProject ? currentProject.short_name : "CMS"}
+              </p>
             </div>
           </div>
         </div>
@@ -144,9 +167,33 @@ const Navbar = () => {
               className="w-[28px] h-[28px] mt-[3px] simple-spinner"
             ></div>
           )}
+          {currentProject !== null && projectsData.length > 1 && <div
+            onClick={handleSettingsClick}
+            className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
+            style={{
+              backgroundColor: appTheme[currentUser.theme].background_2,
+            }}
+          >
+            <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
+              <IoMdSettings
+                size={19}
+                color={appTheme[currentUser.theme].text_1}
+                className="opacity-[60%]"
+              />
+              <div
+                className="truncate text-[14.5px] leading-[17px] font-[500] opacity-[87%]"
+                style={{
+                  color: appTheme[currentUser.theme].text_1,
+                }}
+              >
+                Settings
+              </div>
+            </div>
+          </div>}
+
           <div
             onClick={handleProfileClick}
-            className="dim cursor-pointer flex flex-row w-fit max-w-[250px] pr-[10px] h-[42px] hover:brightness-75 rounded-[4px]"
+            className="dim cursor-pointer flex flex-row w-fit max-w-[250px] pr-[10px] h-[42px] hover:brightness-75 rounded-[4.5px]"
             style={{
               backgroundColor: appTheme[currentUser.theme].background_2,
             }}

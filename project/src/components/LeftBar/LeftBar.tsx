@@ -16,11 +16,13 @@ import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import { usePathname } from "next/navigation";
 import { useAppContext } from "@/contexts/appContext";
 import { FaHome } from "react-icons/fa";
+import { useContextQueries } from "@/contexts/queryContext";
 
 const LeftBar = () => {
   const pathname = usePathname();
   const { currentUser, handleLogout } = useContext(AuthContext);
-  const { pageClick, productTableView, setProductTableView } = useAppContext();
+  const { pageClick, productTableView, setProductTableView, currentProject } =
+    useAppContext();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarRef = useRef<HTMLDivElement>(null);
@@ -192,7 +194,9 @@ const LeftBar = () => {
             >
               <img
                 src={
-                  "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
+                  currentProject
+                    ? currentProject.logo
+                    : "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
                 }
                 alt="logo"
                 className={`select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
@@ -204,7 +208,7 @@ const LeftBar = () => {
                   color: appTheme[currentUser.theme].text_1,
                 }}
               >
-                CMS
+                {currentProject ? currentProject.short_name : "CMS"}
               </p>
             </div>
 
@@ -250,12 +254,14 @@ const LeftBar = () => {
                     : "transparent",
               }}
               onClick={() => {
-                setProductTableView(false)
+                setProductTableView(false);
                 handlePageClick("/products");
               }}
             >
               <MdLibraryBooks className="w-[17px] h-[17px] brightness-75" />
-              <p className="brightness-[55%] text-[15.6px] font-[400]">Products</p>
+              <p className="brightness-[55%] text-[15.6px] font-[400]">
+                Products
+              </p>
             </div>
 
             <div
@@ -267,7 +273,7 @@ const LeftBar = () => {
                     : "transparent",
               }}
               onClick={() => {
-                setProductTableView(true)
+                setProductTableView(true);
                 handlePageClick("/products");
               }}
             >

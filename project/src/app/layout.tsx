@@ -1,3 +1,4 @@
+// project/src/app/layout.tsx
 import type { Metadata } from "next";
 import { appTheme, ThemeType } from "@/util/appTheme";
 import appDetails from "../util/appDetails.json";
@@ -8,8 +9,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Client CMS",
-  description: "Client CMS",
+  title: "CMS",
+  description: "CMS",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default async function RootLayout({

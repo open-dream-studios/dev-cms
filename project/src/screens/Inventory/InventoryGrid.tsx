@@ -1,3 +1,4 @@
+// project/src/screens/Inventory/InventoryGrid.tsx
 "use client";
 import ProductsHeader from "@/screens/Inventory/ProductsHeader";
 import { useAppContext } from "@/contexts/appContext";

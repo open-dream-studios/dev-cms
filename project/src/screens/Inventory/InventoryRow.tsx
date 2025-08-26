@@ -1,14 +1,16 @@
+// project/src/screens/Inventory/InventoryRow.tsx
 import { appTheme } from "@/util/appTheme";
 import { inventoryDataLayout } from "./InventoryGrid";
 import InventoryRowForm from "./InventoryRowForm";
 import { RiDraggable } from "react-icons/ri";
 import { useAppContext } from "@/contexts/appContext";
-import { Product, useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext";
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useEffect } from "react";
 import { FaCheck } from "react-icons/fa6";
 import { ProductFormData } from "@/util/schemas/productSchema";
 import { useForm } from "react-hook-form";
+import { Product } from "@/types/products";
 
 const InventoryRow = ({
   index,

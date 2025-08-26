@@ -139,6 +139,7 @@ export const getUserRoles = (req, res) => {
     SELECT pu.id, pu.project_id, pu.email, pu.role, p.name AS project_name
     FROM project_users pu
     JOIN projects p ON pu.project_id = p.id
+    ORDER BY pu.invited_at DESC
   `;
 
   db.query(q, (err, rows) => {
@@ -187,6 +188,35 @@ export const updateProjectUser = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in updateProjectUser:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteProjectUser = async (req, res) => {
+  const { email, project_id } = req.body;
+
+  if (!email || !project_id) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const [result] = await db
+      .promise()
+      .query("DELETE FROM project_users WHERE email = ? AND project_id = ?", [
+        email,
+        project_id,
+      ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not found in this project" });
+    }
+
+    res.json({
+      success: true,
+      message: "User removed from project successfully",
+    });
+  } catch (err) {
+    console.error("Error in deleteProjectUser:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 };

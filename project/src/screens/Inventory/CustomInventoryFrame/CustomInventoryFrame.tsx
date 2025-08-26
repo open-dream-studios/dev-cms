@@ -1,3 +1,4 @@
+// project/src/screens/Inventory/CustomInventoryFrame/CustomInventoryFrame.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { Product } from "@/contexts/queryContext";

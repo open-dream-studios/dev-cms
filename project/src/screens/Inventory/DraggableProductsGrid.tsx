@@ -1,3 +1,4 @@
+// project/src/screens/Inventory/DraggableProductsGrid.tsx
 "use client";
 import {
   DndContext,
@@ -18,7 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useContext, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { Product, useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext";
 import { verticalListSortingStrategy } from "@dnd-kit/sortable";
 import {
   restrictToVerticalAxis,
@@ -30,6 +31,7 @@ import { toast } from "react-toastify";
 import CustomInventoryFrame from "./CustomInventoryFrame/CustomInventoryFrame";
 import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
+import { Product } from "@/types/products";
 
 function SortableItem({
   id,

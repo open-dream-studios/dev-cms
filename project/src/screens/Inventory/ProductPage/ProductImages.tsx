@@ -1,3 +1,4 @@
+// project/src/screens/Inventory/ProductPage/ProductImages.tsx
 "use client";
 import { IoCloseOutline } from "react-icons/io5";
 import {

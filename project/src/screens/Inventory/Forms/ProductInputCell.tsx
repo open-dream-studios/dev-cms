@@ -1,3 +1,4 @@
+// project/src/screens/Inventory/Forms/ProductInputCell.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";

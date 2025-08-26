@@ -25,7 +25,6 @@ import { usePathname, useRouter } from "next/navigation";
 import LandingNav from "@/screens/Landing/LandingNav/LandingNav";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import {
-  Product,
   QueryProvider,
   useContextQueries,
 } from "@/contexts/queryContext";
@@ -33,6 +32,8 @@ import CustomToast from "@/components/CustomToast";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import LandingPage from "@/screens/Landing/LandingPage/LandingPage";
 import ProjectSelection from "@/screens/ProjectSelection/ProjectSelection";
+import DynamicTitle from "@/components/DynamicTitle";
+import { Product } from "@/types/products";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -43,6 +44,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <QueryProvider>
           <AppContextProvider>
             <CustomToast />
+            <DynamicTitle />
             <AppRoot>{children}</AppRoot>
           </AppContextProvider>
         </QueryProvider>

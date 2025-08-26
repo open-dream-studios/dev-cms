@@ -8,6 +8,8 @@ export const appTheme = {
     background_3: "#BBBBBB",
     background_4: "#AAAAAA",
     background_1_2: "#FFFFFF",
+    background_2_dim: "#F0F0F0",
+    background_2_selected: "#D9D9D9",
     background_2_2: "#E9E9E9",
 
     component_bg_1: "#f5f5f5",
@@ -45,6 +47,8 @@ export const appTheme = {
     background_3: "#333333",
     background_4: "#666666",
     background_1_2: "#252525",
+    background_2_dim: "#1e1e1e",
+    background_2_selected: "#343434",
     background_2_2: "#343434",
 
     component_bg_1: "#161616",

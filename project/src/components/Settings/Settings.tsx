@@ -2,23 +2,32 @@
 import React, { useContext, useState } from "react";
 import { appTheme } from "../../util/appTheme";
 import { AuthContext } from "../../contexts/authContext";
-import Account from "./Account";
-import UserSettings from "./UserSettings";
+import PrivacySettings from "./UserAccess";
+import { useContextQueries } from "@/contexts/queryContext";
+import { useAppContext } from "@/contexts/appContext";
+import SiteSettings from "./SiteSettings";
+import AccountSettings from "./AccountSettings";
 
 type SettingsProps = {
   initialPage: SettingsPages | null;
 };
 
-type SettingsPages = "Account" | "Settings";
+type SettingsPages = "Site" | "Users" | "Account";
 
 const Settings = ({ initialPage }: SettingsProps) => {
   const { currentUser } = useContext(AuthContext);
+  const { projectsData } = useContextQueries();
+  const { currentProject } = useAppContext();
   const [selectedPage, setSelectedPage] = useState<SettingsPages>(
-    initialPage === null ? "Account" : initialPage
+    initialPage === null ? "Site" : initialPage
   );
-  const settingsPages: SettingsPages[] = ["Account", "Settings"];
 
   if (!currentUser) return null;
+
+  const settingsPages: SettingsPages[] =
+    currentProject !== null && projectsData.length >= 1
+      ? ["Site", "Users", "Account"]
+      : ["Account"];
 
   return (
     <div className="w-full h-full flex flex-row">
@@ -39,8 +48,8 @@ const Settings = ({ initialPage }: SettingsProps) => {
                 className="cursor-pointer w-full h-[40px] rounded-[10px] transition-colors duration-200 group"
                 style={{
                   backgroundColor: isSelected
-                    ? appTheme[currentUser.theme].background_2_2
-                    : appTheme[currentUser.theme].background_1_2,
+                    ? appTheme[currentUser.theme].background_2_selected
+                    : appTheme[currentUser.theme].background_2_dim,
                 }}
               >
                 <div
@@ -60,8 +69,13 @@ const Settings = ({ initialPage }: SettingsProps) => {
         </div>
       </div>
       <div className="w-[100%] sm:w-[75%] pl-[30px] sm:pl-0 h-full sm:max-w-[calc(100%-200px)]">
-        {selectedPage === "Account" && <Account />}
-        {selectedPage === "Settings" && <UserSettings />}
+        {currentProject !== null &&
+          projectsData.length >= 1 &&
+          selectedPage === "Site" && <SiteSettings />}
+        {currentProject !== null &&
+          projectsData.length >= 1 &&
+          selectedPage === "Users" && <PrivacySettings />}
+        {selectedPage === "Account" && <AccountSettings />}
       </div>
     </div>
   );

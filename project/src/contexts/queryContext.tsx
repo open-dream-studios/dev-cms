@@ -17,29 +17,7 @@ import {
 import { makeRequest } from "@/util/axios";
 import { AuthContext } from "./authContext";
 import { AddProjectInput, Project, ProjectUser } from "@/types/project";
-
-export type Product = {
-  serial_number: string;
-  name: string;
-  highlight: string | null;
-  description: string | null;
-  make: string | null;
-  model: string | null;
-  price: number;
-  date_sold?: Date;
-  date_entered?: Date;
-  repair_status: "In Progress" | "Complete";
-  sale_status:
-    | "Not Yet Posted"
-    | "Awaiting Sale"
-    | "Sold Awaiting Delivery"
-    | "Delivered";
-  length: number;
-  width: number;
-  note: string | null;
-  images: string[];
-  ordinal: number;
-};
+import { Product } from "@/types/products";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -57,6 +35,7 @@ export type QueryContextType = {
   isLoadingProjectUsers: boolean;
   refetchProjectUsers: () => void;
   updateProjectUser: (projectUser: ProjectUser) => Promise<void>;
+  deleteProjectUser: (projectUser: ProjectUser) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -252,7 +231,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     queryKey: ["projectUsers"],
     queryFn: async () => {
       const res = await makeRequest.get("/api/projects/project-users");
-      console.log(res.data.projectUsers);
       return res.data.projectUsers;
     },
     enabled: isLoggedIn,
@@ -261,14 +239,83 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const updateProjectUserMutation = useMutation({
     mutationFn: async (data: ProjectUser) => {
       await makeRequest.post("/api/projects/update-project-user", data);
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projectUsers"] });
+    onMutate: async (newUser) => {
+      const queryKey = ["projectUsers"];
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData<ProjectUser[]>(queryKey);
+      if (!previousData) return { previousData, queryKey };
+      let newData: ProjectUser[];
+      const existingIndex = previousData.findIndex(
+        (u) => u.email === newUser.email && u.project_id === newUser.project_id
+      );
+
+      if (existingIndex >= 0) {
+        newData = previousData.map((u, i) =>
+          i === existingIndex ? { ...u, ...newUser } : u
+        );
+      } else {
+        newData = [...previousData, newUser];
+      }
+      queryClient.setQueryData(queryKey, newData);
+      return { previousData, queryKey };
+    },
+    onError: (_err, _newUser, context) => {
+      if (context?.queryKey && context?.previousData) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
+      }
+    },
+    onSettled: (_data, _err, _newUser, context) => {
+      if (context?.queryKey) {
+        queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
     },
   });
 
   const updateProjectUser = async (projectUser: ProjectUser) => {
     await updateProjectUserMutation.mutateAsync(projectUser);
+  };
+
+  const deleteProjectUserMutation = useMutation({
+    mutationFn: async (user: ProjectUser) => {
+      await makeRequest.delete("/api/projects/delete-project-user", {
+        data: { email: user.email, project_id: user.project_id },
+      });
+      return user;
+    },
+    onMutate: async (deletedUser) => {
+      const queryKey = ["projectUsers"];
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData<ProjectUser[]>(queryKey);
+      if (!previousData) return { previousData, queryKey };
+
+      const newData = previousData.filter(
+        (u) =>
+          !(
+            u.email === deletedUser.email &&
+            u.project_id === deletedUser.project_id
+          )
+      );
+
+      queryClient.setQueryData(queryKey, newData);
+      return { previousData, queryKey };
+    },
+    onError: (_err, _deletedUser, context) => {
+      if (context?.previousData && context?.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
+      }
+    },
+    onSettled: (_data, _err, _deletedUser, context) => {
+      if (context?.queryKey) {
+        queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
+    },
+  });
+
+  const deleteProjectUser = async (user: ProjectUser) => {
+    await deleteProjectUserMutation.mutateAsync(user);
   };
 
   return (
@@ -289,6 +336,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         isLoadingProjectUsers,
         refetchProjectUsers,
         updateProjectUser,
+        deleteProjectUser,
       }}
     >
       {children}

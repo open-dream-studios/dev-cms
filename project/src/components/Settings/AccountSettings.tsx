@@ -1,3 +1,4 @@
+// project/src/components/Settings/Account.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import Modal2Continue from "@/modals/Modal2Continue";
@@ -11,7 +12,7 @@ import { useContext } from "react";
 import { IoMoonOutline } from "react-icons/io5";
 import { LuSun } from "react-icons/lu";
 
-const Account = () => {
+const AccountSettings = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
   const queryClient = useQueryClient();
   const modal2 = useModal2Store((state: any) => state.modal2);
@@ -83,10 +84,10 @@ const Account = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="relative ml-[5px] md:ml-[8px] h-full flex flex-col pt-[50px] w-[calc(100%-43px)] sm:w-[calc(100%-80px)]">
-      <div className="ml-[1px] w-[90%] flex flex-col items-center justify-center">
-        <p className="font-[600] lg:mb-[21px] mb-[19px] text-[29px] leading-[29px] md:text-[32px] md:leading-[32px] w-[100%] items-start">
-          {currentUser.first_name} {currentUser.last_name}
+    <div className="relative ml-[5px] md:ml-[8px] w-[calc(100%-43px)] sm:w-[calc(100%-80px)] h-full flex flex-col pt-[50px]">
+      <div className="ml-[1px] flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]">
+        <p className="mt-[-2px] font-[600] text-[29px] leading-[29px] h-[40px] md:text-[32px] md:leading-[32px]">
+           {currentUser.first_name} {currentUser.last_name}
         </p>
       </div>
 
@@ -190,4 +191,4 @@ const Account = () => {
   );
 };
 
-export default Account;
+export default AccountSettings;
