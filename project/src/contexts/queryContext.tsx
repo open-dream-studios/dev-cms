@@ -375,7 +375,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await makeRequest.post("/api/modules/get", {
         project_idx: currentProject.id,
       });
-      console.log("PROJECT MODULES", res.data.projectModules);
       return res.data.projectModules;
     },
     enabled: isLoggedIn && !!currentProject,

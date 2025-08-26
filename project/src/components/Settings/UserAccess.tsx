@@ -1,4 +1,4 @@
-// project/src/components/Settings/PrivacySettings.tsx
+// project/src/components/Settings/UserAccess.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext";
@@ -128,7 +128,7 @@ const UserAccess = () => {
             ) : (
               <div className="flex flex-row gap-[11.5px]">
                 <div
-                  className="dim hover:brightness-75 cursor-pointer text-[14.5px] h-[36px] mt-[-0.6px] rounded-full flex justify-center items-center gap-[6px] pl-[16px] pr-[15px]"
+                  className="select-none dim hover:brightness-75 cursor-pointer text-[14.5px] h-[36px] mt-[-0.6px] rounded-full flex justify-center items-center gap-[6px] pl-[16px] pr-[15px]"
                   style={{
                     backgroundColor: appTheme[currentUser.theme].background_1_2,
                     color: appTheme[currentUser.theme].text_3,
@@ -140,7 +140,7 @@ const UserAccess = () => {
                 </div>
                 <button
                   type="submit"
-                  className="dim hover:brightness-75 cursor-pointer text-[15px] h-[36px] rounded-full mt-[-0.4px] flex justify-center items-center gap-[9px] pl-[16px] pr-[15px]"
+                  className="select-none dim hover:brightness-75 cursor-pointer text-[15px] h-[36px] rounded-full mt-[-0.4px] flex justify-center items-center gap-[9px] pl-[16px] pr-[15px]"
                   style={{
                     backgroundColor: appTheme[currentUser.theme].background_1_2,
                     color: appTheme[currentUser.theme].text_3,
