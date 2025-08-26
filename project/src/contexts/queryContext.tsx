@@ -102,25 +102,25 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     isLoading: isLoadingProductsData,
     refetch: refetchProductsData,
   } = useQuery<Product[]>({
-    queryKey: ["products", currentProject?.id], // 🔹 tie cache to project
+    queryKey: ["products", currentProject?.id],
     queryFn: async () => {
       if (!currentProject) return [];
-      const res = await makeRequest.get("/api/products/get", {
-        params: { project_idx: currentProject.id }, // 🔹 send project
+      const res = await makeRequest.get("/api/products", {
+        params: { project_idx: currentProject.id },
       });
       const result = res.data.products || [];
       return result.sort(
         (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
       );
     },
-    enabled: isLoggedIn && !!currentProject, // 🔹 only run if project chosen
+    enabled: isLoggedIn && !!currentProject,
   });
 
   const updateProductsMutation = useMutation({
     mutationFn: async (products: Product[]) => {
       if (!currentProject) return;
       await makeRequest.post("/api/products/update", {
-        project_idx: currentProject.id, // 🔹 backend now needs this
+        project_idx: currentProject.id,
         products,
       });
     },
@@ -213,7 +213,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: async () => {
-      const res = await makeRequest.post("/api/projects");
+      const res = await makeRequest.get("/api/projects");
       return res.data.projects;
     },
     enabled: isLoggedIn,
@@ -277,12 +277,15 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     isLoading: isLoadingProjectUsers,
     refetch: refetchProjectUsers,
   } = useQuery<ProjectUser[]>({
-    queryKey: ["projectUsers"],
+    queryKey: ["projectUsers", currentProject?.id],
     queryFn: async () => {
-      const res = await makeRequest.get("/api/projects/project-users");
+      if (!currentProject) return [];
+      const res = await makeRequest.get("/api/projects/project-users", {
+        params: { project_idx: currentProject.id },
+      });
       return res.data.projectUsers;
     },
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && !!currentProject,
   });
 
   const updateProjectUserMutation = useMutation({
@@ -423,18 +426,15 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     queryKey: ["integrations", currentProject?.id],
     queryFn: async () => {
       if (!currentProject) return [];
-      const res = await makeRequest.post("/api/integrations", {
-        project_idx: currentProject.id,
+      const res = await makeRequest.get("/api/integrations", {
+        params: { project_idx: currentProject.id },
       });
-
       return res.data.integrations || [];
     },
     enabled: isLoggedIn && !!currentProject,
   });
-
   const upsertIntegrationMutation = useMutation({
     mutationFn: async (data: {
-      project_idx: number;
       module_id: number;
       config: Record<string, string>;
     }) => {
@@ -446,6 +446,13 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     },
   });
+
+  const upsertIntegration = async (data: {
+    module_id: number;
+    config: Record<string, string>;
+  }) => {
+    await upsertIntegrationMutation.mutateAsync(data);
+  };
 
   const deleteIntegrationKeyMutation = useMutation({
     mutationFn: async (integration: {
@@ -491,14 +498,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     },
   });
-
-  const upsertIntegration = async (data: {
-    project_idx: number;
-    module_id: number;
-    config: Record<string, string>;
-  }) => {
-    await upsertIntegrationMutation.mutateAsync(data);
-  };
 
   const deleteIntegrationKey = async (data: {
     project_idx: number;

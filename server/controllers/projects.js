@@ -17,27 +17,21 @@ export const getAdminEmails = async () => {
 };
 
 export const getProjects = async (req, res) => {
-  const token = req.cookies.accessToken;
-  if (!token) return res.status(401).json("Not authenticated!");
-
-  jwt.verify(token, process.env.JWT_SECRET, async (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid!");
-
+  try {
+    const { email } = req.user;
     const q = `
-      SELECT p.*, pu.role
+      SELECT p.*
       FROM projects p
-      JOIN project_users pu ON p.id = pu.project_idx
-      WHERE pu.email = ?
+      JOIN project_users pu ON pu.project_idx = p.id
+      WHERE pu.email = ?;
     `;
 
-    try {
-      const [rows] = await db.promise().query(q, [userInfo.email]);
-      res.json({ projects: rows });
-    } catch (err) {
-      console.error("Error fetching projects for user:", err);
-      res.status(500).json({ error: "Failed to fetch projects" });
-    }
-  });
+    const [rows] = await db.promise().query(q, [email]);
+    res.json({ projects: rows });
+  } catch (err) {
+    console.error("Error fetching projects for user:", err);
+    res.status(500).json({ error: "Failed to fetch projects" });
+  }
 };
 
 export const addProject = async (req, res) => {
@@ -58,13 +52,6 @@ export const addProject = async (req, res) => {
       );
 
     const newId = result.insertId;
-
-    // await db.promise().query(
-    //   `INSERT INTO project_modules (project_id, module_id)
-    //      SELECT ?, id FROM modules WHERE name = 'products'`,
-    //   [newId]
-    // );
-
     const adminEmails = await getAdminEmails();
     for (const email of adminEmails) {
       await upsertProjectUser({
@@ -101,32 +88,55 @@ export const deleteProjects = (req, res) => {
         connection.release();
         return res.status(500).json("Failed to start transaction");
       }
+      
+      const lookupQuery = `
+        SELECT id FROM projects WHERE project_id IN (${ids
+          .map(() => "?")
+          .join(",")})
+      `;
 
-      const deleteQuery = `DELETE FROM projects WHERE project_id IN (${ids
-        .map(() => "?")
-        .join(",")})`;
-
-      connection.query(deleteQuery, ids, (err, result) => {
+      connection.query(lookupQuery, ids, (err, rows) => {
         if (err) {
           return connection.rollback(() => {
             connection.release();
-            console.error("Delete failed:", err);
-            res.status(500).json("Delete failed");
+            console.error("Lookup failed:", err);
+            res.status(500).json("Lookup failed");
           });
         }
 
-        connection.commit((err) => {
+        if (rows.length === 0) {
+          connection.release();
+          return res.status(404).json({ error: "No projects found" });
+        }
+
+        const internalIds = rows.map((r) => r.id);
+
+        const deleteQuery = `DELETE FROM projects WHERE id IN (${internalIds
+          .map(() => "?")
+          .join(",")})`;
+
+        connection.query(deleteQuery, internalIds, (err, result) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
-              res.status(500).json("Commit failed");
+              console.error("Delete failed:", err);
+              res.status(500).json("Delete failed");
             });
           }
 
-          connection.release();
-          return res.status(200).json({
-            success: true,
-            deleted: result.affectedRows,
+          connection.commit((err) => {
+            if (err) {
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json("Commit failed");
+              });
+            }
+
+            connection.release();
+            return res.status(200).json({
+              success: true,
+              deleted: result.affectedRows,
+            });
           });
         });
       });
