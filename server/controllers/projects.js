@@ -26,7 +26,7 @@ export const getProjects = async (req, res) => {
     const q = `
       SELECT p.*, pu.role
       FROM projects p
-      JOIN project_users pu ON p.id = pu.project_id
+      JOIN project_users pu ON p.id = pu.project_idx
       WHERE pu.email = ?
     `;
 
@@ -69,7 +69,7 @@ export const addProject = async (req, res) => {
     for (const email of adminEmails) {
       await upsertProjectUser({
         email,
-        project_id: newId,
+        project_idx: newId,
         role: "admin",
       });
     }
@@ -102,7 +102,7 @@ export const deleteProjects = (req, res) => {
         return res.status(500).json("Failed to start transaction");
       }
 
-      const deleteQuery = `DELETE FROM projects WHERE id IN (${ids
+      const deleteQuery = `DELETE FROM projects WHERE project_id IN (${ids
         .map(() => "?")
         .join(",")})`;
 
@@ -136,9 +136,9 @@ export const deleteProjects = (req, res) => {
 
 export const getUserRoles = (req, res) => {
   const q = `
-    SELECT pu.id, pu.project_id, pu.email, pu.role, p.name AS project_name
+    SELECT pu.id, pu.project_idx, pu.email, pu.role, p.name AS project_name
     FROM project_users pu
-    JOIN projects p ON pu.project_id = p.id
+    JOIN projects p ON pu.project_idx = p.id
     ORDER BY pu.invited_at DESC
   `;
 
@@ -151,15 +151,15 @@ export const getUserRoles = (req, res) => {
   });
 };
 
-export async function upsertProjectUser({ email, project_id, role }) {
+export async function upsertProjectUser({ email, project_idx, role }) {
   const sql = `
-    INSERT INTO project_users (email, project_id, role)
+    INSERT INTO project_users (email, project_idx, role)
     VALUES (?, ?, ?)
     ON DUPLICATE KEY UPDATE role = VALUES(role)
   `;
 
   try {
-    const [result] = await db.promise().query(sql, [email, project_id, role]);
+    const [result] = await db.promise().query(sql, [email, project_idx, role]);
     return result;
   } catch (err) {
     console.error("DB error in upsertProjectUser:", err);
@@ -168,16 +168,16 @@ export async function upsertProjectUser({ email, project_id, role }) {
 }
 
 export const updateProjectUser = async (req, res) => {
-  const { id, email, project_id, role } = req.body;
+  const { email, project_idx, role } = req.body;
 
-  if (!email || !project_id || !role || !id) {
+  if (!email || !project_idx || !role) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
   try {
     const result = await upsertProjectUser({
       email,
-      project_id: id,
+      project_idx,
       role,
     });
 
@@ -193,18 +193,18 @@ export const updateProjectUser = async (req, res) => {
 };
 
 export const deleteProjectUser = async (req, res) => {
-  const { email, project_id } = req.body;
+  const { email, project_idx } = req.body;
 
-  if (!email || !project_id) {
+  if (!email || !project_idx) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
   try {
     const [result] = await db
       .promise()
-      .query("DELETE FROM project_users WHERE email = ? AND project_id = ?", [
+      .query("DELETE FROM project_users WHERE email = ? AND project_idx = ?", [
         email,
-        project_id,
+        project_idx,
       ]);
 
     if (result.affectedRows === 0) {

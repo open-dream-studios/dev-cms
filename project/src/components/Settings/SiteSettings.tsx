@@ -29,7 +29,7 @@ const SiteSettings = () => {
   if (!currentUser || !currentProject) return null;
 
   const emailsInProject = projectUsers
-    .filter((u) => u.project_id === currentProject.id)
+    .filter((u) => u.project_idx === currentProject.id)
     .map((u) => u.email);
 
   const form = useProjectUserForm(emailsInProject);
@@ -39,8 +39,7 @@ const SiteSettings = () => {
     await updateProjectUser({
       email: data.email,
       role: data.role as UserRole,
-      id: currentProject.id,
-      project_id: currentProject.project_id,
+      project_idx: currentProject.id,
     } as ProjectUser);
     setShowAddProjectInput(false);
   };
@@ -65,13 +64,13 @@ const SiteSettings = () => {
       projectUsers.findIndex(
         (user: ProjectUser) =>
           user.email === currentUser.email &&
-          user.project_id === currentProject.id &&
+          user.project_idx === currentProject.id &&
           user.role === "owner"
       ) !== -1 ||
       projectUsers.findIndex(
         (user: ProjectUser) =>
           user.email === currentUser.email &&
-          user.project_id === currentProject.id &&
+          user.project_idx === currentProject.id &&
           user.role === "admin"
       ) !== -1 ||
       currentUser.admin === 1
@@ -82,7 +81,7 @@ const SiteSettings = () => {
     const indexFound = projectUsers.findIndex(
       (user: ProjectUser) =>
         user.email === currentUser.email &&
-        user.project_id === currentProject.id
+        user.project_idx === currentProject.id
     );
     if (indexFound === -1) return null;
     return projectUsers[indexFound].role;
@@ -103,7 +102,7 @@ const SiteSettings = () => {
           Site Settings
         </p>
 
-        {currentProject !== null && projectsData.length > 1 && (
+        {currentProject !== null && projectsData.length >= 1 && (
           <div
             onClick={handleClearProject}
             className="flex w-[auto] cursor-pointer h-[100%] items-center rounded-full transition-colors duration-500 group"

@@ -25,7 +25,7 @@ const UserAccess = () => {
   if (!currentUser || !currentProject) return null;
 
   const emailsInProject = projectUsers
-    .filter((u) => u.project_id === currentProject.id)
+    .filter((u) => u.project_idx === currentProject.id)
     .map((u) => u.email);
 
   const form = useProjectUserForm(emailsInProject);
@@ -35,8 +35,7 @@ const UserAccess = () => {
     await updateProjectUser({
       email: data.email,
       role: data.role as UserRole,
-      id: currentProject.id,
-      project_id: currentProject.project_id,
+      project_idx: currentProject.id,
     } as ProjectUser);
     setShowAddProjectInput(false);
   };
@@ -61,13 +60,13 @@ const UserAccess = () => {
       projectUsers.findIndex(
         (user: ProjectUser) =>
           user.email === currentUser.email &&
-          user.project_id === currentProject.id &&
+          user.project_idx === currentProject.id &&
           user.role === "owner"
       ) !== -1 ||
       projectUsers.findIndex(
         (user: ProjectUser) =>
           user.email === currentUser.email &&
-          user.project_id === currentProject.id &&
+          user.project_idx === currentProject.id &&
           user.role === "admin"
       ) !== -1 ||
       currentUser.admin === 1
@@ -78,7 +77,7 @@ const UserAccess = () => {
     const indexFound = projectUsers.findIndex(
       (user: ProjectUser) =>
         user.email === currentUser.email &&
-        user.project_id === currentProject.id
+        user.project_idx === currentProject.id
     );
     if (indexFound === -1) return null;
     return projectUsers[indexFound].role;
@@ -200,7 +199,7 @@ const UserAccess = () => {
                     appTheme[currentUser.theme].background_4
                   }`,
                 }}
-                className="cursor-pointer hover:brightness-75 w-[61px] text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
+                className="cursor-pointer hover:brightness-75 w-[71px] text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
               >
                 {validUserRoles &&
                   validUserRoles
@@ -219,7 +218,7 @@ const UserAccess = () => {
           projectUsers
             .filter(
               (userObject: ProjectUser) =>
-                userObject.project_id === currentProject.id
+                userObject.project_idx === currentProject.id
             )
             .map((user: ProjectUser, index: number) => {
               return (
@@ -271,7 +270,7 @@ const UserAccess = () => {
                         </select>
                       ) : (
                         <div
-                          className="select-none w-[61px] text-center custom-select input px-[12px] py-[4px] text-[12px] rounded-[5px]"
+                          className="w-[61px] select-none text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
                           style={{
                             border: `0.5px solid ${
                               appTheme[currentUser.theme].background_4

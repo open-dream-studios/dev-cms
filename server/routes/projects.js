@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.post("/", getProjects);
 router.post("/add", addProject);
-router.delete("/delete", deleteProjects)
+router.post("/delete", deleteProjects)
 router.get("/project-users", getUserRoles);
 router.post("/update-project-user", updateProjectUser);
-router.delete("/delete-project-user", deleteProjectUser); 
+router.post("/delete-project-user", deleteProjectUser); 
 
 export default router;

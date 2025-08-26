@@ -169,7 +169,7 @@ const Navbar = () => {
               className="w-[28px] h-[28px] mt-[3px] simple-spinner"
             ></div>
           )}
-          {currentProject !== null && projectsData.length > 1 && <div
+          {currentProject !== null && projectsData.length >= 1 && <div
             onClick={handleSettingsClick}
             className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
             style={{

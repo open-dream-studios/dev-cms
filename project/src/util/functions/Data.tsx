@@ -1,5 +1,5 @@
 // project/src/util/functions/Data.tsx
-import { Product } from "@/contexts/queryContext";
+import { Product } from "@/types/products";
 import crypto from "crypto";
 
 export const formatDate = (dateString: string) => {

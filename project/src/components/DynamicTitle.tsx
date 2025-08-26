@@ -18,7 +18,6 @@ export default function DynamicTitle() {
     if (favicon) {
       if (currentProject?.logo) {
         favicon.href = currentProject.logo;
-        console.log(currentProject.logo)
       } else {
         favicon.href = "/favicon.ico";
       }

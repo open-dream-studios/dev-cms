@@ -149,6 +149,14 @@ const ModuleSettings = () => {
     form.reset();
   };
 
+  const handleDeleteProjectModuleClick = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    projectModule: ProjectModule
+  ) => {
+    e.stopPropagation();
+    await handleDeleteProjectModule(projectModule);
+  };
+
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
@@ -294,7 +302,9 @@ const ModuleSettings = () => {
                       </p>
 
                       <button
-                        onClick={() => handleDeleteProjectModule(projectModule)}
+                        onClick={(e) =>
+                          handleDeleteProjectModuleClick(e, projectModule)
+                        }
                         style={{
                           backgroundColor:
                             appTheme[currentUser.theme].background_2_selected,

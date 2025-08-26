@@ -163,8 +163,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   >({
     mutationFn: async (serial_numbers: string[]) => {
       if (!currentProject) return;
-      await makeRequest.delete("/api/products/delete", {
-        data: { project_idx: currentProject.id, serial_numbers },
+      await makeRequest.post("/api/products/delete", {
+        project_idx: currentProject.id,
+        serial_numbers,
       });
     },
     onMutate: async (serial_numbers: string[]) => {
@@ -229,18 +230,18 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     await mutation.mutateAsync(projectData);
   };
 
-  const deleteProjectsMutation = useMutation<
+  const deleteProjectMutation = useMutation<
     void,
     Error,
-    number[],
+    string[],
     { previousData: Project[] | undefined; queryKey: string[] }
   >({
-    mutationFn: async (ids: number[]) => {
-      await makeRequest.delete("/api/projects/delete", {
-        data: { ids },
+    mutationFn: async (ids: string[]) => {
+      await makeRequest.post("/api/projects/delete", {
+        ids,
       });
     },
-    onMutate: async (ids: number[]) => {
+    onMutate: async (ids: string[]) => {
       const queryKey = ["projects"];
       await queryClient.cancelQueries({ queryKey });
 
@@ -266,7 +267,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const deleteProject = async (project: Project) => {
-    await deleteProjectsMutation.mutateAsync([project.project_id]);
+    await deleteProjectMutation.mutateAsync([project.project_id]);
   };
 
   const {
@@ -294,7 +295,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!previousData) return { previousData, queryKey };
       let newData: ProjectUser[];
       const existingIndex = previousData.findIndex(
-        (u) => u.email === newUser.email && u.project_id === newUser.project_id
+        (u) =>
+          u.email === newUser.email && u.project_idx === newUser.project_idx
       );
 
       if (existingIndex >= 0) {
@@ -325,8 +327,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const deleteProjectUserMutation = useMutation({
     mutationFn: async (user: ProjectUser) => {
-      await makeRequest.delete("/api/projects/delete-project-user", {
-        data: { email: user.email, project_id: user.project_id },
+      await makeRequest.post("/api/projects/delete-project-user", {
+        email: user.email,
+        project_idx: user.project_idx,
       });
       return user;
     },
@@ -341,7 +344,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         (u) =>
           !(
             u.email === deletedUser.email &&
-            u.project_id === deletedUser.project_id
+            u.project_idx === deletedUser.project_idx
           )
       );
 
@@ -397,7 +400,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const deleteProjectModuleMutation = useMutation({
     mutationFn: async (data: { project_idx: number; module_id: number }) => {
-      await makeRequest.delete("/api/modules/delete", { data });
+      await makeRequest.post("/api/modules/delete", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -535,7 +538,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const deleteModuleMutation = useMutation({
     mutationFn: async (id: number) => {
-      await makeRequest.delete("/api/modules/delete-module", { data: { id } });
+      await makeRequest.post("/api/modules/delete-module", { data: { id } });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modules"] });

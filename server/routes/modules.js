@@ -12,10 +12,10 @@ import {
 const router = express.Router();
 
 router.post("/add", addProjectModule);
-router.delete("/delete", deleteProjectModule);
+router.post("/delete", deleteProjectModule);
 router.post("/get", getProjectModules);
 router.post("/get-all", getAllModules);
 router.post("/upsert", upsertModule);
-router.delete("/delete-module", deleteModule);
+router.post("/delete-module", deleteModule);
 
 export default router;
