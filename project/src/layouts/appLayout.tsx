@@ -28,7 +28,7 @@ import { QueryProvider, useContextQueries } from "@/contexts/queryContext";
 import CustomToast from "@/components/CustomToast";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import LandingPage from "@/screens/Landing/LandingPage/LandingPage";
-import ProjectSelection from "@/screens/AdminHome/AdminHome";
+import AdminHome from "@/screens/AdminHome/AdminHome";
 import DynamicTitle from "@/components/DynamicTitle";
 import { Product } from "@/types/products";
 import {
@@ -147,7 +147,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
           className={`absolute left-0  top-[var(--nav-height)] w-[100vw] flex h-[calc(100%-var(--nav-height))]`}
         >
           <div className="relative w-[100%] h-[100%]">
-            <ProjectSelection />
+            <AdminHome />
           </div>
         </div>
       </div>

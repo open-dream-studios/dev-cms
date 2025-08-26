@@ -48,10 +48,6 @@ const SiteSettings = () => {
     useState<boolean>(false);
   const [editListMode, setEditListMode] = useState<boolean>(false);
 
-  const handleClearProject = () => {
-    setModal1({ ...modal1, open: false });
-    setCurrentProject(null);
-  };
 
   const handleShowAddUserInput = () => {
     form.reset({ email: "", role: validUserRoles[1] });
@@ -101,18 +97,6 @@ const SiteSettings = () => {
         <p className="mt-[-2px] font-[600] text-[29px] leading-[29px] h-[36px] md:text-[32px] md:leading-[32px]">
           Site Settings
         </p>
-
-        {currentProject !== null && projectsData.length >= 1 && (
-          <div
-            onClick={handleClearProject}
-            className="flex w-[auto] cursor-pointer h-[100%] items-center rounded-full transition-colors duration-500 group"
-          >
-            <AiFillAppstore
-              color={appTheme[currentUser.theme].text_3}
-              size={29}
-            />
-          </div>
-        )}
 
         {/* {currentProject !== null && rowIsOwnerOrAdmin() && (
           <>

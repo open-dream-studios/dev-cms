@@ -412,8 +412,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const hasProjectModule = (identifier: string): boolean => {
-    console.log(identifier, projectModules);
-    console.log(projectModules?.some((pm) => pm.identifier === identifier))
     return projectModules?.some((pm) => pm.identifier === identifier);
   };
 

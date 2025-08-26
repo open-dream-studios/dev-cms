@@ -45,7 +45,7 @@ function SortableItem({
   sheet: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
-  const { editMode, saveProducts } = useAppContext();
+  const { editMode, saveProducts, productTableView } = useAppContext();
   const { deleteProducts } = useContextQueries();
 
   const {
@@ -91,7 +91,7 @@ function SortableItem({
           />
         )}
 
-        {editMode && (
+        {editMode && !productTableView && (
           <div
             style={{
               border: `1px solid ${appTheme[currentUser.theme].text_4}`,

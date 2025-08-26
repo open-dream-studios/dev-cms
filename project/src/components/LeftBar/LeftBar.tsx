@@ -248,7 +248,7 @@ const LeftBar = () => {
             ></div>
 
             {hasProjectModule("products-module") && (
-              <div>
+              <div className="w-[100%]">
                 <div
                   className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[8px] items-center rounded-[10px] px-[12px] py-[5px]"
                   style={{

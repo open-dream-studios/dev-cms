@@ -18,12 +18,13 @@ import { IoMdSettings } from "react-icons/io";
 import Settings from "../Settings/Settings";
 import { useContextQueries } from "@/contexts/queryContext";
 import { useProjectContext } from "@/contexts/projectContext";
+import { AiFillAppstore } from "react-icons/ai";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useProjectContext();
+  const { currentProject, setCurrentProject } = useProjectContext();
   const { editingLock, pageClick } = useAppContext();
-  const { projectsData } = useContextQueries()
+  const { projectsData } = useContextQueries();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -81,6 +82,11 @@ const Navbar = () => {
       borderRadius: "rounded-[15px] md:rounded-[20px]",
       content: <Settings initialPage={"Site"} />,
     });
+  };
+
+  const handleClearProject = () => {
+    setModal1({ ...modal1, open: false });
+    setCurrentProject(null);
   };
 
   if (!currentUser) return null;
@@ -169,29 +175,51 @@ const Navbar = () => {
               className="w-[28px] h-[28px] mt-[3px] simple-spinner"
             ></div>
           )}
-          {currentProject !== null && projectsData.length >= 1 && <div
-            onClick={handleSettingsClick}
-            className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
-            style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
-            }}
-          >
-            <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
-              <IoMdSettings
-                size={19}
-                color={appTheme[currentUser.theme].text_1}
-                className="opacity-[60%]"
-              />
+
+          {currentProject !== null &&
+            (projectsData.length > 1 || currentUser.admin === 1) && (
               <div
-                className="truncate text-[14.5px] leading-[17px] font-[500] opacity-[87%]"
+                onClick={handleClearProject}
+                className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
                 style={{
-                  color: appTheme[currentUser.theme].text_1,
+                  backgroundColor: appTheme[currentUser.theme].background_2,
                 }}
               >
-                Settings
+                <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
+                  <AiFillAppstore
+                    size={29}
+                    color={appTheme[currentUser.theme].text_3}
+                    className="opacity-[60%]"
+                  />
+                </div>
+              </div>
+            )}
+
+          {currentProject !== null && projectsData.length >= 1 && (
+            <div
+              onClick={handleSettingsClick}
+              className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_2,
+              }}
+            >
+              <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
+                <IoMdSettings
+                  size={19}
+                  color={appTheme[currentUser.theme].text_1}
+                  className="opacity-[60%]"
+                />
+                <div
+                  className="truncate text-[14.5px] leading-[17px] font-[500] opacity-[87%]"
+                  style={{
+                    color: appTheme[currentUser.theme].text_1,
+                  }}
+                >
+                  Settings
+                </div>
               </div>
             </div>
-          </div>}
+          )}
 
           <div
             onClick={handleProfileClick}
