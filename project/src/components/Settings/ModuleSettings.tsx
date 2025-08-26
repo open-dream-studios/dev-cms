@@ -173,21 +173,15 @@ const ModuleSettings = () => {
         <p className="font-[600] h-[40px] text-[29px] leading-[33px] md:text-[32px] md:leading-[36px]">
           {selectedProjectModule ? selectedProjectModule.name : "Modules"}
         </p>
-        {selectedProjectModule !== null && currentProject !== null && (
-          <div className="relative flex-1 flex justify-end pr-[5px]">
+        {currentProject !== null && (
+          <div
+            className={`relative ${
+              selectedProjectModule !== null &&
+              "flex-1 flex justify-end pr-[5px]"
+            }`}
+          >
             {showAddKeyInput ? (
               <div className="flex flex-row gap-[11.5px]">
-                <div
-                  className="select-none dim hover:brightness-75 cursor-pointer text-[14.5px] h-[36px] mt-[-0.6px] rounded-full flex justify-center items-center gap-[6px] pl-[16px] pr-[15px]"
-                  style={{
-                    backgroundColor: appTheme[currentUser.theme].background_1_2,
-                    color: appTheme[currentUser.theme].text_3,
-                  }}
-                  onClick={() => setShowAddKeyInput(false)}
-                >
-                  <p className=" mt-[-0.5px]">Cancel</p>
-                  <IoClose size={19} className="mt-[1px]" />
-                </div>
                 <button
                   onClick={handleAddKey}
                   className="select-none dim hover:brightness-75 cursor-pointer text-[15px] h-[36px] rounded-full mt-[-0.4px] flex justify-center items-center gap-[9px] pl-[16px] pr-[15px]"
@@ -199,10 +193,25 @@ const ModuleSettings = () => {
                   <p className=" mt-[-1.5px]">Save</p>
                   <FaRegCircleCheck size={16} className="mt-[1px]" />
                 </button>
+                <div
+                  className="select-none dim hover:brightness-75 cursor-pointer text-[14.5px] h-[36px] mt-[-0.6px] rounded-full flex justify-center items-center gap-[6px] pl-[16px] pr-[15px]"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_1_2,
+                    color: appTheme[currentUser.theme].text_3,
+                  }}
+                  onClick={() => setShowAddKeyInput(false)}
+                >
+                  <p className=" mt-[-0.5px]">Cancel</p>
+                  <IoClose size={19} className="mt-[1px]" />
+                </div>
               </div>
             ) : (
               <div
-                onClick={() => setShowAddKeyInput(true)}
+                onClick={() =>
+                  selectedProjectModule === null
+                    ? setAddingModules(true)
+                    : setShowAddKeyInput(true)
+                }
                 className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                 style={{
                   backgroundColor: appTheme[currentUser.theme].background_1_2,
