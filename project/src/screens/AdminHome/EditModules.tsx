@@ -1,17 +1,23 @@
 "use client";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext";
 import { useModulesForm } from "@/hooks/useModulesForm";
 import { ModuleFormData } from "@/util/schemas/moduleSchema";
 import { appTheme } from "@/util/appTheme";
-import { FaPlus, FaRegCircleCheck, FaTrash } from "react-icons/fa6";
+import {
+  FaChevronLeft,
+  FaPlus,
+  FaRegCircleCheck,
+  FaTrash,
+} from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import { useState } from "react";
 import { Module } from "@/types/project";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
+import { MdChevronLeft } from "react-icons/md";
 
 const EditModules = () => {
   const { currentUser } = useContext(AuthContext);
@@ -21,6 +27,7 @@ const EditModules = () => {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [editingModule, setEditingModule] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const form = useModulesForm();
@@ -34,12 +41,21 @@ const EditModules = () => {
   if (!currentUser) return null;
 
   const onSubmit = async (data: ModuleFormData) => {
+    const module = editingModule
+      ? modules.find((module: Module) => module.id === editingModule)
+      : null;
+
     await upsertModule({
       id: editingModule || undefined,
       name: data.name,
       description: data.description,
       identifier: data.identifier,
       config_schema: configKeys,
+      parent_module_id: module
+        ? module.parent_module_id
+        : selectedModule === null
+        ? null
+        : selectedModule.id,
     });
     setEditingModule(null);
     setShowForm(false);
@@ -99,13 +115,67 @@ const EditModules = () => {
     setConfigKeys(configKeys.filter((k) => k !== key));
   };
 
+  const handleModuleClick = (module: Module) => {
+    if (selectedModule === null) {
+      setSelectedModule(module);
+    }
+  };
+
+  const handleEditModuleClick = (e: React.MouseEvent, mod: Module) => {
+    e.stopPropagation();
+    setEditingModule(mod.id);
+    form.reset({
+      name: mod.name,
+      description: mod.description || "",
+      identifier: mod.identifier || "",
+    });
+    setConfigKeys(mod.config_schema || []);
+    setShowForm(true);
+  };
+
+  const filteredModules = useMemo(() => {
+    return selectedModule === null
+      ? modules.filter((m) => m.parent_module_id === null)
+      : modules.filter((m) => m.parent_module_id === selectedModule.id);
+  }, [modules, selectedModule]);
+
+  const handleBackClick = () => {
+    setShowForm(false);
+    setSelectedModule(null);
+    form.reset({
+      name: "",
+      description: "",
+      identifier: "",
+    });
+    setConfigKeys([]);
+    setEditingModule(null)
+  };
+
+  const handleDeleteModuleClick = (e: React.MouseEvent, mod: Module) => {
+    e.stopPropagation();
+    handleDeleteModule(mod);
+  };
+
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
       className="w-full flex flex-col gap-[8px] px-[50px] py-[33px] h-[100%] overflow-y-scroll"
     >
-      <div className="flex flex-row gap-[12px] items-center mb-[8px]">
-        <h2 className="text-[30px] font-bold mt-[-5px]">Modules</h2>
+      <div className="flex flex-row gap-[5px] items-center mb-[8px]">
+        {selectedModule !== null && (
+          <div
+            onClick={handleBackClick}
+            className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[36px] rounded-full w-[36px] opacity-[30%]"
+          >
+            <FaChevronLeft
+              size={24}
+              color={appTheme[currentUser.theme].text_3}
+            />
+          </div>
+        )}
+        <h2 className="text-[30px] ml-[4px] font-bold mt-[-5px] mr-[14px]">
+          {selectedModule === null ? "Modules" : selectedModule.name}
+        </h2>
         {showForm ? (
           <div className="flex gap-[9px]">
             <button
@@ -237,13 +307,17 @@ const EditModules = () => {
           {isLoadingModules ? (
             <p>Loading...</p>
           ) : (
-            modules.map((mod: Module) => (
+            filteredModules.map((mod: Module) => (
               <div
                 key={mod.id}
                 style={{
                   backgroundColor: appTheme[currentUser.theme].background_1_2,
                 }}
-                className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
+                className={`${
+                  selectedModule === null &&
+                  "hover:brightness-[88%] dim cursor-pointer"
+                } flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
+                onClick={() => handleModuleClick(mod)}
               >
                 <div className="w-[calc(100%-90px)] truncate">
                   <p className="font-semibold truncate">{mod.name}</p>
@@ -257,42 +331,33 @@ const EditModules = () => {
 
                 {!showForm && (
                   <div className="flex flex-row gap-[8px]">
-                    <button
-                      onClick={() => {
-                        setEditingModule(mod.id);
-                        form.reset({
-                          name: mod.name,
-                          description: mod.description || "",
-                          identifier: mod.identifier || "",
-                        });
-                        setConfigKeys(mod.config_schema || []);
-                        setShowForm(true);
-                      }}
+                    <div
+                      onClick={(e) => handleEditModuleClick(e, mod)}
                       style={{
                         backgroundColor:
                           appTheme[currentUser.theme].background_2_selected,
                       }}
-                      className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-75 dim cursor-pointer rounded-full"
+                      className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
                       <FiEdit
                         size={18}
                         color={appTheme[currentUser.theme].text_4}
                       />
-                    </button>
+                    </div>
 
-                    <button
-                      onClick={() => handleDeleteModule(mod)}
+                    <div
+                      onClick={(e) => handleDeleteModuleClick(e, mod)}
                       style={{
                         backgroundColor:
                           appTheme[currentUser.theme].background_2_selected,
                       }}
-                      className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-75 dim cursor-pointer rounded-full"
+                      className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
                       <FaTrash
                         size={15}
                         color={appTheme[currentUser.theme].text_4}
                       />
-                    </button>
+                    </div>
                   </div>
                 )}
               </div>

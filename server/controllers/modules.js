@@ -77,6 +77,7 @@ export const getProjectModules = (req, res) => {
       m.name, 
       m.description, 
       m.identifier,   
+      m.parent_module_id, 
       pm.settings
     FROM project_modules pm
     JOIN modules m ON pm.module_id = m.id
@@ -123,20 +124,21 @@ export const getAllModules = (req, res) => {
 };
 
 export const upsertModule = (req, res) => {
-  const { id, name, description, identifier, config_schema } = req.body;
+  const { id, name, description, identifier, config_schema, parent_module_id } = req.body;
 
   if (!name || !identifier) {
     return res.status(400).json({ message: "Missing name or identifier" });
   }
 
   const q = `
-    INSERT INTO modules (id, name, description, identifier, config_schema)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO modules (id, name, description, identifier, config_schema, parent_module_id)
+    VALUES (?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE 
       name = VALUES(name), 
       description = VALUES(description), 
       identifier = VALUES(identifier),
-      config_schema = VALUES(config_schema)
+      config_schema = VALUES(config_schema),
+      parent_module_id = VALUES(parent_module_id)
   `;
 
   db.query(
@@ -147,6 +149,7 @@ export const upsertModule = (req, res) => {
       description || null,
       identifier,
       JSON.stringify(config_schema || []),
+      parent_module_id
     ],
     (err) => {
       if (err) {

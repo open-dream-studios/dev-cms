@@ -29,15 +29,18 @@ export type Module = {
   identifier: string;
   description: string | null;
   config_schema?: string[];
+  parent_module_id: number | null;
 };
 
 export type ProjectModule = {
+  id: number;
   project_idx: number;
   module_id: number;
   name: string;
   description: string | null;
   identifier: string;
   settings: any;
+  parent_module_id: number | null
 };
 
 export type Integration = {

@@ -81,6 +81,7 @@ export type QueryContextType = {
     description?: string;
     identifier: string;
     config_schema?: string[];
+    parent_module_id: number | null;
   }) => Promise<void>;
   deleteModule: (id: number) => Promise<void>;
 };
@@ -538,6 +539,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       description?: string;
       identifier: string;
       config_schema?: string[];
+      parent_module_id: number | null;
     }) => {
       await makeRequest.post("/api/modules/upsert", data);
     },
@@ -552,6 +554,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     description?: string;
     identifier: string;
     config_schema?: string[];
+    parent_module_id: number | null;
   }) => {
     await upsertModuleMutation.mutateAsync(data);
   };
