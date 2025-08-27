@@ -83,7 +83,7 @@ export const googleAuth = async (req, res) => {
     if (data.length) {
       // If user exists, generate token and log them in
       const token = jwt.sign(
-        { id: data[0].user_id, email: data[0].email },
+        { id: data[0].user_id, email: data[0].email, admin: data[0].admin },
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
@@ -119,7 +119,7 @@ export const googleAuth = async (req, res) => {
               .json({ message: "Error inserting new user", error: err });
           }
           const token = jwt.sign(
-            { id: newUserId, email },
+            { id: newUserId, email, admin: 0 },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
           );
@@ -181,7 +181,7 @@ export const register = async (req, res) => {
             console.error("Registration error:", err);
             return res.status(500).json(err);
           }
-          const token = jwt.sign({ id: newUserId, email: req.body.email }, process.env.JWT_SECRET, {
+          const token = jwt.sign({ id: newUserId, email: req.body.email, admin: 0}, process.env.JWT_SECRET, {
             expiresIn: "7d",
           });
           res.cookie("accessToken", token, {
@@ -252,7 +252,7 @@ export const login = async (req, res) => {
 
     // Otherwise, login was successful
     // Establish a secret key for the user
-    const token = jwt.sign({ id: data[0].user_id, email: data[0].email }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: data[0].user_id, email: data[0].email, admin: data[0].admin }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -383,7 +383,7 @@ export const checkCode = async (req, res) => {
         ) {
           // Establish a secret key for the user
           const token = jwt.sign(
-            { id: data[0].user_id, email: data[0].email },
+            { id: data[0].user_id, email: data[0].email, admin: data[0].admin },
             process.env.JWT_SECRET,
             {
               expiresIn: "7d",

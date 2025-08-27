@@ -111,10 +111,7 @@ const ModuleSettings = () => {
     if (!selectedModule || !currentProject) return;
     (async () => {
       try {
-        const res = await makeRequest.post("/api/integrations", {
-          project_idx: currentProject.id,
-        });
-        const integration = res.data.integrations.find(
+        const integration = integrations.find(
           (i: Integration) => i.module_id === selectedProjectModule?.module_id
         );
         setIntegrationConfig(integration?.config || {});
@@ -122,7 +119,7 @@ const ModuleSettings = () => {
         setIntegrationConfig({});
       }
     })();
-  }, [selectedModule, currentProject]);
+  }, [selectedModule, currentProject, integrations]);
 
   if (!currentUser || !currentProject) return null;
 

@@ -10,10 +10,10 @@ import {
 } from "../controllers/modules.js";
 import { authenticateUser } from "../util/auth.js";
 import { checkProjectPermission } from "../util/permissions.js";
+import { requireAdmin } from "../util/roles.js";
 
 const router = express.Router();
 
-// project-specific modules
 router.post(
   "/add",
   authenticateUser,
@@ -35,21 +35,8 @@ router.post(
   getProjectModules
 );
 
-// global modules (registry)
 router.post("/get-all", authenticateUser, getAllModules);
-
-router.post(
-  "/upsert",
-  authenticateUser,
-  checkProjectPermission(4), // admin only
-  upsertModule
-);
-
-router.post(
-  "/delete-module",
-  authenticateUser,
-  checkProjectPermission(4), // admin only
-  deleteModule
-);
+router.post("/upsert", authenticateUser, requireAdmin, upsertModule);
+router.post("/delete-module", authenticateUser, requireAdmin, deleteModule);
 
 export default router;

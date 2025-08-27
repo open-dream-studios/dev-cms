@@ -166,7 +166,52 @@ export const deleteProducts = (req, res) => {
             });
           }
 
-          // reindex same as before ...
+          // Reindex only products for this project
+          connection.query(`SET @rownum := -1`, (err) => {
+            if (err) {
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json("Failed to reset rownum");
+              });
+            }
+
+            const reindexQuery = `
+                UPDATE products
+                JOIN (
+                  SELECT serial_number, (@rownum := @rownum + 1) AS new_ordinal
+                  FROM products
+                  WHERE project_idx = ?
+                  ORDER BY ordinal
+                ) AS ordered 
+                ON products.serial_number = ordered.serial_number
+                SET products.ordinal = ordered.new_ordinal
+              `;
+
+            connection.query(reindexQuery, [project_idx], (err, result2) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release();
+                  res.status(500).json("Reindex failed");
+                });
+              }
+
+              connection.commit((err) => {
+                if (err) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    res.status(500).json("Commit failed");
+                  });
+                }
+
+                connection.release();
+                return res.status(200).json({
+                  success: true,
+                  deleted: serial_numbers.length,
+                  reindexed: result2.affectedRows,
+                });
+              });
+            });
+          });
         }
       );
     });

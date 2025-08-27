@@ -28,6 +28,7 @@ export type Module = {
   name: string;
   identifier: string;
   description: string | null;
+  config_schema?: string[];
 };
 
 export type ProjectModule = {

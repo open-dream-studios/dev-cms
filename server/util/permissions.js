@@ -1,4 +1,4 @@
-// util/permissions.js
+// server/util/permissions.js
 import { db } from "../connection/connect.js";
 
 export const checkProjectPermission = (requiredLevel) => {
@@ -26,7 +26,7 @@ export const checkProjectPermission = (requiredLevel) => {
 
       if (userLevel < requiredLevel) {
         return res.status(403).json("Insufficient permissions");
-      }
+      } 
 
       req.user = { ...req.user, role, project_idx, userLevel };
       next();

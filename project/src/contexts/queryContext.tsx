@@ -80,6 +80,7 @@ export type QueryContextType = {
     name: string;
     description?: string;
     identifier: string;
+    config_schema?: string[];
   }) => Promise<void>;
   deleteModule: (id: number) => Promise<void>;
 };
@@ -433,8 +434,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     enabled: isLoggedIn && !!currentProject,
   });
+
   const upsertIntegrationMutation = useMutation({
     mutationFn: async (data: {
+      project_idx: number;
       module_id: number;
       config: Record<string, string>;
     }) => {
@@ -445,9 +448,17 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         queryKey: ["integrations", currentProject?.id],
       });
     },
+    onError: (error: any) => {
+      if (error.response?.status === 402) {
+        alert(
+          "Key is not designated to this module. Please check the allowed keys and try again."
+        );
+      }
+    },
   });
 
   const upsertIntegration = async (data: {
+    project_idx: number;
     module_id: number;
     config: Record<string, string>;
   }) => {
@@ -460,7 +471,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       module_id: number;
       key: string;
     }) => {
-      await makeRequest.post("/api/integrations/key", {
+      await makeRequest.post("/api/integrations/delete", {
         project_idx: integration.project_idx,
         module_id: integration.module_id,
         key: integration.key,
@@ -526,6 +537,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       name: string;
       description?: string;
       identifier: string;
+      config_schema?: string[];
     }) => {
       await makeRequest.post("/api/modules/upsert", data);
     },
@@ -539,10 +551,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     name: string;
     description?: string;
     identifier: string;
+    config_schema?: string[];
   }) => {
     await upsertModuleMutation.mutateAsync(data);
   };
-
   const deleteModuleMutation = useMutation({
     mutationFn: async (id: number) => {
       await makeRequest.post("/api/modules/delete-module", { id });

@@ -16,22 +16,23 @@ export const getAdminEmails = async () => {
   }
 };
 
-export const getProjects = async (req, res) => {
-  try {
-    const { email } = req.user;
-    const q = `
-      SELECT p.*
-      FROM projects p
-      JOIN project_users pu ON pu.project_idx = p.id
-      WHERE pu.email = ?;
-    `;
+export const getProjects = (req, res) => {
+  const userEmail = req.user.email;
 
-    const [rows] = await db.promise().query(q, [email]);
-    res.json({ projects: rows });
-  } catch (err) {
-    console.error("Error fetching projects for user:", err);
-    res.status(500).json({ error: "Failed to fetch projects" });
-  }
+  const q = `
+    SELECT p.* 
+    FROM projects p
+    JOIN project_users pu ON p.id = pu.project_idx
+    WHERE pu.email = ?
+  `;
+
+  db.query(q, [userEmail], (err, rows) => {
+    if (err) {
+      console.error("❌ Get projects error:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+    return res.json({ projects: rows });
+  });
 };
 
 export const addProject = async (req, res) => {
@@ -88,7 +89,7 @@ export const deleteProjects = (req, res) => {
         connection.release();
         return res.status(500).json("Failed to start transaction");
       }
-      
+
       const lookupQuery = `
         SELECT id FROM projects WHERE project_id IN (${ids
           .map(() => "?")

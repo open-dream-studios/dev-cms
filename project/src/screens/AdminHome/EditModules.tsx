@@ -33,9 +33,11 @@ const EditModules = () => {
       name: data.name,
       description: data.description,
       identifier: data.identifier,
+      config_schema: configKeys,
     });
     setEditingModule(null);
     setShowForm(false);
+    setConfigKeys([]);
     form.reset();
   };
 
@@ -43,7 +45,7 @@ const EditModules = () => {
     form.reset({
       name: "",
       description: "",
-      identifier: ""
+      identifier: "",
     });
     setShowForm(true);
     setEditingModule(null);
@@ -74,6 +76,20 @@ const EditModules = () => {
         />
       ),
     });
+  };
+
+  const [configKeys, setConfigKeys] = useState<string[]>([]);
+  const [newKey, setNewKey] = useState("");
+
+  const handleAddKey = () => {
+    if (newKey.trim() && !configKeys.includes(newKey.trim())) {
+      setConfigKeys([...configKeys, newKey.trim()]);
+      setNewKey("");
+    }
+  };
+
+  const handleDeleteKey = (key: string) => {
+    setConfigKeys(configKeys.filter((k) => k !== key));
   };
 
   return (
@@ -150,6 +166,51 @@ const EditModules = () => {
                 className="input outline-none px-2 py-1 w-[100%]"
               />
             </p>
+
+            <div className="mt-4">
+              <p className="font-semibold mb-2">Accepted Keys</p>
+
+              <div className="flex flex-wrap gap-2 mb-3">
+                {configKeys.map((key) => (
+                  <div
+                    key={key}
+                    className="flex items-center gap-2 px-3 py-1 rounded-full text-sm"
+                    style={{
+                      backgroundColor:
+                        appTheme[currentUser.theme].background_2_selected,
+                      color: appTheme[currentUser.theme].text_4,
+                    }}
+                  >
+                    {key}
+                    <button
+                      onClick={() => handleDeleteKey(key)}
+                      className="ml-1 text-xs hover:text-red-500"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  placeholder="Add a key..."
+                  className="outline-none input py-[6px] rounded-[5px] text-[14px] flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddKey}
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                  }}
+                  className="hover:brightness-75 dim cursor-pointer w-[80px] rounded-full h-[30px]  text-white text-sm hover:bg-blue-600"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -184,6 +245,7 @@ const EditModules = () => {
                           description: mod.description || "",
                           identifier: mod.identifier || "",
                         });
+                        setConfigKeys(mod.config_schema || []);
                         setShowForm(true);
                       }}
                       style={{

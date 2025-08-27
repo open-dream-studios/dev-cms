@@ -7,6 +7,7 @@ import {
 } from "../controllers/integrations.js";
 import { authenticateUser } from "../connection/middlewares.js";
 import { checkProjectPermission } from "../util/permissions.js";
+import { requireAdmin } from "../util/roles.js";
 
 const router = express.Router();
 
@@ -22,13 +23,13 @@ router.get(
 router.post(
   "/update",
   authenticateUser,
-  checkProjectPermission(2),
+  requireAdmin,
   addOrUpdateIntegration
 );
 
 // editor+ can delete keys from integration
 router.post(
-  "/key",
+  "/delete",
   authenticateUser,
   checkProjectPermission(2),
   deleteIntegrationKey

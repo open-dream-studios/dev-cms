@@ -92,33 +92,53 @@ export const getAllModules = (req, res) => {
       console.error("❌ Fetch modules error:", err);
       return res.status(500).json({ message: "Server error" });
     }
-    return res.json({ modules: rows });
+
+    const modules = rows.map((r) => ({
+      ...r,
+      config_schema:
+        typeof r.config_schema === "string"
+          ? JSON.parse(r.config_schema)
+          : r.config_schema || [],
+    }));
+
+    return res.json({ modules });
   });
 };
 
 export const upsertModule = (req, res) => {
-  const { id, name, description, identifier } = req.body;
+  const { id, name, description, identifier, config_schema } = req.body;
 
   if (!name || !identifier) {
     return res.status(400).json({ message: "Missing name or identifier" });
   }
 
   const q = `
-    INSERT INTO modules (id, name, description, identifier)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO modules (id, name, description, identifier, config_schema)
+    VALUES (?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE 
       name = VALUES(name), 
       description = VALUES(description), 
-      identifier = VALUES(identifier)
+      identifier = VALUES(identifier),
+      config_schema = VALUES(config_schema)
   `;
 
-  db.query(q, [id || null, name, description || null, identifier], (err) => {
-    if (err) {
-      console.error("❌ Upsert module error:", err);
-      return res.status(500).json({ message: "Server error" });
+  db.query(
+    q, 
+    [
+      id || null,
+      name,
+      description || null,
+      identifier,
+      JSON.stringify(config_schema || []),
+    ],
+    (err) => {
+      if (err) {
+        console.error("❌ Upsert module error:", err);
+        return res.status(500).json({ message: "Server error" });
+      }
+      return res.status(200).json({ message: "Module saved" });
     }
-    return res.status(200).json({ message: "Module saved" });
-  });
+  );
 };
 
 export const deleteModule = (req, res) => {
