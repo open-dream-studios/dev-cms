@@ -13,8 +13,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useProjectContext } from "@/contexts/projectContext";
 import { LuBlocks } from "react-icons/lu";
 import EditModules from "./EditModules";
+import { FiEdit } from "react-icons/fi";
 
-const ProjectItem = ({ project }: { project: Project }) => {
+const ProjectItem = ({
+  project,
+  editProjectsMode,
+}: {
+  project: Project;
+  editProjectsMode: boolean;
+}) => {
   const { currentUser } = useContext(AuthContext);
   const { setCurrentProject } = useProjectContext();
   const { deleteProject } = useContextQueries();
@@ -54,7 +61,7 @@ const ProjectItem = ({ project }: { project: Project }) => {
 
   return (
     <div className="relative">
-      {true && (
+      {editProjectsMode && (
         <div
           style={{
             border: `1px solid ${appTheme[currentUser.theme].text_4}`,
@@ -140,57 +147,44 @@ const AdminHome = () => {
     queryClient.invalidateQueries({ queryKey: ["projectUsers"] });
   };
 
-  const handleEditModulesClick = () => {
-    setModal1({
-      ...modal1,
-      open: !modal1.open,
-      showClose: true,
-      offClickClose: true,
-      width: "w-[90vw] md:w-[80vw]",
-      maxWidth: "md:max-w-[1000px]",
-      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
-      borderRadius: "rounded-[15px] md:rounded-[20px]",
-      content: <EditModules />,
-    });
-  };
+  const [editProjectsMode, setEditProjectsMode] = useState<boolean>(false);
 
   if (!currentUser) return null;
 
   return (
     <div className="w-[100%] h-[100%] relative">
       {currentUser.admin === 1 && (
-        <div className="flex flex-row justify-between w-[100%] h-[70px] items-center px-[50px]">
-          <div
-            // onClick={() => setEditListMode((prev) => !prev)}
-            className="select-none dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
-            style={{
-              backgroundColor: appTheme[currentUser.theme].background_1_2,
-              // border: editListMode
-              //   ? "1px solid " + appTheme[currentUser.theme].text_3
-              //   : "none",
-            }}
-          >
-            {/* <FiEdit size={16} /> */}
-          </div>
+        <div className="flex flex-row w-[100%] h-[70px] items-center px-[50px]">
           <div className="flex flex-row gap-[11.5px] ">
-            <div
-              onClick={handleEditModulesClick}
-              className="select-none dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_1_2,
-              }}
-            >
-              <LuBlocks size={16} />
-            </div>
+            <h2 className="text-[30px] leading-[35px] ml-[4px] font-bold mr-[7px]">
+              Projects
+            </h2>
 
-            <div
-              onClick={handleAddProjectClick}
-              className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_1_2,
-              }}
-            >
-              <FaPlus size={16} />
+            <div className="flex flex-row gap-[12px]">
+              <div
+                onClick={handleAddProjectClick}
+                className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_1_2,
+                }}
+              >
+                <FaPlus size={16} />
+              </div>
+              
+              <div
+                onClick={() => {
+                  setEditProjectsMode((prev) => !prev);
+                }}
+                className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
+                style={{
+                  border: editProjectsMode
+                    ? "1.4px solid" + appTheme[currentUser.theme].text_3
+                    : "none",
+                  backgroundColor: appTheme[currentUser.theme].background_1_2,
+                }}
+              >
+                <FiEdit size={16} />
+              </div>
             </div>
           </div>
         </div>
@@ -199,7 +193,11 @@ const AdminHome = () => {
       <div className="w-[100%] h-[100%] px-[100px] pt-[60px] flex flex-col overflow-y-scroll">
         <div className="max-w-[1200px] mb-[50px] w-[100%] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[21px]">
           {projectsData.map((project: Project, index: number) => (
-            <ProjectItem key={index} project={project} />
+            <ProjectItem
+              key={index}
+              project={project}
+              editProjectsMode={editProjectsMode}
+            />
           ))}
         </div>
       </div>

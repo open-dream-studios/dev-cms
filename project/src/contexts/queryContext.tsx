@@ -545,6 +545,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["modules"] });
+      queryClient.invalidateQueries({
+        queryKey: ["projectModules", currentProject?.id],
+      });
     },
   });
 
