@@ -1,5 +1,5 @@
 "use client";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext";
 import { useModulesForm } from "@/hooks/useModulesForm";
@@ -21,9 +21,15 @@ const EditModules = () => {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-  const form = useModulesForm();
   const [editingModule, setEditingModule] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const form = useModulesForm();
+
+  useEffect(() => {
+    if (showForm) {
+      form.setFocus("name");
+    }
+  }, [showForm, form]);
 
   if (!currentUser) return null;
 
@@ -55,6 +61,7 @@ const EditModules = () => {
     setShowForm(false);
     setEditingModule(null);
     form.reset();
+    setNewKey("");
   };
 
   const handleDeleteModule = async (mod: Module) => {
@@ -95,7 +102,7 @@ const EditModules = () => {
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="w-full h-full flex flex-col gap-[8px] px-[50px] py-[33px]"
+      className="w-full flex flex-col gap-[8px] px-[50px] py-[33px] h-[100%] overflow-y-scroll"
     >
       <div className="flex flex-row gap-[12px] items-center mb-[8px]">
         <h2 className="text-[30px] font-bold mt-[-5px]">Modules</h2>
@@ -148,10 +155,13 @@ const EditModules = () => {
               <input
                 {...form.register("name")}
                 placeholder="Name..."
-                className="input outline-none rounded px-2 py-1 w-[100%]"
+                className="input outline-none rounded px-2 py-1 w-[100%] text-[17px]"
               />
             </p>
-            <p className="text-sm text-gray-500">
+            <p
+              style={{ color: appTheme[currentUser.theme].text_4 }}
+              className="text-sm"
+            >
               <input
                 {...form.register("description")}
                 placeholder="Description..."
@@ -159,7 +169,10 @@ const EditModules = () => {
               />
             </p>
 
-            <p className="text-sm text-gray-500">
+            <p
+              style={{ color: appTheme[currentUser.theme].text_4 }}
+              className="text-sm"
+            >
               <input
                 {...form.register("identifier")}
                 placeholder="Identifier..."
@@ -167,30 +180,34 @@ const EditModules = () => {
               />
             </p>
 
-            <div className="mt-4">
-              <p className="font-semibold mb-2">Accepted Keys</p>
+            <div className="mt-4 px-2">
+              <p className="font-semibold text-[17px] mb-[6px]">
+                Accepted Keys
+              </p>
 
-              <div className="flex flex-wrap gap-2 mb-3">
-                {configKeys.map((key) => (
-                  <div
-                    key={key}
-                    className="flex items-center gap-2 px-3 py-1 rounded-full text-sm"
-                    style={{
-                      backgroundColor:
-                        appTheme[currentUser.theme].background_2_selected,
-                      color: appTheme[currentUser.theme].text_4,
-                    }}
-                  >
-                    {key}
-                    <button
-                      onClick={() => handleDeleteKey(key)}
-                      className="ml-1 text-xs hover:text-red-500"
+              {configKeys.length > 0 && (
+                <div className="flex flex-wrap gap-2 my-1">
+                  {configKeys.map((key) => (
+                    <div
+                      key={key}
+                      className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
+                      style={{
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_2_selected,
+                        color: appTheme[currentUser.theme].text_4,
+                      }}
                     >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
+                      {key}
+                      <button
+                        onClick={() => handleDeleteKey(key)}
+                        className="ml-1 text-xs hover:brightness-75 dim cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <input
@@ -205,7 +222,7 @@ const EditModules = () => {
                   style={{
                     backgroundColor: appTheme[currentUser.theme].background_2_2,
                   }}
-                  className="hover:brightness-75 dim cursor-pointer w-[80px] rounded-full h-[30px]  text-white text-sm hover:bg-blue-600"
+                  className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm "
                 >
                   Add
                 </button>
@@ -228,9 +245,12 @@ const EditModules = () => {
                 }}
                 className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
               >
-                <div>
-                  <p className="font-semibold">{mod.name}</p>
-                  <p className="text-sm text-gray-500">
+                <div className="w-[calc(100%-90px)] truncate">
+                  <p className="font-semibold truncate">{mod.name}</p>
+                  <p
+                    style={{ color: appTheme[currentUser.theme].text_4 }}
+                    className="text-sm truncate"
+                  >
                     {mod.identifier} | {mod.description}
                   </p>
                 </div>
