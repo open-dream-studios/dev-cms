@@ -3,9 +3,11 @@
 
 import { useEffect } from "react";
 import { useProjectContext } from "@/contexts/projectContext";
+import { usePathname } from "next/navigation";
 
 export default function DynamicTitle() {
   const { currentProject } = useProjectContext();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (currentProject) {
@@ -16,13 +18,9 @@ export default function DynamicTitle() {
 
     const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
     if (favicon) {
-      if (currentProject?.logo) {
-        favicon.href = currentProject.logo;
-      } else {
-        favicon.href = "/favicon.ico";
-      }
+      favicon.href = currentProject?.logo || "/favicon.ico";
     }
-  }, [currentProject]);
+  }, [currentProject, pathname]);  
 
   return null;
 }

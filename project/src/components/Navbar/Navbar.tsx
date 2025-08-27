@@ -267,6 +267,14 @@ const Navbar = () => {
                 <img
                   className="w-full h-full rounded-full"
                   src={currentUser.profile_img_src}
+                  onError={(e) => {
+                    console.error(
+                      "❌ Failed to load profile image:",
+                      currentUser.profile_img_src
+                    );
+                    (e.currentTarget as HTMLImageElement).src =
+                      "https://res.cloudinary.com/dlzspcvgq/image/upload/v1756299501/person_qortes.png";
+                  }}
                 />
               ) : (
                 <div
