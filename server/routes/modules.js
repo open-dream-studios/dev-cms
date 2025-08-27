@@ -7,6 +7,7 @@ import {
   getAllModules,
   upsertModule,
   deleteModule,
+  runModule,
 } from "../controllers/modules.js";
 import { authenticateUser } from "../util/auth.js";
 import { checkProjectPermission } from "../util/permissions.js";
@@ -38,5 +39,12 @@ router.post(
 router.post("/get-all", authenticateUser, getAllModules);
 router.post("/upsert", authenticateUser, requireAdmin, upsertModule);
 router.post("/delete-module", authenticateUser, requireAdmin, deleteModule);
+
+router.post(
+  "/run/:identifier",
+  authenticateUser,
+  checkProjectPermission(1),
+  runModule
+);
 
 export default router;

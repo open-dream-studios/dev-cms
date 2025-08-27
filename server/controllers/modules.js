@@ -1,4 +1,21 @@
+// server/controllers/modules.js
 import { db } from "../connection/connect.js";
+import { executeModule } from "../util/moduleEngine.js";
+
+export const runModule = async (req, res) => {
+  const { identifier } = req.params;
+  try {
+    const result = await executeModule(
+      identifier,
+      req.user.project_idx,
+      req.body
+    );
+    res.json({ success: true, result });
+  } catch (err) {
+    console.error("Module execution error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
 
 export const addProjectModule = (req, res) => {
   const { module_id, settings } = req.body;
@@ -123,7 +140,7 @@ export const upsertModule = (req, res) => {
   `;
 
   db.query(
-    q, 
+    q,
     [
       id || null,
       name,

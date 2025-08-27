@@ -1,0 +1,121 @@
+// server/definitions/moduleHandlers.js
+import { db } from "../connection/connect.js";
+import { formatSQLDate } from "../functions/data.js";
+import { getConfigKeys } from "../functions/integrations.js";
+import { getSortedProducts } from "../functions/products.js";
+import { updateGoogleSheet } from "./moduleHelpers/google.js";
+
+export const handlers = {
+  "products-export-to-sheets-module": async (moduleConfig, payload) => {
+    const project_idx = moduleConfig.project_idx;
+    try {
+      const configKeys = await getConfigKeys(moduleConfig);
+      const { spreadsheetId, sheetName, serviceAccountJson } = configKeys;
+      if (!spreadsheetId || !sheetName || !serviceAccountJson) {
+        throw new Error("Missing Sheets credentials");
+      }
+
+      const sortedProducts = await getSortedProducts(project_idx);
+
+      const rows = sortedProducts.map((row, index) => [
+        index + 1,
+        row.serial_number,
+        row.name,
+        row.description || "",
+        row.note || "",
+        row.make || "",
+        row.model || "",
+        row.price || "",
+        row.type || "",
+        formatSQLDate(row.date_entered),
+        formatSQLDate(row.date_sold),
+        row.repair_status,
+        row.sale_status,
+        row.length || "",
+        row.width || "",
+        Array.isArray(row.images)
+          ? row.images.join(" ")
+          : typeof row.images === "string"
+          ? JSON.parse(row.images || "[]").join(" ")
+          : "",
+      ]);
+
+      const header = [
+        "ID",
+        "Serial Number",
+        "Name",
+        "Description",
+        "Note",
+        "Make",
+        "Model",
+        "Price ($)",
+        "Type",
+        "Date Entered",
+        "Date Sold",
+        "Repair Status",
+        "Sale Status",
+        "Length (in)",
+        "Width (in)",
+        "Images",
+      ];
+
+      return await updateGoogleSheet(
+        header,
+        rows,
+        spreadsheetId,
+        sheetName,
+        serviceAccountJson
+      );
+    } catch (err) {
+      console.error(err);
+      throw new Error(err.message);
+    }
+  },
+
+  "products-wix-sync-cms-module": async (moduleConfig, payload) => {
+    const project_idx = moduleConfig.project_idx;
+    try {
+      const configKeys = await getConfigKeys(moduleConfig);
+      const { WIX_GENERATED_SECRET, WIX_BACKEND_URL } = configKeys;
+      if (!WIX_GENERATED_SECRET || !WIX_BACKEND_URL) {
+        throw new Error("Missing WIX credentials");
+      }
+
+      const sortedProducts = await getSortedProducts(project_idx);
+      const corrected_data = sortedProducts.reverse().map((item) => ({
+        serialNumber: item.serial_number,
+        sold: !!item.date_sold,
+        name: item.name,
+        description_fld: item.description || "",
+        make: item.make || "",
+        model: item.model || "",
+        price: parseFloat(item.price) || 0,
+        length: parseFloat(item.length) || 0,
+        width: parseFloat(item.width) || 0,
+        images:
+          item.images?.filter((url) => !/\.(mp4|mov)$/i.test(url)).join(" ") ||
+          "",
+      }));
+
+      try {
+        // await axios.post(WIX_BACKEND_URL, corrected_data, {
+        //   headers: {
+        //     Authorization: `Bearer ${WIX_GENERATED_SECRET}`,
+        //     "Content-Type": "application/json",
+        //   },
+        //   timeout: 10000,
+        //   validateStatus: (status) => status < 500,
+        // });
+      } catch (err) {
+        console.error(
+          "Failed to sync with Wix:",
+          err.response?.data || err.message
+        );
+        throw new Error("Wix sync failed")
+      }
+    } catch (e) {
+      console.error(e);
+      throw new Error("Wix sync failed");
+    }
+  },
+};

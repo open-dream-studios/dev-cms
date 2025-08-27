@@ -9,7 +9,6 @@ import { appTheme } from "@/util/appTheme";
 import { toast } from "react-toastify";
 import { DataFilters, useAppContext } from "@/contexts/appContext";
 import { makeRequest } from "@/util/axios";
-import { GOOGLE_SHEET_URL } from "@/util/config";
 import { IoTrashSharp } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext";
 import { usePathname } from "next/navigation";
@@ -19,10 +18,8 @@ import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { Product } from "@/types/products";
 import { useProjectContext } from "@/contexts/projectContext";
-import { ProjectModule } from "@/types/project";
 
 const ProductsHeader = ({ title }: { title: String }) => {
-  const pathName = usePathname();
   const { currentUser } = useContext(AuthContext);
   const {
     setEditingLock,
@@ -36,9 +33,11 @@ const ProductsHeader = ({ title }: { title: String }) => {
     saveProducts,
     localData,
     productTableView,
+    handleRunModule
   } = useAppContext();
   const { currentProject } = useProjectContext();
-  const { deleteProducts, hasProjectModule } = useContextQueries();
+  const { deleteProducts, hasProjectModule } =
+    useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const pathname = usePathname();
@@ -69,10 +68,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const wixSync = async () => {
     setEditingLock(true);
     try {
-      await makeRequest.post("/api/products/wix-sync", {
-        project_idx: currentProject.id,
-      });
-      toast.success("Updated Wix data");
+      await handleRunModule("products-wix-sync-cms-module")
     } catch (e) {
       toast.error("Wix sync failed");
     } finally {
@@ -83,10 +79,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const handleGoogleExport = async () => {
     setEditingLock(true);
     try {
-      await makeRequest.post("/api/products/google-sync", {
-        project_idx: currentProject.id,
-      });
-      window.open(GOOGLE_SHEET_URL, "_blank");
+      await handleRunModule("products-export-to-sheets-module")
     } catch (e) {
       toast.error("Export failed");
     } finally {
@@ -223,161 +216,169 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
   return (
     <div className="relative w-[100%] h-[60px]">
-      {hasProjectModule("products-module") && <div className="flex flex-row items-center sm:justify-between justify-end h-[100%] mb-[17px] pt-[20px] px-[20px]">
-        <div className="hidden sm:flex flex-row gap-[19px] items-center">
-          <h1 className="hidden md:flex mt-[-5px] text-2xl font-[600]">
-            {title}
-          </h1>
-          <div
-            style={{
-              backgroundColor: appTheme[currentUser.theme].header_1_1,
-            }}
-            className="flex w-[202px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
-          >
+      {hasProjectModule("products-module") && (
+        <div className="flex flex-row items-center sm:justify-between justify-end h-[100%] mb-[17px] pt-[20px] px-[20px]">
+          <div className="hidden sm:flex flex-row gap-[19px] items-center">
+            <h1 className="hidden md:flex mt-[-5px] text-2xl font-[600]">
+              {title}
+            </h1>
             <div
-              onClick={() => handleFilterClick("All")}
               style={{
-                backgroundColor:
-                  dataFilters.listings === "All"
-                    ? appTheme[currentUser.theme].header_1_2
-                    : "transparent",
+                backgroundColor: appTheme[currentUser.theme].header_1_1,
               }}
-              className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              className="flex w-[202px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
             >
-              All
-            </div>
-            <div
-              className="w-[1px] h-[22px] rounded-[4px]"
-              style={{
-                opacity: dataFilters.listings === "Sold" ? "0.1" : 0,
-                backgroundColor: appTheme[currentUser.theme].text_1,
-              }}
-            />
-            <div
-              onClick={() => handleFilterClick("Active")}
-              style={{
-                backgroundColor:
-                  dataFilters.listings === "Active"
-                    ? appTheme[currentUser.theme].header_1_2
-                    : "transparent",
-              }}
-              className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-            >
-              Active
-            </div>
-            <div
-              className="w-[1px] h-[22px] rounded-[4px]"
-              style={{
-                opacity: dataFilters.listings === "All" ? "0.1" : 0,
-                backgroundColor: appTheme[currentUser.theme].text_1,
-              }}
-            />
-            <div
-              onClick={() => handleFilterClick("Sold")}
-              style={{
-                backgroundColor:
-                  dataFilters.listings === "Sold"
-                    ? appTheme[currentUser.theme].header_1_2
-                    : "transparent",
-              }}
-              className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-            >
-              Sold
+              <div
+                onClick={() => handleFilterClick("All")}
+                style={{
+                  backgroundColor:
+                    dataFilters.listings === "All"
+                      ? appTheme[currentUser.theme].header_1_2
+                      : "transparent",
+                }}
+                className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              >
+                All
+              </div>
+              <div
+                className="w-[1px] h-[22px] rounded-[4px]"
+                style={{
+                  opacity: dataFilters.listings === "Sold" ? "0.1" : 0,
+                  backgroundColor: appTheme[currentUser.theme].text_1,
+                }}
+              />
+              <div
+                onClick={() => handleFilterClick("Active")}
+                style={{
+                  backgroundColor:
+                    dataFilters.listings === "Active"
+                      ? appTheme[currentUser.theme].header_1_2
+                      : "transparent",
+                }}
+                className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              >
+                Active
+              </div>
+              <div
+                className="w-[1px] h-[22px] rounded-[4px]"
+                style={{
+                  opacity: dataFilters.listings === "All" ? "0.1" : 0,
+                  backgroundColor: appTheme[currentUser.theme].text_1,
+                }}
+              />
+              <div
+                onClick={() => handleFilterClick("Sold")}
+                style={{
+                  backgroundColor:
+                    dataFilters.listings === "Sold"
+                      ? appTheme[currentUser.theme].header_1_2
+                      : "transparent",
+                }}
+                className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              >
+                Sold
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-row gap-[11px]">
-          {hasProjectModule("products-export-to-sheets-module") && (
+          <div className="flex flex-row gap-[11px]">
+            {hasProjectModule("products-export-to-sheets-module") && (
+              <div
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_2,
+                }}
+                className="dim hover:brightness-75 rounded-[25px] w-[33px] [@media(min-width:460px)]:w-[150px] h-[33px] flex flex-row justify-center items-center gap-[6px] text-[13px] font-[600] cursor-pointer"
+                onClick={handleGoogleExport}
+              >
+                <p
+                  style={{
+                    color: appTheme[currentUser.theme].text_1,
+                  }}
+                  className="hidden [@media(min-width:460px)]:block"
+                >
+                  Export Sheet
+                </p>
+
+                <PiExport
+                  color={appTheme[currentUser.theme].text_1}
+                  size={18}
+                />
+              </div>
+            )}
+
+            {hasProjectModule("products-wix-sync-cms-module") && (
+              <div
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_2,
+                }}
+                className="dim hover:brightness-75 rounded-[25px] w-[33px] [@media(min-width:460px)]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[13px] font-[600] cursor-pointer"
+                onClick={handleWixSync}
+              >
+                <p
+                  style={{
+                    color: appTheme[currentUser.theme].text_1,
+                  }}
+                  className="hidden [@media(min-width:460px)]:block"
+                >
+                  Sync Wix
+                </p>
+
+                <BsWindow
+                  color={appTheme[currentUser.theme].text_1}
+                  size={17}
+                />
+              </div>
+            )}
+
             <div
               style={{
                 backgroundColor: appTheme[currentUser.theme].background_2,
+                border: editMode
+                  ? `1px solid ${appTheme[currentUser.theme].text_1}`
+                  : "none",
               }}
-              className="dim hover:brightness-75 rounded-[25px] w-[33px] [@media(min-width:460px)]:w-[150px] h-[33px] flex flex-row justify-center items-center gap-[6px] text-[13px] font-[600] cursor-pointer"
-              onClick={handleGoogleExport}
+              className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
+              onClick={handleEditClick}
             >
-              <p
-                style={{
-                  color: appTheme[currentUser.theme].text_1,
-                }}
-                className="hidden [@media(min-width:460px)]:block"
-              >
-                Export Sheet
-              </p>
-
-              <PiExport color={appTheme[currentUser.theme].text_1} size={18} />
+              <FiEdit
+                size={17}
+                color={appTheme[currentUser.theme].text_1}
+                className="flex items-center justify-center"
+              />
             </div>
-          )}
 
-          {hasProjectModule("products-wix-sync-cms-module") && (
-            <div
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_2,
-              }}
-              className="dim hover:brightness-75 rounded-[25px] w-[33px] [@media(min-width:460px)]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[13px] font-[600] cursor-pointer"
-              onClick={handleWixSync}
-            >
-              <p
-                style={{
-                  color: appTheme[currentUser.theme].text_1,
-                }}
-                className="hidden [@media(min-width:460px)]:block"
-              >
-                Sync Wix
-              </p>
-
-              <BsWindow color={appTheme[currentUser.theme].text_1} size={17} />
-            </div>
-          )}
-
-          <div
-            style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
-              border: editMode
-                ? `1px solid ${appTheme[currentUser.theme].text_1}`
-                : "none",
-            }}
-            className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
-            onClick={handleEditClick}
-          >
-            <FiEdit
-              size={17}
-              color={appTheme[currentUser.theme].text_1}
-              className="flex items-center justify-center"
-            />
-          </div>
-
-          <div
-            style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
-            }}
-            className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
-            onClick={handleAddRow}
-          >
-            <FaPlus
-              size={17}
-              color={appTheme[currentUser.theme].text_1}
-              className="flex items-center justify-center"
-            />
-          </div>
-
-          {selectedProducts.length > 0 && productTableView && (
             <div
               style={{
                 backgroundColor: appTheme[currentUser.theme].background_2,
               }}
               className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
-              onClick={handleConfirmDelete}
+              onClick={handleAddRow}
             >
-              <IoTrashSharp
-                size={18}
+              <FaPlus
+                size={17}
                 color={appTheme[currentUser.theme].text_1}
                 className="flex items-center justify-center"
               />
             </div>
-          )}
+
+            {selectedProducts.length > 0 && productTableView && (
+              <div
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_2,
+                }}
+                className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
+                onClick={handleConfirmDelete}
+              >
+                <IoTrashSharp
+                  size={18}
+                  color={appTheme[currentUser.theme].text_1}
+                  className="flex items-center justify-center"
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>}
+      )}
     </div>
   );
 };

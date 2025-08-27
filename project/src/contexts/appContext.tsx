@@ -23,6 +23,8 @@ import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { Product } from "@/types/products";
 import { useProjectContext } from "./projectContext";
+import { runFrontendModule } from "@/modules/runFrontendModule";
+import { ProjectModule } from "@/types/project";
 
 type AppContextType = {
   localData: Product[];
@@ -61,6 +63,7 @@ type AppContextType = {
   checkForUnsavedChanges: () => boolean;
   productTableView: boolean;
   setProductTableView: React.Dispatch<React.SetStateAction<boolean>>;
+  handleRunModule: (identifier: string) => void;
 };
 
 export type FileImage = {
@@ -78,8 +81,14 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { currentProject, setCurrentProject } = useProjectContext();
-  const { productsData, isOptimisticUpdate, projectsData } =
-    useContextQueries();
+  const {
+    productsData,
+    isOptimisticUpdate,
+    projectsData,
+    projectModules,
+    modules,
+    integrations,
+  } = useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
   const lastPathRef = useRef<string | null>(null);
@@ -464,6 +473,24 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const [productTableView, setProductTableView] = useState<boolean>(true);
 
+  const handleRunModule = async (identifier: string) => {
+    if (!currentProject) return;
+    if (
+      projectModules.some(
+        (projectModule: ProjectModule) =>
+          projectModule.identifier === identifier
+      )
+    ) {
+      await runFrontendModule(identifier, {
+        modules,
+        projectModules,
+        integrations,
+        localData,
+        currentProject,
+      });
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -496,6 +523,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         checkForUnsavedChanges,
         productTableView,
         setProductTableView,
+        handleRunModule,
       }}
     >
       {children}
