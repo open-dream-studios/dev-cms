@@ -9,6 +9,7 @@ import {
   formatSQLDate,
   generateSerial,
 } from "../functions/data.js";
+import { decrypt } from "../util/crypto.js";
 
 dotenv.config();
 
@@ -221,92 +222,144 @@ export const deleteProducts = (req, res) => {
 export const syncToGoogleSheets = async (req, res) => {
   try {
     const { project_idx } = req.user;
-    db.query(
-      "SELECT * FROM products WHERE project_idx = ?",
-      [project_idx],
-      async (err, data) => {
-        if (err) return res.status(500).json(err);
 
-        const spreadsheetId = "1eqbNGSklj9kRzh7jcRG9PtNKURURjy_V8sc3Kz5WJSo";
-        const sheetName = "Inventory";
+    // 1. Look up the integration for Google Sheets
+    const moduleQ = `
+      SELECT pi.config 
+      FROM project_integrations pi
+      JOIN modules m ON pi.module_id = m.id
+      WHERE pi.project_idx = ? AND m.identifier = 'products-export-to-sheets-module'
+      LIMIT 1
+    `;
 
+    db.query(moduleQ, [project_idx], (err, rows) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+      if (!rows.length) {
+        return res
+          .status(400)
+          .json({ message: "Google Sheets not configured" });
+      }
+
+      let configRow = rows[0].config;
+
+      // If MySQL column type is JSON, it’s already an object.
+      // If it's TEXT, it may still be a string.
+      if (typeof configRow === "string") {
         try {
-          const sortedData = data.sort(
-            (a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
-          );
-
-          const rows = sortedData.map((row, index) => [
-            index + 1,
-            row.serial_number,
-            row.name,
-            row.description || "",
-            row.note || "",
-            row.make || "",
-            row.model || "",
-            row.price || "",
-            row.type || "",
-            formatSQLDate(row.date_entered),
-            formatSQLDate(row.date_sold),
-            row.repair_status,
-            row.sale_status,
-            row.length || "",
-            row.width || "",
-            Array.isArray(row.images)
-              ? row.images.join(" ")
-              : typeof row.images === "string"
-              ? JSON.parse(row.images || "[]").join(" ")
-              : "",
-          ]);
-
-          const header = [
-            "ID",
-            "Serial Number",
-            "Name",
-            "Description",
-            "Note",
-            "Make",
-            "Model",
-            "Price ($)",
-            "Type",
-            "Date Entered",
-            "Date Sold",
-            "Repair Status",
-            "Sale Status",
-            "Length (in)",
-            "Width (in)",
-            "Images",
-          ];
-
-          const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-          const parsed = JSON.parse(raw);
-          parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
-
-          const auth = new google.auth.GoogleAuth({
-            credentials: parsed,
-            scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-          });
-
-          const sheets = google.sheets({ version: "v4", auth });
-
-          await sheets.spreadsheets.values.clear({
-            spreadsheetId,
-            range: `${sheetName}!A1:Z`,
-          });
-
-          await sheets.spreadsheets.values.update({
-            spreadsheetId,
-            range: `${sheetName}!A1:Z`,
-            valueInputOption: "RAW",
-            requestBody: { values: [header, ...rows] },
-          });
-
-          return res.json({ success: true });
-        } catch (e) {
-          console.error(e);
-          return res.status(500).json("Google Sheets sync failed.");
+          configRow = JSON.parse(configRow);
+        } catch (err) {
+          console.error("Config JSON parse failed:", err);
+          return res
+            .status(500)
+            .json({ message: "Invalid integration config" });
         }
       }
-    );
+
+      const encryptedConfig = configRow;
+      const config = {};
+
+      for (const [key, value] of Object.entries(encryptedConfig)) {
+        try {
+          const decrypted = decrypt(value);
+          config[key] = decrypted || value;
+        } catch {
+          config[key] = value;
+        }
+      }
+
+      const { spreadsheetId, sheetName, serviceAccountJson } = config;
+
+      // 2. Validate presence
+      if (!spreadsheetId || !sheetName || !serviceAccountJson) {
+        return res.status(400).json({ message: "Missing Sheets credentials" });
+      }
+
+      // 3. Fetch products
+      console.log("TESTING", project_idx);
+      db.query(
+        "SELECT * FROM products WHERE project_idx = ?",
+        [project_idx],
+        async (err, data) => {
+          if (err) return res.status(500).json(err);
+          console.log(data);
+
+          try {
+            const sortedData = data.sort(
+              (a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
+            );
+
+            const rows = sortedData.map((row, index) => [
+              index + 1,
+              row.serial_number,
+              row.name,
+              row.description || "",
+              row.note || "",
+              row.make || "",
+              row.model || "",
+              row.price || "",
+              row.type || "",
+              formatSQLDate(row.date_entered),
+              formatSQLDate(row.date_sold),
+              row.repair_status,
+              row.sale_status,
+              row.length || "",
+              row.width || "",
+              Array.isArray(row.images)
+                ? row.images.join(" ")
+                : typeof row.images === "string"
+                ? JSON.parse(row.images || "[]").join(" ")
+                : "",
+            ]);
+
+            const header = [
+              "ID",
+              "Serial Number",
+              "Name",
+              "Description",
+              "Note",
+              "Make",
+              "Model",
+              "Price ($)",
+              "Type",
+              "Date Entered",
+              "Date Sold",
+              "Repair Status",
+              "Sale Status",
+              "Length (in)",
+              "Width (in)",
+              "Images",
+            ];
+
+            const parsed = JSON.parse(serviceAccountJson);
+            parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
+
+            const auth = new google.auth.GoogleAuth({
+              credentials: parsed,
+              scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+            });
+
+            const sheets = google.sheets({ version: "v4", auth });
+
+            await sheets.spreadsheets.values.clear({
+              spreadsheetId: spreadsheetId,
+              range: `${sheetName}!A1:ZZZ`,
+            });
+
+            await sheets.spreadsheets.values.update({
+              spreadsheetId: spreadsheetId,
+              range: `${sheetName}!A1:ZZZ`,
+              valueInputOption: "RAW",
+              requestBody: { values: [header, ...rows] },
+            });
+
+            return res.json({ success: true });
+          } catch (e) {
+            console.error(e);
+            return res.status(500).json("Google Sheets sync failed.");
+          }
+        }
+      );
+    });
   } catch (e) {
     console.error(e);
     return res.status(500).json("Unexpected error syncing with Google Sheets.");

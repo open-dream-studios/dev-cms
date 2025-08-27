@@ -10,9 +10,6 @@ import { IoClose } from "react-icons/io5";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useIntegrationForm } from "@/hooks/useIntegrationForm";
 import { IntegrationFormData } from "@/util/schemas/integrationSchema";
-import { makeRequest } from "@/util/axios";
-import { BiChevronLeft } from "react-icons/bi";
-import { GoChevronLeft } from "react-icons/go";
 import { MdChevronLeft } from "react-icons/md";
 
 type IntegrationConfig = Record<string, string>;
@@ -175,7 +172,7 @@ const ModuleSettings = () => {
             />
           </div>
         )}
-        <p className="font-[600] h-[40px] text-[29px] leading-[33px] md:text-[32px] md:leading-[36px]">
+        <p className="font-[600] h-[40px] truncate text-[29px] leading-[33px] md:text-[32px] md:leading-[36px]">
           {selectedProjectModule ? selectedProjectModule.name : "Modules"}
         </p>
         {currentProject !== null && (

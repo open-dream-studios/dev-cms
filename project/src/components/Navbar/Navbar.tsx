@@ -19,6 +19,8 @@ import Settings from "../Settings/Settings";
 import { useContextQueries } from "@/contexts/queryContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { AiFillAppstore } from "react-icons/ai";
+import { LuBlocks } from "react-icons/lu";
+import EditModules from "@/screens/AdminHome/EditModules";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -87,6 +89,20 @@ const Navbar = () => {
   const handleClearProject = () => {
     setModal1({ ...modal1, open: false });
     setCurrentProject(null);
+  };
+
+  const handleEditModulesClick = () => {
+    setModal1({
+      ...modal1,
+      open: !modal1.open,
+      showClose: true,
+      offClickClose: true,
+      width: "w-[90vw] md:w-[80vw]",
+      maxWidth: "md:max-w-[1000px]",
+      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+      borderRadius: "rounded-[15px] md:rounded-[20px]",
+      content: <EditModules />,
+    });
   };
 
   if (!currentUser) return null;
@@ -174,6 +190,24 @@ const Navbar = () => {
               }}
               className="w-[28px] h-[28px] mt-[3px] simple-spinner"
             ></div>
+          )}
+
+          {currentUser.admin === 1 && (
+            <div
+              onClick={handleEditModulesClick}
+              className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_2,
+              }}
+            >
+              <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
+                <LuBlocks
+                  size={20}
+                  color={appTheme[currentUser.theme].text_3}
+                  className="opacity-[60%]"
+                />
+              </div>
+            </div>
           )}
 
           {currentProject !== null &&
