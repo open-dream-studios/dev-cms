@@ -3,7 +3,6 @@ import { z } from "zod";
 
 const optionalString = z
   .string()
-  .nullable()
   .transform((val) => (val === "" ? undefined : val))
   .optional();
 

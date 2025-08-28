@@ -3,7 +3,7 @@ export interface Project {
   id: number;
   project_id: string;
   name: string;
-  short_name?: string;
+  short_name?: string | null | undefined;
   domain?: string;
   backend_domain?: string;
   brand?: string;

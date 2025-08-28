@@ -1,5 +1,5 @@
 "use client";
-import React, { useContext, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { appTheme } from "../../util/appTheme";
 import { AuthContext } from "../../contexts/authContext";
 import PrivacySettings from "./UserAccess";
@@ -24,8 +24,10 @@ const Settings = ({ initialPage }: SettingsProps) => {
     initialPage === null ? "Site" : initialPage
   );
 
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
-
+  const currentProject = useMemo(
+    () => projectsData.find((p) => p.id === currentProjectId) ?? null,
+    [projectsData, currentProjectId]
+  );
   if (!currentUser) return null;
 
   const settingsPages: SettingsPages[] =

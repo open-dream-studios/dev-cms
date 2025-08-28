@@ -26,21 +26,21 @@ const ProjectSettings = () => {
 
   const form = useProjectSettingsForm({
     name: currentProjectData.name,
-    short_name: currentProjectData.short_name,
-    domain: currentProjectData.domain,
-    logo: currentProjectData.logo,
-    backend_domain: currentProjectData.backend_domain,
-    brand: currentProjectData.brand,
+    short_name: currentProjectData.short_name ?? undefined,
+    domain: currentProjectData.domain ?? undefined,
+    logo: currentProjectData.logo ?? undefined,
+    backend_domain: currentProjectData.backend_domain ?? undefined,
+    brand: currentProjectData.brand ?? undefined,
   });
 
   useEffect(() => {
     form.reset({
       name: currentProjectData.name,
-      short_name: currentProjectData.short_name,
-      domain: currentProjectData.domain,
-      logo: currentProjectData.logo,
-      backend_domain: currentProjectData.backend_domain,
-      brand: currentProjectData.brand,
+      short_name: currentProjectData.short_name ?? undefined,
+      domain: currentProjectData.domain ?? undefined,
+      logo: currentProjectData.logo ?? undefined,
+      backend_domain: currentProjectData.backend_domain ?? undefined,
+      brand: currentProjectData.brand ?? undefined,
     });
   }, [currentProjectData, form]);
 
