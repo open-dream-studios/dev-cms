@@ -1,6 +1,6 @@
 // server/controllers/media.js
 import { db } from "../connection/connect.js";
-import { addMediaDB, getMediaDB, reorderMediaDB } from "../functions/media.js";
+import { addMediaDB, getMediaDB, reorderMediaDB, reorderFoldersDB } from "../functions/media.js";
 
 // MEDIA
 
@@ -77,6 +77,21 @@ export const deleteMedia = (req, res) => {
   });
 };
 
+export const reorderMedia = async (req, res) => {
+  try {
+    const { project_idx, folder_id, orderedIds } = req.body;
+    if (!project_idx || !Array.isArray(orderedIds)) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    const result = await reorderMediaDB(project_idx, folder_id || null, orderedIds);
+    return res.status(200).json({ success: true, updated: result.affectedRows });
+  } catch (err) {
+    console.error("Error reordering media:", err);
+    return res.status(500).json({ message: "DB error" });
+  }
+};
+
 // FOLDERS
 export const getFolders = (req, res) => {
   const { project_idx } = req.query;
@@ -84,10 +99,10 @@ export const getFolders = (req, res) => {
     return res.status(400).json({ message: "project_idx required" });
 
   const q = `
-  SELECT id, name, parent_id, created_at
-  FROM media_folders
-  WHERE project_idx = ?                
-  ORDER BY created_at DESC
+SELECT id, name, parent_id, created_at, ordinal
+FROM media_folders
+WHERE project_idx = ?
+ORDER BY ordinal ASC
 `;
   db.query(q, [project_idx], (err, rows) => {
     if (err) return res.status(500).json({ message: "DB error" });
@@ -101,13 +116,31 @@ export const addFolder = (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  const q = `
-  INSERT INTO media_folders (project_idx, name, parent_id)  
-  VALUES (?, ?, ?)
-`;
-  db.query(q, [project_idx, name, parent_id || null], (err, result) => {
+  // Step 1: Find max ordinal in this parent scope
+  const getMaxQ = `
+    SELECT COALESCE(MAX(ordinal), -1) AS maxOrdinal
+    FROM media_folders
+    WHERE project_idx = ? AND (parent_id <=> ?)
+  `;
+
+  db.query(getMaxQ, [project_idx, parent_id || null], (err, rows) => {
     if (err) return res.status(500).json({ message: "DB error" });
-    return res.json({ id: result.insertId, message: "Folder created" });
+
+    const nextOrdinal = rows[0].maxOrdinal + 1;
+
+    // Step 2: Insert with calculated ordinal
+    const insertQ = `
+      INSERT INTO media_folders (project_idx, name, parent_id, ordinal, created_at, updated_at)  
+      VALUES (?, ?, ?, ?, NOW(), NOW())
+    `;
+    db.query(
+      insertQ,
+      [project_idx, name, parent_id || null, nextOrdinal],
+      (err, result) => {
+        if (err) return res.status(500).json({ message: "DB error" });
+        return res.json({ id: result.insertId, message: "Folder created" });
+      }
+    );
   });
 };
 
@@ -123,17 +156,17 @@ export const deleteFolder = (req, res) => {
   });
 };
 
-export const reorderMedia = async (req, res) => {
+export const reorderFolders = async (req, res) => {
   try {
-    const { project_idx, folder_id, orderedIds } = req.body;
+    const { project_idx, parent_id, orderedIds } = req.body;
     if (!project_idx || !Array.isArray(orderedIds)) {
       return res.status(400).json({ message: "Missing fields" });
     }
 
-    const result = await reorderMediaDB(project_idx, folder_id || null, orderedIds);
+    const result = await reorderFoldersDB(project_idx, parent_id || null, orderedIds);
     return res.status(200).json({ success: true, updated: result.affectedRows });
   } catch (err) {
-    console.error("Error reordering media:", err);
+    console.error("Error reordering folders:", err);
     return res.status(500).json({ message: "DB error" });
   }
 };

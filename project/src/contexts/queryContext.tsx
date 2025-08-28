@@ -115,25 +115,33 @@ export type QueryContextType = {
   mediaFolders: MediaFolder[];
   isLoadingMedia: boolean;
   isLoadingMediaFolders: boolean;
-  refetchMedia: () => Promise<QueryObserverResult<Media[], Error>>;
-  refetchMediaFolders: () => Promise<QueryObserverResult<MediaFolder[], Error>>;
+  refetchMedia: () => void;
+  refetchMediaFolders: () => void;
   addMedia: (file: {
     project_idx: number;
     folder_id?: number | null;
-    type: "image" | "video" | "file";
     url: string;
+    type: "image" | "video" | "file";
     alt_text?: string;
     metadata?: Record<string, any>;
     media_usage: MediaUsage;
     tags?: string[];
   }) => Promise<void>;
   deleteMedia: (id: number) => Promise<void>;
+  reorderMedia: (data: {
+    folder_id: number | null;
+    orderedIds: number[];
+  }) => Promise<void>;
   addMediaFolder: (data: {
     project_idx: number;
     parent_id?: number | null;
     name: string;
   }) => Promise<void>;
   deleteMediaFolder: (id: number) => Promise<void>;
+  reorderMediaFolders: (data: {
+    parent_id: number | null;
+    orderedIds: number[];
+  }) => Promise<void>;
 
   // // PAGES
   // pages: Page[];
@@ -686,82 +694,98 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     isLoading: isLoadingMedia,
     refetch: refetchMedia,
   } = useQuery<Media[]>({
-    queryKey: ["media", currentProject?.id],
+    queryKey: ["media", currentProjectId],
     queryFn: async () => {
-      if (!currentProject) return [];
+      if (!currentProjectId) return [];
       const res = await makeRequest.get("/api/media", {
-        params: { project_idx: currentProject.id },
+        params: { project_idx: currentProjectId },
       });
       return res.data.media || [];
     },
-    enabled: isLoggedIn && !!currentProject,
+    enabled: isLoggedIn && !!currentProjectId,
   });
 
   const addMediaMutation = useMutation({
-    mutationFn: async (data: {
-      project_idx: number;
-      folder_id?: number | null;
-      url: string;
-      type: "image" | "video" | "file";
-      alt_text?: string;
-      metadata?: Record<string, any>;
-      media_usage: MediaUsage;
-      tags?: string[];
-    }) => {
+    mutationFn: async (data: any) => {
       await makeRequest.post("/api/media/add", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["media", currentProject?.id],
-      });
+      queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
     },
   });
-
-  const addMedia = async (file: {
-    project_idx: number;
-    folder_id?: number | null;
-    url: string;
-    type: "image" | "video" | "file";
-    alt_text?: string;
-    metadata?: Record<string, any>;
-    media_usage: MediaUsage;
-    tags?: string[];
-  }) => {
-    await addMediaMutation.mutateAsync(file);
-  };
+  const addMedia = async (file: any) => addMediaMutation.mutateAsync(file);
 
   const deleteMediaMutation = useMutation({
     mutationFn: async (id: number) => {
       await makeRequest.post("/api/media/delete", {
-        project_idx: currentProject?.id,
+        project_idx: currentProjectId,
         id,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["media", currentProject?.id],
-      });
+      queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
     },
   });
+  const deleteMedia = async (id: number) => deleteMediaMutation.mutateAsync(id);
 
-  const deleteMedia = async (id: number) => {
-    await deleteMediaMutation.mutateAsync(id);
-  };
+  const reorderMediaMutation = useMutation({
+    mutationFn: async (data: {
+      folder_id: number | null;
+      orderedIds: number[];
+    }) => {
+      await makeRequest.post("/api/media/reorder", {
+        project_idx: currentProjectId,
+        folder_id: data.folder_id,
+        orderedIds: data.orderedIds,
+      });
+    },
+    onMutate: async (variables) => {
+      // optimistic update
+      await queryClient.cancelQueries({
+        queryKey: ["media", currentProjectId],
+      });
+      const prevMedia =
+        queryClient.getQueryData<Media[]>(["media", currentProjectId]) || [];
+      const reordered = [...prevMedia].map((m) =>
+        variables.orderedIds.includes(m.id)
+          ? { ...m, ordinal: variables.orderedIds.indexOf(m.id) }
+          : m
+      );
+      queryClient.setQueryData(["media", currentProjectId], reordered);
+      return { prevMedia };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prevMedia) {
+        queryClient.setQueryData(
+          ["media", currentProjectId],
+          context.prevMedia
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
+    },
+  });
+  const reorderMedia = async (data: {
+    folder_id: number | null;
+    orderedIds: number[];
+  }) => reorderMediaMutation.mutateAsync(data);
 
+  // --- MEDIA FOLDERS ---
   const {
     data: mediaFolders = [],
     isLoading: isLoadingMediaFolders,
     refetch: refetchMediaFolders,
   } = useQuery<MediaFolder[]>({
-    queryKey: ["mediaFolders", currentProject?.id],
+    queryKey: ["mediaFolders", currentProjectId],
     queryFn: async () => {
-      if (!currentProject) return [];
+      if (!currentProjectId) return [];
       const res = await makeRequest.get("/api/media/folders", {
-        params: { project_idx: currentProject.id },
+        params: { project_idx: currentProjectId },
       });
       return res.data.folders || [];
     },
-    enabled: isLoggedIn && !!currentProject,
+    enabled: isLoggedIn && !!currentProjectId,
   });
 
   const addMediaFolderMutation = useMutation({
@@ -774,36 +798,78 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["mediaFolders", currentProject?.id],
+        queryKey: ["mediaFolders", currentProjectId],
       });
     },
   });
-
   const addMediaFolder = async (data: {
     project_idx: number;
     parent_id?: number | null;
     name: string;
-  }) => {
-    await addMediaFolderMutation.mutateAsync(data);
-  };
+  }) => addMediaFolderMutation.mutateAsync(data);
 
   const deleteMediaFolderMutation = useMutation({
     mutationFn: async (id: number) => {
       await makeRequest.post("/api/media/folders/delete", {
-        project_idx: currentProject?.id,
+        project_idx: currentProjectId,
         id,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["mediaFolders", currentProject?.id],
+        queryKey: ["mediaFolders", currentProjectId],
       });
     },
   });
+  const deleteMediaFolder = async (id: number) =>
+    deleteMediaFolderMutation.mutateAsync(id);
 
-  const deleteMediaFolder = async (id: number) => {
-    await deleteMediaFolderMutation.mutateAsync(id);
-  };
+  const reorderMediaFoldersMutation = useMutation({
+    mutationFn: async (data: {
+      parent_id: number | null;
+      orderedIds: number[];
+    }) => {
+      await makeRequest.post("/api/media/folders/reorder", {
+        project_idx: currentProjectId,
+        parent_id: data.parent_id,
+        orderedIds: data.orderedIds,
+      });
+    },
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: ["mediaFolders", currentProjectId],
+      });
+      const prevFolders =
+        queryClient.getQueryData<MediaFolder[]>([
+          "mediaFolders",
+          currentProjectId,
+        ]) || [];
+      const reordered = [...prevFolders].map((f) =>
+        variables.orderedIds.includes(f.id)
+          ? { ...f, ordinal: variables.orderedIds.indexOf(f.id) }
+          : f
+      );
+      queryClient.setQueryData(["mediaFolders", currentProjectId], reordered);
+      return { prevFolders };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prevFolders) {
+        queryClient.setQueryData(
+          ["mediaFolders", currentProjectId],
+          context.prevFolders
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["mediaFolders", currentProjectId],
+      });
+    },
+  });
+  const reorderMediaFolders = async (data: {
+    parent_id: number | null;
+    orderedIds: number[];
+  }) => reorderMediaFoldersMutation.mutateAsync(data);
 
   return (
     <QueryContext.Provider
@@ -856,8 +922,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchMediaFolders,
         addMedia,
         deleteMedia,
+        reorderMedia,
         addMediaFolder,
         deleteMediaFolder,
+        reorderMediaFolders,
       }}
     >
       {children}

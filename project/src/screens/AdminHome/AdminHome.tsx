@@ -104,7 +104,7 @@ const AdminHome = () => {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-  if (isLoadingProjects) return <p>Loading projects...</p>;
+  if (isLoadingProjects) return null;
 
   const handleAddProjectClick = () => {
     const steps: StepConfig[] = [

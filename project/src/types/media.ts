@@ -1,4 +1,4 @@
-// project/src/util/types/media.ts
+// project/src/types/media.ts
 export type FileType = "image" | "video" | "file";
 
 export type MediaFolder = {
@@ -8,6 +8,7 @@ export type MediaFolder = {
   name: string;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
+  ordinal: number;
 };
 
 export type MediaUsage = "page" | "product" | "module" | "general";
@@ -22,6 +23,7 @@ export type Media = {
   metadata?: Record<string, any> | null;
   media_usage: MediaUsage;
   tags: string[];
+  ordinal: number;
   created_at: string;
   updated_at: string;
 };

@@ -11,6 +11,7 @@ import {
 } from "../controllers/media.js";
 import { authenticateUser } from "../connection/middlewares.js";
 import { checkProjectPermission } from "../util/permissions.js";
+import { reorderFolders } from "../controllers/media.js";
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.post("/reorder", authenticateUser, checkProjectPermission(3), reorderMedi
 router.get("/folders", authenticateUser, checkProjectPermission(2), getFolders);
 router.post("/folders/add", authenticateUser, checkProjectPermission(3), addFolder);
 router.post("/folders/delete", authenticateUser, checkProjectPermission(3), deleteFolder);
+router.post("/folders/reorder", authenticateUser, checkProjectPermission(3), reorderFolders);
 
 export default router;

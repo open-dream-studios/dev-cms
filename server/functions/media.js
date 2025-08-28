@@ -97,3 +97,34 @@ export const reorderMediaDB = (project_idx, folder_id, orderedIds) => {
     });
   });
 };
+
+export const reorderFoldersDB = (project_idx, parent_id, orderedFolderIds) => {
+  console.log("reordering...", orderedFolderIds);
+  return new Promise((resolve, reject) => {
+    if (!orderedFolderIds || orderedFolderIds.length === 0) {
+      return resolve({ affectedRows: 0 });
+    }
+
+    const caseStatements = orderedFolderIds
+      .map((id, idx) => `WHEN ${db.escape(id)} THEN ${idx}`)
+      .join(" ");
+
+    const q = `
+      UPDATE media_folders
+      SET ordinal = CASE id
+        ${caseStatements}
+      END
+      WHERE project_idx = ? 
+      AND (parent_id <=> ?)
+      AND id IN (${orderedFolderIds.map(() => "?").join(",")})
+    `;
+
+    db.query(q, [project_idx, parent_id, ...orderedFolderIds], (err, result) => {
+      if (err) {
+        console.error("Error reordering folders:", err);
+        return reject(err);
+      }
+      resolve(result);
+    });
+  });
+};
