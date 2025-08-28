@@ -8,6 +8,7 @@ import app_details from "@/util/appDetails.json";
 import { useRouter } from "next/navigation";
 import { Product } from "@/types/products";
 import { useProjectContext } from "@/contexts/projectContext";
+import { useContextQueries } from "@/contexts/queryContext";
 
 const CustomInventoryFrame = ({
   item,
@@ -17,7 +18,10 @@ const CustomInventoryFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useProjectContext();
+  const { projectsData } = useContextQueries()
+  const { currentProjectId } = useProjectContext();
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+
   const router = useRouter();
   const TubTitle = item.name;
   const TubMake = item.make;

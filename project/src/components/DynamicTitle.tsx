@@ -4,10 +4,14 @@
 import { useEffect } from "react";
 import { useProjectContext } from "@/contexts/projectContext";
 import { usePathname } from "next/navigation";
+import { useContextQueries } from "@/contexts/queryContext";
 
 export default function DynamicTitle() {
-  const { currentProject } = useProjectContext();
+  const { currentProjectId } = useProjectContext();
+  const { projectsData } = useContextQueries()
   const pathname = usePathname();
+
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
 
   useEffect(() => {
     if (currentProject) {

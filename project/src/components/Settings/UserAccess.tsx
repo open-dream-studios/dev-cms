@@ -16,9 +16,10 @@ import { useProjectContext } from "@/contexts/projectContext";
 
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject, setCurrentProject } = useProjectContext();
-  const { updateProjectUser, projectUsers, deleteProjectUser } =
+  const { currentProjectId, setCurrentProjectId } = useProjectContext();
+  const { updateProjectUser, projectUsers, deleteProjectUser, projectsData } =
     useContextQueries();
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -46,7 +47,7 @@ const UserAccess = () => {
 
   const handleClearProject = () => {
     setModal1({ ...modal1, open: false });
-    setCurrentProject(null);
+    setCurrentProjectId(null);
   };
 
   const handleShowAddUserInput = () => {
@@ -171,13 +172,21 @@ const UserAccess = () => {
             >
               <input
                 {...form.register("email")}
+                placeholder="Add email..."
                 onChange={(e) => {
                   form.setValue("email", e.target.value, {
                     shouldValidate: false,
                   });
                   form.clearErrors("email");
                 }}
-                placeholder="Add email..."
+                style={
+                  {
+                    "--custom-input-text-color":
+                      appTheme[currentUser.theme].text_4,
+                    color: appTheme[currentUser.theme].text_4,
+                    backgroundColor: "transparent",
+                  } as React.CSSProperties
+                }
                 className="outline-none input w-[100%] py-[6px] rounded-[5px] text-[14px]"
               />
               {form.formState.isSubmitted && form.formState.errors.email && (

@@ -231,3 +231,49 @@ export const deleteProjectUser = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const updateProject = async (req, res) => {
+  const {
+    project_idx,
+    name,
+    short_name,
+    domain,
+    backend_domain,
+    brand,
+    logo,
+  } = req.body;
+
+  if (!project_idx || !name) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const [result] = await db.promise().query(
+      `
+      UPDATE projects
+      SET name = ?,
+          short_name = ?,
+          domain = ?,
+          backend_domain = ?,
+          brand = ?,
+          logo = ?
+      WHERE id = ?
+      `,
+      [name, short_name || null, domain || null, backend_domain || null, brand || null, logo || null, project_idx]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    // Fetch the updated project
+    const [rows] = await db
+      .promise()
+      .query("SELECT * FROM projects WHERE id = ?", [project_idx]);
+
+    res.json({ project: rows[0] });
+  } catch (err) {
+    console.error("Error in updateProject:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

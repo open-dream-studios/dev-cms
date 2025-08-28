@@ -11,8 +11,6 @@ import { IoCloseOutline } from "react-icons/io5";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProjectContext } from "@/contexts/projectContext";
-import { LuBlocks } from "react-icons/lu";
-import EditModules from "./EditModules";
 import { FiEdit } from "react-icons/fi";
 
 const ProjectItem = ({
@@ -23,13 +21,13 @@ const ProjectItem = ({
   editProjectsMode: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { setCurrentProject } = useProjectContext();
+  const { setCurrentProjectId } = useProjectContext();
   const { deleteProject } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const handleProjectClick = () => {
-    setCurrentProject(project);
+    setCurrentProjectId(project.id);
   };
 
   const handleConfirmDelete = () => {
@@ -99,6 +97,7 @@ const AdminHome = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const { projectsData, addProject, isLoadingProjects } = useContextQueries();
+  const [editProjectsMode, setEditProjectsMode] = useState<boolean>(false);
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -147,8 +146,6 @@ const AdminHome = () => {
     queryClient.invalidateQueries({ queryKey: ["projectUsers"] });
   };
 
-  const [editProjectsMode, setEditProjectsMode] = useState<boolean>(false);
-
   if (!currentUser) return null;
 
   return (
@@ -160,32 +157,34 @@ const AdminHome = () => {
               Projects
             </h2>
 
-            <div className="flex flex-row gap-[12px]">
-              <div
-                onClick={handleAddProjectClick}
-                className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
-                style={{
-                  backgroundColor: appTheme[currentUser.theme].background_1_2,
-                }}
-              >
-                <FaPlus size={16} />
+            {currentUser.admin === 1 && (
+              <div className="flex flex-row gap-[12px]">
+                <div
+                  onClick={handleAddProjectClick}
+                  className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_1_2,
+                  }}
+                >
+                  <FaPlus size={16} />
+                </div>
+
+                <div
+                  onClick={() => {
+                    setEditProjectsMode((prev) => !prev);
+                  }}
+                  className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
+                  style={{
+                    border: editProjectsMode
+                      ? "1.4px solid" + appTheme[currentUser.theme].text_3
+                      : "none",
+                    backgroundColor: appTheme[currentUser.theme].background_1_2,
+                  }}
+                >
+                  <FiEdit size={16} />
+                </div>
               </div>
-              
-              <div
-                onClick={() => {
-                  setEditProjectsMode((prev) => !prev);
-                }}
-                className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
-                style={{
-                  border: editProjectsMode
-                    ? "1.4px solid" + appTheme[currentUser.theme].text_3
-                    : "none",
-                  backgroundColor: appTheme[currentUser.theme].background_1_2,
-                }}
-              >
-                <FiEdit size={16} />
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}

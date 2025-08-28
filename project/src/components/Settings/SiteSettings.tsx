@@ -2,29 +2,20 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext";
-import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { ProjectUser, UserRole, validUserRoles } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useState } from "react";
 import { useProjectUserForm } from "@/hooks/useProjectUserForm";
 import { ProjectUserFormData } from "@/util/schemas/projectUserSchema";
-import { AiFillAppstore } from "react-icons/ai";
-import { FiEdit } from "react-icons/fi";
-import { FaPlus, FaRegCircleCheck } from "react-icons/fa6";
-import { IoClose } from "react-icons/io5";
-import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useProjectContext } from "@/contexts/projectContext";
 
 const SiteSettings = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject, setCurrentProject } = useProjectContext();
+  const { currentProjectId, setCurrentProjectId } = useProjectContext();
   const { projectsData, updateProjectUser, projectUsers, deleteProjectUser } =
     useContextQueries();
 
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
 
   if (!currentUser || !currentProject) return null;
 
@@ -47,7 +38,6 @@ const SiteSettings = () => {
   const [showAddProjectInput, setShowAddProjectInput] =
     useState<boolean>(false);
   const [editListMode, setEditListMode] = useState<boolean>(false);
-
 
   const handleShowAddUserInput = () => {
     form.reset({ email: "", role: validUserRoles[1] });

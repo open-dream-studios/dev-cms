@@ -84,6 +84,15 @@ export type QueryContextType = {
     parent_module_id: number | null;
   }) => Promise<void>;
   deleteModule: (id: number) => Promise<void>;
+  updateProject: (data: {
+    project_idx: number;
+    name: string;
+    short_name?: string;
+    domain?: string;
+    backend_domain?: string;
+    brand?: string;
+    logo?: string | null;
+  }) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -91,13 +100,83 @@ const QueryContext = createContext<QueryContextType | undefined>(undefined);
 export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { currentProject } = useProjectContext();
+  const { currentProjectId } = useProjectContext();
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const isLoggedIn = useMemo(
     () => !!currentUser?.user_id,
     [currentUser?.user_id]
   );
+
+  const isOptimisticUpdate = useRef(false);
+
+  const {
+    data: projectsData = [],
+    isLoading: isLoadingProjects,
+    refetch: refetchProjects,
+  } = useQuery<Project[]>({
+    queryKey: ["projects"],
+    queryFn: async () => {
+      const res = await makeRequest.get("/api/projects");
+      return res.data.projects;
+    },
+    enabled: isLoggedIn,
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (projectData: AddProjectInput) => {
+      await makeRequest.post("/api/projects/add", projectData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+
+  const addProject = async (projectData: AddProjectInput) => {
+    await mutation.mutateAsync(projectData);
+  };
+
+  const deleteProjectMutation = useMutation<
+    void,
+    Error,
+    string[],
+    { previousData: Project[] | undefined; queryKey: string[] }
+  >({
+    mutationFn: async (ids: string[]) => {
+      await makeRequest.post("/api/projects/delete", {
+        ids,
+      });
+    },
+    onMutate: async (ids: string[]) => {
+      const queryKey = ["projects"];
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData<Project[]>(queryKey);
+      if (!previousData) return { previousData, queryKey };
+
+      const newData = previousData.filter(
+        (project) => !ids.includes(project.project_id)
+      );
+      queryClient.setQueryData(queryKey, newData);
+      return { previousData, queryKey };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousData && context?.queryKey) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
+      }
+    },
+    onSettled: (_data, _error, _variables, context) => {
+      if (context?.queryKey) {
+        queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
+    },
+  });
+
+  const deleteProject = async (project: Project) => {
+    await deleteProjectMutation.mutateAsync([project.project_id]);
+  };
+
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
 
   const {
     data: productsData,
@@ -204,74 +283,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const deleteProducts = async (serial_numbers: string[]) => {
     await deleteProductsMutation.mutateAsync(serial_numbers);
-  };
-
-  const isOptimisticUpdate = useRef(false);
-
-  const {
-    data: projectsData = [],
-    isLoading: isLoadingProjects,
-    refetch: refetchProjects,
-  } = useQuery<Project[]>({
-    queryKey: ["projects"],
-    queryFn: async () => {
-      const res = await makeRequest.get("/api/projects");
-      return res.data.projects;
-    },
-    enabled: isLoggedIn,
-  });
-
-  const mutation = useMutation({
-    mutationFn: async (projectData: AddProjectInput) => {
-      await makeRequest.post("/api/projects/add", projectData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-    },
-  });
-
-  const addProject = async (projectData: AddProjectInput) => {
-    await mutation.mutateAsync(projectData);
-  };
-
-  const deleteProjectMutation = useMutation<
-    void,
-    Error,
-    string[],
-    { previousData: Project[] | undefined; queryKey: string[] }
-  >({
-    mutationFn: async (ids: string[]) => {
-      await makeRequest.post("/api/projects/delete", {
-        ids,
-      });
-    },
-    onMutate: async (ids: string[]) => {
-      const queryKey = ["projects"];
-      await queryClient.cancelQueries({ queryKey });
-
-      const previousData = queryClient.getQueryData<Project[]>(queryKey);
-      if (!previousData) return { previousData, queryKey };
-
-      const newData = previousData.filter(
-        (project) => !ids.includes(project.project_id)
-      );
-      queryClient.setQueryData(queryKey, newData);
-      return { previousData, queryKey };
-    },
-    onError: (_err, _variables, context) => {
-      if (context?.previousData && context?.queryKey) {
-        queryClient.setQueryData(context.queryKey, context.previousData);
-      }
-    },
-    onSettled: (_data, _error, _variables, context) => {
-      if (context?.queryKey) {
-        queryClient.invalidateQueries({ queryKey: context.queryKey });
-      }
-    },
-  });
-
-  const deleteProject = async (project: Project) => {
-    await deleteProjectMutation.mutateAsync([project.project_id]);
   };
 
   const {
@@ -574,6 +585,43 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     await deleteModuleMutation.mutateAsync(id);
   };
 
+  const updateProjectMutation = useMutation({
+    mutationFn: async (data: {
+      project_idx: number;
+      name: string;
+      short_name?: string;
+      domain?: string;
+      backend_domain?: string;
+      brand?: string;
+      logo?: string | null;
+    }) => {
+      const res = await makeRequest.post("/api/projects/update", data);
+      return res.data.project;
+    },
+    onSuccess: (updatedProject) => {
+      queryClient.setQueryData<Project[]>(["projects"], (old) => {
+        if (!old) return [];
+        return old.map((p) =>
+          p.id === updatedProject.id ? updatedProject : p
+        );
+      });
+      // also refresh currentProject if cached
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+
+  const updateProject = async (data: {
+    project_idx: number;
+    name: string;
+    short_name?: string;
+    domain?: string;
+    backend_domain?: string;
+    brand?: string;
+    logo?: string | null;
+  }) => {
+    await updateProjectMutation.mutateAsync(data);
+  };
+
   return (
     <QueryContext.Provider
       value={{
@@ -616,6 +664,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchModules,
         upsertModule,
         deleteModule,
+        updateProject,
       }}
     >
       {children}

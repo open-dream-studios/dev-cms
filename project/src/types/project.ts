@@ -5,6 +5,8 @@ export interface Project {
   name: string;
   short_name: string;
   domain?: string;
+  backend_domain?: string;
+  brand?: string;
   logo: string;
 }
 

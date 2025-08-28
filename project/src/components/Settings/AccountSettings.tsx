@@ -6,6 +6,7 @@ import { useModal2Store } from "@/store/useModalStore";
 import { appTheme, ThemeType } from "@/util/appTheme";
 import { makeRequest } from "@/util/axios";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
+import NoUser from "@/util/icons/NoUser";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "firebase/auth";
 import { useContext } from "react";
@@ -87,7 +88,7 @@ const AccountSettings = () => {
     <div className="relative ml-[5px] md:ml-[8px] w-[calc(100%-43px)] sm:w-[calc(100%-80px)] h-full flex flex-col pt-[50px]">
       <div className="ml-[1px] flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]">
         <p className="mt-[-2px] font-[600] text-[29px] leading-[29px] h-[40px] md:text-[32px] md:leading-[32px]">
-           {currentUser.first_name} {currentUser.last_name}
+          {currentUser.first_name} {currentUser.last_name}
         </p>
       </div>
 
@@ -96,35 +97,24 @@ const AccountSettings = () => {
           border: `1px solid ${appTheme[currentUser.theme].table_bg_2}`,
           backgroundColor: appTheme[currentUser.theme].background_2,
         }}
-        className="flex flex-row items-center gap-[10px] py-[9px] rounded-[10px] px-[14px]"
+        className="flex flex-row items-center gap-[12.2px] py-[12.2px] rounded-[10px] px-[14px]"
       >
-        <div className="aspect-[1/1] h-[100%] flex items-center justify-center">
+        <div className="aspect-[1/1] h-[28px] flex items-center justify-center">
           {currentUser.profile_img_src !== null ? (
             <img
-              className="w-[28px] h-[28px] rounded-full"
+              className="h-[100%] aspect-[1/1] rounded-full"
               src={currentUser.profile_img_src}
             />
           ) : (
-            <div
-              className="w-full h-full relative overflow-hidden rounded-full flex items-center justify-center"
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_4,
-              }}
-            >
-              <div className="bg-white w-[12px] h-[12px] absolute top-[7px] rounded-full"></div>
-              <div
-                className="bg-white w-[18px] h-[12px] absolute top-[21px]"
-                style={{
-                  borderRadius: "20px",
-                }}
-              ></div>
+            <div className="h-[100%] aspect-[1/1]">
+              <NoUser />
             </div>
           )}
         </div>
 
         <div className="flex flex-col items-center">
           <p
-            className="font-[400] text-[17px] opacity-[0.7]"
+            className="font-[400] text-[17px] mt-[-1px] opacity-[0.7]"
             style={{ color: appTheme[currentUser.theme].text_3 }}
           >
             {currentUser.email}

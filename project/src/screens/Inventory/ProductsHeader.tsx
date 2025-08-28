@@ -35,14 +35,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
     productTableView,
     handleRunModule
   } = useAppContext();
-  const { currentProject } = useProjectContext();
+  const { currentProjectId } = useProjectContext();
   const { deleteProducts, hasProjectModule } =
     useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const pathname = usePathname();
 
-  if (!currentProject) return null;
+  if (!currentProjectId) return null;
 
   const handleWixSync = async () => {
     if (!currentUser) return null;
@@ -171,7 +171,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
     const newProduct: Product = {
       serial_number: newSerial,
       name: "",
-      project_idx: currentProject.id,
+      project_idx: currentProjectId,
       highlight: null,
       price: 0,
       make: newMake,

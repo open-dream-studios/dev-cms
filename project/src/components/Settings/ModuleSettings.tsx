@@ -17,7 +17,7 @@ type IntegrationConfig = Record<string, string>;
 
 const ModuleSettings = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useProjectContext();
+  const { currentProjectId } = useProjectContext();
   const {
     projectModules,
     deleteProjectModule,
@@ -26,7 +26,10 @@ const ModuleSettings = () => {
     integrations,
     upsertIntegration,
     deleteIntegrationKey,
+    projectsData,
   } = useContextQueries();
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+
   if (!currentUser || !currentProject) return null;
 
   const [addingModules, setAddingModules] = useState(false);

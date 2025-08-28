@@ -116,7 +116,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   const { productsData } = useContextQueries();
   const pathName = usePathname();
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useProjectContext();
+  const { currentProjectId } = useProjectContext();
 
   useEffect(() => {
     setSelectedProducts([]);
@@ -131,7 +131,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
 
   if (!currentUser) return;
 
-  if (!currentProject) {
+  if (!currentProjectId) {
     return (
       <div className="w-[100vw] display-height">
         <Modals landing={false} />

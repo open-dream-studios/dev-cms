@@ -98,7 +98,7 @@ export const inventoryDataLayout: InventoryDataItem[] = [
 
 const InventoryGrid = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useProjectContext();
+  const { currentProjectId } = useProjectContext();
   const { productsData, hasProjectModule } = useContextQueries();
   const { filteredProducts, selectedProducts, setSelectedProducts, localData } =
     useAppContext();
@@ -119,7 +119,7 @@ const InventoryGrid = () => {
     }
   };
 
-  if (!currentUser || !currentProject) return null;
+  if (!currentUser || !currentProjectId) return null;
 
   return (
     <div className="relative w-[100%] h-[100%] overflow-hidden">

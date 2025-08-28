@@ -80,7 +80,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { currentProject, setCurrentProject } = useProjectContext();
+  const { currentProjectId, setCurrentProjectId } = useProjectContext();
   const {
     productsData,
     isOptimisticUpdate,
@@ -93,13 +93,15 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [previousPath, setPreviousPath] = useState<string | null>(null);
   const lastPathRef = useRef<string | null>(null);
   const router = useRouter();
+  
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   useEffect(() => {
     if (projectsData.length === 1) {
-      setCurrentProject(projectsData[0]);
+      setCurrentProjectId(projectsData[0].id);
     }
   }, [projectsData]);
 

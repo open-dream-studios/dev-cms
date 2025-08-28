@@ -22,9 +22,9 @@ import { useContextQueries } from "@/contexts/queryContext";
 const LeftBar = () => {
   const pathname = usePathname();
   const { currentUser, handleLogout } = useContext(AuthContext);
-  const { currentProject } = useProjectContext();
+  const { currentProjectId } = useProjectContext();
   const { pageClick, productTableView, setProductTableView } = useAppContext();
-  const { hasProjectModule } = useContextQueries();
+  const { hasProjectModule, projectsData } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarRef = useRef<HTMLDivElement>(null);
@@ -35,8 +35,8 @@ const LeftBar = () => {
   );
   const [showLeftBar, setShowLeftBar] = useState<boolean>(false);
   const showLeftBarRef = useRef<HTMLDivElement>(null);
-
   const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
 
   useEffect(() => {
     setLeftBarRef(leftBarRef as RefObject<HTMLDivElement>);

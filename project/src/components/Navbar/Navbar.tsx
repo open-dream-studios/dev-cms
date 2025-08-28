@@ -24,7 +24,7 @@ import EditModules from "@/screens/AdminHome/EditModules";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject, setCurrentProject } = useProjectContext();
+  const { currentProjectId, setCurrentProjectId } = useProjectContext();
   const { editingLock, pageClick } = useAppContext();
   const { projectsData } = useContextQueries();
   const modal1 = useModal1Store((state: any) => state.modal1);
@@ -35,6 +35,7 @@ const Navbar = () => {
   );
   const leftBarRef = useLeftBarRefStore((state) => state.leftBarRef);
   const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
+  const currentProject = projectsData.find((p) => p.id === currentProjectId);
 
   const toggleLeftBar = () => {
     if (leftBarRef && leftBarRef.current) {
@@ -88,7 +89,7 @@ const Navbar = () => {
 
   const handleClearProject = () => {
     setModal1({ ...modal1, open: false });
-    setCurrentProject(null);
+    setCurrentProjectId(null);
   };
 
   const handleEditModulesClick = () => {
