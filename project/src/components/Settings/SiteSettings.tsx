@@ -4,7 +4,7 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext";
 import { ProjectUser, UserRole, validUserRoles } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useProjectUserForm } from "@/hooks/useProjectUserForm";
 import { ProjectUserFormData } from "@/util/schemas/projectUserSchema";
 import { useProjectContext } from "@/contexts/projectContext";
@@ -15,7 +15,9 @@ const SiteSettings = () => {
   const { projectsData, updateProjectUser, projectUsers, deleteProjectUser } =
     useContextQueries();
 
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+  const currentProject = useMemo(() => {
+    return projectsData.find((p) => p.id === currentProjectId) ?? null;
+  }, [projectsData, currentProjectId]);
 
   if (!currentUser || !currentProject) return null;
 

@@ -20,3 +20,27 @@ export const handleUpdateUser = (queryClient: QueryClient) => {
 //     console.error("Error fetching updated user:", error);
 //   }
 // };
+
+const roleLevels: Record<string, number> = {
+  viewer: 1,
+  editor: 2,
+  admin: 3,
+  owner: 4,
+};
+
+export function getUserAccess(
+  currentProject: { id: number },
+  projectUsers: { email: string; project_idx: number; role: string }[],
+  currentUserEmail?: string
+): number {
+  if (!currentProject || !currentUserEmail) return 0;
+  const membership = projectUsers.find(
+    (u) =>
+      u.project_idx === currentProject.id &&
+      u.email.toLowerCase() === currentUserEmail.toLowerCase()
+  );
+
+  if (!membership) return 0;
+
+  return roleLevels[membership.role] ?? 0;
+}

@@ -106,6 +106,8 @@ const ProductPage = ({ serialNumber }: { serialNumber?: string }) => {
       form.reset();
       setAddProductPage(false);
       router.push(previousPath);
+    } else {
+      router.push("/products");
     }
   };
 
@@ -182,6 +184,7 @@ const ProductPage = ({ serialNumber }: { serialNumber?: string }) => {
   return (
     <div className="w-[100%] h-[100%] overflow-scroll">
       <UploadModal
+        onClose={() => setUploadPopup(false)}
         multiple={true}
         onUploaded={(urls) => {
           const current = form.getValues("images") || [];

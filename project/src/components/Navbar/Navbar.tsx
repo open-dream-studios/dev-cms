@@ -1,5 +1,5 @@
 "use client";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { AuthContext } from "../../contexts/authContext";
 import { HiBars3 } from "react-icons/hi2";
 import { appTheme } from "../../util/appTheme";
@@ -21,6 +21,7 @@ import { useProjectContext } from "@/contexts/projectContext";
 import { AiFillAppstore } from "react-icons/ai";
 import { LuBlocks } from "react-icons/lu";
 import EditModules from "@/screens/AdminHome/EditModules";
+import UserImage from "../blocks/UserImage";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -35,7 +36,10 @@ const Navbar = () => {
   );
   const leftBarRef = useLeftBarRefStore((state) => state.leftBarRef);
   const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+
+  const currentProject = useMemo(() => {
+    return projectsData.find((p) => p.id === currentProjectId) ?? null;
+  }, [projectsData, currentProjectId]);
 
   const toggleLeftBar = () => {
     if (leftBarRef && leftBarRef.current) {
@@ -166,7 +170,7 @@ const Navbar = () => {
               }}
             >
               <p className="hidden sm:block">
-                {currentProject ? currentProject.name : "Client CMS"}
+                {currentProject ? currentProject.name : "Project CMS"}
               </p>
               <p className="block sm:hidden">
                 {currentProject ? currentProject.short_name : "CMS"}
@@ -264,35 +268,7 @@ const Navbar = () => {
             }}
           >
             <div className="ml-[3px] mr-[5px] aspect-[1/1] h-[100%] p-[6px]">
-              {currentUser.profile_img_src !== null ? (
-                <img
-                  className="w-full h-full rounded-full"
-                  src={currentUser.profile_img_src}
-                  onError={(e) => {
-                    console.error(
-                      "❌ Failed to load profile image:",
-                      currentUser.profile_img_src
-                    );
-                    (e.currentTarget as HTMLImageElement).src =
-                      "https://res.cloudinary.com/dlzspcvgq/image/upload/v1756299501/person_qortes.png";
-                  }}
-                />
-              ) : (
-                <div
-                  className="w-full h-full relative overflow-hidden rounded-full flex items-center justify-center"
-                  style={{
-                    backgroundColor: appTheme[currentUser.theme].background_4,
-                  }}
-                >
-                  <div className="bg-white w-[12px] h-[12px] absolute top-[7px] rounded-full"></div>
-                  <div
-                    className="bg-white w-[18px] h-[12px] absolute top-[21px]"
-                    style={{
-                      borderRadius: "20px",
-                    }}
-                  ></div>
-                </div>
-              )}
+              <UserImage />
             </div>
             <div className="flex flex-col justify-center mt-[0.5px] gap-[1px] flex-1 h-[100%] overflow-hidden pr-[4px]">
               <div

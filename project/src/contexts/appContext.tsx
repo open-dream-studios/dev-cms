@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useRef,
   RefObject,
+  useMemo,
 } from "react";
 import { getCurrentTimestamp, getNextOrdinal } from "@/util/functions/Data";
 import axios from "axios";
@@ -95,7 +96,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const lastPathRef = useRef<string | null>(null);
   const router = useRouter();
 
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+  const currentProject = useMemo(() => {
+    return projectsData.find((p) => p.id === currentProjectId) ?? null;
+  }, [projectsData, currentProjectId]);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -155,22 +158,46 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
+  // const handleSend = async (files: FileImage[]) => {
+  //   const formData = new FormData();
+  //   files.forEach((fileImage, index) => {
+  //     formData.append("files", fileImage.file, fileImage.name);
+  //   });
+  //   try {
+  //     const response = await axios.post("/api/images/compress", formData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+  //     if (response.status === 200) {
+  //       const isValidUrl = (url: string) =>
+  //         typeof url === "string" && url.startsWith("https://");
+  //       const cleanUrls = response.data.urls.filter(isValidUrl);
+  //       return cleanUrls;
+  //     } else {
+  //       return [];
+  //     }
+  //   } catch (error) {
+  //     console.error("Upload error:", error);
+  //     return [];
+  //   }
+  // };
+
   const handleSend = async (files: FileImage[]) => {
     const formData = new FormData();
-    files.forEach((fileImage, index) => {
+    files.forEach((fileImage) => {
       formData.append("files", fileImage.file, fileImage.name);
     });
+
     try {
       const response = await axios.post("/api/images/compress", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
       if (response.status === 200) {
-        const isValidUrl = (url: string) =>
-          typeof url === "string" && url.startsWith("https://");
-        const cleanUrls = response.data.urls.filter(isValidUrl);
-        return cleanUrls;
+        const uploadedFiles = response.data.files;
+        // [{ url, metadata }]
+        return uploadedFiles;
       } else {
         return [];
       }
@@ -179,53 +206,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       return [];
     }
   };
-
-  // const handleFileProcessing = async (files: File[]): Promise<string[]> => {
-  //   setEditingLock(true);
-  //   const uploadedNames: string[] = [];
-  //   // const imageFiles = files.filter((file) => file.type.startsWith("image/"));
-
-  //   if (files.length === 0) {
-  //     alert("Only image files are allowed!");
-  //     setEditingLock(false);
-  //     return [];
-  //   }
-
-  //   const readerPromises = files.map((file) => {
-  //     return new Promise<FileImage>((resolve) => {
-  //       const extension = file.type.split("/").pop();
-  //       if (!extension) return;
-
-  //       const lastDotIndex = file.name.lastIndexOf(".");
-  //       if (lastDotIndex === -1) return;
-
-  //       const newFileName = file.name.slice(0, lastDotIndex);
-  //       let sanitizedFileName = newFileName.replace(/[^a-zA-Z0-9]/g, "_");
-  //       const extention = file.type.startsWith("image/")
-  //         ? "webp"
-  //         : file.name.split(".").pop();
-  //       const timeStamp = getCurrentTimestamp();
-
-  //       sanitizedFileName = `${timeStamp}--${sanitizedFileName}.${extention}`;
-  //       uploadedNames.push(sanitizedFileName);
-  //       resolve({ name: sanitizedFileName, file });
-  //     });
-  //   });
-
-  //   try {
-  //     const images = await Promise.all(readerPromises);
-  //     setUploadPopup(false);
-  //     const urls = await handleSend(images);
-  //     return urls;
-  //   } catch (err) {
-  //     console.error("Error processing files:", err);
-  //     return [];
-  //   } finally {
-  //     setEditingLock(false);
-  //   }
-  // };
-
-  // appContext.tsx
+  
   const handleFileProcessing = async (files: File[]): Promise<string[]> => {
     setEditingLock(true);
     try {

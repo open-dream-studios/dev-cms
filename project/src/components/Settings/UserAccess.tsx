@@ -6,7 +6,7 @@ import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { ProjectUser, UserRole, validUserRoles } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { FaPlus, FaRegCircleCheck } from "react-icons/fa6";
 import { useProjectUserForm } from "@/hooks/useProjectUserForm";
 import { ProjectUserFormData } from "@/util/schemas/projectUserSchema";
@@ -19,7 +19,10 @@ const UserAccess = () => {
   const { currentProjectId, setCurrentProjectId } = useProjectContext();
   const { updateProjectUser, projectUsers, deleteProjectUser, projectsData } =
     useContextQueries();
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+
+  const currentProject = useMemo(() => {
+    return projectsData.find((p) => p.id === currentProjectId) ?? null;
+  }, [projectsData, currentProjectId]);
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);

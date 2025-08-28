@@ -28,7 +28,10 @@ const ModuleSettings = () => {
     deleteIntegrationKey,
     projectsData,
   } = useContextQueries();
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+  
+  const currentProject = useMemo(() => {
+    return projectsData.find((p) => p.id === currentProjectId) ?? null;
+  }, [projectsData, currentProjectId]);
 
   if (!currentUser || !currentProject) return null;
 

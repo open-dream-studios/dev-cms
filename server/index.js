@@ -12,6 +12,7 @@ import userRoutes from "./routes/users.js";
 import projectRoutes from "./routes/projects.js"
 import integrationRoutes from "./routes/integrations.js";
 import projectModulesRoutes from "./routes/modules.js";
+import projectMediaRoutes from "./routes/media.js"
 import { db } from "./connection/connect.js";
 dotenv.config();
 
@@ -73,6 +74,7 @@ app.use("/api/images", imageRouter);
 app.use("/api/projects", projectRoutes);
 app.use("/api/integrations", integrationRoutes);;
 app.use("/api/modules", projectModulesRoutes);
+app.use("/api/media", projectMediaRoutes);
 
 // Database
 db.getConnection((err, connection) => {

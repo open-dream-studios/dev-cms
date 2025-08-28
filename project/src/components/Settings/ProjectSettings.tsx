@@ -71,6 +71,7 @@ const ProjectSettings = () => {
     >
       <UploadModal
         multiple={false}
+        onClose={() => setUploadPopup(false)}
         onUploaded={async (urls) => {
           await onLogoSubmit(urls);
         }}

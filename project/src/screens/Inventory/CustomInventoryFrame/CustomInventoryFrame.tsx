@@ -3,7 +3,7 @@
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import app_details from "@/util/appDetails.json";
 import { useRouter } from "next/navigation";
 import { Product } from "@/types/products";
@@ -18,9 +18,12 @@ const CustomInventoryFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { projectsData } = useContextQueries()
+  const { projectsData } = useContextQueries();
   const { currentProjectId } = useProjectContext();
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+
+  const currentProject = useMemo(() => {
+    return projectsData.find((p) => p.id === currentProjectId) ?? null;
+  }, [projectsData, currentProjectId]);
 
   const router = useRouter();
   const TubTitle = item.name;

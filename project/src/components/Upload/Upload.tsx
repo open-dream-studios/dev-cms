@@ -8,27 +8,31 @@ import { IoCloseOutline } from "react-icons/io5";
 
 interface UploadProps {
   handleFiles: (files: File[]) => void;
-  multiple?: boolean; // default true
-}
-
-interface UploadModalProps {
-  onUploaded: (urls: string[]) => void;
   multiple?: boolean;
 }
 
-function UploadModal({ onUploaded, multiple = true }: UploadModalProps) {
+type UploadModalProps = {
+  onUploaded: (urls: string[], files: File[]) => void;
+  multiple?: boolean;
+  onClose: () => void;
+};
+
+function UploadModal({
+  onUploaded,
+  multiple = true,
+  onClose,
+}: UploadModalProps) {
   const { currentUser } = useContext(AuthContext);
-  const { uploadPopup, setUploadPopup, uploadPopupRef, handleFileProcessing } =
+  const { handleFileProcessing, uploadPopup, setUploadPopup, uploadPopupRef } =
     useAppContext();
 
   if (!currentUser) return null;
 
   const handleFiles = async (files: File[]) => {
-    // if single mode, only take the first file
     const filtered = multiple ? files : files.slice(0, 1);
     const urls = await handleFileProcessing(filtered);
     if (urls.length > 0) {
-      onUploaded(multiple ? urls : [urls[0]]);
+      onUploaded(multiple ? urls : [urls[0]], filtered);
     }
   };
 
@@ -120,7 +124,7 @@ const Upload: React.FC<UploadProps> = ({ handleFiles, multiple = true }) => {
         <input
           type="file"
           accept="image/*"
-          multiple={multiple} 
+          multiple={multiple}
           style={{ display: "none" }}
           id="fileInput"
           onChange={(e) => {

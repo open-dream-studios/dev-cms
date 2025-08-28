@@ -15,7 +15,7 @@ const router = express.Router();
 router.get(
   "/",
   authenticateUser,
-  checkProjectPermission(1),
+  checkProjectPermission(3),
   getIntegrations
 );
 

@@ -9,8 +9,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "CMS",
-  description: "CMS",
+  title: "Project CMS",
+  description: "Project CMS",
   icons: {
     icon: "/favicon.ico",
   },

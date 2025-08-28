@@ -84,7 +84,7 @@ const LandingNav = () => {
                 color: appTheme[defaultTheme].text_1,
               }}
             >
-              Client CMS
+              Project CMS
             </p>
           </div>
         </div>

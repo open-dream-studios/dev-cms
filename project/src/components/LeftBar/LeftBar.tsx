@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, RefObject, useRef, useState, useContext } from "react";
+import { useEffect, RefObject, useRef, useState, useContext, useMemo } from "react";
 import {
   useLeftBarOpenStore,
   useLeftBarRefStore,
@@ -36,7 +36,10 @@ const LeftBar = () => {
   const [showLeftBar, setShowLeftBar] = useState<boolean>(false);
   const showLeftBarRef = useRef<HTMLDivElement>(null);
   const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+  
+  const currentProject = useMemo(() => {
+    return projectsData.find((p) => p.id === currentProjectId) ?? null;
+  }, [projectsData, currentProjectId]);
 
   useEffect(() => {
     setLeftBarRef(leftBarRef as RefObject<HTMLDivElement>);

@@ -6,12 +6,12 @@ import { useModal2Store } from "@/store/useModalStore";
 import { appTheme, ThemeType } from "@/util/appTheme";
 import { makeRequest } from "@/util/axios";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import NoUser from "@/util/icons/NoUser";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "firebase/auth";
 import { useContext } from "react";
 import { IoMoonOutline } from "react-icons/io5";
 import { LuSun } from "react-icons/lu";
+import UserImage from "../blocks/UserImage";
 
 const AccountSettings = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
@@ -100,16 +100,7 @@ const AccountSettings = () => {
         className="flex flex-row items-center gap-[12.2px] py-[12.2px] rounded-[10px] px-[14px]"
       >
         <div className="aspect-[1/1] h-[28px] flex items-center justify-center">
-          {currentUser.profile_img_src !== null ? (
-            <img
-              className="h-[100%] aspect-[1/1] rounded-full"
-              src={currentUser.profile_img_src}
-            />
-          ) : (
-            <div className="h-[100%] aspect-[1/1]">
-              <NoUser />
-            </div>
-          )}
+          <UserImage />
         </div>
 
         <div className="flex flex-col items-center">

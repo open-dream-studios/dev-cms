@@ -26,24 +26,45 @@ import {
 } from "@/types/project";
 import { Product } from "@/types/products";
 import { useProjectContext } from "./projectContext";
+import { getUserAccess } from "@/util/functions/Users";
+import { Media, MediaFolder, MediaUsage } from "@/types/media";
+import { Page, PageDefinition } from "@/types/pages";
+import { Theme } from "react-toastify";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
+
+  // ---- Products ----
   productsData: Product[];
   isLoadingProductsData: boolean;
   refetchProductsData: () => Promise<QueryObserverResult<Product[], Error>>;
   updateProducts: (updatedProducts: Product[]) => void;
   deleteProducts: (serial_numbers: string[]) => void;
+
+  // ---- Projects ----
   projectsData: Project[];
   isLoadingProjects: boolean;
   refetchProjects: () => void;
   addProject: (projectData: AddProjectInput) => Promise<void>;
   deleteProject: (project: Project) => Promise<void>;
+  updateProject: (data: {
+    project_idx: number;
+    name: string;
+    short_name?: string;
+    domain?: string;
+    backend_domain?: string;
+    brand?: string;
+    logo?: string | null;
+  }) => Promise<void>;
+
+  // ---- Project Users ----
   projectUsers: ProjectUser[];
   isLoadingProjectUsers: boolean;
   refetchProjectUsers: () => void;
   updateProjectUser: (projectUser: ProjectUser) => Promise<void>;
   deleteProjectUser: (projectUser: ProjectUser) => Promise<void>;
+
+  // ---- Project Modules ----
   projectModules: ProjectModule[];
   isLoadingProjectModules: boolean;
   refetchProjectModules: () => Promise<
@@ -59,6 +80,8 @@ export type QueryContextType = {
     module_id: number;
   }) => Promise<void>;
   hasProjectModule: (identifier: string) => boolean;
+
+  // ---- Integrations ----
   integrations: Integration[];
   isLoadingIntegrations: boolean;
   refetchIntegrations: () => Promise<any>;
@@ -72,6 +95,8 @@ export type QueryContextType = {
     module_id: number;
     key: string;
   }) => Promise<void>;
+
+  // ---- Modules ----
   modules: Module[];
   isLoadingModules: boolean;
   refetchModules: () => Promise<any>;
@@ -84,15 +109,45 @@ export type QueryContextType = {
     parent_module_id: number | null;
   }) => Promise<void>;
   deleteModule: (id: number) => Promise<void>;
-  updateProject: (data: {
+
+  // ---- Media ----
+  media: Media[];
+  mediaFolders: MediaFolder[];
+  isLoadingMedia: boolean;
+  isLoadingMediaFolders: boolean;
+  refetchMedia: () => Promise<QueryObserverResult<Media[], Error>>;
+  refetchMediaFolders: () => Promise<QueryObserverResult<MediaFolder[], Error>>;
+  addMedia: (file: {
     project_idx: number;
-    name: string;
-    short_name?: string;
-    domain?: string;
-    backend_domain?: string;
-    brand?: string;
-    logo?: string | null;
+    folder_id?: number | null;
+    type: "image" | "video" | "file";
+    url: string;
+    alt_text?: string;
+    metadata?: Record<string, any>;
+    media_usage: MediaUsage;
+    tags?: string[];
   }) => Promise<void>;
+  deleteMedia: (id: number) => Promise<void>;
+  addMediaFolder: (data: {
+    project_idx: number;
+    parent_id?: number | null;
+    name: string;
+  }) => Promise<void>;
+  deleteMediaFolder: (id: number) => Promise<void>;
+
+  // // PAGES
+  // pages: Page[];
+  // isLoadingPages: boolean;
+  // refetchPages: () => Promise<void>;
+  // addPage: (data: Partial<Page>) => Promise<void>;
+  // updatePage: (id: number, data: Partial<Page>) => Promise<void>;
+  // deletePage: (id: number) => Promise<void>;
+  // pageDefinitions: PageDefinition[];
+  // isLoadingPageDefinitions: boolean;
+  // refetchPageDefinitions: () => Promise<void>;
+  // theme: Theme | null;
+  // isLoadingTheme: boolean;
+  // updateTheme: (data: Partial<Theme>) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -176,7 +231,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     await deleteProjectMutation.mutateAsync([project.project_id]);
   };
 
-  const currentProject = projectsData.find((p) => p.id === currentProjectId);
+  const currentProject = useMemo(() => {
+    return projectsData.find((p) => p.id === currentProjectId) ?? null;
+  }, [projectsData, currentProjectId]);
 
   const {
     data: productsData,
@@ -444,7 +501,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       });
       return res.data.integrations || [];
     },
-    enabled: isLoggedIn && !!currentProject,
+    enabled:
+      isLoggedIn &&
+      !!currentProject &&
+      getUserAccess(currentProject, projectUsers, currentUser?.email) >= 3,
   });
 
   const upsertIntegrationMutation = useMutation({
@@ -605,7 +665,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
           p.id === updatedProject.id ? updatedProject : p
         );
       });
-      // also refresh currentProject if cached
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
@@ -620,6 +679,130 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     logo?: string | null;
   }) => {
     await updateProjectMutation.mutateAsync(data);
+  };
+
+  const {
+    data: media = [],
+    isLoading: isLoadingMedia,
+    refetch: refetchMedia,
+  } = useQuery<Media[]>({
+    queryKey: ["media", currentProject?.id],
+    queryFn: async () => {
+      if (!currentProject) return [];
+      const res = await makeRequest.get("/api/media", {
+        params: { project_idx: currentProject.id },
+      });
+      return res.data.media || [];
+    },
+    enabled: isLoggedIn && !!currentProject,
+  });
+
+  const addMediaMutation = useMutation({
+    mutationFn: async (data: {
+      project_idx: number;
+      folder_id?: number | null;
+      url: string;
+      type: "image" | "video" | "file";
+      alt_text?: string;
+      metadata?: Record<string, any>;
+      media_usage: MediaUsage;
+      tags?: string[];
+    }) => {
+      await makeRequest.post("/api/media/add", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["media", currentProject?.id],
+      });
+    },
+  });
+
+  const addMedia = async (file: {
+    project_idx: number;
+    folder_id?: number | null;
+    url: string;
+    type: "image" | "video" | "file";
+    alt_text?: string;
+    metadata?: Record<string, any>;
+    media_usage: MediaUsage;
+    tags?: string[];
+  }) => {
+    await addMediaMutation.mutateAsync(file);
+  };
+
+  const deleteMediaMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await makeRequest.post("/api/media/delete", {
+        project_idx: currentProject?.id,
+        id,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["media", currentProject?.id],
+      });
+    },
+  });
+
+  const deleteMedia = async (id: number) => {
+    await deleteMediaMutation.mutateAsync(id);
+  };
+
+  const {
+    data: mediaFolders = [],
+    isLoading: isLoadingMediaFolders,
+    refetch: refetchMediaFolders,
+  } = useQuery<MediaFolder[]>({
+    queryKey: ["mediaFolders", currentProject?.id],
+    queryFn: async () => {
+      if (!currentProject) return [];
+      const res = await makeRequest.get("/api/media/folders", {
+        params: { project_idx: currentProject.id },
+      });
+      return res.data.folders || [];
+    },
+    enabled: isLoggedIn && !!currentProject,
+  });
+
+  const addMediaFolderMutation = useMutation({
+    mutationFn: async (data: {
+      project_idx: number;
+      parent_id?: number | null;
+      name: string;
+    }) => {
+      await makeRequest.post("/api/media/folders/add", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["mediaFolders", currentProject?.id],
+      });
+    },
+  });
+
+  const addMediaFolder = async (data: {
+    project_idx: number;
+    parent_id?: number | null;
+    name: string;
+  }) => {
+    await addMediaFolderMutation.mutateAsync(data);
+  };
+
+  const deleteMediaFolderMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await makeRequest.post("/api/media/folders/delete", {
+        project_idx: currentProject?.id,
+        id,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["mediaFolders", currentProject?.id],
+      });
+    },
+  });
+
+  const deleteMediaFolder = async (id: number) => {
+    await deleteMediaFolderMutation.mutateAsync(id);
   };
 
   return (
@@ -665,6 +848,16 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         upsertModule,
         deleteModule,
         updateProject,
+        media,
+        mediaFolders,
+        isLoadingMedia,
+        isLoadingMediaFolders,
+        refetchMedia,
+        refetchMediaFolders,
+        addMedia,
+        deleteMedia,
+        addMediaFolder,
+        deleteMediaFolder,
       }}
     >
       {children}

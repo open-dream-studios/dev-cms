@@ -1,12 +1,14 @@
-import React, { useContext } from "react";
-import { appTheme } from "../../util/appTheme";
+import React, { useContext, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
+import { appTheme } from "@/util/appTheme";
 
-const NoUser = () => {
+const UserImage = () => {
   const { currentUser } = useContext(AuthContext);
-  if (!currentUser) return;
+  const [imgError, setImgError] = useState(false);
 
-  return (
+  if (!currentUser) return null;
+
+  const fallback = (
     <div
       className="w-full h-full relative overflow-hidden rounded-full flex items-center justify-center"
       style={{
@@ -27,6 +29,18 @@ const NoUser = () => {
       ></div>
     </div>
   );
+
+  if (!currentUser.profile_img_src || imgError) {
+    return fallback;
+  }
+
+  return (
+    <img
+      className="w-full h-full rounded-full"
+      src={currentUser.profile_img_src}
+      onError={() => setImgError(true)}
+    />
+  );
 };
 
-export default NoUser;
+export default UserImage;
