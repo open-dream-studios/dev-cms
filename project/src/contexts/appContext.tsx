@@ -64,6 +64,7 @@ type AppContextType = {
   productTableView: boolean;
   setProductTableView: React.Dispatch<React.SetStateAction<boolean>>;
   handleRunModule: (identifier: string) => void;
+  handleFileProcessing: (files: File[]) => Promise<string[]>;
 };
 
 export type FileImage = {
@@ -93,7 +94,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const [previousPath, setPreviousPath] = useState<string | null>(null);
   const lastPathRef = useRef<string | null>(null);
   const router = useRouter();
-  
+
   const currentProject = projectsData.find((p) => p.id === currentProjectId);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
@@ -179,39 +180,71 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // const handleFileProcessing = async (files: File[]): Promise<string[]> => {
+  //   setEditingLock(true);
+  //   const uploadedNames: string[] = [];
+  //   // const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+  //   if (files.length === 0) {
+  //     alert("Only image files are allowed!");
+  //     setEditingLock(false);
+  //     return [];
+  //   }
+
+  //   const readerPromises = files.map((file) => {
+  //     return new Promise<FileImage>((resolve) => {
+  //       const extension = file.type.split("/").pop();
+  //       if (!extension) return;
+
+  //       const lastDotIndex = file.name.lastIndexOf(".");
+  //       if (lastDotIndex === -1) return;
+
+  //       const newFileName = file.name.slice(0, lastDotIndex);
+  //       let sanitizedFileName = newFileName.replace(/[^a-zA-Z0-9]/g, "_");
+  //       const extention = file.type.startsWith("image/")
+  //         ? "webp"
+  //         : file.name.split(".").pop();
+  //       const timeStamp = getCurrentTimestamp();
+
+  //       sanitizedFileName = `${timeStamp}--${sanitizedFileName}.${extention}`;
+  //       uploadedNames.push(sanitizedFileName);
+  //       resolve({ name: sanitizedFileName, file });
+  //     });
+  //   });
+
+  //   try {
+  //     const images = await Promise.all(readerPromises);
+  //     setUploadPopup(false);
+  //     const urls = await handleSend(images);
+  //     return urls;
+  //   } catch (err) {
+  //     console.error("Error processing files:", err);
+  //     return [];
+  //   } finally {
+  //     setEditingLock(false);
+  //   }
+  // };
+
+  // appContext.tsx
   const handleFileProcessing = async (files: File[]): Promise<string[]> => {
     setEditingLock(true);
-    const uploadedNames: string[] = [];
-    // const imageFiles = files.filter((file) => file.type.startsWith("image/"));
-
-    if (files.length === 0) {
-      alert("Only image files are allowed!");
-      setEditingLock(false);
-      return [];
-    }
-
-    const readerPromises = files.map((file) => {
-      return new Promise<FileImage>((resolve) => {
-        const extension = file.type.split("/").pop();
-        if (!extension) return;
-
-        const lastDotIndex = file.name.lastIndexOf(".");
-        if (lastDotIndex === -1) return;
-
-        const newFileName = file.name.slice(0, lastDotIndex);
-        let sanitizedFileName = newFileName.replace(/[^a-zA-Z0-9]/g, "_");
-        const extention = file.type.startsWith("image/")
-          ? "webp"
-          : file.name.split(".").pop();
-        const timeStamp = getCurrentTimestamp();
-
-        sanitizedFileName = `${timeStamp}--${sanitizedFileName}.${extention}`;
-        uploadedNames.push(sanitizedFileName);
-        resolve({ name: sanitizedFileName, file });
-      });
-    });
-
     try {
+      const uploadedNames: string[] = [];
+
+      const readerPromises = files.map(
+        (file) =>
+          new Promise<FileImage>((resolve) => {
+            const extension = file.type.split("/").pop() ?? "png";
+            const timeStamp = getCurrentTimestamp();
+            const sanitizedFileName = `${timeStamp}--${file.name.replace(
+              /[^a-zA-Z0-9]/g,
+              "_"
+            )}.${extension}`;
+            uploadedNames.push(sanitizedFileName);
+            resolve({ name: sanitizedFileName, file });
+          })
+      );
+
       const images = await Promise.all(readerPromises);
       setUploadPopup(false);
       const urls = await handleSend(images);
@@ -526,6 +559,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         productTableView,
         setProductTableView,
         handleRunModule,
+        handleFileProcessing,
       }}
     >
       {children}

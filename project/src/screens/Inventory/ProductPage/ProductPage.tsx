@@ -181,7 +181,13 @@ const ProductPage = ({ serialNumber }: { serialNumber?: string }) => {
 
   return (
     <div className="w-[100%] h-[100%] overflow-scroll">
-      <UploadModal setValue={form.setValue} getValues={form.getValues} />
+      <UploadModal
+        multiple={true}
+        onUploaded={(urls) => {
+          const current = form.getValues("images") || [];
+          form.setValue("images", [...current, ...urls], { shouldDirty: true });
+        }}
+      />
       <div
         className={`max-w-4xl mx-auto px-10 ${
           newProduct ? "pt-[60px]" : "pt-[22px]"

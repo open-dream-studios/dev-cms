@@ -1,26 +1,36 @@
+// project/src/components/Upload/Upload.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useAppContext } from "@/contexts/appContext";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
-import { UseFormGetValues, UseFormSetValue } from "react-hook-form";
-import { ProductFormData } from "../../screens/Inventory/ProductPage/ProductPage";
 
 interface UploadProps {
   handleFiles: (files: File[]) => void;
+  multiple?: boolean; // default true
 }
 
 interface UploadModalProps {
-  setValue: UseFormSetValue<ProductFormData>;
-  getValues: UseFormGetValues<ProductFormData>;
+  onUploaded: (urls: string[]) => void;
+  multiple?: boolean;
 }
 
-const UploadModal: React.FC<UploadModalProps> = ({ setValue, getValues }) => {
+function UploadModal({ onUploaded, multiple = true }: UploadModalProps) {
   const { currentUser } = useContext(AuthContext);
-  const { uploadPopup, setUploadPopup, handleFiles, uploadPopupRef } =
+  const { uploadPopup, setUploadPopup, uploadPopupRef, handleFileProcessing } =
     useAppContext();
+
   if (!currentUser) return null;
+
+  const handleFiles = async (files: File[]) => {
+    // if single mode, only take the first file
+    const filtered = multiple ? files : files.slice(0, 1);
+    const urls = await handleFileProcessing(filtered);
+    if (urls.length > 0) {
+      onUploaded(multiple ? urls : [urls[0]]);
+    }
+  };
 
   return (
     <>
@@ -29,31 +39,18 @@ const UploadModal: React.FC<UploadModalProps> = ({ setValue, getValues }) => {
           <div
             className="absolute top-0 w-[100vw] display-height"
             style={{ backgroundColor: "black", opacity: 0.4 }}
-          ></div>
+          />
           <div className="absolute top-0 w-[100vw] display-height flex items-center justify-center">
             <div
               ref={uploadPopupRef}
               className="shadow-lg w-[85%] sm:w-[70%] aspect-[1/1.2] sm:aspect-[1.5/1] relative"
-              style={{
-                userSelect: "none",
-                borderRadius: "30px",
-                border:
-                  currentUser.theme === "light"
-                    ? `0.5px solid ${appTheme[currentUser.theme].text_2}`
-                    : `1px solid ${appTheme[currentUser.theme].background_2}`,
-              }}
             >
-              <Upload
-                handleFiles={(files) => handleFiles(files, setValue, getValues)}
-              />
+              <Upload handleFiles={handleFiles} multiple={multiple} />
               <IoCloseOutline
-                onClick={() => {
-                  setUploadPopup(false);
-                }}
-                className="absolute top-2 right-3"
-                style={{ cursor: "pointer" }}
-                color={appTheme[currentUser.theme].text_3}
-                size={40}
+                size={35}
+                color={appTheme[currentUser.theme].text_4}
+                onClick={() => setUploadPopup(false)}
+                className="cursor-pointer hover:brightness-75 dim absolute top-[15px] right-[19px]"
               />
             </div>
           </div>
@@ -61,29 +58,20 @@ const UploadModal: React.FC<UploadModalProps> = ({ setValue, getValues }) => {
       )}
     </>
   );
-};
+}
 
-const Upload: React.FC<UploadProps> = ({ handleFiles }) => {
+const Upload: React.FC<UploadProps> = ({ handleFiles, multiple = true }) => {
   const { currentUser } = useContext(AuthContext);
   const [dragging, setDragging] = useState(false);
-  const handleDragOver = (e: any) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = (e: any) => {
-    e.preventDefault();
-    setDragging(false);
-  };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragging(false);
     const files = Array.from(e.dataTransfer.files);
-    handleFiles(files);
+    handleFiles(multiple ? files : files.slice(0, 1));
   };
 
-  if (!currentUser) return;
+  if (!currentUser) return null;
 
   return (
     <div
@@ -103,8 +91,14 @@ const Upload: React.FC<UploadProps> = ({ handleFiles }) => {
             : "1px solid #333",
         borderRadius: "28px",
       }}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        e.preventDefault();
+        setDragging(false);
+      }}
       onDrop={handleDrop}
     >
       <p
@@ -119,19 +113,19 @@ const Upload: React.FC<UploadProps> = ({ handleFiles }) => {
               : "#fff",
         }}
       >
-        Drag and drop images here
+        Drag and drop {multiple ? "images" : "an image"} here
       </p>
 
       <div className="relative w-[100%] h-[100%] flex justify-center">
         <input
           type="file"
           accept="image/*"
-          multiple
+          multiple={multiple} 
           style={{ display: "none" }}
           id="fileInput"
           onChange={(e) => {
             const files = Array.from(e.target.files || []);
-            handleFiles(files);
+            handleFiles(multiple ? files : files.slice(0, 1));
           }}
         />
         <label

@@ -9,13 +9,18 @@ import { appTheme } from "@/util/appTheme";
 import { ProjectSettingsFormData } from "@/util/schemas/projectSettingsSchema";
 import { useContext, useEffect, useMemo } from "react";
 import { FaPlus } from "react-icons/fa6";
+import UploadModal from "../Upload/Upload";
+import { useAppContext } from "@/contexts/appContext";
 
 const ProjectSettings = () => {
   const { currentProjectId } = useProjectContext();
   const { currentUser } = useContext(AuthContext);
   const { updateProject, projectsData } = useContextQueries();
+  const { setUploadPopup } = useAppContext();
 
-  const currentProjectData = projectsData.find((p) => p.id === currentProjectId);
+  const currentProjectData = projectsData.find(
+    (p) => p.id === currentProjectId
+  );
 
   if (!currentUser || !currentProjectData) return null;
 
@@ -23,6 +28,7 @@ const ProjectSettings = () => {
     name: currentProjectData.name,
     short_name: currentProjectData.short_name,
     domain: currentProjectData.domain,
+    logo: currentProjectData.logo,
     backend_domain: currentProjectData.backend_domain,
     brand: currentProjectData.brand,
   });
@@ -32,6 +38,7 @@ const ProjectSettings = () => {
       name: currentProjectData.name,
       short_name: currentProjectData.short_name,
       domain: currentProjectData.domain,
+      logo: currentProjectData.logo,
       backend_domain: currentProjectData.backend_domain,
       brand: currentProjectData.brand,
     });
@@ -45,28 +52,64 @@ const ProjectSettings = () => {
     form.reset(data);
   };
 
+  const onLogoSubmit = async (urls: string[]) => {
+    if (!urls || urls.length === 0) return;
+    form.setValue("logo", urls[0], { shouldDirty: true });
+    const data = form.getValues();
+    await onSubmit(data);
+  };
+
   const isDirty = form.formState.isDirty;
 
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(onSubmit, (err) => {
+        console.log("Validation failed:", err);
+      })}
+      // onSubmit={form.handleSubmit(onSubmit)}
       className="relative ml-[5px] md:ml-[8px] w-[calc(100%-43px)] sm:w-[calc(100%-80px)] h-full flex flex-col pt-[50px]"
     >
-      <div className="ml-[1px] flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]">
-        <p className="mt-[-2px] font-[600] text-[29px] leading-[29px] h-[40px] md:text-[32px] md:leading-[32px]">
-          {currentProjectData.brand}
-        </p>
+      <UploadModal
+        multiple={false}
+        onUploaded={async (urls) => {
+          await onLogoSubmit(urls);
+        }}
+      />
+      <div
+        style={{
+          ["--custom-input-text-color" as any]:
+            appTheme[currentUser.theme].text_3,
+        }}
+        className="ml-[1px] flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]"
+      >
+        <input
+          {...form.register("brand")}
+          placeholder="Brand..."
+          className="input font-[600] h-[40px] text-[29px] leading-[33px] md:text-[32px] md:leading-[35px] mt-[-1px] w-[100%] outline-none"
+          style={{ color: "var(--custom-input-text-color)" }}
+        />
       </div>
 
       <div className="w-[100%] min-h-[86px] flex flex-row gap-[20px]">
         <div className="aspect-[1/1] h-[100%] max-h-[86px] flex items-center justify-center">
           {currentProjectData.logo !== null ? (
-            <img
-              className="h-[100%] aspect-[1/1] rounded-full"
-              src={currentProjectData.logo}
-            />
+            <div
+              onClick={() => setUploadPopup(true)}
+              className="h-[100%] aspect-[1/1] rounded-[15px] overflow-hidden cursor-pointer relative group"
+              // style={{ borderColor: appTheme[currentUser.theme].text_4 }}
+            >
+              <img
+                className="h-[100%] w-[100%] object-cover transition duration-400 group-hover:brightness-50"
+                src={currentProjectData.logo}
+              />
+
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-400 group-hover:opacity-100">
+                <FaPlus size={25} color={appTheme[currentUser.theme].text_2} />
+              </div>
+            </div>
           ) : (
             <div
+              onClick={() => setUploadPopup(true)}
               className="hover:brightness-75 dim cursor-pointer h-[100%] aspect-[1/1] rounded-[15px] flex items-center justify-center"
               style={{
                 border: "0.5px solid " + appTheme[currentUser.theme].text_3,
@@ -81,56 +124,65 @@ const ProjectSettings = () => {
           <div
             style={{
               backgroundColor: appTheme[currentUser.theme].background_2,
+              ["--custom-input-text-color" as any]:
+                appTheme[currentUser.theme].text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
             <input
               {...form.register("name")}
               placeholder="Project Name..."
-              className="font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
-              style={{ color: appTheme[currentUser.theme].text_3 }}
+              className="input font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
+              style={{ color: "var(--custom-input-text-color)" }}
             />
           </div>
 
           <div
             style={{
               backgroundColor: appTheme[currentUser.theme].background_2,
+              ["--custom-input-text-color" as any]:
+                appTheme[currentUser.theme].text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
             <input
               {...form.register("domain")}
               placeholder="Domain..."
-              className="font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
-              style={{ color: appTheme[currentUser.theme].text_3 }}
+              className="input font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
+              style={{ color: "var(--custom-input-text-color)" }}
             />
           </div>
 
           <div
             style={{
               backgroundColor: appTheme[currentUser.theme].background_2,
+              ["--custom-input-text-color" as any]:
+                appTheme[currentUser.theme].text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
             <input
               {...form.register("backend_domain")}
               placeholder="Backend Domain..."
+              type="text"
               className="font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
-              style={{ color: appTheme[currentUser.theme].text_3 }}
+              style={{ color: "var(--custom-input-text-color)" }}
             />
           </div>
 
           <div
             style={{
               backgroundColor: appTheme[currentUser.theme].background_2,
+              ["--custom-input-text-color" as any]:
+                appTheme[currentUser.theme].text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
             <input
               {...form.register("short_name")}
               placeholder="Abbreviation..."
-              className="font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
-              style={{ color: appTheme[currentUser.theme].text_3 }}
+              className="input font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
+              style={{ color: "var(--custom-input-text-color)" }}
             />
           </div>
 
@@ -147,9 +199,9 @@ const ProjectSettings = () => {
               >
                 Save
               </button>
-              <button
+              <div
                 onClick={() => form.reset()}
-                className="cursor-pointer hover:brightness-90 dim px-[15px] h-[32px] rounded-full text-sm dim"
+                className="items-center flex justify-center cursor-pointer hover:brightness-90 dim px-[15px] h-[32px] rounded-full text-sm dim"
                 style={{
                   backgroundColor:
                     appTheme[currentUser.theme].background_2_selected,
@@ -157,7 +209,7 @@ const ProjectSettings = () => {
                 }}
               >
                 Cancel
-              </button>
+              </div>
             </div>
           )}
         </div>

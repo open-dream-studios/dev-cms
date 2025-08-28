@@ -11,10 +11,6 @@ export function useProjectSettingsForm(defaultValues?: Partial<ProjectSettingsFo
     resolver: zodResolver(ProjectSettingsSchema),
     defaultValues: {
       name: "",
-      short_name: "",
-      domain: "",
-      backend_domain: "",
-      brand: "",
       ...defaultValues,
     },
   });
