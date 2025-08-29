@@ -53,6 +53,42 @@ function SortableMediaItem({
 
   const { currentUser } = useContext(AuthContext);
   const { deleteMedia, mediaFolders } = useContextQueries();
+  const [showNotAllowed, setShowNotAllowed] = useState(false);
+  const dragTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (disabled) {
+      dragTimer.current = setTimeout(() => {
+        setShowNotAllowed(true);
+      }, 150);
+    }
+
+    if (!disabled && listeners?.onPointerDown) {
+      listeners.onPointerDown(e);
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (disabled) {
+      if (dragTimer.current) {
+        clearTimeout(dragTimer.current);
+        dragTimer.current = null;
+      }
+      setShowNotAllowed(false);
+    }
+
+    if (!disabled && listeners?.onPointerUp) {
+      listeners.onPointerUp(e);
+    }
+  };
+
+  const cursorClass = disabled
+    ? showNotAllowed
+      ? "cursor-not-allowed"
+      : "cursor-pointer"
+    : isDragging
+    ? "cursor-grabbing"
+    : "cursor-grab";
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -81,13 +117,13 @@ function SortableMediaItem({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...(!disabled ? listeners : {})}
-      onClick={(e: any) => {
-        handleMediaClick(e);
-      }}
-      className={`relative overflow-visible rounded border bg-white shadow-sm ${
-        !disabled ? "cursor-grab" : "cursor-pointer"
-      } ${isDragging ? "shadow-xl" : ""}`}
+      onClick={handleMediaClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+      className={`relative overflow-visible rounded border bg-white shadow-sm ${cursorClass} ${
+        isDragging ? "shadow-xl" : ""
+      }`}
     >
       {editMode && (
         <div
@@ -110,6 +146,9 @@ function SortableMediaItem({
           draggable={false}
           src={media.url}
           alt={media.alt_text || ""}
+          onDrag={() => {
+            console.log(1);
+          }}
           className="dim hover:brightness-90 object-cover w-full h-[150px]"
         />
       ) : (
