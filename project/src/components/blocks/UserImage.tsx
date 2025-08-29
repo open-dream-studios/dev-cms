@@ -16,16 +16,11 @@ const UserImage = () => {
       }}
     >
       <div
-        style={{
-          backgroundColor: appTheme[currentUser.theme].text_1,
-        }}
-        className="w-[40%] h-[40%] absolute top-[25%] rounded-full"
+        className="bg-white w-[40%] h-[40%] absolute top-[25%] rounded-full"
       ></div>
       <div
-        style={{
-          backgroundColor: appTheme[currentUser.theme].text_1,
-        }}
-        className="w-[70%] h-[60%] absolute top-[71%] rounded-[50px]"
+
+        className="bg-white w-[70%] h-[60%] absolute top-[71%] rounded-[50px]"
       ></div>
     </div>
   );
