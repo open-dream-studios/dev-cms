@@ -10,7 +10,6 @@ import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
 import { Media } from "@/types/media";
 import { useAppContext } from "@/contexts/appContext";
 
- 
 const MediaManager = () => {
   const { currentProjectId } = useProjectContext();
   const { currentUser } = useContext(AuthContext);
@@ -19,6 +18,7 @@ const MediaManager = () => {
 
   const [activeFolder, setActiveFolder] = useState<number | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [editMode, setEditMode] = useState<boolean>(false);
 
   if (!currentUser || !currentProjectId) return null;
 
@@ -32,8 +32,6 @@ const MediaManager = () => {
       orderedIds: newOrder.map((m) => m.id),
     });
   };
-
-
 
   return (
     <div className="flex w-full h-[100%]">
@@ -65,6 +63,8 @@ const MediaManager = () => {
           view={view}
           setView={setView}
           onUploadClick={() => setUploadPopup(true)}
+          editeMode={editMode}
+          setEditMode={setEditMode}
         />
 
         <MediaGrid
@@ -73,6 +73,7 @@ const MediaManager = () => {
           projectId={currentProjectId}
           onReorder={handleReorder}
           activeFolder={activeFolder}
+          editMode={editMode}
         />
       </div>
     </div>

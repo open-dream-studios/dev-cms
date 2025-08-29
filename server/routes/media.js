@@ -7,7 +7,8 @@ import {
   getFolders,
   addFolder,
   deleteFolder,
-  reorderMedia
+  reorderMedia,
+  renameFolder
 } from "../controllers/media.js";
 import { authenticateUser } from "../connection/middlewares.js";
 import { checkProjectPermission } from "../util/permissions.js";
@@ -26,5 +27,5 @@ router.get("/folders", authenticateUser, checkProjectPermission(2), getFolders);
 router.post("/folders/add", authenticateUser, checkProjectPermission(3), addFolder);
 router.post("/folders/delete", authenticateUser, checkProjectPermission(3), deleteFolder);
 router.post("/folders/reorder", authenticateUser, checkProjectPermission(3), reorderFolders);
-
+router.post("/folders/rename", authenticateUser, checkProjectPermission(3), renameFolder);
 export default router;

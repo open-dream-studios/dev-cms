@@ -264,3 +264,27 @@ export const reorderFolders = async (req, res) => {
     return res.status(500).json({ message: "DB error" });
   }
 };
+
+export const renameFolder = (req, res) => {
+  const { folder_id, name } = req.body;
+  const project_idx = req.user.project_idx;
+
+  if (!folder_id || !project_idx || !name) {
+    return res.status(400).json({ message: "Missing fields" });
+  }
+
+  const q = `
+    UPDATE media_folders 
+    SET name = ?, updated_at = NOW() 
+    WHERE id = ? AND project_idx = ?
+  `;
+
+  db.query(q, [name, folder_id, project_idx], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "DB error renaming folder" });
+    }
+
+    return res.json({ success: true, name });
+  });
+};

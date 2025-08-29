@@ -143,6 +143,10 @@ export type QueryContextType = {
     parent_id: number | null;
     orderedIds: number[];
   }) => Promise<void>;
+  renameMediaFolder: (data: {
+    folder_id: number;
+    name: string;
+  }) => Promise<void>;
 
   // // PAGES
   // pages: Page[];
@@ -727,7 +731,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
     },
   });
-  const deleteMedia = async (id: number) => deleteMediaMutation.mutateAsync(id);
+  const deleteMedia = async (id: number) => {
+    console.log(id)
+    deleteMediaMutation.mutateAsync(id)
+  }
 
   const reorderMediaMutation = useMutation({
     mutationFn: async (data: {
@@ -747,13 +754,12 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const prevMedia =
         queryClient.getQueryData<Media[]>(["media", currentProjectId]) || [];
-      const reordered = variables.orderedIds.map((id, idx) => ({
-        ...prevMedia.find((m) => m.id === id)!,
-        ordinal: idx,
-      }));
-
+      const reordered = prevMedia.map((m) => {
+        const idx = variables.orderedIds.indexOf(m.id);
+        if (idx === -1 || m.ordinal === idx) return m; // keep old ref
+        return { ...m, ordinal: idx }; // only new object if ordinal changed
+      });
       queryClient.setQueryData(["media", currentProjectId], reordered);
-
       return { prevMedia };
     },
     onError: (_err, _vars, context) => {
@@ -764,9 +770,13 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["media", currentProjectId],
+    onSuccess: (_data, variables) => {
+      queryClient.setQueryData<Media[]>(["media", currentProjectId], (old) => {
+        if (!old) return old;
+        return old.map((m) => {
+          const idx = variables.orderedIds.indexOf(m.id);
+          return idx === -1 || m.ordinal === idx ? m : { ...m, ordinal: idx };
+        });
       });
     },
   });
@@ -877,6 +887,56 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     orderedIds: number[];
   }) => reorderMediaFoldersMutation.mutateAsync(data);
 
+  const renameMediaFolderMutation = useMutation({
+    mutationFn: async (data: { folder_id: number; name: string }) => {
+      await makeRequest.post("/api/media/folders/rename", {
+        project_idx: currentProjectId,
+        ...data,
+      });
+    },
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: ["mediaFolders", currentProjectId],
+      });
+
+      const prevFolders =
+        queryClient.getQueryData<MediaFolder[]>([
+          "mediaFolders",
+          currentProjectId,
+        ]) || [];
+
+      // Optimistically update
+      queryClient.setQueryData<MediaFolder[]>(
+        ["mediaFolders", currentProjectId],
+        (old) =>
+          old
+            ? old.map((f) =>
+                f.id === variables.folder_id
+                  ? { ...f, name: variables.name }
+                  : f
+              )
+            : []
+      );
+
+      return { prevFolders };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prevFolders) {
+        queryClient.setQueryData(
+          ["mediaFolders", currentProjectId],
+          context.prevFolders
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["mediaFolders", currentProjectId],
+      });
+    },
+  });
+  const renameMediaFolder = async (data: { folder_id: number; name: string }) =>
+    renameMediaFolderMutation.mutateAsync(data);
+
   return (
     <QueryContext.Provider
       value={{
@@ -932,6 +992,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         addMediaFolder,
         deleteMediaFolder,
         reorderMediaFolders,
+        renameMediaFolder,
       }}
     >
       {children}

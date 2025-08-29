@@ -16,7 +16,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Media } from "@/types/media";
 import { appTheme } from "@/util/appTheme";
-import { useContext } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext";
@@ -25,12 +25,14 @@ type SortableMediaItemProps = {
   media: Media;
   id: number;
   disabled?: boolean;
+  editMode: boolean;
 };
 
 function SortableMediaItem({
   media,
   id,
   disabled = false,
+  editMode,
 }: SortableMediaItemProps) {
   const {
     attributes,
@@ -39,14 +41,14 @@ function SortableMediaItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, disabled });
+  } = useSortable({ id, disabled, animateLayoutChanges: () => false });
 
   const { currentUser } = useContext(AuthContext);
   const { deleteMedia } = useContextQueries();
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? "none" : transition,
     zIndex: isDragging ? 9999 : "auto",
   };
 
@@ -62,7 +64,7 @@ function SortableMediaItem({
         !disabled ? "cursor-grab" : "cursor-pointer"
       } ${isDragging ? "shadow-xl" : ""}`}
     >
-      {true && (
+      {editMode && (
         <div
           style={{
             border: `1px solid ${appTheme[currentUser.theme].text_4}`,
@@ -76,6 +78,7 @@ function SortableMediaItem({
       )}
       {media.type === "image" ? (
         <img
+          style={{ willChange: "transform" }}
           draggable={false}
           src={media.url}
           alt={media.alt_text || ""}
@@ -83,6 +86,7 @@ function SortableMediaItem({
         />
       ) : (
         <video
+          style={{ willChange: "transform" }}
           draggable={false}
           src={media.url}
           className="w-full h-[150px]"
@@ -99,6 +103,7 @@ type MediaGridProps = {
   projectId: number;
   onReorder: (newOrder: Media[]) => void;
   activeFolder: number | null;
+  editMode: boolean;
 };
 
 export default function MediaGrid({
@@ -106,23 +111,34 @@ export default function MediaGrid({
   view,
   onReorder,
   activeFolder,
+  editMode,
 }: MediaGridProps) {
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, 
+      },
+    })
+  );
+  const [localMedia, setLocalMedia] = useState<Media[]>([]);
+
+  useEffect(() => {
+    setLocalMedia(
+      [...media].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+    );
+  }, [media]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = media.findIndex((i) => i.id === active.id);
-    const newIndex = media.findIndex((i) => i.id === over.id);
+    const oldIndex = localMedia.findIndex((i) => i.id === active.id);
+    const newIndex = localMedia.findIndex((i) => i.id === over.id);
 
-    const newOrder = arrayMove(media, oldIndex, newIndex);
-    onReorder(newOrder); // this triggers the mutation with optimistic update
+    const newOrder = arrayMove(localMedia, oldIndex, newIndex);
+    setLocalMedia(newOrder);
+    onReorder(newOrder);
   };
-
-  const sortedMedia = [...media].sort(
-    (a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
-  );
 
   return (
     <DndContext
@@ -131,7 +147,7 @@ export default function MediaGrid({
       onDragEnd={handleDragEnd}
     >
       <SortableContext
-        items={sortedMedia.map((m) => m.id)}
+        items={localMedia.map((m) => m.id)}
         strategy={rectSortingStrategy}
       >
         <div
@@ -139,12 +155,13 @@ export default function MediaGrid({
             view === "grid" ? "grid-cols-4" : "grid-cols-1"
           }`}
         >
-          {sortedMedia.map((m) => (
+          {localMedia.map((m) => (
             <SortableMediaItem
               key={m.id}
               id={m.id}
               media={m}
               disabled={activeFolder === null}
+              editMode={editMode}
             />
           ))}
         </div>

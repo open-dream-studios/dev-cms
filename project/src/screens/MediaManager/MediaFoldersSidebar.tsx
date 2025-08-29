@@ -9,13 +9,15 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
+  rectIntersection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { Plus } from "lucide-react";
+import { Folder, GripVertical, Plus } from "lucide-react";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext";
 import { buildFolderTree, MediaFolderNode } from "@/util/functions/Tree";
@@ -46,11 +48,21 @@ export default function MediaFoldersSidebar({
 
   const queryClient = useQueryClient();
   const sensors = useSensors(useSensor(PointerSensor));
-  const folderTree: MediaFolderNode[] = buildFolderTree(mediaFolders ?? []);
+  const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
+  useEffect(() => {
+    if (mediaFolders) {
+      setLocalFolders(
+        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+      );
+    }
+  }, [mediaFolders]);
+
+  const folderTree: MediaFolderNode[] = buildFolderTree(localFolders);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
+  const [renamingFolder, setRenamingFolder] = useState<number | null>(null);
   const [openFolders, setOpenFolders] = useState<Set<number>>(new Set());
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -83,7 +95,9 @@ export default function MediaFoldersSidebar({
         setActiveFolder(null);
       }
       queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
-      queryClient.invalidateQueries({ queryKey: ["mediaFolders", currentProjectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["mediaFolders", currentProjectId],
+      });
     }
   };
 
@@ -99,7 +113,6 @@ export default function MediaFoldersSidebar({
     });
   };
 
-  // Helper: find parentId of a folder by id
   const findParentId = (
     id: number,
     nodes: MediaFolderNode[],
@@ -120,15 +133,27 @@ export default function MediaFoldersSidebar({
     if (!over || active.id === over.id) return;
 
     const parentId = findParentId(active.id as number, folderTree);
+
     const siblings: MediaFolder[] = parentId
-      ? (mediaFolders ?? []).filter((f) => f.parent_id === parentId)
-      : (mediaFolders ?? []).filter((f) => f.parent_id === null);
+      ? localFolders.filter((f) => f.parent_id === parentId)
+      : localFolders.filter((f) => f.parent_id === null);
 
     const oldIndex = siblings.findIndex((f) => f.id === active.id);
     const newIndex = siblings.findIndex((f) => f.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
     const newSiblingsOrder = arrayMove(siblings, oldIndex, newIndex);
+
+    setLocalFolders((prev) => {
+      const updated = [...prev];
+      newSiblingsOrder.forEach((f, idx) => {
+        const indexInPrev = updated.findIndex((p) => p.id === f.id);
+        if (indexInPrev > -1) {
+          updated[indexInPrev] = { ...f, ordinal: idx };
+        }
+      });
+      return updated;
+    });
 
     reorderMediaFolders({
       parent_id: parentId,
@@ -190,12 +215,21 @@ export default function MediaFoldersSidebar({
           >
             Delete Folder
           </button>
+          <button
+            onClick={() => {
+              setRenamingFolder(contextMenu.folderId); // 🔥 New state
+              setContextMenu(null);
+            }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+          >
+            Rename Folder
+          </button>
         </div>
       )}
       <div className="flex-1 overflow-y-auto p-2">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={rectIntersection}
           onDragEnd={handleDragEnd}
         >
           <SortableContext
@@ -212,9 +246,23 @@ export default function MediaFoldersSidebar({
                 openFolders={openFolders}
                 toggleFolderOpen={toggleFolderOpen}
                 onContextMenu={handleContextMenu}
+                renamingFolder={renamingFolder}
+                setRenamingFolder={setRenamingFolder}
               />
             ))}
           </SortableContext>
+
+          <DragOverlay>
+            {activeFolder ? (
+              <div className="flex items-center gap-2 px-2 py-1 bg-white shadow rounded max-h-[32px]">
+                <GripVertical size={14} className="text-gray-400" />
+                <Folder size={16} className="w-[24px]" />
+                <span className="truncate">
+                  {localFolders.find((f) => f.id === activeFolder)?.name}
+                </span>
+              </div>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </div>
 
