@@ -7,7 +7,7 @@ import MediaFoldersSidebar from "../MediaManager/MediaFoldersSidebar";
 import MediaGrid from "@/screens/MediaManager/MediaGrid";
 import MediaToolbar from "../MediaManager/MediaToolbar";
 import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
-import { Media } from "@/types/media";
+import { Media, MediaFolder } from "@/types/media";
 import { useAppContext } from "@/contexts/appContext";
 
 const MediaManager = () => {
@@ -16,19 +16,20 @@ const MediaManager = () => {
   const { setUploadPopup } = useAppContext();
   const { media, reorderMedia, addMedia, refetchMedia } = useContextQueries();
 
-  const [activeFolder, setActiveFolder] = useState<number | null>(null);
+  const [activeFolder, setActiveFolder] = useState<MediaFolder | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [editMode, setEditMode] = useState<boolean>(false);
 
   if (!currentUser || !currentProjectId) return null;
 
   const filteredMedia: Media[] = activeFolder
-    ? media.filter((m: Media) => m.folder_id === activeFolder)
+    ? media.filter((m: Media) => m.folder_id === activeFolder.id)
     : media;
 
   const handleReorder = (newOrder: Media[]) => {
+    if (!activeFolder) return
     reorderMedia({
-      folder_id: activeFolder,
+      folder_id: activeFolder.id,
       orderedIds: newOrder.map((m) => m.id),
     });
   };
@@ -39,13 +40,14 @@ const MediaManager = () => {
         multiple
         onClose={() => setUploadPopup(false)}
         onUploaded={(uploads: CloudinaryUpload[]) => {
+          if (!activeFolder) return
           uploads.forEach((upload: CloudinaryUpload) => {
             addMedia({
               project_idx: currentProjectId,
               public_id: upload.public_id,
               url: upload.url,
               type: "image",
-              folder_id: activeFolder,
+              folder_id: activeFolder.id,
               media_usage: "general",
             });
           });
@@ -65,6 +67,7 @@ const MediaManager = () => {
           onUploadClick={() => setUploadPopup(true)}
           editeMode={editMode}
           setEditMode={setEditMode}
+          activeFolder={activeFolder}
         />
 
         <MediaGrid

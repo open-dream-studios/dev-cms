@@ -1,6 +1,7 @@
 // project/src/screens/Dashboard/MediaToolbar.tsx
 import { Button } from "@/components/ui/button";
 import { AuthContext } from "@/contexts/authContext";
+import { MediaFolder } from "@/types/media";
 import { appTheme } from "@/util/appTheme";
 import { Grid, List, Upload } from "lucide-react";
 import { useContext } from "react";
@@ -12,6 +13,7 @@ type Props = {
   onUploadClick: () => void;
   editeMode: boolean;
   setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  activeFolder: MediaFolder | null;
 };
 
 const MediaToolbar = ({
@@ -20,13 +22,14 @@ const MediaToolbar = ({
   onUploadClick,
   editeMode,
   setEditMode,
+  activeFolder
 }: Props) => {
   const { currentUser } = useContext(AuthContext);
   if (!currentUser) return null;
 
   return (
     <div className="flex items-center justify-between border-b px-4 py-2">
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center ml-[1px]">
         <Button
           className="cursor-pointer hover:brightness-90 dim"
           variant={view === "grid" ? "default" : "outline"}
@@ -41,6 +44,7 @@ const MediaToolbar = ({
         >
           <List size={16} className="mr-1" /> List
         </Button>
+        <p className="text-[24px] font-[700] mt-[-2px] px-[10.5px]">{activeFolder ? activeFolder.name : "All Media" }</p>
       </div>
       <div className="flex gap-2">
         <Button

@@ -21,8 +21,8 @@ import { useContextQueries } from "@/contexts/queryContext";
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
   depth: number;
-  activeFolder: number | null;
-  setActiveFolder: (id: number) => void;
+  activeFolder: MediaFolder | null;
+  setActiveFolder: (mediaFolder: MediaFolder | null) => void;
   openFolders: Set<number>;
   toggleFolderOpen: (id: number) => void;
   onContextMenu: (e: React.MouseEvent, folderId: number) => void;
@@ -88,7 +88,7 @@ export default function FolderItem({
   const handleClick = () => {
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
     clickTimeout.current = setTimeout(() => {
-      setActiveFolder(folder.id);
+      setActiveFolder(folder);
       if (folder.children && folder.children.length > 0) {
         toggleFolderOpen(folder.id);
       }
@@ -105,13 +105,13 @@ export default function FolderItem({
       ref={setNodeRef}
       style={{
         ...style,
-        opacity: isDragging ? 0 : 1 
+        opacity: isDragging ? 0 : 1,
       }}
       {...attributes}
     >
       <div
         className={`flex items-center gap-2 px-2 py-1 cursor-pointer rounded ${
-          activeFolder === folder.id
+          activeFolder && activeFolder.id === folder.id
             ? "bg-gray-200 font-semibold"
             : "hover:bg-gray-100"
         }`}

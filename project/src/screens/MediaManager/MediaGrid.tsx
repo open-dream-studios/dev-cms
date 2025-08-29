@@ -14,7 +14,7 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Media } from "@/types/media";
+import { Media, MediaFolder } from "@/types/media";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
@@ -102,7 +102,7 @@ type MediaGridProps = {
   view: "grid" | "list";
   projectId: number;
   onReorder: (newOrder: Media[]) => void;
-  activeFolder: number | null;
+  activeFolder: MediaFolder | null;
   editMode: boolean;
 };
 
