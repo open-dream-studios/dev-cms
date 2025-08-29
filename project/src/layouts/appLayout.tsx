@@ -35,6 +35,7 @@ import {
   ProjectContextProvider,
   useProjectContext,
 } from "@/contexts/projectContext";
+import { UIProvider } from "@/contexts/uiContext";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -45,9 +46,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <ProjectContextProvider>
           <QueryProvider>
             <AppContextProvider>
-              <CustomToast />
-              <DynamicTitle />
-              <AppRoot>{children}</AppRoot>
+              <UIProvider>
+                <CustomToast />
+                <DynamicTitle />
+                <AppRoot>{children}</AppRoot>
+              </UIProvider>
             </AppContextProvider>
           </QueryProvider>
         </ProjectContextProvider>

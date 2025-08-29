@@ -7,7 +7,13 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Folder, FolderOpen, ChevronRight, ChevronDown, GripVertical } from "lucide-react";
+import {
+  Folder,
+  FolderOpen,
+  ChevronRight,
+  ChevronDown,
+  GripVertical,
+} from "lucide-react";
 import { useState } from "react";
 import { MediaFolder } from "@/types/media";
 
@@ -16,6 +22,9 @@ type FolderItemProps = {
   depth: number;
   activeFolder: number | null;
   setActiveFolder: (id: number) => void;
+  openFolders: Set<number>;
+  toggleFolderOpen: (id: number) => void;
+  onContextMenu: (e: React.MouseEvent, folderId: number) => void;
 };
 
 export default function FolderItem({
@@ -23,12 +32,16 @@ export default function FolderItem({
   depth,
   activeFolder,
   setActiveFolder,
+  openFolders,
+  toggleFolderOpen,
+  onContextMenu,
 }: FolderItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: folder.id,
-  });
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: folder.id,
+    });
 
-  const [isOpen, setIsOpen] = useState(false);
+  const isOpen = openFolders.has(folder.id);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -39,7 +52,7 @@ export default function FolderItem({
   const handleClick = () => {
     setActiveFolder(folder.id);
     if (folder.children && folder.children.length > 0) {
-      setIsOpen((prev) => !prev);
+      toggleFolderOpen(folder.id);
     }
   };
 
@@ -52,18 +65,20 @@ export default function FolderItem({
             : "hover:bg-gray-100"
         }`}
         onClick={handleClick}
+        onContextMenu={(e) => onContextMenu(e, folder.id)}
       >
         {/* Drag handle (only this element listens for drag) */}
-        <span
-          className="cursor-grab active:cursor-grabbing"
-          {...listeners}
-        >
+        <span className="cursor-grab active:cursor-grabbing" {...listeners}>
           <GripVertical size={14} className="text-gray-400" />
         </span>
 
         {/* Expand/collapse icon */}
         {folder.children && folder.children.length > 0 ? (
-          isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />
+          isOpen ? (
+            <ChevronDown size={15} />
+          ) : (
+            <ChevronRight size={15} />
+          )
         ) : (
           <span className="w-[14px]" /> // spacer
         )}
@@ -84,10 +99,13 @@ export default function FolderItem({
             {folder.children.map((child) => (
               <FolderItem
                 key={child.id}
-                folder={child}
-                depth={depth + 1}
+                folder={child} 
+                depth={depth + 1}  
                 activeFolder={activeFolder}
                 setActiveFolder={setActiveFolder}
+                openFolders={openFolders}
+                toggleFolderOpen={toggleFolderOpen}
+                onContextMenu={onContextMenu}
               />
             ))}
           </SortableContext>

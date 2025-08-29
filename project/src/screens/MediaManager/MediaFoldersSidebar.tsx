@@ -1,7 +1,7 @@
 // project/src/components/media/MediaFoldersSidebar.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -22,10 +22,10 @@ import { buildFolderTree, MediaFolderNode } from "@/util/functions/Tree";
 import FolderItem from "./FolderItem";
 import { MediaFolder } from "@/types/media";
 import { useModal2Store } from "@/store/useModalStore";
-import Modal2Input from "@/modals/Modal2Input";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
+import { useQueryClient } from "@tanstack/react-query";
 
 type MediaFoldersSidebarProps = {
   activeFolder: number | null;
@@ -37,14 +37,67 @@ export default function MediaFoldersSidebar({
   setActiveFolder,
 }: MediaFoldersSidebarProps) {
   const { currentProjectId } = useProjectContext();
-  const { mediaFolders, addMediaFolder, reorderMediaFolders } =
-    useContextQueries();
+  const {
+    mediaFolders,
+    addMediaFolder,
+    reorderMediaFolders,
+    deleteMediaFolder,
+  } = useContextQueries();
 
+  const queryClient = useQueryClient();
   const sensors = useSensors(useSensor(PointerSensor));
   const folderTree: MediaFolderNode[] = buildFolderTree(mediaFolders ?? []);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
+
+  const [openFolders, setOpenFolders] = useState<Set<number>>(new Set());
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    folderId: number | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const handler = () => setContextMenu(null);
+    window.addEventListener("click", handler);
+    return () => window.removeEventListener("click", handler);
+  }, []);
+
+  const handleContextMenu = (e: React.MouseEvent, folderId: number) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      folderId,
+    });
+  };
+
+  const handleCloseContextMenu = () => setContextMenu(null);
+
+  const handleDeleteFolder = async () => {
+    if (contextMenu?.folderId) {
+      await deleteMediaFolder(contextMenu.folderId);
+      setContextMenu(null);
+      if (activeFolder === contextMenu.folderId) {
+        setActiveFolder(null);
+      }
+      queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
+      queryClient.invalidateQueries({ queryKey: ["mediaFolders", currentProjectId] });
+    }
+  };
+
+  const toggleFolderOpen = (id: number) => {
+    setOpenFolders((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   // Helper: find parentId of a folder by id
   const findParentId = (
@@ -85,7 +138,6 @@ export default function MediaFoldersSidebar({
 
   const handleAddFolder = async () => {
     if (!currentProjectId) return;
-    console.log(activeFolder)
     const steps: StepConfig[] = [
       {
         name: "name",
@@ -107,11 +159,17 @@ export default function MediaFoldersSidebar({
         <Modal2MultiStepModalInput
           steps={steps}
           onComplete={async (values) => {
-            await addMediaFolder({
+            const newId = await addMediaFolder({
               project_idx: currentProjectId,
               parent_id: activeFolder,
               name: values.name,
             });
+            if (newId) {
+              if (activeFolder) {
+                setOpenFolders((prev) => new Set(prev).add(activeFolder));
+              }
+              setActiveFolder(newId);
+            }
           }}
         />
       ),
@@ -120,6 +178,20 @@ export default function MediaFoldersSidebar({
 
   return (
     <div className="w-60 border-r h-[100%] flex flex-col">
+      {contextMenu && (
+        <div
+          className="fixed z-50 bg-white border shadow-lg rounded-md py-1 w-40 animate-fade-in"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={handleCloseContextMenu}
+        >
+          <button
+            onClick={handleDeleteFolder}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 hover:text-red-600"
+          >
+            Delete Folder
+          </button>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto p-2">
         <DndContext
           sensors={sensors}
@@ -137,6 +209,9 @@ export default function MediaFoldersSidebar({
                 depth={0}
                 activeFolder={activeFolder}
                 setActiveFolder={setActiveFolder}
+                openFolders={openFolders}
+                toggleFolderOpen={toggleFolderOpen}
+                onContextMenu={handleContextMenu}
               />
             ))}
           </SortableContext>

@@ -1,5 +1,14 @@
 "use client";
-import { useEffect, RefObject, useRef, useState, useContext, useMemo } from "react";
+import {
+  useEffect,
+  RefObject,
+  useRef,
+  useState,
+  useContext,
+  useMemo,
+  ReactNode,
+  MouseEventHandler,
+} from "react";
 import {
   useLeftBarOpenStore,
   useLeftBarRefStore,
@@ -13,18 +22,69 @@ import { MdLibraryBooks } from "react-icons/md";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { BiWindows } from "react-icons/bi";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAppContext } from "@/contexts/appContext";
-import { FaHome } from "react-icons/fa";
+import { GoFileMedia } from "react-icons/go";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext";
+import { Screen, useUI } from "@/contexts/uiContext";
+import { motion } from "framer-motion";
+import { GoTerminal } from "react-icons/go";
+import { HiServer, HiViewBoards } from "react-icons/hi";
+import { FaImages, FaThList } from "react-icons/fa";
+import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
+
+type HoverBoxProps = {
+  children: ReactNode;
+  page: Screen;
+  onClick?: MouseEventHandler<HTMLDivElement>;
+};
+
+const HoverBox = ({ children, onClick, page }: HoverBoxProps) => {
+  const { currentUser } = useContext(AuthContext);
+  const { screen } = useUI();
+  const [hovered, setHovered] = useState(false);
+
+  if (!currentUser) return null;
+
+  return (
+    <motion.div
+      onClick={onClick}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      animate={{
+        backgroundColor: hovered
+          ? appTheme[currentUser.theme].background_2
+          : screen === page
+          ? appTheme[currentUser.theme].background_2
+          : appTheme[currentUser.theme].background_1,
+      }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="cursor-pointer rounded-[8px] w-full h-[38px] flex items-center justify-start px-[12px]"
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const Divider = () => {
+  const { currentUser } = useContext(AuthContext);
+  if (!currentUser) return null;
+
+  return (
+    <div
+      style={{ backgroundColor: appTheme[currentUser.theme].background_2 }}
+      className="w-full h-[1px] rounded-[1px] mb-[10px]"
+    />
+  );
+};
 
 const LeftBar = () => {
-  const pathname = usePathname();
   const { currentUser, handleLogout } = useContext(AuthContext);
   const { currentProjectId } = useProjectContext();
-  const { pageClick, productTableView, setProductTableView } = useAppContext();
+  const { pageClick } = useAppContext();
   const { hasProjectModule, projectsData } = useContextQueries();
+  const { screen, setScreen } = useUI();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarRef = useRef<HTMLDivElement>(null);
@@ -36,7 +96,17 @@ const LeftBar = () => {
   const [showLeftBar, setShowLeftBar] = useState<boolean>(false);
   const showLeftBarRef = useRef<HTMLDivElement>(null);
   const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
-  
+  const windowLargeRef = useRef<boolean>(window.innerWidth > 1024);
+  const [windowWidth, setWindowWidth] = useState<number | null>(null);
+
+  const setTab = (tab: Screen) => {
+    if (windowWidth && windowWidth < 1024) {
+      closeLeftBar();
+    }
+    setScreen(tab);
+    pageClick(tab);
+  };
+
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
   }, [projectsData, currentProjectId]);
@@ -103,8 +173,6 @@ const LeftBar = () => {
     leftBarOpenRef.current = leftBarOpen;
   }, [leftBarOpen]);
 
-  const windowLargeRef = useRef<boolean>(window.innerWidth > 1024);
-  const [windowWidth, setWindowWidth] = useState<number | null>(null);
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -153,13 +221,6 @@ const LeftBar = () => {
     });
   };
 
-  const handlePageClick = (newPage: string) => {
-    if (windowWidth < 1024) {
-      closeLeftBar();
-    }
-    pageClick(newPage);
-  };
-
   if (!currentUser) return null;
 
   return (
@@ -191,10 +252,10 @@ const LeftBar = () => {
             style={{
               color: appTheme[currentUser.theme].text_1,
             }}
-            className="relative w-[100%] h-[100%] px-[20px] pt-[5px] items-start flex flex-col"
+            className="relative w-[100%] h-[100%] px-[20px] pt-[8.8px] items-start flex flex-col"
           >
             <div
-              onClick={() => pageClick("/")}
+              onClick={() => setTab("dashboard")}
               className="flex lg:hidden flex-row mt-[22px] gap-[5px] mb-[18px] items-center cursor-pointer dim hover:brightness-75 pr-[6px]"
             >
               <img
@@ -217,77 +278,84 @@ const LeftBar = () => {
               </p>
             </div>
 
-            <div className="w-[100%] justify-between flex flex-row items-center">
-              <div
-                onClick={() => {
-                  handlePageClick("/");
-                }}
-                className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[7px] items-center rounded-[10px] px-[12px] py-[5px]"
-                style={{
-                  backgroundColor:
-                    pathname === "/"
-                      ? appTheme[currentUser.theme].background_2
-                      : "transparent",
-                  color: appTheme[currentUser.theme].text_1,
-                }}
-              >
-                <FaHome className="w-[17px] h-[17px]" />
-                <p>Website</p>
-              </div>
+            <div className="w-[100%] flex flex-row-reverse justify-end items-center mb-[11px]">
               <LuPanelLeftClose
                 style={{ color: appTheme[currentUser.theme].text_4 }}
-                className="hidden lg:block dim cursor-pointer brightness-75 hover:brightness-50 w-[24px] h-[24px] mr-[-8px] ml-[10px] mt-[5px]"
+                className="hidden lg:block dim cursor-pointer brightness-75 hover:brightness-50 w-[24px] h-[24px] mr-[-8px] ml-[10px]"
                 onClick={() => {
                   closeLeftBar();
                 }}
               />
+              {hasProjectModule("dashboard-module") && (
+                <div className="flex-1 flex flex-col">
+                  <HoverBox
+                    onClick={() => {
+                      setTab("dashboard");
+                    }}
+                    page="dashboard"
+                  >
+                    <div className="flex flex-row gap-[8px]">
+                      <HiServer
+                        size={15}
+                        color={appTheme[currentUser.theme].text_3}
+                        className="w-[17px] h-[17px] brightness-75"
+                      />
+                      <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
+                        Dashboard
+                      </p>
+                    </div>
+                  </HoverBox>
+                </div>
+              )}
             </div>
 
-            <div
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_2,
-              }}
-              className="w-[100%] h-[1px] rounded-[1px] my-[15px]"
-            ></div>
+            {hasProjectModule("media-module") &&
+              hasProjectModule("global-media-module") && (
+                <div className="w-[100%] flex flex-col mb-[10px]">
+                  <Divider />
+                  <HoverBox
+                    onClick={() => {
+                      setTab("media");
+                    }}
+                    page="media"
+                  >
+                    <div className="flex flex-row gap-[8px]">
+                      <FaImages className="w-[17px] h-[17px] brightness-75" />
+                      <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
+                        Media
+                      </p>
+                    </div>
+                  </HoverBox>
+                </div>
+              )}
 
             {hasProjectModule("products-module") && (
-              <div className="w-[100%]">
-                <div
-                  className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[8px] items-center rounded-[10px] px-[12px] py-[5px]"
-                  style={{
-                    backgroundColor:
-                      pathname === "/products" && !productTableView
-                        ? appTheme[currentUser.theme].background_2
-                        : "transparent",
-                  }}
-                  onClick={() => {
-                    setProductTableView(false);
-                    handlePageClick("/products");
-                  }}
-                >
-                  <MdLibraryBooks className="w-[17px] h-[17px] brightness-75" />
-                  <p className="brightness-[55%] text-[15.6px] font-[400]">
-                    Products
-                  </p>
-                </div>
+              <div className="w-[100%] h-[auto] flex flex-col">
+                <Divider />
+                <div className="flex flex-col gap-[9px]">
+                  <HoverBox onClick={() => setTab("products")} page="products">
+                    <div className="flex flex-row gap-[8px]">
+                      <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
+                      <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
+                        Products
+                      </p>
+                    </div>
+                  </HoverBox>
 
-                <div
-                  className="mt-[5px] dim hover:brightness-75 cursor-pointer w-[100%] flex gap-[9px] items-center rounded-[10px] px-[12px] py-[5px]"
-                  style={{
-                    backgroundColor:
-                      pathname === "/products" && productTableView
-                        ? appTheme[currentUser.theme].background_2
-                        : "transparent",
-                  }}
-                  onClick={() => {
-                    setProductTableView(true);
-                    handlePageClick("/products");
-                  }}
-                >
-                  <BiWindows className="w-[17px] h-[17px] brightness-75" />
-                  <p className="brightness-[55%] text-[15.6px] font-[400]">
-                    Data
-                  </p>
+                  <HoverBox
+                    onClick={() => setTab("products-table")}
+                    page="products-table"
+                  >
+                    <div className="flex flex-row gap-[8px]">
+                      <ProductsDataIcon
+                        // color={appTheme[currentUser.theme].text_3}
+                        size={22}
+                      />
+                      <p className="brightness-[55%] text-[15.6px] font-[400]">
+                        Data
+                      </p>
+                    </div>
+                  </HoverBox>
                 </div>
               </div>
             )}

@@ -62,8 +62,6 @@ type AppContextType = {
   submitProductForm: () => Promise<boolean>;
   resetTimer: (fast: boolean) => void;
   checkForUnsavedChanges: () => boolean;
-  productTableView: boolean;
-  setProductTableView: React.Dispatch<React.SetStateAction<boolean>>;
   handleRunModule: (identifier: string) => void;
   handleFileProcessing: (files: File[]) => Promise<string[]>;
 };
@@ -206,7 +204,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       return [];
     }
   };
-  
+
   const handleFileProcessing = async (files: File[]): Promise<string[]> => {
     setEditingLock(true);
     try {
@@ -371,36 +369,50 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
+  const requiresRouteChange = (newRoute: string) => {
+    if (newRoute === pathname) return false;
+    return (newRoute === "/" || newRoute.startsWith("/products"));
+  };
+
+  const filterRoute = (newPage: string) => {
+    let newRoute = newPage;
+    if (newPage === "products-table") newRoute = "products";
+    if (!newPage.startsWith("products")) newRoute = "";
+    return "/" + newRoute;
+  };
+
   const pageClick = async (newPage: string) => {
-    if (newPage === pathname) return;
+    const route = filterRoute(newPage);
+    if (!requiresRouteChange(route)) return;
+
     if (pathname === "/") {
       if (checkForUnsavedChanges()) {
         await saveProducts();
       }
-      router.push(newPage);
+      router.push(route);
     } else if (pathname.startsWith("/products")) {
       const onContinue = async () => {
         const result = await submitProductForm();
         if (result) {
-          router.push(newPage);
+          router.push(route);
         }
       };
       if (pathname === "/products") {
         if (addProductPage) {
-          promptSave(() => router.push(newPage), onContinue);
+          promptSave(() => router.push(route), onContinue);
         } else {
-          router.push(newPage);
+          router.push(route);
         }
       } else {
         const isDirty = productFormRef?.current?.formState?.isDirty;
         if (isDirty) {
-          promptSave(() => router.push(newPage), onContinue);
+          promptSave(() => router.push(route), onContinue);
         } else {
-          router.push(newPage);
+          router.push(route);
         }
       }
     } else {
-      router.push(newPage);
+      router.push(route);
     }
   };
 
@@ -487,8 +499,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const [productTableView, setProductTableView] = useState<boolean>(true);
-
   const handleRunModule = async (identifier: string) => {
     if (!currentProject) return;
     if (
@@ -537,8 +547,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         submitProductForm,
         resetTimer,
         checkForUnsavedChanges,
-        productTableView,
-        setProductTableView,
         handleRunModule,
         handleFileProcessing,
       }}

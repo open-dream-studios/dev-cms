@@ -99,7 +99,6 @@ export const reorderMediaDB = (project_idx, folder_id, orderedIds) => {
 };
 
 export const reorderFoldersDB = (project_idx, parent_id, orderedFolderIds) => {
-  console.log("reordering...", orderedFolderIds);
   return new Promise((resolve, reject) => {
     if (!orderedFolderIds || orderedFolderIds.length === 0) {
       return resolve({ affectedRows: 0 });

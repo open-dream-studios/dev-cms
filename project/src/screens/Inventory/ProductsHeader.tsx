@@ -18,6 +18,7 @@ import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { Product } from "@/types/products";
 import { useProjectContext } from "@/contexts/projectContext";
+import { useUI } from "@/contexts/uiContext";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const { currentUser } = useContext(AuthContext);
@@ -32,12 +33,11 @@ const ProductsHeader = ({ title }: { title: String }) => {
     setAddProductPage,
     saveProducts,
     localData,
-    productTableView,
-    handleRunModule
+    handleRunModule,
   } = useAppContext();
   const { currentProjectId } = useProjectContext();
-  const { deleteProducts, hasProjectModule } =
-    useContextQueries();
+  const { deleteProducts, hasProjectModule } = useContextQueries();
+  const { screen } = useUI();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const pathname = usePathname();
@@ -68,7 +68,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const wixSync = async () => {
     setEditingLock(true);
     try {
-      await handleRunModule("products-wix-sync-cms-module")
+      await handleRunModule("products-wix-sync-cms-module");
     } catch (e) {
       toast.error("Wix sync failed");
     } finally {
@@ -79,7 +79,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const handleGoogleExport = async () => {
     setEditingLock(true);
     try {
-      await handleRunModule("products-export-to-sheets-module")
+      await handleRunModule("products-export-to-sheets-module");
     } catch (e) {
       toast.error("Export failed");
     } finally {
@@ -132,7 +132,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
   const handleAddRow = () => {
     setEditMode(false);
-    if (!productTableView) {
+    if (screen !== "products-table") {
       setAddProductPage(true);
     } else {
       if (!currentUser) return null;
@@ -361,7 +361,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
               />
             </div>
 
-            {selectedProducts.length > 0 && productTableView && (
+            {selectedProducts.length > 0 && screen === "products-table" && (
               <div
                 style={{
                   backgroundColor: appTheme[currentUser.theme].background_2,

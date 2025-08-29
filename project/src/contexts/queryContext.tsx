@@ -136,7 +136,7 @@ export type QueryContextType = {
     project_idx: number;
     parent_id?: number | null;
     name: string;
-  }) => Promise<void>;
+  }) => Promise<number>;
   deleteMediaFolder: (id: number) => Promise<void>;
   reorderMediaFolders: (data: {
     parent_id: number | null;
@@ -740,18 +740,19 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     },
     onMutate: async (variables) => {
-      // optimistic update
       await queryClient.cancelQueries({
         queryKey: ["media", currentProjectId],
       });
+
       const prevMedia =
         queryClient.getQueryData<Media[]>(["media", currentProjectId]) || [];
-      const reordered = [...prevMedia].map((m) =>
-        variables.orderedIds.includes(m.id)
-          ? { ...m, ordinal: variables.orderedIds.indexOf(m.id) }
-          : m
-      );
+      const reordered = variables.orderedIds.map((id, idx) => ({
+        ...prevMedia.find((m) => m.id === id)!,
+        ordinal: idx,
+      }));
+
       queryClient.setQueryData(["media", currentProjectId], reordered);
+
       return { prevMedia };
     },
     onError: (_err, _vars, context) => {
@@ -763,9 +764,12 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["media", currentProjectId],
+      });
     },
   });
+
   const reorderMedia = async (data: {
     folder_id: number | null;
     orderedIds: number[];
@@ -794,7 +798,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
       parent_id?: number | null;
       name: string;
     }) => {
-      await makeRequest.post("/api/media/folders/add", data);
+      const res = await makeRequest.post("/api/media/folders/add", data);
+      return res.data.id as number;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

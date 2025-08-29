@@ -10,18 +10,20 @@ import ProductPage from "../../../screens/Inventory/ProductPage/ProductPage";
 import ProductsHeader from "@/screens/Inventory/ProductsHeader";
 import DraggableProductsGrid from "@/screens/Inventory/DraggableProductsGrid";
 import InventoryGrid from "@/screens/Inventory/InventoryGrid";
+import { useUI } from "@/contexts/uiContext";
 
 const ProductsPage = () => {
   const { currentUser } = useContext(AuthContext);
   const { productsData, isLoadingProductsData } = useContextQueries();
-  const { addProductPage, filteredProducts, productTableView } =
+  const { addProductPage, filteredProducts } =
     useAppContext();
+  const { screen } = useUI();
 
   if (!currentUser) return null;
 
   return (
     <>
-      {productTableView ? (
+      {screen === "products-table" ? (
         <InventoryGrid />
       ) : (
         <>
