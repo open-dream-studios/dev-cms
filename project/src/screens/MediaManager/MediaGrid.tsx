@@ -15,6 +15,11 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Media } from "@/types/media";
+import { appTheme } from "@/util/appTheme";
+import { useContext } from "react";
+import { AuthContext } from "@/contexts/authContext";
+import { IoCloseOutline } from "react-icons/io5";
+import { useContextQueries } from "@/contexts/queryContext";
 
 type SortableMediaItemProps = {
   media: Media;
@@ -36,11 +41,16 @@ function SortableMediaItem({
     isDragging,
   } = useSortable({ id, disabled });
 
+  const { currentUser } = useContext(AuthContext);
+  const { deleteMedia } = useContextQueries();
+
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 9999 : "auto", // 👈 float dragged item above others
+    zIndex: isDragging ? 9999 : "auto",
   };
+
+  if (!currentUser) return null;
 
   return (
     <div
@@ -48,10 +58,22 @@ function SortableMediaItem({
       style={style}
       {...attributes}
       {...(!disabled ? listeners : {})}
-      className={`rounded overflow-hidden border bg-white shadow-sm ${
+      className={`relative overflow-visible rounded border bg-white shadow-sm ${
         !disabled ? "cursor-grab" : "cursor-pointer"
-      } ${isDragging ? "shadow-xl" : ""}`} // 👈 add a stronger shadow for clarity
+      } ${isDragging ? "shadow-xl" : ""}`}
     >
+      {true && (
+        <div
+          style={{
+            border: `1px solid ${appTheme[currentUser.theme].text_4}`,
+            backgroundColor: appTheme[currentUser.theme].background_1,
+          }}
+          className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+          onClick={async () => await deleteMedia(id)}
+        >
+          <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
+        </div>
+      )}
       {media.type === "image" ? (
         <img
           draggable={false}

@@ -74,7 +74,7 @@ export const addMedia = async (req, res) => {
 };
 
 export const deleteMedia = (req, res) => {
-  const { id } = req.params;
+  const { id } = req.body;
   const project_idx = req.user.project_idx;
 
   if (!id || !project_idx) {
