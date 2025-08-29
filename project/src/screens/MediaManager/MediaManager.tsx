@@ -1,4 +1,4 @@
-// project/src/screens/Dashboard/Dashboard.tsx
+// project/src/screens/MediaManager/MediaManager.tsx
 import { useState, useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
@@ -9,16 +9,27 @@ import MediaToolbar from "../MediaManager/MediaToolbar";
 import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
 import { Media, MediaFolder } from "@/types/media";
 import { useAppContext } from "@/contexts/appContext";
+import { collectParentIds } from "@/util/functions/Tree";
 
 const MediaManager = () => {
   const { currentProjectId } = useProjectContext();
   const { currentUser } = useContext(AuthContext);
   const { setUploadPopup } = useAppContext();
-  const { media, reorderMedia, addMedia, refetchMedia } = useContextQueries();
+  const { media, reorderMedia, addMedia, refetchMedia, mediaFolders } = useContextQueries();
 
   const [activeFolder, setActiveFolder] = useState<MediaFolder | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [editMode, setEditMode] = useState<boolean>(false);
+  const [openFolders, setOpenFolders] = useState<Set<number>>(new Set());
+
+  function openAllParents(folder: MediaFolder) {
+    const parentIds = collectParentIds(folder, mediaFolders);
+    setOpenFolders((prev) => {
+      const next = new Set(prev);
+      parentIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
 
   if (!currentUser || !currentProjectId) return null;
 
@@ -27,7 +38,7 @@ const MediaManager = () => {
     : media;
 
   const handleReorder = (newOrder: Media[]) => {
-    if (!activeFolder) return
+    if (!activeFolder) return;
     reorderMedia({
       folder_id: activeFolder.id,
       orderedIds: newOrder.map((m) => m.id),
@@ -40,7 +51,7 @@ const MediaManager = () => {
         multiple
         onClose={() => setUploadPopup(false)}
         onUploaded={(uploads: CloudinaryUpload[]) => {
-          if (!activeFolder) return
+          if (!activeFolder) return;
           uploads.forEach((upload: CloudinaryUpload) => {
             addMedia({
               project_idx: currentProjectId,
@@ -58,6 +69,8 @@ const MediaManager = () => {
       <MediaFoldersSidebar
         activeFolder={activeFolder}
         setActiveFolder={setActiveFolder}
+        openFolders={openFolders}
+        setOpenFolders={setOpenFolders}
       />
 
       <div className="flex-1 flex flex-col">
@@ -76,7 +89,9 @@ const MediaManager = () => {
           projectId={currentProjectId}
           onReorder={handleReorder}
           activeFolder={activeFolder}
+          setActiveFolder={setActiveFolder}
           editMode={editMode}
+          openAllParents={openAllParents}
         />
       </div>
     </div>

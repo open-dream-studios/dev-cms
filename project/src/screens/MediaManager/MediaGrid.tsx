@@ -16,7 +16,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Media, MediaFolder } from "@/types/media";
 import { appTheme } from "@/util/appTheme";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext";
@@ -26,6 +26,10 @@ type SortableMediaItemProps = {
   id: number;
   disabled?: boolean;
   editMode: boolean;
+  setMediaSelected: React.Dispatch<React.SetStateAction<Media | null>>;
+  activeFolder: MediaFolder | null;
+  setActiveFolder: React.Dispatch<React.SetStateAction<MediaFolder | null>>;
+  openAllParents: (folder: MediaFolder) => void;
 };
 
 function SortableMediaItem({
@@ -33,6 +37,10 @@ function SortableMediaItem({
   id,
   disabled = false,
   editMode,
+  setMediaSelected,
+  activeFolder,
+  setActiveFolder,
+  openAllParents,
 }: SortableMediaItemProps) {
   const {
     attributes,
@@ -44,12 +52,26 @@ function SortableMediaItem({
   } = useSortable({ id, disabled, animateLayoutChanges: () => false });
 
   const { currentUser } = useContext(AuthContext);
-  const { deleteMedia } = useContextQueries();
+  const { deleteMedia, mediaFolders } = useContextQueries();
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? "none" : transition,
     zIndex: isDragging ? 9999 : "auto",
+  };
+
+  const handleMediaClick = (e: any) => {
+    if (!activeFolder) {
+      const folderFound = mediaFolders.find(
+        (mediaFolder: MediaFolder) => mediaFolder.id === media.folder_id
+      );
+      if (folderFound) {
+        openAllParents(folderFound);
+        setActiveFolder(folderFound);
+      }
+    } else {
+      setMediaSelected(media);
+    }
   };
 
   if (!currentUser) return null;
@@ -60,6 +82,9 @@ function SortableMediaItem({
       style={style}
       {...attributes}
       {...(!disabled ? listeners : {})}
+      onClick={(e: any) => {
+        handleMediaClick(e);
+      }}
       className={`relative overflow-visible rounded border bg-white shadow-sm ${
         !disabled ? "cursor-grab" : "cursor-pointer"
       } ${isDragging ? "shadow-xl" : ""}`}
@@ -71,7 +96,10 @@ function SortableMediaItem({
             backgroundColor: appTheme[currentUser.theme].background_1,
           }}
           className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
-          onClick={async () => await deleteMedia(id)}
+          onClick={async (e: any) => {
+            e.stopPropagation();
+            await deleteMedia(id);
+          }}
         >
           <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
         </div>
@@ -103,7 +131,9 @@ type MediaGridProps = {
   projectId: number;
   onReorder: (newOrder: Media[]) => void;
   activeFolder: MediaFolder | null;
+  setActiveFolder: React.Dispatch<React.SetStateAction<MediaFolder | null>>;
   editMode: boolean;
+  openAllParents: (folder: MediaFolder) => void;
 };
 
 export default function MediaGrid({
@@ -111,16 +141,22 @@ export default function MediaGrid({
   view,
   onReorder,
   activeFolder,
+  setActiveFolder,
   editMode,
+  openAllParents,
 }: MediaGridProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, 
+        distance: 5,
       },
     })
   );
+  const { currentUser } = useContext(AuthContext);
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
+  const [mediaSelected, setMediaSelected] = useState<Media | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
 
   useEffect(() => {
     setLocalMedia(
@@ -140,32 +176,136 @@ export default function MediaGrid({
     onReorder(newOrder);
   };
 
+  if (!currentUser) return null;
+
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={localMedia.map((m) => m.id)}
-        strategy={rectSortingStrategy}
-      >
+    <div className="w-[100%] h-[100%] relative">
+      {mediaSelected && activeFolder && (
         <div
-          className={`p-4 grid gap-4 ${
-            view === "grid" ? "grid-cols-4" : "grid-cols-1"
-          }`}
+          className="fixed z-[990] top-0 left-0 w-[100%] h-[100%] flex items-center justify-center"
+          style={{
+            backgroundColor: appTheme[currentUser.theme].background_1,
+          }}
+          onClick={() => setMediaSelected(null)}
         >
-          {localMedia.map((m) => (
-            <SortableMediaItem
-              key={m.id}
-              id={m.id}
-              media={m}
-              disabled={activeFolder === null}
-              editMode={editMode}
+          {/\.(mp4|mov)$/i.test(mediaSelected.url) ? (
+            <div className="relative max-w-[100%] max-h-[100%]">
+              <video
+                ref={videoRef}
+                src={mediaSelected.url}
+                className="object-contain max-w-[100%] max-h-[90vh]"
+                playsInline
+                loop
+                autoPlay
+                onClick={() => setMediaSelected(null)}
+                onTimeUpdate={(e) => {
+                  const v = e.currentTarget;
+                  setVideoTime({
+                    current: v.currentTime,
+                    duration: v.duration,
+                  });
+                }}
+              />
+              <div
+                className="absolute left-0 right-0 bottom-4 px-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="range"
+                  min={0}
+                  max={videoTime.duration || 0}
+                  step={0.01}
+                  value={videoTime.current || 0}
+                  onChange={(e) => {
+                    const newTime = parseFloat(e.target.value);
+                    if (videoRef.current)
+                      videoRef.current.currentTime = newTime;
+                    setVideoTime((prev) => ({ ...prev, current: newTime }));
+                  }}
+                  className="w-full appearance-none bg-transparent cursor-pointer"
+                  style={{
+                    WebkitAppearance: "none",
+                    appearance: "none",
+                  }}
+                />
+                <style jsx>{`
+                  input[type="range"] {
+                    height: 4px;
+                  }
+                  input[type="range"]::-webkit-slider-runnable-track {
+                    height: 4px;
+                    background: #ccc;
+                    border-radius: 2px;
+                  }
+                  input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    height: 14px;
+                    width: 14px;
+                    border-radius: 50%;
+                    background: #d1d5db;
+                    margin-top: -5px; /* centers thumb vertically */
+                    transition: background 0.2s ease;
+                  }
+                  input[type="range"]::-webkit-slider-thumb:hover {
+                    background: #d1d5db;
+                  }
+                  input[type="range"]::-moz-range-track {
+                    height: 4px;
+                    background: #ccc;
+                    border-radius: 2px;
+                  }
+                  input[type="range"]::-moz-range-thumb {
+                    height: 14px;
+                    width: 14px;
+                    border-radius: 50%;
+                    background: #d1d5db;
+                    border: none;
+                    transition: background 0.2s ease;
+                  }
+                  input[type="range"]::-moz-range-thumb:hover {
+                    background: #d1d5db;
+                  }
+                `}</style>
+              </div>
+            </div>
+          ) : (
+            <img
+              src={mediaSelected.url}
+              className="object-cover max-w-[100%] max-h-[100%]"
             />
-          ))}
+          )}
         </div>
-      </SortableContext>
-    </DndContext>
+      )}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={localMedia.map((m) => m.id)}
+          strategy={rectSortingStrategy}
+        >
+          <div
+            className={`p-4 grid gap-4 ${
+              view === "grid" ? "grid-cols-4" : "grid-cols-1"
+            }`}
+          >
+            {localMedia.map((m) => (
+              <SortableMediaItem
+                key={m.id}
+                id={m.id}
+                media={m}
+                disabled={activeFolder === null}
+                editMode={editMode}
+                setMediaSelected={setMediaSelected}
+                activeFolder={activeFolder}
+                setActiveFolder={setActiveFolder}
+                openAllParents={openAllParents}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </div>
   );
 }

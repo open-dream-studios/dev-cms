@@ -82,9 +82,8 @@ const Divider = () => {
 const LeftBar = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
   const { currentProjectId } = useProjectContext();
-  const { pageClick } = useAppContext();
   const { hasProjectModule, projectsData } = useContextQueries();
-  const { screen, setScreen } = useUI();
+  const { setTab } = useUI();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarRef = useRef<HTMLDivElement>(null);
@@ -98,14 +97,6 @@ const LeftBar = () => {
   const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
   const windowLargeRef = useRef<boolean>(window.innerWidth > 1024);
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
-
-  const setTab = (tab: Screen) => {
-    if (windowWidth && windowWidth < 1024) {
-      closeLeftBar();
-    }
-    setScreen(tab);
-    pageClick(tab);
-  };
 
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
@@ -221,6 +212,13 @@ const LeftBar = () => {
     });
   };
 
+  const handleTabClick = (tab: Screen) => {
+    if (windowWidth && windowWidth < 1024) {
+      closeLeftBar();
+    }
+    setTab(tab);
+  };
+
   if (!currentUser) return null;
 
   return (
@@ -255,7 +253,7 @@ const LeftBar = () => {
             className="relative w-[100%] h-[100%] px-[20px] pt-[8.8px] items-start flex flex-col"
           >
             <div
-              onClick={() => setTab("dashboard")}
+              onClick={() => handleTabClick("dashboard")}
               className="flex lg:hidden flex-row mt-[22px] gap-[5px] mb-[18px] items-center cursor-pointer dim hover:brightness-75 pr-[6px]"
             >
               <img
@@ -290,7 +288,7 @@ const LeftBar = () => {
                 <div className="flex-1 flex flex-col">
                   <HoverBox
                     onClick={() => {
-                      setTab("dashboard");
+                      handleTabClick("dashboard");
                     }}
                     page="dashboard"
                   >
@@ -315,7 +313,7 @@ const LeftBar = () => {
                   <Divider />
                   <HoverBox
                     onClick={() => {
-                      setTab("media");
+                      handleTabClick("media");
                     }}
                     page="media"
                   >
@@ -333,7 +331,10 @@ const LeftBar = () => {
               <div className="w-[100%] h-[auto] flex flex-col">
                 <Divider />
                 <div className="flex flex-col gap-[9px]">
-                  <HoverBox onClick={() => setTab("products")} page="products">
+                  <HoverBox
+                    onClick={() => handleTabClick("products")}
+                    page="products"
+                  >
                     <div className="flex flex-row gap-[8px]">
                       <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
                       <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
@@ -343,7 +344,7 @@ const LeftBar = () => {
                   </HoverBox>
 
                   <HoverBox
-                    onClick={() => setTab("products-table")}
+                    onClick={() => handleTabClick("products-table")}
                     page="products-table"
                   >
                     <div className="flex flex-row gap-[8px]">

@@ -47,13 +47,13 @@ const MediaToolbar = ({
         <p className="text-[24px] font-[700] mt-[-2px] px-[10.5px]">{activeFolder ? activeFolder.name : "All Media" }</p>
       </div>
       <div className="flex gap-2">
-        <Button
+        {activeFolder && <Button
           variant={editeMode ? "default" : "outline"}
           className="cursor-pointer hover:brightness-90 dim"
           onClick={() => setEditMode((prev: boolean) => !prev)}
         >
           <FiEdit />
-        </Button>
+        </Button>}
         <Button
           className="cursor-pointer hover:brightness-90 dim"
           onClick={onUploadClick}

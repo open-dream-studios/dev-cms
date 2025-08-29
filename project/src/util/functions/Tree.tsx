@@ -15,3 +15,20 @@ export function buildFolderTree(
       children: buildFolderTree(folders, f.id),
     }));
 }
+
+  export function collectParentIds(
+    folder: MediaFolder,
+    allFolders: MediaFolder[]
+  ): number[] {
+    const parents: number[] = [];
+    let current = folder;
+
+    while (current.parent_id !== null) {
+      parents.push(current.parent_id);
+      const next = allFolders.find((f) => f.id === current.parent_id);
+      if (!next) break;
+      current = next;
+    }
+
+    return parents;
+  }

@@ -732,7 +732,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     },
   });
   const deleteMedia = async (id: number) => {
-    console.log(id)
     deleteMediaMutation.mutateAsync(id)
   }
 
