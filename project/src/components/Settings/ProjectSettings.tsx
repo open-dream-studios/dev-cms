@@ -9,7 +9,7 @@ import { appTheme } from "@/util/appTheme";
 import { ProjectSettingsFormData } from "@/util/schemas/projectSettingsSchema";
 import { useContext, useEffect, useMemo } from "react";
 import { FaPlus } from "react-icons/fa6";
-import UploadModal from "../Upload/Upload";
+import UploadModal, { CloudinaryUpload } from "../Upload/Upload";
 import { useAppContext } from "@/contexts/appContext";
 
 const ProjectSettings = () => {
@@ -72,8 +72,10 @@ const ProjectSettings = () => {
       <UploadModal
         multiple={false}
         onClose={() => setUploadPopup(false)}
-        onUploaded={async (urls) => {
-          await onLogoSubmit(urls);
+        onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
+          await onLogoSubmit(
+            uploadObjects.map((item: CloudinaryUpload) => item.url)
+          );
         }}
       />
       <div

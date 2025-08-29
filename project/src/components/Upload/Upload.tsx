@@ -6,13 +6,25 @@ import { appTheme } from "@/util/appTheme";
 import React, { useContext, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 
+export type CloudinaryUpload = {
+  metadata: {
+    duration: number | null;
+    extension: string;
+    height: number;
+    size: number;
+    width: number;
+  };
+  public_id: string;
+  url: string;
+};
+
 interface UploadProps {
   handleFiles: (files: File[]) => void;
   multiple?: boolean;
 }
 
 type UploadModalProps = {
-  onUploaded: (urls: string[], files: File[]) => void;
+  onUploaded: (cloudinaryUploads: CloudinaryUpload[], files: File[]) => void;
   multiple?: boolean;
   onClose: () => void;
 };
@@ -30,9 +42,9 @@ function UploadModal({
 
   const handleFiles = async (files: File[]) => {
     const filtered = multiple ? files : files.slice(0, 1);
-    const urls = await handleFileProcessing(filtered);
-    if (urls.length > 0) {
-      onUploaded(multiple ? urls : [urls[0]], filtered);
+    const uploadedImages = await handleFileProcessing(filtered);
+    if (uploadedImages.length > 0) {
+      onUploaded(multiple ? uploadedImages : [uploadedImages[0]], filtered);
     }
   };
 

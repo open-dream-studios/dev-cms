@@ -26,6 +26,7 @@ import { Product } from "@/types/products";
 import { useProjectContext } from "./projectContext";
 import { runFrontendModule } from "@/modules/runFrontendModule";
 import { ProjectModule } from "@/types/project";
+import { CloudinaryUpload } from "@/components/Upload/Upload";
 
 type AppContextType = {
   localData: Product[];
@@ -63,7 +64,7 @@ type AppContextType = {
   resetTimer: (fast: boolean) => void;
   checkForUnsavedChanges: () => boolean;
   handleRunModule: (identifier: string) => void;
-  handleFileProcessing: (files: File[]) => Promise<string[]>;
+  handleFileProcessing: (files: File[]) => Promise<CloudinaryUpload[]>;
 };
 
 export type FileImage = {
@@ -194,7 +195,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (response.status === 200) {
         const uploadedFiles = response.data.files;
-        // [{ url, metadata }]
         return uploadedFiles;
       } else {
         return [];
@@ -205,7 +205,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const handleFileProcessing = async (files: File[]): Promise<string[]> => {
+  const handleFileProcessing = async (files: File[]): Promise<CloudinaryUpload[]> => {
     setEditingLock(true);
     try {
       const uploadedNames: string[] = [];
@@ -226,8 +226,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const images = await Promise.all(readerPromises);
       setUploadPopup(false);
-      const urls = await handleSend(images);
-      return urls;
+      const uploadObjects = await handleSend(images);
+      return uploadObjects;
     } catch (err) {
       console.error("Error processing files:", err);
       return [];
@@ -244,7 +244,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     const newImages = await handleFileProcessing(files);
     if (newImages.length === 0) return;
     const currentImages = getValues("images") || [];
-    const updated = [...currentImages, ...newImages];
+    const newImageUrls = newImages.map((item) => item.url)
+    const updated = [...currentImages, ...newImageUrls];
     setValue("images", updated, { shouldDirty: true });
   };
 

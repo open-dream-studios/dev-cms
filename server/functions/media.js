@@ -24,6 +24,7 @@ export const getMediaDB = (project_idx) => {
 export const addMediaDB = ({
   project_idx,
   folder_id,
+  public_id,
   url,
   type,
   alt_text,
@@ -46,15 +47,16 @@ export const addMediaDB = ({
 
       const q = `
         INSERT INTO media (
-          project_idx, folder_id, type, url, alt_text, metadata, media_usage, tags,
+          project_idx, folder_id, public_id, type, url, alt_text, metadata, media_usage, tags,
           ordinal, created_at, updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `;
 
       const values = [
         project_idx,
         folder_id || null,
+        public_id,
         type,
         url,
         alt_text || null,

@@ -12,7 +12,9 @@ import { IoIosAddCircleOutline } from "react-icons/io";
 import ProductImages from "./ProductImages";
 import { usePathname, useRouter } from "next/navigation";
 import { FaChevronLeft } from "react-icons/fa6";
-import UploadModal from "../../../components/Upload/Upload";
+import UploadModal, {
+  CloudinaryUpload,
+} from "../../../components/Upload/Upload";
 import { ProductFormData } from "@/util/schemas/productSchema";
 import { useProductForm } from "@/hooks/useProductForm";
 import ProductInputField from "../Forms/ProductInputField";
@@ -186,9 +188,14 @@ const ProductPage = ({ serialNumber }: { serialNumber?: string }) => {
       <UploadModal
         onClose={() => setUploadPopup(false)}
         multiple={true}
-        onUploaded={(urls) => {
+        onUploaded={(uploadObjects: CloudinaryUpload[]) => {
           const current = form.getValues("images") || [];
-          form.setValue("images", [...current, ...urls], { shouldDirty: true });
+          const newUrls = uploadObjects.map(
+            (item: CloudinaryUpload) => item.url
+          );
+          form.setValue("images", [...current, ...newUrls], {
+            shouldDirty: true,
+          });
         }}
       />
       <div

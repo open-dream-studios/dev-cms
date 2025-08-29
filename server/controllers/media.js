@@ -1,6 +1,12 @@
 // server/controllers/media.js
 import { db } from "../connection/connect.js";
-import { addMediaDB, getMediaDB, reorderMediaDB, reorderFoldersDB } from "../functions/media.js";
+import { deleteFromCloudinary } from "../functions/cloudinary.js";
+import {
+  addMediaDB,
+  getMediaDB,
+  reorderMediaDB,
+  reorderFoldersDB,
+} from "../functions/media.js";
 
 // MEDIA
 
@@ -26,6 +32,7 @@ export const addMedia = async (req, res) => {
     let {
       project_idx,
       folder_id,
+      public_id,
       url,
       type,
       alt_text,
@@ -34,7 +41,7 @@ export const addMedia = async (req, res) => {
       tags,
     } = req.body;
 
-    if (!project_idx || !url || !type || !media_usage) {
+    if (!project_idx || !url || !type || !media_usage || !public_id) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -47,6 +54,7 @@ export const addMedia = async (req, res) => {
     const result = await addMediaDB({
       project_idx,
       folder_id,
+      public_id,
       url,
       type,
       alt_text,
@@ -66,14 +74,46 @@ export const addMedia = async (req, res) => {
 };
 
 export const deleteMedia = (req, res) => {
-  const { id, project_idx } = req.body;
-  if (!id || !project_idx)
-    return res.status(400).json({ message: "Missing fields" });
+  const { id } = req.params;
+  const project_idx = req.user.project_idx;
 
-  const q = `DELETE FROM media WHERE id = ? AND project_idx = ? LIMIT 1`;
-  db.query(q, [id, project_idx], (err) => {
-    if (err) return res.status(500).json({ message: "DB error" });
-    return res.json({ message: "Media deleted" });
+  if (!id || !project_idx) {
+    return res.status(400).json({ message: "Missing fields" });
+  }
+
+  const selectQuery = `SELECT public_id, type FROM media WHERE id = ? AND project_idx = ? LIMIT 1`;
+  db.query(selectQuery, [id, project_idx], async (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "DB error" });
+    }
+
+    if (!results.length) {
+      return res.status(404).json({ message: "Media not found" });
+    }
+
+    const media = results[0];
+
+    try {
+      // 2. Delete from Cloudinary
+      await deleteFromCloudinary([media]);
+
+      // 3. Delete from DB
+      const deleteQuery = `DELETE FROM media WHERE id = ? AND project_idx = ? LIMIT 1`;
+      db.query(deleteQuery, [id, project_idx], (err2) => {
+        if (err2) {
+          console.error(err2);
+          return res.status(500).json({ message: "DB error deleting media" });
+        }
+
+        return res.json({ message: "Media deleted successfully" });
+      });
+    } catch (cloudErr) {
+      console.error(cloudErr);
+      return res
+        .status(500)
+        .json({ message: "Error deleting from Cloudinary" });
+    }
   });
 };
 
@@ -84,8 +124,14 @@ export const reorderMedia = async (req, res) => {
       return res.status(400).json({ message: "Missing fields" });
     }
 
-    const result = await reorderMediaDB(project_idx, folder_id || null, orderedIds);
-    return res.status(200).json({ success: true, updated: result.affectedRows });
+    const result = await reorderMediaDB(
+      project_idx,
+      folder_id || null,
+      orderedIds
+    );
+    return res
+      .status(200)
+      .json({ success: true, updated: result.affectedRows });
   } catch (err) {
     console.error("Error reordering media:", err);
     return res.status(500).json({ message: "DB error" });
@@ -145,15 +191,57 @@ export const addFolder = (req, res) => {
 };
 
 export const deleteFolder = (req, res) => {
-  const { id, project_idx } = req.body;
-  if (!id || !project_idx)
-    return res.status(400).json({ message: "Missing fields" });
+  const { folder_id } = req.body;
+  const project_idx = req.user.project_idx;
 
-  const q = `DELETE FROM media_folders WHERE id = ? AND project_idx = ? LIMIT 1`;
-  db.query(q, [id, project_idx], (err) => {
-    if (err) return res.status(500).json({ message: "DB error" });
-    return res.json({ message: "Folder deleted" });
-  });
+  if (!folder_id || !project_idx) {
+    return res.status(400).json({ message: "Missing folderId or projectId" });
+  }
+
+  // 1. Get all media public_ids in this folder + subfolders
+  const recursiveQuery = `
+    WITH RECURSIVE subfolders AS (
+      SELECT id FROM media_folders WHERE id = ?
+      UNION ALL
+      SELECT mf.id
+      FROM media_folders mf
+      INNER JOIN subfolders sf ON mf.parent_id = sf.id
+    )
+    SELECT m.public_id, m.type
+    FROM media m
+    WHERE m.folder_id IN (SELECT id FROM subfolders) AND m.project_idx = ?
+  `;
+
+  db.query(
+    recursiveQuery,
+    [folder_id, project_idx],
+    async (err, mediaResults) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error finding media" });
+      }
+
+      try {
+        // 2. Delete from Cloudinary if media exist
+        if (mediaResults.length > 0) {
+          await deleteFromCloudinary(mediaResults);
+        }
+
+        // 3. Delete folder(s) from DB (CASCADE handles media + nested folders)
+        const deleteQuery = `DELETE FROM media_folders WHERE id=? AND project_idx=?`;
+        db.query(deleteQuery, [folder_id, project_idx], (deleteErr) => {
+          if (deleteErr) {
+            console.error(deleteErr);
+            return res.status(500).json({ message: "Error deleting folder" });
+          }
+          return res.json({ message: "Folder and all contents deleted" });
+        });
+      } catch (cloudErr) {
+        console.error(cloudErr);
+        return res.status(500).json({ message: "Cloudinary deletion failed" });
+      }
+    }
+  );
 };
 
 export const reorderFolders = async (req, res) => {
@@ -163,8 +251,14 @@ export const reorderFolders = async (req, res) => {
       return res.status(400).json({ message: "Missing fields" });
     }
 
-    const result = await reorderFoldersDB(project_idx, parent_id || null, orderedIds);
-    return res.status(200).json({ success: true, updated: result.affectedRows });
+    const result = await reorderFoldersDB(
+      project_idx,
+      parent_id || null,
+      orderedIds
+    );
+    return res
+      .status(200)
+      .json({ success: true, updated: result.affectedRows });
   } catch (err) {
     console.error("Error reordering folders:", err);
     return res.status(500).json({ message: "DB error" });

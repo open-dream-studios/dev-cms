@@ -17,6 +17,7 @@ export type Media = {
   id: number;
   project_idx: number;
   folder_id: number | null;
+  public_id: number | null;
   type: FileType;
   url: string;
   alt_text?: string | null;

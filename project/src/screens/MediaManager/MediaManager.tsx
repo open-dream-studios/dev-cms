@@ -6,11 +6,11 @@ import { useContextQueries } from "@/contexts/queryContext";
 import MediaFoldersSidebar from "../MediaManager/MediaFoldersSidebar";
 import MediaGrid from "@/screens/MediaManager/MediaGrid";
 import MediaToolbar from "../MediaManager/MediaToolbar";
-import UploadModal from "@/components/Upload/Upload";
+import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
 import { Media } from "@/types/media";
 import { useAppContext } from "@/contexts/appContext";
-import { toast } from "react-toastify";
 
+ 
 const MediaManager = () => {
   const { currentProjectId } = useProjectContext();
   const { currentUser } = useContext(AuthContext);
@@ -33,16 +33,19 @@ const MediaManager = () => {
     });
   };
 
+
+
   return (
     <div className="flex w-full h-[100%]">
       <UploadModal
         multiple
         onClose={() => setUploadPopup(false)}
-        onUploaded={(urls: string[]) => {
-          urls.forEach((url) => {
+        onUploaded={(uploads: CloudinaryUpload[]) => {
+          uploads.forEach((upload: CloudinaryUpload) => {
             addMedia({
               project_idx: currentProjectId,
-              url,
+              public_id: upload.public_id,
+              url: upload.url,
               type: "image",
               folder_id: activeFolder,
               media_usage: "general",

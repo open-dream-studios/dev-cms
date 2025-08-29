@@ -119,6 +119,7 @@ export type QueryContextType = {
   refetchMediaFolders: () => void;
   addMedia: (file: {
     project_idx: number;
+    public_id: string | null;
     folder_id?: number | null;
     url: string;
     type: "image" | "video" | "file";
@@ -817,7 +818,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     mutationFn: async (id: number) => {
       await makeRequest.post("/api/media/folders/delete", {
         project_idx: currentProjectId,
-        id,
+        folder_id: id,
       });
     },
     onSuccess: () => {

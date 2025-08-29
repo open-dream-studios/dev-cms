@@ -159,7 +159,7 @@ export const compressAndUploadFiles = async (filePaths) => {
         });
       }
 
-      const folderBase = "open_dream/dev-cms/projects";
+      const folderBase = "open-dream/dev-cms/projects";
       let result;
 
       if (resourceType === "video") {
@@ -186,6 +186,7 @@ export const compressAndUploadFiles = async (filePaths) => {
 
       uploads.push({
         url: result.secure_url,
+        public_id: result.public_id,
         metadata: meta,
       });
 
