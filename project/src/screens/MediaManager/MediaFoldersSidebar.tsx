@@ -1,7 +1,7 @@
 // project/src/components/media/MediaFoldersSidebar.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -34,11 +34,16 @@ import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
 import { useQueryClient } from "@tanstack/react-query";
+import { appTheme } from "@/util/appTheme";
+import { AuthContext } from "@/contexts/authContext";
+import { FaPlus } from "react-icons/fa6";
+import Divider from "@/lib/blocks/Divider";
+import { MdChevronLeft } from "react-icons/md";
 
 type MediaFoldersSidebarProps = {
   activeFolder: MediaFolder | null;
   setActiveFolder: (mediaFolder: MediaFolder | null) => void;
-  openFolders: Set<number>; 
+  openFolders: Set<number>;
   setOpenFolders: React.Dispatch<React.SetStateAction<Set<number>>>;
 };
 
@@ -71,6 +76,7 @@ export default function MediaFoldersSidebar({
   } = useContextQueries();
 
   const queryClient = useQueryClient();
+  const { currentUser } = useContext(AuthContext)
   const sensors = useSensors(useSensor(PointerSensor));
   const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
   useEffect(() => {
@@ -252,9 +258,13 @@ export default function MediaFoldersSidebar({
 
   const [activeId, setActiveId] = useState<number | null>(null);
 
+  if (!currentUser) return null
+
   return (
-    <div className="w-60 border-r h-[100%] flex flex-col">
-      {/* Context Menu */}
+    <div className="w-60 h-[100%] flex flex-col px-[15px]" style={{
+      borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2
+        }`
+    }}>
       {contextMenu && (
         <div
           className="fixed z-50 bg-white border shadow-lg rounded-md py-1 w-40 animate-fade-in"
@@ -279,25 +289,30 @@ export default function MediaFoldersSidebar({
         </div>
       )}
 
-      {/* Header */}
-      <div className="mt-[8px] px-2 w-[100%] flex flex-row justify-between gap-[10px] items-center">
-        <div
-          onClick={() => setActiveFolder(null)}
-          className="cursor-pointer hover:brightness-75 dim"
-        >
-          <p className="text-[20px] font-[700] ml-[5px]">Media</p>
+      <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
+        <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
+
+          <p onClick={() => setActiveFolder(null)} className="cursor-pointer hover:opacity-[75%] transition-all duration-300 ease-in-out w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
+            Media
+          </p>
+
         </div>
 
-        <button
-          className="cursor-pointer flex aspect-[1/1] items-center gap-2 px-2 py-2 text-sm bg-[#e9e9e9] hover:bg-gray-100 rounded-full"
+        <div
           onClick={handleAddFolder}
+          className="dim cursor-pointer hover:brightness-75 min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+          style={{
+            backgroundColor: appTheme[currentUser.theme].background_1_2,
+          }}
         >
-          <Plus size={16} />
-        </button>
+          <FaPlus size={12} />
+        </div>
+
       </div>
 
-      {/* Folder Tree */}
-      <div className="flex-1 overflow-y-auto p-2">
+      <Divider />
+
+      <div className="flex-1 overflow-y-auto">
         <DndContext
           sensors={sensors}
           collisionDetection={rectIntersection}
@@ -333,17 +348,17 @@ export default function MediaFoldersSidebar({
           <DragOverlay>
             {activeId
               ? (() => {
-                  const activeNode = findNode(folderTree, activeId);
-                  if (!activeNode) return null;
+                const activeNode = findNode(folderTree, activeId);
+                if (!activeNode) return null;
 
-                  return (
-                    <div className="flex items-center gap-2 px-2 py-1 bg-white shadow rounded max-h-[32px]">
-                      <GripVertical size={14} className="text-gray-400" />
-                      {renderFolderIcons(activeNode)}
-                      <span className="truncate">{activeNode.name}</span>
-                    </div>
-                  );
-                })()
+                return (
+                  <div className="flex items-center gap-2 px-2 py-1 bg-white shadow rounded max-h-[32px]">
+                    <GripVertical size={14} className="text-gray-400" />
+                    {renderFolderIcons(activeNode)}
+                    <span className="truncate">{activeNode.name}</span>
+                  </div>
+                );
+              })()
               : null}
           </DragOverlay>
         </DndContext>

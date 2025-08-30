@@ -186,15 +186,11 @@ const ProjectPagesEditor = () => {
           refetchMedia();
         }}
       /> */}
-      {/* 
-      <ProjectPagesSidebar
-        activeFolder={activeFolder}
-        setActiveFolder={setActiveFolder}
-        openFolders={openFolders}
-        setOpenFolders={setOpenFolders}
-      /> */}
 
-      <div className="w-60 border-r h-[100%] flex flex-col px-[20px]">
+      <div className="w-60 h-[100%] flex flex-col px-[15px]" style={{
+        borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2
+          }`
+      }}>
         {contextMenu && (
           <div
             className="fixed z-50 bg-white border shadow-lg rounded-md py-1 w-40 animate-fade-in"
@@ -223,7 +219,7 @@ const ProjectPagesEditor = () => {
                 <MdChevronLeft size={25} />
               </div>
             )}
-            <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px]">
+            <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
               {editingPage
                 ? `${editingPage.title}`
                 : addingPage

@@ -256,7 +256,7 @@ export default function ProjectPagesSidebar({
   const [activeId, setActiveId] = useState<number | null>(null);
 
   return (
-    <div className="w-60 border-r h-[100%] flex flex-col">
+    <div className="w-60 h-[100%] flex flex-col">
       {/* {contextMenu && (
         <div
           className="fixed z-50 bg-white border shadow-lg rounded-md py-1 w-40 animate-fade-in"

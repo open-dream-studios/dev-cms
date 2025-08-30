@@ -121,14 +121,13 @@ function SortableMediaItem({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
-      className={`relative overflow-visible rounded border bg-white shadow-sm ${cursorClass} ${
+      className={`relative overflow-visible rounded shadow-sm ${cursorClass} ${
         isDragging ? "shadow-xl" : ""
       }`}
     >
       {editMode && (
         <div
           style={{
-            border: `1px solid ${appTheme[currentUser.theme].text_4}`,
             backgroundColor: appTheme[currentUser.theme].background_1,
           }}
           className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
@@ -146,10 +145,7 @@ function SortableMediaItem({
           draggable={false}
           src={media.url}
           alt={media.alt_text || ""}
-          onDrag={() => {
-            console.log(1);
-          }}
-          className="dim hover:brightness-90 object-cover w-full h-[150px]"
+          className="dim hover:brightness-90 object-cover w-full max-h-[210px] aspect-[1/1]"
         />
       ) : (
         <video
@@ -326,7 +322,7 @@ export default function MediaGrid({
         >
           <div
             className={`p-4 grid gap-4 ${
-              view === "grid" ? "grid-cols-4" : "grid-cols-1"
+              view === "grid" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"
             }`}
           >
             {localMedia.map((m) => (

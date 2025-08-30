@@ -14,9 +14,13 @@ import {
   ChevronDown,
   GripVertical,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { MouseEventHandler, ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { MediaFolder } from "@/types/media";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { motion } from "framer-motion"
+import { AuthContext } from "@/contexts/authContext";
+import { useUI } from "@/contexts/uiContext";
+import { appTheme } from "@/util/appTheme";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
@@ -41,6 +45,7 @@ export default function FolderItem({
   renamingFolder,
   setRenamingFolder,
 }: FolderItemProps) {
+  const { currentUser } = useContext(AuthContext);
   const { renameMediaFolder } = useContextQueries();
   const [tempName, setTempName] = useState<string>(folder.name);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +105,10 @@ export default function FolderItem({
     setRenamingFolder(folder.id);
   };
 
+  const [hovered, setHovered] = useState(false);
+
+    if (!currentUser) return null;
+
   return (
     <div
       ref={setNodeRef}
@@ -109,15 +118,21 @@ export default function FolderItem({
       }}
       {...attributes}
     >
-      <div
-        className={`flex items-center gap-2 px-2 py-1 cursor-pointer rounded ${
-          activeFolder && activeFolder.id === folder.id
-            ? "bg-gray-200 font-semibold"
-            : "hover:bg-gray-100"
-        }`}
+      <motion.div
+        onHoverStart={() => setHovered(true)}
+        onHoverEnd={() => setHovered(false)}
+        className={`flex items-center gap-2 px-2 py-1 cursor-pointer rounded`}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={(e) => onContextMenu(e, folder.id)}
+         animate={{
+        backgroundColor: hovered
+          ? appTheme[currentUser.theme].background_2
+          : activeFolder && activeFolder.id === folder.id
+            ? appTheme[currentUser.theme].background_2
+            : appTheme[currentUser.theme].background_1,
+      }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <span className="cursor-grab active:cursor-grabbing" {...listeners}>
           <GripVertical size={14} className="text-gray-400" />
@@ -152,7 +167,7 @@ export default function FolderItem({
         ) : (
           <span className="w-[100%]">{folder.name}</span>
         )}
-      </div>
+      </motion.div>
 
       {/* Render children only when open */}
       {isOpen && folder.children && folder.children.length > 0 && (
