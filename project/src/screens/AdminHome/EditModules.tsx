@@ -17,7 +17,6 @@ import { useState } from "react";
 import { Module } from "@/types/project";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
-import { MdChevronLeft } from "react-icons/md";
 
 const EditModules = () => {
   const { currentUser } = useContext(AuthContext);

@@ -99,8 +99,6 @@ const AdminHome = () => {
   const { projectsData, addProject, isLoadingProjects } = useContextQueries();
   const [editProjectsMode, setEditProjectsMode] = useState<boolean>(false);
 
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 

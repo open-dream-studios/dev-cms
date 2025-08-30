@@ -6,3 +6,4 @@ export * from "./integrations";
 export * from "./modules";
 export * from "./media";
 export * from "./mediaFolders";
+export * from "./pageDefinitions";

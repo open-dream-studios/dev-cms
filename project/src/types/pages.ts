@@ -18,8 +18,9 @@ export type Page = {
 
 export type PageDefinition = {
   id: number;
-  type: string; // e.g. "homepage", "blog_post"
-  name: string; // human-readable
+  identifier: string;
+  name: string;
+  parent_page_definition_id: number | null;
   allowed_sections: string[];
   config_schema: Record<string, any>;
 };

@@ -20,6 +20,7 @@ import { useProjectContext } from "@/contexts/projectContext";
 import { AiFillAppstore } from "react-icons/ai";
 import { LuBlocks } from "react-icons/lu";
 import EditModules from "@/screens/AdminHome/EditModules";
+import EditPageDefinitions from "@/screens/AdminHome/EditPageDefinitions";
 import UserImage from "../blocks/UserImage";
 import { useUI } from "@/contexts/uiContext";
 
@@ -98,6 +99,17 @@ const Navbar = () => {
   };
 
   const handleEditModulesClick = () => {
+    // setModal1({
+    //   ...modal1,
+    //   open: !modal1.open,
+    //   showClose: true,
+    //   offClickClose: true,
+    //   width: "w-[90vw] md:w-[80vw]",
+    //   maxWidth: "md:max-w-[1000px]",
+    //   aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+    //   borderRadius: "rounded-[15px] md:rounded-[20px]",
+    //   content: <EditModules />,
+    // });
     setModal1({
       ...modal1,
       open: !modal1.open,
@@ -107,8 +119,9 @@ const Navbar = () => {
       maxWidth: "md:max-w-[1000px]",
       aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
       borderRadius: "rounded-[15px] md:rounded-[20px]",
-      content: <EditModules />,
+      content: <EditPageDefinitions />,
     });
+
   };
 
   const handleLogoClick = () => {
@@ -125,16 +138,14 @@ const Navbar = () => {
           "--left-bar-width": removeWhiteSpace(appDetails.left_bar_width),
           "--nav-ml": appDetails.left_bar_width,
           backgroundColor: appTheme[currentUser.theme].background_1,
-          borderBottom: `0.5px solid ${
-            appTheme[currentUser.theme].background_2
-          }`,
+          borderBottom: `0.5px solid ${appTheme[currentUser.theme].background_2
+            }`,
         } as React.CSSProperties
       }
-      className={`fixed z-[900] ${
-        appDetails.left_bar_full
+      className={`fixed z-[900] ${appDetails.left_bar_full
           ? "w-[100vw] lg:w-[calc(100vw-(var(--left-bar-width))] lg:ml-[calc(var(--nav-ml))]"
           : "w-[100vw]"
-      } h-[var(--nav-height)]`}
+        } h-[var(--nav-height)]`}
     >
       <div className="w-[100%] h-[100%] absolute flex justify-between items-center">
         <div className="flex flex-row items-center px-[18px]">
@@ -142,9 +153,8 @@ const Navbar = () => {
             onClick={() => {
               toggleLeftBar();
             }}
-            className={`w-[30px] dim cursor-pointer ${
-              leftBarOpen && "lg:hidden"
-            } ${!currentProject && "hidden"} hover:brightness-75 mx-[3px]`}
+            className={`w-[30px] dim cursor-pointer ${leftBarOpen && "lg:hidden"
+              } ${!currentProject && "hidden"} hover:brightness-75 mx-[3px]`}
             color={appTheme[currentUser.theme].text_1}
             fontSize={29}
           />
@@ -159,13 +169,12 @@ const Navbar = () => {
                   : "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
               }
               alt="logo"
-              className={`${
-                !currentProject
+              className={`${!currentProject
                   ? ""
                   : !leftBarOpen
-                  ? "hidden"
-                  : "hidden lg:block"
-              }  select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
+                    ? "hidden"
+                    : "hidden lg:block"
+                }  select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
             />
 
             <div

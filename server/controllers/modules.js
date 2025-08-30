@@ -126,39 +126,89 @@ export const getAllModules = (req, res) => {
 export const upsertModule = (req, res) => {
   const { id, name, description, identifier, config_schema, parent_module_id } = req.body;
 
-  if (!name || !identifier) {
-    return res.status(400).json({ message: "Missing name or identifier" });
+  if (!identifier || !name) {
+    return res.status(400).json({ message: "Missing identifier or name" });
   }
 
-  const q = `
-    INSERT INTO modules (id, name, description, identifier, config_schema, parent_module_id)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE 
-      name = VALUES(name), 
-      description = VALUES(description), 
-      identifier = VALUES(identifier),
-      config_schema = VALUES(config_schema),
-      parent_module_id = VALUES(parent_module_id)
-  `;
+  // 1️⃣ Look up if identifier exists
+  const qFind = "SELECT id FROM modules WHERE identifier = ? LIMIT 1";
 
-  db.query(
-    q,
-    [
-      id || null,
-      name,
-      description || null,
-      identifier,
-      JSON.stringify(config_schema || []),
-      parent_module_id
-    ],
-    (err) => {
-      if (err) {
-        console.error("❌ Upsert module error:", err);
-        return res.status(500).json({ message: "Server error" });
-      }
-      return res.status(200).json({ message: "Module saved" });
+  db.query(qFind, [identifier], (err, results) => {
+    if (err) {
+      console.error("❌ Find module error:", err);
+      return res.status(500).json({ message: "Server error" });
     }
-  );
+
+    const existing = results[0];
+
+    if (existing) {
+      // 2️⃣ Identifier already exists
+      if (!id) {
+        return res.status(400).json({
+          message: "Identifier already exists, must provide id to update",
+        });
+      }
+      if (existing.id !== id) {
+        return res.status(400).json({
+          message: "Identifier exists but does not match provided id",
+        });
+      }
+
+      // ✅ Safe to update
+      const qUpdate = `
+        UPDATE modules
+        SET name = ?, description = ?, config_schema = ?, parent_module_id = ?
+        WHERE id = ?
+      `;
+      db.query(
+        qUpdate,
+        [
+          name,
+          description || null,
+          JSON.stringify(config_schema || []),
+          parent_module_id || null,
+          id,
+        ],
+        (err2) => {
+          if (err2) {
+            console.error("❌ Update module error:", err2);
+            return res.status(500).json({ message: "Server error" });
+          }
+          return res.status(200).json({ message: "Module updated" });
+        }
+      );
+    } else {
+      // 3️⃣ Identifier does NOT exist
+      if (id) {
+        return res.status(400).json({
+          message: "Identifier does not exist, cannot create with a preset id",
+        });
+      }
+
+      // ✅ Safe to insert
+      const qInsert = `
+        INSERT INTO modules (identifier, name, description, config_schema, parent_module_id)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      db.query(
+        qInsert,
+        [
+          identifier,
+          name,
+          description || null,
+          JSON.stringify(config_schema || []),
+          parent_module_id || null,
+        ],
+        (err3) => {
+          if (err3) {
+            console.error("❌ Insert module error:", err3);
+            return res.status(500).json({ message: "Server error" });
+          }
+          return res.status(200).json({ message: "Module created" });
+        }
+      );
+    }
+  });
 };
 
 export const deleteModule = (req, res) => {
