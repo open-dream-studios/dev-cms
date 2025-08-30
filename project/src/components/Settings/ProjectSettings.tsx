@@ -2,7 +2,7 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useProjectSettingsForm } from "@/hooks/useProjectSettingsForm";
 import { Project } from "@/types/project";
 import { appTheme } from "@/util/appTheme";

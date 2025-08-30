@@ -8,7 +8,7 @@ import app_details from "@/util/appDetails.json";
 import { useRouter } from "next/navigation";
 import { Product } from "@/types/products";
 import { useProjectContext } from "@/contexts/projectContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 const CustomInventoryFrame = ({
   item,

@@ -4,7 +4,7 @@ import { inventoryDataLayout } from "./InventoryGrid";
 import InventoryRowForm from "./InventoryRowForm";
 import { RiDraggable } from "react-icons/ri";
 import { useAppContext } from "@/contexts/appContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useEffect } from "react";
 import { FaCheck } from "react-icons/fa6";

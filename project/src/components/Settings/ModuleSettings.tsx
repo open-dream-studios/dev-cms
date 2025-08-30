@@ -1,6 +1,6 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Integration, Module, ProjectModule } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";

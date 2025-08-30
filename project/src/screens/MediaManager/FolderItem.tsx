@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MediaFolder } from "@/types/media";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };

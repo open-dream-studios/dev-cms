@@ -26,7 +26,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAppContext } from "@/contexts/appContext";
 import { GoFileMedia } from "react-icons/go";
 import { useProjectContext } from "@/contexts/projectContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Screen, useUI } from "@/contexts/uiContext";
 import { motion } from "framer-motion";
 import { GoTerminal } from "react-icons/go";
@@ -56,8 +56,8 @@ const HoverBox = ({ children, onClick, page }: HoverBoxProps) => {
         backgroundColor: hovered
           ? appTheme[currentUser.theme].background_2
           : screen === page
-          ? appTheme[currentUser.theme].background_2
-          : appTheme[currentUser.theme].background_1,
+            ? appTheme[currentUser.theme].background_2
+            : appTheme[currentUser.theme].background_1,
       }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="cursor-pointer rounded-[8px] w-full h-[38px] flex items-center justify-start px-[12px]"
@@ -76,6 +76,37 @@ const Divider = () => {
       style={{ backgroundColor: appTheme[currentUser.theme].background_2 }}
       className="w-full h-[1px] rounded-[1px] mb-[10px]"
     />
+  );
+};
+
+type BoxItem = {
+  title: string;
+  icon: ReactNode;
+  page: string;
+  onClick: () => void;
+};
+
+type BoxSectionProps = {
+  items: BoxItem[];
+};
+
+const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
+  return (
+    <div className="w-[100%] flex flex-col mb-[10px]">
+      <Divider />
+      <div className="flex flex-col gap-[9px]">
+        {items.map((item, idx) => (
+          <HoverBox key={idx} onClick={item.onClick} page={item.page as Screen}>
+            <div className="flex flex-row gap-[8px]">
+              {item.icon}
+              <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
+                {item.title}
+              </p>
+            </div>
+          </HoverBox>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -237,13 +268,11 @@ const LeftBar = () => {
           ref={leftBarRef}
           style={{
             backgroundColor: appTheme[currentUser.theme].background_1,
-            borderRight: `0.5px solid ${
-              appTheme[currentUser.theme].background_2
-            }`,
+            borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2
+              }`,
           }}
-          className={`z-[951] pointer-events-auto ${
-            leftBarOpen ? "right-0" : "right-[100%]"
-          } absolute top-0 h-[100%] w-[100%] flex justify-center
+          className={`z-[951] pointer-events-auto ${leftBarOpen ? "right-0" : "right-[100%]"
+            } absolute top-0 h-[100%] w-[100%] flex justify-center
           `}
         >
           <div
@@ -309,56 +338,48 @@ const LeftBar = () => {
 
             {hasProjectModule("media-module") &&
               hasProjectModule("global-media-module") && (
-                <div className="w-[100%] flex flex-col mb-[10px]">
-                  <Divider />
-                  <HoverBox
-                    onClick={() => {
-                      handleTabClick("media");
-                    }}
-                    page="media"
-                  >
-                    <div className="flex flex-row gap-[8px]">
-                      <FaImages className="w-[17px] h-[17px] brightness-75" />
-                      <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
-                        Media
-                      </p>
-                    </div>
-                  </HoverBox>
-                </div>
+                <BoxSection
+                  items={[
+                    {
+                      title: "Media",
+                      icon: <FaImages className="w-[17px] h-[17px] brightness-75" />,
+                      page: "media" as Screen,
+                      onClick: () => handleTabClick("media"),
+                    },
+                  ]}
+                />
               )}
 
-            {hasProjectModule("products-module") && (
-              <div className="w-[100%] h-[auto] flex flex-col">
-                <Divider />
-                <div className="flex flex-col gap-[9px]">
-                  <HoverBox
-                    onClick={() => handleTabClick("products")}
-                    page="products"
-                  >
-                    <div className="flex flex-row gap-[8px]">
-                      <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
-                      <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
-                        Products
-                      </p>
-                    </div>
-                  </HoverBox>
+            {hasProjectModule("pages-module") && (
+              <BoxSection
+                items={[
+                  {
+                    title: "Pages",
+                    icon: <FaImages className="w-[17px] h-[17px] brightness-75" />,
+                    page: "pages" as Screen,
+                    onClick: () => handleTabClick("pages"),
+                  },
+                ]}
+              />
+            )}
 
-                  <HoverBox
-                    onClick={() => handleTabClick("products-table")}
-                    page="products-table"
-                  >
-                    <div className="flex flex-row gap-[8px]">
-                      <ProductsDataIcon
-                        // color={appTheme[currentUser.theme].text_3}
-                        size={22}
-                      />
-                      <p className="brightness-[55%] text-[15.6px] font-[400]">
-                        Data
-                      </p>
-                    </div>
-                  </HoverBox>
-                </div>
-              </div>
+            {hasProjectModule("products-module") && (
+              <BoxSection
+                items={[
+                  {
+                    title: "Products",
+                    icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+                    page: "products" as Screen,
+                    onClick: () => handleTabClick("products"),
+                  },
+                  {
+                    title: "Data",
+                    icon: <ProductsDataIcon size={22} />,
+                    page: "products-table" as Screen,
+                    onClick: () => handleTabClick("products-table"),
+                  },
+                ]}
+              />
             )}
           </div>
 
@@ -378,9 +399,8 @@ const LeftBar = () => {
 
       {showLeftBar && windowWidth !== null && (
         <div
-          className={`z-[920] flex ${
-            windowWidth < 1024 ? "" : "hidden"
-          } w-full h-full fixed top-0 left-0`}
+          className={`z-[920] flex ${windowWidth < 1024 ? "" : "hidden"
+            } w-full h-full fixed top-0 left-0`}
         >
           <div
             ref={showLeftBarRef}

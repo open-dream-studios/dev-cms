@@ -7,7 +7,7 @@ import { useAppContext } from "@/contexts/appContext";
 import { appTheme } from "@/util/appTheme";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import "react-datepicker/dist/react-datepicker.css";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import ProductImages from "./ProductImages";
 import { usePathname, useRouter } from "next/navigation";

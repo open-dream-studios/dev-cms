@@ -1,7 +1,7 @@
 "use client";
 import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModulesForm } from "@/hooks/useModulesForm";
 import { ModuleFormData } from "@/util/schemas/moduleSchema";
 import { appTheme } from "@/util/appTheme";

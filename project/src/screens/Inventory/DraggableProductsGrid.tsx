@@ -19,7 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useContext, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { verticalListSortingStrategy } from "@dnd-kit/sortable";
 import {
   restrictToVerticalAxis,

@@ -1,3 +1,4 @@
+import { ProjectUser } from "@/types/project";
 import { QueryClient } from "@tanstack/react-query";
 
 export const handleUpdateUser = (queryClient: QueryClient) => {
@@ -29,14 +30,14 @@ const roleLevels: Record<string, number> = {
 };
 
 export function getUserAccess(
-  currentProject: { id: number },
-  projectUsers: { email: string; project_idx: number; role: string }[],
+  currentProjectId: number,
+  projectUsers: ProjectUser[],
   currentUserEmail?: string
 ): number {
-  if (!currentProject || !currentUserEmail) return 0;
+  if (!currentProjectId || !currentUserEmail) return 0;
   const membership = projectUsers.find(
     (u) =>
-      u.project_idx === currentProject.id &&
+      u.project_idx === currentProjectId &&
       u.email.toLowerCase() === currentUserEmail.toLowerCase()
   );
 

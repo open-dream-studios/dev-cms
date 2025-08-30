@@ -1,7 +1,7 @@
 // project/src/components/Settings/SiteSettings.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { ProjectUser, UserRole, validUserRoles } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useMemo, useState } from "react";

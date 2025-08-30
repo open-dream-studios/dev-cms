@@ -19,7 +19,7 @@ import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 type SortableMediaItemProps = {
   media: Media;

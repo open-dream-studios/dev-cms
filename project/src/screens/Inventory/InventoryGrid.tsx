@@ -3,7 +3,7 @@
 import ProductsHeader from "@/screens/Inventory/ProductsHeader";
 import { useAppContext } from "@/contexts/appContext";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import DraggableProductsGrid from "./DraggableProductsGrid";

@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { appTheme } from "../util/appTheme";
 import { AuthContext } from "../contexts/authContext";
 import { useModal2Store } from "../store/useModalStore";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { toast } from "react-toastify";
 import { Product } from "@/types/products";
 

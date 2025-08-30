@@ -4,7 +4,7 @@
 import { useEffect, useMemo } from "react";
 import { useProjectContext } from "@/contexts/projectContext";
 import { usePathname } from "next/navigation";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 export default function DynamicTitle() {
   const { currentProjectId } = useProjectContext();

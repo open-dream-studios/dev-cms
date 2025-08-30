@@ -17,7 +17,7 @@ import {
   UseFormSetValue,
 } from "react-hook-form";
 import { ProductFormData } from "@/screens/Inventory/ProductPage/ProductPage";
-import { useContextQueries } from "./queryContext";
+import { useContextQueries } from "./queryContext/queryContext";
 import { toast } from "react-toastify";
 import { usePathname, useRouter } from "next/navigation";
 import Modal2Continue from "@/modals/Modal2Continue";

@@ -15,7 +15,7 @@ import { useAppContext } from "@/contexts/appContext";
 import "./Navbar.css";
 import { IoMdSettings } from "react-icons/io";
 import Settings from "../Settings/Settings";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { AiFillAppstore } from "react-icons/ai";
 import { LuBlocks } from "react-icons/lu";

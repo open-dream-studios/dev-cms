@@ -1,6 +1,6 @@
 // project/src/screens/Inventory/InventoryRowForm.tsx
 "use client";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useProductForm } from "@/hooks/useProductForm";
 import { appTheme } from "@/util/appTheme";
 import ProductInputCell from "@/screens/Inventory/Forms/ProductInputCell";

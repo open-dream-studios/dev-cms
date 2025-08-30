@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import { DataFilters, useAppContext } from "@/contexts/appContext";
 import { makeRequest } from "@/util/axios";
 import { IoTrashSharp } from "react-icons/io5";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { usePathname } from "next/navigation";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";

@@ -2,7 +2,7 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MediaFoldersSidebar from "../MediaManager/MediaFoldersSidebar";
 import MediaGrid from "@/screens/MediaManager/MediaGrid";
 import MediaToolbar from "../MediaManager/MediaToolbar";

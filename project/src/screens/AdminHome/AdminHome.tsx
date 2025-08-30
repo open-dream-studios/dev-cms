@@ -4,7 +4,7 @@ import { Project } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MultiStepModalInput, { StepConfig } from "@/modals/Modal2MultiStepInput";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { IoCloseOutline } from "react-icons/io5";

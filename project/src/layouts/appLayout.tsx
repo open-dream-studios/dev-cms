@@ -24,7 +24,7 @@ import appDetails from "@/util/appDetails.json";
 import { usePathname, useRouter } from "next/navigation";
 import LandingNav from "@/screens/Landing/LandingNav/LandingNav";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import { QueryProvider, useContextQueries } from "@/contexts/queryContext";
+import { QueryProvider, useContextQueries } from "@/contexts/queryContext/queryContext";
 import CustomToast from "@/components/CustomToast";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import LandingPage from "@/screens/Landing/LandingPage/LandingPage";

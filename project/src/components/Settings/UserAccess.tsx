@@ -1,7 +1,7 @@
 // project/src/components/Settings/UserAccess.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { ProjectUser, UserRole, validUserRoles } from "@/types/project";
 import { appTheme } from "@/util/appTheme";

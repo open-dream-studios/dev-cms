@@ -25,7 +25,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useProjectContext } from "@/contexts/projectContext";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { buildFolderTree, MediaFolderNode } from "@/util/functions/Tree";
 import FolderItem from "./FolderItem";
 import { MediaFolder } from "@/types/media";

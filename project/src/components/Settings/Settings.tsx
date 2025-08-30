@@ -3,7 +3,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { appTheme } from "../../util/appTheme";
 import { AuthContext } from "../../contexts/authContext";
 import PrivacySettings from "./UserAccess";
-import { useContextQueries } from "@/contexts/queryContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import SiteSettings from "./SiteSettings";
 import AccountSettings from "./AccountSettings";
 import { useProjectContext } from "@/contexts/projectContext";
