@@ -17,47 +17,17 @@ import { appTheme } from "@/util/appTheme";
 import { PageDefinition, ProjectPage } from "@/types/pages";
 import { SubmitHandler } from "react-hook-form";
 import { ProjectPagesFormData } from "@/util/schemas/projectPagesSchema";
-import { usePageForm } from "@/hooks/useProjectPagesForm";
+import { defaultProjectPagesFormValues, usePageForm } from "@/hooks/useProjectPagesForm";
 import { MdChevronLeft } from "react-icons/md";
 import Divider from "@/lib/blocks/Divider";
 import { FiEdit } from "react-icons/fi";
+import SiteEditor from "./SiteEditor";
+import { Project } from "@/types/project";
+import { domainToUrl } from "@/util/functions/Pages";
 
 const ProjectPagesEditor = () => {
-  // const { currentProjectId } = useProjectContext();
-  // const { currentUser } = useContext(AuthContext);
-  // const { setUploadPopup } = useAppContext();
-  // const { media, reorderMedia, addMedia, refetchMedia, mediaFolders } = useContextQueries();
-
-  // const [activeFolder, setActiveFolder] = useState<MediaFolder | null>(null);
-  // const [view, setView] = useState<"grid" | "list">("grid");
-  // const [editMode, setEditMode] = useState<boolean>(false);
-  // const [openFolders, setOpenFolders] = useState<Set<number>>(new Set());
-
-  // function openAllParents(folder: MediaFolder) {
-  //   const parentIds = collectParentIds(folder, mediaFolders);
-  //   setOpenFolders((prev) => {
-  //     const next = new Set(prev);
-  //     parentIds.forEach((id) => next.add(id));
-  //     return next;
-  //   });
-  // }
-
-  // if (!currentUser || !currentProjectId) return null;
-
-  // const filteredMedia: Media[] = activeFolder
-  //   ? media.filter((m: Media) => m.folder_id === activeFolder.id)
-  //   : media;
-
-  // const handleReorder = (newOrder: Media[]) => {
-  //   if (!activeFolder) return;
-  //   reorderMedia({
-  //     folder_id: activeFolder.id,
-  //     orderedIds: newOrder.map((m) => m.id),
-  //   });
-  // };
-
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId, currentProject } = useProjectContext();
   const {
     projectPages,
     addProjectPage,
@@ -100,7 +70,7 @@ const ProjectPagesEditor = () => {
   const onSubmit: SubmitHandler<ProjectPagesFormData> = async (data) => {
     if (!currentProjectId) return;
     try {
-      await addProjectPage({ ...data, project_idx: currentProjectId });
+      await addProjectPage({ ...data, id: editingPage?.id || undefined, project_idx: currentProjectId });
       setAddingPage(false);
       setEditingPage(null);
       form.reset();
@@ -128,7 +98,7 @@ const ProjectPagesEditor = () => {
         parent_page_id: editingPage.parent_page_id ?? null,
       });
     } else if (addingPage) {
-      form.reset();
+      form.reset(defaultProjectPagesFormValues);
     }
   }, [editingPage, addingPage]);
 
@@ -146,7 +116,7 @@ const ProjectPagesEditor = () => {
     if (!currentProjectId || !contextMenu || !contextMenu.page) return;
     await deleteProjectPage({
       project_idx: currentProjectId,
-      slug: contextMenu.page.slug,
+      id: contextMenu.page.id,
     });
   };
 
@@ -187,6 +157,12 @@ const ProjectPagesEditor = () => {
   };
 
   const handleCloseContextMenu = () => setContextMenu(null);
+
+  const handleAddPageClick = () => {
+    // form.reset(defaultProjectPagesFormValues);
+    form.reset(defaultProjectPagesFormValues)
+    setAddingPage(true)
+  }
 
   if (!currentUser || !currentProjectId) return null;
 
@@ -239,7 +215,7 @@ const ProjectPagesEditor = () => {
             {(selectedParentPage || editingPage || addingPage) && (
               <div
                 onClick={handleBackClick}
-                className="dim hover:brightness-75 cursor-pointer w-[30px] h-[30px] mt-[-5px] pr-[2px] pb-[2px] rounded-full flex justify-center items-center"
+                className="dim hover:brightness-75 cursor-pointer w-[30px] h-[30px] min-w-[30px] mt-[-5px] pr-[2px] pb-[2px] rounded-full flex justify-center items-center"
                 style={{
                   backgroundColor: appTheme[currentUser.theme].background_1_2,
                 }}
@@ -260,8 +236,8 @@ const ProjectPagesEditor = () => {
           </div>
           {!editingPage && !addingPage && !selectedParentPage && (
             <div
-              onClick={() => setAddingPage(true)}
-              className="dim cursor-pointer hover:brightness-75 w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+              onClick={handleAddPageClick}
+              className="dim cursor-pointer hover:brightness-75 min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
               style={{
                 backgroundColor: appTheme[currentUser.theme].background_1_2,
               }}
@@ -304,7 +280,7 @@ const ProjectPagesEditor = () => {
               placeholder="Slug"
               className="input rounded p-[6px]"
               onChange={(e) => {
-                const filtered = e.target.value.replace(/[^a-z0-9-]/g, "");
+                const filtered = e.target.value.replace(/[^a-z0-9-/]/g, "");
                 form.setValue("slug", filtered, { shouldValidate: true });
               }}
             />
@@ -367,7 +343,7 @@ const ProjectPagesEditor = () => {
                         e.stopPropagation();
                         setEditingPage(page);
                       }}
-                      className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim cursor-pointer"
+                      className="flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full dim cursor-pointer"
                       style={{
                         backgroundColor:
                           appTheme[currentUser.theme].background_2_selected,
@@ -393,16 +369,7 @@ const ProjectPagesEditor = () => {
           activeFolder={activeFolder}
         /> */}
 
-        {/* <MediaGrid
-          media={filteredMedia}
-          view={view}
-          projectId={currentProjectId}
-          onReorder={handleReorder}
-          activeFolder={activeFolder}
-          setActiveFolder={setActiveFolder}
-          editMode={editMode}
-          openAllParents={openAllParents}
-        /> */}
+        {currentProject && <SiteEditor src={currentProject.domain ? domainToUrl(currentProject.domain) : ""} />}
       </div>
     </div>
   );

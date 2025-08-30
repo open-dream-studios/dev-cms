@@ -37,9 +37,7 @@ export const upsertPageDefinition = (req, res) => {
   } = req.body;
 
   if (!identifier || !name) {
-    return res
-      .status(400)
-      .json({ message: "Missing identifier or name" });
+    return res.status(400).json({ message: "Missing identifier or name" });
   }
 
   // 1️⃣ Look up if identifier exists
@@ -57,14 +55,12 @@ export const upsertPageDefinition = (req, res) => {
       // 2️⃣ Identifier already exists
       if (!id) {
         return res.status(400).json({
-          message:
-            "Identifier already exists, must provide id to update",
+          message: "Identifier already exists, must provide id to update",
         });
       }
       if (existing.id !== id) {
         return res.status(400).json({
-          message:
-            "Identifier exists but does not match provided id",
+          message: "Identifier exists but does not match provided id",
         });
       }
 
@@ -95,8 +91,7 @@ export const upsertPageDefinition = (req, res) => {
       // 3️⃣ Identifier does NOT exist
       if (id) {
         return res.status(400).json({
-          message:
-            "Identifier does not exist, cannot create with a preset id",
+          message: "Identifier does not exist, cannot create with a preset id",
         });
       }
 
@@ -145,70 +140,132 @@ export const deletePageDefinition = (req, res) => {
 };
 
 export const addProjectPage = (req, res) => {
-  const { definition_id, title, slug, order_index, seo_title, seo_description, seo_keywords, template, published, parent_page_id } = req.body;
+  const {
+    id,
+    definition_id,
+    title,
+    slug,
+    order_index,
+    seo_title,
+    seo_description,
+    seo_keywords,
+    template,
+    published,
+    parent_page_id,
+  } = req.body;
   const project_id = req.user?.project_idx;
 
   if (!project_id || !title || !slug) {
     return res.status(400).json({ message: "Missing fields" });
   }
 
-  const q = `
-    INSERT INTO project_pages 
-    (project_id, definition_id, title, slug, order_index, seo_title, seo_description, seo_keywords, template, published, parent_page_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      title = VALUES(title),
-      order_index = VALUES(order_index),
-      seo_title = VALUES(seo_title),
-      seo_description = VALUES(seo_description),
-      seo_keywords = VALUES(seo_keywords),
-      template = VALUES(template),
-      published = VALUES(published),
-      parent_page_id = VALUES(parent_page_id),
-      updated_at = NOW()
-  `;
-
-  db.query(
-    q,
-    [
-      project_id,
-      definition_id || null,
-      title,
-      slug,
-      order_index || 0,
-      seo_title || null,
-      seo_description || null,
-      JSON.stringify(seo_keywords || []),
-      template || "default",
-      published !== undefined ? published : true,
-      parent_page_id || null,
-    ],
-    (err) => {
-      if (err) {
-        console.error("❌ Add project page error:", err);
-        return res.status(500).json({ message: "Server error" });
+  if (id) {
+    // UPDATE by id
+    const qUpdate = `
+      UPDATE project_pages
+      SET definition_id = ?, title = ?, slug = ?, order_index = ?, seo_title = ?,
+          seo_description = ?, seo_keywords = ?, template = ?, published = ?,
+          parent_page_id = ?, updated_at = NOW()
+      WHERE id = ? AND project_id = ?
+    `;
+    db.query(
+      qUpdate,
+      [
+        definition_id || null,
+        title,
+        slug,
+        order_index || 0,
+        seo_title || null,
+        seo_description || null,
+        JSON.stringify(seo_keywords || []),
+        template || "default",
+        published !== undefined ? published : true,
+        parent_page_id || null,
+        id,
+        project_id,
+      ],
+      (err) => {
+        if (err) {
+          if (err.code === "ER_DUP_ENTRY") {
+            return res
+              .status(400)
+              .json({ message: "Slug already exists for this project" });
+          }
+          console.error("❌ Update project page error:", err);
+          return res.status(500).json({ message: "Server error" });
+        }
+        return res.status(200).json({ message: "Page updated" });
       }
-      return res.status(200).json({ message: "Page added/updated to project" });
-    }
-  );
+    );
+  } else {
+    // INSERT
+    const qInsert = `
+      INSERT INTO project_pages (
+        project_id, parent_page_id, definition_id, title, slug, order_index,
+        seo_title, seo_description, seo_keywords, template, published
+      )
+      SELECT
+        ? AS project_id,
+        ? AS parent_page_id,
+        ? AS definition_id,
+        ? AS title,
+        ? AS slug,
+        COALESCE(MAX(order_index), -1) + 1,
+        ? AS seo_title,
+        ? AS seo_description,
+        ? AS seo_keywords,
+        ? AS template,
+        ? AS published
+      FROM project_pages
+      WHERE project_id = ?;
+    `;
+    db.query(
+      qInsert,
+      [
+        project_id, // project_id
+        parent_page_id || null, // parent_page_id
+        definition_id || null, // definition_id
+        title, // title
+        slug, // slug
+        seo_title || null, // seo_title
+        seo_description || null, // seo_description
+        JSON.stringify(seo_keywords || []), // seo_keywords
+        template || "default", // template
+        published !== undefined ? published : true, // published
+        project_id, // for WHERE project_id = ?
+      ],
+      (err) => {
+        if (err) {
+          if (err.code === "ER_DUP_ENTRY") {
+            return res
+              .status(400)
+              .json({ message: "Slug already exists for this project" });
+          }
+          console.error("❌ Insert project page error:", err);
+          return res.status(500).json({ message: "Server error" });
+        }
+        return res.status(200).json({ message: "Page created" });
+      }
+    );
+  }
 };
 
 export const deleteProjectPage = (req, res) => {
-  const { slug } = req.body;
+  const { id } = req.body;
   const project_id = req.user?.project_idx;
 
-  if (!project_id || !slug) {
+  if (!project_id || !id) {
     return res.status(400).json({ message: "Missing fields" });
   }
 
-  const q = `DELETE FROM project_pages WHERE project_id = ? AND slug = ?`;
+  const q = `DELETE FROM project_pages WHERE project_id = ? AND id = ?`;
 
-  db.query(q, [project_id, slug], (err) => {
+  db.query(q, [project_id, id], (err) => {
     if (err) {
       console.error("❌ Delete project page error:", err);
       return res.status(500).json({ message: "Server error" });
     }
-    return res.status(200).json({ message: "Page removed from project" });
+    return res.status(200).json({ message: "Page removed" });
   });
 };
 
@@ -220,26 +277,8 @@ export const getProjectPages = (req, res) => {
   }
 
   const q = `
-    SELECT 
-      pp.id,
-      pp.project_id,
-      pp.definition_id,
-      pd.name AS definition_name,
-      pd.identifier AS definition_identifier,
-      pp.title,
-      pp.slug,
-      pp.order_index,
-      pp.seo_title,
-      pp.seo_description,
-      pp.seo_keywords,
-      pp.template,
-      pp.published,
-      pp.parent_page_id,
-      pp.created_at,
-      pp.updated_at,
-      pp.published_at
+    SELECT *
     FROM project_pages pp
-    LEFT JOIN page_definitions pd ON pp.definition_id = pd.id
     WHERE pp.project_id = ?
     ORDER BY pp.order_index ASC
   `;

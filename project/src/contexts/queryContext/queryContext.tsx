@@ -162,7 +162,7 @@ export type QueryContextType = {
   isLoadingProjectPages: boolean;
   refetchProjectPages: () => Promise<any>;
   addProjectPage: (data: any) => Promise<void>;
-  deleteProjectPage: (data: { project_idx: number; slug: string }) => Promise<void>;
+  deleteProjectPage: (data: { project_idx: number; id: number }) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -255,7 +255,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         isLoadingProjectPages,
         refetchProjectPages,
         addProjectPage: (data: any) => addProjectPageMutation.mutateAsync(data),
-        deleteProjectPage: (data: { project_idx: number; slug: string }) =>
+        deleteProjectPage: (data: { project_idx: number; id: number }) =>
           deleteProjectPageMutation.mutateAsync(data),
       }}
     >

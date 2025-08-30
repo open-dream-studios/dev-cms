@@ -18,22 +18,17 @@ import Modal2Continue from "../../modals/Modal2Continue";
 import { appTheme } from "../../util/appTheme";
 import appDetails from "../../util/appDetails.json";
 import { AuthContext } from "@/contexts/authContext";
-import { MdLibraryBooks } from "react-icons/md";
 import { LuPanelLeftClose } from "react-icons/lu";
-import { BiWindows } from "react-icons/bi";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useAppContext } from "@/contexts/appContext";
-import { GoFileMedia } from "react-icons/go";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Screen, useUI } from "@/contexts/uiContext";
 import { motion } from "framer-motion";
-import { GoTerminal } from "react-icons/go";
 import { HiServer, HiViewBoards } from "react-icons/hi";
 import { FaImages, FaThList } from "react-icons/fa";
 import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
 import Divider from "@/lib/blocks/Divider";
+import { FaPollH } from "react-icons/fa";
 
 type HoverBoxProps = {
   children: ReactNode;
@@ -344,7 +339,7 @@ const LeftBar = () => {
                 items={[
                   {
                     title: "Pages",
-                    icon: <FaImages className="w-[17px] h-[17px] brightness-75" />,
+                    icon: <FaPollH className="brightness-75 mt-[1px] " size={16} />,
                     page: "pages" as Screen,
                     onClick: () => handleTabClick("pages"),
                   },

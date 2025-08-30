@@ -10,10 +10,13 @@ export const ProjectPagesSchema = z.object({
   slug: z
     .string()
     .min(1, { message: "" })
-    .regex(/^[a-z0-9-]+$/, {
+    .regex(/^[a-z0-9-/]+$/, {
       message: "Slug can only contain letters, numbers, and dashes",
     })
-    .transform((val) => val.toLowerCase()),
+    .transform((val) => {
+      const normalized = val.toLowerCase();
+      return normalized.startsWith("/") ? normalized : `/${normalized}`;
+    }),
   order_index: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
     z.number().optional()
@@ -22,7 +25,11 @@ export const ProjectPagesSchema = z.object({
   seo_description: z.string().optional(),
   seo_keywords: z.array(z.string()).optional(),
   template: z.string().optional(),
-  published: z.boolean().optional(),
+  published: z.preprocess((val) => {
+    if (val === "0" || val === 0) return false;
+    if (val === "1" || val === 1) return true;
+    return val; 
+  }, z.boolean().optional()),
   parent_page_id: z.preprocess(
     (val) => (val === "" ? null : Number(val)),
     z.number().nullable().optional()

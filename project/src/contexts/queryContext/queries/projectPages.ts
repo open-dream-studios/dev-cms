@@ -36,7 +36,7 @@ export function useProjectPages(
   });
 
   const deleteProjectPageMutation = useMutation({
-    mutationFn: async (data: { project_idx: number; slug: string }) => {
+    mutationFn: async (data: { project_idx: number; id: number }) => {
       await makeRequest.post("/api/pages/delete", data);
     },
     onSuccess: () => {

@@ -25,7 +25,7 @@ import AdminController from "@/screens/AdminHome/AdminControllers/AdminControlle
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setCurrentProjectId } = useProjectContext();
+  const { currentProjectId, setProjectData } = useProjectContext();
   const { editingLock } = useAppContext();
   const { projectsData } = useContextQueries();
   const { setTab } = useUI()
@@ -94,7 +94,7 @@ const Navbar = () => {
 
   const handleClearProject = () => {
     setModal1({ ...modal1, open: false });
-    setCurrentProjectId(null);
+    setProjectData(null);
   };
 
   const handleEditModulesClick = () => {
@@ -228,7 +228,7 @@ const Navbar = () => {
               >
                 <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
                   <AiFillAppstore
-                    size={29}
+                    size={24}
                     color={appTheme[currentUser.theme].text_3}
                     className="opacity-[60%]"
                   />

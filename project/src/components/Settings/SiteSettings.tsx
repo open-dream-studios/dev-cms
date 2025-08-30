@@ -11,7 +11,7 @@ import { useProjectContext } from "@/contexts/projectContext";
 
 const SiteSettings = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setCurrentProjectId } = useProjectContext();
+  const { currentProjectId } = useProjectContext();
   const { projectsData, updateProjectUser, projectUsers, deleteProjectUser } =
     useContextQueries();
 

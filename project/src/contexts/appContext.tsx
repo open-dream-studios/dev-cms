@@ -81,7 +81,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { currentProjectId, setCurrentProjectId } = useProjectContext();
+  const { currentProjectId, setProjectData } = useProjectContext();
   const {
     productsData,
     isOptimisticUpdate,
@@ -104,7 +104,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (projectsData.length === 1) {
-      setCurrentProjectId(projectsData[0].id);
+      setProjectData(projectsData[0]);
     }
   }, [projectsData]);
 

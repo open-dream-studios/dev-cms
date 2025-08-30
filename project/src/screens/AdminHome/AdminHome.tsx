@@ -21,13 +21,13 @@ const ProjectItem = ({
   editProjectsMode: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { setCurrentProjectId } = useProjectContext();
+  const { setProjectData } = useProjectContext();
   const { deleteProject } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const handleProjectClick = () => {
-    setCurrentProjectId(project.id);
+    setProjectData(project);
   };
 
   const handleConfirmDelete = () => {
