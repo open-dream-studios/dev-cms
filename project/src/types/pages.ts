@@ -1,7 +1,8 @@
 // project/src/types/pages.ts
-export type Page = {
+export type ProjectPage = {
   id: number;
   project_id: number;
+  definition_id: number;
   parent_page_id?: number | null;
   title: string;
   slug: string;

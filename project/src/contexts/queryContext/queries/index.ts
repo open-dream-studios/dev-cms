@@ -7,3 +7,4 @@ export * from "./modules";
 export * from "./media";
 export * from "./mediaFolders";
 export * from "./pageDefinitions";
+export * from "./projectPages";

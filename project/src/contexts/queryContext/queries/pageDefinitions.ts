@@ -1,3 +1,4 @@
+// src/context/queryContext/queries/pageDefinitions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { PageDefinition } from "@/types/pages";
@@ -12,7 +13,7 @@ export function usePageDefinitions(isLoggedIn: boolean) {
   } = useQuery<PageDefinition[]>({
     queryKey: ["pageDefinitions"],
     queryFn: async () => {
-      const res = await makeRequest.post("/api/page-definitions/get-all");
+      const res = await makeRequest.post("/api/pages/page-definitions/get-all");
       return res.data.pageDefinitions;
     },
     enabled: isLoggedIn,
@@ -27,7 +28,7 @@ export function usePageDefinitions(isLoggedIn: boolean) {
       allowed_sections?: string[];
       config_schema?: Record<string, any>;
     }) => {
-      await makeRequest.post("/api/page-definitions/upsert", data);
+      await makeRequest.post("/api/pages/page-definitions/upsert", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pageDefinitions"] });
@@ -36,7 +37,7 @@ export function usePageDefinitions(isLoggedIn: boolean) {
 
   const deletePageDefinitionMutation = useMutation({
     mutationFn: async (id: number) => {
-      await makeRequest.post("/api/page-definitions/delete", { id });
+      await makeRequest.post("/api/pages/page-definitions/delete", { id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pageDefinitions"] });

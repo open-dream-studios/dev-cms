@@ -4,7 +4,7 @@ import React from "react";
 import Dashboard from "@/screens/Dashboard/Dashboard";
 import { useUI } from "@/contexts/uiContext";
 import MediaManager from "@/screens/MediaManager/MediaManager";
-import PagesEditor from "@/screens/PagesEditor/PagesEditor";
+import PagesEditor from "@/screens/PagesEditor/ProjectPagesEditor";
 
 const HomePage = () => {
   const { screen } = useUI();

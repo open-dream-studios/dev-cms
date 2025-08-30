@@ -9,12 +9,13 @@ import AccountSettings from "./AccountSettings";
 import { useProjectContext } from "@/contexts/projectContext";
 import ModuleSettings from "./ModuleSettings";
 import ProjectSettings from "./ProjectSettings";
+import ProjectPagesSettings from "./ProjectPagesSettings";
 
 type SettingsProps = {
   initialPage: SettingsPages | null;
 };
 
-type SettingsPages = "Site" | "Users" | "Account" | "Modules" | "Project";
+type SettingsPages = "Site" | "Users" | "Account" | "Modules" | "Project" | "ProjectPages"
 
 const Settings = ({ initialPage }: SettingsProps) => {
   const { currentUser } = useContext(AuthContext);
@@ -37,7 +38,7 @@ const Settings = ({ initialPage }: SettingsProps) => {
   const adminPages: SettingsPages[] =
     currentProject !== null && projectsData.length >= 1
       ? currentUser.admin === 1
-        ? ["Project", "Modules", "Account"]
+        ? ["Project", "ProjectPages", "Modules", "Account"]
         : ["Account"]
       : [];
 
@@ -125,6 +126,9 @@ const Settings = ({ initialPage }: SettingsProps) => {
         {currentProject !== null &&
           projectsData.length >= 1 &&
           selectedPage === "Modules" && <ModuleSettings />}
+        {currentProject !== null &&
+          projectsData.length >= 1 &&
+          selectedPage === "ProjectPages" && <ProjectPagesSettings />}
 
         {selectedPage === "Project" && <ProjectSettings />}
         {selectedPage === "Account" && <AccountSettings />}

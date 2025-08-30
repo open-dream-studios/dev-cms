@@ -23,8 +23,8 @@ import {
 import { Product } from "@/types/products";
 import { useProjectContext } from "../projectContext";
 import { Media, MediaFolder, MediaUsage } from "@/types/media";
-import { useProjectModules, useProjects, useProducts, useProjectUsers, useIntegrations, useModules, useMediaFolders, useMedia, usePageDefinitions } from "./queries";
-import { PageDefinition } from "@/types/pages";
+import { useProjectModules, useProjects, useProducts, useProjectUsers, useIntegrations, useModules, useMediaFolders, useMedia, usePageDefinitions, useProjectPages } from "./queries";
+import { PageDefinition, ProjectPage } from "@/types/pages";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -156,6 +156,13 @@ export type QueryContextType = {
     config_schema?: Record<string, any>;
   }) => Promise<void>;
   deletePageDefinition: (id: number) => Promise<void>;
+
+  // ---- Project Pages ----
+  projectPages: ProjectPage[];
+  isLoadingProjectPages: boolean;
+  refetchProjectPages: () => Promise<any>;
+  addProjectPage: (data: any) => Promise<void>;
+  deleteProjectPage: (data: { project_idx: number; slug: string }) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -181,6 +188,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const { media, isLoadingMedia, refetchMedia, addMedia, deleteMedia, reorderMedia } = useMedia(isLoggedIn, currentProjectId);
   const { mediaFolders, isLoadingMediaFolders, refetchMediaFolders, addMediaFolder, deleteMediaFolder, renameMediaFolder, reorderMediaFolders } = useMediaFolders(isLoggedIn, currentProjectId);
   const { pageDefinitions, isLoadingPageDefinitions, refetchPageDefinitions, upsertPageDefinition, deletePageDefinition } = usePageDefinitions(isLoggedIn);
+  const { projectPages, isLoadingProjectPages, refetchProjectPages, addProjectPageMutation, deleteProjectPageMutation } = useProjectPages(isLoggedIn, currentProjectId);
 
   return (
     <QueryContext.Provider
@@ -243,6 +251,12 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchPageDefinitions,
         upsertPageDefinition,
         deletePageDefinition,
+        projectPages,
+        isLoadingProjectPages,
+        refetchProjectPages,
+        addProjectPage: (data: any) => addProjectPageMutation.mutateAsync(data),
+        deleteProjectPage: (data: { project_idx: number; slug: string }) =>
+          deleteProjectPageMutation.mutateAsync(data),
       }}
     >
       {children}

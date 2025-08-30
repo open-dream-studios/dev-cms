@@ -19,10 +19,9 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { AiFillAppstore } from "react-icons/ai";
 import { LuBlocks } from "react-icons/lu";
-import EditModules from "@/screens/AdminHome/EditModules";
-import EditPageDefinitions from "@/screens/AdminHome/EditPageDefinitions";
 import UserImage from "../blocks/UserImage";
 import { useUI } from "@/contexts/uiContext";
+import AdminController from "@/screens/AdminHome/AdminControllers/AdminController";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -99,17 +98,6 @@ const Navbar = () => {
   };
 
   const handleEditModulesClick = () => {
-    // setModal1({
-    //   ...modal1,
-    //   open: !modal1.open,
-    //   showClose: true,
-    //   offClickClose: true,
-    //   width: "w-[90vw] md:w-[80vw]",
-    //   maxWidth: "md:max-w-[1000px]",
-    //   aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
-    //   borderRadius: "rounded-[15px] md:rounded-[20px]",
-    //   content: <EditModules />,
-    // });
     setModal1({
       ...modal1,
       open: !modal1.open,
@@ -119,7 +107,7 @@ const Navbar = () => {
       maxWidth: "md:max-w-[1000px]",
       aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
       borderRadius: "rounded-[15px] md:rounded-[20px]",
-      content: <EditPageDefinitions />,
+      content: <AdminController />,
     });
 
   };
@@ -143,8 +131,8 @@ const Navbar = () => {
         } as React.CSSProperties
       }
       className={`fixed z-[900] ${appDetails.left_bar_full
-          ? "w-[100vw] lg:w-[calc(100vw-(var(--left-bar-width))] lg:ml-[calc(var(--nav-ml))]"
-          : "w-[100vw]"
+        ? "w-[100vw] lg:w-[calc(100vw-(var(--left-bar-width))] lg:ml-[calc(var(--nav-ml))]"
+        : "w-[100vw]"
         } h-[var(--nav-height)]`}
     >
       <div className="w-[100%] h-[100%] absolute flex justify-between items-center">
@@ -170,10 +158,10 @@ const Navbar = () => {
               }
               alt="logo"
               className={`${!currentProject
-                  ? ""
-                  : !leftBarOpen
-                    ? "hidden"
-                    : "hidden lg:block"
+                ? ""
+                : !leftBarOpen
+                  ? "hidden"
+                  : "hidden lg:block"
                 }  select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
             />
 

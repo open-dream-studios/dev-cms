@@ -124,19 +124,19 @@ const EditPageDefinitions = () => {
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="w-full flex flex-col gap-[8px] px-[50px] py-[33px] h-full overflow-y-scroll"
+      className="w-full flex flex-col gap-[8px] h-[100%] overflow-y-scroll"
     >
-      <div className="flex flex-row gap-[5px] items-center mb-[8px]">
+      <div className="flex flex-row gap-[5px] items-center mb-[8px] justify-center">
         {selectedPage && (
           <div
             onClick={handleBackClick}
-            className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[36px] rounded-full w-[36px] opacity-[30%]"
+            className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[33px] rounded-full w-[33px] opacity-[30%]"
           >
-            <FaChevronLeft size={24} color={appTheme[currentUser.theme].text_3} />
+            <FaChevronLeft size={22} color={appTheme[currentUser.theme].text_3} />
           </div>
         )}
-        <h2 className="text-[30px] ml-[4px] font-bold mt-[-5px] mr-[14px]">
-          {selectedPage ? selectedPage.name : "Page Definitions"}
+        <h2 className="text-[24px] ml-[4px] font-bold mt-[-5px] mr-[14px]">
+          {selectedPage ? selectedPage.name : "Page Types"}
         </h2>
 
         {showForm ? (
@@ -162,9 +162,9 @@ const EditPageDefinitions = () => {
             type="button"
             onClick={handleShowForm}
             style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
-            className="flex items-center justify-center w-[36px] h-[36px] rounded-full dim hover:brightness-75 cursor-pointer"
+            className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
-            <FaPlus size={17} color={appTheme[currentUser.theme].text_4} />
+            <FaPlus size={16} color={appTheme[currentUser.theme].text_4} />
           </button>
         )}
       </div>

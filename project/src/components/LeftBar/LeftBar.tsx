@@ -33,6 +33,7 @@ import { GoTerminal } from "react-icons/go";
 import { HiServer, HiViewBoards } from "react-icons/hi";
 import { FaImages, FaThList } from "react-icons/fa";
 import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
+import Divider from "@/lib/blocks/Divider";
 
 type HoverBoxProps = {
   children: ReactNode;
@@ -64,18 +65,6 @@ const HoverBox = ({ children, onClick, page }: HoverBoxProps) => {
     >
       {children}
     </motion.div>
-  );
-};
-
-const Divider = () => {
-  const { currentUser } = useContext(AuthContext);
-  if (!currentUser) return null;
-
-  return (
-    <div
-      style={{ backgroundColor: appTheme[currentUser.theme].background_2 }}
-      className="w-full h-[1px] rounded-[1px] mb-[10px]"
-    />
   );
 };
 
