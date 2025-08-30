@@ -3,16 +3,7 @@ import { useState, useContext, useMemo, useEffect } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import MediaFoldersSidebar from "../MediaManager/MediaFoldersSidebar";
-// import MediaGrid from "@/screens/MediaManager/MediaGrid";
-import MediaToolbar from "../MediaManager/MediaToolbar";
-import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
-import { Media, MediaFolder } from "@/types/media";
-import { useAppContext } from "@/contexts/appContext";
-import { collectParentIds } from "@/util/functions/Tree";
-import ProjectPagesSidebar from "./ProjectPagesSidebar";
-import ProjectPagesToolbar from "./ProjectPagesToolbar";
-import { FaPlus, FaTrash } from "react-icons/fa6";
+import { FaPlus } from "react-icons/fa6";
 import { appTheme } from "@/util/appTheme";
 import { PageDefinition, ProjectPage } from "@/types/pages";
 import { SubmitHandler } from "react-hook-form";
@@ -22,8 +13,8 @@ import { MdChevronLeft } from "react-icons/md";
 import Divider from "@/lib/blocks/Divider";
 import { FiEdit } from "react-icons/fi";
 import SiteEditor from "./SiteEditor";
-import { Project } from "@/types/project";
 import { domainToUrl } from "@/util/functions/Pages";
+import PagesSidebar from "./PagesSidebar";
 
 const ProjectPagesEditor = () => {
   const { currentUser } = useContext(AuthContext);
@@ -159,7 +150,6 @@ const ProjectPagesEditor = () => {
   const handleCloseContextMenu = () => setContextMenu(null);
 
   const handleAddPageClick = () => {
-    // form.reset(defaultProjectPagesFormValues);
     form.reset(defaultProjectPagesFormValues)
     setAddingPage(true)
   }
@@ -168,25 +158,6 @@ const ProjectPagesEditor = () => {
 
   return (
     <div className="flex w-full h-[100%]">
-      {/* <UploadModal
-        multiple
-        onClose={() => setUploadPopup(false)}
-        onUploaded={(uploads: CloudinaryUpload[]) => {
-          if (!activeFolder) return;
-          uploads.forEach((upload: CloudinaryUpload) => {
-            addMedia({
-              project_idx: currentProjectId,
-              public_id: upload.public_id,
-              url: upload.url,
-              type: "image",
-              folder_id: activeFolder.id,
-              media_usage: "general",
-            });
-          });
-          refetchMedia();
-        }}
-      /> */}
-
       <div className="w-60 h-[100%] flex flex-col px-[15px]" style={{
         borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2
           }`
@@ -230,10 +201,10 @@ const ProjectPagesEditor = () => {
             </p>
 
           </div>
-          {!editingPage && !addingPage && !selectedParentPage && (
+          {currentUser.admin && !editingPage && !addingPage && !selectedParentPage && (
             <div
               onClick={handleAddPageClick}
-              className="dim cursor-pointer hover:brightness-75 min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+              className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
               style={{
                 backgroundColor: appTheme[currentUser.theme].background_1_2,
               }}
@@ -321,37 +292,7 @@ const ProjectPagesEditor = () => {
         )}
 
         {!editingPage && !addingPage && (
-          <div
-            className="w-[100%] flex flex-col gap-[9px] max-h-[305px] overflow-y-scroll"
-          >
-            {filteredActivePages.map((page, index) => (
-              <div key={page.id} className="w-full relative">
-                <div
-                  onClick={() => setSelectedParentPage(page)}
-                  onContextMenu={(e) => handleContextMenu(e, page)}
-                  className="group cursor-pointer w-full h-[50px] flex justify-between items-center px-[20px] rounded-[8px]"
-                  style={{ color: appTheme[currentUser.theme].text_4, backgroundColor: appTheme[currentUser.theme].background_1_2, }}
-                >
-                  <p className="truncate w-[calc(100%-40px)]">{page.title}</p>
-                  <div className="flex gap-[11px]">
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingPage(page);
-                      }}
-                      className="flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full dim cursor-pointer"
-                      style={{
-                        backgroundColor:
-                          appTheme[currentUser.theme].background_2_selected,
-                      }}
-                    >
-                      <FiEdit size={15} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <PagesSidebar filteredActivePages={filteredActivePages} setSelectedParentPage={setSelectedParentPage} handleContextMenu={handleContextMenu} setEditingPage={setEditingPage} />
         )}
       </div>
 
@@ -365,7 +306,7 @@ const ProjectPagesEditor = () => {
           activeFolder={activeFolder}
         /> */}
 
-        {currentProject && <SiteEditor src={currentProject.domain ? domainToUrl(currentProject.domain) : ""} />}
+        {currentProject && <SiteEditor src={currentProject.domain ? domainToUrl(selectedParentPage ? currentProject.domain + selectedParentPage.slug : currentProject.domain) : ""} />}
       </div>
     </div>
   );

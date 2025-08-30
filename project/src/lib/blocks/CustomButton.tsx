@@ -30,7 +30,7 @@ const CustomButton = ({ variant, onClick, children, active = true }: CustomButto
   return (
     <div
       style={{ backgroundColor: bg, color: color, border: border }}
-      className="cursor-pointer hover:brightness-75 dim pl-[17px] pr-[18px] py-[7px] rounded-[8px] flex flex-row items-center justify-center gap-[8px]"
+      className="select-none cursor-pointer hover:brightness-75 dim pl-[17px] pr-[18px] py-[7px] rounded-[8px] flex flex-row items-center justify-center gap-[8px]"
       onClick={onClick}
     >
       {children}

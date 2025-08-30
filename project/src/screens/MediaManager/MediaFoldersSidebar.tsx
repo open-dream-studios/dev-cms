@@ -300,7 +300,7 @@ export default function MediaFoldersSidebar({
 
         <div
           onClick={handleAddFolder}
-          className="dim cursor-pointer hover:brightness-75 min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+          className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
           style={{
             backgroundColor: appTheme[currentUser.theme].background_1_2,
           }}

@@ -1,3 +1,4 @@
+// project/src/components/LeftBar/LeftBar.tsx
 "use client";
 import {
   useEffect,
@@ -7,7 +8,6 @@ import {
   useContext,
   useMemo,
   ReactNode,
-  MouseEventHandler,
 } from "react";
 import {
   useLeftBarOpenStore,
@@ -23,50 +23,17 @@ import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Screen, useUI } from "@/contexts/uiContext";
-import { motion } from "framer-motion";
 import { HiServer, HiViewBoards } from "react-icons/hi";
-import { FaImages, FaThList } from "react-icons/fa";
+import { FaImages } from "react-icons/fa";
 import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
 import Divider from "@/lib/blocks/Divider";
 import { FaPollH } from "react-icons/fa";
-
-type HoverBoxProps = {
-  children: ReactNode;
-  page: Screen;
-  onClick?: MouseEventHandler<HTMLDivElement>;
-};
-
-const HoverBox = ({ children, onClick, page }: HoverBoxProps) => {
-  const { currentUser } = useContext(AuthContext);
-  const { screen } = useUI();
-  const [hovered, setHovered] = useState(false);
-
-  if (!currentUser) return null;
-
-  return (
-    <motion.div
-      onClick={onClick}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      animate={{
-        backgroundColor: hovered
-          ? appTheme[currentUser.theme].background_2
-          : screen === page
-            ? appTheme[currentUser.theme].background_2
-            : appTheme[currentUser.theme].background_1,
-      }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="cursor-pointer rounded-[8px] w-full h-[38px] flex items-center justify-start px-[12px]"
-    >
-      {children}
-    </motion.div>
-  );
-};
+import HoverBox from "@/lib/blocks/HoverBox";
 
 type BoxItem = {
   title: string;
   icon: ReactNode;
-  page: string;
+  page: Screen;
   onClick: () => void;
 };
 
@@ -79,15 +46,15 @@ const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
     <div className="w-[100%] flex flex-col mb-[10px]">
       <Divider />
       <div className="flex flex-col gap-[9px]">
-        {items.map((item, idx) => (
-          <HoverBox key={idx} onClick={item.onClick} page={item.page as Screen}>
+        {items.map((item: BoxItem, index: number) => (
+          <HoverBox key={index} onClick={item.onClick} page={item.page}>
             <div className="flex flex-row gap-[8px]">
               {item.icon}
               <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
                 {item.title}
               </p>
             </div>
-          </HoverBox>
+          </HoverBox >
         ))}
       </div>
     </div>

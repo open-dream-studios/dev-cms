@@ -51,7 +51,7 @@ const MediaToolbar = ({
         <p className="text-[24px] font-[700] mt-[-2px] px-[10.5px]">{activeFolder ? activeFolder.name : "All Media"}</p>
       </div>
       <div className="flex gap-2">
-        {activeFolder && <CustomButton onClick={onUploadClick} variant="outline">
+        {activeFolder && <CustomButton onClick={() => setEditMode((prev) => !prev)} variant="outline">
           <FiEdit size={16} />
         </CustomButton>}
 

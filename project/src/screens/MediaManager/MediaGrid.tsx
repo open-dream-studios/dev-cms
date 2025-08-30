@@ -129,6 +129,7 @@ function SortableMediaItem({
         <div
           style={{
             backgroundColor: appTheme[currentUser.theme].background_1,
+            border: "0.5px solid " + appTheme[currentUser.theme].text_3,
           }}
           className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
           onClick={async (e: any) => {
