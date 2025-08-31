@@ -1,3 +1,4 @@
+// server/functions/media.js
 import { db } from "../connection/connect.js";
 
 export const getMediaDB = (project_idx) => {

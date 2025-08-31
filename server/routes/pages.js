@@ -7,6 +7,7 @@ import {
   addProjectPage,
   deleteProjectPage,
   getProjectPages,
+  reorderProjectPages,
 } from "../controllers/pages.js";
 import { authenticateUser } from "../util/auth.js";
 import { requireAdmin } from "../util/roles.js";
@@ -53,6 +54,13 @@ router.post(
   authenticateUser,
   checkProjectPermission(1), // viewer+
   getProjectPages
+);
+
+router.post(
+  "/reorder",
+  authenticateUser,
+  checkProjectPermission(3), // owner+
+  reorderProjectPages
 );
 
 export default router;

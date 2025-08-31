@@ -325,7 +325,7 @@ const LeftBar = () => {
                   },
                   {
                     title: "Data",
-                    icon: <ProductsDataIcon size={22} />,
+                    icon: <div className={`${currentUser.theme === "dark" ? "opacity-[70%]" : "opacity-[80%]"}`}><ProductsDataIcon size={22} /></div>,
                     page: "products-table" as Screen,
                     onClick: () => handleTabClick("products-table"),
                   },

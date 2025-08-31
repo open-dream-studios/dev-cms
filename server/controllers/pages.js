@@ -1,5 +1,6 @@
 // server/controllers/pageDefinitions.js
 import { db } from "../connection/connect.js";
+import { reorderProjectPagesDB } from "../functions/pages.js";
 
 export const getAllPageDefinitions = (req, res) => {
   const q = `SELECT * FROM page_definitions`;
@@ -299,4 +300,27 @@ export const getProjectPages = (req, res) => {
 
     return res.json({ projectPages });
   });
+};
+
+export const reorderProjectPages = async (req, res) => {
+  try {
+    const { parent_page_id, orderedIds } = req.body;
+    const project_idx = req.user?.project_idx;
+    if (!project_idx || !Array.isArray(orderedIds)) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    const result = await reorderProjectPagesDB(
+      project_idx,
+      parent_page_id || null,
+      orderedIds
+    );
+
+    return res
+      .status(200)
+      .json({ success: true, updated: result.affectedRows });
+  } catch (err) {
+    console.error("Error reordering project pages:", err);
+    return res.status(500).json({ message: "DB error" });
+  }
 };

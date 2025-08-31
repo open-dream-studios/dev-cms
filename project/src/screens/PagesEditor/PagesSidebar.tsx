@@ -1,49 +1,134 @@
 import { AuthContext } from '@/contexts/authContext';
 import { ProjectPage } from '@/types/pages';
 import { appTheme } from '@/util/appTheme';
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { FiEdit } from 'react-icons/fi';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useContextQueries } from '@/contexts/queryContext/queryContext';
+import { useProjectContext } from '@/contexts/projectContext';
 
 interface PagesSidebarProps {
   filteredActivePages: ProjectPage[];
+  selectedParentPage: ProjectPage | null;
   setSelectedParentPage: React.Dispatch<React.SetStateAction<ProjectPage | null>>;
   handleContextMenu: (e: React.MouseEvent, page: ProjectPage) => void;
   setEditingPage: React.Dispatch<React.SetStateAction<ProjectPage | null>>;
 }
 
-const PagesSidebar = ({ filteredActivePages, setSelectedParentPage, handleContextMenu, setEditingPage }: PagesSidebarProps) => {
+interface SortablePageItemProps {
+  page: ProjectPage,
+  setSelectedParentPage: React.Dispatch<React.SetStateAction<ProjectPage | null>>;
+  setEditingPage: React.Dispatch<React.SetStateAction<ProjectPage | null>>;
+  handleContextMenu: (e: React.MouseEvent, page: ProjectPage) => void;
+}
+
+const SortablePageItem = ({ page, setSelectedParentPage, setEditingPage, handleContextMenu }: SortablePageItemProps) => {
   const { currentUser } = useContext(AuthContext)
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: page.id,
+  });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(
+      transform ? { ...transform, x: 0 } : transform
+    ),
+    transition,
+    zIndex: isDragging ? 9999 : "auto",
+  };
+
+  if (!currentUser) return null
+
+  return (
+
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full relative">
+      <div
+        onClick={() => setSelectedParentPage(page)}
+        onContextMenu={(e) => handleContextMenu(e, page)}
+        className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
+        style={{ color: appTheme[currentUser.theme].text_4, backgroundColor: appTheme[currentUser.theme].background_1_2, }}
+      >
+        <p className="select-none truncate w-[calc(100%-40px)]">{page.title}</p>
+        {currentUser.admin && <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditingPage(page);
+          }}
+          className="hover:brightness-90 dim flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full dim cursor-pointer"
+          style={{
+            backgroundColor:
+              appTheme[currentUser.theme].background_2_selected,
+          }}
+        >
+          <FiEdit size={15} />
+        </div>}
+      </div>
+    </div>
+  );
+};
+
+const PagesSidebar = ({ filteredActivePages, selectedParentPage, setSelectedParentPage, handleContextMenu, setEditingPage }: PagesSidebarProps) => {
+  const { currentUser } = useContext(AuthContext)
+  const { currentProjectId } = useProjectContext()
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
+
+  const [localPages, setLocalPages] = useState(filteredActivePages);
+
+  useEffect(() => {
+    setLocalPages(filteredActivePages);
+  }, [filteredActivePages]);
+
+  const { reorderProjectPages } = useContextQueries();
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (currentProjectId && over && active.id !== over.id) {
+      const oldIndex = localPages.findIndex(p => p.id === active.id);
+      const newIndex = localPages.findIndex(p => p.id === over.id);
+      const newOrder = arrayMove(localPages, oldIndex, newIndex);
+      setLocalPages(newOrder);
+
+      await reorderProjectPages({
+        project_idx: currentProjectId,
+        parent_page_id: selectedParentPage?.id ?? null,
+        orderedIds: newOrder.map(p => p.id),
+      });
+    }
+  };
+
   if (!currentUser) return null
   return (
-    <div
-      className="w-[100%] flex flex-col gap-[9px] max-h-[305px] overflow-y-scroll"
-    >
-      {filteredActivePages.map((page, index) => (
-        <div key={page.id} className="w-full relative">
-          <div
-            onClick={() => setSelectedParentPage(page)}
-            onContextMenu={(e) => handleContextMenu(e, page)}
-            className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
-            style={{ color: appTheme[currentUser.theme].text_4, backgroundColor: appTheme[currentUser.theme].background_1_2, }}
-          >
-            <p className="select-none truncate w-[calc(100%-40px)]">{page.title}</p>
-            {currentUser.admin && <div
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingPage(page);
-              }}
-              className="hover:brightness-90 dim flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full dim cursor-pointer"
-              style={{
-                backgroundColor:
-                  appTheme[currentUser.theme].background_2_selected,
-              }}
-            >
-              <FiEdit size={15} />
-            </div>}
-          </div>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={localPages.map(p => p.id)} strategy={verticalListSortingStrategy}>
+        <div className="h-[100%] overflow-y-scroll flex flex-col gap-[9px]">
+          {localPages.map((page) => (
+            <SortablePageItem
+              key={page.id}
+              page={page}
+              setSelectedParentPage={setSelectedParentPage}
+              setEditingPage={setEditingPage}
+              handleContextMenu={handleContextMenu}
+            />
+          ))}
         </div>
-      ))}
-    </div>
+      </SortableContext>
+    </DndContext>
   )
 }
 

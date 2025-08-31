@@ -292,7 +292,7 @@ const ProjectPagesEditor = () => {
         )}
 
         {!editingPage && !addingPage && (
-          <PagesSidebar filteredActivePages={filteredActivePages} setSelectedParentPage={setSelectedParentPage} handleContextMenu={handleContextMenu} setEditingPage={setEditingPage} />
+          <PagesSidebar filteredActivePages={filteredActivePages} selectedParentPage={selectedParentPage} setSelectedParentPage={setSelectedParentPage} handleContextMenu={handleContextMenu} setEditingPage={setEditingPage} />
         )}
       </div>
 

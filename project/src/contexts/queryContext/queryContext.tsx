@@ -163,6 +163,11 @@ export type QueryContextType = {
   refetchProjectPages: () => Promise<any>;
   addProjectPage: (data: any) => Promise<void>;
   deleteProjectPage: (data: { project_idx: number; id: number }) => Promise<void>;
+  reorderProjectPages: (data: {
+    project_idx: number;
+    parent_page_id: number | null;
+    orderedIds: number[];
+  }) => void;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -188,7 +193,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const { media, isLoadingMedia, refetchMedia, addMedia, deleteMedia, reorderMedia } = useMedia(isLoggedIn, currentProjectId);
   const { mediaFolders, isLoadingMediaFolders, refetchMediaFolders, addMediaFolder, deleteMediaFolder, renameMediaFolder, reorderMediaFolders } = useMediaFolders(isLoggedIn, currentProjectId);
   const { pageDefinitions, isLoadingPageDefinitions, refetchPageDefinitions, upsertPageDefinition, deletePageDefinition } = usePageDefinitions(isLoggedIn);
-  const { projectPages, isLoadingProjectPages, refetchProjectPages, addProjectPageMutation, deleteProjectPageMutation } = useProjectPages(isLoggedIn, currentProjectId);
+  const { projectPages, isLoadingProjectPages, refetchProjectPages, addProjectPageMutation, deleteProjectPageMutation, reorderProjectPagesMutation } = useProjectPages(isLoggedIn, currentProjectId);
 
   return (
     <QueryContext.Provider
@@ -257,6 +262,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         addProjectPage: (data: any) => addProjectPageMutation.mutateAsync(data),
         deleteProjectPage: (data: { project_idx: number; id: number }) =>
           deleteProjectPageMutation.mutateAsync(data),
+        reorderProjectPages: (data: {
+          project_idx: number;
+          parent_page_id: number | null;
+          orderedIds: number[];
+        }) => reorderProjectPagesMutation.mutateAsync(data)
       }}
     >
       {children}
