@@ -352,7 +352,9 @@ export default function MediaFoldersSidebar({
                 if (!activeNode) return null;
 
                 return (
-                  <div className="flex items-center gap-2 px-2 py-1 bg-white shadow rounded max-h-[32px]">
+                  <div 
+                    style={{backgroundColor: appTheme[currentUser.theme].background_2}}
+                    className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]">
                     <GripVertical size={14} className="text-gray-400" />
                     {renderFolderIcons(activeNode)}
                     <span className="truncate">{activeNode.name}</span>

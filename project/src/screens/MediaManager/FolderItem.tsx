@@ -169,7 +169,6 @@ export default function FolderItem({
         )}
       </motion.div>
 
-      {/* Render children only when open */}
       {isOpen && folder.children && folder.children.length > 0 && (
         <div className="ml-2">
           <SortableContext

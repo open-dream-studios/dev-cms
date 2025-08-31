@@ -16,7 +16,7 @@ type Props = {
   activeFolder: MediaFolder | null;
 };
 
-const ProjectPagesToolbar = ({
+const PagesToolbar = ({
   view,
   setView,
   onUploadClick,
@@ -65,4 +65,4 @@ const ProjectPagesToolbar = ({
   );
 };
 
-export default ProjectPagesToolbar;
+export default PagesToolbar;
