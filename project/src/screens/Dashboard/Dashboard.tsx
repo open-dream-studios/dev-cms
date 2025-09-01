@@ -122,10 +122,11 @@ function MetricCard({ title, value, delta, icon }: any) {
   return (
     <motion.div
       whileHover={{ scale: 1.03 }}
+      style={{border: "1px solid #F7F7F7"}}
       className={`${
         currentUser.theme === "dark"
           ? "bg-gradient-to-b from-white/3 to-transparent border border-white/6"
-          : "shadow-xl"
+          : "drop-shadow-lg"
       } cursor-pointer hover:brightness-75 dim border border-white/6 rounded-2xl p-4 shadow-2xl backdrop-blur-sm`}
     >
       <div className="flex items-start justify-between gap-4">
@@ -139,7 +140,7 @@ function MetricCard({ title, value, delta, icon }: any) {
             {icon}
           </div>
           <div className="w-[100%] h-[100%]">
-            <div className="flex flex-row justify-between w-[100]">
+            <div className="flex flex-row justify-between w-[100%]">
               <div
                 className="text-sm"
                 style={{
