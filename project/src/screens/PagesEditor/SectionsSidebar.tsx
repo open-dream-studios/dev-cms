@@ -153,7 +153,7 @@ const SectionsSidebar = ({
     }
   };
 
-  if (!currentUser) return null;
+  if (!currentUser) return null; 
   return (
     <DndContext
       sensors={sensors}
