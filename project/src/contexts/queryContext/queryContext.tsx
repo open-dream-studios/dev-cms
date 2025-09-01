@@ -7,10 +7,7 @@ import React, {
   useRef,
   RefObject,
 } from "react";
-import {
-  QueryObserverResult,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { QueryObserverResult, useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "../authContext";
 import {
   AddProjectInput,
@@ -23,8 +20,26 @@ import {
 import { Product } from "@/types/products";
 import { useProjectContext } from "../projectContext";
 import { Media, MediaFolder, MediaUsage } from "@/types/media";
-import { useProjectModules, useProjects, useProducts, useProjectUsers, useIntegrations, useModules, useMediaFolders, useMedia, usePageDefinitions, useProjectPages } from "./queries";
-import { PageDefinition, ProjectPage } from "@/types/pages";
+import {
+  useProjectModules,
+  useProjects,
+  useProducts,
+  useProjectUsers,
+  useIntegrations,
+  useModules,
+  useMediaFolders,
+  useMedia,
+  usePageDefinitions,
+  useProjectPages,
+} from "./queries";
+import {
+  PageDefinition,
+  ProjectPage,
+  Section,
+  SectionDefinition,
+} from "@/types/pages";
+import { useSectionDefinitions } from "./queries/sectionDefinitions";
+import { useSections } from "./queries/sections";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -162,10 +177,39 @@ export type QueryContextType = {
   isLoadingProjectPages: boolean;
   refetchProjectPages: () => Promise<any>;
   addProjectPage: (data: any) => Promise<void>;
-  deleteProjectPage: (data: { project_idx: number; id: number }) => Promise<void>;
+  deleteProjectPage: (data: {
+    project_idx: number;
+    id: number;
+  }) => Promise<void>;
   reorderProjectPages: (data: {
     project_idx: number;
     parent_page_id: number | null;
+    orderedIds: number[];
+  }) => void;
+
+  // ---- SECTIONS ----
+  sectionDefinitions: SectionDefinition[];
+  isLoadingSectionDefinitions: boolean;
+  refetchSectionDefinitions: () => Promise<any>;
+  upsertSectionDefinition: (data: {
+    id?: number;
+    identifier: string;
+    name: string;
+    parent_section_definition_id?: number | null;
+    allowed_elements?: string[];
+    config_schema?: Record<string, any>;
+  }) => Promise<void>;
+  deleteSectionDefinition: (id: number) => Promise<void>;
+
+  projectSections: Section[];
+  isLoadingSections: boolean;
+  refetchSections: () => Promise<any>;
+  addSection: (data: any) => Promise<void>;
+  deleteSection: (data: { project_idx: number; id: number }) => Promise<void>;
+  reorderSections: (data: {
+    project_idx: number;
+    project_page_id: number;
+    parent_section_id: number | null;
     orderedIds: number[];
   }) => void;
 };
@@ -175,7 +219,7 @@ const QueryContext = createContext<QueryContextType | undefined>(undefined);
 export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId, currentPageId } = useProjectContext();
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const isLoggedIn = useMemo(
@@ -184,16 +228,97 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const isOptimisticUpdate = useRef(false);
 
-  const { projectsData, isLoadingProjects, refetchProjects, updateProject, addProject, deleteProject, currentProject } = useProjects(isLoggedIn, currentProjectId);
-  const { productsData, isLoadingProductsData, refetchProductsData, updateProducts, deleteProducts } = useProducts(isLoggedIn, currentProjectId, isOptimisticUpdate);
-  const { projectUsers, isLoadingProjectUsers, refetchProjectUsers, updateProjectUser, deleteProjectUser } = useProjectUsers(isLoggedIn, currentProjectId);
-  const { projectModules, isLoadingProjectModules, refetchProjectModules, addProjectModuleMutation, deleteProjectModuleMutation, hasProjectModule } = useProjectModules(isLoggedIn, currentProjectId);
-  const { integrations, isLoadingIntegrations, refetchIntegrations, upsertIntegration, deleteIntegrationKey } = useIntegrations(isLoggedIn, currentProjectId, currentUser, projectUsers);
-  const { modules, isLoadingModules, refetchModules, upsertModule, deleteModule } = useModules(isLoggedIn, currentProjectId);
-  const { media, isLoadingMedia, refetchMedia, addMedia, deleteMedia, reorderMedia } = useMedia(isLoggedIn, currentProjectId);
-  const { mediaFolders, isLoadingMediaFolders, refetchMediaFolders, addMediaFolder, deleteMediaFolder, renameMediaFolder, reorderMediaFolders } = useMediaFolders(isLoggedIn, currentProjectId);
-  const { pageDefinitions, isLoadingPageDefinitions, refetchPageDefinitions, upsertPageDefinition, deletePageDefinition } = usePageDefinitions(isLoggedIn);
-  const { projectPages, isLoadingProjectPages, refetchProjectPages, addProjectPageMutation, deleteProjectPageMutation, reorderProjectPagesMutation } = useProjectPages(isLoggedIn, currentProjectId);
+  const {
+    projectsData,
+    isLoadingProjects,
+    refetchProjects,
+    updateProject,
+    addProject,
+    deleteProject,
+  } = useProjects(isLoggedIn, currentProjectId);
+  const {
+    productsData,
+    isLoadingProductsData,
+    refetchProductsData,
+    updateProducts,
+    deleteProducts,
+  } = useProducts(isLoggedIn, currentProjectId, isOptimisticUpdate);
+  const {
+    projectUsers,
+    isLoadingProjectUsers,
+    refetchProjectUsers,
+    updateProjectUser,
+    deleteProjectUser,
+  } = useProjectUsers(isLoggedIn, currentProjectId);
+  const {
+    projectModules,
+    isLoadingProjectModules,
+    refetchProjectModules,
+    addProjectModuleMutation,
+    deleteProjectModuleMutation,
+    hasProjectModule,
+  } = useProjectModules(isLoggedIn, currentProjectId);
+  const {
+    integrations,
+    isLoadingIntegrations,
+    refetchIntegrations,
+    upsertIntegration,
+    deleteIntegrationKey,
+  } = useIntegrations(isLoggedIn, currentProjectId, currentUser, projectUsers);
+  const {
+    modules,
+    isLoadingModules,
+    refetchModules,
+    upsertModule,
+    deleteModule,
+  } = useModules(isLoggedIn, currentProjectId);
+  const {
+    media,
+    isLoadingMedia,
+    refetchMedia,
+    addMedia,
+    deleteMedia,
+    reorderMedia,
+  } = useMedia(isLoggedIn, currentProjectId);
+  const {
+    mediaFolders,
+    isLoadingMediaFolders,
+    refetchMediaFolders,
+    addMediaFolder,
+    deleteMediaFolder,
+    renameMediaFolder,
+    reorderMediaFolders,
+  } = useMediaFolders(isLoggedIn, currentProjectId);
+  const {
+    pageDefinitions,
+    isLoadingPageDefinitions,
+    refetchPageDefinitions,
+    upsertPageDefinition,
+    deletePageDefinition,
+  } = usePageDefinitions(isLoggedIn);
+  const {
+    projectPages,
+    isLoadingProjectPages,
+    refetchProjectPages,
+    addProjectPageMutation,
+    deleteProjectPageMutation,
+    reorderProjectPagesMutation,
+  } = useProjectPages(isLoggedIn, currentProjectId);
+  const {
+    sectionDefinitions,
+    isLoadingSectionDefinitions,
+    refetchSectionDefinitions,
+    upsertSectionDefinition,
+    deleteSectionDefinition,
+  } = useSectionDefinitions(isLoggedIn);
+  const {
+    projectSections,
+    isLoadingSections,
+    refetchSections,
+    addSection,
+    deleteSection,
+    reorderSections,
+  } = useSections(isLoggedIn, currentProjectId, currentPageId);
 
   return (
     <QueryContext.Provider
@@ -266,7 +391,18 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
           project_idx: number;
           parent_page_id: number | null;
           orderedIds: number[];
-        }) => reorderProjectPagesMutation.mutateAsync(data)
+        }) => reorderProjectPagesMutation.mutateAsync(data),
+        sectionDefinitions,
+        isLoadingSectionDefinitions,
+        refetchSectionDefinitions,
+        upsertSectionDefinition,
+        deleteSectionDefinition,
+        projectSections,
+        isLoadingSections,
+        refetchSections,
+        addSection,
+        deleteSection,
+        reorderSections,
       }}
     >
       {children}

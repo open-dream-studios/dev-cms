@@ -16,7 +16,7 @@ export const reorderProjectPagesDB = (project_idx, parent_page_id, orderedPageId
       SET order_index = CASE id
         ${caseStatements}
       END
-      WHERE project_id = ?
+      WHERE project_idx = ?
       AND (parent_page_id <=> ?)
       AND id IN (${orderedPageIds.map(() => "?").join(",")})
     `;

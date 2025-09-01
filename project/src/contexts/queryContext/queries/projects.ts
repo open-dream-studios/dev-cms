@@ -112,17 +112,12 @@ export function useProjects(
     await deleteProjectMutation.mutateAsync([project.project_id]);
   };
 
-  const currentProject = useMemo(() => {
-    return projectsData.find((p) => p.id === currentProjectId) ?? null;
-  }, [projectsData, currentProjectId]);
-
   return {
     projectsData,
     isLoadingProjects,
     refetchProjects,
     addProject,
     deleteProject,
-    currentProject,
     updateProject
   };
 }

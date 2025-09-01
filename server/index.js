@@ -14,6 +14,7 @@ import integrationRoutes from "./routes/integrations.js";
 import projectModulesRoutes from "./routes/modules.js";
 import projectMediaRoutes from "./routes/media.js"
 import pageRoutes from "./routes/pages.js";
+import sectionRoutes from "./routes/sections.js"
 import { db } from "./connection/connect.js";
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use("/api/integrations", integrationRoutes);;
 app.use("/api/modules", projectModulesRoutes);
 app.use("/api/media", projectMediaRoutes);
 app.use("/api/pages", pageRoutes);
+app.use("/api/sections", sectionRoutes);
 
 // Database
 db.getConnection((err, connection) => {

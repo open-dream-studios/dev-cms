@@ -2,6 +2,7 @@
 "use client";
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useAppContext } from "./appContext";
+import { useProjectContext } from "./projectContext";
 
 export type Screen =
   | "dashboard"
@@ -31,6 +32,7 @@ const UIContext = createContext<UIState | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
   const { pageClick } = useAppContext();
+  const { setCurrentSectionData, setCurrentPageData } = useProjectContext()
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [modals, setModals] = useState<Modal[]>([]);
   const [sidebar, setSidebar] = useState<UIState["sidebar"]>("none");
@@ -39,6 +41,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const popModal = () => setModals((prev) => prev.slice(0, -1));
 
   const setTab = (tab: Screen) => {
+    setCurrentSectionData(null)
+    setCurrentPageData(null)
     setScreen(tab);
     pageClick(tab);
   };

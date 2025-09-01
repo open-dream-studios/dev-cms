@@ -1,5 +1,5 @@
 import { AuthContext } from '@/contexts/authContext';
-import { ProjectPage } from '@/types/pages';
+import { ProjectPage, Section } from '@/types/pages';
 import { appTheme } from '@/util/appTheme';
 import React, { useContext, useEffect, useState } from 'react'
 import { FiEdit } from 'react-icons/fi';
@@ -22,27 +22,24 @@ import { useContextQueries } from '@/contexts/queryContext/queryContext';
 import { useProjectContext } from '@/contexts/projectContext';
 import { ContextInput, ContextInputType } from './PagesEditor';
 
-interface PagesSidebarProps {
-  filteredActivePages: ProjectPage[];
-  handleContextMenu: (    e: React.MouseEvent,
-    input: ContextInput,
-    type: ContextInputType) => void;
-  setEditingPage: React.Dispatch<React.SetStateAction<ProjectPage | null>>;
+interface SectionsSidebarProps {
+  filteredActiveSections: Section[];
+  setEditingSection: React.Dispatch<React.SetStateAction<Section | null>>;
+  handleContextMenu: (e: React.MouseEvent, input: ContextInput, type: ContextInputType) => void;
 }
 
-interface SortablePageItemProps {
-  page: ProjectPage,
-  setEditingPage: React.Dispatch<React.SetStateAction<ProjectPage | null>>;
-  handleContextMenu: (    e: React.MouseEvent,
-    input: ContextInput,
-    type: ContextInputType) => void;
+interface SortableSectionItemProps {
+  section: Section;
+  setEditingSection: React.Dispatch<React.SetStateAction<Section | null>>;
+  handleContextMenu: (e: React.MouseEvent, input: ContextInput, type: ContextInputType) => void;
 }
 
-const SortablePageItem = ({ page, setEditingPage, handleContextMenu }: SortablePageItemProps) => {
+const SortableSectionItem = ({ section, setEditingSection, handleContextMenu }: SortableSectionItemProps) => {
   const { currentUser } = useContext(AuthContext)
-  const { currentPage, setCurrentPageData } = useProjectContext()
+  const { setCurrentSectionData } = useProjectContext()
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: page.id,
+    id: section.id,
   });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(
@@ -58,16 +55,16 @@ const SortablePageItem = ({ page, setEditingPage, handleContextMenu }: SortableP
 
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full relative">
       <div
-        onClick={() => setCurrentPageData(page)}
-        onContextMenu={(e) => handleContextMenu(e, page, "page")}
+        // onClick={() => {}}
+        onContextMenu={(e) => handleContextMenu(e, section, "section")}
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
         style={{ color: appTheme[currentUser.theme].text_4, backgroundColor: appTheme[currentUser.theme].background_1_2, }}
       >
-        <p className="select-none truncate w-[calc(100%-40px)]">{page.title}</p>
+        <p className="select-none truncate w-[calc(100%-40px)]">{section.name}</p>
         {currentUser.admin && <div
           onClick={(e) => {
             e.stopPropagation();
-            setEditingPage(page);
+            setEditingSection(section);
           }}
           className="hover:brightness-90 dim flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full dim cursor-pointer"
           style={{
@@ -82,49 +79,49 @@ const SortablePageItem = ({ page, setEditingPage, handleContextMenu }: SortableP
   );
 };
 
-const PagesSidebar = ({ filteredActivePages, handleContextMenu, setEditingPage }: PagesSidebarProps) => {
+const SectionsSidebar = ({ filteredActiveSections, handleContextMenu, setEditingSection }: SectionsSidebarProps) => {
   const { currentUser } = useContext(AuthContext)
-  const { currentProjectId, currentPage } = useProjectContext()
+  const { currentProjectId } = useProjectContext()
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
     })
   );
 
-  const [localPages, setLocalPages] = useState(filteredActivePages);
+  const [localSections, setLocalSections] = useState(filteredActiveSections);
 
   useEffect(() => {
-    setLocalPages(filteredActivePages);
-  }, [filteredActivePages]);
+    setLocalSections(filteredActiveSections);
+  }, [filteredActiveSections]);
 
   const { reorderProjectPages } = useContextQueries();
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (currentProjectId && over && active.id !== over.id) {
-      const oldIndex = localPages.findIndex(p => p.id === active.id);
-      const newIndex = localPages.findIndex(p => p.id === over.id);
-      const newOrder = arrayMove(localPages, oldIndex, newIndex);
-      setLocalPages(newOrder);
+      const oldIndex = localSections.findIndex((p: Section) => p.id === active.id);
+      const newIndex = localSections.findIndex((p: Section) => p.id === over.id);
+      const newOrder = arrayMove(localSections, oldIndex, newIndex);
+      setLocalSections(newOrder);
 
-      await reorderProjectPages({
-        project_idx: currentProjectId,
-        parent_page_id: currentPage?.id ?? null,
-        orderedIds: newOrder.map(p => p.id),
-      });
+      // await reorderProjectSections({
+      //   project_idx: currentProjectId,
+      //   parent_page_id: selectedSection?.id ?? null,
+      //   orderedIds: newOrder.map(p => p.id),
+      // });
     }
   };
 
   if (!currentUser) return null
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={localPages.map(p => p.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext items={localSections.map((p: Section) => p.id)} strategy={verticalListSortingStrategy}>
         <div className="h-[100%] overflow-y-scroll flex flex-col gap-[9px]">
-          {localPages.map((page: ProjectPage) => (
-            <SortablePageItem
-              key={page.id}
-              page={page}
-              setEditingPage={setEditingPage}
+          {localSections.map((section: Section) => (
+            <SortableSectionItem
+              key={section.id}
+              section={section}
+              setEditingSection={setEditingSection}
               handleContextMenu={handleContextMenu}
             />
           ))}
@@ -134,4 +131,4 @@ const PagesSidebar = ({ filteredActivePages, handleContextMenu, setEditingPage }
   )
 }
 
-export default PagesSidebar
+export default SectionsSidebar

@@ -1,4 +1,4 @@
-//project/src/screens/AdminHome/AdminHome.tsx
+// project/src/screens/AdminHome/AdminHome.tsx
 import { AuthContext } from "@/contexts/authContext";
 import { Project } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
@@ -21,13 +21,13 @@ const ProjectItem = ({
   editProjectsMode: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { setProjectData } = useProjectContext();
+  const { setCurrentProjectData } = useProjectContext();
   const { deleteProject } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const handleProjectClick = () => {
-    setProjectData(project);
+    setCurrentProjectData(project);
   };
 
   const handleConfirmDelete = () => {

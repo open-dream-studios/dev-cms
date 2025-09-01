@@ -25,7 +25,7 @@ import AdminController from "@/screens/AdminHome/AdminControllers/AdminControlle
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setProjectData } = useProjectContext();
+  const { currentProjectId, setCurrentProjectData } = useProjectContext();
   const { editingLock } = useAppContext();
   const { projectsData } = useContextQueries();
   const { setTab } = useUI()
@@ -94,7 +94,7 @@ const Navbar = () => {
 
   const handleClearProject = () => {
     setModal1({ ...modal1, open: false });
-    setProjectData(null);
+    setCurrentProjectData(null);
   };
 
   const handleEditModulesClick = () => {

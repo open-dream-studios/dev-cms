@@ -1,3 +1,4 @@
+// project/src/screens/AdminHome/Dashboard/Dashboard.tsx
 import React, { useContext, useMemo, useState } from "react";
 import {
   LineChart,
@@ -23,7 +24,6 @@ import {
   Users,
   BarChart2,
   RefreshCw,
-  Settings,
   Zap,
 } from "lucide-react";
 import { appTheme } from "@/util/appTheme";

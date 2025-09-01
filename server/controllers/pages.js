@@ -1,4 +1,4 @@
-// server/controllers/pageDefinitions.js
+// server/controllers/pages.js
 import { db } from "../connection/connect.js";
 import { reorderProjectPagesDB } from "../functions/pages.js";
 
@@ -154,9 +154,9 @@ export const addProjectPage = (req, res) => {
     published,
     parent_page_id,
   } = req.body;
-  const project_id = req.user?.project_idx;
+  const project_idx = req.user?.project_idx;
 
-  if (!project_id || !title || !slug) {
+  if (!project_idx || !title || !slug) {
     return res.status(400).json({ message: "Missing fields" });
   }
 
@@ -167,7 +167,7 @@ export const addProjectPage = (req, res) => {
       SET definition_id = ?, title = ?, slug = ?, order_index = ?, seo_title = ?,
           seo_description = ?, seo_keywords = ?, template = ?, published = ?,
           parent_page_id = ?, updated_at = NOW()
-      WHERE id = ? AND project_id = ?
+      WHERE id = ? AND project_idx = ?
     `;
     db.query(
       qUpdate,
@@ -183,7 +183,7 @@ export const addProjectPage = (req, res) => {
         published !== undefined ? published : true,
         parent_page_id || null,
         id,
-        project_id,
+        project_idx,
       ],
       (err) => {
         if (err) {
@@ -202,11 +202,11 @@ export const addProjectPage = (req, res) => {
     // INSERT
     const qInsert = `
       INSERT INTO project_pages (
-        project_id, parent_page_id, definition_id, title, slug, order_index,
+        project_idx, parent_page_id, definition_id, title, slug, order_index,
         seo_title, seo_description, seo_keywords, template, published
       )
       SELECT
-        ? AS project_id,
+        ? AS project_idx,
         ? AS parent_page_id,
         ? AS definition_id,
         ? AS title,
@@ -218,12 +218,12 @@ export const addProjectPage = (req, res) => {
         ? AS template,
         ? AS published
       FROM project_pages
-      WHERE project_id = ?;
+      WHERE project_idx = ?;
     `;
     db.query(
       qInsert,
       [
-        project_id, // project_id
+        project_idx, // project_id
         parent_page_id || null, // parent_page_id
         definition_id || null, // definition_id
         title, // title
@@ -233,7 +233,7 @@ export const addProjectPage = (req, res) => {
         JSON.stringify(seo_keywords || []), // seo_keywords
         template || "default", // template
         published !== undefined ? published : true, // published
-        project_id, // for WHERE project_id = ?
+        project_idx, // for WHERE project_id = ?
       ],
       (err) => {
         if (err) {
@@ -253,15 +253,15 @@ export const addProjectPage = (req, res) => {
 
 export const deleteProjectPage = (req, res) => {
   const { id } = req.body;
-  const project_id = req.user?.project_idx;
+  const project_idx = req.user?.project_idx;
 
-  if (!project_id || !id) {
+  if (!project_idx || !id) {
     return res.status(400).json({ message: "Missing fields" });
   }
 
-  const q = `DELETE FROM project_pages WHERE project_id = ? AND id = ?`;
+  const q = `DELETE FROM project_pages WHERE project_idx = ? AND id = ?`;
 
-  db.query(q, [project_id, id], (err) => {
+  db.query(q, [project_idx, id], (err) => {
     if (err) {
       console.error("❌ Delete project page error:", err);
       return res.status(500).json({ message: "Server error" });
@@ -271,20 +271,20 @@ export const deleteProjectPage = (req, res) => {
 };
 
 export const getProjectPages = (req, res) => {
-  const project_id = req.user?.project_idx;
+  const project_idx = req.user?.project_idx;
 
-  if (!project_id) {
+  if (!project_idx) {
     return res.status(400).json({ message: "Missing project_id" });
   }
 
   const q = `
     SELECT *
     FROM project_pages pp
-    WHERE pp.project_id = ?
+    WHERE pp.project_idx = ?
     ORDER BY pp.order_index ASC
   `;
 
-  db.query(q, [project_id], (err, rows) => {
+  db.query(q, [project_idx], (err, rows) => {
     if (err) {
       console.error("❌ Fetch project pages error:", err);
       return res.status(500).json({ message: "Server error" });

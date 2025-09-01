@@ -1,11 +1,13 @@
+// project/src/screens/AdminHome/AdminControl/AdminControl.tsx
 import { AuthContext } from '@/contexts/authContext'
 import { appTheme } from '@/util/appTheme'
 import React, { useContext, useState } from 'react'
 import EditModules from './EditModules'
 import Divider from '@/lib/blocks/Divider'
 import EditPageDefinitions from './EditPageDefinitions'
+import EditSectionDefinitions from './EditSectionDefinitions'
 
-export type Control = "modules" | "pages"
+export type Control = "modules" | "pages" | "sections"
 
 const AdminController = () => {
   const { currentUser } = useContext(AuthContext)
@@ -26,7 +28,7 @@ const AdminController = () => {
           style={{
             backgroundColor: appTheme[currentUser.theme].header_1_1,
           }}
-          className="flex w-[196px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
+          className="flex w-[290px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
         >
           <div
             onClick={() => setControlActive("modules")}
@@ -52,6 +54,18 @@ const AdminController = () => {
           >
             Pages
           </div>
+                  <div
+            onClick={() => handleControlClick("sections")}
+            style={{
+              backgroundColor:
+                controlActive === "sections"
+                  ? appTheme[currentUser.theme].header_1_2
+                  : "transparent",
+            }}
+            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+          >
+            Sections
+          </div>
         </div>
       </div>
 
@@ -60,6 +74,7 @@ const AdminController = () => {
       <div className="flex-1">
         {controlActive === "modules" && <EditModules />}
         {controlActive === "pages" && <EditPageDefinitions />}
+        {controlActive === "sections" && <EditSectionDefinitions />}
       </div>
 
     </div>
