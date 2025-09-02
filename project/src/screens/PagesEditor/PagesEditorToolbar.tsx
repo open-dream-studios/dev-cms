@@ -51,7 +51,7 @@ const PagesEditorToolbar = () =>
         const slug = "/";
 
         const apiUrl =
-          "https://tsa-inventory-production.up.railway.app/api/pages/get-data";
+          "https://dev-cms-production.up.railway.app/api/pages/get-data";
         const res = await fetch(apiUrl, {
           method: "POST",
           headers: {

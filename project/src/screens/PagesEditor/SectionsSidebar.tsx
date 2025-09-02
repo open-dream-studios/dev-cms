@@ -2,7 +2,7 @@ import { AuthContext } from "@/contexts/authContext";
 import { ProjectPage, Section } from "@/types/pages";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useState } from "react";
-import { FiEdit } from "react-icons/fi";
+import { FiChevronRight, FiEdit } from "react-icons/fi";
 import {
   DndContext,
   closestCenter,
@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { ContextInput, ContextInputType } from "./PagesEditor";
+import { BsChevronRight } from "react-icons/bs";
 
 interface SectionsSidebarProps {
   filteredActiveSections: Section[];
@@ -78,7 +79,7 @@ const SortableSectionItem = ({
       className="w-full relative"
     >
       <div
-        // onClick={() => {}}
+        onClick={() => setEditingSection(section)}
         onContextMenu={(e) => handleContextMenu(e, section, "section")}
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
         style={{
@@ -91,17 +92,12 @@ const SortableSectionItem = ({
         </p>
         {currentUser.admin && (
           <div
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditingSection(section);
-            }}
-            className="hover:brightness-90 dim flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full dim cursor-pointer"
+            className="flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full"
             style={{
-              backgroundColor:
-                appTheme[currentUser.theme].background_2_selected,
+              backgroundColor: appTheme[currentUser.theme].background_2_2,
             }}
           >
-            <FiEdit size={15} />
+            <FiChevronRight size={25} />
           </div>
         )}
       </div>
@@ -153,7 +149,7 @@ const SectionsSidebar = ({
     }
   };
 
-  if (!currentUser) return null; 
+  if (!currentUser) return null;
   return (
     <DndContext
       sensors={sensors}

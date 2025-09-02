@@ -70,6 +70,8 @@ const ProjectPagesEditor = () => {
   //   console.log({ isDirty, isValid, errors });
   // }, [isDirty, isValid, errors]);
 
+  const [siteEditorKey, setSiteEditorKey] = useState<number>(0)
+
   useEffect(() => {
     if (editingPage) {
       pageForm.reset({
@@ -103,6 +105,7 @@ const ProjectPagesEditor = () => {
       setAddingPage(false);
       setEditingPage(null);
       pageForm.reset();
+      setSiteEditorKey((prev) => prev + 1)
     } catch (err) {
       console.error("Failed to save page:", err);
     }
@@ -143,6 +146,7 @@ const ProjectPagesEditor = () => {
       setAddingSection(false);
       setEditingSection(null);
       sectionForm.reset();
+      setSiteEditorKey((prev) => prev + 1)
     } catch (err) {
       console.error("Failed to save section:", err);
     }
@@ -451,66 +455,59 @@ const ProjectPagesEditor = () => {
           </>
         ) : (
           <>
-            {/* {(editingSection || addingSection) && (
-              <form
-                onSubmit={sectionForm.handleSubmit(onSubmitSection)}
-                className="w-[100%] rounded-[8px] p-[15px] flex flex-col gap-[10px]"
-                style={{
-                  backgroundColor: appTheme[currentUser.theme].background_1_2,
-                }}
-              >
-                <select
-                  {...sectionForm.register("definition_id")}
-                  className="input rounded p-[6px]"
-                >
-                  <option value="" disabled defaultValue="">
-                    Section type
-                  </option>
-                  {sectionDefinitions.map((def: SectionDefinition) => (
-                    <option key={def.id} value={def.id}>
-                      {def.name}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  {...sectionForm.register("name")}
-                  placeholder="Name"
-                  className="input rounded p-[6px]"
-                />
-
-                <button
-                  type="submit"
-                  className="hover:brightness-90 dim px-[12px] py-[8px] rounded-full dim cursor-pointer font-[600]"
-                  style={{
-                    backgroundColor:
-                      appTheme[currentUser.theme].background_2_selected,
-                    color: appTheme[currentUser.theme].text_3,
-                  }}
-                >
-                  <p className="opacity-[70%]">Save</p>
-                </button>
-              </form>
-            )} */}
             {(addingSection || editingSection) && (
               <form
                 onSubmit={sectionForm.handleSubmit(onSubmitSection)}
-                className="flex flex-col gap-4 p-4 rounded bg-gray-50"
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_1_2,
+                }}
+                className="flex flex-col gap-[10px] px-[15px] py-[15px] rounded-[8px]"
               >
-                <select
-                  {...sectionForm.register("definition_id")}
-                  onChange={(e) => {
-                    const id = Number(e.target.value);
-                    sectionForm.setValue("definition_id", id);
-                    sectionForm.setValue("config", {}); 
+                <p
+                  className="text-[14px] font-[600] opacity-[0.8] leading-[15px]"
+                  style={{
+                    color: appTheme[currentUser.theme].text_3,
                   }}
                 >
-                  <option value="">-- Select Section Type --</option>
-                  {sectionDefinitions.map((def) => (
-                    <option key={def.id} value={def.id}>
-                      {def.name}
-                    </option>
-                  ))}
-                </select>
+                  Section Type
+                </p>
+                <div
+                  className="dim hover:brightness-90 rounded-[6px] pr-[9px] mb-[10px]"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                  }}
+                >
+                  <select
+                    {...sectionForm.register("definition_id")}
+                    onChange={(e) => {
+                      const id = Number(e.target.value);
+                      sectionForm.setValue("definition_id", id);
+                      sectionForm.setValue("config", {});
+                    }}
+                    className="w-[100%] py-[5px] pl-[9px] mr-[9px] outline-none border-none cursor-pointer"
+                  >
+                    {sectionDefinitions.map((def) => (
+                      <option key={def.id} value={def.id}>
+                        {def.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <p
+                  className="text-[14px] font-[600] opacity-[0.8] leading-[15px]"
+                  style={{
+                    color: appTheme[currentUser.theme].text_3,
+                  }}
+                >
+                  Content
+                </p>
+                <div
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_3,
+                  }}
+                  className="w-[100%] h-[1.3px] mt-[-2px] rounded-[2px] opacity-[0.5]"
+                />
 
                 {sectionForm.watch("definition_id") && (
                   <DynamicSectionForm
@@ -528,9 +525,13 @@ const ProjectPagesEditor = () => {
 
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded"
+                  className="mt-[6px] dim hover:brightness-90 cursor-pointer px-4 py-2 rounded-[8px] text-[15px] font-[600]"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                    color: appTheme[currentUser.theme].text_2,
+                  }}
                 >
-                  Save Section
+                  Save
                 </button>
               </form>
             )}
@@ -548,7 +549,7 @@ const ProjectPagesEditor = () => {
       <div className="flex-1 flex flex-col">
         <PagesEditorToolbar />
 
-        {currentProject && siteUrl && <SiteEditor src={siteUrl} />}
+        {currentProject && siteUrl && <SiteEditor key={siteEditorKey} src={siteUrl} />}
       </div>
     </div>
   );

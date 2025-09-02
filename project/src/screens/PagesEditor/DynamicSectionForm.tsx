@@ -1,6 +1,7 @@
-// DynamicSectionForm.tsx
-import React from "react";
+import React, { useContext } from "react";
 import { FieldDefinition } from "@/types/sectionConfigSchema";
+import { appTheme } from "@/util/appTheme";
+import { AuthContext } from "@/contexts/authContext";
 
 type Props = {
   fields: FieldDefinition[];
@@ -9,57 +10,104 @@ type Props = {
 };
 
 const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
+  const { currentUser } = useContext(AuthContext);
   const update = (key: string, val: any) => {
     onChange({ ...values, [key]: val });
   };
 
+  if (!currentUser) return null;
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-[14px] rounded-[8px]">
       {fields.map((f) => {
         const val = values[f.key] ?? f.default ?? "";
+
+        const labelEl = (
+          <label
+            className="text-[14px] font-[600] opacity-80"
+            style={{ color: appTheme[currentUser.theme].text_3 }}
+          >
+            {f.label || f.key}
+          </label>
+        );
+
         switch (f.type) {
           case "string":
+            return (
+              <div key={f.key} className="flex flex-col gap-1">
+                {labelEl}
+                <textarea
+                  className="resize-y rounded-[8px] px-[10px] py-[6px] outline-none border-none dim"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                    color: appTheme[currentUser.theme].text_1,
+                  }}
+                  value={val}
+                  onChange={(e) => update(f.key, e.target.value)}
+                />
+              </div>
+            );
+
           case "url":
           case "color":
           case "date":
           case "datetime":
+          case "link":
             return (
               <div key={f.key} className="flex flex-col gap-1">
-                <label className="font-semibold">{f.label || f.key}</label>
+                {labelEl}
                 <input
-                  type={f.type === "string" ? "text" : f.type}
-                  className="input rounded px-2 py-1"
+                  type={f.type === "link" || f.type === "url" ? "text" : f.type}
+                  className="rounded-[8px] px-[10px] py-[6px] outline-none border-none dim"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                    color: appTheme[currentUser.theme].text_1,
+                  }}
                   value={val}
                   onChange={(e) => update(f.key, e.target.value)}
                 />
               </div>
             );
+
           case "text":
             return (
               <div key={f.key} className="flex flex-col gap-1">
-                <label className="font-semibold">{f.label || f.key}</label>
+                {labelEl}
                 <textarea
-                  className="input rounded px-2 py-1"
+                  className="resize-y rounded-[8px] px-[10px] py-[6px] outline-none border-none dim"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                    color: appTheme[currentUser.theme].text_1,
+                  }}
                   value={val}
                   onChange={(e) => update(f.key, e.target.value)}
                 />
               </div>
             );
+
           case "number":
             return (
               <div key={f.key} className="flex flex-col gap-1">
-                <label className="font-semibold">{f.label || f.key}</label>
+                {labelEl}
                 <input
                   type="number"
-                  className="input rounded px-2 py-1"
+                  className="rounded-[8px] px-[10px] py-[6px] outline-none border-none dim"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                    color: appTheme[currentUser.theme].text_1,
+                  }}
                   value={val}
                   onChange={(e) => update(f.key, e.target.valueAsNumber)}
                 />
               </div>
             );
+
           case "boolean":
             return (
-              <label key={f.key} className="flex items-center gap-2">
+              <label
+                key={f.key}
+                className="flex items-center gap-2 cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   checked={!!val}
@@ -68,14 +116,19 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                 {f.label || f.key}
               </label>
             );
+
           case "select":
           case "multiselect":
             return (
               <div key={f.key} className="flex flex-col gap-1">
-                <label className="font-semibold">{f.label || f.key}</label>
+                {labelEl}
                 <select
                   multiple={f.type === "multiselect"}
-                  className="input rounded px-2 py-1"
+                  className="rounded-[8px] px-[10px] py-[6px] outline-none border-none cursor-pointer dim"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                    color: appTheme[currentUser.theme].text_1,
+                  }}
                   value={val}
                   onChange={(e) =>
                     update(
@@ -96,10 +149,17 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                 </select>
               </div>
             );
+
           case "object":
             return (
-              <div key={f.key} className="p-2 rounded border">
-                <p className="font-semibold">{f.label || f.key}</p>
+              <div
+                key={f.key}
+                className="p-3 rounded-[8px] dim"
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_2_2,
+                }}
+              >
+                <p className="font-semibold mb-2">{f.label || f.key}</p>
                 <DynamicSectionForm
                   fields={f.fields || []}
                   values={val || {}}
@@ -107,12 +167,25 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                 />
               </div>
             );
+
           case "repeater":
             return (
-              <div key={f.key} className="p-2 rounded border">
-                <p className="font-semibold">{f.label || f.key}</p>
+              <div
+                key={f.key}
+                className="p-3 rounded-[8px] dim"
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_2_2,
+                }}
+              >
+                <p className="font-semibold mb-2">{f.label || f.key}</p>
                 {(val || []).map((item: any, i: number) => (
-                  <div key={i} className="mb-2 p-2 border rounded">
+                  <div
+                    key={i}
+                    className="mb-2 p-2 rounded-[8px]"
+                    style={{
+                      backgroundColor: appTheme[currentUser.theme].background_3,
+                    }}
+                  >
                     <DynamicSectionForm
                       fields={f.fields || []}
                       values={item}
@@ -126,21 +199,21 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                 ))}
                 <button
                   type="button"
-                  className="mt-1 px-3 py-1 rounded bg-gray-200"
-                  onClick={() =>
-                    update(f.key, [...(val || []), {}])
-                  }
+                  className="mt-1 px-3 py-1 rounded-full dim cursor-pointer font-[600]"
+                  style={{
+                    backgroundColor:
+                      appTheme[currentUser.theme].background_2_selected,
+                    color: appTheme[currentUser.theme].text_3,
+                  }}
+                  onClick={() => update(f.key, [...(val || []), {}])}
                 >
                   Add {f.itemLabel || "Item"}
                 </button>
               </div>
             );
+
           default:
-            return (
-              <p key={f.key} className="text-red-500">
-                Unsupported type: {f.type}
-              </p>
-            );
+            return null;
         }
       })}
     </div>
