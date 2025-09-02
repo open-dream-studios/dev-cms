@@ -6,6 +6,7 @@ import { MediaFolder } from "@/types/media";
 import { appTheme } from "@/util/appTheme";
 import { makeRequest } from "@/util/axios";
 import { domainToUrl } from "@/util/functions/Pages";
+import axios from "axios";
 import { Grid, Link2, List, Upload } from "lucide-react";
 import { useContext } from "react";
 import { FiEdit } from "react-icons/fi";
@@ -30,8 +31,7 @@ const PagesEditorToolbar = () =>
   // }: Props
   {
     const { currentUser } = useContext(AuthContext);
-    const { currentProject, currentPage } =
-      useProjectContext();
+    const { currentProject, currentPage } = useProjectContext();
 
     const handleLinkClick = () => {
       if (!currentProject) return;
@@ -41,11 +41,35 @@ const PagesEditorToolbar = () =>
 
     const handleGetDataClick = async () => {
       if (!currentProject) return;
-      const data = await makeRequest.post("/api/pages/get-data", {
-        domain: currentProject.domain,
-        slug: currentPage ? currentPage.slug : "/",
-      });
-      console.log(data);
+      // const data = await makeRequest.post("/api/pages/get-data", {
+      //   domain: currentProject.domain,
+      //   slug: currentPage ? currentPage.slug : "/",
+      // });
+      try {
+        console.log("getting data");
+        const domain = "tannyspaacquisitions.com";
+        const slug = "/";
+
+        const apiUrl =
+          "https://tsa-inventory-production.up.railway.app/api/pages/get-data";
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ domain, slug }),
+        });
+
+        if (!res.ok) {
+          throw new Error("API request failed");
+        }
+
+        const result = await res.json();
+        console.log(result);
+      } catch (err) {
+        console.error("❌ Error fetching page data:", err);
+      }
+      // console.log(data);
     };
 
     if (!currentUser) return null;
