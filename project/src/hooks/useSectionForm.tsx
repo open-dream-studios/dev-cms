@@ -1,10 +1,10 @@
 // project/src/hooks/useSectionForm.ts
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ProjectSectionsSchema, ProjectSectionsFormData } from "@/util/schemas/sectionSchema";
+import {
+  ProjectSectionsSchema,
+  ProjectSectionsFormData,
+} from "@/util/schemas/sectionSchema";
 import { useForm } from "react-hook-form";
-import type { z } from "zod";
-
-type SectionFormData = z.infer<typeof ProjectSectionsSchema>;
 
 export const defaultProjectSectionsFormValues: ProjectSectionsFormData = {
   definition_id: null,
@@ -15,9 +15,9 @@ export const defaultProjectSectionsFormValues: ProjectSectionsFormData = {
   project_page_id: null,
 };
 
-export function useSectionForm(defaultValues?: Partial<SectionFormData>) {
-  return useForm({
-    resolver: zodResolver(ProjectSectionsSchema),
+export function useSectionForm(defaultValues?: Partial<ProjectSectionsFormData>) {
+  return useForm<ProjectSectionsFormData>({
+    resolver: zodResolver(ProjectSectionsSchema) as any, 
     mode: "onChange",
     defaultValues: { ...defaultProjectSectionsFormValues, ...defaultValues },
   });

@@ -21,7 +21,7 @@ import { MdChevronLeft } from "react-icons/md";
 import Divider from "@/lib/blocks/Divider";
 import { FiEdit } from "react-icons/fi";
 import SiteEditor from "./SiteEditor";
-import { domainToUrl } from "@/util/functions/Pages";
+import { domainToUrl, removeTrailingSlash } from "@/util/functions/Pages";
 import PagesSidebar from "./PagesSidebar";
 import SectionsSidebar from "./SectionsSidebar";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
@@ -30,6 +30,8 @@ import {
   useSectionForm,
 } from "@/hooks/useSectionForm";
 import { ProjectSectionsFormData } from "@/util/schemas/sectionSchema";
+import PagesEditorToolbar from "./PagesEditorToolbar";
+import DynamicSectionForm from "./DynamicSectionForm";
 
 export type ContextInput = ProjectPage | Section | null;
 export type ContextInputType = "page" | "section";
@@ -283,6 +285,24 @@ const ProjectPagesEditor = () => {
         );
   }, [projectSections, currentSection]);
 
+  const [siteUrl, setSiteUrl] = useState<string | null>(null);
+  const nextUrl = currentProject?.domain
+    ? domainToUrl(
+        currentPage
+          ? currentProject.domain + currentPage.slug
+          : currentProject.domain
+      )
+    : null;
+
+  useEffect(() => {
+    if (
+      nextUrl &&
+      removeTrailingSlash(nextUrl) !== removeTrailingSlash(siteUrl)
+    ) {
+      setSiteUrl(removeTrailingSlash(nextUrl));
+    }
+  }, [nextUrl, siteUrl]);
+
   if (!currentUser || !currentProjectId) return null;
 
   return (
@@ -431,7 +451,7 @@ const ProjectPagesEditor = () => {
           </>
         ) : (
           <>
-            {(editingSection || addingSection) && (
+            {/* {(editingSection || addingSection) && (
               <form
                 onSubmit={sectionForm.handleSubmit(onSubmitSection)}
                 className="w-[100%] rounded-[8px] p-[15px] flex flex-col gap-[10px]"
@@ -470,6 +490,49 @@ const ProjectPagesEditor = () => {
                   <p className="opacity-[70%]">Save</p>
                 </button>
               </form>
+            )} */}
+            {(addingSection || editingSection) && (
+              <form
+                onSubmit={sectionForm.handleSubmit(onSubmitSection)}
+                className="flex flex-col gap-4 p-4 rounded bg-gray-50"
+              >
+                <select
+                  {...sectionForm.register("definition_id")}
+                  onChange={(e) => {
+                    const id = Number(e.target.value);
+                    sectionForm.setValue("definition_id", id);
+                    sectionForm.setValue("config", {}); 
+                  }}
+                >
+                  <option value="">-- Select Section Type --</option>
+                  {sectionDefinitions.map((def) => (
+                    <option key={def.id} value={def.id}>
+                      {def.name}
+                    </option>
+                  ))}
+                </select>
+
+                {sectionForm.watch("definition_id") && (
+                  <DynamicSectionForm
+                    fields={
+                      sectionDefinitions.find(
+                        (d) => d.id === sectionForm.watch("definition_id")
+                      )?.config_schema.fields || []
+                    }
+                    values={sectionForm.watch("config") || {}}
+                    onChange={(cfg) =>
+                      sectionForm.setValue("config", cfg, { shouldDirty: true })
+                    }
+                  />
+                )}
+
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded"
+                >
+                  Save Section
+                </button>
+              </form>
             )}
             {!editingSection && !addingSection && (
               <SectionsSidebar
@@ -483,28 +546,9 @@ const ProjectPagesEditor = () => {
       </div>
 
       <div className="flex-1 flex flex-col">
-        {/* <ProjectPagesToolbar
-          view={view}
-          setView={setView}
-          onUploadClick={() => setUploadPopup(true)}
-          editeMode={editMode}
-          setEditMode={setEditMode}
-          activeFolder={activeFolder}
-        /> */}
+        <PagesEditorToolbar />
 
-        {/* {currentProject && (
-          <SiteEditor
-            src={
-              currentProject.domain
-                ? domainToUrl(
-                    currentPage
-                      ? currentProject.domain + currentPage.slug
-                      : currentProject.domain
-                  )
-                : ""
-            }
-          />
-        )} */}
+        {currentProject && siteUrl && <SiteEditor src={siteUrl} />}
       </div>
     </div>
   );

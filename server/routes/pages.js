@@ -8,6 +8,7 @@ import {
   deleteProjectPage,
   getProjectPages,
   reorderProjectPages,
+  getPageData
 } from "../controllers/pages.js";
 import { authenticateUser } from "../util/auth.js";
 import { requireAdmin } from "../util/roles.js";
@@ -61,6 +62,11 @@ router.post(
   authenticateUser,
   checkProjectPermission(3), // owner+
   reorderProjectPages
+);
+
+router.post(
+  "/get-data",
+  getPageData
 );
 
 export default router;

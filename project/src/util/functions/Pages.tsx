@@ -5,3 +5,7 @@ export function domainToUrl(domain: string): string {
   }
   return `https://${domain}`;
 }
+
+export function removeTrailingSlash(str: string | null) {
+  return str ? str.replace(/\/+$/, "") : str;
+}

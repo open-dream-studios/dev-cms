@@ -40,9 +40,10 @@ export const upsertSectionDefinition = (req, res) => {
     return res.status(400).json({ message: "Missing identifier or name" });
   }
 
-  const qFind = "SELECT id FROM section_definitions WHERE identifier = ? LIMIT 1";
+  const qFind =
+    "SELECT * FROM section_definitions WHERE id = ? LIMIT 1";
 
-  db.query(qFind, [identifier], (err, results) => {
+  db.query(qFind, [id], (err, results) => {
     if (err) {
       console.error("❌ Find section definition error:", err);
       return res.status(500).json({ message: "Server error" });
@@ -64,13 +65,14 @@ export const upsertSectionDefinition = (req, res) => {
 
       const qUpdate = `
         UPDATE section_definitions
-        SET name = ?, parent_section_definition_id = ?, allowed_elements = ?, config_schema = ?
+        SET name = ?, identifier = ?, parent_section_definition_id = ?, allowed_elements = ?, config_schema = ?
         WHERE id = ?
       `;
       db.query(
         qUpdate,
         [
           name,
+          identifier,
           parent_section_definition_id || null,
           JSON.stringify(allowed_elements || []),
           JSON.stringify(config_schema || {}),
@@ -81,11 +83,14 @@ export const upsertSectionDefinition = (req, res) => {
             console.error("❌ Update section definition error:", err2);
             return res.status(500).json({ message: "Server error" });
           }
-          return res.status(200).json({ message: "Section definition updated" });
+          return res
+            .status(200)
+            .json({ message: "Section definition updated" });
         }
       );
     } else {
       if (id) {
+        console.log("400")
         return res.status(400).json({
           message: "Identifier does not exist, cannot create with a preset id",
         });
@@ -109,7 +114,9 @@ export const upsertSectionDefinition = (req, res) => {
             console.error("❌ Insert section definition error:", err3);
             return res.status(500).json({ message: "Server error" });
           }
-          return res.status(200).json({ message: "Section definition created" });
+          return res
+            .status(200)
+            .json({ message: "Section definition created" });
         }
       );
     }
@@ -259,7 +266,8 @@ export const getSections = (req, res) => {
 
     const sections = rows.map((r) => ({
       ...r,
-      config: typeof r.config === "string" ? JSON.parse(r.config) : r.config || {},
+      config:
+        typeof r.config === "string" ? JSON.parse(r.config) : r.config || {},
     }));
 
     return res.json({ sections });
@@ -274,7 +282,13 @@ export const reorderSections = (req, res) => {
     return res.status(400).json({ message: "Missing fields" });
   }
 
-  const updates = orderedIds.map((id, index) => [index, project_idx, project_page_id, parent_section_id || null, id]);
+  const updates = orderedIds.map((id, index) => [
+    index,
+    project_idx,
+    project_page_id,
+    parent_section_id || null,
+    id,
+  ]);
 
   const q = `
     UPDATE project_sections

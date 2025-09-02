@@ -187,7 +187,7 @@ const AdminHome = () => {
         </div>
       )}
 
-      <div className="w-[100%] h-[100%] px-[100px] pt-[60px] flex flex-col overflow-y-scroll">
+      <div className="w-[100%] h-[calc(100%-70px)] px-[100px] pt-[60px] flex flex-col overflow-y-scroll">
         <div className="max-w-[1200px] mb-[50px] w-[100%] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[21px]">
           {projectsData.map((project: Project, index: number) => (
             <ProjectItem

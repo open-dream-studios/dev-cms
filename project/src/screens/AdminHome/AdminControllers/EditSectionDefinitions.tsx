@@ -4,12 +4,23 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { appTheme } from "@/util/appTheme";
-import { FaChevronLeft, FaPlus, FaRegCircleCheck, FaTrash } from "react-icons/fa6";
+import {
+  FaChevronLeft,
+  FaPlus,
+  FaRegCircleCheck,
+  FaTrash,
+} from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { SectionDefinition } from "@/types/pages";
+import {
+  FieldDefinition,
+  SectionConfigSchema,
+} from "@/types/sectionConfigSchema";
+import SchemaBuilder from "./SchemaBuilder";
+import { toast } from "react-toastify";
 
 const EditSectionDefinitions = () => {
   const { currentUser } = useContext(AuthContext);
@@ -23,7 +34,8 @@ const EditSectionDefinitions = () => {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-  const [selectedSection, setSelectedSection] = useState<SectionDefinition | null>(null);
+  const [selectedSection, setSelectedSection] =
+    useState<SectionDefinition | null>(null);
   const [editingSection, setEditingSection] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -31,6 +43,10 @@ const EditSectionDefinitions = () => {
   const [identifier, setIdentifier] = useState("");
   const [allowedElements, setAllowedElements] = useState<string[]>([]);
   const [newElement, setNewElement] = useState("");
+
+  const [configSchema, setConfigSchema] = useState<SectionConfigSchema>({
+    fields: [],
+  });
 
   useEffect(() => {
     if (showForm) {
@@ -42,18 +58,52 @@ const EditSectionDefinitions = () => {
 
   if (!currentUser) return null;
 
+  function validateUniqueKeys(
+    fields: FieldDefinition[],
+    path: string[] = []
+  ): string[] {
+    const errors: string[] = [];
+    const seen = new Set<string>();
+
+    for (const field of fields) {
+      if (seen.has(field.key)) {
+        errors.push(
+          `Duplicate key "${field.key}" at ${path.join(".") || "root"}`
+        );
+      } else if (field.key) {
+        seen.add(field.key);
+      }
+
+      // Recurse into containers
+      if (field.type === "object" || field.type === "repeater") {
+        errors.push(
+          ...validateUniqueKeys((field as any).fields || [], [
+            ...path,
+            field.key,
+          ])
+        );
+      }
+    }
+    return errors;
+  }
+
   const onSubmit = async () => {
     const parentId = selectedSection ? selectedSection.id : null;
+    const errors = validateUniqueKeys(configSchema.fields);
+    if (errors.length === 0) {
+      await upsertSectionDefinition({
+        id: editingSection || undefined,
+        name,
+        identifier,
+        allowed_elements: allowedElements,
+        parent_section_definition_id: parentId,
+        config_schema: configSchema,
+      });
 
-    await upsertSectionDefinition({
-      id: editingSection || undefined,
-      name,
-      identifier,
-      allowed_elements: allowedElements,
-      parent_section_definition_id: parentId,
-    });
-
-    resetForm();
+      resetForm();
+    } else {
+      toast.error(errors[0]);
+    }
   };
 
   const resetForm = () => {
@@ -63,10 +113,12 @@ const EditSectionDefinitions = () => {
     setName("");
     setIdentifier("");
     setNewElement("");
+    setConfigSchema({ fields: [] });
   };
 
   const handleShowForm = () => {
     resetForm();
+    setConfigSchema({ fields: [] });
     setShowForm(true);
   };
 
@@ -90,6 +142,11 @@ const EditSectionDefinitions = () => {
     setName(section.name);
     setIdentifier(section.identifier);
     setAllowedElements(section.allowed_elements || []);
+    setConfigSchema(
+      (section as any).config_schema && (section as any).config_schema.fields
+        ? (section as any).config_schema
+        : { fields: [] }
+    );
     setShowForm(true);
   };
 
@@ -115,8 +172,12 @@ const EditSectionDefinitions = () => {
 
   const filteredSections = useMemo(() => {
     return selectedSection === null
-      ? sectionDefinitions.filter((s) => s.parent_section_definition_id === null)
-      : sectionDefinitions.filter((s) => s.parent_section_definition_id === selectedSection.id);
+      ? sectionDefinitions.filter(
+          (s) => s.parent_section_definition_id === null
+        )
+      : sectionDefinitions.filter(
+          (s) => s.parent_section_definition_id === selectedSection.id
+        );
   }, [sectionDefinitions, selectedSection]);
 
   return (
@@ -133,7 +194,10 @@ const EditSectionDefinitions = () => {
             onClick={handleBackClick}
             className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[33px] rounded-full w-[33px] opacity-[30%]"
           >
-            <FaChevronLeft size={22} color={appTheme[currentUser.theme].text_3} />
+            <FaChevronLeft
+              size={22}
+              color={appTheme[currentUser.theme].text_3}
+            />
           </div>
         )}
         <h2 className="text-[24px] ml-[4px] font-bold mt-[-5px] mr-[14px]">
@@ -144,7 +208,10 @@ const EditSectionDefinitions = () => {
           <div className="flex gap-[9px]">
             <button
               type="submit"
-              style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+              style={{
+                backgroundColor:
+                  appTheme[currentUser.theme].background_2_selected,
+              }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px] py-[6px] rounded-full"
             >
               <FaRegCircleCheck /> Save
@@ -152,7 +219,10 @@ const EditSectionDefinitions = () => {
             <button
               type="button"
               onClick={resetForm}
-              style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+              style={{
+                backgroundColor:
+                  appTheme[currentUser.theme].background_2_selected,
+              }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
             >
               <IoClose size={19} /> Cancel
@@ -162,7 +232,10 @@ const EditSectionDefinitions = () => {
           <button
             type="button"
             onClick={handleShowForm}
-            style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+            style={{
+              backgroundColor:
+                appTheme[currentUser.theme].background_2_selected,
+            }}
             className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
             <FaPlus size={16} color={appTheme[currentUser.theme].text_4} />
@@ -172,8 +245,10 @@ const EditSectionDefinitions = () => {
 
       {showForm && (
         <div
-          style={{ backgroundColor: appTheme[currentUser.theme].background_1_2 }}
-          className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
+          style={{
+            backgroundColor: appTheme[currentUser.theme].background_1_2,
+          }}
+          className="flex flex-col gap-4 justify-between items-center rounded-[10px] px-[20px] py-[14px]"
         >
           <div className="w-full">
             <input
@@ -191,7 +266,9 @@ const EditSectionDefinitions = () => {
             />
 
             <div className="mt-4 px-2">
-              <p className="font-semibold text-[17px] mb-[6px]">Allowed Elements</p>
+              <p className="font-semibold text-[17px] mb-[6px]">
+                Allowed Elements
+              </p>
               {allowedElements.length > 0 && (
                 <div className="flex flex-wrap gap-2 my-1">
                   {allowedElements.map((s) => (
@@ -199,7 +276,8 @@ const EditSectionDefinitions = () => {
                       key={s}
                       className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
                       style={{
-                        backgroundColor: appTheme[currentUser.theme].background_2_selected,
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_2_selected,
                         color: appTheme[currentUser.theme].text_4,
                       }}
                     >
@@ -225,12 +303,25 @@ const EditSectionDefinitions = () => {
                 <button
                   type="button"
                   onClick={handleAddElement}
-                  style={{ backgroundColor: appTheme[currentUser.theme].background_2_2 }}
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                  }}
                   className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm"
                 >
                   Add
                 </button>
               </div>
+            </div>
+
+            <div className="mt-2">
+              <p className="font-semibold text-[17px] mb-[6px]">
+                Config Schema
+              </p>
+              <SchemaBuilder
+                value={configSchema}
+                onChange={setConfigSchema}
+                title="Fields"
+              />
             </div>
           </div>
         </div>
@@ -244,9 +335,12 @@ const EditSectionDefinitions = () => {
             filteredSections.map((section) => (
               <div
                 key={section.id}
-                style={{ backgroundColor: appTheme[currentUser.theme].background_1_2 }}
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_1_2,
+                }}
                 className={`${
-                  selectedSection === null && "hover:brightness-[88%] dim cursor-pointer"
+                  selectedSection === null &&
+                  "hover:brightness-[88%] dim cursor-pointer"
                 } flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
                 onClick={() => handleSectionClick(section)}
               >
@@ -263,20 +357,32 @@ const EditSectionDefinitions = () => {
                   <div className="flex flex-row gap-[8px]">
                     <div
                       onClick={(e) => handleEditClick(e, section)}
-                      style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+                      style={{
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_2_selected,
+                      }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FiEdit size={18} color={appTheme[currentUser.theme].text_4} />
+                      <FiEdit
+                        size={18}
+                        color={appTheme[currentUser.theme].text_4}
+                      />
                     </div>
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteSectionDef(section);
                       }}
-                      style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+                      style={{
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_2_selected,
+                      }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FaTrash size={15} color={appTheme[currentUser.theme].text_4} />
+                      <FaTrash
+                        size={15}
+                        color={appTheme[currentUser.theme].text_4}
+                      />
                     </div>
                   </div>
                 )}
