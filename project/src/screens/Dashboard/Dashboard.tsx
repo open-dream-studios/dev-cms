@@ -122,7 +122,6 @@ function MetricCard({ title, value, delta, icon }: any) {
   return (
     <motion.div
       whileHover={{ scale: 1.03 }}
-      style={{border: "1px solid #F7F7F7"}}
       className={`${
         currentUser.theme === "dark"
           ? "bg-gradient-to-b from-white/3 to-transparent border border-white/6"

@@ -40,6 +40,8 @@ import {
 } from "@/types/pages";
 import { useSectionDefinitions } from "./queries/sectionDefinitions";
 import { useSections } from "./queries/sections";
+import { useCustomers } from "./queries/customers";
+import { Customer } from "@/types/customers";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -212,6 +214,13 @@ export type QueryContextType = {
     parent_section_id: number | null;
     orderedIds: number[];
   }) => void;
+
+  // Customers
+  customers: Customer[];
+  isLoadingCustomers: boolean;
+  refetchCustomers: () => Promise<any>;
+  upsertCustomer: (data: any) => Promise<void>;
+  deleteCustomer: (data: { project_idx: number; id: number }) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -319,6 +328,13 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     deleteSection,
     reorderSections,
   } = useSections(isLoggedIn, currentProjectId, currentPageId);
+  const {
+    customers,
+    isLoadingCustomers,
+    refetchCustomers,
+    upsertCustomerMutation,
+    deleteCustomerMutation,
+  } = useCustomers(isLoggedIn, currentProjectId);
 
   return (
     <QueryContext.Provider
@@ -403,6 +419,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         addSection,
         deleteSection,
         reorderSections,
+        customers,
+        isLoadingCustomers,
+        refetchCustomers,
+        upsertCustomer: (data: any) => upsertCustomerMutation.mutateAsync(data),
+        deleteCustomer: (data) => deleteCustomerMutation.mutateAsync(data),
       }}
     >
       {children}

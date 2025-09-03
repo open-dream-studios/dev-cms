@@ -1,6 +1,7 @@
 // project/src/contexts/ProjectContext.tsx
 "use client";
 
+import { Customer } from "@/types/customers";
 import { ProjectPage, Section } from "@/types/pages";
 import { Project } from "@/types/project";
 import { createContext, useContext, useState, ReactNode } from "react";
@@ -15,6 +16,9 @@ type ProjectContextType = {
   currentSection: Section | null;
   currentSectionId: number | null;
   setCurrentSectionData: (section: Section | null) => void;
+  currentCustomer: Customer | null;
+  currentCustomerId: number | null;
+  setCurrentCustomerData: (customer: Customer | null) => void;
 };
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -30,6 +34,10 @@ export const ProjectContextProvider = ({
   const [currentPage, setCurrentPage] = useState<ProjectPage | null>(null);
   const [currentSectionId, setCurrentSectionId] = useState<number | null>(null);
   const [currentSection, setCurrentSection] = useState<Section | null>(null);
+  const [currentCustomerId, setCurrentCustomerId] = useState<number | null>(
+    null
+  );
+  const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
 
   const setCurrentProjectData = (project: Project | null) => {
     setCurrentProjectId(project ? project.id : null);
@@ -46,6 +54,11 @@ export const ProjectContextProvider = ({
     setCurrentSection(section);
   };
 
+  const setCurrentCustomerData = (customer: Customer | null) => {
+    setCurrentCustomerId(customer ? customer.id : null);
+    setCurrentCustomer(customer);
+  };
+
   return (
     <ProjectContext.Provider
       value={{
@@ -58,6 +71,9 @@ export const ProjectContextProvider = ({
         currentSection,
         currentSectionId,
         setCurrentSectionData,
+        currentCustomer,
+        currentCustomerId,
+        setCurrentCustomerData,
       }}
     >
       {children}

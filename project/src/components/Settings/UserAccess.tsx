@@ -16,7 +16,7 @@ import { useProjectContext } from "@/contexts/projectContext";
 
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setProjectData } = useProjectContext();
+  const { currentProjectId, setCurrentProjectData } = useProjectContext();
   const { updateProjectUser, projectUsers, deleteProjectUser, projectsData } =
     useContextQueries();
 
@@ -50,7 +50,7 @@ const UserAccess = () => {
 
   const handleClearProject = () => {
     setModal1({ ...modal1, open: false });
-    setProjectData(null);
+    setCurrentProjectData(null);
   };
 
   const handleShowAddUserInput = () => {

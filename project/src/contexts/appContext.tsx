@@ -205,7 +205,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const handleFileProcessing = async (files: File[]): Promise<CloudinaryUpload[]> => {
+  const handleFileProcessing = async (
+    files: File[]
+  ): Promise<CloudinaryUpload[]> => {
     setEditingLock(true);
     try {
       const uploadedNames: string[] = [];
@@ -244,7 +246,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     const newImages = await handleFileProcessing(files);
     if (newImages.length === 0) return;
     const currentImages = getValues("images") || [];
-    const newImageUrls = newImages.map((item) => item.url)
+    const newImageUrls = newImages.map((item) => item.url);
     const updated = [...currentImages, ...newImageUrls];
     setValue("images", updated, { shouldDirty: true });
   };
@@ -372,14 +374,22 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const requiresRouteChange = (newRoute: string) => {
     if (newRoute === pathname) return false;
-    return (newRoute === "/" || newRoute.startsWith("/products"));
+    return newRoute === "/" || newRoute.startsWith("/products") || newRoute.startsWith("/tubs");
   };
 
   const filterRoute = (newPage: string) => {
-    let newRoute = newPage;
-    if (newPage === "products-table") newRoute = "products";
-    if (!newPage.startsWith("products")) newRoute = "";
-    return "/" + newRoute;
+    let newRouteDividers = newPage.split("/");
+    if (newPage === "products-table") return "/products";
+    if (newRouteDividers.length >= 1 && newRouteDividers[0] === "/products")
+      return "products";
+
+    if (newPage === "products-management") return "/tubs";
+    if (
+      newRouteDividers.length >= 1 &&
+      newRouteDividers[0] === "products-management"
+    )
+      return "/tubs";
+    return "/";
   };
 
   const pageClick = async (newPage: string) => {

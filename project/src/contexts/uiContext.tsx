@@ -10,7 +10,10 @@ export type Screen =
   | "products-table"
   | "media"
   | "pages"
-  | "settings";
+  | "settings"
+  | "customers"
+  | "products-management"
+  | "tasks-management"
 
 type Modal =
   | { type: "mediaUpload" }

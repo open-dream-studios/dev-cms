@@ -29,6 +29,8 @@ import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
 import Divider from "@/lib/blocks/Divider";
 import { FaPollH } from "react-icons/fa";
 import HoverBox from "@/lib/blocks/HoverBox";
+import { IoPersonAddSharp, IoPersonSharp } from "react-icons/io5";
+import { BsPersonCircle } from "react-icons/bs";
 
 type BoxItem = {
   title: string;
@@ -48,13 +50,13 @@ const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
       <div className="flex flex-col gap-[9px]">
         {items.map((item: BoxItem, index: number) => (
           <HoverBox key={index} onClick={item.onClick} page={item.page}>
-            <div className="flex flex-row gap-[8px]">
+            <div className="select-none flex flex-row gap-[8px]">
               {item.icon}
               <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
                 {item.title}
               </p>
             </div>
-          </HoverBox >
+          </HoverBox>
         ))}
       </div>
     </div>
@@ -203,6 +205,128 @@ const LeftBar = () => {
 
   if (!currentUser) return null;
 
+  const renderModule = (item: BoxItem, withClose: boolean = false) => {
+    return (
+      <div className="w-[100%] flex flex-row-reverse justify-end items-center mb-[11px]">
+        {withClose && (
+          <LuPanelLeftClose
+            style={{ color: appTheme[currentUser.theme].text_4 }}
+            className="hidden lg:block dim cursor-pointer brightness-75 hover:brightness-50 w-[24px] h-[24px] mr-[-8px] ml-[10px]"
+            onClick={closeLeftBar}
+          />
+        )}
+        <div className="flex-1 flex flex-col">
+          <HoverBox onClick={item.onClick} page={item.page}>
+            <div className="flex flex-row gap-[8px]">
+              {item.icon}
+              <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
+                {item.title}
+              </p>
+            </div>
+          </HoverBox>
+        </div>
+      </div>
+    );
+  };
+
+  // Gather all available modules in order
+  const displayedModules: BoxItem[] = [];
+
+  if (hasProjectModule("dashboard-module")) {
+    displayedModules.push({
+      title: "Dashboard",
+      icon: (
+        <HiServer
+          size={15}
+          color={appTheme[currentUser.theme].text_3}
+          className="w-[17px] h-[17px] brightness-75"
+        />
+      ),
+      page: "dashboard" as Screen,
+      onClick: () => handleTabClick("dashboard"),
+    });
+  }
+
+  if (
+    hasProjectModule("media-module") &&
+    hasProjectModule("global-media-module")
+  ) {
+    displayedModules.push({
+      title: "Media",
+      icon: <FaImages className="w-[17px] h-[17px] brightness-75" />,
+      page: "media" as Screen,
+      onClick: () => handleTabClick("media"),
+    });
+  }
+
+  if (hasProjectModule("pages-module")) {
+    displayedModules.push({
+      title: "Pages",
+      icon: <FaPollH className="brightness-75 mt-[1px]" size={16} />,
+      page: "pages" as Screen,
+      onClick: () => handleTabClick("pages"),
+    });
+  }
+
+  if (hasProjectModule("products-module")) {
+    displayedModules.push(
+      {
+        title: "Products",
+        icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+        page: "products" as Screen,
+        onClick: () => handleTabClick("products"),
+      },
+      {
+        title: "Data",
+        icon: (
+          <div
+            className={`${
+              currentUser.theme === "dark" ? "opacity-[70%]" : "opacity-[80%]"
+            } mt-[2.85px]`}
+          >
+            <ProductsDataIcon size={22} />
+          </div>
+        ),
+        page: "products-table" as Screen,
+        onClick: () => handleTabClick("products-table"),
+      }
+    );
+  }
+
+  if (hasProjectModule("customers-module")) {
+    displayedModules.push({
+      title: "Customers",
+      icon: <IoPersonSharp className="brightness-75 mt-[1px]" size={16} />,
+      page: "customers" as Screen,
+      onClick: () => handleTabClick("customers"),
+    });
+  }
+
+  if (hasProjectModule("product-management-module")) {
+    displayedModules.push(
+      {
+        title: "Tubs",
+        icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+        page: "products-management" as Screen,
+        onClick: () => handleTabClick("products-management"),
+      },
+      {
+        title: "Tasks",
+        icon: (
+          <div
+            className={`${
+              currentUser.theme === "dark" ? "opacity-[65%]" : "opacity-[80%]"
+            } mt-[2.85px]`}
+          >
+            <ProductsDataIcon size={22} />
+          </div>
+        ),
+        page: "tasks-management" as Screen,
+        onClick: () => handleTabClick("tasks-management"),
+      }
+    );
+  }
+
   return (
     <div className="display-height">
       <div
@@ -219,11 +343,13 @@ const LeftBar = () => {
           ref={leftBarRef}
           style={{
             backgroundColor: appTheme[currentUser.theme].background_1,
-            borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2
-              }`,
+            borderRight: `0.5px solid ${
+              appTheme[currentUser.theme].background_2
+            }`,
           }}
-          className={`z-[951] pointer-events-auto ${leftBarOpen ? "right-0" : "right-[100%]"
-            } absolute top-0 h-[100%] w-[100%] flex justify-center
+          className={`z-[951] pointer-events-auto ${
+            leftBarOpen ? "right-0" : "right-[100%]"
+          } absolute top-0 h-[100%] w-[100%] flex justify-center
           `}
         >
           <div
@@ -256,82 +382,14 @@ const LeftBar = () => {
               </p>
             </div>
 
-            <div className="w-[100%] flex flex-row-reverse justify-end items-center mb-[11px]">
-              <LuPanelLeftClose
-                style={{ color: appTheme[currentUser.theme].text_4 }}
-                className="hidden lg:block dim cursor-pointer brightness-75 hover:brightness-50 w-[24px] h-[24px] mr-[-8px] ml-[10px]"
-                onClick={() => {
-                  closeLeftBar();
-                }}
-              />
-              {hasProjectModule("dashboard-module") && (
-                <div className="flex-1 flex flex-col">
-                  <HoverBox
-                    onClick={() => {
-                      handleTabClick("dashboard");
-                    }}
-                    page="dashboard"
-                  >
-                    <div className="flex flex-row gap-[8px]">
-                      <HiServer
-                        size={15}
-                        color={appTheme[currentUser.theme].text_3}
-                        className="w-[17px] h-[17px] brightness-75"
-                      />
-                      <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
-                        Dashboard
-                      </p>
-                    </div>
-                  </HoverBox>
-                </div>
-              )}
+            <div className="w-[100%] flex flex-row-reverse justify-end items-center mt-[2px]">
+              {displayedModules.length > 0 &&
+                renderModule(displayedModules[0], true)}
             </div>
 
-            {hasProjectModule("media-module") &&
-              hasProjectModule("global-media-module") && (
-                <BoxSection
-                  items={[
-                    {
-                      title: "Media",
-                      icon: <FaImages className="w-[17px] h-[17px] brightness-75" />,
-                      page: "media" as Screen,
-                      onClick: () => handleTabClick("media"),
-                    },
-                  ]}
-                />
-              )}
-
-            {hasProjectModule("pages-module") && (
-              <BoxSection
-                items={[
-                  {
-                    title: "Pages",
-                    icon: <FaPollH className="brightness-75 mt-[1px] " size={16} />,
-                    page: "pages" as Screen,
-                    onClick: () => handleTabClick("pages"),
-                  },
-                ]}
-              />
-            )}
-
-            {hasProjectModule("products-module") && (
-              <BoxSection
-                items={[
-                  {
-                    title: "Products",
-                    icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-                    page: "products" as Screen,
-                    onClick: () => handleTabClick("products"),
-                  },
-                  {
-                    title: "Data",
-                    icon: <div className={`${currentUser.theme === "dark" ? "opacity-[70%]" : "opacity-[80%]"} mt-[2.85px]`}><ProductsDataIcon size={22} /></div>,
-                    page: "products-table" as Screen,
-                    onClick: () => handleTabClick("products-table"),
-                  },
-                ]}
-              />
-            )}
+            {displayedModules.slice(1).map((m, i) => (
+              <BoxSection key={i} items={[m]} />
+            ))}
           </div>
 
           <div
@@ -350,8 +408,9 @@ const LeftBar = () => {
 
       {showLeftBar && windowWidth !== null && (
         <div
-          className={`z-[920] flex ${windowWidth < 1024 ? "" : "hidden"
-            } w-full h-full fixed top-0 left-0`}
+          className={`z-[920] flex ${
+            windowWidth < 1024 ? "" : "hidden"
+          } w-full h-full fixed top-0 left-0`}
         >
           <div
             ref={showLeftBarRef}
