@@ -1,8 +1,11 @@
+import { Media } from "./media";
+
 // project/src/types/products.ts
 export type Product = {
   serial_number: string;
-  name: string;
   project_idx: number;
+  customer_id: number | null;
+  name: string;
   highlight: string | null;
   description: string | null;
   make: string | null;
@@ -19,6 +22,6 @@ export type Product = {
   length: number;
   width: number;
   note: string | null;
-  images: string[];
+  images: any[];
   ordinal: number;
 };

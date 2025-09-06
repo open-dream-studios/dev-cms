@@ -9,7 +9,7 @@ export function useCustomers(
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
-  
+
   const {
     data: customers = [],
     isLoading: isLoadingCustomers,
@@ -41,9 +41,10 @@ export function useCustomers(
 
   const upsertCustomerMutation = useMutation({
     mutationFn: async (data: any) => {
-      await makeRequest.post("/api/customers/update", data);
+      const res = await makeRequest.post("/api/customers/update", data);
+      return res.data.customer;  
     },
-    onSuccess: () => {
+    onSuccess: (customer) => {
       queryClient.invalidateQueries({
         queryKey: ["customers", currentProjectId],
       });

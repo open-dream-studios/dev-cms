@@ -6,15 +6,14 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus } from "react-icons/fa6";
 import { appTheme } from "@/util/appTheme";
 import { SubmitHandler } from "react-hook-form";
-import { MdChevronLeft } from "react-icons/md";
 import Divider from "@/lib/blocks/Divider";
 import CustomerView from "./CustomerView";
 import { Customer } from "@/types/customers";
 import { useCustomerForm } from "@/hooks/useCustomerForm";
-import {
-  CustomerFormData,
-  customerToForm,
-} from "@/util/schemas/customerSchema";
+import { CustomerFormData } from "@/util/schemas/customerSchema";
+import Modal2Continue from "@/modals/Modal2Continue";
+import { useModal2Store } from "@/store/useModalStore";
+import { ExposedCustomerForm } from "./CustomerView";
 
 const CustomerCatalog = () => {
   const { currentUser } = useContext(AuthContext);
@@ -22,41 +21,17 @@ const CustomerCatalog = () => {
     useContextQueries();
   const { currentCustomer, setCurrentCustomerData, currentProjectId } =
     useProjectContext();
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [addingCustomer, setAddingCustomer] = useState<boolean>(false);
 
-  const customerForm = useCustomerForm();
-  // const { isDirty, isValid, errors } = sectionForm.formState;
-  // useEffect(() => {
-  //   console.log({ isDirty, isValid, errors });
-  // }, [isDirty, isValid, errors]);
-
-  // useEffect(() => {
-  //   if (editingCustomer) {
-  //     customerForm.reset();
-  //   } else if (addingCustomer) {
-  //     customerForm.reset();
-  //   }
-  // }, [editingCustomer, addingCustomer]);
-
-  // const onSubmit: SubmitHandler<CustomerFormData> = async (data) => {
-  //   if (!currentProjectId) return;
-  //   try {
-  //     await upsertCustomer({
-  //       ...data,
-  //       customerId: editingCustomer?.id || undefined,
-  //       project_idx: currentProjectId,
-  //     });
-  //     setAddingCustomer(false);
-  //     setEditingCustomer(null);
-  //     customerForm.reset();
-  //   } catch (err) {
-  //     console.error("Failed to save Customer:", err);
-  //   }
-  // };
+  const modal2 = useModal2Store((state: any) => state.modal2);
+  const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const handleDeleteCustomer = async () => {
     if (!currentProjectId || !contextMenu || !contextMenu.input) return;
+    if (currentCustomer && currentCustomer.id === contextMenu.input.id) {
+      setCurrentCustomerData(null);
+      setAddingCustomer(true);
+    }
     await deleteCustomer({
       project_idx: currentProjectId,
       id: contextMenu.input.id,
@@ -92,15 +67,81 @@ const CustomerCatalog = () => {
   };
 
   const handleCloseContextMenu = () => setContextMenu(null);
+  const [isFormDirty, setIsFormDirty] = useState(false);
+  const [customerForm, setCustomerForm] = useState<ExposedCustomerForm | null>(
+    null
+  );
 
   const handleAddItemClick = () => {
-    setCurrentCustomerData(null); // null = "Add" mode
+    setCurrentCustomerData(null);
     setAddingCustomer(true);
   };
+  useEffect(() => {
+    if (addingCustomer && customerForm) {
+      customerForm.focusFirstName?.();
+    }
+  }, [addingCustomer, customerForm]);
 
+  // useEffect(() => {
+  //   if (customerForm) {
+  //     const { isDirty, isValid, errors } = customerForm.formState;
+  //     console.log({ isDirty, isValid, errors });
+  //   }
+  // }, [customerForm]);
+
+  const handleSubmit: SubmitHandler<CustomerFormData> = async (data) => {
+    if (!currentProjectId) return;
+    const saved = await upsertCustomer({
+      project_idx: currentProjectId,
+      customerId: currentCustomer?.customer_id,
+      ...data,
+      phone: data.phone?.replace(/\D/g, "") ?? null,
+    });
+
+    if (saved) {
+      setCurrentCustomerData(saved);
+      setAddingCustomer(false);
+    }
+
+    customerForm?.reset({
+      ...data,
+      phone: data.phone?.replace(/\D/g, "") ?? "",
+    });
+  };
+
+  // when clicking another customer
   const handleCustomerClick = (customer: Customer) => {
-    setCurrentCustomerData(customer);
-    setAddingCustomer(false);
+    if (!currentUser) return null;
+    if (isFormDirty) {
+      setModal2({
+        ...modal2,
+        open: !modal2.open,
+        showClose: false,
+        offClickClose: true,
+        width: "w-[300px]",
+        maxWidth: "max-w-[400px]",
+        aspectRatio: "aspect-[5/2]",
+        borderRadius: "rounded-[12px] md:rounded-[15px]",
+        content: (
+          <Modal2Continue
+            text={`Save customer info?`}
+            onContinue={async () => {
+              await customerForm?.handleSubmit(handleSubmit)();
+              setCurrentCustomerData(customer);
+              setAddingCustomer(false);
+            }}
+            onNoSave={() => {
+              setAddingCustomer(false);
+              setCurrentCustomerData(customer);
+            }}
+            threeOptions={true}
+          />
+        ),
+      });
+    } else {
+      setAddingCustomer(false);
+      setCurrentCustomerData(customer);
+    }
   };
 
   if (!currentUser || !currentProjectId) return null;
@@ -137,22 +178,11 @@ const CustomerCatalog = () => {
 
         <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
           <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
-            {/* {(editingCustomer || addingCustomer) && (
-              <div
-                onClick={handleBackClick}
-                className="dim hover:brightness-75 cursor-pointer w-[30px] h-[30px] min-w-[30px] mt-[-5px] pr-[2px] pb-[2px] rounded-full flex justify-center items-center"
-                style={{
-                  backgroundColor: appTheme[currentUser.theme].background_1_2,
-                }}
-              >
-                <MdChevronLeft size={25} />
-              </div>
-            )} */}
             <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
               Customers
             </p>
           </div>
-          {!editingCustomer && !addingCustomer && (
+          {!addingCustomer && (
             <div
               onClick={handleAddItemClick}
               className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
@@ -174,7 +204,10 @@ const CustomerCatalog = () => {
                 onContextMenu={(e) => handleContextMenu(e, customer)}
                 onClick={() => handleCustomerClick(customer)}
                 style={{
-                  backgroundColor: currentCustomer && currentCustomer.id === customer.id ? appTheme[currentUser.theme].background_3 : appTheme[currentUser.theme].background_2,
+                  backgroundColor:
+                    currentCustomer && currentCustomer.id === customer.id
+                      ? appTheme[currentUser.theme].background_3
+                      : appTheme[currentUser.theme].background_2,
                   color: appTheme[currentUser.theme].text_4,
                 }}
                 className="mb-[9.5px] w-full h-[70px] pl-[14px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 
@@ -194,13 +227,13 @@ const CustomerCatalog = () => {
 
                 <div className="flex flex-col items-start justify-start overflow-hidden h-[58px] mt-[1px]">
                   <p
-                    className="font-bold text-[16px] leading-[19px] truncate"
+                    className="w-[100%] font-bold text-[16px] leading-[19px] truncate"
                     style={{ color: appTheme[currentUser.theme].text_4 }}
                   >
                     {customer.first_name} {customer.last_name}
                   </p>
 
-                  <div className="flex flex-col text-[13px] leading-[22px] opacity-70 truncate">
+                  <div className="w-[100%] flex flex-col text-[13px] leading-[22px] opacity-70 truncate">
                     {customer.email && (
                       <p className="truncate">{customer.email}</p>
                     )}
@@ -215,7 +248,16 @@ const CustomerCatalog = () => {
         </>
       </div>
 
-      <div className="flex-1 flex flex-col">{true && <CustomerView key={currentCustomer?.id ?? "new"}/>}</div>
+      <div className="flex-1">
+        {(currentCustomer || addingCustomer) && (
+          <CustomerView
+            key={currentCustomer?.id ?? "new"}
+            onDirtyChange={setIsFormDirty}
+            onSubmit={handleSubmit}
+            exposeForm={setCustomerForm}
+          />
+        )}
+      </div>
     </div>
   );
 };

@@ -170,6 +170,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
     const newProduct: Product = {
       serial_number: newSerial,
+      customer_id: null,
       name: "",
       project_idx: currentProjectId,
       highlight: null,

@@ -5,15 +5,19 @@ import { Customer } from "@/types/customers";
 export const CustomerSchema = z.object({
   first_name: z.string().min(1, "First name required"),
   last_name: z.string().min(1, "Last name required"),
-  email: z.email({ message: "Invalid email address" }),
+  email: z
+    .string()
+    .email({ message: "Invalid email address" })
+    .or(z.literal("")) // allow empty string
+    .optional(),
   phone: z
     .string()
-    .optional()
-    .or(z.literal(""))
-    .refine((val) => (val ? val.replace(/\D/g, "").length === 10 : ""), {
+    .or(z.literal("")) // allow empty string
+    .refine((val) => (val ? val.replace(/\D/g, "").length === 10 : true), {
       message: "Phone number must be exactly 10 digits",
     })
-    .transform((val) => (val ? val.replace(/\D/g, "") : "")),
+    .transform((val) => (val ? val.replace(/\D/g, "") : ""))
+    .optional(),
   address_line1: z.string().optional(),
   address_line2: z.string().optional(),
   city: z.string().optional(),

@@ -6,7 +6,7 @@ import React, { useContext, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MultiStepModalInput, { StepConfig } from "@/modals/Modal2MultiStepInput";
-import { useModal1Store, useModal2Store } from "@/store/useModalStore";
+import { useModal2Store } from "@/store/useModalStore";
 import { IoCloseOutline } from "react-icons/io5";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useQueryClient } from "@tanstack/react-query";

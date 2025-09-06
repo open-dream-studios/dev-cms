@@ -6,6 +6,7 @@ import {
   formatDateToMySQL,
   generateSerial,
 } from "../functions/data.js";
+import { updateProductsDB } from "../functions/products.js";
 
 dotenv.config();
 
@@ -40,83 +41,6 @@ export const updateProducts = async (req, res) => {
     console.error("Error updating products:", dbErr);
     return res.status(500).json("Update failed");
   }
-};
-
-export const updateProductsDB = (project_idx, products) => {
-  return new Promise((resolve, reject) => {
-    db.query(
-      `SELECT serial_number, ordinal FROM products WHERE project_idx = ?`,
-      [project_idx],
-      (err, rows) => {
-        if (err) {
-          console.error("Error fetching existing products:", err);
-          return reject(err);
-        }
-
-        const nextOrdinal =
-          rows.length > 0
-            ? Math.max(...rows.map((r) => r.ordinal ?? 0)) + 1
-            : 0;
-
-        const q = `
-          INSERT INTO products (
-            serial_number, project_idx, name, highlight, description, note,
-            make, model, price, type, date_sold,
-            repair_status, sale_status, length, width, images, ordinal
-          )
-          VALUES ${products
-            .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-            .join(", ")}
-          ON DUPLICATE KEY UPDATE
-            name = VALUES(name),
-            highlight = VALUES(highlight),
-            description = VALUES(description),
-            note = VALUES(note),
-            make = VALUES(make),
-            model = VALUES(model),
-            price = VALUES(price),
-            type = VALUES(type),
-            date_sold = VALUES(date_sold),
-            repair_status = VALUES(repair_status),
-            sale_status = VALUES(sale_status),
-            length = VALUES(length),
-            width = VALUES(width),
-            images = VALUES(images),
-            ordinal = VALUES(ordinal)
-        `;
-
-        const values = products.flatMap((p, i) => [
-          !p.serial_number || p.serial_number.length < 14
-            ? generateSerial(p.length, p.width, p.make, rows.length + i)
-            : p.serial_number,
-          project_idx,
-          p.name,
-          p.highlight ?? null,
-          p.description,
-          p.note ?? "",
-          p.make,
-          p.model,
-          p.price,
-          p.type ?? "TSA",
-          p.date_sold ? formatDateToMySQL(p.date_sold) : null,
-          p.repair_status,
-          p.sale_status,
-          p.length,
-          p.width,
-          JSON.stringify(Array.isArray(p.images) ? p.images : []),
-          typeof p.ordinal === "number" ? p.ordinal : nextOrdinal + i,
-        ]);
-
-        db.query(q, values, (err, result) => {
-          if (err) {
-            console.error("DB error inserting/updating products:", err);
-            return reject(err);
-          }
-          resolve(result);
-        });
-      }
-    );
-  });
 };
 
 export const deleteProducts = (req, res) => {

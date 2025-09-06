@@ -9,13 +9,13 @@ import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/products.js";
 import imageRouter from "./routes/images.js";
 import userRoutes from "./routes/users.js";
-import projectRoutes from "./routes/projects.js"
+import projectRoutes from "./routes/projects.js";
 import integrationRoutes from "./routes/integrations.js";
 import projectModulesRoutes from "./routes/modules.js";
-import projectMediaRoutes from "./routes/media.js"
+import projectMediaRoutes from "./routes/media.js";
 import pageRoutes from "./routes/pages.js";
-import sectionRoutes from "./routes/sections.js"
-import customerRoutes from "./routes/customers.js"
+import sectionRoutes from "./routes/sections.js";
+import customerRoutes from "./routes/customers.js";
 import { db } from "./connection/connect.js";
 dotenv.config();
 
@@ -24,23 +24,22 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 const useHTTPS = false;
-const server =
-  useHTTPS
-    ? (() => {
-        try {
-          return https.createServer(
-            {
-              key: fs.readFileSync("./ssl/key.pem"),
-              cert: fs.readFileSync("./ssl/cert.pem"),
-            },
-            app
-          );
-        } catch (err) {
-          console.error("⚠️ Failed to load SSL certs. Falling back to HTTP.");
-          return http.createServer(app);
-        }
-      })()
-    : http.createServer(app);
+const server = useHTTPS
+  ? (() => {
+      try {
+        return https.createServer(
+          {
+            key: fs.readFileSync("./ssl/key.pem"),
+            cert: fs.readFileSync("./ssl/cert.pem"),
+          },
+          app
+        );
+      } catch (err) {
+        console.error("⚠️ Failed to load SSL certs. Falling back to HTTP.");
+        return http.createServer(app);
+      }
+    })()
+  : http.createServer(app);
 
 // App
 app.use((req, res, next) => {
@@ -75,12 +74,12 @@ app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/images", imageRouter);
 app.use("/api/projects", projectRoutes);
-app.use("/api/integrations", integrationRoutes);;
+app.use("/api/integrations", integrationRoutes);
 app.use("/api/modules", projectModulesRoutes);
 app.use("/api/media", projectMediaRoutes);
 app.use("/api/pages", pageRoutes);
 app.use("/api/sections", sectionRoutes);
-app.use("/api/customers", customerRoutes)
+app.use("/api/customers", customerRoutes);
 
 // Database
 db.getConnection((err, connection) => {

@@ -219,7 +219,7 @@ export type QueryContextType = {
   customers: Customer[];
   isLoadingCustomers: boolean;
   refetchCustomers: () => Promise<any>;
-  upsertCustomer: (data: any) => Promise<void>;
+  upsertCustomer: (data: any) => Promise<Customer>;
   deleteCustomer: (data: { project_idx: number; id: number }) => Promise<void>;
 };
 
