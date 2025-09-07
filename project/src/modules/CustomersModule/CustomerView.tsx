@@ -26,6 +26,8 @@ import {
 } from "@/util/functions/Customers";
 import { Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
+import { Product } from "@/types/products";
+import ProductFrame from "../components/ProductCard/CustomerProductFrame";
 
 type CustomerViewProps = {
   onDirtyChange?: (dirty: boolean) => void;
@@ -43,7 +45,7 @@ const CustomerView = ({
   exposeForm,
 }: CustomerViewProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { upsertCustomer } = useContextQueries();
+  const { productsData } = useContextQueries();
   const { currentCustomer, currentProjectId } = useProjectContext();
 
   const customerForm = useCustomerForm(currentCustomer);
@@ -185,8 +187,10 @@ const CustomerView = ({
     startTimer();
   };
 
+  if (!currentCustomer) return null
+
   return (
-    <div className="flex flex-col items-start w-full min-h-[100%] p-6 overflow-scroll">
+    <div className="flex flex-col items-start w-full h-[100%] p-6 overflow-scroll">
       <form
         onSubmit={customerForm.handleSubmit(onSubmit as SubmitHandler<any>)}
         className="h-[306px] aspect-[1.85/1] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
@@ -441,6 +445,18 @@ const CustomerView = ({
           )}
         </div>
       </form>
+
+      <div className="flex-1 w-[100%] pt-[30px]">
+        <div className="h-[100%] w-[100%] grid grid-cols-2 gap-[20px]">
+          {productsData.filter((product: Product) => product.customer_id === currentCustomer.id).map((product: Product, index: number) => {
+            return (
+              <div key={index} className="">
+                <ProductFrame product={product} index={index} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <style jsx global>{`
         input:-webkit-autofill,

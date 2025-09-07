@@ -50,10 +50,10 @@ export const updateProductsDB = (project_idx, products) => {
           INSERT INTO products (
             serial_number, project_idx, customer_id, name, highlight, description, note,
             make, model, price, type, date_sold,
-            repair_status, sale_status, length, width, images, ordinal
+            repair_status, sale_status, length, width, ordinal
           )
           VALUES ${products
-            .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+            .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
             .join(", ")}
           ON DUPLICATE KEY UPDATE
             customer_id = VALUES(customer_id),
@@ -70,7 +70,6 @@ export const updateProductsDB = (project_idx, products) => {
             sale_status = VALUES(sale_status),
             length = VALUES(length),
             width = VALUES(width),
-            images = VALUES(images),
             ordinal = VALUES(ordinal)
         `;
 
@@ -93,7 +92,6 @@ export const updateProductsDB = (project_idx, products) => {
           p.sale_status,
           p.length,
           p.width,
-          JSON.stringify(Array.isArray(p.images) ? p.images : []),
           typeof p.ordinal === "number" ? p.ordinal : nextOrdinal + i,
         ]);
 

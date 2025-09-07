@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const ProductSchema = z.object({
   name: z.string(),
+  customer_id: z.number().optional(),
   description: z.string().optional().nullable(),
   serial_number: z
     .string()
@@ -41,7 +42,6 @@ export const ProductSchema = z.object({
       message: "Max 2 decimal places",
     }),
   note: z.string().optional().nullable(),
-  images: z.array(z.string().url()).optional(),
 });
 
 export type ProductFormData = z.infer<typeof ProductSchema>;

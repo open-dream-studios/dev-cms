@@ -302,29 +302,30 @@ const LeftBar = () => {
     });
   }
 
-  if (hasProjectModule("product-management-module")) {
-    displayedModules.push(
-      {
-        title: "Tubs",
-        icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-        page: "products-management" as Screen,
-        onClick: () => handleTabClick("products-management"),
-      },
-      {
-        title: "Tasks",
-        icon: (
-          <div
-            className={`${
-              currentUser.theme === "dark" ? "opacity-[65%]" : "opacity-[80%]"
-            } mt-[2.85px]`}
-          >
-            <ProductsDataIcon size={22} />
-          </div>
-        ),
-        page: "tasks-management" as Screen,
-        onClick: () => handleTabClick("tasks-management"),
-      }
-    );
+  if (hasProjectModule("customer-products-module")) {
+    displayedModules.push({
+      title: "Inventory",
+      icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+      page: "customer-products" as Screen,
+      onClick: () => handleTabClick("customer-products"),
+    });
+  }
+
+  if (hasProjectModule("tasks-module")) {
+    displayedModules.push({
+      title: "Tasks",
+      icon: (
+        <div
+          className={`${
+            currentUser.theme === "dark" ? "opacity-[65%]" : "opacity-[80%]"
+          } mt-[2.85px]`}
+        >
+          <ProductsDataIcon size={22} />
+        </div>
+      ),
+      page: "tasks" as Screen,
+      onClick: () => handleTabClick("tasks"),
+    });
   }
 
   return (

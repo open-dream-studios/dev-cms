@@ -1,11 +1,6 @@
 // server/controllers/products.js
 import dotenv from "dotenv";
 import { db } from "../connection/connect.js";
-import axios from "axios";
-import {
-  formatDateToMySQL,
-  generateSerial,
-} from "../functions/data.js";
 import { updateProductsDB } from "../functions/products.js";
 
 dotenv.config();

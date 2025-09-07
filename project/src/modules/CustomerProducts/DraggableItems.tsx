@@ -1,4 +1,4 @@
-// project/src/screens/Inventory/DraggableProductsGrid.tsx
+// project/src/modules/CustomerProducts/DraggableItem.tsx
 "use client";
 import {
   DndContext,
@@ -26,13 +26,13 @@ import {
   restrictToParentElement,
 } from "@dnd-kit/modifiers";
 import { useAppContext } from "@/contexts/appContext";
-// import InventoryRow from "./InventoryRow";
 import { toast } from "react-toastify";
-import TubDisplay from "./TubDisplay/TubDisplay";
+import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
 import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@/types/products";
 import { useUI } from "@/contexts/uiContext";
+import InventoryRow from "./Grid/InventoryRow";
 
 function SortableItem({
   id,
@@ -93,7 +93,7 @@ function SortableItem({
           />
         )}
 
-        {editMode && screen !== "products-table" && (
+        {editMode && screen !== "customer-products-table" && (
           <div
             style={{
               border: `1px solid ${appTheme[currentUser.theme].text_4}`,
@@ -108,14 +108,13 @@ function SortableItem({
 
         <div className="transition-[filter] duration-300 ease-in-out group-hover/grabber:brightness-[86%]">
           {sheet ? (
-            // <InventoryRow index={index} product={product} />
-            <></>
+            <InventoryRow index={index} product={product} />
           ) : (
             <div
               key={product.serial_number}
               className="relative w-[100%] h-[100%]"
             >
-              <TubDisplay item={product} index={index} />
+              <CustomerProductFrame product={product} index={index} />
             </div>
           )}
         </div>
@@ -124,7 +123,7 @@ function SortableItem({
   );
 }
 
-const DraggableProductsGrid = ({ sheet }: { sheet: boolean }) => {
+const DraggableItems = ({ sheet }: { sheet: boolean }) => {
   const { currentUser } = useContext(AuthContext);
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -227,4 +226,4 @@ const DraggableProductsGrid = ({ sheet }: { sheet: boolean }) => {
   );
 };
 
-export default DraggableProductsGrid;
+export default DraggableItems;

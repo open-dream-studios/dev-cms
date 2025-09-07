@@ -1,11 +1,11 @@
-// project/src/screens/Inventory/CustomInventoryFrame/CustomInventoryFrameSkeleton.tsx
+// project/src/modules/CustomerProducts/ProductCard/ProductSkeleton.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext } from "react";
 import { Skeleton } from "../../../components/ui/skeleton";
 
-const CustomInventoryFrameSkeleton = () => {
+const ProductSkeleton = () => {
   const { currentUser } = useContext(AuthContext);
   if (!currentUser) return null;
   return (
@@ -36,7 +36,7 @@ const CustomInventoryFrameSkeleton = () => {
             style={{
               backgroundColor: appTheme[currentUser.theme].background_3,
             }}
-            className="w-[109px] h-[21px]  overflow-hidden rounded-full"
+            className="w-[109px] h-[21px] overflow-hidden rounded-full"
           ></div>
         </div>
       </div>
@@ -44,4 +44,4 @@ const CustomInventoryFrameSkeleton = () => {
   );
 };
 
-export default CustomInventoryFrameSkeleton;
+export default ProductSkeleton;

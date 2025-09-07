@@ -22,6 +22,5 @@ export type Product = {
   length: number;
   width: number;
   note: string | null;
-  images: any[];
   ordinal: number;
 };

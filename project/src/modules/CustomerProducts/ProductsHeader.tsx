@@ -18,8 +18,9 @@ import Modal2Input from "@/modals/Modal2Input";
 import { Product } from "@/types/products";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useUI } from "@/contexts/uiContext";
+import Link from "next/link";
 
-const TubsHeader = ({ title }: { title: String }) => {
+const ProductsHeader = ({ title }: { title: String }) => {
   const { currentUser } = useContext(AuthContext);
   const {
     setEditingLock,
@@ -36,7 +37,7 @@ const TubsHeader = ({ title }: { title: String }) => {
   } = useAppContext();
   const { currentProjectId } = useProjectContext();
   const { deleteProducts, hasProjectModule } = useContextQueries();
-  const { screen } = useUI();
+  const { screen, setScreen } = useUI();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const pathname = usePathname();
@@ -184,7 +185,6 @@ const TubsHeader = ({ title }: { title: String }) => {
       date_sold: undefined,
       description: "",
       note: "",
-      images: [],
       ordinal: nextOrdinal,
     };
     await saveProducts(newProduct);
@@ -215,13 +215,15 @@ const TubsHeader = ({ title }: { title: String }) => {
   if (!currentUser) return null;
 
   return (
-    <div className="relativ">
-      {hasProjectModule("product-management-module") && (
+    <div className="relative">
+      {hasProjectModule("customer-products-module") && (
         <div className="flex flex-row items-center sm:justify-between justify-end h-[100%] mb-[17px] pt-[20px] px-[20px]">
           <div className="hidden sm:flex flex-row gap-[19px] items-center">
-            <h1 className="hidden md:flex mt-[-5px] text-2xl font-[600]">
-              Inventory
+           
+            <h1 onClick={()=>{setScreen("customer-products-table")}}className="hidden md:flex mt-[-5px] text-2xl font-[600]">
+              {title}
             </h1>
+        
             <div
               style={{
                 backgroundColor: appTheme[currentUser.theme].header_1_1,
@@ -383,4 +385,4 @@ const TubsHeader = ({ title }: { title: String }) => {
   );
 };
 
-export default TubsHeader;
+export default ProductsHeader;

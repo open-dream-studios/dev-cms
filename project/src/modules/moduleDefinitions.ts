@@ -14,6 +14,24 @@ interface ModuleDefinition {
   run: (args: RunModuleContext) => Promise<void>;
 }
 
+export const definitionTree = {
+  "dashboard-module": null,
+  "pages-module": null,
+  "media-module": {
+    "global-media-module": null,
+  },
+  "customers-module": {
+    "customer-products-module": null,
+  },
+  "employees-module": {
+    "tasks-module": null,
+  },
+  "products-module": {
+    "products-wix-sync-cms-module": null,
+    "products-export-to-sheets-module": null,
+  },
+};
+
 export const moduleDefinitions: Record<string, ModuleDefinition> = {
   "products-export-to-sheets-module": {
     identifier: "products-export-to-sheets-module",

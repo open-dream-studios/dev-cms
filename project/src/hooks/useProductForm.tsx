@@ -10,6 +10,7 @@ export const useProductForm = (initialData?: Partial<ProductFormData>) => {
     defaultValues: {
       serial_number: "",
       name: "",
+      customer_id: undefined,
       description: "",
       make: "",
       model: "",
@@ -21,7 +22,6 @@ export const useProductForm = (initialData?: Partial<ProductFormData>) => {
       length: 0,
       width: 0,
       note: "",
-      images: [],
       ...initialData,
     },
   });

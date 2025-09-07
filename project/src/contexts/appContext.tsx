@@ -16,7 +16,7 @@ import {
   UseFormReturn,
   UseFormSetValue,
 } from "react-hook-form";
-import { ProductFormData } from "@/screens/Inventory/ProductPage/ProductPage";
+import { ProductFormData } from "@/util/schemas/productSchema";
 import { useContextQueries } from "./queryContext/queryContext";
 import { toast } from "react-toastify";
 import { usePathname, useRouter } from "next/navigation";
@@ -244,11 +244,11 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     getValues: UseFormGetValues<ProductFormData>
   ) => {
     const newImages = await handleFileProcessing(files);
-    if (newImages.length === 0) return;
-    const currentImages = getValues("images") || [];
-    const newImageUrls = newImages.map((item) => item.url);
-    const updated = [...currentImages, ...newImageUrls];
-    setValue("images", updated, { shouldDirty: true });
+    // if (newImages.length === 0) return;
+    // const currentImages = getValues("images") || [];
+    // const newImageUrls = newImages.map((item) => item.url);
+    // const updated = [...currentImages, ...newImageUrls];
+    // setValue("images", updated, { shouldDirty: true });
   };
 
   const [addProductPage, setAddProductPage] = useState<boolean>(false);
@@ -282,7 +282,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       date_entered: item.date_entered ?? undefined,
       date_sold: item.date_sold ?? undefined,
       note: item.note ?? "",
-      images: Array.isArray(item.images) ? item.images : [],
     };
   };
 
@@ -374,7 +373,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const requiresRouteChange = (newRoute: string) => {
     if (newRoute === pathname) return false;
-    return newRoute === "/" || newRoute.startsWith("/products") || newRoute.startsWith("/tubs");
+    return newRoute === "/" || newRoute.startsWith("/products") || newRoute.startsWith("/inventory");
   };
 
   const filterRoute = (newPage: string) => {
@@ -383,12 +382,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     if (newRouteDividers.length >= 1 && newRouteDividers[0] === "/products")
       return "products";
 
-    if (newPage === "products-management") return "/tubs";
+    if (newPage === "customer-products") return "/inventory";
     if (
       newRouteDividers.length >= 1 &&
-      newRouteDividers[0] === "products-management"
+      newRouteDividers[0] === "customer-products"
     )
-      return "/tubs";
+      return "/inventory";
     return "/";
   };
 
@@ -401,14 +400,14 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         await saveProducts();
       }
       router.push(route);
-    } else if (pathname.startsWith("/products")) {
+    } else if (pathname.startsWith("/inventory")) {
       const onContinue = async () => {
         const result = await submitProductForm();
         if (result) {
           router.push(route);
         }
       };
-      if (pathname === "/products") {
+      if (pathname === "/inventory") {
         if (addProductPage) {
           promptSave(() => router.push(route), onContinue);
         } else {
@@ -453,10 +452,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       const normalizedData: Product = {
         ...data,
         project_idx: currentProject.id,
+        customer_id: data.customer_id ?? null,
         highlight: existing?.highlight ?? null,
         description: data.description ?? null,
         note: data.note ?? null,
-        images: Array.isArray(data.images) ? data.images : [],
         ordinal,
       };
 

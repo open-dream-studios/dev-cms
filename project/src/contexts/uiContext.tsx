@@ -12,8 +12,9 @@ export type Screen =
   | "pages"
   | "settings"
   | "customers"
-  | "products-management"
-  | "tasks-management"
+  | "customer-products"
+  | "customer-products-table"
+  | "tasks"
 
 type Modal =
   | { type: "mediaUpload" }

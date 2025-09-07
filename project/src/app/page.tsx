@@ -5,7 +5,7 @@ import Dashboard from "@/screens/Dashboard/Dashboard";
 import { useUI } from "@/contexts/uiContext";
 import MediaManager from "@/screens/MediaManager/MediaManager";
 import PagesEditor from "@/screens/PagesEditor/PagesEditor";
-import CustomerCatalog from "@/screens/CustomerCatalog/CustomerCatalog";
+import CustomerCatalog from "@/modules/CustomersModule/CustomerCatalog";
 
 const HomePage = () => {
   const { screen } = useUI();
