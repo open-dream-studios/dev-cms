@@ -52,15 +52,24 @@ export async function fetchPlaceDetails(placeId: string, sessionToken: string) {
 export function parseAddressComponents(components: any[]) {
   const getComponent = (type: string) =>
     components.find((c) => c.types.includes(type))?.long_name || "";
-
+  function formatSubpremise(value: string): string {
+    if (!value) return "";
+    const trimmed = value.trim();
+    if (/^\d/.test(trimmed)) {
+      return `#${trimmed}`;
+    }
+    return trimmed;
+  }
   const streetNumber = getComponent("street_number");
   const route = getComponent("route");
-  const city = getComponent("locality");
+  const subpremise = formatSubpremise(getComponent("subpremise"));
+  const city = getComponent("locality") || getComponent("postal_town");
   const state = getComponent("administrative_area_level_1");
   const zip = getComponent("postal_code");
 
   return {
     address_line1: `${streetNumber} ${route}`.trim(),
+    address_line2: subpremise || "",
     city,
     state,
     zip,

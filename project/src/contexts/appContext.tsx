@@ -12,6 +12,7 @@ import React, {
 import { getCurrentTimestamp, getNextOrdinal } from "@/util/functions/Data";
 import axios from "axios";
 import {
+  SubmitHandler,
   UseFormGetValues,
   UseFormReturn,
   UseFormSetValue,
@@ -27,6 +28,9 @@ import { useProjectContext } from "./projectContext";
 import { runFrontendModule } from "@/modules/runFrontendModule";
 import { ProjectModule } from "@/types/project";
 import { CloudinaryUpload } from "@/components/Upload/Upload";
+import { ExposedCustomerForm } from "@/modules/CustomersModule/CustomerView";
+import { CustomerFormData } from "@/util/schemas/customerSchema";
+import { id } from "zod/v4/locales";
 
 type AppContextType = {
   localData: Product[];
@@ -36,11 +40,6 @@ type AppContextType = {
   setEditingLock: React.Dispatch<React.SetStateAction<boolean>>;
   uploadPopup: boolean;
   setUploadPopup: React.Dispatch<React.SetStateAction<boolean>>;
-  handleFiles: (
-    files: File[],
-    setValue: UseFormSetValue<ProductFormData>,
-    getValues: UseFormGetValues<ProductFormData>
-  ) => void;
   uploadPopupRef: React.RefObject<HTMLDivElement | null>;
   addProductPage: boolean;
   setAddProductPage: React.Dispatch<React.SetStateAction<boolean>>;
@@ -59,12 +58,16 @@ type AppContextType = {
   onSubmit: (
     data: ProductFormData,
     overrideNewProduct?: boolean
-  ) => Promise<boolean>;
-  submitProductForm: () => Promise<boolean>;
+  ) => Promise<number[] | null>;
+  submitProductForm: () => Promise<number[] | null>;
   resetTimer: (fast: boolean) => void;
   checkForUnsavedChanges: () => boolean;
   handleRunModule: (identifier: string) => void;
   handleFileProcessing: (files: File[]) => Promise<CloudinaryUpload[]>;
+  setExposedCustomerForm: React.Dispatch<
+    React.SetStateAction<ExposedCustomerForm | null>
+  >;
+  onCustomerSubmit: SubmitHandler<CustomerFormData>;
 };
 
 export type FileImage = {
@@ -81,7 +84,12 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { currentProjectId, setCurrentProjectData } = useProjectContext();
+  const {
+    currentProjectId,
+    setCurrentProjectData,
+    currentCustomer,
+    setCurrentCustomerData,
+  } = useProjectContext();
   const {
     productsData,
     isOptimisticUpdate,
@@ -89,6 +97,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     projectModules,
     modules,
     integrations,
+    upsertCustomer,
   } = useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
@@ -157,31 +166,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
-  // const handleSend = async (files: FileImage[]) => {
-  //   const formData = new FormData();
-  //   files.forEach((fileImage, index) => {
-  //     formData.append("files", fileImage.file, fileImage.name);
-  //   });
-  //   try {
-  //     const response = await axios.post("/api/images/compress", formData, {
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //     });
-  //     if (response.status === 200) {
-  //       const isValidUrl = (url: string) =>
-  //         typeof url === "string" && url.startsWith("https://");
-  //       const cleanUrls = response.data.urls.filter(isValidUrl);
-  //       return cleanUrls;
-  //     } else {
-  //       return [];
-  //     }
-  //   } catch (error) {
-  //     console.error("Upload error:", error);
-  //     return [];
-  //   }
-  // };
-
   const handleSend = async (files: FileImage[]) => {
     const formData = new FormData();
     files.forEach((fileImage) => {
@@ -236,19 +220,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setEditingLock(false);
     }
-  };
-
-  const handleFiles = async (
-    files: File[],
-    setValue: UseFormSetValue<ProductFormData>,
-    getValues: UseFormGetValues<ProductFormData>
-  ) => {
-    const newImages = await handleFileProcessing(files);
-    // if (newImages.length === 0) return;
-    // const currentImages = getValues("images") || [];
-    // const newImageUrls = newImages.map((item) => item.url);
-    // const updated = [...currentImages, ...newImageUrls];
-    // setValue("images", updated, { shouldDirty: true });
   };
 
   const [addProductPage, setAddProductPage] = useState<boolean>(false);
@@ -326,6 +297,12 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     return getUnsavedProducts().length > 0;
   };
 
+  const [exposedCustomerForm, setExposedCustomerForm] =
+    useState<ExposedCustomerForm | null>(null);
+  const checkForUnsavedCustomerChanges = () => {
+    return exposedCustomerForm?.isDirty ?? false;
+  };
+
   const saveProducts = async (newProduct?: Product) => {
     const updatedProducts = getUnsavedProducts();
 
@@ -373,7 +350,11 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const requiresRouteChange = (newRoute: string) => {
     if (newRoute === pathname) return false;
-    return newRoute === "/" || newRoute.startsWith("/products") || newRoute.startsWith("/inventory");
+    return (
+      newRoute === "/" ||
+      newRoute.startsWith("/products") ||
+      newRoute.startsWith("/products")
+    );
   };
 
   const filterRoute = (newPage: string) => {
@@ -382,32 +363,63 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     if (newRouteDividers.length >= 1 && newRouteDividers[0] === "/products")
       return "products";
 
-    if (newPage === "customer-products") return "/inventory";
+    if (newPage === "customer-products") return "/products";
     if (
       newRouteDividers.length >= 1 &&
       newRouteDividers[0] === "customer-products"
     )
-      return "/inventory";
+      return "/products";
     return "/";
+  };
+
+  const onCustomerSubmit: SubmitHandler<CustomerFormData> = async (data) => {
+    if (!currentProjectId) return;
+
+    console.log({
+      ...data,
+      project_idx: currentProjectId,
+      customer_id: currentCustomer?.customer_id,
+      id: currentCustomer?.id,
+      phone: data.phone?.replace(/\D/g, "") ?? null,
+    });
+    const saved = await upsertCustomer({
+      ...data,
+      project_idx: currentProjectId,
+      customer_id: currentCustomer?.customer_id,
+      id: currentCustomer?.id,
+      phone: data.phone?.replace(/\D/g, "") ?? null,
+    });
+
+    if (saved) {
+      setCurrentCustomerData(saved);
+    }
+
+    exposedCustomerForm?.reset({
+      ...data,
+      phone: data.phone?.replace(/\D/g, "") ?? "",
+    });
   };
 
   const pageClick = async (newPage: string) => {
     const route = filterRoute(newPage);
+    if (checkForUnsavedChanges()) {
+      await saveProducts();
+    }
+    if (checkForUnsavedCustomerChanges()) {
+      await exposedCustomerForm?.handleSubmit(onCustomerSubmit)();
+    }
     if (!requiresRouteChange(route)) return;
 
     if (pathname === "/") {
-      if (checkForUnsavedChanges()) {
-        await saveProducts();
-      }
       router.push(route);
-    } else if (pathname.startsWith("/inventory")) {
+    } else if (pathname.startsWith("/products")) {
       const onContinue = async () => {
         const result = await submitProductForm();
         if (result) {
           router.push(route);
         }
       };
-      if (pathname === "/inventory") {
+      if (pathname === "/products") {
         if (addProductPage) {
           promptSave(() => router.push(route), onContinue);
         } else {
@@ -429,14 +441,14 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const onSubmit = async (
     data: ProductFormData,
     overrideNewProduct?: boolean
-  ): Promise<boolean> => {
-    if (!currentProject) return false;
+  ): Promise<number[] | null> => {
+    if (!currentProject) return null;
     try {
       const isNew = overrideNewProduct ?? addProductPage;
 
       if (data.serial_number.length < 14) {
         toast.error("Serial # is not at least 14 characters");
-        return false;
+        return null;
       }
 
       const existing = productsData.find(
@@ -445,12 +457,13 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (isNew && existing) {
         toast.error("ID is already used on another product");
-        return false;
+        return null;
       }
 
       const ordinal = existing?.ordinal ?? getNextOrdinal(productsData);
       const normalizedData: Product = {
         ...data,
+        id: existing?.id ?? null,
         project_idx: currentProject.id,
         customer_id: data.customer_id ?? null,
         highlight: existing?.highlight ?? null,
@@ -459,26 +472,26 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         ordinal,
       };
 
-      await updateProducts([normalizedData]);
+      const productIds = await updateProducts([normalizedData]);
       if (productFormRef.current) {
         productFormRef.current.reset(productFormRef.current.watch());
       }
 
-      return true;
+      return productIds;
     } catch (error) {
       toast.error("Error updating products");
-      return false;
+      return null;
     }
   };
 
   const submitProductForm = async () => {
     const form = productFormRef.current;
-    if (!form) return false;
+    if (!form) return null;
     const data = form.getValues();
     try {
       return await onSubmit(data);
     } catch (err) {
-      return false;
+      return null;
     }
   };
 
@@ -537,7 +550,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setEditingLock,
         uploadPopup,
         setUploadPopup,
-        handleFiles,
         uploadPopupRef,
         addProductPage,
         setAddProductPage,
@@ -559,6 +571,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         checkForUnsavedChanges,
         handleRunModule,
         handleFileProcessing,
+        setExposedCustomerForm,
+        onCustomerSubmit,
       }}
     >
       {children}

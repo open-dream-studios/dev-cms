@@ -7,7 +7,7 @@ import MediaFoldersSidebar from "../MediaManager/MediaFoldersSidebar";
 import MediaGrid from "@/screens/MediaManager/MediaGrid";
 import MediaToolbar from "../MediaManager/MediaToolbar";
 import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
-import { Media, MediaFolder } from "@/types/media";
+import { Media, MediaFolder, MediaInsert } from "@/types/media";
 import { useAppContext } from "@/contexts/appContext";
 import { collectParentIds } from "@/util/functions/Tree";
 
@@ -15,7 +15,8 @@ const MediaManager = () => {
   const { currentProjectId } = useProjectContext();
   const { currentUser } = useContext(AuthContext);
   const { setUploadPopup } = useAppContext();
-  const { media, reorderMedia, addMedia, refetchMedia, mediaFolders } = useContextQueries();
+  const { media, reorderMedia, addMedia, refetchMedia, mediaFolders } =
+    useContextQueries();
 
   const [activeFolder, setActiveFolder] = useState<MediaFolder | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -50,18 +51,19 @@ const MediaManager = () => {
       <UploadModal
         multiple
         onClose={() => setUploadPopup(false)}
-        onUploaded={(uploads: CloudinaryUpload[]) => {
+        onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
           if (!activeFolder) return;
-          uploads.forEach((upload: CloudinaryUpload) => {
-            addMedia({
+          const upload_items = uploadObjects.map((upload: CloudinaryUpload) => {
+            return {
               project_idx: currentProjectId,
               public_id: upload.public_id,
               url: upload.url,
               type: "image",
               folder_id: activeFolder.id,
               media_usage: "general",
-            });
+            } as MediaInsert;
           });
+          await addMedia(upload_items);
           refetchMedia();
         }}
       />

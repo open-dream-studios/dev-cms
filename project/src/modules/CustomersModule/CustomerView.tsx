@@ -1,3 +1,4 @@
+// project/src/modules/CustomersModule/CustomerView.tsx
 import React, {
   useContext,
   useEffect,
@@ -28,25 +29,28 @@ import { Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
 import { Product } from "@/types/products";
 import ProductFrame from "../components/ProductCard/CustomerProductFrame";
+import { useAppContext } from "@/contexts/appContext";
 
 type CustomerViewProps = {
   onDirtyChange?: (dirty: boolean) => void;
-  onSubmit: SubmitHandler<CustomerFormData>;
+  onCustomerSubmit: SubmitHandler<CustomerFormData>;
   exposeForm?: (form: ExposedCustomerForm) => void;
 };
 
 export type ExposedCustomerForm = UseFormReturn<CustomerFormData> & {
   focusFirstName?: () => void;
+  isDirty: boolean;
 };
 
 const CustomerView = ({
   onDirtyChange,
-  onSubmit,
+  onCustomerSubmit,
   exposeForm,
 }: CustomerViewProps) => {
   const { currentUser } = useContext(AuthContext);
   const { productsData } = useContextQueries();
   const { currentCustomer, currentProjectId } = useProjectContext();
+  const { setExposedCustomerForm } = useAppContext();
 
   const customerForm = useCustomerForm(currentCustomer);
   const { formState } = customerForm;
@@ -63,13 +67,19 @@ const CustomerView = ({
   const addressLine1Ref = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (exposeForm) {
-      exposeForm({
-        ...customerForm,
-        focusFirstName: () => firstNameInputRef.current?.focus(),
-      });
-    }
-  }, [customerForm, exposeForm]);
+    const exposed: ExposedCustomerForm = {
+      ...customerForm,
+      focusFirstName: () => firstNameInputRef.current?.focus(),
+      isDirty: customerForm.formState.isDirty,
+    };
+    exposeForm?.(exposed);
+    setExposedCustomerForm(exposed);
+  }, [
+    customerForm,
+    exposeForm,
+    setExposedCustomerForm,
+    customerForm.formState.isDirty,
+  ]);
 
   const handleKeyDown =
     (nextRef: React.RefObject<HTMLElement | null>) =>
@@ -80,7 +90,6 @@ const CustomerView = ({
       }
     };
 
-  // notify parent of dirty state
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
@@ -98,6 +107,10 @@ const CustomerView = ({
         const parsed = parseAddressComponents(address_components);
 
         customerForm.setValue("address_line1", parsed.address_line1, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+        customerForm.setValue("address_line2", parsed.address_line2, {
           shouldValidate: true,
           shouldDirty: true,
         });
@@ -122,22 +135,6 @@ const CustomerView = ({
   }, [currentCustomer, customerForm]);
 
   if (!currentUser || !currentProjectId) return null;
-
-  // const onSubmit: SubmitHandler<CustomerFormData> = async (data) => {
-  //   if (!currentProjectId) return;
-
-  //   await upsertCustomer({
-  //     project_idx: currentProjectId,
-  //     customerId: currentCustomer ? currentCustomer.customer_id : undefined,
-  //     ...data,
-  //     phone: data.phone ? data.phone.replace(/\D/g, "") : null, // clean new value
-  //   });
-
-  //   customerForm.reset({
-  //     ...data,
-  //     phone: data.phone ? data.phone.replace(/\D/g, "") : "",
-  //   });
-  // };
 
   const popupRef = useRef<HTMLDivElement | null>(null);
   const addressContainerRef = useRef<HTMLDivElement | null>(null);
@@ -187,12 +184,12 @@ const CustomerView = ({
     startTimer();
   };
 
-  if (!currentCustomer) return null
-
   return (
     <div className="flex flex-col items-start w-full h-[100%] p-6 overflow-scroll">
       <form
-        onSubmit={customerForm.handleSubmit(onSubmit as SubmitHandler<any>)}
+        onSubmit={customerForm.handleSubmit(
+          onCustomerSubmit as SubmitHandler<any>
+        )}
         className="h-[306px] aspect-[1.85/1] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
         style={{
           backgroundColor: appTheme[currentUser.theme].background_2,
@@ -446,17 +443,21 @@ const CustomerView = ({
         </div>
       </form>
 
-      <div className="flex-1 w-[100%] pt-[30px]">
+      {currentCustomer && <div className="flex-1 w-[100%] pt-[30px]">
         <div className="h-[100%] w-[100%] grid grid-cols-2 gap-[20px]">
-          {productsData.filter((product: Product) => product.customer_id === currentCustomer.id).map((product: Product, index: number) => {
-            return (
-              <div key={index} className="">
-                <ProductFrame product={product} index={index} />
-              </div>
-            );
-          })}
+          {productsData
+            .filter(
+              (product: Product) => product.customer_id === currentCustomer.id
+            )
+            .map((product: Product, index: number) => {
+              return (
+                <div key={index} className="hover:brightness-[86%] dim cursor-pointer">
+                  <ProductFrame product={product} index={index} />
+                </div>
+              );
+            })}
         </div>
-      </div>
+      </div>}
 
       <style jsx global>{`
         input:-webkit-autofill,

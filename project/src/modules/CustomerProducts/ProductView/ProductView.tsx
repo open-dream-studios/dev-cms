@@ -1,6 +1,6 @@
 // project/src/screens/Inventory/ProductPage/ProductView.tsx
 "use client";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../../../contexts/authContext";
 import React from "react";
 import { useAppContext } from "@/contexts/appContext";
@@ -20,6 +20,8 @@ import { useProductForm } from "@/hooks/useProductForm";
 import ProductInputField from "../Forms/InputField";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { UserCircle2Icon } from "lucide-react";
+import { useProjectContext } from "@/contexts/projectContext";
+import { Media, MediaInsert, MediaLink } from "@/types/media";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -31,13 +33,24 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     onSubmit,
     addProductPage: newProduct,
   } = useAppContext();
-  const { productsData } = useContextQueries();
+  const {
+    productsData,
+    addMedia,
+    refetchMedia,
+    media,
+    upsertMediaLinks,
+    mediaLinks,
+  } = useContextQueries();
+  const { currentProjectId } = useProjectContext();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const router = useRouter();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const pathname = usePathname();
+
+  const [productImages, setProductImages] = useState<MediaLink[]>([]);
+  const originalImagesRef = useRef<MediaLink[]>([]);
 
   const form = useProductForm();
   const dateSold = form.watch("date_sold");
@@ -77,6 +90,31 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [newProduct, serialNumber, productsData, form.reset]);
 
+  useEffect(() => {
+    const matchedProduct = productsData.find(
+      (product) => product.serial_number === serialNumber
+    );
+    if (matchedProduct) {
+      const mediaLinksFound = mediaLinks.filter(
+        (link: MediaLink) =>
+          link.entity_id === matchedProduct.id && link.entity_type === "product"
+      );
+      if (mediaLinksFound.length > 0) {
+        const initialImages = mediaLinksFound.map((mediaLink: MediaLink) => {
+          return {
+            id: mediaLink.id,
+            entity_type: mediaLink.entity_type,
+            entity_id: mediaLink.entity_id,
+            media_id: mediaLink.media_id,
+            url: mediaLink.url,
+          } as MediaLink;
+        });
+        setProductImages(initialImages);
+        originalImagesRef.current = initialImages;
+      }
+    }
+  }, [mediaLinks]);
+
   const resetForm = async () => {
     await setModal1({
       ...modal1,
@@ -104,7 +142,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }
 
   const goToPrev = () => {
-    if (pathname === "/inventory") {
+    if (pathname === "/products") {
       form.reset();
       setAddProductPage(false);
     } else if (previousPath) {
@@ -112,12 +150,12 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       setAddProductPage(false);
       router.push(previousPath);
     } else {
-      router.push("/inventory");
+      router.push("/products");
     }
   };
 
   const handleBackButton = () => {
-    if (form.formState.isDirty) {
+    if (form.formState.isDirty || imagesChanged) {
       if (!currentUser) return null;
       setModal2({
         ...modal2,
@@ -132,7 +170,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
           <Modal2Continue
             text={`Save product before continuing?`}
             onContinue={form.handleSubmit(async (data) => {
-              await onSubmit(data);
+              await handleSubmit(data);
               goToPrev();
             })}
             threeOptions={true}
@@ -150,7 +188,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   };
 
   const handleProductsClick = () => {
-    if (form.formState.isDirty) {
+    if (form.formState.isDirty || imagesChanged) {
       if (!currentUser) return null;
       setModal2({
         ...modal2,
@@ -165,8 +203,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
           <Modal2Continue
             text={`Save products before continuing?`}
             onContinue={form.handleSubmit(async (data) => {
-              await onSubmit(data);
-              router.push("/inventory");
+              await handleSubmit(data);
+              router.push("/products");
             })}
             threeOptions={true}
             onNoSave={() => goToPrev()}
@@ -174,15 +212,27 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         ),
       });
     } else {
-      router.push("/inventory");
+      router.push("/products");
     }
   };
 
   const handleSubmit = async (data: ProductFormData) => {
-    await onSubmit(data);
+    const productIds = await onSubmit(data);
+    if (imagesChanged) {
+      if (productIds && productIds.length > 0) {
+        const updatedImages = productImages.map((img) => ({
+          ...img,
+          entity_id: productIds[0],
+        }));
+        await upsertMediaLinks(updatedImages);
+      }
+    }
     resetForm();
     goToPrev();
   };
+
+  const imagesChanged =
+    JSON.stringify(productImages) !== JSON.stringify(originalImagesRef.current);
 
   if (!currentUser) return null;
 
@@ -191,14 +241,33 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       <UploadModal
         onClose={() => setUploadPopup(false)}
         multiple={true}
-        onUploaded={(uploadObjects: CloudinaryUpload[]) => {
-          // const current = form.getValues("images") || [];
-          // const newUrls = uploadObjects.map(
-          //   (item: CloudinaryUpload) => item.url
-          // );
-          // form.setValue("images", [...current, ...newUrls], {
-          //   shouldDirty: true,
-          // });
+        onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
+          if (!currentProjectId) return;
+          const media_items = uploadObjects.map((upload: CloudinaryUpload) => {
+            return {
+              project_idx: currentProjectId,
+              public_id: upload.public_id,
+              url: upload.url,
+              type: "image",
+              folder_id: null,
+              media_usage: "product",
+            } as MediaInsert;
+          });
+          const mediaObjects = await addMedia(media_items);
+          setProductImages((prev) => [
+            ...prev,
+            ...mediaObjects.map(
+              (m, index) =>
+                ({
+                  entity_type: "product",
+                  entity_id: null,
+                  media_id: m.id,
+                  url: m.url,
+                  ordinal: prev.length + index,
+                } as MediaLink)
+            ),
+          ]);
+          refetchMedia();
         }}
       />
       <div
@@ -269,7 +338,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
           </button>
           <button
             onClick={() => {
-              const customer_id = window.prompt("customer id")
+              const customer_id = window.prompt("customer id");
               if (customer_id) {
                 form.setValue("customer_id", parseFloat(customer_id), {
                   shouldDirty: true,
@@ -293,11 +362,10 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
           </button>
         </div>
 
-        {/* <ProductImages
-          images={images ?? []}
-          setValue={form.setValue}
-          getValues={form.getValues}
-        /> */}
+        <ProductImages
+          productImages={productImages}
+          setProductImages={setProductImages}
+        />
 
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
@@ -527,7 +595,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
           />
 
           <div className="flex flex-row gap-[16px]">
-            {form.formState.isDirty && (
+            {(form.formState.isDirty || imagesChanged) && (
               <button
                 type="submit"
                 className="cursor-pointer dim hover:brightness-75 mt-[20px] w-[200px] h-[40px] rounded-[8px] text-white font-semibold"

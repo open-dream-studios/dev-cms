@@ -6,11 +6,11 @@ import { appTheme } from "@/util/appTheme";
 
 type HoverBoxProps = {
   children: ReactNode;
-  page: Screen;
+  pages: Screen[];
   onClick?: MouseEventHandler<HTMLDivElement>;
 };
 
-const HoverBox = ({ children, onClick, page }: HoverBoxProps) => {
+const HoverBox = ({ children, onClick, pages }: HoverBoxProps) => {
   const { currentUser } = useContext(AuthContext);
   const { screen } = useUI();
   const [hovered, setHovered] = useState(false);
@@ -25,7 +25,7 @@ const HoverBox = ({ children, onClick, page }: HoverBoxProps) => {
       animate={{
         backgroundColor: hovered
           ? appTheme[currentUser.theme].background_2
-          : screen === page
+          : pages.includes(screen)
             ? appTheme[currentUser.theme].background_2
             : appTheme[currentUser.theme].background_1,
       }}

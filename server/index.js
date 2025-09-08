@@ -16,6 +16,7 @@ import projectMediaRoutes from "./routes/media.js";
 import pageRoutes from "./routes/pages.js";
 import sectionRoutes from "./routes/sections.js";
 import customerRoutes from "./routes/customers.js";
+import mediaLinkRoutes from "./routes/mediaLinks.js";
 import { db } from "./connection/connect.js";
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/integrations", integrationRoutes);
 app.use("/api/modules", projectModulesRoutes);
 app.use("/api/media", projectMediaRoutes);
+app.use("/api/media-links", mediaLinkRoutes);
 app.use("/api/pages", pageRoutes);
 app.use("/api/sections", sectionRoutes);
 app.use("/api/customers", customerRoutes);

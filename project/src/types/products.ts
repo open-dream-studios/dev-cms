@@ -2,6 +2,7 @@ import { Media } from "./media";
 
 // project/src/types/products.ts
 export type Product = {
+  id: number | null;
   serial_number: string;
   project_idx: number;
   customer_id: number | null;

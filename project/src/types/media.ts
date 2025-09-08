@@ -6,18 +6,18 @@ export type MediaFolder = {
   project_idx: number;
   parent_id: number | null;
   name: string;
-  created_at: string; // ISO timestamp
-  updated_at: string; // ISO timestamp
+  created_at: string; 
+  updated_at: string;  
   ordinal: number;
 };
 
-export type MediaUsage = "page" | "product" | "module" | "general";
+export type MediaUsage = "page" | "product" | "module";
 
 export type Media = {
   id: number;
   project_idx: number;
   folder_id: number | null;
-  public_id: number | null;
+  public_id: string | null;
   type: FileType;
   url: string;
   alt_text?: string | null;
@@ -27,4 +27,23 @@ export type Media = {
   ordinal: number;
   created_at: string;
   updated_at: string;
+};
+
+export type MediaInsert = {
+  project_idx: number;
+  public_id: string | null;
+  url: string;
+  type: FileType;
+  folder_id: number | null;
+  media_usage: MediaUsage;
+};
+
+export type MediaLink = {
+  id?: number; 
+  url: string;
+  entity_type: MediaUsage,
+  entity_id: number | null; 
+  media_id: number; 
+  ordinal: number;
+  created_at?: string;  
 };

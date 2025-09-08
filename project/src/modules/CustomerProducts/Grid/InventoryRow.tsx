@@ -32,11 +32,11 @@ const InventoryRow = ({
   const { productsData } = useContextQueries();
 
   const form = useForm<ProductFormData>({
-    defaultValues: product,
+    // defaultValues: product,
   });
 
   useEffect(() => {
-    form.reset(product);
+    // form.reset(product);
   }, [product]);
 
   if (!currentUser) return null;

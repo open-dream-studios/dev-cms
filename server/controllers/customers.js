@@ -25,7 +25,7 @@ export const getCustomers = (req, res) => {
 export const upsertCustomer = async (req, res) => {
   const {
     project_idx,
-    customerId,
+    customer_id,
     first_name,
     last_name,
     email,
@@ -43,7 +43,7 @@ export const upsertCustomer = async (req, res) => {
   }
 
   try {
-    const custId = customerId || crypto.randomBytes(8).toString("hex");
+    const custId = customer_id || crypto.randomBytes(8).toString("hex");
 
     const q = `
       INSERT INTO customers (
@@ -86,7 +86,7 @@ export const upsertCustomer = async (req, res) => {
     res.status(201).json({
       customer: {
         id: result.insertId,
-        customerId: custId,
+        customer_id: custId,
         first_name,
         last_name,
         email,

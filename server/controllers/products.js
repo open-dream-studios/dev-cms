@@ -31,6 +31,7 @@ export const updateProducts = async (req, res) => {
     return res.status(200).json({
       success: true,
       updated: result.affectedRows,
+      productIds: result || [],
     });
   } catch (dbErr) {
     console.error("Error updating products:", dbErr);

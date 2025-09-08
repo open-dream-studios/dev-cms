@@ -33,11 +33,12 @@ export function useProducts(
 
   const updateProductsMutation = useMutation({
     mutationFn: async (products: Product[]) => {
-      if (!currentProjectId) return;
-      await makeRequest.post("/api/products/update", {
+      if (!currentProjectId) return [];
+      const res = await makeRequest.post("/api/products/update", {
         project_idx: currentProjectId,
         products,
       });
+      return res.data.productIds || [];
     },
     onMutate: async (updatedProducts: Product[]) => {
       const queryKey = ["products"];
@@ -111,8 +112,10 @@ export function useProducts(
     },
   });
 
-  const updateProducts = async (updatedProducts: Product[]) => {
-    await updateProductsMutation.mutateAsync(updatedProducts);
+  const updateProducts = async (
+    updatedProducts: Product[]
+  ): Promise<number[]> => {
+    return await updateProductsMutation.mutateAsync(updatedProducts);
   };
 
   const deleteProducts = async (serial_numbers: string[]) => {

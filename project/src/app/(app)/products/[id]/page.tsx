@@ -1,8 +1,9 @@
+// project/src/app/(app)/products/[id]/page.tsx
 "use client";
 import { useContext } from "react";
 import { useParams } from "next/navigation";
 import { AuthContext } from "@/contexts/authContext";
-import ProductsPage from "@/screens/Inventory/ProductPage/ProductPage";
+import ProductView from "@/modules/CustomerProducts/ProductView/ProductView";
 
 const Product = () => {
   const { currentUser } = useContext(AuthContext);
@@ -11,7 +12,8 @@ const Product = () => {
 
   if (!currentUser) return null;
 
-  return <ProductsPage serialNumber={serialNumber} />;
+  return <ProductView serialNumber={serialNumber} />;
+  return 
 };
 
 export default Product;

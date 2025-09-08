@@ -4,7 +4,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useProductForm } from "@/hooks/useProductForm";
 import { appTheme } from "@/util/appTheme";
 import ProductInputCell from "../Forms/InputCell";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { ProductFormData } from "@/util/schemas/productSchema";
 import { InventoryDataItem } from "./InventoryGrid";
@@ -14,6 +14,7 @@ import { FaPlus } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import { useAppContext } from "@/contexts/appContext";
 import { Product } from "@/types/products";
+import { MediaLink } from "@/types/media";
 
 type InventoryRowFormProps = {
   product: Product;
@@ -31,7 +32,7 @@ const InventoryRowForm = ({
   const { currentUser } = useContext(AuthContext);
   const { formRefs, saveProducts, resetTimer, localData, setLocalData } =
     useAppContext();
-  const { productsData } = useContextQueries();
+  const { productsData, mediaLinks } = useContextQueries();
   const form = useProductForm();
   const router = useRouter();
   registerFormRef(product.serial_number, form);
@@ -112,6 +113,14 @@ const InventoryRowForm = ({
     return () => subscription.unsubscribe();
   }, [form, product.serial_number]);
 
+    const itemImage = useMemo(() => {
+      const mediaLinksFound = mediaLinks.filter(
+        (m: MediaLink) =>
+          m.entity_type === "product" && m.entity_id === product.id
+      );
+      return mediaLinksFound.length > 0 ? mediaLinksFound[0] : null;
+    }, [product, mediaLinks]);
+
   if (!currentUser) return null;
 
   return (
@@ -132,11 +141,11 @@ const InventoryRowForm = ({
           className="cursor-pointer dim hover:brightness-75"
         >
           <div className="relative w-[42px] h-[42px]">
-            {/* {product.images.length > 0 ? (
+            {itemImage ? (
               <>
-                {/\.(mp4|mov)$/i.test(product.images[0]) ? (
+                {/\.(mp4|mov)$/i.test(itemImage.url) ? (
                   <video
-                    src={product.images[0]}
+                    src={itemImage.url}
                     className="object-cover w-[42px] h-[42px] rounded-[5px]"
                     playsInline
                     muted
@@ -144,7 +153,7 @@ const InventoryRowForm = ({
                   />
                 ) : (
                   <Image
-                    src={product.images[0]}
+                    src={itemImage.url}
                     alt="image"
                     width={42}
                     height={42}
@@ -161,7 +170,7 @@ const InventoryRowForm = ({
               >
                 <FaPlus color={appTheme[currentUser.theme].text_1} size={20} />
               </div>
-            )} */}
+            )}
           </div>
         </div>
       </div>

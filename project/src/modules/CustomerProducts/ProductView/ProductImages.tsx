@@ -24,19 +24,20 @@ import { AuthContext } from "@/contexts/authContext";
 import { UseFormSetValue, UseFormGetValues } from "react-hook-form";
 import { ProductFormData } from "./ProductView";
 import { IoPlayCircleOutline } from "react-icons/io5";
+import { MediaLink } from "@/types/media";
 
 function SortableImage({
   id,
   url,
   setImageView,
-  images,
-  setValue,
+  productImages,
+  setProductImages,
 }: {
   id: string;
   url: string;
   setImageView: React.Dispatch<React.SetStateAction<string>>;
-  images: string[];
-  setValue: UseFormSetValue<ProductFormData>;
+  productImages: MediaLink[];
+  setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
 }) {
   const { currentUser } = useContext(AuthContext);
 
@@ -78,10 +79,7 @@ function SortableImage({
     startPos.current = null;
   };
 
-  const handleDeleteImage = (url: string) => {
-    const updated = images.filter((link) => link !== url);
-    // setValue("images", updated, { shouldDirty: true });
-  };
+  const handleDeleteImage = (index: string) => {};
 
   if (!currentUser) return null;
 
@@ -135,14 +133,12 @@ function SortableImage({
   );
 }
 
-export default function DraggableImageGrid({
-  images,
-  setValue,
-  getValues,
+export default function ProductImages({
+  productImages,
+  setProductImages,
 }: {
-  images: string[];
-  setValue: UseFormSetValue<ProductFormData>;
-  getValues: UseFormGetValues<ProductFormData>;
+  productImages: MediaLink[];
+  setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
 }) {
   const { currentUser } = useContext(AuthContext);
   const sensors = useSensors(
@@ -156,9 +152,9 @@ export default function DraggableImageGrid({
   );
   const [imageView, setImageView] = useState<string>("");
 
-  const items = images.map((url, index) => ({
-    id: `${url}-${index}`,
-    url,
+  const items = productImages.map((img) => ({
+    id: img.media_id.toString(),
+    url: img.url,
   }));
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -168,8 +164,13 @@ export default function DraggableImageGrid({
     const oldIndex = items.findIndex((item) => item.id === active.id);
     const newIndex = items.findIndex((item) => item.id === over.id);
 
-    const reordered = arrayMove(images, oldIndex, newIndex);
-    // setValue("images", reordered, { shouldDirty: true });
+    const reordered = arrayMove(productImages, oldIndex, newIndex);
+    const reorderedWithOrdinals = reordered.map((img, idx) => ({
+      ...img,
+      ordinal: idx,
+    }));
+
+    setProductImages(reorderedWithOrdinals);
   };
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -284,7 +285,7 @@ export default function DraggableImageGrid({
           items={items.map((item) => item.id)}
           strategy={rectSortingStrategy}
         >
-          {images.length > 0 && (
+          {productImages.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-[10px] p-1 sm:p-2 md:p-4 touch-none">
               {items.map((item) => (
                 <SortableImage
@@ -292,8 +293,8 @@ export default function DraggableImageGrid({
                   id={item.id}
                   url={item.url}
                   setImageView={setImageView}
-                  images={images}
-                  setValue={setValue}
+                  productImages={productImages}
+                  setProductImages={setProductImages}
                 />
               ))}
             </div>

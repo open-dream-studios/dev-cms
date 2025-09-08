@@ -19,7 +19,8 @@ import {
 } from "@/types/project";
 import { Product } from "@/types/products";
 import { useProjectContext } from "../projectContext";
-import { Media, MediaFolder, MediaUsage } from "@/types/media";
+import { Media, MediaFolder, MediaInsert, MediaLink } from "@/types/media";
+import { useMediaLinks } from "./queries/mediaLinks";
 import {
   useProjectModules,
   useProjects,
@@ -50,7 +51,7 @@ export type QueryContextType = {
   productsData: Product[];
   isLoadingProductsData: boolean;
   refetchProductsData: () => Promise<QueryObserverResult<Product[], Error>>;
-  updateProducts: (updatedProducts: Product[]) => void;
+  updateProducts: (updatedProducts: Product[]) => Promise<number[]>;
   deleteProducts: (serial_numbers: string[]) => void;
 
   // ---- Projects ----
@@ -129,17 +130,7 @@ export type QueryContextType = {
   isLoadingMediaFolders: boolean;
   refetchMedia: () => void;
   refetchMediaFolders: () => void;
-  addMedia: (file: {
-    project_idx: number;
-    public_id: string | null;
-    folder_id?: number | null;
-    url: string;
-    type: "image" | "video" | "file";
-    alt_text?: string;
-    metadata?: Record<string, any>;
-    media_usage: MediaUsage;
-    tags?: string[];
-  }) => Promise<void>;
+  addMedia: (data: MediaInsert[]) => Promise<Media[]>;
   deleteMedia: (id: number) => Promise<void>;
   reorderMedia: (data: {
     folder_id: number | null;
@@ -159,6 +150,13 @@ export type QueryContextType = {
     folder_id: number;
     name: string;
   }) => Promise<void>;
+
+  // ---- Media Links ----
+  mediaLinks: MediaLink[];
+  isLoadingMediaLinks: boolean;
+  upsertMediaLinks: (items: MediaLink[]) => Promise<void>;
+  deleteMediaLinks: (ids: number[]) => Promise<void>;
+  reorderMediaLinks: (orderedIds: number[]) => Promise<void>;
 
   // ---- Page Definitions ----
   pageDefinitions: PageDefinition[];
@@ -290,6 +288,13 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     reorderMedia,
   } = useMedia(isLoggedIn, currentProjectId);
   const {
+    mediaLinks,
+    isLoadingMediaLinks,
+    upsertMediaLinks,
+    deleteMediaLinks,
+    reorderMediaLinks,
+  } = useMediaLinks(isLoggedIn, currentProjectId);
+  const {
     mediaFolders,
     isLoadingMediaFolders,
     refetchMediaFolders,
@@ -388,6 +393,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         addMedia,
         deleteMedia,
         reorderMedia,
+        mediaLinks,
+        isLoadingMediaLinks,
+        upsertMediaLinks,
+        deleteMediaLinks,
+        reorderMediaLinks,
         addMediaFolder,
         deleteMediaFolder,
         reorderMediaFolders,

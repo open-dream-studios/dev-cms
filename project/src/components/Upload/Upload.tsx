@@ -135,7 +135,7 @@ const Upload: React.FC<UploadProps> = ({ handleFiles, multiple = true }) => {
       <div className="relative w-[100%] h-[100%] flex justify-center">
         <input
           type="file"
-          accept="image/*"
+          accept=".jpg,.jpeg,.png,.mp4,.mov,.avi"
           multiple={multiple}
           style={{ display: "none" }}
           id="fileInput"

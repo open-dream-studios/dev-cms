@@ -9,6 +9,10 @@ import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { formatPhone } from "@/util/functions/Customers";
 import { Customer } from "@/types/customers";
+import app_details from "../../../util/appDetails.json";
+import { MediaLink } from "@/types/media";
+import { useUI } from "@/contexts/uiContext";
+import { useAppContext } from "@/contexts/appContext";
 
 const CustomerProductFrame = ({
   product,
@@ -18,8 +22,11 @@ const CustomerProductFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { projectsData, customers } = useContextQueries();
-  const { currentProjectId, currentCustomer } = useProjectContext();
+  const { pageClick } = useAppContext();
+  const { projectsData, customers, mediaLinks } = useContextQueries();
+  const { currentProjectId, currentCustomer, setCurrentCustomerData } =
+    useProjectContext();
+  const { setScreen } = useUI();
 
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
@@ -41,6 +48,14 @@ const CustomerProductFrame = ({
     );
   }, [customers]);
 
+  const itemImage = useMemo(() => {
+    const mediaLinksFound = mediaLinks.filter(
+      (m: MediaLink) =>
+        m.entity_type === "product" && m.entity_id === product.id
+    );
+    return mediaLinksFound.length > 0 ? mediaLinksFound[0] : null;
+  }, [product, mediaLinks]);
+
   if (!currentUser) return null;
 
   return (
@@ -54,15 +69,15 @@ const CustomerProductFrame = ({
       <div className="w-[100%] h-[60%] select-none py-[25px] px-[28px] flex flex-row gap-[15px]">
         <div className="h-[100%] aspect-[1/1]">
           <div className="w-[100%] h-[100%] rounded-[10px] overflow-hidden">
-            {/* {item.images.length === 0 ? (
+            {!itemImage ? (
               <img
                 draggable={false}
                 className="w-full h-full object-cover"
                 src={app_details.default_img}
               />
-            ) : /\.(mp4|mov)$/i.test(item.images[0]) ? (
+            ) : /\.(mp4|mov)$/i.test(itemImage.url) ? (
               <video
-                src={item.images[0].url}
+                src={itemImage.url}
                 className="w-full h-full object-cover"
                 playsInline
                 muted
@@ -72,18 +87,24 @@ const CustomerProductFrame = ({
               <img
                 draggable={false}
                 className="w-full h-full object-cover"
-                src={item.images[0].url}
+                src={itemImage.url}
               />
-            )} */}
+            )}
           </div>
         </div>
-        <div className="flex flex-col gap-[15px] w-[100%] h-[100%]">
+        <div className="flex flex-col gap-[10px] w-[100%] h-[100%]">
           {productCustomer && (
             <div
               style={{
                 backgroundColor: appTheme[currentUser.theme].background_3,
               }}
-              className="w-[100%] items-center flex flex-row gap-[9px] rounded-full px-[11px] pt-[7px] pb-[5px]"
+              className="w-[100%] dim hover:brightness-90 items-center flex flex-row gap-[9px] rounded-full px-[11px] pt-[7px] pb-[5px]"
+              onClick={async (e) => {
+                e.stopPropagation();
+                setScreen("customers");
+                setCurrentCustomerData(productCustomer);
+                await pageClick("/");
+              }}
             >
               <div
                 className="w-[34px] h-[34px] flex items-center justify-center rounded-full border font-semibold text-[13px] min-w-[33px] min-h-[33px]"

@@ -26,47 +26,24 @@ export const getMedia = async (req, res) => {
   }
 };
 
-// ADD MEDIA
+// Add media
 export const addMedia = async (req, res) => {
   try {
-    let {
-      project_idx,
-      folder_id,
-      public_id,
-      url,
-      type,
-      alt_text,
-      metadata,
-      media_usage,
-      tags,
-    } = req.body;
+    const { project_idx, items } = req.body;
 
-    if (!project_idx || !url || !type || !media_usage || !public_id) {
+    if (!project_idx || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // 🟢 Handle case where url comes wrapped as { url, metadata }
-    if (typeof url === "object" && url.url) {
-      metadata = url.metadata ?? metadata;
-      url = url.url;
+    for (const item of items) {
+      const { url, type, media_usage, public_id } = item;
+      if (!url || !type || !media_usage || !public_id) {
+        return res.status(400).json({ message: "Missing required fields in one or more items" });
+      }
     }
 
-    const result = await addMediaDB({
-      project_idx,
-      folder_id,
-      public_id,
-      url,
-      type,
-      alt_text,
-      metadata,
-      media_usage,
-      tags,
-    });
-
-    return res.status(200).json({
-      success: true,
-      id: result.insertId,
-    });
+    const media = await addMediaDB(project_idx, items);
+    return res.status(200).json({ media });
   } catch (err) {
     console.error("Error adding media:", err);
     return res.status(500).json({ message: "DB error" });

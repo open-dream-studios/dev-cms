@@ -100,7 +100,28 @@ export const updateProductsDB = (project_idx, products) => {
             console.error("DB error inserting/updating products:", err);
             return reject(err);
           }
-          resolve(result);
+
+          // Collect serial_numbers you just inserted/updated
+          const serials = products.map((p) =>
+            !p.serial_number || p.serial_number.length < 14
+              ? generateSerial(p.length, p.width, p.make) // match what you inserted
+              : p.serial_number
+          );
+
+          // Now fetch their IDs
+          db.query(
+            `SELECT id, serial_number FROM products WHERE project_idx = ? AND serial_number IN (?)`,
+            [project_idx, serials],
+            (err, rows) => {
+              if (err) {
+                console.error("Error fetching updated IDs:", err);
+                return reject(err);
+              }
+
+              const updatedIds = rows.map((r) => r.id);
+              resolve(updatedIds);
+            }
+          );
         });
       }
     );

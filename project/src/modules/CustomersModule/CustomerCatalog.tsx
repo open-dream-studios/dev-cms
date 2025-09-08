@@ -14,6 +14,8 @@ import { CustomerFormData } from "@/util/schemas/customerSchema";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { ExposedCustomerForm } from "./CustomerView";
+import { useAppContext } from "@/contexts/appContext";
+import { formatPhone } from "@/util/functions/Customers";
 
 const CustomerCatalog = () => {
   const { currentUser } = useContext(AuthContext);
@@ -21,6 +23,7 @@ const CustomerCatalog = () => {
     useContextQueries();
   const { currentCustomer, setCurrentCustomerData, currentProjectId } =
     useProjectContext();
+  const { onCustomerSubmit } = useAppContext();
   const [addingCustomer, setAddingCustomer] = useState<boolean>(false);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
@@ -90,23 +93,7 @@ const CustomerCatalog = () => {
   // }, [customerForm]);
 
   const handleSubmit: SubmitHandler<CustomerFormData> = async (data) => {
-    if (!currentProjectId) return;
-    const saved = await upsertCustomer({
-      project_idx: currentProjectId,
-      customerId: currentCustomer?.customer_id,
-      ...data,
-      phone: data.phone?.replace(/\D/g, "") ?? null,
-    });
-
-    if (saved) {
-      setCurrentCustomerData(saved);
-      setAddingCustomer(false);
-    }
-
-    customerForm?.reset({
-      ...data,
-      phone: data.phone?.replace(/\D/g, "") ?? "",
-    });
+    await onCustomerSubmit(data)
   };
 
   // when clicking another customer
@@ -238,7 +225,7 @@ const CustomerCatalog = () => {
                       <p className="truncate">{customer.email}</p>
                     )}
                     {customer.phone && (
-                      <p className="truncate">{customer.phone}</p>
+                      <p className="truncate">{formatPhone(customer.phone)}</p>
                     )}
                   </div>
                 </div>
@@ -253,7 +240,7 @@ const CustomerCatalog = () => {
           <CustomerView
             key={currentCustomer?.id ?? "new"}
             onDirtyChange={setIsFormDirty}
-            onSubmit={handleSubmit}
+            onCustomerSubmit={onCustomerSubmit}
             exposeForm={setCustomerForm}
           />
         )}

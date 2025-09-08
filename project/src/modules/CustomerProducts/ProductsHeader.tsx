@@ -132,7 +132,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
   const handleAddRow = () => {
     setEditMode(false);
-    if (screen !== "products-table") {
+    if (screen !== "customer-products-table") {
       setAddProductPage(true);
     } else {
       if (!currentUser) return null;
@@ -169,6 +169,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
       allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
 
     const newProduct: Product = {
+      id: null,
       serial_number: newSerial,
       customer_id: null,
       name: "",
@@ -212,6 +213,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
     await saveProducts();
   };
 
+  const handleViewClick = (view: string) => {
+    if (view === "Products") {
+      setScreen("customer-products");
+    } else if (view === "Table") {
+      setScreen("customer-products-table");
+    }
+  };
+
   if (!currentUser) return null;
 
   return (
@@ -219,11 +228,42 @@ const ProductsHeader = ({ title }: { title: String }) => {
       {hasProjectModule("customer-products-module") && (
         <div className="flex flex-row items-center sm:justify-between justify-end h-[100%] mb-[17px] pt-[20px] px-[20px]">
           <div className="hidden sm:flex flex-row gap-[19px] items-center">
-           
-            <h1 onClick={()=>{setScreen("customer-products-table")}}className="hidden md:flex mt-[-5px] text-2xl font-[600]">
+            {/* <h1 onClick={()=>{setScreen("customer-products-table")}}className="hidden md:flex mt-[-5px] text-2xl font-[600]">
               {title}
-            </h1>
-        
+            </h1> */}
+
+            <div
+              style={{
+                backgroundColor: appTheme[currentUser.theme].header_1_1,
+              }}
+              className="flex w-[160px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
+            >
+              <div
+                onClick={() => handleViewClick("Products")}
+                style={{
+                  backgroundColor:
+                    screen === "customer-products"
+                      ? appTheme[currentUser.theme].header_1_2
+                      : "transparent",
+                }}
+                className="cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              >
+                Products
+              </div>
+              <div
+                onClick={() => handleViewClick("Table")}
+                style={{
+                  backgroundColor:
+                    screen === "customer-products-table"
+                      ? appTheme[currentUser.theme].header_1_2
+                      : "transparent",
+                }}
+                className="cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              >
+                Table
+              </div>
+            </div>
+
             <div
               style={{
                 backgroundColor: appTheme[currentUser.theme].header_1_1,
@@ -363,21 +403,22 @@ const ProductsHeader = ({ title }: { title: String }) => {
               />
             </div>
 
-            {selectedProducts.length > 0 && screen === "products-table" && (
-              <div
-                style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2,
-                }}
-                className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
-                onClick={handleConfirmDelete}
-              >
-                <IoTrashSharp
-                  size={18}
-                  color={appTheme[currentUser.theme].text_1}
-                  className="flex items-center justify-center"
-                />
-              </div>
-            )}
+            {selectedProducts.length > 0 &&
+              screen === "customer-products-table" && (
+                <div
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2,
+                  }}
+                  className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
+                  onClick={handleConfirmDelete}
+                >
+                  <IoTrashSharp
+                    size={18}
+                    color={appTheme[currentUser.theme].text_1}
+                    className="flex items-center justify-center"
+                  />
+                </div>
+              )}
           </div>
         </div>
       )}

@@ -106,7 +106,7 @@ function SortableItem({
           </div>
         )}
 
-        <div className="transition-[filter] duration-300 ease-in-out group-hover/grabber:brightness-[86%]">
+        <div className="dim cursor-pointer hover:brightness-[86%]">
           {sheet ? (
             <InventoryRow index={index} product={product} />
           ) : (

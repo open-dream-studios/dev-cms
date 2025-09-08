@@ -29,13 +29,12 @@ import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
 import Divider from "@/lib/blocks/Divider";
 import { FaPollH } from "react-icons/fa";
 import HoverBox from "@/lib/blocks/HoverBox";
-import { IoPersonAddSharp, IoPersonSharp } from "react-icons/io5";
-import { BsPersonCircle } from "react-icons/bs";
+import { IoPersonSharp } from "react-icons/io5";
 
 type BoxItem = {
   title: string;
   icon: ReactNode;
-  page: Screen;
+  pages: Screen[];
   onClick: () => void;
 };
 
@@ -49,7 +48,7 @@ const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
       <Divider />
       <div className="flex flex-col gap-[9px]">
         {items.map((item: BoxItem, index: number) => (
-          <HoverBox key={index} onClick={item.onClick} page={item.page}>
+          <HoverBox key={index} onClick={item.onClick} pages={item.pages}>
             <div className="select-none flex flex-row gap-[8px]">
               {item.icon}
               <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
@@ -216,7 +215,7 @@ const LeftBar = () => {
           />
         )}
         <div className="flex-1 flex flex-col">
-          <HoverBox onClick={item.onClick} page={item.page}>
+          <HoverBox onClick={item.onClick} pages={item.pages}>
             <div className="flex flex-row gap-[8px]">
               {item.icon}
               <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
@@ -242,7 +241,7 @@ const LeftBar = () => {
           className="w-[17px] h-[17px] brightness-75"
         />
       ),
-      page: "dashboard" as Screen,
+      pages: ["dashboard" as Screen],
       onClick: () => handleTabClick("dashboard"),
     });
   }
@@ -254,7 +253,7 @@ const LeftBar = () => {
     displayedModules.push({
       title: "Media",
       icon: <FaImages className="w-[17px] h-[17px] brightness-75" />,
-      page: "media" as Screen,
+      pages: ["media" as Screen],
       onClick: () => handleTabClick("media"),
     });
   }
@@ -263,7 +262,7 @@ const LeftBar = () => {
     displayedModules.push({
       title: "Pages",
       icon: <FaPollH className="brightness-75 mt-[1px]" size={16} />,
-      page: "pages" as Screen,
+      pages: ["pages" as Screen],
       onClick: () => handleTabClick("pages"),
     });
   }
@@ -273,7 +272,7 @@ const LeftBar = () => {
       {
         title: "Products",
         icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-        page: "products" as Screen,
+        pages: ["products" as Screen],
         onClick: () => handleTabClick("products"),
       },
       {
@@ -287,7 +286,7 @@ const LeftBar = () => {
             <ProductsDataIcon size={22} />
           </div>
         ),
-        page: "products-table" as Screen,
+        pages: ["products-table" as Screen],
         onClick: () => handleTabClick("products-table"),
       }
     );
@@ -297,7 +296,7 @@ const LeftBar = () => {
     displayedModules.push({
       title: "Customers",
       icon: <IoPersonSharp className="brightness-75 mt-[1px]" size={16} />,
-      page: "customers" as Screen,
+      pages: ["customers" as Screen],
       onClick: () => handleTabClick("customers"),
     });
   }
@@ -306,7 +305,7 @@ const LeftBar = () => {
     displayedModules.push({
       title: "Inventory",
       icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-      page: "customer-products" as Screen,
+      pages: ["customer-products" as Screen, "customer-products-table" as Screen],
       onClick: () => handleTabClick("customer-products"),
     });
   }
@@ -323,7 +322,7 @@ const LeftBar = () => {
           <ProductsDataIcon size={22} />
         </div>
       ),
-      page: "tasks" as Screen,
+      pages: ["tasks" as Screen],
       onClick: () => handleTabClick("tasks"),
     });
   }
