@@ -154,6 +154,7 @@ export type QueryContextType = {
   // ---- Media Links ----
   mediaLinks: MediaLink[];
   isLoadingMediaLinks: boolean;
+  refetchMediaLinks: () => void;
   upsertMediaLinks: (items: MediaLink[]) => Promise<void>;
   deleteMediaLinks: (ids: number[]) => Promise<void>;
   reorderMediaLinks: (orderedIds: number[]) => Promise<void>;
@@ -290,6 +291,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const {
     mediaLinks,
     isLoadingMediaLinks,
+    refetchMediaLinks,
     upsertMediaLinks,
     deleteMediaLinks,
     reorderMediaLinks,
@@ -395,6 +397,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         reorderMedia,
         mediaLinks,
         isLoadingMediaLinks,
+        refetchMediaLinks,
         upsertMediaLinks,
         deleteMediaLinks,
         reorderMediaLinks,

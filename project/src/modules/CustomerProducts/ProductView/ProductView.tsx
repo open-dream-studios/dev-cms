@@ -56,6 +56,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       !serialNumber
     ) {
       setProductImages([]);
+      originalImagesRef.current = [];
     }
   }, [serialNumber, screen, pathname]);
 
@@ -74,10 +75,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     if (productFormRef) {
       productFormRef.current = form;
     }
-    if (serialNumber) {
-      formRefs.current.set(serialNumber, form);
-    }
-  }, [form, productFormRef]);
+  }, [form, productFormRef, formRefs]);
 
   useEffect(() => {
     if (!newProduct && serialNumber && productsData?.length) {
@@ -116,19 +114,17 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         (link: MediaLink) =>
           link.entity_id === matchedProduct.id && link.entity_type === "product"
       );
-      if (mediaLinksFound.length > 0) {
-        const initialImages = mediaLinksFound.map((mediaLink: MediaLink) => {
-          return {
-            id: mediaLink.id,
-            entity_type: mediaLink.entity_type,
-            entity_id: mediaLink.entity_id,
-            media_id: mediaLink.media_id,
-            url: mediaLink.url,
-          } as MediaLink;
-        });
-        setProductImages(initialImages);
-        originalImagesRef.current = initialImages;
-      }
+      const initialImages = mediaLinksFound.map((mediaLink: MediaLink) => {
+        return {
+          id: mediaLink.id,
+          entity_type: mediaLink.entity_type,
+          entity_id: mediaLink.entity_id,
+          media_id: mediaLink.media_id,
+          url: mediaLink.url,
+        } as MediaLink;
+      });
+      setProductImages(initialImages);
+      originalImagesRef.current = initialImages;
     }
   }, [mediaLinks]);
 
@@ -160,6 +156,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
   const imagesChanged =
     JSON.stringify(productImages) !== JSON.stringify(originalImagesRef.current);
+
+  const onFormSubmitButton = async (data: ProductFormData) => {
+    await handleProductFormSubmit(data);
+    if (data.serial_number) {
+      await screenClick(
+        "edit-customer-product",
+        `/products/${data.serial_number}`
+      );
+    }
+  };
 
   if (!currentUser) return null;
 
@@ -295,7 +301,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         />
 
         <form
-          onSubmit={form.handleSubmit(handleProductFormSubmit)}
+          onSubmit={form.handleSubmit(onFormSubmitButton)}
           className="gap-[10px] mt-[10px]"
         >
           <ProductInputField

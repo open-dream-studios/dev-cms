@@ -87,7 +87,7 @@ type AppContextType = {
   setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
   originalImagesRef: React.RefObject<MediaLink[] | null>;
   handleProductFormSubmit: (data: ProductFormData) => void;
-  screenHistoryRef: React.RefObject<{ screen: Screen, page: string | null }[]>;
+  screenHistoryRef: React.RefObject<{ screen: Screen; page: string | null }[]>;
 };
 
 export type FileImage = {
@@ -121,6 +121,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     integrations,
     upsertCustomer,
     upsertMediaLinks,
+    refetchMediaLinks,
   } = useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
@@ -288,6 +289,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const getUnsavedProducts = (): Product[] => {
     const updatedProducts: Product[] = [];
+
     for (const item of localDataRef.current) {
       const stored = productsData.find(
         (p) => p.serial_number === item.serial_number
@@ -297,17 +299,42 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         continue;
       }
 
-      if (formRefs.current) {
-        const formArray = formRefs.current
-          .entries()
-          .find((form) => form[0] === item.serial_number);
-        if (formArray) {
-          const isDirty =
-            Object.keys(formArray[1].formState.dirtyFields).length > 0;
-          if (isDirty) {
-            updatedProducts.push(normalizeProduct(item));
+      if (screen === "customer-products-table") {
+        if (formRefs.current) {
+          const formArray = formRefs.current
+            .entries()
+            .find((form) => form[0] === item.serial_number);
+          if (formArray) {
+            const isDirty =
+              Object.keys(formArray[1].formState.dirtyFields).length > 0;
+            if (isDirty) {
+              updatedProducts.push(normalizeProduct(item));
+            }
           }
         }
+      }
+    }
+
+    if (
+      (screen === "add-customer-product" ||
+        screen === "edit-customer-product") &&
+      productFormRef.current
+    ) {
+      const isDirty =
+        Object.keys(productFormRef.current.formState.dirtyFields).length > 0;
+      if (isDirty && currentProject) {
+        const formValues = productFormRef.current.getValues();
+        const newProduct: Product = {
+          ...formValues,
+          id: null,
+          project_idx: currentProject.id,
+          customer_id: formValues.customer_id ?? null,
+          highlight: null,
+          description: formValues.description ?? null,
+          note: formValues.note ?? null,
+          ordinal: getNextOrdinal(productsData),
+        };
+        updatedProducts.push(normalizeProduct(newProduct));
       }
     }
 
@@ -451,6 +478,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     if (productFormRef.current) {
       productFormRef.current.reset();
     }
+    refetchMediaLinks();
   };
 
   const screenRoute = (newScreen: Screen) => {
@@ -489,30 +517,46 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     setCurrentPageData(null);
     setAddingCustomer(false);
 
-    if (checkForUnsavedChanges()) {
-      if (
-        (screen === "add-customer-product" ||
-          screen === "edit-customer-product") &&
-        productFormRef.current
-      ) {
-        const data = productFormRef.current.getValues();
-        await handleProductFormSubmit(data);
-      }
-      if (screen === "customer-products-table") {
-        await saveProducts();
-      }
-    }
-
     if (checkForUnsavedCustomerChanges()) {
       await exposedCustomerForm?.handleSubmit(onCustomerSubmit)();
     }
 
-    if (!newPage) {
-      router.push(screenRoute(newScreen));
-    } else if (newPage !== pathname) {
-      router.push(newPage);
+    const onContinue = async () => {
+      if (productFormRef.current) {
+        const data = productFormRef.current.getValues();
+        await handleProductFormSubmit(data);
+      }
+      await onComplete();
+    };
+
+    const onComplete = async () => {
+      if (!newPage) {
+        router.push(screenRoute(newScreen));
+      } else if (newPage !== pathname) {
+        router.push(newPage);
+      }
+      setScreen(newScreen);
+    };
+
+    if (checkForUnsavedChanges()) {
+      if (
+        screen === "add-customer-product" ||
+        screen === "edit-customer-product"
+      ) {
+        if (screen === "add-customer-product") {
+          await promptSave(onComplete, onContinue);
+        } else {
+          await onContinue();
+        }
+      } else if (screen === "customer-products-table") {
+        await saveProducts();
+        await onComplete();
+      } else {
+        await onComplete();
+      }
+    } else {
+      await onComplete();
     }
-    setScreen(newScreen);
   };
 
   const onSubmit = async (
@@ -673,7 +717,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setProductImages,
         originalImagesRef,
         handleProductFormSubmit,
-        screenHistoryRef
+        screenHistoryRef,
       }}
     >
       {children}
