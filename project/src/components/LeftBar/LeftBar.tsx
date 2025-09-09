@@ -22,7 +22,6 @@ import { LuPanelLeftClose } from "react-icons/lu";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Screen, useUI } from "@/contexts/uiContext";
 import { HiServer, HiViewBoards } from "react-icons/hi";
 import { FaImages } from "react-icons/fa";
 import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
@@ -30,6 +29,8 @@ import Divider from "@/lib/blocks/Divider";
 import { FaPollH } from "react-icons/fa";
 import HoverBox from "@/lib/blocks/HoverBox";
 import { IoPersonSharp } from "react-icons/io5";
+import { useAppContext } from "@/contexts/appContext";
+import { Screen } from "@/types/screens";
 
 type BoxItem = {
   title: string;
@@ -66,7 +67,7 @@ const LeftBar = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
   const { currentProjectId } = useProjectContext();
   const { hasProjectModule, projectsData } = useContextQueries();
-  const { setTab } = useUI();
+  const { screenClick } = useAppContext();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarRef = useRef<HTMLDivElement>(null);
@@ -199,7 +200,7 @@ const LeftBar = () => {
     if (windowWidth && windowWidth < 1024) {
       closeLeftBar();
     }
-    setTab(tab);
+    screenClick(tab, null);
   };
 
   if (!currentUser) return null;
@@ -305,7 +306,12 @@ const LeftBar = () => {
     displayedModules.push({
       title: "Inventory",
       icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-      pages: ["customer-products" as Screen, "customer-products-table" as Screen],
+      pages: [
+        "customer-products" as Screen,
+        "customer-products-table" as Screen,
+        "add-customer-product" as Screen,
+        "edit-customer-product" as Screen,
+      ],
       onClick: () => handleTabClick("customer-products"),
     });
   }

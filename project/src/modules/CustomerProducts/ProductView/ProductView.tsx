@@ -1,16 +1,14 @@
 // project/src/screens/Inventory/ProductPage/ProductView.tsx
 "use client";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "../../../contexts/authContext";
 import React from "react";
 import { useAppContext } from "@/contexts/appContext";
 import { appTheme } from "@/util/appTheme";
-import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import "react-datepicker/dist/react-datepicker.css";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import ProductImages from "./ProductImages";
-import { usePathname, useRouter } from "next/navigation";
 import { FaChevronLeft } from "react-icons/fa6";
 import UploadModal, {
   CloudinaryUpload,
@@ -18,47 +16,66 @@ import UploadModal, {
 import { ProductFormData } from "@/util/schemas/productSchema";
 import { useProductForm } from "@/hooks/useProductForm";
 import ProductInputField from "../Forms/InputField";
-import Modal2Continue from "@/modals/Modal2Continue";
 import { UserCircle2Icon } from "lucide-react";
 import { useProjectContext } from "@/contexts/projectContext";
-import { Media, MediaInsert, MediaLink } from "@/types/media";
+import { MediaInsert, MediaLink } from "@/types/media";
+import { usePathname } from "next/navigation";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
   const {
     setUploadPopup,
-    setAddProductPage,
-    previousPath,
     productFormRef,
-    onSubmit,
-    addProductPage: newProduct,
+    handleProductFormSubmit,
+    goToPrev,
+    screen,
+    screenClick,
+    productImages,
+    setProductImages,
+    originalImagesRef,
+    formRefs,
+    screenHistoryRef,
   } = useAppContext();
-  const {
-    productsData,
-    addMedia,
-    refetchMedia,
-    media,
-    upsertMediaLinks,
-    mediaLinks,
-  } = useContextQueries();
+  const { productsData, addMedia, refetchMedia, mediaLinks } =
+    useContextQueries();
   const { currentProjectId } = useProjectContext();
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const router = useRouter();
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
   const pathname = usePathname();
 
-  const [productImages, setProductImages] = useState<MediaLink[]>([]);
-  const originalImagesRef = useRef<MediaLink[]>([]);
+  const newProduct = useMemo(() => {
+    return screen === "add-customer-product";
+  }, [screen]);
 
   const form = useProductForm();
   const dateSold = form.watch("date_sold");
   const dateEntered = form.watch("date_entered");
 
   useEffect(() => {
+    if (
+      pathname === "/products" &&
+      screen === "add-customer-product" &&
+      !serialNumber
+    ) {
+      setProductImages([]);
+    }
+  }, [serialNumber, screen, pathname]);
+
+  useEffect(() => {
+    if (
+      serialNumber &&
+      screen !== "edit-customer-product" &&
+      screenHistoryRef.current &&
+      screenHistoryRef.current.length <= 1
+    ) {
+      screenClick("edit-customer-product", `/products/${serialNumber}`);
+    }
+  }, [serialNumber, screen]);
+
+  useEffect(() => {
     if (productFormRef) {
       productFormRef.current = form;
+    }
+    if (serialNumber) {
+      formRefs.current.set(serialNumber, form);
     }
   }, [form, productFormRef]);
 
@@ -115,14 +132,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [mediaLinks]);
 
-  const resetForm = async () => {
-    await setModal1({
-      ...modal1,
-      open: false,
-    });
-    form.reset();
-  };
-
   if (!currentUser) return null;
 
   if (!newProduct && serialNumber && productsData?.length) {
@@ -141,94 +150,12 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }
 
-  const goToPrev = () => {
-    if (pathname === "/products") {
-      form.reset();
-      setAddProductPage(false);
-    } else if (previousPath) {
-      form.reset();
-      setAddProductPage(false);
-      router.push(previousPath);
-    } else {
-      router.push("/products");
-    }
+  const handleBackButton = async () => {
+    await goToPrev();
   };
 
-  const handleBackButton = () => {
-    if (form.formState.isDirty || imagesChanged) {
-      if (!currentUser) return null;
-      setModal2({
-        ...modal2,
-        open: !modal2.open,
-        showClose: false,
-        offClickClose: true,
-        width: "w-[300px]",
-        maxWidth: "max-w-[400px]",
-        aspectRatio: "aspect-[5/2]",
-        borderRadius: "rounded-[12px] md:rounded-[15px]",
-        content: (
-          <Modal2Continue
-            text={`Save product before continuing?`}
-            onContinue={form.handleSubmit(async (data) => {
-              await handleSubmit(data);
-              goToPrev();
-            })}
-            threeOptions={true}
-            onNoSave={() => goToPrev()}
-          />
-        ),
-      });
-    } else {
-      if (newProduct) {
-        setAddProductPage(false);
-      } else {
-        goToPrev();
-      }
-    }
-  };
-
-  const handleProductsClick = () => {
-    if (form.formState.isDirty || imagesChanged) {
-      if (!currentUser) return null;
-      setModal2({
-        ...modal2,
-        open: !modal2.open,
-        showClose: false,
-        offClickClose: true,
-        width: "w-[300px]",
-        maxWidth: "max-w-[400px]",
-        aspectRatio: "aspect-[5/2]",
-        borderRadius: "rounded-[12px] md:rounded-[15px]",
-        content: (
-          <Modal2Continue
-            text={`Save products before continuing?`}
-            onContinue={form.handleSubmit(async (data) => {
-              await handleSubmit(data);
-              router.push("/products");
-            })}
-            threeOptions={true}
-            onNoSave={() => goToPrev()}
-          />
-        ),
-      });
-    } else {
-      router.push("/products");
-    }
-  };
-
-  const handleSubmit = async (data: ProductFormData) => {
-    const productIds = await onSubmit(data);
-    if (imagesChanged) {
-      if (productIds && productIds.length > 0) {
-        const updatedImages = productImages.map((img) => ({
-          ...img,
-          entity_id: productIds[0],
-        }));
-        await upsertMediaLinks(updatedImages);
-      }
-    }
-    resetForm();
-    goToPrev();
+  const handleProductsClick = async () => {
+    await screenClick("customer-products", "/products");
   };
 
   const imagesChanged =
@@ -368,7 +295,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         />
 
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={form.handleSubmit(handleProductFormSubmit)}
           className="gap-[10px] mt-[10px]"
         >
           <ProductInputField

@@ -1,8 +1,9 @@
 import { MouseEventHandler, ReactNode, useContext, useState } from "react";
 import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
-import { Screen, useUI } from "@/contexts/uiContext";
 import { appTheme } from "@/util/appTheme";
+import { useAppContext } from "@/contexts/appContext";
+import { Screen } from "@/types/screens";
 
 type HoverBoxProps = {
   children: ReactNode;
@@ -12,7 +13,7 @@ type HoverBoxProps = {
 
 const HoverBox = ({ children, onClick, pages }: HoverBoxProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { screen } = useUI();
+  const { screen } = useAppContext();
   const [hovered, setHovered] = useState(false);
 
   if (!currentUser) return null;

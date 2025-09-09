@@ -33,7 +33,6 @@ import { useAppContext } from "@/contexts/appContext";
 
 type CustomerViewProps = {
   onDirtyChange?: (dirty: boolean) => void;
-  onCustomerSubmit: SubmitHandler<CustomerFormData>;
   exposeForm?: (form: ExposedCustomerForm) => void;
 };
 
@@ -42,15 +41,11 @@ export type ExposedCustomerForm = UseFormReturn<CustomerFormData> & {
   isDirty: boolean;
 };
 
-const CustomerView = ({
-  onDirtyChange,
-  onCustomerSubmit,
-  exposeForm,
-}: CustomerViewProps) => {
+const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
   const { currentUser } = useContext(AuthContext);
   const { productsData } = useContextQueries();
   const { currentCustomer, currentProjectId } = useProjectContext();
-  const { setExposedCustomerForm } = useAppContext();
+  const { setExposedCustomerForm, onCustomerSubmit } = useAppContext();
 
   const customerForm = useCustomerForm(currentCustomer);
   const { formState } = customerForm;
@@ -190,7 +185,7 @@ const CustomerView = ({
         onSubmit={customerForm.handleSubmit(
           onCustomerSubmit as SubmitHandler<any>
         )}
-        className="h-[306px] aspect-[1.85/1] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
+        className="w-[100%] max-w-[550px] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
         style={{
           backgroundColor: appTheme[currentUser.theme].background_2,
           color: appTheme[currentUser.theme].text_4,
@@ -410,54 +405,67 @@ const CustomerView = ({
             <input
               {...customerForm.register("city")}
               placeholder="City"
-              className="outline-none border-none rounded p-2 col-span-4 text-[15px] font-[500]"
+              className="outline-none border-none rounded p-2 col-span-9 lg:col-span-4 text-[15px] font-[500]"
             />
             <input
               {...customerForm.register("state")}
               placeholder="State"
-              className="outline-none border-none rounded p-2 col-span-3 text-[15px] font-[500]"
+              className="outline-none border-none rounded p-2 col-span-9 lg:col-span-3 text-[15px] font-[500]"
             />
             <input
               {...customerForm.register("zip")}
               placeholder="Zip"
-              className="outline-none border-none rounded p-2 col-span-2 text-[15px] font-[500]"
+              onChange={(e) => {
+                let value = e.target.value.replace(/\D/g, "").slice(0, 5);
+                customerForm.setValue("zip", value, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+              }}
+              value={customerForm.watch("zip") || ""}
+              className="outline-none border-none rounded p-2 col-span-9 lg:col-span-2 text-[15px] font-[500]"
             />
           </div>
 
-          {isDirty && isValid && (
-            <button
-              type="submit"
-              className="cursor-pointer hover:brightness-90 dim flex flex-row items-center gap-[7px] mt-[9px] self-start px-4 py-2 rounded-full font-semibold shadow-sm text-sm"
-              style={{
-                backgroundColor:
-                  appTheme[currentUser.theme].background_2_selected,
-                color: appTheme[currentUser.theme].text_3,
-              }}
-            >
-              <CheckCircle2 size={20} />{" "}
-              <div className="text-[15px]">
-                {currentCustomer ? "Save Changes" : "Add Customer"}
-              </div>
-            </button>
-          )}
+          <button
+            type="submit"
+            className={`${
+              isDirty && isValid ? "flex" : "opacity-0 pointer-events-none"
+            } cursor-pointer hover:brightness-90 dim flex flex-row items-center gap-[7px] mt-[9px] self-start px-4 py-2 rounded-full font-semibold shadow-sm text-sm`}
+            style={{
+              backgroundColor:
+                appTheme[currentUser.theme].background_2_selected,
+              color: appTheme[currentUser.theme].text_3,
+            }}
+          >
+            <CheckCircle2 size={20} />{" "}
+            <div className="text-[15px]">
+              {currentCustomer ? "Save Changes" : "Add Customer"}
+            </div>
+          </button>
         </div>
       </form>
 
-      {currentCustomer && <div className="flex-1 w-[100%] pt-[30px]">
-        <div className="h-[100%] w-[100%] grid grid-cols-2 gap-[20px]">
-          {productsData
-            .filter(
-              (product: Product) => product.customer_id === currentCustomer.id
-            )
-            .map((product: Product, index: number) => {
-              return (
-                <div key={index} className="hover:brightness-[86%] dim cursor-pointer">
-                  <ProductFrame product={product} index={index} />
-                </div>
-              );
-            })}
+      {currentCustomer && (
+        <div className="flex-1 w-[100%] pt-[30px]">
+          <div className="h-[100%] w-[100%] grid grid-cols-2 gap-[20px]">
+            {productsData
+              .filter(
+                (product: Product) => product.customer_id === currentCustomer.id
+              )
+              .map((product: Product, index: number) => {
+                return (
+                  <div
+                    key={index}
+                    className="hover:brightness-[86%] dim cursor-pointer"
+                  >
+                    <ProductFrame product={product} index={index} />
+                  </div>
+                );
+              })}
+          </div>
         </div>
-      </div>}
+      )}
 
       <style jsx global>{`
         input:-webkit-autofill,

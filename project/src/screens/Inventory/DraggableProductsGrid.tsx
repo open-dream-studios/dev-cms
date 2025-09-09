@@ -32,7 +32,6 @@ import CustomInventoryFrame from "./CustomInventoryFrame/CustomInventoryFrame";
 import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@/types/products";
-import { useUI } from "@/contexts/uiContext";
 
 function SortableItem({
   id,
@@ -46,9 +45,8 @@ function SortableItem({
   sheet: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
-  const { editMode, saveProducts } = useAppContext();
+  const { editMode, saveProducts, screen } = useAppContext();
   const { deleteProducts } = useContextQueries();
-  const { screen }  = useUI()
 
   const {
     attributes,

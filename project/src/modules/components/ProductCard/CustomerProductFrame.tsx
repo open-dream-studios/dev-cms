@@ -11,7 +11,6 @@ import { formatPhone } from "@/util/functions/Customers";
 import { Customer } from "@/types/customers";
 import app_details from "../../../util/appDetails.json";
 import { MediaLink } from "@/types/media";
-import { useUI } from "@/contexts/uiContext";
 import { useAppContext } from "@/contexts/appContext";
 
 const CustomerProductFrame = ({
@@ -22,22 +21,14 @@ const CustomerProductFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { pageClick } = useAppContext();
-  const { projectsData, customers, mediaLinks } = useContextQueries();
-  const { currentProjectId, currentCustomer, setCurrentCustomerData } =
-    useProjectContext();
-  const { setScreen } = useUI();
+  const { screenClick, setScreen } = useAppContext();
+  const { customers, mediaLinks } = useContextQueries();
+  const { setCurrentCustomerData } = useProjectContext();
 
-  const currentProject = useMemo(() => {
-    return projectsData.find((p) => p.id === currentProjectId) ?? null;
-  }, [projectsData, currentProjectId]);
-
-  const router = useRouter();
-  const TubID = product.serial_number;
-
-  const handleClick = () => {
-    router.push(
-      TubID && TubID.trim().length !== 0 ? `/products/${TubID}` : "/products"
+  const handleClick = async () => {
+    await screenClick(
+      "edit-customer-product",
+      `/products/${product.serial_number}`
     );
   };
 
@@ -101,9 +92,8 @@ const CustomerProductFrame = ({
               className="w-[100%] dim hover:brightness-90 items-center flex flex-row gap-[9px] rounded-full px-[11px] pt-[7px] pb-[5px]"
               onClick={async (e) => {
                 e.stopPropagation();
-                setScreen("customers");
                 setCurrentCustomerData(productCustomer);
-                await pageClick("/");
+                await screenClick("customers", "/");
               }}
             >
               <div

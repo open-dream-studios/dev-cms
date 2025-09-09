@@ -14,14 +14,13 @@ import InventoryGrid from "@/screens/Inventory/InventoryGrid";
 const ProductsPage = () => {
   const { currentUser } = useContext(AuthContext);
   const { productsData, isLoadingProductsData } = useContextQueries();
-  const { addProductPage, filteredProducts } =
-    useAppContext();
+  const { screen, filteredProducts } = useAppContext();
 
   if (!currentUser) return null;
 
   return (
     <>
-      {addProductPage ? (
+      {screen === "add-product" ? (
         <ProductPage />
       ) : (
         <div className="w-[100%] h-[100%] relative">

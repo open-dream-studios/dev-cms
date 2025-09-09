@@ -24,7 +24,10 @@ import appDetails from "@/util/appDetails.json";
 import { usePathname, useRouter } from "next/navigation";
 import LandingNav from "@/screens/Landing/LandingNav/LandingNav";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import { QueryProvider, useContextQueries } from "@/contexts/queryContext/queryContext";
+import {
+  QueryProvider,
+  useContextQueries,
+} from "@/contexts/queryContext/queryContext";
 import CustomToast from "@/components/CustomToast";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import LandingPage from "@/screens/Landing/LandingPage/LandingPage";
@@ -35,7 +38,6 @@ import {
   ProjectContextProvider,
   useProjectContext,
 } from "@/contexts/projectContext";
-import { UIProvider } from "@/contexts/uiContext";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -46,11 +48,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <ProjectContextProvider>
           <QueryProvider>
             <AppContextProvider>
-              <UIProvider>
-                <CustomToast />
-                <DynamicTitle />
-                <AppRoot>{children}</AppRoot>
-              </UIProvider>
+              <CustomToast />
+              <DynamicTitle />
+              <AppRoot>{children}</AppRoot>
             </AppContextProvider>
           </QueryProvider>
         </ProjectContextProvider>
@@ -113,7 +113,6 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
     editingLock,
     setSelectedProducts,
     setEditMode,
-    setAddProductPage,
     setLocalData,
   } = useAppContext();
   const { productsData } = useContextQueries();
@@ -129,7 +128,6 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
         (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
       )
     );
-    setAddProductPage(false);
   }, [setSelectedProducts, pathName]);
 
   if (!currentUser) return;

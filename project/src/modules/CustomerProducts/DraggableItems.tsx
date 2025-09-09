@@ -31,7 +31,6 @@ import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame
 import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@/types/products";
-import { useUI } from "@/contexts/uiContext";
 import InventoryRow from "./Grid/InventoryRow";
 
 function SortableItem({
@@ -48,7 +47,7 @@ function SortableItem({
   const { currentUser } = useContext(AuthContext);
   const { editMode, saveProducts } = useAppContext();
   const { deleteProducts } = useContextQueries();
-  const { screen }  = useUI()
+  const { screen }  = useAppContext()
 
   const {
     attributes,

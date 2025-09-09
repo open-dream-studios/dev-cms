@@ -30,7 +30,8 @@ import { ProjectModule } from "@/types/project";
 import { CloudinaryUpload } from "@/components/Upload/Upload";
 import { ExposedCustomerForm } from "@/modules/CustomersModule/CustomerView";
 import { CustomerFormData } from "@/util/schemas/customerSchema";
-import { id } from "zod/v4/locales";
+import { Modal, Screen, UIState } from "@/types/screens";
+import { MediaLink } from "@/types/media";
 
 type AppContextType = {
   localData: Product[];
@@ -41,8 +42,6 @@ type AppContextType = {
   uploadPopup: boolean;
   setUploadPopup: React.Dispatch<React.SetStateAction<boolean>>;
   uploadPopupRef: React.RefObject<HTMLDivElement | null>;
-  addProductPage: boolean;
-  setAddProductPage: React.Dispatch<React.SetStateAction<boolean>>;
   dataFilters: DataFilters;
   setDataFilters: React.Dispatch<React.SetStateAction<DataFilters>>;
   filteredProducts: (products: Product[]) => Product[];
@@ -54,12 +53,12 @@ type AppContextType = {
   productFormRef: React.RefObject<UseFormReturn<ProductFormData> | null>;
   formRefs: React.RefObject<Map<string, UseFormReturn<ProductFormData>>>;
   previousPath: string | null;
-  pageClick: (newPage: string) => void;
+  screenClick: (newScreen: Screen, newPage: string | null) => void;
+  goToPrev: () => void;
   onSubmit: (
     data: ProductFormData,
     overrideNewProduct?: boolean
   ) => Promise<number[] | null>;
-  submitProductForm: () => Promise<number[] | null>;
   resetTimer: (fast: boolean) => void;
   checkForUnsavedChanges: () => boolean;
   handleRunModule: (identifier: string) => void;
@@ -68,6 +67,27 @@ type AppContextType = {
     React.SetStateAction<ExposedCustomerForm | null>
   >;
   onCustomerSubmit: SubmitHandler<CustomerFormData>;
+  addingCustomer: boolean;
+  setAddingCustomer: React.Dispatch<React.SetStateAction<boolean>>;
+  isFormDirty: boolean;
+  setIsFormDirty: React.Dispatch<React.SetStateAction<boolean>>;
+  customerForm: ExposedCustomerForm | null;
+  setCustomerForm: React.Dispatch<
+    React.SetStateAction<ExposedCustomerForm | null>
+  >;
+  screen: Screen;
+  modals: Modal[];
+  sidebar: "none" | "mediaFolders" | "settings";
+  setScreen: (s: Screen) => void;
+  pushModal: (m: Modal) => void;
+  popModal: () => void;
+  setSidebar: (s: UIState["sidebar"]) => void;
+
+  productImages: MediaLink[];
+  setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
+  originalImagesRef: React.RefObject<MediaLink[] | null>;
+  handleProductFormSubmit: (data: ProductFormData) => void;
+  screenHistoryRef: React.RefObject<{ screen: Screen, page: string | null }[]>;
 };
 
 export type FileImage = {
@@ -89,6 +109,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     setCurrentProjectData,
     currentCustomer,
     setCurrentCustomerData,
+    setCurrentSectionData,
+    setCurrentPageData,
   } = useProjectContext();
   const {
     productsData,
@@ -98,6 +120,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     modules,
     integrations,
     upsertCustomer,
+    upsertMediaLinks,
   } = useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
@@ -222,8 +245,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const [addProductPage, setAddProductPage] = useState<boolean>(false);
-
   const [dataFilters, setDataFilters] = useState<DataFilters>({
     listings: "All",
   });
@@ -294,13 +315,20 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const checkForUnsavedChanges = () => {
-    return getUnsavedProducts().length > 0;
+    return (
+      getUnsavedProducts().length > 0 ||
+      ((screen === "add-customer-product" ||
+        screen === "edit-customer-product") &&
+        imagesChanged)
+    );
   };
 
   const [exposedCustomerForm, setExposedCustomerForm] =
     useState<ExposedCustomerForm | null>(null);
   const checkForUnsavedCustomerChanges = () => {
-    return exposedCustomerForm?.isDirty ?? false;
+    return exposedCustomerForm
+      ? exposedCustomerForm.isDirty || imagesChanged
+      : false;
   };
 
   const saveProducts = async (newProduct?: Product) => {
@@ -348,40 +376,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  const requiresRouteChange = (newRoute: string) => {
-    if (newRoute === pathname) return false;
-    return (
-      newRoute === "/" ||
-      newRoute.startsWith("/products") ||
-      newRoute.startsWith("/products")
-    );
-  };
-
-  const filterRoute = (newPage: string) => {
-    let newRouteDividers = newPage.split("/");
-    if (newPage === "products-table") return "/products";
-    if (newRouteDividers.length >= 1 && newRouteDividers[0] === "/products")
-      return "products";
-
-    if (newPage === "customer-products") return "/products";
-    if (
-      newRouteDividers.length >= 1 &&
-      newRouteDividers[0] === "customer-products"
-    )
-      return "/products";
-    return "/";
-  };
-
   const onCustomerSubmit: SubmitHandler<CustomerFormData> = async (data) => {
     if (!currentProjectId) return;
-
-    console.log({
-      ...data,
-      project_idx: currentProjectId,
-      customer_id: currentCustomer?.customer_id,
-      id: currentCustomer?.id,
-      phone: data.phone?.replace(/\D/g, "") ?? null,
-    });
     const saved = await upsertCustomer({
       ...data,
       project_idx: currentProjectId,
@@ -400,42 +396,123 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  const pageClick = async (newPage: string) => {
-    const route = filterRoute(newPage);
-    if (checkForUnsavedChanges()) {
-      await saveProducts();
+  const screenHistoryRef = useRef<{ screen: Screen; page: string | null }[]>(
+    []
+  );
+  const goToPrev = async () => {
+    const history = screenHistoryRef.current;
+    if (history.length > 1) {
+      const prev = history[history.length - 2];
+      screenClick(prev.screen, prev.page);
     }
+  };
+
+  useEffect(() => {
+    if (history.length === 0) {
+      const dividedPath = pathname.split("/").filter((item) => item.length > 0);
+      let adjustScreen = null;
+      if (dividedPath.length === 2 && dividedPath[0] === "products") {
+        adjustScreen = "edit-customer-product";
+      }
+      if (
+        dividedPath.length === 1 &&
+        dividedPath[0] === "products" &&
+        screen !== "customer-products" &&
+        screen !== "customer-products-table"
+      ) {
+        adjustScreen = "customer-products";
+      }
+      if (adjustScreen) {
+        setScreen(adjustScreen as Screen);
+      } else {
+        adjustScreen === "dashboard";
+      }
+      const history = screenHistoryRef.current;
+      if (history.length === 0) {
+        screenHistoryRef.current.push({
+          screen: adjustScreen as Screen,
+          page: pathname,
+        });
+      }
+    }
+  }, [pathname]);
+
+  const handleProductFormSubmit = async (data: ProductFormData) => {
+    const productIds = await onSubmit(data);
+    if (imagesChanged) {
+      if (productIds && productIds.length > 0) {
+        const updatedImages = productImages.map((img) => ({
+          ...img,
+          entity_id: productIds[0],
+        }));
+        await upsertMediaLinks(updatedImages);
+      }
+    }
+    if (productFormRef.current) {
+      productFormRef.current.reset();
+    }
+  };
+
+  const screenRoute = (newScreen: Screen) => {
+    if (
+      newScreen === "products" ||
+      newScreen === "products-table" ||
+      newScreen === "customer-products-table" ||
+      newScreen === "customer-products"
+    ) {
+      return "/products";
+    }
+    return "/";
+  };
+
+  const screenClick = async (newScreen: Screen, newPage: string | null) => {
+    if (!newScreen) return;
+    if (screenHistoryRef.current.length === 0) {
+      screenHistoryRef.current.push({ screen: newScreen, page: newPage });
+    } else if (
+      !(
+        screenHistoryRef.current[screenHistoryRef.current.length - 1].screen ===
+          newScreen &&
+        screenHistoryRef.current[screenHistoryRef.current.length - 1].page ===
+          newPage
+      ) &&
+      !(
+        screenHistoryRef.current[screenHistoryRef.current.length - 1].screen ===
+          "edit-customer-product" && newScreen === "edit-customer-product"
+      )
+    ) {
+      screenHistoryRef.current = screenHistoryRef.current.slice(-1);
+      screenHistoryRef.current.push({ screen: newScreen, page: newPage });
+    }
+
+    setCurrentSectionData(null);
+    setCurrentPageData(null);
+    setAddingCustomer(false);
+
+    if (checkForUnsavedChanges()) {
+      if (
+        (screen === "add-customer-product" ||
+          screen === "edit-customer-product") &&
+        productFormRef.current
+      ) {
+        const data = productFormRef.current.getValues();
+        await handleProductFormSubmit(data);
+      }
+      if (screen === "customer-products-table") {
+        await saveProducts();
+      }
+    }
+
     if (checkForUnsavedCustomerChanges()) {
       await exposedCustomerForm?.handleSubmit(onCustomerSubmit)();
     }
-    if (!requiresRouteChange(route)) return;
 
-    if (pathname === "/") {
-      router.push(route);
-    } else if (pathname.startsWith("/products")) {
-      const onContinue = async () => {
-        const result = await submitProductForm();
-        if (result) {
-          router.push(route);
-        }
-      };
-      if (pathname === "/products") {
-        if (addProductPage) {
-          promptSave(() => router.push(route), onContinue);
-        } else {
-          router.push(route);
-        }
-      } else {
-        const isDirty = productFormRef?.current?.formState?.isDirty;
-        if (isDirty) {
-          promptSave(() => router.push(route), onContinue);
-        } else {
-          router.push(route);
-        }
-      }
-    } else {
-      router.push(route);
+    if (!newPage) {
+      router.push(screenRoute(newScreen));
+    } else if (newPage !== pathname) {
+      router.push(newPage);
     }
+    setScreen(newScreen);
   };
 
   const onSubmit = async (
@@ -444,7 +521,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   ): Promise<number[] | null> => {
     if (!currentProject) return null;
     try {
-      const isNew = overrideNewProduct ?? addProductPage;
+      const isNew = overrideNewProduct ?? screen === "add-customer-product";
 
       if (data.serial_number.length < 14) {
         toast.error("Serial # is not at least 14 characters");
@@ -480,17 +557,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       return productIds;
     } catch (error) {
       toast.error("Error updating products");
-      return null;
-    }
-  };
-
-  const submitProductForm = async () => {
-    const form = productFormRef.current;
-    if (!form) return null;
-    const data = form.getValues();
-    try {
-      return await onSubmit(data);
-    } catch (err) {
       return null;
     }
   };
@@ -540,6 +606,25 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const [addingCustomer, setAddingCustomer] = useState<boolean>(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
+  const [customerForm, setCustomerForm] = useState<ExposedCustomerForm | null>(
+    null
+  );
+
+  const [screen, setScreen] = useState<Screen>("dashboard");
+  const [modals, setModals] = useState<Modal[]>([]);
+  const [sidebar, setSidebar] = useState<UIState["sidebar"]>("none");
+
+  const pushModal = (m: Modal) => setModals((prev) => [...prev, m]);
+  const popModal = () => setModals((prev) => prev.slice(0, -1));
+
+  const [productImages, setProductImages] = useState<MediaLink[]>([]);
+  const originalImagesRef = useRef<MediaLink[]>([]);
+
+  const imagesChanged =
+    JSON.stringify(productImages) !== JSON.stringify(originalImagesRef.current);
+
   return (
     <AppContext.Provider
       value={{
@@ -551,8 +636,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         uploadPopup,
         setUploadPopup,
         uploadPopupRef,
-        addProductPage,
-        setAddProductPage,
         dataFilters,
         setDataFilters,
         filteredProducts,
@@ -564,15 +647,33 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         formRefs,
         productFormRef,
         previousPath,
-        pageClick,
+        screenClick,
         onSubmit,
-        submitProductForm,
         resetTimer,
         checkForUnsavedChanges,
         handleRunModule,
         handleFileProcessing,
         setExposedCustomerForm,
         onCustomerSubmit,
+        addingCustomer,
+        setAddingCustomer,
+        isFormDirty,
+        setIsFormDirty,
+        customerForm,
+        setCustomerForm,
+        goToPrev,
+        screen,
+        modals,
+        sidebar,
+        setScreen,
+        pushModal,
+        popModal,
+        setSidebar,
+        productImages,
+        setProductImages,
+        originalImagesRef,
+        handleProductFormSubmit,
+        screenHistoryRef
       }}
     >
       {children}

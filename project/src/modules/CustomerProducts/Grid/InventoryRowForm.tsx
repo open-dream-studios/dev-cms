@@ -30,8 +30,7 @@ const InventoryRowForm = ({
   registerFormRef,
 }: InventoryRowFormProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { formRefs, saveProducts, resetTimer, localData, setLocalData } =
-    useAppContext();
+  const { formRefs, screenClick, resetTimer, setLocalData } = useAppContext();
   const { productsData, mediaLinks } = useContextQueries();
   const form = useProductForm();
   const router = useRouter();
@@ -67,7 +66,7 @@ const InventoryRowForm = ({
     }
   }, [newProduct, product.serial_number, form.reset, productsData]);
 
-  const handleImageClick = async () => {
+  const handleProductClick = async () => {
     let dirtyRows = 0;
     for (const [serial, form] of formRefs.current.entries()) {
       if (Object.keys(form.formState.dirtyFields).length !== 0) {
@@ -75,18 +74,14 @@ const InventoryRowForm = ({
       }
     }
 
-    const exists = productsData?.some(
+    const existingProduct = productsData?.find(
       (p) => p.serial_number === product.serial_number
     );
-    if (exists) {
-      if (localData.length > productsData.length || dirtyRows > 0) {
-        await saveProducts();
-        router.push(`/products/${product.serial_number}`);
-      } else {
-        router.push(`/products/${product.serial_number}`);
-      }
-    } else {
-      return;
+    if (existingProduct) {
+      await screenClick(
+        "edit-customer-product",
+        `/products/${existingProduct.serial_number}`
+      );
     }
   };
 
@@ -113,13 +108,13 @@ const InventoryRowForm = ({
     return () => subscription.unsubscribe();
   }, [form, product.serial_number]);
 
-    const itemImage = useMemo(() => {
-      const mediaLinksFound = mediaLinks.filter(
-        (m: MediaLink) =>
-          m.entity_type === "product" && m.entity_id === product.id
-      );
-      return mediaLinksFound.length > 0 ? mediaLinksFound[0] : null;
-    }, [product, mediaLinks]);
+  const itemImage = useMemo(() => {
+    const mediaLinksFound = mediaLinks.filter(
+      (m: MediaLink) =>
+        m.entity_type === "product" && m.entity_id === product.id
+    );
+    return mediaLinksFound.length > 0 ? mediaLinksFound[0] : null;
+  }, [product, mediaLinks]);
 
   if (!currentUser) return null;
 
@@ -137,7 +132,7 @@ const InventoryRowForm = ({
         className={`pl-[10.5px] h-[100%] flex items-center ${inventoryDataLayout[0].className}`}
       >
         <div
-          onClick={handleImageClick}
+          onClick={handleProductClick}
           className="cursor-pointer dim hover:brightness-75"
         >
           <div className="relative w-[42px] h-[42px]">
@@ -176,7 +171,7 @@ const InventoryRowForm = ({
       </div>
 
       <div
-        onClick={handleImageClick}
+        onClick={handleProductClick}
         className={`cursor-pointer dim hover:brightness-75 flex items-center h-[100%] w-[100%] pl-[7px] pr-[6px] py-[4px] text-[12px] ${inventoryDataLayout[1].className}`}
         style={{
           borderRight: `0.5px solid ${

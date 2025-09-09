@@ -20,15 +20,13 @@ import { useProjectContext } from "@/contexts/projectContext";
 import { AiFillAppstore } from "react-icons/ai";
 import { LuBlocks } from "react-icons/lu";
 import UserImage from "../blocks/UserImage";
-import { useUI } from "@/contexts/uiContext";
 import AdminController from "@/screens/AdminHome/AdminControllers/AdminController";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useProjectContext();
-  const { editingLock } = useAppContext();
+  const { editingLock, screenClick } = useAppContext();
   const { projectsData } = useContextQueries();
-  const { setTab } = useUI()
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -113,7 +111,7 @@ const Navbar = () => {
   };
 
   const handleLogoClick = () => {
-    setTab("dashboard");
+    screenClick("dashboard", null);
   };
 
   if (!currentUser) return null;

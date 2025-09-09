@@ -2,13 +2,13 @@
 "use client";
 import React from "react";
 import Dashboard from "@/screens/Dashboard/Dashboard";
-import { useUI } from "@/contexts/uiContext";
 import MediaManager from "@/screens/MediaManager/MediaManager";
 import PagesEditor from "@/screens/PagesEditor/PagesEditor";
 import CustomerCatalog from "@/modules/CustomersModule/CustomerCatalog";
+import { useAppContext } from "@/contexts/appContext";
 
 const HomePage = () => {
-  const { screen } = useUI();
+  const { screen } = useAppContext();
   return (
     <div className="relative w-[100%] h-[100%]">
       {screen === "dashboard" && <Dashboard />}

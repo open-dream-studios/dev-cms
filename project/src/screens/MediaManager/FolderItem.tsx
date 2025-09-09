@@ -19,7 +19,6 @@ import { MediaFolder } from "@/types/media";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { motion } from "framer-motion"
 import { AuthContext } from "@/contexts/authContext";
-import { useUI } from "@/contexts/uiContext";
 import { appTheme } from "@/util/appTheme";
 
 type FolderItemProps = {

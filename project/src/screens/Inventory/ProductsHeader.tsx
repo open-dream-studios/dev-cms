@@ -18,7 +18,6 @@ import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { Product } from "@/types/products";
 import { useProjectContext } from "@/contexts/projectContext";
-import { useUI } from "@/contexts/uiContext";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const { currentUser } = useContext(AuthContext);
@@ -30,14 +29,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
     setDataFilters,
     selectedProducts,
     setSelectedProducts,
-    setAddProductPage,
     saveProducts,
     localData,
     handleRunModule,
+    screen,
+    screenClick
   } = useAppContext();
   const { currentProjectId } = useProjectContext();
   const { deleteProducts, hasProjectModule } = useContextQueries();
-  const { screen } = useUI();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const pathname = usePathname();
@@ -133,7 +132,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const handleAddRow = () => {
     setEditMode(false);
     if (screen !== "products-table") {
-      setAddProductPage(true);
+      screenClick("add-customer-product", "/products")
     } else {
       if (!currentUser) return null;
       setModal2({
@@ -169,6 +168,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
       allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
 
     const newProduct: Product = {
+      id: null,
       serial_number: newSerial,
       customer_id: null,
       name: "",
@@ -185,7 +185,6 @@ const ProductsHeader = ({ title }: { title: String }) => {
       date_sold: undefined,
       description: "",
       note: "",
-      images: [],
       ordinal: nextOrdinal,
     };
     await saveProducts(newProduct);

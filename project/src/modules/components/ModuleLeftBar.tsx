@@ -1,0 +1,313 @@
+// project/src/modules/components/ModuleLeftBar.tsx
+import { AuthContext } from "@/contexts/authContext";
+import { useProjectContext } from "@/contexts/projectContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import Divider from "@/lib/blocks/Divider";
+import { Customer } from "@/types/customers";
+import { appTheme } from "@/util/appTheme";
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import { FaPlus } from "react-icons/fa6";
+import { CustomerMiniCard } from "../CustomersModule/CustomerCatalog";
+import { useAppContext } from "@/contexts/appContext";
+import { useModal2Store } from "@/store/useModalStore";
+import Modal2Continue from "@/modals/Modal2Continue";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MediaLink } from "@/types/media";
+import { Product } from "@/types/products";
+import { usePathname } from "next/navigation";
+
+const ModuleLeftBar = () => {
+  const { currentProjectId, currentCustomer, setCurrentCustomerData } =
+    useProjectContext();
+  const { currentUser } = useContext(AuthContext);
+  const { customers, deleteCustomer, isLoadingProductsData, mediaLinks } =
+    useContextQueries();
+  const {
+    onCustomerSubmit,
+    addingCustomer,
+    setAddingCustomer,
+    customerForm,
+    isFormDirty,
+    localDataRef,
+    screenClick,
+    screen,
+  } = useAppContext();
+  const pathname = usePathname();
+
+  const modal2 = useModal2Store((state: any) => state.modal2);
+  const setModal2 = useModal2Store((state: any) => state.setModal2);
+
+  const handleDeleteCustomer = async () => {
+    if (!currentProjectId || !contextMenu || !contextMenu.input) return;
+    if (currentCustomer && currentCustomer.id === contextMenu.input.id) {
+      setCurrentCustomerData(null);
+      setAddingCustomer(true);
+    }
+    await deleteCustomer({
+      project_idx: currentProjectId,
+      id: contextMenu.input.id,
+    });
+  };
+
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    input: Customer;
+  } | null>(null);
+
+  useEffect(() => {
+    const handler = () => setContextMenu(null);
+    window.addEventListener("click", handler);
+    const handler2 = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setContextMenu(null);
+    };
+    window.addEventListener("keydown", handler2);
+    return () => {
+      window.removeEventListener("click", handler);
+      window.removeEventListener("keydown", handler2);
+    };
+  }, []);
+
+  const handleContextMenu = (e: React.MouseEvent, input: Customer) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      input,
+    });
+  };
+
+  const handleCloseContextMenu = () => setContextMenu(null);
+
+  const handleAddItemClick = () => {
+    setCurrentCustomerData(null);
+    setAddingCustomer(true);
+  };
+
+  useEffect(() => {
+    if (addingCustomer && customerForm) {
+      customerForm.focusFirstName?.();
+    }
+  }, [addingCustomer, customerForm]);
+
+  // useEffect(() => {
+  //   if (customerForm) {
+  //     const { isDirty, isValid, errors } = customerForm.formState;
+  //     console.log({ isDirty, isValid, errors });
+  //   }
+  // }, [customerForm]);
+
+  const handleCustomerClick = (customer: Customer) => {
+    if (!currentUser) return null;
+    if (isFormDirty) {
+      setModal2({
+        ...modal2,
+        open: !modal2.open,
+        showClose: false,
+        offClickClose: true,
+        width: "w-[300px]",
+        maxWidth: "max-w-[400px]",
+        aspectRatio: "aspect-[5/2]",
+        borderRadius: "rounded-[12px] md:rounded-[15px]",
+        content: (
+          <Modal2Continue
+            text={`Save customer info?`}
+            onContinue={async () => {
+              await customerForm?.handleSubmit(onCustomerSubmit)();
+              setCurrentCustomerData(customer);
+              setAddingCustomer(false);
+            }}
+            onNoSave={() => {
+              setAddingCustomer(false);
+              setCurrentCustomerData(customer);
+            }}
+            threeOptions={true}
+          />
+        ),
+      });
+    } else {
+      setAddingCustomer(false);
+      setCurrentCustomerData(customer);
+    }
+  };
+
+  const handleProductClick = async (product: Product) => {
+    await screenClick(
+      "edit-customer-product",
+      `/products/${product.serial_number}`
+    );
+  };
+
+  const handlePlusClick = async () => {
+    if (screen === "customers") {
+      handleAddItemClick();
+    }
+    if (screen === "edit-customer-product") {
+      screenClick("add-customer-product", "/products");
+    }
+  };
+
+  const currentProductId = useMemo(() => {
+    const dividedPath = pathname.split("/").filter((item) => item.length > 0);
+    if (dividedPath.length === 2) {
+      return dividedPath[1];
+    } else {
+      return null;
+    }
+  }, [pathname]);
+
+  if (!currentUser) return null;
+
+  return (
+    <div
+      className="w-60 h-[100%] flex flex-col px-[15px] overflow-hidden"
+      style={{
+        borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2}`,
+      }}
+    >
+      {contextMenu && screen === "customers" && (
+        <div
+          className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
+          style={{
+            top: contextMenu.y,
+            left: contextMenu.x,
+            backgroundColor: appTheme[currentUser.theme].background_1_2,
+            border: "1px solid" + appTheme[currentUser.theme].background_3,
+          }}
+          onContextMenu={handleCloseContextMenu}
+        >
+          <button
+            onClick={handleDeleteCustomer}
+            className="hover:brightness-50 dim cursor-pointer w-full text-left px-3 py-2 text-sm"
+          >
+            {`Delete customer`}
+          </button>
+        </div>
+      )}
+
+      <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
+        <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
+          <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
+            {screen === "customers" && "Customers"}
+            {(screen === "edit-customer-product" ||
+              screen === "add-customer-product") &&
+              "Products"}
+          </p>
+        </div>
+        {!addingCustomer && screen !== "add-customer-product" && (
+          <div
+            onClick={handlePlusClick}
+            className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+            style={{
+              backgroundColor: appTheme[currentUser.theme].background_1_2,
+            }}
+          >
+            <FaPlus size={12} />
+          </div>
+        )}
+      </div>
+
+      <Divider />
+      {screen === "customers" && (
+        <>
+          {customers.map((customer: Customer, index: number) => {
+            return (
+              <CustomerMiniCard
+                customer={customer}
+                key={index}
+                index={index}
+                handleContextMenu={handleContextMenu}
+                handleCustomerClick={handleCustomerClick}
+              />
+            );
+          })}
+        </>
+      )}
+      {(screen === "edit-customer-product" ||
+        screen === "add-customer-product") && (
+        <div className="flex flex-1 overflow-y-auto flex-col gap-[8.25px]">
+          {isLoadingProductsData ? (
+            <>
+              {Array.from({ length: 4 }, (_, index) => {
+                return (
+                  <div key={index}>
+                    <Skeleton
+                      style={{
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_2,
+                      }}
+                      className="w-[100%] h-[58px] rounded-[9px] flex flex-row gap-[10px] py-[9px] px-[12px]"
+                    >
+                      <div
+                        style={{
+                          backgroundColor:
+                            appTheme[currentUser.theme].background_3,
+                        }}
+                        className="aspect-[1/1] rounded-[6px] h-[100%] "
+                      ></div>
+                    </Skeleton>
+                  </div>
+                );
+              })}
+            </>
+          ) : (
+            localDataRef.current.map((product, index) => {
+              const foundLinks = mediaLinks.filter(
+                (mediaLink: MediaLink) =>
+                  mediaLink.entity_id === product.id &&
+                  mediaLink.entity_type === "product"
+              );
+
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor:
+                      currentProductId &&
+                      currentProductId === product.serial_number
+                        ? appTheme[currentUser.theme].background_2_selected
+                        : appTheme[currentUser.theme].background_2,
+                  }}
+                  className="w-[100%] h-[58px] rounded-[9px] hover:brightness-[86%] dim cursor-pointer flex flex-row gap-[10px] py-[9px] px-[12px]"
+                  onClick={() => handleProductClick(product)}
+                >
+                  <div
+                    style={{
+                      backgroundColor:
+                        currentProductId === product.serial_number
+                          ? appTheme[currentUser.theme].background_3_2
+                          : appTheme[currentUser.theme].background_3,
+                    }}
+                    className="aspect-[1/1] rounded-[6px] h-[100%] overflow-hidden"
+                  >
+                    {foundLinks.length > 0 && (
+                      <>
+                        {/\.(mp4|mov)$/i.test(foundLinks[0].url) ? (
+                          <video
+                            src={foundLinks[0].url}
+                            className="w-full h-full object-cover"
+                            playsInline
+                            muted
+                            loop
+                          />
+                        ) : (
+                          <img
+                            draggable={false}
+                            className="w-full h-full object-cover"
+                            src={foundLinks[0].url}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ModuleLeftBar;
