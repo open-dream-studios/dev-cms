@@ -47,7 +47,7 @@ export function useMediaLinks(
   // ✅ Bulk delete
   const deleteMediaLinksMutation = useMutation({
     mutationFn: async (ids: number[]) => {
-      await makeRequest.post("/api/media-links/delete", { ids });
+      await makeRequest.post("/api/media-links/delete", { ids, project_idx: currentProjectId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

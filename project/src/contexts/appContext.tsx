@@ -31,7 +31,7 @@ import { CloudinaryUpload } from "@/components/Upload/Upload";
 import { ExposedCustomerForm } from "@/modules/CustomersModule/CustomerView";
 import { CustomerFormData } from "@/util/schemas/customerSchema";
 import { Modal, Screen, UIState } from "@/types/screens";
-import { MediaLink } from "@/types/media";
+import { MediaLink, TempMediaLink } from "@/types/media";
 
 type AppContextType = {
   localData: Product[];
@@ -83,9 +83,9 @@ type AppContextType = {
   popModal: () => void;
   setSidebar: (s: UIState["sidebar"]) => void;
 
-  productImages: MediaLink[];
-  setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
-  originalImagesRef: React.RefObject<MediaLink[] | null>;
+  productImages: TempMediaLink[];
+  setProductImages: React.Dispatch<React.SetStateAction<TempMediaLink[]>>;
+  originalImagesRef: React.RefObject<TempMediaLink[] | null>;
   handleProductFormSubmit: (data: ProductFormData) => void;
   screenHistoryRef: React.RefObject<{ screen: Screen; page: string | null }[]>;
 };
@@ -663,7 +663,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const pushModal = (m: Modal) => setModals((prev) => [...prev, m]);
   const popModal = () => setModals((prev) => prev.slice(0, -1));
 
-  const [productImages, setProductImages] = useState<MediaLink[]>([]);
+  const [productImages, setProductImages] = useState<TempMediaLink[]>([]);
   const originalImagesRef = useRef<MediaLink[]>([]);
 
   const imagesChanged =

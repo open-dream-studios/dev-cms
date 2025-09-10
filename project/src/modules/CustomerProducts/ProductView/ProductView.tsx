@@ -18,7 +18,7 @@ import { useProductForm } from "@/hooks/useProductForm";
 import ProductInputField from "../Forms/InputField";
 import { UserCircle2Icon } from "lucide-react";
 import { useProjectContext } from "@/contexts/projectContext";
-import { MediaInsert, MediaLink } from "@/types/media";
+import { MediaInsert, MediaLink, TempMediaLink } from "@/types/media";
 import { usePathname } from "next/navigation";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
@@ -105,28 +105,46 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [newProduct, serialNumber, productsData, form.reset]);
 
-  useEffect(() => {
-    const matchedProduct = productsData.find(
+  const matchedProduct = useMemo(() => {
+    return productsData.find(
       (product) => product.serial_number === serialNumber
     );
+  }, [productsData]);
+
+  useEffect(() => {
     if (matchedProduct) {
       const mediaLinksFound = mediaLinks.filter(
         (link: MediaLink) =>
           link.entity_id === matchedProduct.id && link.entity_type === "product"
       );
-      const initialImages = mediaLinksFound.map((mediaLink: MediaLink) => {
-        return {
-          id: mediaLink.id,
-          entity_type: mediaLink.entity_type,
-          entity_id: mediaLink.entity_id,
-          media_id: mediaLink.media_id,
-          url: mediaLink.url,
-        } as MediaLink;
+      const initialImages = mediaLinksFound.map(
+        (mediaLink: MediaLink) =>
+          ({
+            id: mediaLink.id,
+            entity_type: mediaLink.entity_type,
+            entity_id: mediaLink.entity_id,
+            media_id: mediaLink.media_id,
+            url: mediaLink.url,
+          } as MediaLink)
+      );
+
+      setProductImages((prev) => {
+        const tempImages = prev.filter((img) => img.isTemp);
+        const merged = [...initialImages, ...tempImages];
+
+        // Deduplicate by media_id (or URL if no media_id)
+        const seen = new Set<string>();
+        return merged.filter((img) => {
+          const key = img.media_id ? `media-${img.media_id}` : `url-${img.url}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
       });
-      setProductImages(initialImages);
+
       originalImagesRef.current = initialImages;
     }
-  }, [mediaLinks]);
+  }, [mediaLinks, matchedProduct]);
 
   if (!currentUser) return null;
 
@@ -187,19 +205,19 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             } as MediaInsert;
           });
           const mediaObjects = await addMedia(media_items);
-          setProductImages((prev) => [
-            ...prev,
-            ...mediaObjects.map(
-              (m, index) =>
-                ({
-                  entity_type: "product",
-                  entity_id: null,
-                  media_id: m.id,
-                  url: m.url,
-                  ordinal: prev.length + index,
-                } as MediaLink)
-            ),
-          ]);
+          setProductImages((prev) => {
+            const startIndex = prev.length;
+            const newImages: TempMediaLink[] = mediaObjects.map((m, index) => ({
+              entity_type: "product",
+              entity_id: null,
+              media_id: m.id,
+              url: m.url,
+              ordinal: startIndex + index,
+              isTemp: true,
+            }));
+            console.log([...prev, ...newImages]);
+            return [...prev, ...newImages];
+          });
           refetchMedia();
         }}
       />
@@ -298,6 +316,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         <ProductImages
           productImages={productImages}
           setProductImages={setProductImages}
+          matchedProduct={matchedProduct ?? null}
         />
 
         <form

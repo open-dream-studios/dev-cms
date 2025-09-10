@@ -47,3 +47,5 @@ export type MediaLink = {
   ordinal: number;
   created_at?: string;  
 };
+
+export type TempMediaLink = MediaLink & { isTemp?: boolean };

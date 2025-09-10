@@ -25,22 +25,25 @@ import { UseFormSetValue, UseFormGetValues } from "react-hook-form";
 import { ProductFormData } from "./ProductView";
 import { IoPlayCircleOutline } from "react-icons/io5";
 import { MediaLink } from "@/types/media";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { useAppContext } from "@/contexts/appContext";
+import { Product } from "@/types/products";
 
 function SortableImage({
   id,
   url,
+  index,
   setImageView,
-  productImages,
-  setProductImages,
+  handleDeleteImage,
 }: {
   id: string;
   url: string;
+  index: number;
   setImageView: React.Dispatch<React.SetStateAction<string>>;
-  productImages: MediaLink[];
-  setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
+  handleDeleteImage: (index: number) => void;
 }) {
   const { currentUser } = useContext(AuthContext);
-
+  const { productImages } = useAppContext();
   const {
     attributes,
     listeners,
@@ -78,8 +81,6 @@ function SortableImage({
     }
     startPos.current = null;
   };
-
-  const handleDeleteImage = (index: string) => {};
 
   if (!currentUser) return null;
 
@@ -122,8 +123,8 @@ function SortableImage({
             backgroundColor: appTheme[currentUser.theme].background_1,
           }}
           className="ignore-click w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[10px] absolute top-[-8px] right-[-9px] z-20"
-          onClick={() => {
-            handleDeleteImage(url);
+          onClick={async () => {
+            await handleDeleteImage(index);
           }}
         >
           <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
@@ -136,11 +137,15 @@ function SortableImage({
 export default function ProductImages({
   productImages,
   setProductImages,
+  matchedProduct,
 }: {
   productImages: MediaLink[];
   setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
+  matchedProduct: Product | null;
 }) {
   const { currentUser } = useContext(AuthContext);
+  const { deleteMediaLinks } = useContextQueries();
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(TouchSensor, {
@@ -157,24 +162,58 @@ export default function ProductImages({
     url: img.url,
   }));
 
+  // const handleDragEnd = (event: DragEndEvent) => {
+  //   const { active, over } = event;
+  //   if (!over || active.id === over.id) return;
+
+  //   const oldIndex = items.findIndex((item) => item.id === active.id);
+  //   const newIndex = items.findIndex((item) => item.id === over.id);
+
+  //   const reordered = arrayMove(productImages, oldIndex, newIndex);
+  //   const reorderedWithOrdinals = reordered.map((img, idx) => ({
+  //     ...img,
+  //     ordinal: idx,
+  //   }));
+
+  //   setProductImages(reorderedWithOrdinals);
+  // };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = items.findIndex((item) => item.id === active.id);
-    const newIndex = items.findIndex((item) => item.id === over.id);
+    const oldIndex = productImages.findIndex(
+      (item) => item.media_id.toString() === active.id
+    );
+    const newIndex = productImages.findIndex(
+      (item) => item.media_id.toString() === over.id
+    );
 
-    const reordered = arrayMove(productImages, oldIndex, newIndex);
-    const reorderedWithOrdinals = reordered.map((img, idx) => ({
-      ...img,
-      ordinal: idx,
-    }));
+    const reordered = arrayMove(productImages, oldIndex, newIndex).map(
+      (img, idx) => ({ ...img, ordinal: idx })
+    );
 
-    setProductImages(reorderedWithOrdinals);
+    setProductImages(reordered);
   };
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
+
+  const handleDeleteImage = async (index: number) => {
+    const image = productImages[index];
+    if (image.id) {
+      try {
+        await deleteMediaLinks([image.id]);
+      } catch (err) {
+        console.error("Error deleting media link", err);
+        return;
+      }
+    }
+    const updated = productImages.filter((_, i) => i !== index);
+    const reordered = updated.map((img, idx) => ({ ...img, ordinal: idx }));
+
+    setProductImages(reordered);
+  };
 
   if (!currentUser) return null;
 
@@ -287,14 +326,14 @@ export default function ProductImages({
         >
           {productImages.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-[10px] p-1 sm:p-2 md:p-4 touch-none">
-              {items.map((item) => (
+              {items.map((item: any, index: number) => (
                 <SortableImage
-                  key={item.id}
+                  key={`${item.id}${item.url}`}
                   id={item.id}
+                  index={index}
                   url={item.url}
                   setImageView={setImageView}
-                  productImages={productImages}
-                  setProductImages={setProductImages}
+                  handleDeleteImage={handleDeleteImage}
                 />
               ))}
             </div>
