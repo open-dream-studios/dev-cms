@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const ProductSchema = z.object({
   name: z.string(),
-  customer_id: z.number().optional(),
+  customer_id: z.number().optional().nullable(),
   description: z.string().optional().nullable(),
   serial_number: z
     .string()
@@ -22,6 +22,7 @@ export const ProductSchema = z.object({
     }),
   date_sold: z.date().optional(),
   date_entered: z.date().optional(),
+  job_type: z.enum(["service", "refurbishment", "resell"]),
   repair_status: z.enum(["In Progress", "Complete"]),
   sale_status: z.enum([
     "Not Yet Posted",

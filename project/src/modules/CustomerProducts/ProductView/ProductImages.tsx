@@ -17,33 +17,26 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import Image from "next/image";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { UseFormSetValue, UseFormGetValues } from "react-hook-form";
-import { ProductFormData } from "./ProductView";
-import { IoPlayCircleOutline } from "react-icons/io5";
 import { MediaLink } from "@/types/media";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useAppContext } from "@/contexts/appContext";
-import { Product } from "@/types/products";
+import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 
 function SortableImage({
   id,
   url,
   index,
-  setImageView,
+  setImageDisplayed,
   handleDeleteImage,
 }: {
   id: string;
   url: string;
   index: number;
-  setImageView: React.Dispatch<React.SetStateAction<string>>;
+  setImageDisplayed: React.Dispatch<React.SetStateAction<string | null>>;
   handleDeleteImage: (index: number) => void;
 }) {
   const { currentUser } = useContext(AuthContext);
-  const { productImages } = useAppContext();
   const {
     attributes,
     listeners,
@@ -77,7 +70,7 @@ function SortableImage({
     const dy = e.clientY - startPos.current.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     if (distance < wiggleThreshold) {
-      setImageView(url);
+      setImageDisplayed(url);
     }
     startPos.current = null;
   };
@@ -93,30 +86,9 @@ function SortableImage({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
     >
-      <div className=" cursor-pointer hover:brightness-75 dim w-[100%] h-[100%] inset-0">
+      <div className="select-none cursor-pointer hover:brightness-75 dim w-[100%] h-[100%] inset-0">
         <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />
-        {/\.(mp4|mov)$/i.test(url) ? (
-          <>
-            <video
-              src={url}
-              className="object-cover w-full h-full rounded-[10px]"
-              playsInline
-              muted
-              loop
-            />
-            <div className="absolute top-0 left-0 w-[100%] h-[100%] flex items-center justify-center pb-[4px]">
-              <IoPlayCircleOutline size={35} color={"white"} />
-            </div>
-          </>
-        ) : (
-          <Image
-            src={url}
-            alt="image"
-            width={200}
-            height={200}
-            className="object-cover w-full h-full rounded-[10px]"
-          />
-        )}
+        <RenderedImage url={url}/>
         <div
           style={{
             border: `1px solid ${appTheme[currentUser.theme].text_4}`,
@@ -137,14 +109,13 @@ function SortableImage({
 export default function ProductImages({
   productImages,
   setProductImages,
-  matchedProduct,
+  setImageDisplayed,
 }: {
   productImages: MediaLink[];
   setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
-  matchedProduct: Product | null;
+  setImageDisplayed: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   const { currentUser } = useContext(AuthContext);
-  const { deleteMediaLinks } = useContextQueries();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -155,28 +126,11 @@ export default function ProductImages({
       },
     })
   );
-  const [imageView, setImageView] = useState<string>("");
 
   const items = productImages.map((img) => ({
     id: img.media_id.toString(),
     url: img.url,
   }));
-
-  // const handleDragEnd = (event: DragEndEvent) => {
-  //   const { active, over } = event;
-  //   if (!over || active.id === over.id) return;
-
-  //   const oldIndex = items.findIndex((item) => item.id === active.id);
-  //   const newIndex = items.findIndex((item) => item.id === over.id);
-
-  //   const reordered = arrayMove(productImages, oldIndex, newIndex);
-  //   const reorderedWithOrdinals = reordered.map((img, idx) => ({
-  //     ...img,
-  //     ordinal: idx,
-  //   }));
-
-  //   setProductImages(reorderedWithOrdinals);
-  // };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -196,150 +150,43 @@ export default function ProductImages({
     setProductImages(reordered);
   };
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
-
-  const handleDeleteImage = async (index: number) => {
-    const image = productImages[index];
-    if (image.id) {
-      try {
-        await deleteMediaLinks([image.id]);
-      } catch (err) {
-        console.error("Error deleting media link", err);
-        return;
-      }
-    }
-    const updated = productImages.filter((_, i) => i !== index);
-    const reordered = updated.map((img, idx) => ({ ...img, ordinal: idx }));
-
-    setProductImages(reordered);
+  const handleDeleteImage = (index: number) => {
+    setProductImages((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
+      return updated.map((img, idx) => ({
+        ...img,
+        ordinal: idx,
+      }));
+    });
   };
 
   if (!currentUser) return null;
 
   return (
-    <>
-      {imageView !== "" && (
-        <div
-          className="fixed z-[990] top-0 left-0 w-[100vw] display-height flex items-center justify-center"
-          style={{
-            backgroundColor: appTheme[currentUser.theme].background_1,
-          }}
-          onClick={() => setImageView("")}
-        >
-          {/\.(mp4|mov)$/i.test(imageView) ? (
-            <div className="relative max-w-[100%] max-h-[100%]">
-              <video
-                ref={videoRef}
-                src={imageView}
-                className="object-contain max-w-[100%] max-h-[90vh]"
-                playsInline
-                loop
-                autoPlay
-                onClick={() => setImageView("")}
-                onTimeUpdate={(e) => {
-                  const v = e.currentTarget;
-                  setVideoTime({
-                    current: v.currentTime,
-                    duration: v.duration,
-                  });
-                }}
-              />
-              <div
-                className="absolute left-0 right-0 bottom-4 px-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <input
-                  type="range"
-                  min={0}
-                  max={videoTime.duration || 0}
-                  step={0.01}
-                  value={videoTime.current || 0}
-                  onChange={(e) => {
-                    const newTime = parseFloat(e.target.value);
-                    if (videoRef.current)
-                      videoRef.current.currentTime = newTime;
-                    setVideoTime((prev) => ({ ...prev, current: newTime }));
-                  }}
-                  className="w-full appearance-none bg-transparent cursor-pointer"
-                  style={{
-                    WebkitAppearance: "none",
-                    appearance: "none",
-                  }}
-                />
-                <style jsx>{`
-                  input[type="range"] {
-                    height: 4px;
-                  }
-                  input[type="range"]::-webkit-slider-runnable-track {
-                    height: 4px;
-                    background: #ccc;
-                    border-radius: 2px;
-                  }
-                  input[type="range"]::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    height: 14px;
-                    width: 14px;
-                    border-radius: 50%;
-                    background: #d1d5db;
-                    margin-top: -5px; /* centers thumb vertically */
-                    transition: background 0.2s ease;
-                  }
-                  input[type="range"]::-webkit-slider-thumb:hover {
-                    background: #d1d5db;
-                  }
-                  input[type="range"]::-moz-range-track {
-                    height: 4px;
-                    background: #ccc;
-                    border-radius: 2px;
-                  }
-                  input[type="range"]::-moz-range-thumb {
-                    height: 14px;
-                    width: 14px;
-                    border-radius: 50%;
-                    background: #d1d5db;
-                    border: none;
-                    transition: background 0.2s ease;
-                  }
-                  input[type="range"]::-moz-range-thumb:hover {
-                    background: #d1d5db;
-                  }
-                `}</style>
-              </div>
-            </div>
-          ) : (
-            <img
-              src={imageView}
-              className="object-cover max-w-[100%] max-h-[100%]"
-            />
-          )}
-        </div>
-      )}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={items.map((item) => item.id)}
+        strategy={rectSortingStrategy}
       >
-        <SortableContext
-          items={items.map((item) => item.id)}
-          strategy={rectSortingStrategy}
-        >
-          {productImages.length > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-[10px] p-1 sm:p-2 md:p-4 touch-none">
-              {items.map((item: any, index: number) => (
-                <SortableImage
-                  key={`${item.id}${item.url}`}
-                  id={item.id}
-                  index={index}
-                  url={item.url}
-                  setImageView={setImageView}
-                  handleDeleteImage={handleDeleteImage}
-                />
-              ))}
-            </div>
-          )}
-        </SortableContext>
-      </DndContext>
-    </>
+        {productImages.length > 0 && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-[11px] py-[2px] sm:py-[4px] md:py-[6px] touch-none">
+            {items.map((item: any, index: number) => (
+              <SortableImage
+                key={`${item.id}${item.url}`}
+                id={item.id}
+                index={index}
+                url={item.url}
+                setImageDisplayed={setImageDisplayed}
+                handleDeleteImage={handleDeleteImage}
+              />
+            ))}
+          </div>
+        )}
+      </SortableContext>
+    </DndContext>
   );
 }

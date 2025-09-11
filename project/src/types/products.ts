@@ -14,6 +14,7 @@ export type Product = {
   price: number;
   date_sold?: Date;
   date_entered?: Date;
+  job_type: "service" | "refurbishment" | "resell";
   repair_status: "In Progress" | "Complete";
   sale_status:
     | "Not Yet Posted"

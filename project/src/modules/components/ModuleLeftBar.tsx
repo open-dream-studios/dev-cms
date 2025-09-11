@@ -160,7 +160,7 @@ const ModuleLeftBar = () => {
 
   return (
     <div
-      className="w-60 h-[100%] flex flex-col px-[15px] overflow-hidden"
+      className="w-[240px] h-[100%] flex flex-col px-[15px] overflow-hidden"
       style={{
         borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2}`,
       }}
@@ -225,7 +225,7 @@ const ModuleLeftBar = () => {
       )}
       {(screen === "edit-customer-product" ||
         screen === "add-customer-product") && (
-        <div className="flex flex-1 overflow-y-auto flex-col gap-[8.25px]">
+        <div className="flex w-[100%] h-[100%] overflow-y-auto flex-col gap-[8.25px]">
           {isLoadingProductsData ? (
             <>
               {Array.from({ length: 4 }, (_, index) => {
@@ -268,7 +268,7 @@ const ModuleLeftBar = () => {
                         ? appTheme[currentUser.theme].background_2_selected
                         : appTheme[currentUser.theme].background_2,
                   }}
-                  className="w-[100%] h-[58px] rounded-[9px] hover:brightness-[86%] dim cursor-pointer flex flex-row gap-[10px] py-[9px] px-[12px]"
+                  className="w-[100%] h-[58px] rounded-[9px] items-center hover:brightness-[86%] dim cursor-pointer flex flex-row gap-[10px] py-[9px] px-[12px]"
                   onClick={() => handleProductClick(product)}
                 >
                   <div
@@ -278,7 +278,7 @@ const ModuleLeftBar = () => {
                           ? appTheme[currentUser.theme].background_3_2
                           : appTheme[currentUser.theme].background_3,
                     }}
-                    className="aspect-[1/1] rounded-[6px] h-[100%] overflow-hidden"
+                    className="select-none min-w-[40px] w-[40px] h-[40px] min-h-[40px] rounded-[6px] overflow-hidden"
                   >
                     {foundLinks.length > 0 && (
                       <>
@@ -299,6 +299,14 @@ const ModuleLeftBar = () => {
                         )}
                       </>
                     )}
+                  </div>
+                  <div className="flex w-[136px] h-[100%] flex-col gap-[2px] ">
+                    <div className="text-[15px] leading-[20px] font-[500] opacity-70 truncate w-[100%]">
+                      {product.name}
+                    </div>
+                    <div className="text-[14px] leading-[18px] font-[400] opacity-40 truncate w-[100%]">
+                      {product.make} {product.model && "|"}  {product.model}
+                    </div>
                   </div>
                 </div>
               );

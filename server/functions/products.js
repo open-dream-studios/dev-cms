@@ -49,11 +49,11 @@ export const updateProductsDB = (project_idx, products) => {
         const q = `
           INSERT INTO products (
             serial_number, project_idx, customer_id, name, highlight, description, note,
-            make, model, price, type, date_sold,
+            make, model, price, type, date_sold, job_type,
             repair_status, sale_status, length, width, ordinal
           )
           VALUES ${products
-            .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+            .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
             .join(", ")}
           ON DUPLICATE KEY UPDATE
             customer_id = VALUES(customer_id),
@@ -66,6 +66,7 @@ export const updateProductsDB = (project_idx, products) => {
             price = VALUES(price),
             type = VALUES(type),
             date_sold = VALUES(date_sold),
+            job_type = VALUES(job_type),
             repair_status = VALUES(repair_status),
             sale_status = VALUES(sale_status),
             length = VALUES(length),
@@ -88,6 +89,7 @@ export const updateProductsDB = (project_idx, products) => {
           p.price,
           p.type ?? "TSA",
           p.date_sold ? formatDateToMySQL(p.date_sold) : null,
+          p.job_type,
           p.repair_status,
           p.sale_status,
           p.length,

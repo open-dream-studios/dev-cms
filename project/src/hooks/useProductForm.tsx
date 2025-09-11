@@ -17,6 +17,7 @@ export const useProductForm = (initialData?: Partial<ProductFormData>) => {
       price: 0,
       date_sold: undefined,
       date_entered: undefined,
+      job_type: "service",
       repair_status: "In Progress",
       sale_status: "Not Yet Posted",
       length: 0,

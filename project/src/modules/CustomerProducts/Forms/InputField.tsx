@@ -11,6 +11,7 @@ import {
 } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import { IoClose } from "react-icons/io5";
+import { capitalizeFirstLetter } from "@/util/functions/Data";
 
 const InputField = <T extends FieldValues>({
   inputType,
@@ -59,7 +60,7 @@ const InputField = <T extends FieldValues>({
           appTheme[currentUser.theme].text_1,
       }}
     >
-      <label className="block font-[400]">{label}</label>
+      {/* <label className="block font-[400]">{label}</label> */}
       {inputType === "input" ? (
         <input
           {...register(name, registerOptions)}
@@ -68,14 +69,15 @@ const InputField = <T extends FieldValues>({
           pattern={pattern}
           onInput={onInput}
           disabled={disabled}
-          className="input rounded-[7px] w-[100%] mt-[6px] px-[10px] py-[4px]"
-          style={{
-            border: `0.5px solid ${
-              currentUser.theme === "light"
-                ? appTheme[currentUser.theme].text_3
-                : appTheme[currentUser.theme].text_4
-            }`,
-          }}
+          placeholder={capitalizeFirstLetter(name) + "..."}
+          className="truncate outline-none border-none input w-[100%]"
+          // style={{
+          //   border: `0.5px solid ${
+          //     currentUser.theme === "light"
+          //       ? appTheme[currentUser.theme].text_3
+          //       : appTheme[currentUser.theme].text_4
+          //   }`,
+          // }}
         />
       ) : inputType === "textarea" ? (
         <textarea
@@ -95,23 +97,23 @@ const InputField = <T extends FieldValues>({
         <div className="relative">
           <select
             {...register(name)}
-            className="input rounded-[7px] w-full px-3 py-[4px] custom-select pr-8"
+            className="input rounded-[7px] w-full px-3 py-[4px] custom-select pr-8 cursor-pointer"
             style={{
               appearance: "none",
               WebkitAppearance: "none",
               backgroundColor: "transparent",
-              border: `0.5px solid ${
-                currentUser.theme === "light"
-                  ? appTheme[currentUser.theme].text_3
-                  : appTheme[currentUser.theme].text_4
-              }`,
+              // border: `0.5px solid ${
+              //   currentUser.theme === "light"
+              //     ? appTheme[currentUser.theme].text_3
+              //     : appTheme[currentUser.theme].text_4
+              // }`,
               color: appTheme[currentUser.theme].text_1,
             }}
           >
             {options &&
               options.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {capitalizeFirstLetter(option)}
                 </option>
               ))}
           </select>

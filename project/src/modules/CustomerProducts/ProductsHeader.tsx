@@ -177,6 +177,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
       model: newModel,
       length: 0,
       width: 0,
+      job_type: "service",
       sale_status: "Not Yet Posted",
       repair_status: "In Progress",
       date_entered: undefined,

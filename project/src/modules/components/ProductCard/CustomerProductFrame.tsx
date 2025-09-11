@@ -12,6 +12,7 @@ import { Customer } from "@/types/customers";
 import app_details from "../../../util/appDetails.json";
 import { MediaLink } from "@/types/media";
 import { useAppContext } from "@/contexts/appContext";
+import CustomerTag from "./CustomerTag";
 
 const CustomerProductFrame = ({
   product,
@@ -21,9 +22,8 @@ const CustomerProductFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { screenClick, setScreen } = useAppContext();
+  const { screenClick } = useAppContext();
   const { customers, mediaLinks } = useContextQueries();
-  const { setCurrentCustomerData } = useProjectContext();
 
   const handleClick = async () => {
     await screenClick(
@@ -84,50 +84,7 @@ const CustomerProductFrame = ({
           </div>
         </div>
         <div className="flex flex-col gap-[10px] w-[100%] h-[100%]">
-          {productCustomer && (
-            <div
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_3,
-              }}
-              className="w-[100%] dim hover:brightness-90 items-center flex flex-row gap-[9px] rounded-full px-[11px] pt-[7px] pb-[5px]"
-              onClick={async (e) => {
-                e.stopPropagation();
-                setCurrentCustomerData(productCustomer);
-                await screenClick("customers", "/");
-              }}
-            >
-              <div
-                className="w-[34px] h-[34px] flex items-center justify-center rounded-full border font-semibold text-[13px] min-w-[33px] min-h-[33px]"
-                style={{
-                  borderColor: appTheme[currentUser.theme].text_3,
-                  color: appTheme[currentUser.theme].text_3,
-                }}
-              >
-                {`${productCustomer.first_name?.[0] ?? ""}${
-                  productCustomer.last_name?.[0] ?? ""
-                }`.toUpperCase()}
-              </div>
-              <div className="w-[100%] flex flex-1 flex-col gap-[1px] h-[100%] justify-center">
-                <div className="text-[15px] leading-[17px] font-[600]">
-                  {productCustomer.first_name} {productCustomer.last_name}
-                </div>
-                <div
-                  style={{
-                    color: appTheme[currentUser.theme].text_4,
-                  }}
-                  className="text-[14px] leading-[17px] font-[400] flex flex-row gap-[8px] w-[100%] min-h-[20px]"
-                >
-                  <div className="flex items-center gap-2">
-                    {productCustomer.phone && (
-                      <span className="w-[100px]">
-                        {formatPhone(productCustomer.phone)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {productCustomer && <CustomerTag productCustomer={productCustomer} />}
           <div className="w-[100%] h-[100%] gap-[2.5px] flex flex-col ml-[2.5px]">
             <div
               className="font-[600] text-[18.5px] leading-[25px]"

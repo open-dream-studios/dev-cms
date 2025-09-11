@@ -31,47 +31,29 @@ export const upsertMediaLinks = (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  const inserts = [];
-  const updates = [];
+  // map only the fields needed for the insert
+  const inserts = items.map(i => [
+    i.entity_type,
+    i.entity_id,
+    i.media_id,
+    i.ordinal ?? 0
+  ]);
 
-  for (const i of items) {
-    if (i.id) {
-      updates.push([
-        i.entity_type,
-        i.entity_id,
-        i.media_id,
-        i.ordinal ?? null,
-        i.id,
-      ]);
-    } else {
-      inserts.push([i.entity_type, i.entity_id, i.media_id, i.ordinal ?? null]);
+  const q = `
+    INSERT INTO media_link (entity_type, entity_id, media_id, ordinal)
+    VALUES ?
+    ON DUPLICATE KEY UPDATE
+      ordinal = VALUES(ordinal),
+      updated_at = NOW()
+  `;
+
+  db.query(q, [inserts], (err) => {
+    if (err) {
+      console.error("Upsert error:", err);
+      return res.status(500).json({ message: "Server error" });
     }
-  }
-
-  if (inserts.length > 0) {
-    const insertQ = `
-      INSERT INTO media_link (entity_type, entity_id, media_id, ordinal)
-      VALUES ?
-    `;
-    db.query(insertQ, [inserts], (err) => {
-      if (err) console.error("Insert error:", err);
-    });
-  }
-
-  if (updates.length > 0) {
-    const updateQ = `
-      UPDATE media_link 
-      SET entity_type=?, entity_id=?, media_id=?, ordinal=?, updated_at=NOW()
-      WHERE id=?
-    `;
-    for (const u of updates) {
-      db.query(updateQ, u, (err) => {
-        if (err) console.error("Update error:", err);
-      });
-    }
-  }
-
-  return res.json({ success: true });
+    return res.json({ success: true });
+  });
 };
 
 // ✅ Bulk delete

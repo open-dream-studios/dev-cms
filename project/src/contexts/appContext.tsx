@@ -122,6 +122,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     upsertCustomer,
     upsertMediaLinks,
     refetchMediaLinks,
+    mediaLinks,
+    deleteMediaLinks,
   } = useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
@@ -333,6 +335,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
           description: formValues.description ?? null,
           note: formValues.note ?? null,
           ordinal: getNextOrdinal(productsData),
+          job_type: formValues.job_type ?? null,
         };
         updatedProducts.push(normalizeProduct(newProduct));
       }
@@ -428,7 +431,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const goToPrev = async () => {
     const history = screenHistoryRef.current;
-    if (history.length > 1) {
+    if (history.length >= 2) {
       const prev = history[history.length - 2];
       screenClick(prev.screen, prev.page);
     }
@@ -467,12 +470,38 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const handleProductFormSubmit = async (data: ProductFormData) => {
     const productIds = await onSubmit(data);
     if (imagesChanged) {
-      if (productIds && productIds.length > 0) {
-        const updatedImages = productImages.map((img) => ({
-          ...img,
-          entity_id: productIds[0],
-        }));
-        await upsertMediaLinks(updatedImages);
+      // Handle deletion of stored media links
+      if (productIds && productIds.length >= 1) {
+        const productIdUpdated = productIds[0];
+        const originalStoredLinkIds = mediaLinks
+          .filter(
+            (link: MediaLink) =>
+              link.entity_id === productIdUpdated &&
+              link.entity_type === "product" &&
+              typeof link.id === "number"
+          )
+          .map((item) => item.id as number);
+
+        const finalStoredLinkIds = productImages
+          .filter((img) => !img.isTemp)
+          .map((item) => item.id);
+
+        const removedIds = originalStoredLinkIds.filter(
+          (id) => !finalStoredLinkIds.includes(id)
+        );
+
+        if (removedIds.length > 0) {
+          await deleteMediaLinks(removedIds);
+        }
+
+        // Update products
+        if (productIds && productIds.length > 0) {
+          const updatedImages = productImages.map((img) => ({
+            ...img,
+            entity_id: productIds[0],
+          }));
+          await upsertMediaLinks(updatedImages);
+        }
       }
     }
     if (productFormRef.current) {
@@ -503,10 +532,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
           newScreen &&
         screenHistoryRef.current[screenHistoryRef.current.length - 1].page ===
           newPage
-      ) &&
-      !(
-        screenHistoryRef.current[screenHistoryRef.current.length - 1].screen ===
-          "edit-customer-product" && newScreen === "edit-customer-product"
       )
     ) {
       screenHistoryRef.current = screenHistoryRef.current.slice(-1);
@@ -586,7 +611,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         ...data,
         id: existing?.id ?? null,
         project_idx: currentProject.id,
-        customer_id: data.customer_id ?? null,
+        customer_id: data.job_type === "resell" ? null : data.customer_id ?? null,
         highlight: existing?.highlight ?? null,
         description: data.description ?? null,
         note: data.note ?? null,
