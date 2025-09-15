@@ -1,4 +1,4 @@
-// project/src/screens/Inventory/ProductPage/ProductView.tsx
+// project/src/modules/CustomerProducts/ProductView/ProductView.tsx
 "use client";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AuthContext } from "../../../contexts/authContext";
@@ -8,12 +8,12 @@ import { appTheme } from "@/util/appTheme";
 import "react-datepicker/dist/react-datepicker.css";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import ProductImages from "./ProductImages";
-import { FaChevronLeft, FaPlus } from "react-icons/fa6";
+import { FaChevronLeft, FaChevronUp, FaPlus } from "react-icons/fa6";
 import UploadModal, {
   CloudinaryUpload,
 } from "../../../components/Upload/Upload";
 import { ProductFormData } from "@/util/schemas/productSchema";
-import { useProductForm } from "@/hooks/useProductForm";
+import { defaultProductValues, useProductForm } from "@/hooks/useProductForm";
 import ProductInputField from "../Forms/InputField";
 import { useProjectContext } from "@/contexts/projectContext";
 import { MediaInsert, MediaLink, TempMediaLink } from "@/types/media";
@@ -24,6 +24,11 @@ import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useModal1Store } from "@/store/useModalStore";
 import CustomerSelection from "@/modules/components/Customers/CustomerSelection";
+import { IoImagesOutline } from "react-icons/io5";
+import { IoImageOutline } from "react-icons/io5";
+import { Job, JobDefinition } from "@/types/jobs";
+import { flushSync } from "react-dom";
+import ProductTasks from "./ProductTasks";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -39,9 +44,18 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     originalImagesRef,
     formRefs,
     screenHistoryRef,
+    designateProductStatusOptions,
+    designateProductStatusColor,
   } = useAppContext();
-  const { productsData, addMedia, refetchMedia, mediaLinks, customers } =
-    useContextQueries();
+  const {
+    productsData,
+    addMedia,
+    refetchMedia,
+    mediaLinks,
+    customers,
+    jobs,
+    jobDefinitions,
+  } = useContextQueries();
   const { currentProjectId } = useProjectContext();
   const pathname = usePathname();
 
@@ -58,10 +72,10 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }, [screen]);
 
   const form = useProductForm();
-  const dateSold = form.watch("date_sold");
-  const dateEntered = form.watch("date_entered");
   const jobType = form.watch("job_type");
   const customerId = form.watch("customer_id");
+  const productStatus = form.watch("product_status");
+  const dateComplete = form.watch("date_complete");
 
   useEffect(() => {
     if (
@@ -87,11 +101,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [serialNumber, screen]);
 
+  const initialFormState = useRef<Partial<ProductFormData> | null>(null);
+
   useEffect(() => {
     if (productFormRef) {
       productFormRef.current = form;
     }
-  }, [form, productFormRef, formRefs]);
+  }, [form, productFormRef]);
 
   useEffect(() => {
     if (!newProduct && serialNumber && productsData?.length) {
@@ -107,16 +123,15 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         customer_id: matchedProduct.customer_id
           ? matchedProduct.customer_id
           : undefined,
-        date_sold: matchedProduct.date_sold
-          ? new Date(matchedProduct.date_sold)
-          : undefined,
-        date_entered: matchedProduct.date_entered
-          ? new Date(matchedProduct.date_entered)
-          : undefined,
+        date_complete: matchedProduct.date_complete
+          ? new Date(matchedProduct.date_complete)
+          : null,
         price: matchedProduct.price ? Number(matchedProduct.price) : 0,
         length: matchedProduct.length ? Number(matchedProduct.length) : 0,
         width: matchedProduct.width ? Number(matchedProduct.width) : 0,
+        height: matchedProduct.height ? Number(matchedProduct.height) : 0,
       };
+      initialFormState.current = formDefaults;
       form.reset(formDefaults);
     }
   }, [newProduct, serialNumber, productsData, form.reset]);
@@ -128,14 +143,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }, [productsData]);
 
   const matchedCustomer = useMemo(() => {
-    const product = productsData.find(
-      (product) => product.serial_number === serialNumber
+    return (
+      customers.find((customer: Customer) => customer.id === customerId) || null
     );
-    if (product) {
-      return customers.find((customer: Customer) => customer.id === customerId);
-    }
-    return null;
-  }, [productsData, customers, serialNumber, customerId]);
+  }, [
+    productsData,
+    customers,
+    serialNumber,
+    customerId,
+    productFormRef.current,
+  ]);
 
   useEffect(() => {
     if (matchedProduct) {
@@ -166,6 +183,64 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [mediaLinks, matchedProduct]);
 
+  const handleBackButton = async () => {
+    await goToPrev();
+  };
+
+  const handleProductsClick = async () => {
+    await screenClick("customer-products", "/products");
+  };
+
+  const imagesChanged =
+    JSON.stringify(productImages) !== JSON.stringify(originalImagesRef.current);
+
+  const onFormSubmitButton = async (data: ProductFormData) => {
+    const success = await handleProductFormSubmit(data);
+    if (screen === "add-customer-product" && success && data.serial_number) {
+      flushSync(() => {
+        if (productFormRef.current) {
+          productFormRef.current.reset(defaultProductValues);
+        }
+      });
+      await screenClick(
+        "edit-customer-product",
+        `/products/${data.serial_number}`
+      );
+    }
+  };
+
+  const handleCancelFormChanges = () => {
+    if (imagesChanged && originalImagesRef.current) {
+      setProductImages(originalImagesRef.current);
+    }
+    if (
+      initialFormState.current &&
+      productFormRef.current &&
+      productFormRef.current.formState.dirtyFields &&
+      Object.keys(productFormRef.current.formState.dirtyFields).length > 0
+    ) {
+      form.reset(initialFormState.current);
+    }
+  };
+
+  const [imageEditorOpen, setImageEditorOpen] = useState<boolean>(false);
+  const [descriptionEditorOpen, setDescriptionEditorOpen] =
+    useState<boolean>(false);
+
+  const handleAddTaskClick = () => {
+    setModal1({
+      ...modal1,
+      open: !modal1.open,
+      showClose: true,
+      offClickClose: true,
+      width: "w-[90vw] md:w-[80vw]",
+      maxWidth: "md:max-w-[1000px]",
+      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+      borderRadius: "rounded-[15px] md:rounded-[20px]",
+      content: <ProductTasks product={matchedProduct ?? null} />,
+    });
+  };
+
   if (!currentUser) return null;
 
   if (!newProduct && serialNumber && productsData?.length) {
@@ -183,29 +258,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       );
     }
   }
-
-  const handleBackButton = async () => {
-    await goToPrev();
-  };
-
-  const handleProductsClick = async () => {
-    await screenClick("customer-products", "/products");
-  };
-
-  const imagesChanged =
-    JSON.stringify(productImages) !== JSON.stringify(originalImagesRef.current);
-
-  const onFormSubmitButton = async (data: ProductFormData) => {
-    await handleProductFormSubmit(data);
-    if (data.serial_number) {
-      await screenClick(
-        "edit-customer-product",
-        `/products/${data.serial_number}`
-      );
-    }
-  };
-
-  if (!currentUser) return null;
 
   return (
     <form
@@ -339,63 +391,68 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
           )}
         </div>
       )}
-      {matchedProduct && (
-        <div
-          className={`max-w-4xl mx-auto px-[10px] pt-[28px] pb-[60px] rounded-2xl`}
-        >
-          <div className="flex flex-row gap-[13px]">
-            {screenHistoryRef.current &&
-              screenHistoryRef.current.length >= 2 && (
-                <div
-                  onClick={handleBackButton}
-                  style={{
-                    backgroundColor: appTheme[currentUser.theme].background_2,
-                  }}
-                  className="w-[40px] h-[40px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-75 cursor-pointer"
-                >
-                  <FaChevronLeft
-                    size={21}
-                    color={appTheme[currentUser.theme].text_1}
-                  />
-                </div>
-              )}
 
-            {newProduct && (
-              <div className="">
-                <h1 className="text-3xl font-[500] mb-[24px]">Add Product</h1>
-              </div>
-            )}
+      <div
+        className={`max-w-4xl mx-auto px-[17px] pt-[28px] pb-[60px] rounded-2xl`}
+      >
+        <div className="flex flex-row gap-[13px] ml-[3px]">
+          {screenHistoryRef.current && screenHistoryRef.current.length >= 2 && (
+            <div
+              onClick={handleBackButton}
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_2,
+              }}
+              className="w-[40px] h-[40px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-75 cursor-pointer"
+            >
+              <FaChevronLeft
+                size={21}
+                className="opacity-[0.6]"
+                color={appTheme[currentUser.theme].text_1}
+              />
+            </div>
+          )}
 
-            {!newProduct && (
+          {newProduct && (
+            <h1 className="text-3xl font-[500] mb-[24px]">Add Product</h1>
+          )}
+
+          {!newProduct && (
+            <div
+              className="ml-[2px] flex flex-row gap-[10px] text-[25px] font-[400] mb-[20px] opacity-[0.5]"
+              style={{
+                color: currentUser.theme === "dark" ? "#bbb" : "black",
+              }}
+            >
               <div
-                className="ml-[2px] flex flex-row gap-[10px] text-[25px] font-[400] mb-[20px] opacity-[0.5]"
-                style={{
-                  color: currentUser.theme === "dark" ? "#bbb" : "black",
-                }}
+                onClick={handleProductsClick}
+                className="cursor-pointer dim hover:brightness-75"
               >
-                <div
-                  onClick={handleProductsClick}
-                  className="cursor-pointer dim hover:brightness-75"
-                >
-                  Products
-                </div>
-
-                <h1 className="hidden [@media(min-width:480px)]:block">/</h1>
-
-                <div className="hidden [@media(min-width:480px)]:block cursor-pointer dim hover:brightness-75 text-[23px] mt-[1px]">
-                  {serialNumber}
-                </div>
+                Products
               </div>
-            )}
-          </div>
 
-          <div
-            className="flex flex-col w-[100%] rounded-[15px] px-[35px] py-[30px]"
-            style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
-            }}
-          >
-            <div className="w-[100%] flex flex-row gap-[18px]">
+              <h1 className="hidden [@media(min-width:480px)]:block">/</h1>
+
+              <div className="hidden [@media(min-width:480px)]:block cursor-pointer dim hover:brightness-75 text-[23px] mt-[1px]">
+                {serialNumber}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div
+          className="flex flex-col w-[100%] rounded-[15px] px-[35px] py-[30px]"
+          style={{
+            backgroundColor: appTheme[currentUser.theme].background_2,
+          }}
+        >
+          <div className="w-[100%] flex flex-row gap-[18px]">
+            <div
+              className={`${
+                jobType === "resell"
+                  ? "w-[190px] min-w-[190px]"
+                  : "w-[184px] min-w-[184px]"
+              } flex flex-col`}
+            >
               {productImages.length >= 1 ? (
                 <div
                   onClick={() => {
@@ -404,7 +461,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   style={{
                     backgroundColor: appTheme[currentUser.theme].background_3,
                   }}
-                  className="cursor-pointer hover:brightness-[86%] dim w-[43%] max-w-[250px] aspect-[1/1] rounded-[10px]"
+                  className="cursor-pointer hover:brightness-[86%] dim w-[100%] aspect-[1/1] rounded-[10px]"
                 >
                   <RenderedImage
                     url={imageDisplayed ? imageDisplayed : productImages[0].url}
@@ -418,396 +475,630 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   style={{
                     backgroundColor: appTheme[currentUser.theme].background_3,
                   }}
-                  className="flex justify-center items-center cursor-pointer hover:brightness-[86%] dim w-[130px] h-[130px] rounded-[10px]"
+                  className="flex justify-center items-center cursor-pointer hover:brightness-[86%] dim w-[100%] aspect-[1/1] rounded-[10px]"
                 >
                   <FaPlus className="w-[25px] h-[25px] opacity-[0.5]" />
                 </div>
               )}
-              <div className="flex flex-1 flex-col">
-                <div className="flex flex-row mb-[6.5px] mt-[4px]">
-                  {productFormRef.current &&
-                    (jobType === "service" || jobType === "refurbishment") && (
-                      <>
-                        {matchedCustomer ? (
-                          <CustomerTag productCustomer={matchedCustomer} />
-                        ) : (
-                          <CustomerTag productCustomer={null} />
-                        )}
-                      </>
-                    )}
-                  {matchedCustomer && jobType !== "resell" && (
+
+              <div className="mt-[11px] w-[100%] h-[50px] flex flex-row relative">
+                <div className="min-w-[61px] h-[50px] flex items-center">
+                  <div
+                    onClick={() => {
+                      setImageEditorOpen((prev) => !prev);
+                    }}
+                    className="dim hover:brightness-90 cursor-pointer w-[51px] h-[51px] rounded-[10px] text-[15px] flex items-center justify-center font-[500]"
+                    style={{
+                      backgroundColor: appTheme[currentUser.theme].background_3,
+                    }}
+                  >
+                    <IoImagesOutline
+                      className="w-[23px] h-[23px] opacity-[0.4]"
+                      color={appTheme[currentUser.theme].text_1}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  className="w-[100%] h-[100%] overflow-x-auto flex flex-row"
+                >
+                  <ProductImages
+                    productImages={productImages}
+                    imageEditorOpen={imageEditorOpen}
+                    setProductImages={setProductImages}
+                    setImageDisplayed={setImageDisplayed}
+                    singleRow={true}
+                  />
+                </div>
+              </div>
+            </div>
+            {imageEditorOpen ? (
+              <div className="w-[100%] h-auto flex flex-col">
+                <div className="flex items-center flex-row justify-between">
+                  <div className="flex items-center flex-row gap-[12px] mt-[2px] mb-[8px]">
                     <div
                       onClick={() => {
-                        setModal1({
-                          ...modal1,
-                          open: !modal1.open,
-                          showClose: true,
-                          offClickClose: true,
-                          width: "w-[90vw] md:w-[80vw]",
-                          maxWidth: "md:max-w-[1000px]",
-                          aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
-                          borderRadius: "rounded-[15px] md:rounded-[20px]",
-                          content: <CustomerSelection />,
-                        });
+                        setImageEditorOpen(false);
                       }}
-                      className="h-[100%] px-[1px] flex items-center cursor-pointer hover:brightness-75 dim"
+                      style={{
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_3,
+                      }}
+                      className="w-[34px] h-[34px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-90 cursor-pointer"
                     >
-                      <BsThreeDotsVertical
-                        size={22}
-                        className="opacity-[0.2]"
+                      <FaChevronLeft
+                        size={18}
+                        color={appTheme[currentUser.theme].text_1}
+                        className="opacity-[0.5] ml-[1.5px]"
                       />
                     </div>
-                  )}
+                    <div className="text-[23px] font-[600] mt-[-2.5px]">
+                      Images
+                    </div>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setUploadPopup(true);
+                    }}
+                    style={{
+                      backgroundColor: appTheme[currentUser.theme].background_3,
+                    }}
+                    className="pl-[17px] pr-[22px] py-[5px] rounded-full gap-[8px] flex items-center justify-center dim hover:brightness-90 cursor-pointer"
+                  >
+                    <IoImageOutline
+                      size={20}
+                      color={appTheme[currentUser.theme].text_1}
+                      className="opacity-[0.8] ml-[1.5px]"
+                    />
+                    <div className="text-[16px] font-[500] opacity-[0.8]">
+                      Upload
+                    </div>
+                  </div>
                 </div>
+                <ProductImages
+                  productImages={productImages}
+                  imageEditorOpen={imageEditorOpen}
+                  setProductImages={setProductImages}
+                  setImageDisplayed={setImageDisplayed}
+                  singleRow={false}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col">
                 <ProductInputField
                   label="Name"
                   name="name"
                   register={form.register}
                   error={form.formState.errors.name?.message}
                   disabled={false}
-                  className="ml-[3px] w-[100%] font-bold text-[25px]"
+                  className="ml-[3px] mt-[-3px] w-[100%] font-bold text-[25px]"
                   inputType={"input"}
                 />
 
                 <div
-                  className={`${
-                    jobType === "resell" ? "mt-[7px]" : "mt-[2px]"
-                  } flex items-center ml-[3px] font-[500] w-max text-[17px] mb-[10px]`}
+                  className={`flex flex-col ${
+                    descriptionEditorOpen ? "w-[100%]" : "w-[331px]"
+                  }`}
                 >
-                  <p className="opacity-[0.5] mr-[10px]">ID</p>
                   <div
-                    style={{
-                      backgroundColor: appTheme[currentUser.theme].background_3,
-                    }}
-                    className="rounded-[6px] py-[2px] px-[10px]"
+                    className={`${
+                      jobType === "resell" ? "mt-[7px]" : "mt-[7px]"
+                    } mb-[10px] flex items-center font-[500] w-max text-[17px]`}
                   >
-                    <ProductInputField
-                      label="Serial Number"
-                      name="serial_number"
-                      register={form.register}
-                      error={form.formState.errors.serial_number?.message}
-                      disabled={!newProduct}
-                      className="text-[15px] font-[500] w-max mb-[1px] opacity-[0.5]"
-                      inputType={"input"}
-                      onInput={(e) => {
-                        e.currentTarget.value = e.currentTarget.value
-                          .toUpperCase()
-                          .replace(/[^A-Z0-9]/g, "")
-                          .slice(0, 20);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {jobType === "resell" && (
-                  <div className="mt-[1px] flex items-center ml-[3px] font-[500] w-max text-[17px] mb-[7px]">
-                    <p className="opacity-[0.5] mr-[10px]">Price</p>
+                    <p className="opacity-[0.5] mr-[10px]">ID</p>
                     <div
                       style={{
                         backgroundColor:
                           appTheme[currentUser.theme].background_3,
                       }}
-                      className="rounded-[6px] py-[2px] px-[9px] flex flex-row gap-[2px]"
+                      className="rounded-[6px] py-[2px] px-[10px]"
                     >
-                      <p className="opacity-[0.5] font-[500] text-[15px]">$</p>
                       <ProductInputField
-                        label="Price ($)"
-                        name="price"
-                        inputMode="decimal"
-                        pattern="^\d+(\.\d{0,2})?$"
+                        label="Serial Number"
+                        name="serial_number"
+                        register={form.register}
+                        error={form.formState.errors.serial_number?.message}
+                        disabled={!newProduct}
+                        className="text-[15px] font-[500] w-max mb-[1px] opacity-[0.5]"
                         inputType={"input"}
                         onInput={(e) => {
-                          let value = e.currentTarget.value;
-                          value = value.replace(/[^0-9.]/g, "");
-                          const parts = value.split(".");
-                          if (parts.length > 2)
-                            value = parts[0] + "." + parts[1];
-                          if (parts[1]?.length > 2) {
-                            parts[1] = parts[1].slice(0, 2);
-                            value = parts[0] + "." + parts[1];
-                          }
-                          e.currentTarget.value = value;
+                          e.currentTarget.value = e.currentTarget.value
+                            .toUpperCase()
+                            .replace(/[^A-Z0-9]/g, "")
+                            .slice(0, 20);
                         }}
-                        register={form.register}
-                        registerOptions={{
-                          required: "Price is required",
-                          validate: (value) =>
-                            /^\d+(\.\d{1,2})?$/.test(String(value)) ||
-                            "Max 2 decimal places",
-                          setValueAs: (v) =>
-                            v === "" ? undefined : parseFloat(v),
-                        }}
-                        error={form.formState.errors.price?.message}
-                        className="text-[15px] font-[500] w-max mb-[1px] opacity-[0.5]"
                       />
                     </div>
                   </div>
-                )}
 
-                <div className="mt-[3px] ml-[3px]">
-                  <ProductImages
-                    productImages={productImages}
-                    setProductImages={setProductImages}
-                    setImageDisplayed={setImageDisplayed}
+                  {jobType === "resell" && (
+                    <div
+                      className={`${
+                        descriptionEditorOpen ? "h-[175px]" : "mb-[10px]"
+                      } flex flex-row items-center font-[500] w-[100%] relative text-[17px] mt-[-1px]`}
+                    >
+                      {!descriptionEditorOpen && (
+                        <p className="opacity-[0.5] mr-[10px]">Description</p>
+                      )}
+                      {matchedProduct && (
+                        <div
+                          style={{
+                            backgroundColor:
+                              appTheme[currentUser.theme].background_3,
+                          }}
+                          onClick={() => {
+                            if (!descriptionEditorOpen) {
+                              setDescriptionEditorOpen(true);
+                            }
+                          }}
+                          className={`${
+                            !descriptionEditorOpen
+                              ? "cursor-pointer dim hover:brightness-[85%] py-[2px] px-[10px]"
+                              : "px-[4px] h-[100%]"
+                          } rounded-[6px] min-h-[24px] flex flex-1 min-w-0`}
+                        >
+                          {!descriptionEditorOpen ? (
+                            <div className="opacity-[0.5] truncate w-[100%] min-h-[24px] text-[16px]">
+                              {matchedProduct.description &&
+                              matchedProduct.description.trim().length > 0
+                                ? matchedProduct.description
+                                : "..."}
+                            </div>
+                          ) : (
+                            <ProductInputField
+                              label="Description"
+                              name="description"
+                              register={form.register}
+                              error={form.formState.errors.description?.message}
+                              disabled={false}
+                              className="w-[calc(100%-35px)] text-[15px] opacity-[0.5]"
+                              inputType={"textarea"}
+                              rows={6}
+                            />
+                          )}
+                          {descriptionEditorOpen && (
+                            <div
+                              onClick={() => setDescriptionEditorOpen(false)}
+                              className="flex justify-center items-center cursor-pointer hover:brightness-75 dim w-[36px] h-[26px] right-[10px] top-[10px] absolute z-[300]"
+                            >
+                              <FaChevronUp
+                                className="opacity-[0.5]"
+                                size={25}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!descriptionEditorOpen && (
+                    <div className="flex flex-col">
+                      {jobType === "resell" && (
+                        <div className="flex items-center font-[500] text-[17px] mb-[10px]">
+                          <p className="opacity-[0.5] mr-[10px]">Price</p>
+                          <div
+                            style={{
+                              backgroundColor:
+                                appTheme[currentUser.theme].background_3,
+                            }}
+                            className="rounded-[6px] py-[2px] px-[9px] flex flex-row gap-[2px] w-[100%]"
+                          >
+                            <p className="opacity-[0.5] font-[500] text-[15px]">
+                              $
+                            </p>
+                            <ProductInputField
+                              label="Price ($)"
+                              name="price"
+                              inputMode="decimal"
+                              pattern="^\d+(\.\d{0,2})?$"
+                              inputType={"input"}
+                              onInput={(e) => {
+                                let value = e.currentTarget.value;
+                                value = value.replace(/[^0-9.]/g, "");
+                                const parts = value.split(".");
+                                if (parts.length > 2)
+                                  value = parts[0] + "." + parts[1];
+                                if (parts[1]?.length > 2) {
+                                  parts[1] = parts[1].slice(0, 2);
+                                  value = parts[0] + "." + parts[1];
+                                }
+                                e.currentTarget.value = value;
+                              }}
+                              register={form.register}
+                              registerOptions={{
+                                required: "Price is required",
+                                validate: (value) =>
+                                  /^\d+(\.\d{1,2})?$/.test(String(value)) ||
+                                  "Max 2 decimal places",
+                                setValueAs: (v) =>
+                                  v === "" ? undefined : parseFloat(v),
+                              }}
+                              error={form.formState.errors.price?.message}
+                              className="text-[15px] font-[500] opacity-[0.5]"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="w-[100%] flex flex-row items-center mb-[10px]">
+                        <p className="opacity-[0.5] font-[500] text-[17px] mr-[11px] mt-[-2px]">
+                          Make
+                        </p>
+                        <div
+                          style={{
+                            backgroundColor:
+                              appTheme[currentUser.theme].background_3,
+                          }}
+                          className="rounded-[6px] py-[3px] px-[10px] w-[100%]"
+                        >
+                          <ProductInputField
+                            label="Make"
+                            name="make"
+                            register={form.register}
+                            error={form.formState.errors.make?.message}
+                            className="text-[15px] font-[500] opacity-[0.5] w-[100%] truncate"
+                            inputType={"input"}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center w-[100%] mb-[10px]">
+                        <p className="opacity-[0.5] font-[500] text-[17px] mr-[11px] mt-[-2px]">
+                          Model
+                        </p>
+                        <div
+                          style={{
+                            backgroundColor:
+                              appTheme[currentUser.theme].background_3,
+                          }}
+                          className="rounded-[6px] py-[3px] px-[10px] w-[100%]"
+                        >
+                          <ProductInputField
+                            label="Model"
+                            name="model"
+                            register={form.register}
+                            error={form.formState.errors.model?.message}
+                            className="text-[15px] font-[500] opacity-[0.5]  w-[243px]"
+                            inputType={"input"}
+                          />
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex flex-row gap-[5px] items-center mb-[10px]`}
+                      >
+                        <p className="opacity-[0.5] font-[500] text-[17px] mr-[6px] mt-[-2px]">
+                          L x W x H
+                        </p>
+                        <div
+                          style={{
+                            backgroundColor:
+                              appTheme[currentUser.theme].background_3,
+                          }}
+                          className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
+                        >
+                          <ProductInputField
+                            label="Length (in)"
+                            name="length"
+                            placeholder="L"
+                            inputMode="decimal"
+                            pattern="^\d+(\.\d{0,2})?$"
+                            inputType={"input"}
+                            onInput={(e) => {
+                              let value = e.currentTarget.value;
+                              value = value.replace(/[^0-9.]/g, "");
+                              const parts = value.split(".");
+                              if (parts.length > 2) {
+                                value = parts[0] + "." + parts[1];
+                              }
+                              if (parts[1]?.length > 2) {
+                                parts[1] = parts[1].slice(0, 2);
+                                value = parts[0] + "." + parts[1];
+                              }
+                              e.currentTarget.value = value;
+                            }}
+                            register={form.register}
+                            registerOptions={{
+                              required: "Length is required",
+                              validate: (value) =>
+                                /^\d+(\.\d{1,2})?$/.test(String(value)) ||
+                                "Max 2 decimal places",
+                              setValueAs: (v) =>
+                                v === "" ? undefined : parseFloat(v),
+                            }}
+                            error={form.formState.errors.length?.message}
+                            className="text-[15px] font-[500] opacity-[0.5]"
+                          />
+                        </div>
+
+                        <div className="opacity-50 text-[14px] mx-[1px]">X</div>
+
+                        <div
+                          style={{
+                            backgroundColor:
+                              appTheme[currentUser.theme].background_3,
+                          }}
+                          className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
+                        >
+                          <ProductInputField
+                            label="Width (in)"
+                            name="width"
+                            placeholder="W"
+                            inputMode="decimal"
+                            pattern="^\d+(\.\d{0,2})?$"
+                            inputType={"input"}
+                            onInput={(e) => {
+                              let value = e.currentTarget.value;
+                              value = value.replace(/[^0-9.]/g, "");
+                              const parts = value.split(".");
+                              if (parts.length > 2) {
+                                value = parts[0] + "." + parts[1];
+                              }
+                              if (parts[1]?.length > 2) {
+                                parts[1] = parts[1].slice(0, 2);
+                                value = parts[0] + "." + parts[1];
+                              }
+                              e.currentTarget.value = value;
+                            }}
+                            register={form.register}
+                            registerOptions={{
+                              required: "Width is required",
+                              validate: (value) =>
+                                /^\d+(\.\d{1,2})?$/.test(String(value)) ||
+                                "Max 2 decimal places",
+                              setValueAs: (v) =>
+                                v === "" ? undefined : parseFloat(v),
+                            }}
+                            error={form.formState.errors.width?.message}
+                            className="text-[15px] font-[500] opacity-[0.5]"
+                          />
+                        </div>
+
+                        <div className="opacity-50 text-[14px] mx-[1px]">X</div>
+
+                        <div
+                          style={{
+                            backgroundColor:
+                              appTheme[currentUser.theme].background_3,
+                          }}
+                          className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
+                        >
+                          <ProductInputField
+                            label="Height (in)"
+                            placeholder="H"
+                            name="height"
+                            inputMode="decimal"
+                            pattern="^\d+(\.\d{0,2})?$"
+                            inputType={"input"}
+                            onInput={(e) => {
+                              let value = e.currentTarget.value;
+                              value = value.replace(/[^0-9.]/g, "");
+                              const parts = value.split(".");
+                              if (parts.length > 2) {
+                                value = parts[0] + "." + parts[1];
+                              }
+                              if (parts[1]?.length > 2) {
+                                parts[1] = parts[1].slice(0, 2);
+                                value = parts[0] + "." + parts[1];
+                              }
+                              e.currentTarget.value = value;
+                            }}
+                            register={form.register}
+                            registerOptions={{
+                              required: "Height is required",
+                              validate: (value) =>
+                                /^\d+(\.\d{1,2})?$/.test(String(value)) ||
+                                "Max 2 decimal places",
+                              setValueAs: (v) =>
+                                v === "" ? undefined : parseFloat(v),
+                            }}
+                            error={form.formState.errors.height?.message}
+                            className="text-[15px] font-[500] opacity-[0.5]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-row">
+                        {productFormRef.current &&
+                          (jobType === "service" ||
+                            jobType === "refurbishment") && (
+                            <>
+                              {matchedCustomer ? (
+                                <CustomerTag
+                                  productCustomer={matchedCustomer}
+                                />
+                              ) : (
+                                <CustomerTag productCustomer={null} />
+                              )}
+                            </>
+                          )}
+                        {matchedCustomer && jobType !== "resell" && (
+                          <div
+                            onClick={() => {
+                              setModal1({
+                                ...modal1,
+                                open: !modal1.open,
+                                showClose: true,
+                                offClickClose: true,
+                                width: "w-[90vw] md:w-[80vw]",
+                                maxWidth: "md:max-w-[1000px]",
+                                aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+                                borderRadius:
+                                  "rounded-[15px] md:rounded-[20px]",
+                                content: <CustomerSelection />,
+                              });
+                            }}
+                            className="h-[100%] px-[1px] flex items-center cursor-pointer hover:brightness-75 dim"
+                          >
+                            <BsThreeDotsVertical
+                              size={22}
+                              className="opacity-[0.2]"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-[8px]">
+            <ProductInputField
+              label="Note"
+              name="note"
+              register={form.register}
+              error={form.formState.errors.note?.message}
+              disabled={false}
+              className="w-[100%] opacity-[0.5]"
+              inputType={"textarea"}
+              rows={2}
+            />
+
+            <div className="flex flex-row w-[100%] gap-[20px] mt-[8px] mb-[5px]">
+              <div className="h-[40px] flex flex-row gap-[9px] items-center">
+                <div className="font-[600] text-[16px] opacity-[0.5] mt-[-2px]">
+                  Job Type
+                </div>
+                <div
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_3,
+                  }}
+                  className="rounded-full px-[5px]"
+                >
+                  <ProductInputField
+                    label="Job Type"
+                    name="job_type"
+                    register={form.register}
+                    className="cursor-pointer hover:brightness-75 dim"
+                    inputType={"dropdown"}
+                    options={["service", "refurbishment", "resell"]}
                   />
                 </div>
               </div>
-            </div>
 
-            {/* <div className="w-[100%] flex flex-row gap-[10px]">
-            <button
-              onClick={() => {
-                setUploadPopup(true);
-              }}
-              className="dim hover:brightness-75 cursor-pointer w-[170px] h-[35px] mb-[13px] gap-[6px] rounded-[6px] text-[15px] flex items-center justify-center font-[500]"
-              style={{
-                border: `0.5px solid ${
-                  currentUser.theme === "light"
-                    ? appTheme[currentUser.theme].text_1
-                    : appTheme[currentUser.theme].text_4
-                }`,
-              }}
-            >
-              <IoIosAddCircleOutline
-                className="w-[19px] h-[19px] mt-[1px]"
-                color={appTheme[currentUser.theme].text_1}
-              />
-              Images
-            </button>
-            <button
-              onClick={() => {
-                const customer_id = window.prompt("customer id");
-                if (customer_id) {
-                  form.setValue("customer_id", parseFloat(customer_id), {
-                    shouldDirty: true,
-                  });
-                }
-              }}
-              className="dim hover:brightness-75 cursor-pointer w-[170px] h-[35px] mb-[13px] gap-[6px] rounded-[6px] text-[15px] flex items-center justify-center font-[500]"
-              style={{
-                border: `0.5px solid ${
-                  currentUser.theme === "light"
-                    ? appTheme[currentUser.theme].text_1
-                    : appTheme[currentUser.theme].text_4
-                }`,
-              }}
-            >
-              <UserCircle2Icon
-                className="w-[19px] h-[19px] mt-[1px]"
-                color={appTheme[currentUser.theme].text_1}
-              />
-              Customer
-            </button>
-          </div> */}
-
-            <div className="mt-[14px] h-[40px] flex flex-row gap-[9px] items-center">
-              <div className="font-[600] text-[16px] opacity-[0.5]">
-                Job Type
-              </div>
-              <div
-                style={{
-                  backgroundColor: appTheme[currentUser.theme].background_3,
-                }}
-                className="rounded-full px-[5px]"
-              >
-                <ProductInputField
-                  label="Job Type"
-                  name="job_type"
-                  register={form.register}
-                  className="cursor-pointer hover:brightness-75 dim"
-                  inputType={"dropdown"}
-                  options={["service", "refurbishment", "resell"]}
-                />
-              </div>
-            </div>
-
-            <div className="mt-[10px]">
-              <ProductInputField
-                label="Description"
-                name="description"
-                register={form.register}
-                error={form.formState.errors.description?.message}
-                disabled={false}
-                className="w-[100%] mb-[10px]"
-                inputType={"textarea"}
-                rows={3}
-              />
-
-              <div className="grid grid-cols-2 gap-[10px] gap-x-[5vw]">
-                <ProductInputField
-                  label="Make"
-                  name="make"
-                  register={form.register}
-                  error={form.formState.errors.make?.message}
-                  className="col-span-2 sm:col-span-1"
-                  inputType={"input"}
-                />
-
-                <ProductInputField
-                  label="Model"
-                  name="model"
-                  register={form.register}
-                  error={form.formState.errors.model?.message}
-                  className="col-span-2 sm:col-span-1"
-                  inputType={"input"}
-                />
-
-                <ProductInputField
-                  label="Repair Status"
-                  name="repair_status"
-                  register={form.register}
-                  className="col-span-2 sm:col-span-1"
-                  inputType={"dropdown"}
-                  options={["In Progress", "Complete"]}
-                />
-
-                <ProductInputField
-                  label="Sale Status"
-                  name="sale_status"
-                  register={form.register}
-                  className="col-span-2 sm:col-span-1"
-                  inputType={"dropdown"}
-                  options={[
-                    "Not Yet Posted",
-                    "Awaiting Sale",
-                    "Sold Awaiting Delivery",
-                    "Delivered",
-                  ]}
-                />
-
-                <ProductInputField
-                  label="Length (in)"
-                  name="length"
-                  inputMode="decimal"
-                  pattern="^\d+(\.\d{0,2})?$"
-                  inputType={"input"}
-                  onInput={(e) => {
-                    let value = e.currentTarget.value;
-                    value = value.replace(/[^0-9.]/g, "");
-                    const parts = value.split(".");
-                    if (parts.length > 2) {
-                      value = parts[0] + "." + parts[1];
-                    }
-                    if (parts[1]?.length > 2) {
-                      parts[1] = parts[1].slice(0, 2);
-                      value = parts[0] + "." + parts[1];
-                    }
-                    e.currentTarget.value = value;
-                  }}
-                  register={form.register}
-                  registerOptions={{
-                    required: "Length is required",
-                    validate: (value) =>
-                      /^\d+(\.\d{1,2})?$/.test(String(value)) ||
-                      "Max 2 decimal places",
-                    setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
-                  }}
-                  error={form.formState.errors.length?.message}
-                  className="col-span-2 sm:col-span-1"
-                />
-
-                <ProductInputField
-                  label="Width (in)"
-                  name="width"
-                  inputMode="decimal"
-                  pattern="^\d+(\.\d{0,2})?$"
-                  inputType={"input"}
-                  onInput={(e) => {
-                    let value = e.currentTarget.value;
-                    value = value.replace(/[^0-9.]/g, "");
-                    const parts = value.split(".");
-                    if (parts.length > 2) {
-                      value = parts[0] + "." + parts[1];
-                    }
-                    if (parts[1]?.length > 2) {
-                      parts[1] = parts[1].slice(0, 2);
-                      value = parts[0] + "." + parts[1];
-                    }
-                    e.currentTarget.value = value;
-                  }}
-                  register={form.register}
-                  registerOptions={{
-                    required: "Width is required",
-                    validate: (value) =>
-                      /^\d+(\.\d{1,2})?$/.test(String(value)) ||
-                      "Max 2 decimal places",
-                    setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
-                  }}
-                  error={form.formState.errors.width?.message}
-                  className="col-span-2 sm:col-span-1"
-                />
-              </div>
-
-              <div className="flex flex-row">
-                {!newProduct && (
-                  <div className="mr-[25px] pointer-events-none">
+              {productFormRef.current && (
+                <div className="h-[40px] flex flex-row gap-[9px] items-center">
+                  <div className="font-[600] text-[16px] opacity-[0.5] mt-[-2px]">
+                    Status
+                  </div>
+                  <div
+                    style={{
+                      backgroundColor:
+                        designateProductStatusColor(productStatus),
+                    }}
+                    className="rounded-full px-[5px]"
+                  >
                     <ProductInputField
-                      label="Date Entered"
-                      name="date_entered"
+                      label="Product Status"
+                      name="product_status"
                       register={form.register}
-                      className="mt-[12px] opacity-[0.5]"
-                      inputType={"date"}
-                      selected={dateEntered}
-                      disabled={true}
-                      onChange={(date: Date | null) =>
-                        form.setValue("date_entered", date ?? undefined, {
-                          shouldDirty: true,
-                        })
-                      }
+                      className="cursor-pointer hover:brightness-75 dim"
+                      inputType={"dropdown"}
+                      options={designateProductStatusOptions(jobType)}
                     />
                   </div>
-                )}
+                </div>
+              )}
 
-                <ProductInputField
-                  label="Date Sold"
-                  name="date_sold"
-                  register={form.register}
-                  className="mt-[12px]"
-                  inputType={"date"}
-                  selected={dateSold}
-                  disabled={false}
-                  onChange={(date: Date | null) =>
-                    form.setValue("date_sold", date ?? undefined, {
-                      shouldDirty: true,
-                    })
-                  }
-                  onCancel={() => {
-                    form.setValue("date_sold", undefined, {
-                      shouldDirty: true,
-                    });
+              {productFormRef.current &&
+                (productStatus === "complete" ||
+                  productStatus === "delivered") && (
+                  <ProductInputField
+                    label="Date Complete"
+                    name="date_complete"
+                    register={form.register}
+                    inputType={"date"}
+                    selected={dateComplete ?? undefined}
+                    disabled={false}
+                    onChange={(date: Date | null) =>
+                      form.setValue("date_complete", date ?? undefined, {
+                        shouldDirty: true,
+                      })
+                    }
+                    onCancel={() => {
+                      form.setValue("date_complete", undefined, {
+                        shouldDirty: true,
+                      });
+                    }}
+                  />
+                )}
+            </div>
+
+            <div
+              className="mt-[4px] w-[100%] min-h-[100px] rounded-[8px]"
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_3,
+              }}
+            >
+              <div className="w-[100%] flex flex-row justify-between px-[15px] py-[9px]">
+                <div className="font-[600] text-[16px] opacity-[0.5]">
+                  Status
+                </div>
+                <div
+                  onClick={handleAddTaskClick}
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_3_2,
                   }}
-                />
+                  className="w-[34px] h-[34px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-90 cursor-pointer"
+                >
+                  <FaPlus
+                    size={18}
+                    color={appTheme[currentUser.theme].text_1}
+                    className="opacity-[0.5] ml-[1.5px]"
+                  />
+                </div>
               </div>
 
-              <ProductInputField
-                label="Note"
-                name="note"
-                register={form.register}
-                error={form.formState.errors.note?.message}
-                disabled={false}
-                className="w-[100%] mt-[10px] mb-[10px]"
-                inputType={"textarea"}
-                rows={2}
-              />
+              <div>
+                {matchedProduct &&
+                  jobs
+                    .filter((job: Job) => job.product_id === matchedProduct.id)
+                    .map((job: Job, index: number) => {
+                      const matchedDefinition = jobDefinitions.find(
+                        (definition: JobDefinition) =>
+                          definition.id === job.job_definition_id
+                      );
+                      if (!matchedDefinition) return;
+                      return (
+                        <div
+                          style={{
+                            backgroundColor:
+                              appTheme[currentUser.theme].background_3,
+                          }}
+                          key={index}
+                          className="w-[50%] rounded-[8px] h-[60px]"
+                        >
+                          {matchedDefinition.type}
+                        </div>
+                      );
+                    })}
+              </div>
+            </div>
 
-              <div className="flex flex-row gap-[16px]">
-                {(form.formState.isDirty || imagesChanged) && (
-                  <button
-                    type="submit"
-                    className="cursor-pointer dim hover:brightness-75 mt-[20px] w-[200px] h-[40px] rounded-[8px] text-white font-semibold"
-                    style={{
-                      backgroundColor: appTheme[currentUser.theme].app_color_1,
-                    }}
-                  >
-                    <div className="flex items-center justify-center">
-                      Submit
-                    </div>
-                  </button>
-                )}
+            <div className="flex flex-row gap-[16px] mt-[10px]">
+              {(form.formState.isDirty || imagesChanged) && (
+                <button
+                  type="submit"
+                  className="cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold"
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].app_color_1,
+                  }}
+                >
+                  <div className="flex items-center justify-center">Save</div>
+                </button>
+              )}
 
+              {((productFormRef.current &&
+                productFormRef.current.formState.dirtyFields &&
+                Object.keys(productFormRef.current.formState.dirtyFields)
+                  .length > 0) ||
+                imagesChanged) && (
                 <div
-                  onClick={handleBackButton}
-                  className="cursor-pointer dim hover:brightness-75 mt-[20px] w-[200px] h-[40px] rounded-[8px] text-white font-semibold flex items-center justify-center"
+                  onClick={handleCancelFormChanges}
+                  className="cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold flex items-center justify-center"
                   style={{
                     backgroundColor:
                       currentUser.theme === "dark" ? "#999" : "#bbb",
@@ -815,11 +1106,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 >
                   Cancel
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
     </form>
   );
 };

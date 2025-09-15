@@ -12,6 +12,7 @@ import {
 import DatePicker from "react-datepicker";
 import { IoClose } from "react-icons/io5";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
+import { useAppContext } from "@/contexts/appContext";
 
 const InputField = <T extends FieldValues>({
   inputType,
@@ -30,6 +31,7 @@ const InputField = <T extends FieldValues>({
   selected,
   onChange,
   onCancel,
+  placeholder,
 }: {
   inputType: "input" | "textarea" | "dropdown" | "date";
   label: string;
@@ -47,8 +49,10 @@ const InputField = <T extends FieldValues>({
   selected?: Date | undefined;
   onChange?: (date: Date | null) => void;
   onCancel?: () => void;
+  placeholder?: string;
 }) => {
   const { currentUser } = useContext(AuthContext);
+  const { formatDropdownOption } = useAppContext();
   if (!currentUser) return null;
 
   return (
@@ -69,7 +73,9 @@ const InputField = <T extends FieldValues>({
           pattern={pattern}
           onInput={onInput}
           disabled={disabled}
-          placeholder={capitalizeFirstLetter(name) + "..."}
+          placeholder={
+            placeholder ? placeholder : capitalizeFirstLetter(name) + "..."
+          }
           className="truncate outline-none border-none input w-[100%]"
           // style={{
           //   border: `0.5px solid ${
@@ -82,14 +88,18 @@ const InputField = <T extends FieldValues>({
       ) : inputType === "textarea" ? (
         <textarea
           {...register(name)}
-          className="resize-none input rounded-[7px] w-[100%] mt-[6px] px-[10px] py-[4px]"
+          className="outline-none border-none resize-none input rounded-[7px] w-[100%] mt-[3px] px-[12px] py-[6px]"
           disabled={disabled}
+          placeholder={
+            placeholder ? placeholder : capitalizeFirstLetter(name) + "..."
+          }
           style={{
-            border: `0.5px solid ${
-              currentUser.theme === "light"
-                ? appTheme[currentUser.theme].text_3
-                : appTheme[currentUser.theme].text_4
-            }`,
+            // border: `0.5px solid ${
+            //   currentUser.theme === "light"
+            //     ? appTheme[currentUser.theme].text_3
+            //     : appTheme[currentUser.theme].text_4
+            // }`,
+            backgroundColor: appTheme[currentUser.theme].background_3,
           }}
           rows={rows}
         />
@@ -113,7 +123,7 @@ const InputField = <T extends FieldValues>({
             {options &&
               options.map((option) => (
                 <option key={option} value={option}>
-                  {capitalizeFirstLetter(option)}
+                  {formatDropdownOption(option)}
                 </option>
               ))}
           </select>
@@ -130,26 +140,23 @@ const InputField = <T extends FieldValues>({
           </div>
         </div>
       ) : inputType === "date" ? (
-        <div className="flex flex-row gap-[10px] mt-[6px]">
-          <div
-            className="rounded-[8px] w-fit"
-            style={{
-              border: `0.5px solid ${
-                currentUser.theme === "light"
-                  ? appTheme[currentUser.theme].text_3
-                  : appTheme[currentUser.theme].text_4
-              }`,
-            }}
-          >
+        <div className="flex items-center flex-row gap-[10px] h-[100%]">
+          <div className="w-max">
             <DatePicker
               selected={selected}
               onChange={onChange}
-              className="input w-[100%] h-[100%] px-[8px] py-[7px]"
+              className="w-[100%] h-[100%] outline-none border-none opacity-[0.4] cursor-pointer hover:brightness-75 dim"
               placeholderText="Select Date"
+              disabledKeyboardNavigation
+              showPopperArrow={false}
+              preventOpenOnFocus={true}
+              shouldCloseOnSelect={true}
+              onFocus={(e) => e.target.blur()}
+              onChangeRaw={(e: any) => e.preventDefault()}
             />
           </div>
 
-          {selected && name === "date_sold" && (
+          {/* {selected && name === "date_sold" && (
             <div
               onClick={onCancel}
               style={{
@@ -162,7 +169,7 @@ const InputField = <T extends FieldValues>({
                 size={29}
               />
             </div>
-          )}
+          )} */}
         </div>
       ) : (
         <></>

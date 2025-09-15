@@ -49,8 +49,8 @@ export const updateProductsDB = (project_idx, products) => {
         const q = `
           INSERT INTO products (
             serial_number, project_idx, customer_id, name, highlight, description, note,
-            make, model, price, type, date_sold, job_type,
-            repair_status, sale_status, length, width, ordinal
+            make, model, price, type, job_type, product_status,
+            date_complete, length, width, height, ordinal
           )
           VALUES ${products
             .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -65,12 +65,12 @@ export const updateProductsDB = (project_idx, products) => {
             model = VALUES(model),
             price = VALUES(price),
             type = VALUES(type),
-            date_sold = VALUES(date_sold),
             job_type = VALUES(job_type),
-            repair_status = VALUES(repair_status),
-            sale_status = VALUES(sale_status),
+            product_status = VALUES(product_status),
+            date_complete = VALUES(date_complete),
             length = VALUES(length),
             width = VALUES(width),
+            height = VALUES(height),
             ordinal = VALUES(ordinal)
         `;
 
@@ -88,12 +88,12 @@ export const updateProductsDB = (project_idx, products) => {
           p.model,
           p.price,
           p.type ?? "TSA",
-          p.date_sold ? formatDateToMySQL(p.date_sold) : null,
           p.job_type,
-          p.repair_status,
-          p.sale_status,
+          p.product_status,
+          p.date_complete ? formatDateToMySQL(p.date_complete) : null,
           p.length,
           p.width,
+          p.height,
           typeof p.ordinal === "number" ? p.ordinal : nextOrdinal + i,
         ]);
 

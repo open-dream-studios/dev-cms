@@ -19,29 +19,44 @@ export const ProductSchema = z.object({
     .min(0, "Must be a positive number")
     .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
       message: "Max 2 decimal places",
-    }),
-  date_sold: z.date().optional(),
-  date_entered: z.date().optional(),
+    })
+    .optional()
+    .nullable(),
   job_type: z.enum(["service", "refurbishment", "resell"]),
-  repair_status: z.enum(["In Progress", "Complete"]),
-  sale_status: z.enum([
-    "Not Yet Posted",
-    "Awaiting Sale",
-    "Sold Awaiting Delivery",
-    "Delivered",
+  product_status: z.enum([
+    "waiting_diagnosis",
+    "waiting_work",
+    "waiting_listing",
+    "listed",
+    "waiting_delivery",
+    "delivered",
+    "complete",
   ]),
+  date_complete: z.date().optional().nullable(),
   length: z
     .number()
     .min(0, "Must be a positive number")
     .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
       message: "Max 2 decimal places",
-    }),
+    })
+    .optional()
+    .nullable(),
   width: z
     .number()
     .min(0, "Must be a positive number")
     .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
       message: "Max 2 decimal places",
-    }),
+    })
+    .optional()
+    .nullable(),
+  height: z
+    .number()
+    .min(0, "Must be a positive number")
+    .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
+      message: "Max 2 decimal places",
+    })
+    .optional()
+    .nullable(),
   note: z.string().optional().nullable(),
 });
 

@@ -1,6 +1,15 @@
-import { Media } from "./media";
-
 // project/src/types/products.ts
+export type ProductStatusOption =
+  | "waiting_diagnosis"
+  | "waiting_work"
+  | "waiting_listing"
+  | "listed"
+  | "waiting_delivery"
+  | "delivered"
+  | "complete";
+
+export type ProductJobType = "service" | "refurbishment" | "resell";
+
 export type Product = {
   id: number | null;
   serial_number: string;
@@ -12,17 +21,12 @@ export type Product = {
   make: string | null;
   model: string | null;
   price: number;
-  date_sold?: Date;
-  date_entered?: Date;
-  job_type: "service" | "refurbishment" | "resell";
-  repair_status: "In Progress" | "Complete";
-  sale_status:
-    | "Not Yet Posted"
-    | "Awaiting Sale"
-    | "Sold Awaiting Delivery"
-    | "Delivered";
+  job_type: ProductJobType;
+  product_status: ProductStatusOption;
+  date_complete: Date | undefined;
   length: number;
   width: number;
+  height: number;
   note: string | null;
   ordinal: number;
 };

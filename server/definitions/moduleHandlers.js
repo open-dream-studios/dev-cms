@@ -27,12 +27,11 @@ export const handlers = {
         row.model || "",
         row.price || "",
         row.type || "",
-        formatSQLDate(row.date_entered),
-        formatSQLDate(row.date_sold),
-        row.repair_status,
-        row.sale_status,
+        formatSQLDate(row.date_complete),
+        row.product_status,
         row.length || "",
         row.width || "",
+        row.height || "",
         Array.isArray(row.images)
           ? row.images.join(" ")
           : typeof row.images === "string"
@@ -50,12 +49,11 @@ export const handlers = {
         "Model",
         "Price ($)",
         "Type",
-        "Date Entered",
-        "Date Sold",
-        "Repair Status",
-        "Sale Status",
+        "Date Complete",
+        "Product Status",
         "Length (in)",
         "Width (in)",
+        "Height (in)",
         "Images",
       ];
 
@@ -84,7 +82,7 @@ export const handlers = {
       const sortedProducts = await getSortedProducts(project_idx);
       const corrected_data = sortedProducts.reverse().map((item) => ({
         serialNumber: item.serial_number,
-        sold: !!item.date_sold,
+        sold: item.product_status === "delivered",
         name: item.name,
         description_fld: item.description || "",
         make: item.make || "",

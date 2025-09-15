@@ -9,7 +9,11 @@ import React, {
   RefObject,
   useMemo,
 } from "react";
-import { getCurrentTimestamp, getNextOrdinal } from "@/util/functions/Data";
+import {
+  capitalizeFirstLetter,
+  getCurrentTimestamp,
+  getNextOrdinal,
+} from "@/util/functions/Data";
 import axios from "axios";
 import {
   SubmitHandler,
@@ -23,7 +27,7 @@ import { toast } from "react-toastify";
 import { usePathname, useRouter } from "next/navigation";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
-import { Product } from "@/types/products";
+import { Product, ProductJobType, ProductStatusOption } from "@/types/products";
 import { useProjectContext } from "./projectContext";
 import { runFrontendModule } from "@/modules/runFrontendModule";
 import { ProjectModule } from "@/types/project";
@@ -32,6 +36,9 @@ import { ExposedCustomerForm } from "@/modules/CustomersModule/CustomerView";
 import { CustomerFormData } from "@/util/schemas/customerSchema";
 import { Modal, Screen, UIState } from "@/types/screens";
 import { MediaLink, TempMediaLink } from "@/types/media";
+import { JobStatusOption } from "@/types/jobs";
+import { appTheme } from "@/util/appTheme";
+import { AuthContext } from "./authContext";
 
 type AppContextType = {
   localData: Product[];
@@ -86,8 +93,14 @@ type AppContextType = {
   productImages: TempMediaLink[];
   setProductImages: React.Dispatch<React.SetStateAction<TempMediaLink[]>>;
   originalImagesRef: React.RefObject<TempMediaLink[] | null>;
-  handleProductFormSubmit: (data: ProductFormData) => void;
+  handleProductFormSubmit: (data: ProductFormData) => Promise<boolean>;
   screenHistoryRef: React.RefObject<{ screen: Screen; page: string | null }[]>;
+
+  formatDropdownOption: (option: string) => string;
+  designateProductStatusOptions: (
+    jobType: ProductJobType
+  ) => ProductStatusOption[];
+  designateProductStatusColor: (status: ProductStatusOption) => string;
 };
 
 export type FileImage = {
@@ -104,6 +117,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { currentUser } = useContext(AuthContext)
   const {
     currentProjectId,
     setCurrentProjectData,
@@ -253,29 +267,29 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const filteredProducts = (products: Product[]) => {
-    if (products.length === 0) return [];
-    if (dataFilters.listings === "All") {
-      return products;
-    } else if (dataFilters.listings === "Sold") {
-      return products.filter(
-        (product) =>
-          product.sale_status === "Sold Awaiting Delivery" ||
-          product.sale_status === "Delivered"
-      );
-    } else {
-      return products.filter(
-        (product) =>
-          product.sale_status === "Not Yet Posted" ||
-          product.sale_status === "Awaiting Sale"
-      );
-    }
+    // if (products.length === 0) return [];
+    // if (dataFilters.listings === "All") {
+    //   return products;
+    // } else if (dataFilters.listings === "Sold") {
+    //   return products.filter(
+    //     (product) =>
+    //       product.sale_status === "Sold Awaiting Delivery" ||
+    //       product.sale_status === "Delivered"
+    //   );
+    // } else {
+    //   return products.filter(
+    //     (product) =>
+    //       product.sale_status === "Not Yet Posted" ||
+    //       product.sale_status === "Awaiting Sale"
+    //   );
+    // }
+    return products;
   };
 
   const normalizeProduct = (item: Product) => {
     return {
       ...item,
-      date_entered: item.date_entered ?? undefined,
-      date_sold: item.date_sold ?? undefined,
+      date_complete: item.date_complete ?? undefined,
       note: item.note ?? "",
     };
   };
@@ -333,9 +347,15 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
           customer_id: formValues.customer_id ?? null,
           highlight: null,
           description: formValues.description ?? null,
+          price: formValues.price ?? 0,
           note: formValues.note ?? null,
-          ordinal: getNextOrdinal(productsData),
+          length: formValues.length ?? 0,
+          height: formValues.height ?? 0,
+          width: formValues.width ?? 0,
           job_type: formValues.job_type ?? null,
+          ordinal: getNextOrdinal(productsData),
+          product_status: "waiting_work",
+          date_complete: undefined,
         };
         updatedProducts.push(normalizeProduct(newProduct));
       }
@@ -347,9 +367,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const checkForUnsavedChanges = () => {
     return (
       getUnsavedProducts().length > 0 ||
-      ((screen === "add-customer-product" ||
-        screen === "edit-customer-product") &&
-        imagesChanged)
+      (screen === "edit-customer-product" && imagesChanged)
     );
   };
 
@@ -438,6 +456,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
+    const history = screenHistoryRef.current;
     if (history.length === 0) {
       const dividedPath = pathname.split("/").filter((item) => item.length > 0);
       let adjustScreen = null;
@@ -505,9 +524,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     }
     if (productFormRef.current) {
-      productFormRef.current.reset();
+      productFormRef.current.reset(productFormRef.current.watch());
     }
     refetchMediaLinks();
+    return productIds && productIds.length > 0 ? true : false;
   };
 
   const screenRoute = (newScreen: Screen) => {
@@ -611,11 +631,17 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         ...data,
         id: existing?.id ?? null,
         project_idx: currentProject.id,
-        customer_id: data.job_type === "resell" ? null : data.customer_id ?? null,
+        customer_id:
+          data.job_type === "resell" ? null : data.customer_id ?? null,
         highlight: existing?.highlight ?? null,
         description: data.description ?? null,
+        price: data.price ?? 0,
         note: data.note ?? null,
+        length: data.length ?? 0,
+        width: data.width ?? 0,
+        height: data.height ?? 0,
         ordinal,
+        date_complete: data.date_complete ?? undefined,
       };
 
       const productIds = await updateProducts([normalizedData]);
@@ -694,6 +720,50 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const imagesChanged =
     JSON.stringify(productImages) !== JSON.stringify(originalImagesRef.current);
 
+  const formatDropdownOption = (option: string) => {
+    return option
+      .split("_")
+      .map((word) => capitalizeFirstLetter(word))
+      .join(" ");
+  };
+
+  const designateProductStatusOptions = (jobType: ProductJobType) => {
+    let statusOptions: ProductStatusOption[] = [];
+    if (jobType === "resell") {
+      statusOptions = [
+        "waiting_work",
+        "waiting_listing",
+        "listed",
+        "waiting_delivery",
+        "delivered",
+      ].map((item) => item as ProductStatusOption);
+    }
+    if (jobType === "refurbishment") {
+      statusOptions = ["waiting_work", "waiting_delivery", "delivered"].map(
+        (item) => item as ProductStatusOption
+      );
+    }
+    if (jobType === "service") {
+      statusOptions = ["waiting_diagnosis", "waiting_work", "complete"].map(
+        (item) => item as ProductStatusOption
+      );
+    }
+
+    return statusOptions;
+  };
+
+  const designateProductStatusColor = (status: ProductStatusOption) => {
+    if (!currentUser) return "white"
+    if (status === "waiting_diagnosis") return "red";
+    if (status === "waiting_work") return "red";
+    if (status === "waiting_listing") return "red";
+    if (status === "listed") return "yellow";
+    if (status === "waiting_delivery") return "yellow";
+    if (status === "delivered") return "green";
+    if (status === "complete") return "green";
+    return appTheme[currentUser.theme].background_3
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -743,6 +813,9 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         originalImagesRef,
         handleProductFormSubmit,
         screenHistoryRef,
+        formatDropdownOption,
+        designateProductStatusOptions,
+        designateProductStatusColor,
       }}
     >
       {children}

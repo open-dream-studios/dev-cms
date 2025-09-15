@@ -89,7 +89,6 @@ const CustomerCatalog = () => {
   return (
     <div className="flex w-full h-[100%]">
       <ModuleLeftBar />
-
       <div className="flex-1">
         {(currentCustomer || addingCustomer) && (
           <CustomerView

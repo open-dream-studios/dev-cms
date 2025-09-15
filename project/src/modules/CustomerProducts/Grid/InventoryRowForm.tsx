@@ -38,8 +38,7 @@ const InventoryRowForm = ({
 
   let newProduct = false;
 
-  const dateSold = form.watch("date_sold");
-  const dateEntered = form.watch("date_entered");
+  const dateComplete = form.watch("date_complete");
 
   useEffect(() => {
     if (!newProduct && product.serial_number) {
@@ -52,11 +51,8 @@ const InventoryRowForm = ({
         customer_id: matchingProduct.customer_id
           ? matchingProduct.customer_id
           : undefined,
-        date_sold: matchingProduct.date_sold
-          ? new Date(matchingProduct.date_sold)
-          : undefined,
-        date_entered: matchingProduct.date_entered
-          ? new Date(matchingProduct.date_entered)
+        date_complete: matchingProduct.date_complete
+          ? new Date(matchingProduct.date_complete)
           : undefined,
         price: matchingProduct.price ? Number(matchingProduct.price) : 0,
         length: matchingProduct.length ? Number(matchingProduct.length) : 0,
@@ -312,77 +308,35 @@ const InventoryRowForm = ({
       />
 
       <ProductInputCell
-        name="repair_status"
+        name="product_status"
         register={form.register}
         className={`h-[100%] ${inventoryDataLayout[8].className}`}
         inputType={"dropdown"}
-        options={["In Progress", "Complete"]}
+        options={[]}
         onInput={(e) => {
-          form.setValue(
-            "repair_status",
-            e.currentTarget.value as "In Progress" | "Complete",
-            {
-              shouldDirty: true,
-            }
-          );
+          // form.setValue(
+          //   "product_status",
+          //   e.currentTarget.value as "In Progress" | "Complete",
+          //   {
+          //     shouldDirty: true,
+          //   }
+          // );
         }}
       />
 
       <ProductInputCell
-        name="sale_status"
-        register={form.register}
-        className={`h-[100%] ${inventoryDataLayout[9].className}`}
-        inputType={"dropdown"}
-        options={[
-          "Not Yet Posted",
-          "Awaiting Sale",
-          "Sold Awaiting Delivery",
-          "Delivered",
-        ]}
-        onInput={(e) => {
-          form.setValue(
-            "sale_status",
-            e.currentTarget.value as
-              | "Not Yet Posted"
-              | "Awaiting Sale"
-              | "Sold Awaiting Delivery"
-              | "Delivered",
-            {
-              shouldDirty: true,
-            }
-          );
-        }}
-      />
-
-      {!newProduct && (
-        <ProductInputCell
-          name="date_entered"
-          register={form.register}
-          className={`opacity-[0.5] pointer-events-none h-[100%] ${inventoryDataLayout[10].className}`}
-          inputType={"date"}
-          selected={dateEntered}
-          disabled={true}
-          onChange={(date: Date | null) =>
-            form.setValue("date_entered", date ?? undefined, {
-              shouldDirty: true,
-            })
-          }
-        />
-      )}
-
-      <ProductInputCell
-        name="date_sold"
+        name="date_complete"
         register={form.register}
         className={`h-[100%] ${inventoryDataLayout[11].className}`}
         inputType={"date"}
-        selected={dateSold}
+        selected={dateComplete ?? undefined}
         onChange={(date: Date | null) =>
-          form.setValue("date_sold", date ?? undefined, {
+          form.setValue("date_complete", date ?? undefined, {
             shouldDirty: true,
           })
         }
         onCancel={() => {
-          form.setValue("date_sold", undefined, {
+          form.setValue("date_complete", undefined, {
             shouldDirty: true,
           });
         }}

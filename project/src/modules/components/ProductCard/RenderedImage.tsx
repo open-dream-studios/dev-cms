@@ -24,6 +24,7 @@ const RenderedImage = ({ url }: { url: string }) => {
           alt="image"
           width={200}
           height={200}
+          draggable={false}
           className="object-cover w-full h-full rounded-[10px]"
         />
       )}

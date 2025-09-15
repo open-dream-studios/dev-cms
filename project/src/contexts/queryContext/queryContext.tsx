@@ -43,6 +43,9 @@ import { useSectionDefinitions } from "./queries/sectionDefinitions";
 import { useSections } from "./queries/sections";
 import { useCustomers } from "./queries/customers";
 import { Customer } from "@/types/customers";
+import { Job, JobDefinition } from "@/types/jobs";
+import { useJobDefinitions } from "./queries/jobDefinitions";
+import { useJobs } from "./queries/jobs";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -220,6 +223,20 @@ export type QueryContextType = {
   refetchCustomers: () => Promise<any>;
   upsertCustomer: (data: any) => Promise<Customer>;
   deleteCustomer: (data: { project_idx: number; id: number }) => Promise<void>;
+
+  // ---- Job Definitions ----
+  jobDefinitions: JobDefinition[];
+  isLoadingJobDefinitions: boolean;
+  refetchJobDefinitions: () => Promise<any>;
+  upsertJobDefinition: (definition: JobDefinition) => Promise<any>;
+  deleteJobDefinition: (definition_id: string) => Promise<void>;
+
+  // ---- Jobs ----
+  jobs: Job[];
+  isLoadingJobs: boolean;
+  refetchJobs: () => Promise<any>;
+  upsertJob: (job: Job) => Promise<any>;
+  deleteJob: (job_id: string) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -342,6 +359,16 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     upsertCustomerMutation,
     deleteCustomerMutation,
   } = useCustomers(isLoggedIn, currentProjectId);
+  const {
+    jobDefinitionsData,
+    isLoadingJobDefinitions,
+    refetchJobDefinitions,
+    upsertJobDefinition,
+    deleteJobDefinition,
+  } = useJobDefinitions(isLoggedIn, currentProjectId);
+
+  const { jobsData, isLoadingJobs, refetchJobs, upsertJob, deleteJob } =
+    useJobs(isLoggedIn, currentProjectId);
 
   return (
     <QueryContext.Provider
@@ -437,6 +464,16 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchCustomers,
         upsertCustomer: (data: any) => upsertCustomerMutation.mutateAsync(data),
         deleteCustomer: (data) => deleteCustomerMutation.mutateAsync(data),
+        jobDefinitions: jobDefinitionsData ?? [],
+        isLoadingJobDefinitions,
+        refetchJobDefinitions,
+        upsertJobDefinition,
+        deleteJobDefinition,
+        jobs: jobsData ?? [],
+        isLoadingJobs,
+        refetchJobs,
+        upsertJob,
+        deleteJob,
       }}
     >
       {children}

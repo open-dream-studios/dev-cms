@@ -29,12 +29,16 @@ function SortableImage({
   index,
   setImageDisplayed,
   handleDeleteImage,
+  imageEditorOpen,
+  singleRow,
 }: {
   id: string;
   url: string;
   index: number;
   setImageDisplayed: React.Dispatch<React.SetStateAction<string | null>>;
   handleDeleteImage: (index: number) => void;
+  imageEditorOpen: boolean;
+  singleRow: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
   const {
@@ -82,25 +86,27 @@ function SortableImage({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="relative w-full aspect-square"
+      className="relative aspect-square"
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
     >
       <div className="select-none cursor-pointer hover:brightness-75 dim w-[100%] h-[100%] inset-0">
-        <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />
-        <RenderedImage url={url}/>
-        <div
-          style={{
-            border: `1px solid ${appTheme[currentUser.theme].text_4}`,
-            backgroundColor: appTheme[currentUser.theme].background_1,
-          }}
-          className="ignore-click w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[10px] absolute top-[-8px] right-[-9px] z-20"
-          onClick={async () => {
-            await handleDeleteImage(index);
-          }}
-        >
-          <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
-        </div>
+        {!singleRow && <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />}
+        <RenderedImage url={url} />
+        {!singleRow && (
+          <div
+            style={{
+              border: `1px solid ${appTheme[currentUser.theme].text_4}`,
+              backgroundColor: appTheme[currentUser.theme].background_1,
+            }}
+            className="ignore-click w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[10px] absolute top-[-8px] right-[-9px] z-20"
+            onClick={async () => {
+              await handleDeleteImage(index);
+            }}
+          >
+            <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -110,10 +116,14 @@ export default function ProductImages({
   productImages,
   setProductImages,
   setImageDisplayed,
+  imageEditorOpen,
+  singleRow,
 }: {
   productImages: MediaLink[];
   setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
   setImageDisplayed: React.Dispatch<React.SetStateAction<string | null>>;
+  imageEditorOpen: boolean;
+  singleRow: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
 
@@ -173,7 +183,13 @@ export default function ProductImages({
         strategy={rectSortingStrategy}
       >
         {productImages.length > 0 && (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-[11px] py-[2px] sm:py-[4px] md:py-[6px] touch-none">
+          <div
+            className={`${
+              singleRow
+                ? "flex flex-row h-[100%]"
+                : "grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 py-[2px] sm:py-[4px] md:py-[6px]"
+            } gap-[11px] touch-none`}
+          >
             {items.map((item: any, index: number) => (
               <SortableImage
                 key={`${item.id}${item.url}`}
@@ -182,6 +198,8 @@ export default function ProductImages({
                 url={item.url}
                 setImageDisplayed={setImageDisplayed}
                 handleDeleteImage={handleDeleteImage}
+                imageEditorOpen={imageEditorOpen}
+                singleRow={singleRow}
               />
             ))}
           </div>

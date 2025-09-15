@@ -160,7 +160,7 @@ const ModuleLeftBar = () => {
 
   return (
     <div
-      className="w-[240px] h-[100%] flex flex-col px-[15px] overflow-hidden"
+      className={`${screen === "customer-products" ? "hidden xl:flex" : "flex"} w-[240px] min-w-[240px] h-[100%] flex-col px-[15px] overflow-hidden`}
       style={{
         borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2}`,
       }}
@@ -300,12 +300,12 @@ const ModuleLeftBar = () => {
                       </>
                     )}
                   </div>
-                  <div className="flex w-[136px] h-[100%] flex-col gap-[2px] ">
+                  <div className="select-none flex w-[136px] h-[100%] flex-col gap-[2px] ">
                     <div className="text-[15px] leading-[20px] font-[500] opacity-70 truncate w-[100%]">
-                      {product.name}
+                      {product.name ? product.name : product.serial_number}
                     </div>
                     <div className="text-[14px] leading-[18px] font-[400] opacity-40 truncate w-[100%]">
-                      {product.make} {product.model && "|"}  {product.model}
+                      {product.make} {product.model && "|"} {product.model}
                     </div>
                   </div>
                 </div>
