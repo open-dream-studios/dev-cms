@@ -1,8 +1,6 @@
-// project/src/modules/CustomerProducts/ProductView/ProductTasks.tsx
-import { useAppContext } from "@/contexts/appContext";
+// project/src/modules/CustomerProducts/ProductView/ProductJobs.tsx
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import Modal2Input from "@/modals/Modal2Input";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
@@ -10,15 +8,15 @@ import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { Job, JobDefinition } from "@/types/jobs";
 import { Product } from "@/types/products";
 import { appTheme } from "@/util/appTheme";
-import { formatPhone } from "@/util/functions/Customers";
 import { useContext, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 
-interface ProductTasksProps {
+interface ProductJobsProps {
   product: Product | null;
+  customerId: number | null;
 }
 
-const ProductTasks = ({ product }: ProductTasksProps) => {
+const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
   const { currentUser } = useContext(AuthContext);
   const {
     upsertJobDefinition,
@@ -36,7 +34,7 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
-    definition_id: string | null;
+    job_definition_id: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -52,37 +50,29 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
 
   const handleContextMenu = (
     e: React.MouseEvent,
-    definition_id: string | null
+    job_definition_id: string | null
   ) => {
     e.preventDefault();
     setContextMenu({
       x: e.clientX,
       y: e.clientY,
-      definition_id,
+      job_definition_id,
     });
   };
 
   const handleCloseContextMenu = () => setContextMenu(null);
 
-  const handleAddTaskDefinition = async () => {
+  const handleAddJobDefinition = async () => {
     const steps: StepConfig[] = [
       {
-        name: "name",
-        placeholder: "Task Name...",
+        name: "type",
+        placeholder: "Job Type...",
         validate: (val) => (val.length > 1 ? true : "2+ characters required"),
       },
       {
         name: "description",
         placeholder: "Description...",
         validate: (val) => (val.length > 1 ? true : "2+ characters required"),
-      },
-      {
-        name: "hoursRequired",
-        placeholder: "Hours Required...",
-        validate: (val) => {
-          const num = Number(val);
-          return num > 0 ? true : "Must be a positive number";
-        },
       },
     ];
 
@@ -100,10 +90,9 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
           steps={steps}
           onComplete={async (values) => {
             await upsertJobDefinition({
-              definition_id: null,
-              type: values.name,
+              job_definition_id: null,
+              type: values.type,
               description: values.description,
-              hours_required: parseFloat(values.hoursRequired),
             });
           }}
         />
@@ -111,15 +100,16 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
     });
   };
 
-  const handleSelectTask = async (definition: JobDefinition) => {
+  const handleSelectJob = async (definition: JobDefinition) => {
     if (!product || !definition.id) return;
     await upsertJob({
       job_id: null,
-      product_id: product.id,
       job_definition_id: definition.id,
-      status: "work_required",
+      product_id: product.id,
+      customer_id: customerId,
+      status: "waiting_work",
       priority: "medium",
-      scheduled_date: null,
+      scheduled_start_date: null,
       completed_date: null,
       notes: null,
     } as Job);
@@ -129,9 +119,9 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
     });
   };
 
-  const handleDeleteTask = async () => {
-    if (contextMenu && contextMenu.definition_id) {
-      await deleteJobDefinition(contextMenu.definition_id);
+  const handleDeleteJob = async () => {
+    if (contextMenu && contextMenu.job_definition_id) {
+      await deleteJobDefinition(contextMenu.job_definition_id);
     }
   };
 
@@ -139,7 +129,7 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
 
   return (
     <div className="w-[100%] h-[100%] pl-[50px] lg:pl-[80px] pr-[25px] lg:pr-[55px] pt-[40px] flex flex-col gap-[12px]">
-      {contextMenu && (
+      {currentUser.admin === 1 && contextMenu && (
         <div
           id="context-menu"
           className="fixed z-50 shadow-lg rounded-md py-1 w-40 animate-fade-in"
@@ -152,7 +142,7 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
         >
           <button
             onClick={() => {
-              handleDeleteTask();
+              handleDeleteJob();
               handleCloseContextMenu();
             }}
             style={{
@@ -160,23 +150,23 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
             }}
             className="w-full text-left px-3 py-2 text-sm cursor-pointer hover:brightness-75 dim"
           >
-            Delete Task
+            Delete Job
           </button>
         </div>
       )}
       <div className="flex flex-row justify-between w-[100%] pr-[25px] items-center">
         <div className="text-[25px] md:text-[31px] font-[600]">
-          Defined Tasks
+          Defined Jobs
         </div>
-        <div
+        {currentUser.admin === 1 && <div
           style={{
             backgroundColor: appTheme[currentUser.theme].background_3,
           }}
-          onClick={handleAddTaskDefinition}
+          onClick={handleAddJobDefinition}
           className="w-[40px] h-[40px] rounded-full cursor-pointer hover:brightness-75 dim flex items-center justify-center"
         >
           <FaPlus className="w-[20px] h-[20px] opacity-60" />
-        </div>
+        </div>}
       </div>
       <div className="flex flex-col gap-[10px] pr-[25px] flex-1 overflow-auto pb-[30px]">
         {jobDefinitions.map((definition: JobDefinition, index: number) => {
@@ -184,31 +174,26 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
             <div
               key={index}
               onContextMenu={(e: any) =>
-                handleContextMenu(e, definition.definition_id)
+                handleContextMenu(e, definition.job_definition_id)
               }
               style={{
                 backgroundColor: appTheme[currentUser.theme].background_3,
               }}
-              onClick={() => handleSelectTask(definition)}
+              onClick={() => handleSelectJob(definition)}
               className="cursor-pointer hover:brightness-[86%] dim px-[18px] py-[5px] w-[100%] min-h-[60px] rounded-[12px] flex flex-row items-center"
             >
               <div className="w-[100%] h-[100%] items-center flex flex-row gap-[10px]">
                 <div className="flex h-[100%] w-[100%] flex-col justify-center">
                   <div className="flex flex-row justify-between w-[100%]">
                     <div className="font-[600] text-[17px] leading-[19px]">
-                      {definition.type ?? ""}
+                      {definition.type}
                     </div>
-                    {definition.hours_required && (
-                      <div className="font-[500] text-[14px] opacity-[0.3]">
-                        {definition.hours_required}
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex flex-row justify-between w-[100%]">
                     {definition.description && (
                       <div className="font-[500] text-[14px] opacity-[0.3]">
-                        {definition.description}
+                        {definition.description ?? ""}
                       </div>
                     )}
                   </div>
@@ -222,4 +207,4 @@ const ProductTasks = ({ product }: ProductTasksProps) => {
   );
 };
 
-export default ProductTasks;
+export default ProductJobs;

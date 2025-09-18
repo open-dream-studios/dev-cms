@@ -27,7 +27,7 @@ import { toast } from "react-toastify";
 import { usePathname, useRouter } from "next/navigation";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
-import { Product, ProductJobType, ProductStatusOption } from "@/types/products";
+import { Product } from "@/types/products";
 import { useProjectContext } from "./projectContext";
 import { runFrontendModule } from "@/modules/runFrontendModule";
 import { ProjectModule } from "@/types/project";
@@ -97,10 +97,10 @@ type AppContextType = {
   screenHistoryRef: React.RefObject<{ screen: Screen; page: string | null }[]>;
 
   formatDropdownOption: (option: string) => string;
-  designateProductStatusOptions: (
-    jobType: ProductJobType
-  ) => ProductStatusOption[];
-  designateProductStatusColor: (status: ProductStatusOption) => string;
+  // designateProductStatusOptions: (
+  //   jobType: ProductJobType
+  // ) => ProductStatusOption[];
+  // designateProductStatusColor: (status: ProductStatusOption) => string;
 };
 
 export type FileImage = {
@@ -286,14 +286,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     return products;
   };
 
-  const normalizeProduct = (item: Product) => {
-    return {
-      ...item,
-      date_complete: item.date_complete ?? undefined,
-      note: item.note ?? "",
-    };
-  };
-
   const [editMode, setEditMode] = useState<boolean>(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
@@ -311,7 +303,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         (p) => p.serial_number === item.serial_number
       );
       if (stored && stored?.ordinal !== item.ordinal) {
-        updatedProducts.push(normalizeProduct(item));
+        updatedProducts.push(item);
         continue;
       }
 
@@ -324,7 +316,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
             const isDirty =
               Object.keys(formArray[1].formState.dirtyFields).length > 0;
             if (isDirty) {
-              updatedProducts.push(normalizeProduct(item));
+              updatedProducts.push(item);
             }
           }
         }
@@ -342,22 +334,17 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         const formValues = productFormRef.current.getValues();
         const newProduct: Product = {
           ...formValues,
-          id: null,
-          project_idx: currentProject.id,
+          name: formValues.name ?? null,
           customer_id: formValues.customer_id ?? null,
           highlight: null,
-          description: formValues.description ?? null,
-          price: formValues.price ?? 0,
-          note: formValues.note ?? null,
           length: formValues.length ?? 0,
-          height: formValues.height ?? 0,
           width: formValues.width ?? 0,
-          job_type: formValues.job_type ?? null,
+          height: formValues.height ?? 0,
           ordinal: getNextOrdinal(productsData),
-          product_status: "waiting_work",
-          date_complete: undefined,
+          description: formValues.description ?? null,
+          note: formValues.note ?? null,
         };
-        updatedProducts.push(normalizeProduct(newProduct));
+        updatedProducts.push(newProduct);
       }
     }
 
@@ -629,19 +616,15 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       const ordinal = existing?.ordinal ?? getNextOrdinal(productsData);
       const normalizedData: Product = {
         ...data,
-        id: existing?.id ?? null,
-        project_idx: currentProject.id,
-        customer_id:
-          data.job_type === "resell" ? null : data.customer_id ?? null,
+        name: data.name ?? null,
+        customer_id: data.customer_id ?? null,
         highlight: existing?.highlight ?? null,
-        description: data.description ?? null,
-        price: data.price ?? 0,
-        note: data.note ?? null,
         length: data.length ?? 0,
         width: data.width ?? 0,
         height: data.height ?? 0,
         ordinal,
-        date_complete: data.date_complete ?? undefined,
+        description: data.description ?? null,
+        note: data.note ?? null,
       };
 
       const productIds = await updateProducts([normalizedData]);
@@ -727,42 +710,42 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       .join(" ");
   };
 
-  const designateProductStatusOptions = (jobType: ProductJobType) => {
-    let statusOptions: ProductStatusOption[] = [];
-    if (jobType === "resell") {
-      statusOptions = [
-        "waiting_work",
-        "waiting_listing",
-        "listed",
-        "waiting_delivery",
-        "delivered",
-      ].map((item) => item as ProductStatusOption);
-    }
-    if (jobType === "refurbishment") {
-      statusOptions = ["waiting_work", "waiting_delivery", "delivered"].map(
-        (item) => item as ProductStatusOption
-      );
-    }
-    if (jobType === "service") {
-      statusOptions = ["waiting_diagnosis", "waiting_work", "complete"].map(
-        (item) => item as ProductStatusOption
-      );
-    }
+  // const designateProductStatusOptions = (jobType: ProductJobType) => {
+  //   let statusOptions: ProductStatusOption[] = [];
+  //   if (jobType === "resell") {
+  //     statusOptions = [
+  //       "waiting_work",
+  //       "waiting_listing",
+  //       "listed",
+  //       "waiting_delivery",
+  //       "delivered",
+  //     ].map((item) => item as ProductStatusOption);
+  //   }
+  //   if (jobType === "refurbishment") {
+  //     statusOptions = ["waiting_work", "waiting_delivery", "delivered"].map(
+  //       (item) => item as ProductStatusOption
+  //     );
+  //   }
+  //   if (jobType === "service") {
+  //     statusOptions = ["waiting_diagnosis", "waiting_work", "complete"].map(
+  //       (item) => item as ProductStatusOption
+  //     );
+  //   }
 
-    return statusOptions;
-  };
+  //   return statusOptions;
+  // };
 
-  const designateProductStatusColor = (status: ProductStatusOption) => {
-    if (!currentUser) return "white"
-    if (status === "waiting_diagnosis") return "red";
-    if (status === "waiting_work") return "red";
-    if (status === "waiting_listing") return "red";
-    if (status === "listed") return "yellow";
-    if (status === "waiting_delivery") return "yellow";
-    if (status === "delivered") return "green";
-    if (status === "complete") return "green";
-    return appTheme[currentUser.theme].background_3
-  };
+  // const designateProductStatusColor = (status: ProductStatusOption) => {
+  //   if (!currentUser) return "white"
+  //   if (status === "waiting_diagnosis") return "red";
+  //   if (status === "waiting_work") return "red";
+  //   if (status === "waiting_listing") return "red";
+  //   if (status === "listed") return "orange";
+  //   if (status === "waiting_delivery") return "orange";
+  //   if (status === "delivered") return "green";
+  //   if (status === "complete") return "green";
+  //   return appTheme[currentUser.theme].background_3
+  // };
 
   return (
     <AppContext.Provider
@@ -814,8 +797,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         handleProductFormSubmit,
         screenHistoryRef,
         formatDropdownOption,
-        designateProductStatusOptions,
-        designateProductStatusColor,
+        // designateProductStatusOptions,
+        // designateProductStatusColor,
       }}
     >
       {children}

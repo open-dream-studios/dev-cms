@@ -2,7 +2,7 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
-import { useContext } from "react";
+import { useContext, useRef, useState } from "react";
 import {
   FieldValues,
   Path,
@@ -53,12 +53,18 @@ const InputField = <T extends FieldValues>({
 }) => {
   const { currentUser } = useContext(AuthContext);
   const { formatDropdownOption } = useAppContext();
+
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
+  const isDatePickerOpenRef = useRef<boolean>(false);
+
   if (!currentUser) return null;
 
   return (
     <div
       className={className}
       style={{
+        margin: 0, 
+        padding: 0,
         position: "relative",
         ["--custom-input-text-color" as any]:
           appTheme[currentUser.theme].text_1,
@@ -77,29 +83,17 @@ const InputField = <T extends FieldValues>({
             placeholder ? placeholder : capitalizeFirstLetter(name) + "..."
           }
           className="truncate outline-none border-none input w-[100%]"
-          // style={{
-          //   border: `0.5px solid ${
-          //     currentUser.theme === "light"
-          //       ? appTheme[currentUser.theme].text_3
-          //       : appTheme[currentUser.theme].text_4
-          //   }`,
-          // }}
         />
       ) : inputType === "textarea" ? (
         <textarea
           {...register(name)}
-          className="outline-none border-none resize-none input rounded-[7px] w-[100%] mt-[3px] px-[12px] py-[6px]"
+          className="outline-none p-0 m-0 border-none resize-none input rounded-[7px] w-[100%] px-[12px] py-[6px]"
           disabled={disabled}
           placeholder={
             placeholder ? placeholder : capitalizeFirstLetter(name) + "..."
           }
           style={{
-            // border: `0.5px solid ${
-            //   currentUser.theme === "light"
-            //     ? appTheme[currentUser.theme].text_3
-            //     : appTheme[currentUser.theme].text_4
-            // }`,
-            backgroundColor: appTheme[currentUser.theme].background_3,
+            backgroundColor: appTheme[currentUser.theme].background_2,
           }}
           rows={rows}
         />
@@ -111,12 +105,6 @@ const InputField = <T extends FieldValues>({
             style={{
               appearance: "none",
               WebkitAppearance: "none",
-              backgroundColor: "transparent",
-              // border: `0.5px solid ${
-              //   currentUser.theme === "light"
-              //     ? appTheme[currentUser.theme].text_3
-              //     : appTheme[currentUser.theme].text_4
-              // }`,
               color: appTheme[currentUser.theme].text_1,
             }}
           >
@@ -141,35 +129,48 @@ const InputField = <T extends FieldValues>({
         </div>
       ) : inputType === "date" ? (
         <div className="flex items-center flex-row gap-[10px] h-[100%]">
-          <div className="w-max">
-            <DatePicker
-              selected={selected}
-              onChange={onChange}
-              className="w-[100%] h-[100%] outline-none border-none opacity-[0.4] cursor-pointer hover:brightness-75 dim"
-              placeholderText="Select Date"
-              disabledKeyboardNavigation
-              showPopperArrow={false}
-              preventOpenOnFocus={true}
-              shouldCloseOnSelect={true}
-              onFocus={(e) => e.target.blur()}
-              onChangeRaw={(e: any) => e.preventDefault()}
-            />
-          </div>
-
-          {/* {selected && name === "date_sold" && (
-            <div
-              onClick={onCancel}
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_3,
-              }}
-              className="flex items-center justify-center w-[34.5px] h-[34px] pb-[0.5px] pr-[0.5px] rounded-[6px] cursor-pointer dim hover:brightness-75"
-            >
-              <IoClose
-                color={appTheme[currentUser.theme].background_1}
-                size={29}
+          {onChange && (
+            <div className="w-[100px]">
+              <DatePicker
+                selected={selected}
+                onChange={(date) => {
+                  onChange(date);
+                }}
+                onCalendarOpen={() => {
+                  setIsDatePickerOpen(true);
+                  isDatePickerOpenRef.current = true;
+                }}
+                onCalendarClose={() => {
+                  setIsDatePickerOpen(false);
+                  isDatePickerOpenRef.current = false;
+                }}
+                customInput={
+                  <div className="w-full h-full opacity-40 cursor-pointer hover:brightness-75 dim">
+                    {selected ? selected.toLocaleDateString() : "Select Date"}
+                  </div>
+                }
               />
             </div>
-          )} */}
+          )}
+
+          {onCancel && selected && name === "date_complete" && (
+            <div
+              onMouseDown={(e) => {
+                if (isDatePickerOpenRef.current) {
+                  onCancel();
+                }
+              }}
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_3,
+                opacity: isDatePickerOpen ? 1 : 0,
+              }}
+              className={`ml-[-10px] mt-[1px] flex items-center justify-center w-[25px] h-[25px] pb-[0.5px] pr-[0.5px] rounded-[4px] ${
+                isDatePickerOpen && "cursor-pointer dim hover:brightness-90"
+              }`}
+            >
+              <IoClose color={appTheme[currentUser.theme].text_4} size={21} />
+            </div>
+          )}
         </div>
       ) : (
         <></>

@@ -10,7 +10,7 @@ const Modals = ({ landing }: { landing: boolean }) => {
   let currentTheme = appDetails.default_theme as ThemeType;
   const { currentUser } = useContext(AuthContext);
   if (!landing && currentUser) {
-    currentTheme = currentUser.theme
+    currentTheme = currentUser.theme;
   }
 
   const modal1 = useModal1Store((state: any) => state.modal1);
@@ -85,6 +85,21 @@ const Modals = ({ landing }: { landing: boolean }) => {
     }
   }, [showModal2]);
 
+  const mouseDownInside = useRef(false);
+
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (modal2Ref.current) {
+        const modalContent = modal2Ref.current.querySelector("div");
+        mouseDownInside.current = !!(
+          modalContent && modalContent.contains(e.target as Node)
+        );
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, []);
+
   if (!landing && !currentUser) return;
 
   return (
@@ -134,9 +149,11 @@ const Modals = ({ landing }: { landing: boolean }) => {
       {showModal2 && (
         <div
           ref={modal2Ref}
-          onClick={() => {
+          onClick={(e) => {
             if (modal2.offClickClose) {
-              setModal2({ ...modal2, open: false });
+              if (!mouseDownInside.current) {
+                setModal2({ ...modal2, open: false });
+              }
             }
           }}
           className="z-[940] fixed top-0 left-0 w-[100vw] display-height flex items-center justify-center"

@@ -1,27 +1,62 @@
 // project/src/types/jobs.ts
 export type JobStatusOption =
-  | "work_required"
+  | "waiting_diagnosis"
+  | "waiting_work"
+  | "waiting_parts"
+  | "waiting_listing"
+  | "listed"
+  | "waiting_customer"
+  | "waiting_delivery"
+  | "complete"
+  | "delivered"
+  | "cancelled";
+
+export type PriorityOption = "low" | "medium" | "high" | "urgent";
+
+export type Job = {
+  id?: number;
+  job_id: string | null;
+  job_definition_id: number | null;
+  product_id: number | null;
+  customer_id: number | null;
+  status: JobStatusOption;
+  priority: PriorityOption;
+  scheduled_start_date: Date | null;
+  completed_date: Date | null;
+  notes: string | null;
+  updated_at?: Date | null;
+};
+
+export type JobDefinition = {
+  id?: number;
+  job_definition_id: string | null;
+  type: string;
+  description: string | null;
+};
+
+export type TaskStatusOption =
+  | "waiting_work"
   | "waiting_parts"
   | "waiting_customer"
   | "complete"
   | "cancelled";
 
-export type Job = {
-  id?: number | null;
-  job_id: string | null;
-  product_id: number;
-  job_definition_id: number;
-  status: JobStatusOption;
-  priority: string;
-  scheduled_date: string | null;
-  completed_date: string | null;
+export type Task = {
+  id?: number;
+  task_id: string | null;
+  job_id: number | null;
+  task_definition_id: number | null;
+  status: TaskStatusOption;
+  priority: PriorityOption;
+  scheduled_start_date: Date | null;
+  completed_date: Date | null;
   notes: string | null;
 };
 
-export type JobDefinition = {
-  id?: number | null;
-  definition_id: string | null;
+export type TaskDefinition = {
+  id?: number;
+  task_definition_id: string | null;
   type: string;
-  description: string;
-  hours_required: number;
+  description: string | null;
+  hours_required: number | null
 };

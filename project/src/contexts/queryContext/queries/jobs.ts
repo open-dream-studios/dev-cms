@@ -1,3 +1,4 @@
+// src/context/queryContext/queries/jobs.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { Job } from "@/types/jobs";

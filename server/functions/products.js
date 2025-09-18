@@ -48,30 +48,25 @@ export const updateProductsDB = (project_idx, products) => {
 
         const q = `
           INSERT INTO products (
-            serial_number, project_idx, customer_id, name, highlight, description, note,
-            make, model, price, type, job_type, product_status,
-            date_complete, length, width, height, ordinal
+            serial_number, project_idx, name, customer_id, highlight,
+            make, model, type, length, width, height, ordinal, description, note
           )
           VALUES ${products
-            .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+            .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
             .join(", ")}
           ON DUPLICATE KEY UPDATE
-            customer_id = VALUES(customer_id),
             name = VALUES(name),
+            customer_id = VALUES(customer_id),
             highlight = VALUES(highlight),
-            description = VALUES(description),
-            note = VALUES(note),
             make = VALUES(make),
             model = VALUES(model),
-            price = VALUES(price),
             type = VALUES(type),
-            job_type = VALUES(job_type),
-            product_status = VALUES(product_status),
-            date_complete = VALUES(date_complete),
             length = VALUES(length),
             width = VALUES(width),
             height = VALUES(height),
-            ordinal = VALUES(ordinal)
+            ordinal = VALUES(ordinal),
+            description = VALUES(description),
+            note = VALUES(note)
         `;
 
         const values = products.flatMap((p, i) => [
@@ -79,22 +74,18 @@ export const updateProductsDB = (project_idx, products) => {
             ? generateSerial(p.length, p.width, p.make, rows.length + i)
             : p.serial_number,
           project_idx,
-          p.customer_id,
           p.name,
+          p.customer_id,
           p.highlight ?? null,
-          p.description,
-          p.note ?? "",
           p.make,
           p.model,
-          p.price,
           p.type ?? "TSA",
-          p.job_type,
-          p.product_status,
-          p.date_complete ? formatDateToMySQL(p.date_complete) : null,
           p.length,
           p.width,
           p.height,
           typeof p.ordinal === "number" ? p.ordinal : nextOrdinal + i,
+          p.description,
+          p.note ?? "",
         ]);
 
         db.query(q, values, (err, result) => {
@@ -106,7 +97,7 @@ export const updateProductsDB = (project_idx, products) => {
           // Collect serial_numbers you just inserted/updated
           const serials = products.map((p) =>
             !p.serial_number || p.serial_number.length < 14
-              ? generateSerial(p.length, p.width, p.make) // match what you inserted
+              ? generateSerial(p.length, p.width, p.make) 
               : p.serial_number
           );
 

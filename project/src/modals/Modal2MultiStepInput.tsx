@@ -3,15 +3,13 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { appTheme } from "../util/appTheme";
 import { AuthContext } from "../contexts/authContext";
 import { useModal2Store } from "../store/useModalStore";
-import { toast } from "react-toastify";
 
 export type StepConfig = {
-  name: string; // key in returned object
+  name: string; 
   placeholder: string;
   initialValue?: string;
   sanitize?: (value: string) => string;
   validate?: (value: string) => true | string;
-  // return true if valid, otherwise return error message string
 };
 
 type Modal2MultiStepModalInputProps = {

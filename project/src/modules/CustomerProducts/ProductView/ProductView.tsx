@@ -8,12 +8,21 @@ import { appTheme } from "@/util/appTheme";
 import "react-datepicker/dist/react-datepicker.css";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import ProductImages from "./ProductImages";
-import { FaChevronLeft, FaChevronUp, FaPlus } from "react-icons/fa6";
+import {
+  FaChevronDown,
+  FaChevronLeft,
+  FaChevronUp,
+  FaPlus,
+  FaWrench,
+} from "react-icons/fa6";
 import UploadModal, {
   CloudinaryUpload,
 } from "../../../components/Upload/Upload";
-import { ProductFormData } from "@/util/schemas/productSchema";
-import { defaultProductValues, useProductForm } from "@/hooks/useProductForm";
+import {
+  defaultProductValues,
+  ProductFormData,
+} from "@/util/schemas/productSchema";
+import { useProductForm } from "@/hooks/useProductForm";
 import ProductInputField from "../Forms/InputField";
 import { useProjectContext } from "@/contexts/projectContext";
 import { MediaInsert, MediaLink, TempMediaLink } from "@/types/media";
@@ -28,9 +37,28 @@ import { IoImagesOutline } from "react-icons/io5";
 import { IoImageOutline } from "react-icons/io5";
 import { Job, JobDefinition } from "@/types/jobs";
 import { flushSync } from "react-dom";
-import ProductTasks from "./ProductTasks";
+import ProductProgressCard from "./ProductProgressCard";
+import { Box } from "lucide-react";
+import { getCardStyle } from "@/styles/themeStyles";
+import ProductJobs from "./ProductJobs";
+import ProductJobCard from "./ProductJobCard";
+import { AiFillProduct } from "react-icons/ai";
+import ProductJobCard2 from "./ProductJobCard2";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
+  const sample = {
+    id: "P-001",
+    name: "NeuroWidget Pro",
+    sku: "P-001",
+    icon: <Box size={18} />,
+    progress: 52,
+    sold: 420,
+    revenue: 37800,
+    conv: "4.6%",
+    eta: "Sep 26",
+    owner: "Sabrina",
+  };
+
   const { currentUser } = useContext(AuthContext);
   const {
     setUploadPopup,
@@ -44,8 +72,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     originalImagesRef,
     formRefs,
     screenHistoryRef,
-    designateProductStatusOptions,
-    designateProductStatusColor,
+    // designateProductStatusOptions,
+    // designateProductStatusColor,
   } = useAppContext();
   const {
     productsData,
@@ -63,19 +91,54 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const [imageDisplayed, setImageDisplayed] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
-
+  const [imageEditorOpen, setImageEditorOpen] = useState<boolean>(false);
+  const [descriptionEditorOpen, setDescriptionEditorOpen] =
+    useState<boolean>(false);
+  const [noteEditorOpen, setNoteEditorOpen] = useState<boolean>(false);
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
+  const form = useProductForm();
+  const customerId = form.watch("customer_id");
+  const description = form.watch("description") 
+
+  const initialFormState = useRef<Partial<ProductFormData> | null>(null);
+
+  const matchedProduct = useMemo(() => {
+    return productsData.find(
+      (product) => product.serial_number === serialNumber
+    );
+  }, [productsData]);
+
+  const matchedCustomer = useMemo(() => {
+    return (
+      customers.find((customer: Customer) => customer.id === customerId) || null
+    );
+  }, [
+    productsData,
+    customers,
+    serialNumber,
+    customerId,
+    productFormRef.current,
+  ]);
 
   const newProduct = useMemo(() => {
     return screen === "add-customer-product";
   }, [screen]);
 
-  const form = useProductForm();
-  const jobType = form.watch("job_type");
-  const customerId = form.watch("customer_id");
-  const productStatus = form.watch("product_status");
-  const dateComplete = form.watch("date_complete");
+  const productJobs = useMemo(() => {
+    if (!matchedProduct || !matchedProduct.id) return [];
+    return jobs.filter((job: Job) => job.product_id === matchedProduct.id);
+  }, [jobs, matchedProduct]);
+
+  useEffect(() => {
+    if (productFormRef) {
+      productFormRef.current = form;
+    }
+  }, [form, productFormRef]);
 
   useEffect(() => {
     if (
@@ -101,14 +164,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [serialNumber, screen]);
 
-  const initialFormState = useRef<Partial<ProductFormData> | null>(null);
-
-  useEffect(() => {
-    if (productFormRef) {
-      productFormRef.current = form;
-    }
-  }, [form, productFormRef]);
-
   useEffect(() => {
     if (!newProduct && serialNumber && productsData?.length) {
       const matchedProduct = productsData.find(
@@ -120,13 +175,12 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       }
       const formDefaults: Partial<ProductFormData> = {
         ...matchedProduct,
+        serial_number: matchedProduct.serial_number
+          ? matchedProduct.serial_number
+          : "",
         customer_id: matchedProduct.customer_id
           ? matchedProduct.customer_id
-          : undefined,
-        date_complete: matchedProduct.date_complete
-          ? new Date(matchedProduct.date_complete)
           : null,
-        price: matchedProduct.price ? Number(matchedProduct.price) : 0,
         length: matchedProduct.length ? Number(matchedProduct.length) : 0,
         width: matchedProduct.width ? Number(matchedProduct.width) : 0,
         height: matchedProduct.height ? Number(matchedProduct.height) : 0,
@@ -135,24 +189,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       form.reset(formDefaults);
     }
   }, [newProduct, serialNumber, productsData, form.reset]);
-
-  const matchedProduct = useMemo(() => {
-    return productsData.find(
-      (product) => product.serial_number === serialNumber
-    );
-  }, [productsData]);
-
-  const matchedCustomer = useMemo(() => {
-    return (
-      customers.find((customer: Customer) => customer.id === customerId) || null
-    );
-  }, [
-    productsData,
-    customers,
-    serialNumber,
-    customerId,
-    productFormRef.current,
-  ]);
 
   useEffect(() => {
     if (matchedProduct) {
@@ -184,7 +220,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }, [mediaLinks, matchedProduct]);
 
   const handleBackButton = async () => {
-    await goToPrev();
+    if (screenHistoryRef.current && screenHistoryRef.current.length >= 2) {
+      await goToPrev();
+    } else {
+      await screenClick("customer-products", "/products");
+    }
   };
 
   const handleProductsClick = async () => {
@@ -223,11 +263,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   };
 
-  const [imageEditorOpen, setImageEditorOpen] = useState<boolean>(false);
-  const [descriptionEditorOpen, setDescriptionEditorOpen] =
-    useState<boolean>(false);
-
-  const handleAddTaskClick = () => {
+  const handleAddJobClick = () => {
     setModal1({
       ...modal1,
       open: !modal1.open,
@@ -237,7 +273,12 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       maxWidth: "md:max-w-[1000px]",
       aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
       borderRadius: "rounded-[15px] md:rounded-[20px]",
-      content: <ProductTasks product={matchedProduct ?? null} />,
+      content: (
+        <ProductJobs
+          product={matchedProduct ?? null}
+          customerId={customerId ?? null}
+        />
+      ),
     });
   };
 
@@ -249,10 +290,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     );
     if (!productExists) {
       return (
-        <div
-          className="text-center text-xl py-20"
-          style={{ color: appTheme[currentUser.theme].text_1 }}
-        >
+        <div className="text-center text-xl py-20" style={{ color: t.text_1 }}>
           No product found for serial number: <strong>{serialNumber}</strong>
         </div>
       );
@@ -299,7 +337,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         <div
           className="fixed z-[990] top-0 left-0 w-[100vw] display-height flex items-center justify-center"
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1,
+            backgroundColor: t.background_1,
           }}
           onClick={() => setImageView("")}
         >
@@ -393,30 +431,26 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       )}
 
       <div
-        className={`max-w-4xl mx-auto px-[17px] pt-[28px] pb-[60px] rounded-2xl`}
+        className={`max-w-4xl mx-auto px-[17px] pt-[28px] pb-[30px] flex flex-col`}
       >
         <div className="flex flex-row gap-[13px] ml-[3px]">
-          {screenHistoryRef.current && screenHistoryRef.current.length >= 2 && (
-            <div
-              onClick={handleBackButton}
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_2,
-              }}
-              className="w-[40px] h-[40px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-75 cursor-pointer"
-            >
-              <FaChevronLeft
-                size={21}
-                className="opacity-[0.6]"
-                color={appTheme[currentUser.theme].text_1}
-              />
-            </div>
-          )}
+          <div
+            onClick={handleBackButton}
+            style={{
+              backgroundColor: t.background_2,
+            }}
+            className="w-[40px] h-[40px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-75 cursor-pointer"
+          >
+            <FaChevronLeft
+              size={21}
+              className="opacity-[0.6]"
+              color={t.text_1}
+            />
+          </div>
 
-          {newProduct && (
+          {newProduct ? (
             <h1 className="text-3xl font-[500] mb-[24px]">Add Product</h1>
-          )}
-
-          {!newProduct && (
+          ) : (
             <div
               className="ml-[2px] flex flex-row gap-[10px] text-[25px] font-[400] mb-[20px] opacity-[0.5]"
               style={{
@@ -440,26 +474,18 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         </div>
 
         <div
-          className="flex flex-col w-[100%] rounded-[15px] px-[35px] py-[30px]"
-          style={{
-            backgroundColor: appTheme[currentUser.theme].background_2,
-          }}
+          className="mb-[2px] flex flex-col w-[100%] rounded-[15px] px-[35px] py-[30px]"
+          style={getCardStyle(theme, t)}
         >
           <div className="w-[100%] flex flex-row gap-[18px]">
-            <div
-              className={`${
-                jobType === "resell"
-                  ? "w-[190px] min-w-[190px]"
-                  : "w-[184px] min-w-[184px]"
-              } flex flex-col`}
-            >
+            <div className="w-[218px] min-w-[218px] flex flex-col">
               {productImages.length >= 1 ? (
                 <div
                   onClick={() => {
                     setImageView(imageDisplayed);
                   }}
                   style={{
-                    backgroundColor: appTheme[currentUser.theme].background_3,
+                    backgroundColor: t.background_2,
                   }}
                   className="cursor-pointer hover:brightness-[86%] dim w-[100%] aspect-[1/1] rounded-[10px]"
                 >
@@ -473,7 +499,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     setUploadPopup(true);
                   }}
                   style={{
-                    backgroundColor: appTheme[currentUser.theme].background_3,
+                    backgroundColor: t.background_2,
                   }}
                   className="flex justify-center items-center cursor-pointer hover:brightness-[86%] dim w-[100%] aspect-[1/1] rounded-[10px]"
                 >
@@ -489,12 +515,12 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     }}
                     className="dim hover:brightness-90 cursor-pointer w-[51px] h-[51px] rounded-[10px] text-[15px] flex items-center justify-center font-[500]"
                     style={{
-                      backgroundColor: appTheme[currentUser.theme].background_3,
+                      backgroundColor: t.background_2,
                     }}
                   >
                     <IoImagesOutline
                       className="w-[23px] h-[23px] opacity-[0.4]"
-                      color={appTheme[currentUser.theme].text_1}
+                      color={t.text_1}
                     />
                   </div>
                 </div>
@@ -521,14 +547,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                         setImageEditorOpen(false);
                       }}
                       style={{
-                        backgroundColor:
-                          appTheme[currentUser.theme].background_3,
+                        backgroundColor: t.background_2,
                       }}
                       className="w-[34px] h-[34px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-90 cursor-pointer"
                     >
                       <FaChevronLeft
                         size={18}
-                        color={appTheme[currentUser.theme].text_1}
+                        color={t.text_1}
                         className="opacity-[0.5] ml-[1.5px]"
                       />
                     </div>
@@ -541,13 +566,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                       setUploadPopup(true);
                     }}
                     style={{
-                      backgroundColor: appTheme[currentUser.theme].background_3,
+                      backgroundColor: t.background_2,
                     }}
                     className="pl-[17px] pr-[22px] py-[5px] rounded-full gap-[8px] flex items-center justify-center dim hover:brightness-90 cursor-pointer"
                   >
                     <IoImageOutline
                       size={20}
-                      color={appTheme[currentUser.theme].text_1}
+                      color={t.text_1}
                       className="opacity-[0.8] ml-[1.5px]"
                     />
                     <div className="text-[16px] font-[500] opacity-[0.8]">
@@ -576,20 +601,15 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 />
 
                 <div
-                  className={`flex flex-col ${
+                  className={`flex flex-col h-[100%] ${
                     descriptionEditorOpen ? "w-[100%]" : "w-[331px]"
                   }`}
                 >
-                  <div
-                    className={`${
-                      jobType === "resell" ? "mt-[7px]" : "mt-[7px]"
-                    } mb-[10px] flex items-center font-[500] w-max text-[17px]`}
-                  >
+                  <div className="mt-[7px mb-[10px] flex items-center font-[500] w-max text-[17px]">
                     <p className="opacity-[0.5] mr-[10px]">ID</p>
                     <div
                       style={{
-                        backgroundColor:
-                          appTheme[currentUser.theme].background_3,
+                        backgroundColor: t.background_2,
                       }}
                       className="rounded-[6px] py-[2px] px-[10px]"
                     >
@@ -611,76 +631,60 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     </div>
                   </div>
 
-                  {jobType === "resell" && (
+                  <div
+                    className={`${
+                      descriptionEditorOpen ? "h-[100%]" : "mb-[10px]"
+                    } flex flex-row items-center font-[500] w-[100%] relative text-[17px] mt-[-1px]`}
+                  >
+                    {!descriptionEditorOpen && (
+                      <p className="opacity-[0.5] mr-[10px]">Description</p>
+                    )}
                     <div
+                      style={{
+                        backgroundColor: t.background_2,
+                      }}
+                      onClick={() => {
+                        if (!descriptionEditorOpen) {
+                          setDescriptionEditorOpen(true);
+                        }
+                      }}
                       className={`${
-                        descriptionEditorOpen ? "h-[175px]" : "mb-[10px]"
-                      } flex flex-row items-center font-[500] w-[100%] relative text-[17px] mt-[-1px]`}
+                        !descriptionEditorOpen
+                          ? "cursor-pointer dim hover:brightness-[85%] py-[2px] px-[10px]"
+                          : "px-[4px] h-[100%]"
+                      } rounded-[6px] min-h-[24px] flex flex-1 min-w-0`}
                     >
-                      {!descriptionEditorOpen && (
-                        <p className="opacity-[0.5] mr-[10px]">Description</p>
+                      {!descriptionEditorOpen ? (
+                        <div className="opacity-[0.5] truncate w-[100%] min-h-[24px] text-[16px]">
+                          {description && description.length > 0 ? description : "..."}
+                        </div>
+                      ) : (
+                        <textarea
+                          {...form.register("description")}
+                          className="w-[calc(100%-40px)] text-[15px] opacity-[0.5] outline-none border-none resize-none input rounded-[7px] px-[12px] py-[9px]"
+                          placeholder="Description..."
+                        />
                       )}
-                      {matchedProduct && (
+                      {descriptionEditorOpen && (
                         <div
-                          style={{
-                            backgroundColor:
-                              appTheme[currentUser.theme].background_3,
-                          }}
-                          onClick={() => {
-                            if (!descriptionEditorOpen) {
-                              setDescriptionEditorOpen(true);
-                            }
-                          }}
-                          className={`${
-                            !descriptionEditorOpen
-                              ? "cursor-pointer dim hover:brightness-[85%] py-[2px] px-[10px]"
-                              : "px-[4px] h-[100%]"
-                          } rounded-[6px] min-h-[24px] flex flex-1 min-w-0`}
+                          onClick={() => setDescriptionEditorOpen(false)}
+                          className="flex justify-center items-center cursor-pointer hover:brightness-75 dim w-[36px] h-[26px] right-[10px] top-[10px] absolute z-[300]"
                         >
-                          {!descriptionEditorOpen ? (
-                            <div className="opacity-[0.5] truncate w-[100%] min-h-[24px] text-[16px]">
-                              {matchedProduct.description &&
-                              matchedProduct.description.trim().length > 0
-                                ? matchedProduct.description
-                                : "..."}
-                            </div>
-                          ) : (
-                            <ProductInputField
-                              label="Description"
-                              name="description"
-                              register={form.register}
-                              error={form.formState.errors.description?.message}
-                              disabled={false}
-                              className="w-[calc(100%-35px)] text-[15px] opacity-[0.5]"
-                              inputType={"textarea"}
-                              rows={6}
-                            />
-                          )}
-                          {descriptionEditorOpen && (
-                            <div
-                              onClick={() => setDescriptionEditorOpen(false)}
-                              className="flex justify-center items-center cursor-pointer hover:brightness-75 dim w-[36px] h-[26px] right-[10px] top-[10px] absolute z-[300]"
-                            >
-                              <FaChevronUp
-                                className="opacity-[0.5]"
-                                size={25}
-                              />
-                            </div>
-                          )}
+                          <FaChevronUp className="opacity-[0.2]" size={25} />
                         </div>
                       )}
                     </div>
-                  )}
+                  </div>
 
                   {!descriptionEditorOpen && (
                     <div className="flex flex-col">
-                      {jobType === "resell" && (
+                      {/* {jobType === "resell" && (
                         <div className="flex items-center font-[500] text-[17px] mb-[10px]">
                           <p className="opacity-[0.5] mr-[10px]">Price</p>
                           <div
                             style={{
                               backgroundColor:
-                                appTheme[currentUser.theme].background_3,
+                                t.background_2,
                             }}
                             className="rounded-[6px] py-[2px] px-[9px] flex flex-row gap-[2px] w-[100%]"
                           >
@@ -719,7 +723,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                             />
                           </div>
                         </div>
-                      )}
+                      )} */}
 
                       <div className="w-[100%] flex flex-row items-center mb-[10px]">
                         <p className="opacity-[0.5] font-[500] text-[17px] mr-[11px] mt-[-2px]">
@@ -727,8 +731,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                         </p>
                         <div
                           style={{
-                            backgroundColor:
-                              appTheme[currentUser.theme].background_3,
+                            backgroundColor: t.background_2,
                           }}
                           className="rounded-[6px] py-[3px] px-[10px] w-[100%]"
                         >
@@ -749,8 +752,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                         </p>
                         <div
                           style={{
-                            backgroundColor:
-                              appTheme[currentUser.theme].background_3,
+                            backgroundColor: t.background_2,
                           }}
                           className="rounded-[6px] py-[3px] px-[10px] w-[100%]"
                         >
@@ -773,8 +775,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                         </p>
                         <div
                           style={{
-                            backgroundColor:
-                              appTheme[currentUser.theme].background_3,
+                            backgroundColor: t.background_2,
                           }}
                           className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
                         >
@@ -816,8 +817,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
                         <div
                           style={{
-                            backgroundColor:
-                              appTheme[currentUser.theme].background_3,
+                            backgroundColor: t.background_2,
                           }}
                           className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
                         >
@@ -859,8 +859,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
                         <div
                           style={{
-                            backgroundColor:
-                              appTheme[currentUser.theme].background_3,
+                            backgroundColor: t.background_2,
                           }}
                           className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
                         >
@@ -900,20 +899,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                       </div>
 
                       <div className="flex flex-row">
-                        {productFormRef.current &&
-                          (jobType === "service" ||
-                            jobType === "refurbishment") && (
-                            <>
-                              {matchedCustomer ? (
-                                <CustomerTag
-                                  productCustomer={matchedCustomer}
-                                />
-                              ) : (
-                                <CustomerTag productCustomer={null} />
-                              )}
-                            </>
-                          )}
-                        {matchedCustomer && jobType !== "resell" && (
+                        {matchedCustomer ? (
+                          <CustomerTag productCustomer={matchedCustomer} />
+                        ) : (
+                          <CustomerTag productCustomer={null} />
+                        )}
+
+                        {matchedCustomer && (
                           <div
                             onClick={() => {
                               setModal1({
@@ -945,26 +937,39 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             )}
           </div>
 
-          <div className="mt-[8px]">
-            <ProductInputField
-              label="Note"
-              name="note"
-              register={form.register}
-              error={form.formState.errors.note?.message}
-              disabled={false}
-              className="w-[100%] opacity-[0.5]"
-              inputType={"textarea"}
-              rows={2}
-            />
+          <div className="mt-[11px]">
+            <div
+              className={`relative rounded-[8px] ${noteEditorOpen ? "h-[150px]" : "h-[57px]"}`}
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_2,
+              }}
+            >
+              <textarea
+                {...form.register("note")}
+                className="w-[calc(100%-45px)] h-[100%] text-[15px] opacity-[0.5] outline-none border-none resize-none input rounded-[7px] px-[15px] py-[8px]"
+                placeholder="Note..."
+              />
 
-            <div className="flex flex-row w-[100%] gap-[20px] mt-[8px] mb-[5px]">
-              <div className="h-[40px] flex flex-row gap-[9px] items-center">
+              <div
+                onClick={() => setNoteEditorOpen((prev) => !prev)}
+                className="flex justify-center items-center cursor-pointer hover:brightness-75 dim w-[36px] h-[26px] right-[10px] top-[6px] absolute z-[300]"
+              >
+                {noteEditorOpen ? (
+                  <FaChevronUp className="opacity-[0.2]" size={25} />
+                ) : (
+                  <FaChevronDown className="opacity-[0.2]" size={25} />
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-row w-[100%] gap-[20px]">
+              {/* <div className="h-[40px] flex flex-row gap-[9px] items-center">
                 <div className="font-[600] text-[16px] opacity-[0.5] mt-[-2px]">
                   Job Type
                 </div>
                 <div
                   style={{
-                    backgroundColor: appTheme[currentUser.theme].background_3,
+                    backgroundColor: t.background_2,
                   }}
                   className="rounded-full px-[5px]"
                 >
@@ -977,8 +982,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     options={["service", "refurbishment", "resell"]}
                   />
                 </div>
-              </div>
-
+              </div> */}
+              {/* 
               {productFormRef.current && (
                 <div className="h-[40px] flex flex-row gap-[9px] items-center">
                   <div className="font-[600] text-[16px] opacity-[0.5] mt-[-2px]">
@@ -1001,9 +1006,9 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     />
                   </div>
                 </div>
-              )}
+              )} */}
 
-              {productFormRef.current &&
+              {/* {productFormRef.current &&
                 (productStatus === "complete" ||
                   productStatus === "delivered") && (
                   <ProductInputField
@@ -1024,67 +1029,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                       });
                     }}
                   />
-                )}
+                )} */}
             </div>
 
-            <div
-              className="mt-[4px] w-[100%] min-h-[100px] rounded-[8px]"
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_3,
-              }}
-            >
-              <div className="w-[100%] flex flex-row justify-between px-[15px] py-[9px]">
-                <div className="font-[600] text-[16px] opacity-[0.5]">
-                  Status
-                </div>
-                <div
-                  onClick={handleAddTaskClick}
-                  style={{
-                    backgroundColor: appTheme[currentUser.theme].background_3_2,
-                  }}
-                  className="w-[34px] h-[34px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-90 cursor-pointer"
-                >
-                  <FaPlus
-                    size={18}
-                    color={appTheme[currentUser.theme].text_1}
-                    className="opacity-[0.5] ml-[1.5px]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                {matchedProduct &&
-                  jobs
-                    .filter((job: Job) => job.product_id === matchedProduct.id)
-                    .map((job: Job, index: number) => {
-                      const matchedDefinition = jobDefinitions.find(
-                        (definition: JobDefinition) =>
-                          definition.id === job.job_definition_id
-                      );
-                      if (!matchedDefinition) return;
-                      return (
-                        <div
-                          style={{
-                            backgroundColor:
-                              appTheme[currentUser.theme].background_3,
-                          }}
-                          key={index}
-                          className="w-[50%] rounded-[8px] h-[60px]"
-                        >
-                          {matchedDefinition.type}
-                        </div>
-                      );
-                    })}
-              </div>
-            </div>
-
-            <div className="flex flex-row gap-[16px] mt-[10px]">
+            <div className="flex flex-row gap-[16px]">
               {(form.formState.isDirty || imagesChanged) && (
                 <button
                   type="submit"
-                  className="cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold"
+                  className="mt-[12px] cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold"
                   style={{
-                    backgroundColor: appTheme[currentUser.theme].app_color_1,
+                    backgroundColor: t.app_color_1,
                   }}
                 >
                   <div className="flex items-center justify-center">Save</div>
@@ -1098,7 +1052,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 imagesChanged) && (
                 <div
                   onClick={handleCancelFormChanges}
-                  className="cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold flex items-center justify-center"
+                  className="mt-[12px] cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold flex items-center justify-center"
                   style={{
                     backgroundColor:
                       currentUser.theme === "dark" ? "#999" : "#bbb",
@@ -1108,6 +1062,50 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {matchedProduct &&
+          matchedProduct.id &&
+          productJobs &&
+          productJobs.length > 0 &&
+          productJobs.map((productJob: Job, index: number) => {
+            const matchedDefinition = jobDefinitions.find(
+              (definition: JobDefinition) =>
+                definition.id === productJob.job_definition_id
+            );
+            if (!matchedDefinition) return;
+            return (
+              <div key={index} className="mt-[10px]">
+                {/* <ProductProgressCard product={sample} /> */}
+                {/* <ProductJobCard 
+                  job={productJob}
+                  jobDefinition={matchedDefinition}
+                  productIcon={<FaWrench />}
+                  tasks={[]}
+                  // className?: string;
+                  // onOpen?: (jobId: string | null) => void;
+                /> */}
+                <ProductJobCard2 matchedDefinition={matchedDefinition} productJob={productJob}/>
+              </div>
+            );
+          })}
+
+        <div className="w-[100%] mt-[10px] flex justify-end">
+          <div
+            style={getCardStyle(theme, t)}
+            className="cursor-pointer hover:brightness-90 dim py-[10px] px-[20px] rounded-[10px] flex items-center justify-center gap-[7px] flex-row"
+            onClick={handleAddJobClick}
+          >
+            <div
+              style={{
+                backgroundColor: t.background_2_2,
+              }}
+              className="opacity-[0.8] w-[28px] h-[28px] rounded-[20px] flex items-center justify-center"
+            >
+              <FaPlus size={16} color={t.text_1} className="opacity-[0.5]" />
+            </div>
+            <div className="text-[16px] font-[500]">Add Job</div>
           </div>
         </div>
       </div>

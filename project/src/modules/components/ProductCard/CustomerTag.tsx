@@ -41,7 +41,7 @@ const CustomerTag = ({
     return (
       <div
         style={{
-          backgroundColor: appTheme[currentUser.theme].background_3,
+          backgroundColor: appTheme[currentUser.theme].background_2,
         }}
         className="max-w-[260px] w-[100%] cursor-pointer dim hover:brightness-90 items-center flex flex-row gap-[9px] rounded-full px-[10.5px] py-[5.9px]"
         onClick={async (e) => {
@@ -86,7 +86,7 @@ const CustomerTag = ({
     return (
       <div
         style={{
-          backgroundColor: appTheme[currentUser.theme].background_3,
+          backgroundColor: appTheme[currentUser.theme].background_2,
         }}
         className="max-w-[220px] w-[100%] cursor-pointer dim hover:brightness-90 items-center flex flex-row gap-[9px] rounded-full px-[12px] py-[10px]"
         onClick={handleAddCustomerClick}

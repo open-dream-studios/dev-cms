@@ -2,9 +2,6 @@
 import { z } from "zod";
 
 export const ProductSchema = z.object({
-  name: z.string(),
-  customer_id: z.number().optional().nullable(),
-  description: z.string().optional().nullable(),
   serial_number: z
     .string()
     .min(14, "14 Characters Required")
@@ -12,27 +9,18 @@ export const ProductSchema = z.object({
     .refine((val) => /^[A-Z0-9]+$/.test(val), {
       message: "Only uppercase letters and numbers allowed",
     }),
+  name: z.string().optional().nullable(),
+  customer_id: z.number().optional().nullable(),
   make: z.string().nullable(),
   model: z.string().nullable(),
-  price: z
-    .number()
-    .min(0, "Must be a positive number")
-    .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
-      message: "Max 2 decimal places",
-    })
-    .optional()
-    .nullable(),
-  job_type: z.enum(["service", "refurbishment", "resell"]),
-  product_status: z.enum([
-    "waiting_diagnosis",
-    "waiting_work",
-    "waiting_listing",
-    "listed",
-    "waiting_delivery",
-    "delivered",
-    "complete",
-  ]),
-  date_complete: z.date().optional().nullable(),
+  // price: z
+  //   .number()
+  //   .min(0, "Must be a positive number")
+  //   .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
+  //     message: "Max 2 decimal places",
+  //   })
+  //   .optional()
+  //   .nullable(),
   length: z
     .number()
     .min(0, "Must be a positive number")
@@ -57,7 +45,21 @@ export const ProductSchema = z.object({
     })
     .optional()
     .nullable(),
+  description: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
 });
 
 export type ProductFormData = z.infer<typeof ProductSchema>;
+
+export const defaultProductValues: ProductFormData = {
+  serial_number: "",
+  name: null,
+  customer_id: undefined,
+  make: null,
+  model: null,
+  length: 0,
+  width: 0,
+  height: 0,
+  description: null,
+  note: null,
+};

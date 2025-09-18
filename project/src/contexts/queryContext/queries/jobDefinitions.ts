@@ -1,3 +1,4 @@
+// src/context/queryContext/queries/jobDefinitions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { JobDefinition } from "@/types/jobs";
@@ -41,10 +42,10 @@ export function useJobDefinitions(
   });
 
   const deleteJobDefinitionMutation = useMutation({
-    mutationFn: async (definition_id: string) => {
+    mutationFn: async (job_definition_id: string) => {
       if (!currentProjectId) throw new Error("No project selected");
       await makeRequest.post("/api/jobs/delete-definition", {
-        definition_id,
+        job_definition_id,
         project_idx: currentProjectId,
       });
     },
@@ -59,8 +60,8 @@ export function useJobDefinitions(
     return await upsertJobDefinitionMutation.mutateAsync(definition);
   };
 
-  const deleteJobDefinition = async (definition_id: string) => {
-    await deleteJobDefinitionMutation.mutateAsync(definition_id);
+  const deleteJobDefinition = async (job_definition_id: string) => {
+    await deleteJobDefinitionMutation.mutateAsync(job_definition_id);
   };
 
   return {

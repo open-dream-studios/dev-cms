@@ -43,9 +43,11 @@ import { useSectionDefinitions } from "./queries/sectionDefinitions";
 import { useSections } from "./queries/sections";
 import { useCustomers } from "./queries/customers";
 import { Customer } from "@/types/customers";
-import { Job, JobDefinition } from "@/types/jobs";
+import { Job, JobDefinition, Task, TaskDefinition } from "@/types/jobs";
 import { useJobDefinitions } from "./queries/jobDefinitions";
 import { useJobs } from "./queries/jobs";
+import { useTasks } from "./queries/tasks";
+import { useTaskDefinitions } from "./queries/taskDefinitions";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -237,6 +239,20 @@ export type QueryContextType = {
   refetchJobs: () => Promise<any>;
   upsertJob: (job: Job) => Promise<any>;
   deleteJob: (job_id: string) => Promise<void>;
+
+  // ---- Task Definitions ----
+  taskDefinitions: TaskDefinition[];
+  isLoadingTaskDefinitions: boolean;
+  refetchTaskDefinitions: () => Promise<any>;
+  upsertTaskDefinition: (definition: TaskDefinition) => Promise<any>;
+  deleteTaskDefinition: (definition_id: string) => Promise<void>;
+
+  // ---- Tasks ----
+  tasks: Task[];
+  isLoadingTasks: boolean;
+  refetchTasks: () => Promise<any>;
+  upsertTask: (task: Task) => Promise<any>;
+  deleteTask: (task_id: string) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -359,6 +375,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     upsertCustomerMutation,
     deleteCustomerMutation,
   } = useCustomers(isLoggedIn, currentProjectId);
+
   const {
     jobDefinitionsData,
     isLoadingJobDefinitions,
@@ -366,9 +383,18 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     upsertJobDefinition,
     deleteJobDefinition,
   } = useJobDefinitions(isLoggedIn, currentProjectId);
-
   const { jobsData, isLoadingJobs, refetchJobs, upsertJob, deleteJob } =
     useJobs(isLoggedIn, currentProjectId);
+
+  const {
+    taskDefinitionsData,
+    isLoadingTaskDefinitions,
+    refetchTaskDefinitions,
+    upsertTaskDefinition,
+    deleteTaskDefinition,
+  } = useTaskDefinitions(isLoggedIn, currentProjectId);
+  const { tasksData, isLoadingTasks, refetchTasks, upsertTask, deleteTask } =
+    useTasks(isLoggedIn, currentProjectId);
 
   return (
     <QueryContext.Provider
@@ -474,6 +500,16 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchJobs,
         upsertJob,
         deleteJob,
+        taskDefinitions: taskDefinitionsData ?? [],
+        isLoadingTaskDefinitions,
+        refetchTaskDefinitions,
+        upsertTaskDefinition,
+        deleteTaskDefinition,
+        tasks: tasksData ?? [],
+        isLoadingTasks,
+        refetchTasks,
+        upsertTask,
+        deleteTask,
       }}
     >
       {children}
