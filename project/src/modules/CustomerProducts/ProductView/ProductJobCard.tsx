@@ -1,188 +1,725 @@
-// project/src/modules/CustomerProducts/ProductView/ProductJobCard.tsx
-import React, { useContext, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+// project/src/modules/Jobs/JobCard.tsx
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Box,
   Check,
   Activity,
   Calendar,
   Clock,
   Tag,
-  FolderSearch,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
+  Plus,
 } from "lucide-react";
 import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
-import { getCardStyle } from "@/styles/themeStyles";
-import { Job, JobDefinition, Task } from "@/types/jobs";
+import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
+import type {
+  Job,
+  JobDefinition,
+  Task,
+  PriorityOption,
+  JobStatusOption,
+  TaskStatusOption,
+} from "@/types/jobs";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { FaPlus, FaWrench } from "react-icons/fa6";
+import { FaUserLarge } from "react-icons/fa6";
+import ScheduleTimeline from "@/modules/components/Calendar/Calendar";
+import DatePicker from "react-datepicker";
+import "../../components/Calendar/Calendar.css";
+import { BsThreeDots, BsThreeDotsVertical } from "react-icons/bs";
+import { FiEdit } from "react-icons/fi";
 import { useJobForm } from "@/hooks/useJobForm";
-import type { JobFormData } from "@/util/schemas/jobSchema";
+import { JobFormData } from "@/util/schemas/jobSchema";
+import { UseFormReturn } from "react-hook-form";
+import { Product } from "@/types/products";
+import { dateToString, formatDateTime } from "@/util/functions/Time";
 
-/**
- * Props
- */
-type Props = {
-  job: Job;
-  jobDefinition?: JobDefinition | null;
-  productIcon?: React.ReactNode;
-  tasks?: Task[];
-  className?: string;
-  onOpen?: (jobId: string | null) => void;
-};
-
-const formatDate = (d?: Date | string | null) => {
-  if (!d) return "TBD";
-  const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-};
-
-const formatDateTime = (d?: Date | null) => {
-  if (!d) return "TBD";
-  return d.toLocaleString();
-};
-
-const clamp = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-
-/**
- * Timeline visualization:
- * - shows a compact week or multi-day band from start -> end
- * - working hours (8-17) are lightly highlighted as blocks
- * - progress dot marks scheduled start/complete
- */
-const Timeline: React.FC<{
-  start?: Date | null;
-  end?: Date | null;
-  progress?: number; // 0-100
-  height?: number;
-}> = ({ start, end, progress = 0, height = 56 }) => {
-  // If missing dates show a single-day placeholder
-  const now = new Date();
-  const s = start ? new Date(start) : now;
-  const e = end ? new Date(end) : new Date(s.getTime() + 1000 * 60 * 60 * 24);
-  // ensure order
-  if (e < s) e.setTime(s.getTime() + 1000 * 60 * 60 * 24);
-
-  // compute days span
-  const days = Math.max(1, Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
-  const totalMs = e.getTime() - s.getTime();
-
-  // build day blocks
-  const dayBlocks = new Array(days).fill(0).map((_, i) => {
-    const dayStart = new Date(s.getFullYear(), s.getMonth(), s.getDate() + i, 0, 0, 0);
-    const dayEnd = new Date(dayStart.getTime() + 1000 * 60 * 60 * 24);
-    return { dayStart, dayEnd };
-  });
-
-  const viewWidth = 320; // px of svg track
-  const leftPad = 8;
-  const rightPad = 8;
-  const usable = viewWidth - leftPad - rightPad;
-
-  const posFor = (date: Date) => {
-    const frac = clamp((date.getTime() - s.getTime()) / totalMs, 0, 1);
-    return leftPad + usable * frac;
-  };
-
+// ---------- CircularProgress ----------
+const CircularProgress: React.FC<{
+  value: number; // 0-100
+  size?: number;
+  stroke?: number;
+  color?: string;
+  bg?: string;
+}> = ({
+  value,
+  size = 56,
+  stroke = 7,
+  color = "#06b6d4",
+  bg = "rgba(255,255,255,0.06)",
+}) => {
+  const radius = (size - stroke) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const circumference = 2 * Math.PI * radius;
+  const dash = (value / 100) * circumference;
   return (
-    <div className="w-full select-none">
-      <svg width="100%" height={height} viewBox={`0 0 ${viewWidth} ${height}`} preserveAspectRatio="xMidYMid meet">
-        {/* background track */}
-        <rect x={leftPad} y={height / 2 - 6} rx={6} width={usable} height={12} fill="rgba(255,255,255,0.03)" />
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="block"
+    >
+      <circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        stroke={bg}
+        strokeWidth={stroke}
+        fill="none"
+        strokeLinecap="round"
+      />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        stroke={color}
+        strokeWidth={stroke}
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray={`${dash} ${circumference - dash}`}
+        transform={`rotate(-90 ${cx} ${cy})`}
+      />
+      <text
+        x="50%"
+        y="50%"
+        dominantBaseline="middle"
+        textAnchor="middle"
+        fontSize={11.2}
+        style={{ fontWeight: 700, fill: "white", opacity: 0.5 }}
+      >
+        {Math.round(value)}%
+      </text>
+    </svg>
+  );
+};
 
-        {/* working-hour highlights per day (8-17) */}
-        {dayBlocks.map(({ dayStart }, i) => {
-          const workStart = new Date(dayStart.getTime()); workStart.setHours(8,0,0,0);
-          const workEnd = new Date(dayStart.getTime()); workEnd.setHours(17,0,0,0);
-          // clamp within s..e
-          const segStart = new Date(Math.max(s.getTime(), workStart.getTime()));
-          const segEnd = new Date(Math.min(e.getTime(), workEnd.getTime()));
-          if (segEnd > segStart) {
-            const x = posFor(segStart);
-            const w = Math.max(2, posFor(segEnd) - x);
-            return (
-              <rect key={i} x={x} y={height/2 - 6} rx={6} width={w} height={12} fill="rgba(6,182,212,0.12)" />
-            );
-          }
-          return null;
-        })}
-
-        {/* filled progress indicator along track */}
-        <rect
-          x={leftPad}
-          y={height / 2 - 6}
-          rx={6}
-          width={(usable * clamp(progress / 100, 0, 1))}
-          height={12}
-          fill="url(#grad)"
-          opacity={0.95}
-        />
-
-        <defs>
-          <linearGradient id="grad" x1="0%" x2="100%">
-            <stop offset="0%" stopColor="#06b6d4" stopOpacity="1" />
-            <stop offset="100%" stopColor="#7c3aed" stopOpacity="1" />
-          </linearGradient>
-        </defs>
-
-        {/* start and end markers */}
-        <circle cx={posFor(s)} cy={height / 2} r={6} fill="#06b6d4" stroke="white" strokeWidth={1.5} />
-        <circle cx={posFor(e)} cy={height / 2} r={6} fill={progress >= 100 ? "#22c55e" : "#7c3aed"} stroke="white" strokeWidth={1.5} />
-
-        {/* label dots for now/progress */}
-        <g transform={`translate(0, ${height/2 - 18})`}>
-          <text x={posFor(s)} y={-14} fontSize={9} textAnchor="middle" fill="rgba(255,255,255,0.8)">{formatDate(s)}</text>
-          <text x={posFor(e)} y={-14} fontSize={9} textAnchor="middle" fill="rgba(255,255,255,0.8)">{formatDate(e)}</text>
-        </g>
-      </svg>
+// ---------- StatusBadge ----------
+const StatusBadge: React.FC<{
+  form: UseFormReturn<JobFormData> | null;
+}> = ({ form }) => {
+  if (!form) return null;
+  const status = form.watch("status");
+  const mapping: Record<string, { color: string; label: string }> = {
+    waiting_diagnosis: { color: "#06b6d4", label: "Waiting On Diagnosis" },
+    waiting_work: { color: "#60a5fa", label: "Work Required" },
+    waiting_parts: { color: "#f59e0b", label: "Waiting On Parts" },
+    waiting_customer: { color: "#f59e0b", label: "Waiting On Customer" },
+    waiting_listing: { color: "#8b5cf6", label: "Ready To List" },
+    listed: { color: "#8b5cf6", label: "Listed" },
+    waiting_delivery: { color: "#60a5fa", label: "Ready For Delivery" },
+    delivered: { color: "#16a34a", label: "Delivered" },
+    complete: { color: "#16a34a", label: "Complete" },
+    cancelled: { color: "#ef4444", label: "Cancelled" },
+  };
+  const info = mapping[status] ?? {
+    color: "#94a3b8",
+    label: status || "Unknown",
+  };
+  if (!form) return null;
+  return (
+    <div
+      className="cursor-pointer hover:brightness-75 dim inline-flex items-center gap-2 pl-[12px] pr-[14px] rounded-full text-[13px] font-semibold"
+      style={{ background: `${info.color}20`, color: info.color }}
+    >
+      <span
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: info.color,
+          boxShadow: "0 0 8px rgba(0,0,0,0.18)",
+        }}
+        className="brightness-[140%]"
+      />
+      <select
+        {...form.register("status")}
+        className="brightness-[140%] pl-[24px] pr-[5px] rounded-full ml-[-26px] cursor-pointer py-2 text-sm outline-none border-none"
+      >
+        <option value="waiting_diagnosis">
+          {mapping["waiting_diagnosis"].label}
+        </option>
+        <option value="waiting_work">{mapping["waiting_work"].label}</option>
+        <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
+        <option value="waiting_customer">
+          {mapping["waiting_customer"].label}
+        </option>
+        <option value="waiting_listing">
+          {mapping["waiting_listing"].label}
+        </option>
+        <option value="listed">{mapping["listed"].label}</option>
+        <option value="waiting_delivery">
+          {mapping["waiting_delivery"].label}
+        </option>
+        <option value="delivered">{mapping["delivered"].label}</option>
+        <option value="complete">{mapping["complete"].label}</option>
+        <option value="cancelled">{mapping["cancelled"].label}</option>
+      </select>
     </div>
   );
 };
 
-/**
- * Main card
- */
-const ProductJobCard: React.FC<Props> = ({
-  job,
-  jobDefinition,
-  productIcon,
-  tasks = [],
-  className = "",
-  onOpen,
-}) => {
-  const { currentUser } = useContext(AuthContext);
+// ---------- TaskStatusBadge ----------
+const TaskStatusBadge: React.FC<{
+  status: TaskStatusOption;
+  setStatus: React.Dispatch<React.SetStateAction<TaskStatusOption>>;
+}> = ({ status, setStatus }) => {
+  const mapping: Record<string, { color: string; label: string }> = {
+    waiting_work: { color: "#60a5fa", label: "Work Required" },
+    waiting_parts: { color: "#f59e0b", label: "Waiting On Parts" },
+    waiting_customer: { color: "#f59e0b", label: "Waiting On Customer" },
+    complete: { color: "#16a34a", label: "Complete" },
+    cancelled: { color: "#ef4444", label: "Cancelled" },
+  };
+  const info = mapping[status] ?? {
+    color: "#94a3b8",
+    label: status || "Unknown",
+  };
+  return (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="cursor-pointer hover:brightness-75 dim inline-flex items-center gap-2 pl-[12px] pr-[10px] rounded-full text-[13px] font-semibold"
+      style={{ background: `${info.color}20`, color: info.color }}
+    >
+      <span
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: info.color,
+          boxShadow: "0 0 8px rgba(0,0,0,0.18)",
+        }}
+        className="brightness-[140%]"
+      />
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value as TaskStatusOption)}
+        className="brightness-[140%] pl-[22px] pr-[5px] rounded-full ml-[-26px] cursor-pointer h-[25px] text-[13px] outline-none border-none"
+      >
+        <option value="waiting_work">{mapping["waiting_work"].label}</option>
+        <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
+        <option value="waiting_customer">
+          {mapping["waiting_customer"].label}
+        </option>
+        <option value="complete">{mapping["complete"].label}</option>
+        <option value="cancelled">{mapping["cancelled"].label}</option>
+      </select>
+    </div>
+  );
+};
+
+// ---------- PriorityBadge ----------
+const PriorityBadge: React.FC<{
+  form: UseFormReturn<JobFormData> | null;
+}> = ({ form }) => {
+  const { currentUser } = React.useContext(AuthContext);
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
-  const icon = productIcon ?? <Box size={18} />;
 
-  // small local UI state for note editor open
-  const [noteOpen, setNoteOpen] = useState(false);
-  const [showTasks, setShowTasks] = useState(false);
-
-  const form = useJobForm({
-    status: job.status as any,
-    priority: job.priority as any,
-    scheduled_date: job.scheduled_start_date ?? undefined,
-    completed_date: job.completed_date ?? undefined,
-    notes: job.notes ?? undefined,
-  });
-
-  // derive simple progress from tasks complete ratio (fallback to 0)
-  const progress = useMemo(() => {
-    if (!tasks.length) return job.status === "complete" ? 100 : 0;
-    const done = tasks.filter((t) => t.status === "complete").length;
-    return Math.round((done / tasks.length) * 100);
-  }, [tasks, job.status]);
+  if (!form) return null;
+  const priority = form.watch("priority");
 
   return (
     <div
-      className={`w-full rounded-2xl p-4 ${className}`}
-      style={getCardStyle(theme, t)}
+      onClick={(e) => e.stopPropagation()}
+      className="rounded-full pr-[10px] cursor-pointer hover:brightness-[93%] dim"
+      style={{
+        background:
+          status === "complete" ||
+          status === "cancelled" ||
+          status === "delivered"
+            ? t.background_2
+            : priority === "urgent"
+            ? "rgba(239,68,68,0.12)"
+            : priority === "high"
+            ? "#f59e0b20"
+            : t.background_2,
+      }}
     >
-      {/* top row */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <select
+        {...form.register("priority")}
+        style={{
+          color:
+            status === "complete" ||
+            status === "cancelled" ||
+            status === "delivered"
+              ? t.text_1
+              : priority === "urgent"
+              ? "#ef4444"
+              : priority === "high"
+              ? "#f59e0b"
+              : t.text_1,
+          filter:
+            priority === "urgent" || priority === "high"
+              ? "brightness(140%)"
+              : "none",
+        }}
+        className="cursor-pointer font-[500] outline-none border-none rounded-full pl-[10px] w-[90px] h-[25px] text-[13px] opacity-[0.95]"
+      >
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+        <option value="urgent">Urgent</option>
+      </select>
+    </div>
+  );
+};
+
+// ---------- TaskCard ----------
+const TaskCard: React.FC<{
+  task: Task;
+  idx: number;
+  resetSignal: number;
+  registerSafeRef: (ref: HTMLElement | null) => void;
+}> = ({ task, idx, resetSignal, registerSafeRef }) => {
+  const { currentUser } = React.useContext(AuthContext);
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
+  const threeDotsRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    registerSafeRef(threeDotsRef.current); // register with parent
+  }, [registerSafeRef]);
+
+  // reset when signal changes
+  useEffect(() => {
+    setDeleteButtonVisible(false);
+  }, [resetSignal]);
+
+  // fake part data example (you'd replace with real part listing)
+  const fakeParts =
+    idx % 2 === 0
+      ? [
+          { id: "p1", name: "Valve kit", qty: 1, status: "on_order" },
+          { id: "p2", name: "Rubber seal", qty: 2, status: "in_stock" },
+        ]
+      : [{ id: "p3", name: "Filter", qty: 1, status: "missing" }];
+
+  const completed = task.status === "complete";
+
+  const [taskDate, setTaskDate] = useState<Date | null>(new Date());
+  const people = ["Paul", "Dan"];
+  const [priority, setPriority] = useState<PriorityOption>("medium");
+  const [status, setStatus] = useState<TaskStatusOption>("waiting_work");
+  const [deleteButtonVisible, setDeleteButtonVisible] =
+    useState<boolean>(false);
+  const [descriptionOpen, setDescriptionOpen] = useState<boolean>(false);
+  const [editAssignment, setEditAssignment] = useState<boolean>(false);
+
+  return (
+    <div
+      className="rounded-xl relative"
+      style={{
+        ...getInnerCardStyle(theme, t),
+        transform: "translateZ(0)",
+      }}
+    >
+      <div
+        className={`${
+          deleteButtonVisible
+            ? "pointer-events-auto z-[501]"
+            : "opacity-0 pointer-events-none z-[100]"
+        } transition-opacity duration-300 ease-in-out w-[100%] h-[100%] absolute left-0 top-0 rounded-xl`}
+      >
+        <div className="w-[100%] h-[100%] bg-black opacity-[0.1] z-[500] absolute left-0 top-0 rounded-xl" />
+        <div
+          style={{
+            border: "1px solid " + t.background_3,
+            backgroundColor: t.background_2,
+          }}
+          className={`${
+            deleteButtonVisible
+              ? "pointer-events-auto z-[501]"
+              : "opacity-0 pointer-events-none"
+          } transition-all duration-300 ease-in-out absolute right-[10px] top-[25px] shadow-xl z-[502] w-[100px] h-[35px] rounded-[6px] flex items-center justify-center cursor-pointer hover:brightness-90 dim`}
+        >
+          <div
+            onClick={() => {
+              // if (task.task_id) {
+              // deleteTask(task.task_id)
+              // }
+              console.log("delete task");
+            }}
+            className="text-[13px] font-[500] opacity-[0.8]"
+          >
+            Delete Task
+          </div>
+        </div>
+      </div>
+
+      <div className="w-[100%] h-[100%] z-[300] flex items-start gap-[13px] p-3">
+        <div
+          onClick={() => {
+            setDeleteButtonVisible((prev) => !prev);
+          }}
+          ref={threeDotsRef}
+          className="absolute flex items-end flex-col z-[500] top-[6px] right-[14px] cursor-pointer hover:brightness-90 dim"
+        >
+          <BsThreeDots size={20} className="opacity-[0.2]" />
+        </div>
+        <div
+          className="w-12 h-12 rounded-lg flex items-center justify-center"
+          style={{
+            background: completed
+              ? "rgba(115,255,115,0.29)"
+              : "rgba(6,182,212,0.18)",
+          }}
+        >
+          {completed ? <Check size={18} /> : <Activity size={18} />}
+        </div>
+
+        <div className="flex-1">
+          <div className="flex items-start justify-between gap-[12px]">
+            <div className="flex flex-col gap-[8px] w-[100%]">
+              <input
+                type="text"
+                className="mt-[3px] w-[100%] text-[15px] font-[500] outline-none truncate"
+                placeholder="Task..."
+              />
+
+              <div
+                className={`relative rounded-[5px] transition-all duration-200 ${
+                  descriptionOpen ? "h-[120px]" : "h-[30px]"
+                }`}
+                style={{ backgroundColor: appTheme[theme].background_2 }}
+              >
+                <textarea
+                  // value={notes ?? ""}
+                  // onChange={(e) => setNotes(e.target.value)}
+                  className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] leading-[16px] opacity-[0.7] outline-none border-none resize-none px-3 py-[6.7px]"
+                  placeholder="Description..."
+                />
+
+                <div
+                  onClick={() => setDescriptionOpen((prev) => !prev)}
+                  className="flex justify-center items-center cursor-pointer hover:brightness-90 dim w-[36px] h-[30px] right-[3px] top-[0px] absolute z-[300]"
+                >
+                  {descriptionOpen ? (
+                    <ChevronUp size={22} className="opacity-30" />
+                  ) : (
+                    <ChevronDown size={22} className="opacity-30" />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-start gap-[8px] mt-[1px] flex-row w-[100%]">
+                <Calendar
+                  size={15}
+                  className="opacity-[0.4] min-w-[15px] mt-[6px]"
+                />
+                <div className="min-w-[100px] relative">
+                  <DatePicker
+                    selected={taskDate}
+                    onChange={(date) => setTaskDate(date)}
+                    className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
+                      theme === "dark"
+                        ? "text-[#999] border-[#3d3d3d] border-[1px]"
+                        : "text-black border-[#111] border-[0.5px]"
+                    }`}
+                    calendarClassName={
+                      theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                    }
+                    popperClassName={
+                      theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                    }
+                  />
+                </div>
+
+                <div className="ml-[9px] mt-[4px] mr-[3px] opacity-[0.6] text-[12px] font-[500]">
+                  Assignment
+                </div>
+
+                <div className="w-[100%] flex-wrap gap-[8px] flex flex-row mt-[1px]">
+                  {people.map((person: any, index: number) => {
+                    return (
+                      <div className="relative" key={index}>
+                        <div
+                          style={{
+                            backgroundColor: "#60a5fa20",
+                          }}
+                          className="relative h-[25px] px-[15px] rounded-full flex items-center cursor-pointer hover:brightness-[80%] dim "
+                        >
+                          <div
+                            style={{
+                              color: "#60a5fa",
+                            }}
+                            className="select-none brightness-130 text-[12px] font-[500] mt-[-0.8px]"
+                          >
+                            {person}
+                          </div>
+                        </div>
+                        {editAssignment && (
+                          <div
+                            style={{
+                              backgroundColor: t.background_4,
+                            }}
+                            className="cursor-pointer hover:brightness-[45%] dim brightness-[55%] w-[13px] h-[13px] z-[300] absolute right-[-5px] top-[-5px] rounded-full bg-red-400 flex items-center justify-center"
+                          >
+                            <div
+                              className="w-[6px] h-[1.5px] rounded-full"
+                              style={{
+                                backgroundColor: t.text_1,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  <div
+                    className="ml-[1px] cursor-pointer hover:brightness-90 dim w-[25px] h-[25px] rounded-full flex items-center justify-center"
+                    style={{
+                      backgroundColor: t.background_2,
+                    }}
+                  >
+                    <FaPlus size={12} className="opacity-[0.6]" />
+                  </div>
+
+                  <div
+                    className="cursor-pointer mt-[-0.5px] hover:brightness-90 dim w-[26px] h-[26px] rounded-full flex items-center justify-center"
+                    style={{
+                      backgroundColor: t.background_2,
+                      border: editAssignment ? "1px solid " + t.text_3 : "none",
+                    }}
+                    onClick={() => setEditAssignment((prev) => !prev)}
+                  >
+                    <FiEdit size={12} className="opacity-[0.6]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center flex-row gap-[10px]">
+              <div className="flex flex-col gap-[4px]">
+                <div className="select-none ml-[3px] opacity-[0.2] text-[13px] font-[500]">
+                  Priority
+                </div>
+                <PriorityBadge form={null} />
+              </div>
+
+              <div className="flex flex-col gap-[4px]">
+                <div className="select-none ml-[4px] opacity-[0.2] text-[13px] font-[500]">
+                  Status
+                </div>
+                <TaskStatusBadge status={status} setStatus={setStatus} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ---------- MiniTaskCard ----------
+const MiniTaskCard: React.FC<{
+  task: Task;
+  idx: number;
+  setTasksCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+}> = ({ task, idx, setTasksCollapsed }) => {
+  const { currentUser } = React.useContext(AuthContext);
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
+  const completed = task.status === "complete";
+  const [priority, setPriority] = useState<PriorityOption>("medium");
+  const [status, setStatus] = useState<TaskStatusOption>("waiting_work");
+
+  return (
+    <div
+      className="cursor-pointer hover:brightness-[86%] dim rounded-xl relative"
+      style={getInnerCardStyle(theme, t)}
+    >
+      <div
+        onClick={() => {
+          setTasksCollapsed(false);
+        }}
+        className="w-[100%] h-[100%] z-[300] flex items-start gap-[13px] p-3"
+      >
+        <div
+          className="w-[30px] h-[30px] rounded-lg flex items-center justify-center"
+          style={{
+            background: completed
+              ? "rgba(115,255,115,0.45)"
+              : "rgba(6,182,212,0.2)",
+          }}
+        >
+          {completed ? <Check size={16.5} /> : <Activity size={15.2} />}
+        </div>
+
+        <div className="flex-1">
+          <div className="flex items-start justify-between gap-[12px]">
+            <div className="flex flex-col gap-[8px] w-[100%]">
+              <div className="mt-[3px] w-[100%] text-[15px] font-[500] outline-none truncate">
+                {task.task}
+              </div>
+            </div>
+
+            <div className="flex items-center flex-row gap-[10px] mt-[2px]">
+              <div className="flex flex-col gap-[4px]">
+                <PriorityBadge form={null} />
+              </div>
+
+              <div className="flex flex-col gap-[4px]">
+                <TaskStatusBadge status={status} setStatus={setStatus} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ---------- JobCard (main) ----------
+type ProductJobProps = {
+  productJob: Job | null;
+  matchedDefinition: JobDefinition | null;
+  matchedProduct: Product | null;
+};
+
+const ProductJobCard: React.FC<ProductJobProps> = ({
+  productJob,
+  matchedDefinition,
+  matchedProduct,
+}) => {
+  const { currentUser } = useContext(AuthContext);
+  const { tasks: allTasks, deleteJob, upsertJob } = useContextQueries();
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
+  if (!matchedDefinition || !productJob) return null;
+
+  useEffect(() => {
+    jobForm.reset(productJob as JobFormData);
+  }, [productJob]);
+
+  const jobForm = useJobForm();
+
+  const onFormSubmitButton = async (data: JobFormData) => {
+    const submitValue = {
+      ...data,
+      scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
+      completed_date: dateToString(data.completed_date ?? null),
+      valuation: data.valuation ?? 0,
+      job_id: productJob.job_id ? productJob.job_id : null,
+      job_definition_id: matchedDefinition.id,
+      product_id:
+        matchedProduct && matchedProduct.id ? matchedProduct.id : null,
+      customer_id:
+        matchedProduct && matchedProduct.customer_id
+          ? matchedProduct.customer_id
+          : null,
+    } as Job;
+    await upsertJob(submitValue);
+  };
+
+  // fake tasks if not provided
+  const defaultTasks: Task[] = [
+    {
+      task_id: "T-001",
+      job_id: 1,
+      status: "waiting_work",
+      priority: "high",
+      scheduled_start_date: new Date(),
+      completed_date: null,
+      task: "Inspect outer shell and remove corrosion",
+      description: "spa pack",
+    },
+    {
+      task_id: "T-002",
+      job_id: 1,
+      status: "waiting_parts",
+      priority: "medium",
+      scheduled_start_date: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      completed_date: null,
+      task: "Replace valve kit",
+      description: "spa pack",
+    },
+    {
+      task_id: "T-003",
+      job_id: 1,
+      status: "complete",
+      priority: "low",
+      scheduled_start_date: new Date(Date.now() - 1000 * 60 * 60 * 24),
+      completed_date: new Date(),
+      task: "Clean & polish",
+      description: "spa pack",
+    },
+  ];
+
+  const tasks = useMemo(() => {
+    return defaultTasks;
+    // if (!jobProp) return [];
+    // return allTasks.filter((task: Task) => task.job_id === jobProp.id);
+  }, [allTasks]);
+
+  const completedCount = tasks.filter((t) => t.status === "complete").length;
+  const progressPct = Math.round(
+    (completedCount / Math.max(1, tasks.length)) * 100
+  );
+
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [tasksCollapsed, setTasksCollapsed] = useState(true);
+  const [editAssignment, setEditAssignment] = useState<boolean>(false);
+  const [deleteButtonVisible, setDeleteButtonVisible] =
+    useState<boolean>(false);
+  const [resetSignal, setResetSignal] = useState<number>(0);
+  const parentRef = useRef<HTMLFormElement | null>(null);
+  const childRefs = useRef<HTMLElement[]>([]);
+  const threeDotsRef = useRef<HTMLDivElement | null>(null);
+
+  const registerChildRef = (ref: HTMLElement | null) => {
+    if (ref && !childRefs.current.includes(ref)) {
+      childRefs.current.push(ref);
+    }
+  };
+  useEffect(() => {
+    function handleClick(event: MouseEvent) {
+      const target = event.target as Node;
+      if (parentRef.current && !parentRef.current.contains(target)) return;
+      if (childRefs.current.some((ref) => ref.contains(target))) return;
+      if (threeDotsRef.current?.contains(target)) return;
+      setDeleteButtonVisible(false);
+      setResetSignal((prev) => prev + 1);
+    }
+
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
+
+  function addTask() {
+    if (!productJob) return;
+    const newTask: Task = {
+      task_id: `T-${Math.floor(Math.random() * 9000 + 1000)}`,
+      job_id: productJob.id ?? 1,
+      status: "waiting_work",
+      priority: "medium",
+      scheduled_start_date: null,
+      completed_date: null,
+      task: "New task",
+      description: "spa pack",
+    };
+    // setTasks((p) => [newTask, ...p]);
+  }
+
+  const people = ["Paul", "Dan"];
+
+  if (!currentUser) return null;
+
+  return (
+    <form
+      className="w-[100%] rounded-2xl px-[16px] pt-[14px] pb-[16px"
+      style={getCardStyle(theme, t)}
+      ref={parentRef}
+      onSubmit={jobForm.handleSubmit(onFormSubmitButton)}
+    >
+      {/* TOP ROW */}
+      <div className="flex items-start justify-between w-full">
+        <div className="flex items-center gap-[15px]">
           <div
             className="p-3 rounded-xl shadow-sm"
             style={{
@@ -194,289 +731,337 @@ const ProductJobCard: React.FC<Props> = ({
               minHeight: 56,
             }}
           >
-            <div style={{ color: t.text_1 }}>{icon}</div>
+            <FaWrench
+              size={20}
+              className="opacity-[0.65]"
+              style={{ color: t.text_1 }}
+            />
           </div>
 
-          <div className="flex flex-col">
-            <div style={{ color: t.text_1 }} className="text-lg font-semibold leading-tight">
-              {`${jobDefinition?.type ?? "Untitled"} Job`}
-            </div>
-
-            <div className="flex items-center gap-2 mt-1">
-              <div className="text-xs" style={{ color: t.text_2 }}>
-                {jobDefinition?.type ?? "Job"}
-              </div>
-
+          <div className="flex flex-col mt-[6px]">
+            <div className="mt-[-4px] flex flex-row gap-[5px] items-center">
               <div
-                className={`text-xs rounded-full px-2 py-1 font-medium`}
-                style={{
-                  backgroundColor: job.status === "complete" ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.03)",
-                  color: job.status === "complete" ? "rgb(34,197,94)" : t.text_2,
-                }}
+                style={{ color: t.text_1 }}
+                className="text-[20px] leading-[24px] font-semibold mt-[-5px]"
               >
-                {job.status.replace("_", " ")}
+                {matchedDefinition.type} {" Job"}
               </div>
-
-              <div className="text-xs rounded-full px-2 py-1 font-medium" style={{ backgroundColor: "rgba(255,255,255,0.02)", color: t.text_2 }}>
-                Priority: <span className="ml-1 font-semibold" style={{ color: t.text_1 }}>{job.priority}</span>
+              <div className="relative flex flex-row gap-[3px] items-center mt-[-5px]">
+                <div
+                  ref={threeDotsRef}
+                  className="opacity-[0.5] cursor-pointer hover:brightness-75 dim"
+                >
+                  <BsThreeDotsVertical
+                    size={18}
+                    onClick={() => {
+                      setDeleteButtonVisible(true);
+                    }}
+                  />
+                </div>
+                {deleteButtonVisible ? (
+                  <div
+                    style={{
+                      border: "1px solid " + t.background_3,
+                      backgroundColor: t.background_2,
+                    }}
+                    className="shadow-xl z-[502] w-[100px] h-[35px] rounded-[6px] flex items-center justify-center cursor-pointer hover:brightness-90 dim"
+                  >
+                    <div
+                      onClick={async () => {
+                        if (productJob.job_id) {
+                          deleteJob(productJob.job_id);
+                        }
+                      }}
+                      className="text-[13px] font-[500] opacity-[0.8]"
+                    >
+                      Delete Job
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    style={{
+                      border: "1px solid " + t.background_3,
+                      backgroundColor: t.background_2,
+                    }}
+                    className="shadow-xl z-[502] w-[100px] h-[35px] rounded-[6px] flex items-center justify-center cursor-pointer hover:brightness-90 dim"
+                  >
+                    <div className="text-[13px] font-[500] opacity-[0.8]">
+                      Save Job
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
 
-            <div className="text-xs mt-2" style={{ color: t.text_2 }}>
-              Scheduled: <span style={{ color: t.text_1 }} className="font-semibold">{formatDate(job.scheduled_start_date)}</span>
-              <span className="mx-3">•</span>
-              Completed: <span style={{ color: t.text_1 }} className="font-semibold">{formatDate(job.completed_date)}</span>
+            <div className="mt-[2px] flex items-center gap-2">
+              <div className="opacity-[0.4] mt-[-3px] text-[15px] font-medium">
+                Priority
+              </div>
+              <PriorityBadge form={jobForm} />
             </div>
           </div>
         </div>
 
-        {/* right: compact progress and actions */}
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col items-end">
-            <div className="text-xs" style={{ color: t.text_2 }}>Job Progress</div>
-            <motion.div
-              initial={{ scale: 0.96, opacity: 0.6 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.28 }}
-              className="mt-2"
-            >
-              {/* circular simple progress */}
-              <div className="relative w-[64px] h-[64px]">
-                <svg viewBox="0 0 36 36" className="w-full h-full block">
-                  <defs>
-                    <linearGradient id="g1" x1="0%" x2="100%">
-                      <stop offset="0%" stopColor="#06b6d4" />
-                      <stop offset="100%" stopColor="#7c3aed" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M18 2.0845
-                       a 15.9155 15.9155 0 0 1 0 31.831
-                       a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.06)"
-                    strokeWidth="3"
-                  />
-                  <path
-                    d="M18 2.0845
-                       a 15.9155 15.9155 0 0 1 0 31.831"
-                    fill="none"
-                    stroke="url(#g1)"
-                    strokeWidth="3"
-                    strokeDasharray={`${clamp(progress,0,100) / 100 * 100} 100`}
-                    strokeLinecap="round"
-                  />
-                  <text x="50%" y="52%" dominantBaseline="middle" textAnchor="middle" fontSize="7" fill="white" style={{ fontWeight: 700 }}>
-                    {Math.round(progress)}%
-                  </text>
-                </svg>
-              </div>
-            </motion.div>
+        <div
+          className="flex items-center gap-[15px] py-[6.5px] px-[12px] rounded-[10px]"
+          style={getInnerCardStyle(theme, t)}
+        >
+          <div className="flex flex-col gap-[7px]">
+            <p className="ml-[2.5px] mt-[-3px] font-[500] text-[13px] leading-[15px] opacity-[0.26]">
+              Job Status
+            </p>
+            <StatusBadge form={jobForm} />
           </div>
-
-          <div>
-            <button
-              onClick={() => onOpen?.(job.job_id)}
-              className="px-3 py-2 rounded-lg text-sm font-semibold cursor-pointer dim"
-              style={{
-                background: "linear-gradient(90deg,#06b6d4,#7c3aed)",
-                color: "#fff",
-                boxShadow: "0 6px 18px rgba(124,58,237,0.12)",
-              }}
-            >
-              Open
-            </button>
-          </div>
+          <CircularProgress
+            value={progressPct}
+            size={55}
+            stroke={8}
+            color={progressPct >= 100 ? "#22c55e" : "#06b6d4"}
+            bg={
+              theme === "dark" ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)"
+            }
+          />
         </div>
       </div>
 
-      {/* divider */}
-      <div className="w-full h-[1px] my-4" style={{ background: theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.06)" }} />
-
-      {/* Lower content: left (description + notes + schedule) | right (timeline + controls + mini-tasks) */}
-      <div className="flex gap-4 items-start">
-        {/* LEFT column - wide */}
-        <div
-          className="flex-1 rounded-xl p-4"
-          style={{
-            background: theme === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.03)",
-            border: theme === "dark" ? "1px solid rgba(255,255,255,0.03)" : undefined,
-          }}
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm" style={{ color: t.text_2 }}>Description</div>
-              <div className="mt-2 text-xs" style={{ color: t.text_2 }}>
-                {jobDefinition?.description ?? "No job description available. Add details about what needs to be done for this tub."}
-              </div>
-            </div>
-
-            <div className="text-xs text-right" style={{ color: t.text_2 }}>
-              <div>Last update</div>
-              {job.updated_at && <div className="font-semibold" style={{ color: t.text_1 }}> {formatDateTime(job.updated_at ? new Date() : undefined)}</div>}
-            </div>
-          </div>
-
-          {/* Notes editor */}
-          <div className="mt-4">
-            <div className="text-xs mb-2" style={{ color: t.text_2 }}>Notes</div>
-
-            <div
-              className={`relative rounded-[8px] transition-all duration-200 ${noteOpen ? "h-[150px]" : "h-[56px]"}`}
-              style={{
-                backgroundColor: appTheme[theme].background_2,
+      {matchedDefinition.type === "Resell" && (
+        <div className="flex items-center mb-[10px] mt-[1px]">
+          <p className="opacity-[0.4] mr-[10px] text-[15px] font-[500]">
+            Resell Price
+          </p>
+          <div
+            style={{
+              backgroundColor: t.background_2,
+            }}
+            className="rounded-[6px] px-[9px] flex flex-row gap-[2px] w-[140px] items-center"
+          >
+            <p className="opacity-[0.65] font-[500] text-[15px]">$</p>
+            <input
+              {...jobForm.register("valuation", {
+                required: "Price is required",
+                validate: (value) =>
+                  /^\d+(\.\d{1,2})?$/.test(String(value)) ||
+                  "Max 2 decimal places",
+                setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
+              })}
+              type={"text"}
+              inputMode="decimal"
+              pattern="^\d+(\.\d{0,2})?$"
+              onInput={(e) => {
+                let value = e.currentTarget.value;
+                value = value.replace(/[^0-9.]/g, "");
+                const parts = value.split(".");
+                if (parts.length > 2) value = parts[0] + "." + parts[1];
+                if (parts[1]?.length > 2) {
+                  parts[1] = parts[1].slice(0, 2);
+                  value = parts[0] + "." + parts[1];
+                }
+                e.currentTarget.value = value;
               }}
-            >
-              <textarea
-                {...form.register("notes" as any)}
-                className="w-[calc(100%-45px)] h-[100%] text-[14px] opacity-[0.9] outline-none border-none resize-none bg-transparent px-3 py-2 rounded-[7px]"
-                placeholder="Add a note about the job..."
-              />
-
-              <div
-                onClick={() => setNoteOpen((p) => !p)}
-                className="flex justify-center items-center cursor-pointer hover:brightness-90 dim w-[36px] h-[30px] right-[10px] top-[8px] absolute z-[300]"
-              >
-                {noteOpen ? <ChevronUp size={16} className="opacity-60" /> : <ChevronDown size={16} className="opacity-60" />}
-              </div>
-            </div>
-          </div>
-
-          {/* small metadata row */}
-          <div className="mt-3 flex flex-wrap gap-3 items-center text-xs" style={{ color: t.text_2 }}>
-            <div className="flex items-center gap-2">
-              <Calendar size={14} /> <span>{formatDate(job.scheduled_start_date)}</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Clock size={14} /> <span>{formatDate(job.completed_date)}</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Tag size={14} /> <span>{job.job_id ?? "—"}</span>
-            </div>
+              className="w-[100%] border-none outline-none text-[15px] font-[500] opacity-[0.7] input rounded-[7px] pr-[10px] py-[4px] truncate"
+            />
           </div>
         </div>
+      )}
 
-        {/* RIGHT column - narrow */}
-        <div className="w-[360px] grid grid-rows-[auto_auto_1fr] gap-3">
-          {/* timeline mini-card */}
+      {/* MIDDLE */}
+      <div className="w-[100%] h-auto mt-[13.5px] gap-[14px] flex flex-col">
+        <div className="flex flex-col gap-[12px]">
           <div
-            className="rounded-xl p-3"
-            style={{
-              background: theme === "dark" ? "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))" : "rgba(0,0,0,0.03)",
-              border: theme === "dark" ? "1px solid rgba(255,255,255,0.03)" : undefined,
-            }}
+            className="rounded-xl px-[15px] pt-[11px] pb-[10px] w-[100%]"
+            style={getInnerCardStyle(theme, t)}
           >
-            <div className="flex items-center justify-between">
-              <div className="text-xs" style={{ color: t.text_2 }}>Schedule</div>
-              <div className="text-xs font-semibold" style={{ color: t.text_1 }}>
-                {formatDate(job.scheduled_start_date)} — {formatDate(job.completed_date)}
+            <div className="flex items-start justify-between">
+              <div>
+                <div
+                  className="text-[15px] font-[600] ml-[3px]"
+                  style={{ color: t.text_2 }}
+                >
+                  Job Details
+                </div>
               </div>
-            </div>
 
-            <div className="mt-3">
-              <Timeline start={job.scheduled_start_date ?? undefined} end={job.completed_date ?? undefined} progress={progress} height={64} />
-            </div>
-
-            <div className="mt-2 flex items-center text-xs" style={{ color: t.text_2 }}>
-              <Clock size={14} /> <span className="ml-2">{job.scheduled_start_date ? new Date(job.scheduled_start_date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</span>
-            </div>
-          </div>
-
-          {/* controls mini-card */}
-          <div
-            className="rounded-xl p-3 flex flex-col gap-3"
-            style={{
-              background: theme === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.03)",
-              border: theme === "dark" ? "1px solid rgba(255,255,255,0.03)" : undefined,
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-xs" style={{ color: t.text_2 }}>Status</div>
-              <div className="text-xs font-semibold" style={{ color: t.text_1 }}>
-                {job.status.replace("_", " ")}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <select
-                {...form.register("status" as any)}
-                className="w-full rounded-md px-3 py-2 text-sm outline-none cursor-pointer"
-                style={{ background: appTheme[theme].background_3, color: t.text_1 }}
-              >
-                <option value="waiting_diagnosis">waiting_diagnosis</option>
-                <option value="waiting_work">waiting_work</option>
-                <option value="waiting_parts">waiting_parts</option>
-                <option value="waiting_listing">waiting_listing</option>
-                <option value="waiting_customer">waiting_customer</option>
-                <option value="waiting_delivery">waiting_delivery</option>
-                <option value="complete">complete</option>
-                <option value="delivered">delivered</option>
-                <option value="cancelled">cancelled</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="text-xs" style={{ color: t.text_2 }}>Priority</div>
-              <select
-                {...form.register("priority" as any)}
-                className="ml-auto rounded-md px-3 py-2 text-sm outline-none cursor-pointer"
-                style={{ background: appTheme[theme].background_3, color: t.text_1 }}
-              >
-                <option value="low">low</option>
-                <option value="medium">medium</option>
-                <option value="high">high</option>
-                <option value="urgent">urgent</option>
-              </select>
-            </div>
-          </div>
-
-          {/* tasks mini-list */}
-          <div
-            className="rounded-xl p-3 overflow-hidden"
-            style={{
-              background: theme === "dark" ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.02)",
-              border: theme === "dark" ? "1px solid rgba(255,255,255,0.02)" : undefined,
-              minHeight: 120,
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-xs" style={{ color: t.text_2 }}>Tasks</div>
-              <div onClick={() => setShowTasks((s) => !s)} className="cursor-pointer dim">
-                {showTasks ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </div>
-            </div>
-
-            <div className={`mt-3 space-y-2 transition-all ${showTasks ? "max-h-[480px]" : "max-h-[92px] overflow-hidden"}`}>
-              {tasks.length === 0 && (
-                <div className="text-xs" style={{ color: t.text_2 }}>
-                  No tasks yet — add steps required to finish this job.
+              {productJob.updated_at && (
+                <div className="flex items-center mt-[2.5px] mr-[5px] text-xs gap-[6px] flex-row opacity-[0.6]">
+                  <Clock size={14} className="ml-[4px]" />
+                  <div className="ml-[1px]">Updated</div>
+                  <div
+                    className="font-semibold opacity-[0.85]"
+                    style={{ color: t.text_1 }}
+                  >
+                    {formatDateTime(productJob.updated_at)}
+                  </div>
                 </div>
               )}
+            </div>
 
-              {tasks.slice(0, 6).map((task) => (
-                <div key={task.task_id} className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-[34px] h-[34px] rounded-md flex items-center justify-center" style={{ background: "rgba(255,255,255,0.02)" }}>
-                      {task.status === "complete" ? <Check size={16} /> : <Activity size={16} />}
-                    </div>
-                    <div className="text-xs">
-                      <div style={{ color: t.text_1 }} className="font-semibold text-[13px]">{task.task_definition_id ? `Task ${task.task_definition_id}` : "Task"}</div>
-                      <div style={{ color: t.text_2 }} className="text-[12px]">{task.notes ?? "—"}</div>
-                    </div>
-                  </div>
+            <div className="mt-[10.5px]">
+              <div
+                className={`relative rounded-[8px] transition-all duration-200 ${
+                  noteOpen ? "h-[210px]" : "h-[56px]"
+                }`}
+                style={{ backgroundColor: appTheme[theme].background_2 }}
+              >
+                <textarea
+                  {...jobForm.register("notes")}
+                  className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] opacity-[0.95] outline-none border-none resize-none bg-transparent px-3 py-2 rounded-[7px]"
+                  placeholder="Details..."
+                />
 
-                  <div className="text-xs" style={{ color: t.text_2 }}>
-                    {task.scheduled_start_date ? formatDate(task.scheduled_start_date) : "—"}
-                  </div>
+                <div
+                  onClick={() => setNoteOpen((p) => !p)}
+                  className="flex justify-center items-center cursor-pointer hover:brightness-90 dim w-[36px] h-[30px] right-[3px] top-[0px] absolute z-[300]"
+                >
+                  {noteOpen ? (
+                    <ChevronUp size={22} className="opacity-30" />
+                  ) : (
+                    <ChevronDown size={22} className="opacity-30" />
+                  )}
                 </div>
-              ))}
+              </div>
+            </div>
+
+            <div className="mt-[14px] flex flex-row gap-[13px] items-start">
+              <div
+                className="text-[14px] font-[500] ml-[3px] mt-[1.5px] opacity-[0.6]"
+                style={{ color: t.text_2 }}
+              >
+                Assignment
+              </div>
+
+              <div className="w-[100%] flex-wrap gap-[8px] flex flex-row mt-[1px]">
+                {people.map((person: any, index: number) => {
+                  return (
+                    <div className="relative" key={index}>
+                      <div
+                        style={{
+                          backgroundColor: "#60a5fa20",
+                        }}
+                        className="relative h-[25px] px-[15px] rounded-full flex items-center cursor-pointer hover:brightness-[80%] dim "
+                      >
+                        <div
+                          style={{
+                            color: "#60a5fa",
+                          }}
+                          className="select-none brightness-130 text-[12px] font-[500] mt-[-0.8px]"
+                        >
+                          {person}
+                        </div>
+                      </div>
+                      {editAssignment && (
+                        <div
+                          style={{
+                            backgroundColor: t.background_4,
+                          }}
+                          className="cursor-pointer hover:brightness-[45%] dim brightness-[55%] w-[13px] h-[13px] z-[300] absolute right-[-5px] top-[-5px] rounded-full bg-red-400 flex items-center justify-center"
+                        >
+                          <div
+                            className="w-[6px] h-[1.5px] rounded-full"
+                            style={{
+                              backgroundColor: t.text_1,
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <div
+                  className="ml-[1px] cursor-pointer hover:brightness-90 dim w-[25px] h-[25px] rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: t.background_2,
+                  }}
+                >
+                  <FaPlus size={12} className="opacity-[0.6]" />
+                </div>
+
+                <div
+                  className="cursor-pointer mt-[-0.5px] hover:brightness-90 dim w-[26px] h-[26px] rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: t.background_2,
+                    border: editAssignment ? "1px solid " + t.text_3 : "none",
+                  }}
+                  onClick={() => setEditAssignment((prev) => !prev)}
+                >
+                  <FiEdit size={12} className="opacity-[0.6]" />
+                </div>
+              </div>
+
+              {/* <div className="flex items-center gap-2 text-[13px] opacity-[0.45]">
+                <Tag size={14} /> <span>{job.job_id ?? "—"}</span>
+              </div> */}
             </div>
           </div>
         </div>
+
+        {/* Schedule */}
+        <ScheduleTimeline
+          form={jobForm}
+          matchedDefinition={matchedDefinition}
+        />
       </div>
-    </div>
+
+      {/* bottom: tasks list */}
+      <div className="mt-[12px]">
+        <div className="flex items-center justify-between mb-[8px]">
+          <div className="text-[21px] font-semibold ml-[3px] mt-[4px]">
+            Tasks
+          </div>
+          <div className="flex items-center gap-2 mt-[-2px]">
+            <div
+              onClick={() => setTasksCollapsed((prev) => !prev)}
+              className="h-[30px] cursor-pointer hover:brightness-75 dim flex flex-row items-center gap-[6px] pl-[12px] pr-[8px] rounded bg-[rgba(255,255,255,0.03)]"
+            >
+              <div className="font-[400] text-[13px] opacity-[0.5]">
+                {tasks.length} Tasks
+              </div>
+              <ChevronDown
+                size={19}
+                className={`opacity-[0.4] transition-transform duration-100 ease-in-out ${
+                  !tasksCollapsed && "rotate-180"
+                }`}
+              />
+            </div>
+            <div
+              onClick={addTask}
+              className="cursor-pointer hover:brightness-75 dim h-[30px] flex items-center gap-2 pl-[8px] pr-[12px] rounded bg-[rgba(255,255,255,0.03)] text-[13px] font-[400]"
+            >
+              <Plus size={14.5} className="opacity-[0.4]" />
+              <div className="font-[400] text-[13px] opacity-[0.5]">
+                Add Task
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {tasksCollapsed ? (
+          <div className="flex flex-col gap-3">
+            {tasks.map((task_item: Task, index: number) => (
+              <MiniTaskCard
+                key={index}
+                task={task_item}
+                idx={index}
+                setTasksCollapsed={setTasksCollapsed}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {tasks.map((task_item: Task, index: number) => (
+              <TaskCard
+                key={index}
+                task={task_item}
+                idx={index}
+                resetSignal={resetSignal}
+                registerSafeRef={registerChildRef}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </form>
   );
 };
 

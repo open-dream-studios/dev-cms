@@ -13,14 +13,6 @@ export const ProductSchema = z.object({
   customer_id: z.number().optional().nullable(),
   make: z.string().nullable(),
   model: z.string().nullable(),
-  // price: z
-  //   .number()
-  //   .min(0, "Must be a positive number")
-  //   .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
-  //     message: "Max 2 decimal places",
-  //   })
-  //   .optional()
-  //   .nullable(),
   length: z
     .number()
     .min(0, "Must be a positive number")

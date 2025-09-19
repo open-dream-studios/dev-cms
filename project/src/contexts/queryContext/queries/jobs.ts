@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { Job } from "@/types/jobs";
+import { utcToProjectTimezone, utcToLocal } from "@/util/functions/Time";
 
 export function useJobs(isLoggedIn: boolean, currentProjectId: number | null) {
   const queryClient = useQueryClient();
@@ -17,7 +18,21 @@ export function useJobs(isLoggedIn: boolean, currentProjectId: number | null) {
       const res = await makeRequest.post("/api/jobs/get", {
         project_idx: currentProjectId,
       });
-      return res.data.jobs || [];
+
+      const jobs: Job[] = (res.data.jobs || []).map((job: Job) => ({
+        ...job,
+        scheduled_start_date: job.scheduled_start_date
+          ? new Date(utcToProjectTimezone(job.scheduled_start_date as string)!)
+          : null,
+        completed_date: job.completed_date
+          ? new Date(utcToProjectTimezone(job.completed_date as string)!)
+          : null,
+        updated_at: job.updated_at
+          ? new Date(utcToLocal(job.updated_at as string)!)
+          : null,
+      }));
+
+      return jobs;
     },
     enabled: isLoggedIn && !!currentProjectId,
   });

@@ -2,7 +2,7 @@
 export const getCardStyle = (theme: "dark" | "light", t: any) => ({
   background:
     theme === "dark"
-      ? "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))"
+      ? "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018))"
       : t.background_1,
   boxShadow: theme === "dark" ? "none" : "0 0 15px 1px rgba(0, 0, 0, 0.15)",
   border: theme === "dark" ? "1px solid rgba(255,255,255,0.06)" : "none",

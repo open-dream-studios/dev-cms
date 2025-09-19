@@ -43,11 +43,10 @@ import { useSectionDefinitions } from "./queries/sectionDefinitions";
 import { useSections } from "./queries/sections";
 import { useCustomers } from "./queries/customers";
 import { Customer } from "@/types/customers";
-import { Job, JobDefinition, Task, TaskDefinition } from "@/types/jobs";
+import { Job, JobDefinition, Task } from "@/types/jobs";
 import { useJobDefinitions } from "./queries/jobDefinitions";
 import { useJobs } from "./queries/jobs";
 import { useTasks } from "./queries/tasks";
-import { useTaskDefinitions } from "./queries/taskDefinitions";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -241,11 +240,11 @@ export type QueryContextType = {
   deleteJob: (job_id: string) => Promise<void>;
 
   // ---- Task Definitions ----
-  taskDefinitions: TaskDefinition[];
-  isLoadingTaskDefinitions: boolean;
-  refetchTaskDefinitions: () => Promise<any>;
-  upsertTaskDefinition: (definition: TaskDefinition) => Promise<any>;
-  deleteTaskDefinition: (definition_id: string) => Promise<void>;
+  // taskDefinitions: TaskDefinition[];
+  // isLoadingTaskDefinitions: boolean;
+  // refetchTaskDefinitions: () => Promise<any>;
+  // upsertTaskDefinition: (definition: TaskDefinition) => Promise<any>;
+  // deleteTaskDefinition: (definition_id: string) => Promise<void>;
 
   // ---- Tasks ----
   tasks: Task[];
@@ -386,13 +385,13 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const { jobsData, isLoadingJobs, refetchJobs, upsertJob, deleteJob } =
     useJobs(isLoggedIn, currentProjectId);
 
-  const {
-    taskDefinitionsData,
-    isLoadingTaskDefinitions,
-    refetchTaskDefinitions,
-    upsertTaskDefinition,
-    deleteTaskDefinition,
-  } = useTaskDefinitions(isLoggedIn, currentProjectId);
+  // const {
+  //   taskDefinitionsData,
+  //   isLoadingTaskDefinitions,
+  //   refetchTaskDefinitions,
+  //   upsertTaskDefinition,
+  //   deleteTaskDefinition,
+  // } = useTaskDefinitions(isLoggedIn, currentProjectId);
   const { tasksData, isLoadingTasks, refetchTasks, upsertTask, deleteTask } =
     useTasks(isLoggedIn, currentProjectId);
 
@@ -500,11 +499,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchJobs,
         upsertJob,
         deleteJob,
-        taskDefinitions: taskDefinitionsData ?? [],
-        isLoadingTaskDefinitions,
-        refetchTaskDefinitions,
-        upsertTaskDefinition,
-        deleteTaskDefinition,
+        // taskDefinitions: taskDefinitionsData ?? [],
+        // isLoadingTaskDefinitions,
+        // refetchTaskDefinitions,
+        // upsertTaskDefinition,
+        // deleteTaskDefinition,
         tasks: tasksData ?? [],
         isLoadingTasks,
         refetchTasks,

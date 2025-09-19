@@ -1,5 +1,6 @@
 // project/src/modules/CustomerProducts/ProductView/ProductJobs.tsx
 import { AuthContext } from "@/contexts/authContext";
+import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Modal2MultiStepModalInput, {
   StepConfig,
@@ -18,6 +19,7 @@ interface ProductJobsProps {
 
 const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
   const { currentUser } = useContext(AuthContext);
+  const { currentProject } = useProjectContext()
   const {
     upsertJobDefinition,
     jobDefinitions,
@@ -125,7 +127,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
     }
   };
 
-  if (!currentUser) return null;
+  if (!currentUser || !currentProject) return null;
 
   return (
     <div className="w-[100%] h-[100%] pl-[50px] lg:pl-[80px] pr-[25px] lg:pr-[55px] pt-[40px] flex flex-col gap-[12px]">
@@ -156,7 +158,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
       )}
       <div className="flex flex-row justify-between w-[100%] pr-[25px] items-center">
         <div className="text-[25px] md:text-[31px] font-[600]">
-          Defined Jobs
+          {currentProject.short_name} Jobs
         </div>
         {currentUser.admin === 1 && <div
           style={{

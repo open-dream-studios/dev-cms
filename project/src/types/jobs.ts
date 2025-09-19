@@ -19,12 +19,13 @@ export type Job = {
   job_definition_id: number | null;
   product_id: number | null;
   customer_id: number | null;
+  valuation: number | null;
   status: JobStatusOption;
   priority: PriorityOption;
-  scheduled_start_date: Date | null;
-  completed_date: Date | null;
+  scheduled_start_date: string | Date | null;
+  completed_date: string | Date | null;
   notes: string | null;
-  updated_at?: Date | null;
+  updated_at?: string | Date | null;
 };
 
 export type JobDefinition = {
@@ -45,18 +46,10 @@ export type Task = {
   id?: number;
   task_id: string | null;
   job_id: number | null;
-  task_definition_id: number | null;
   status: TaskStatusOption;
   priority: PriorityOption;
-  scheduled_start_date: Date | null;
-  completed_date: Date | null;
-  notes: string | null;
-};
-
-export type TaskDefinition = {
-  id?: number;
-  task_definition_id: string | null;
-  type: string;
-  description: string | null;
-  hours_required: number | null
+  scheduled_start_date: string | Date | null;
+  completed_date: string | Date | null;
+  task: string | null;
+  description: string;
 };

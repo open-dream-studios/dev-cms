@@ -4,38 +4,16 @@ import {
   upsertTask,
   deleteTask,
   getTasks,
-  getAllTaskDefinitions,
-  upsertTaskDefinition,
-  deleteTaskDefinition,
+  // getAllTaskDefinitions,
+  // upsertTaskDefinition,
+  // deleteTaskDefinition,
 } from "../controllers/tasks.js";
 import { authenticateUser } from "../util/auth.js";
 import { checkProjectPermission } from "../util/permissions.js";
 
 const router = express.Router();
 
-// ---- TASK DEFINITIONS ----
-router.post(
-  "/get-definitions",
-  authenticateUser,
-  checkProjectPermission(1), // viewer+
-  getAllTaskDefinitions
-);
-
-router.post(
-  "/upsert-definition",
-  authenticateUser,
-  checkProjectPermission(3), // owner+
-  upsertTaskDefinition
-);
-
-router.post(
-  "/delete-definition",
-  authenticateUser,
-  checkProjectPermission(3), // owner+
-  deleteTaskDefinition
-);
-
-// ---- TASKS (PROJECT USAGE) ----
+// ---- TASKS ----
 router.post(
   "/get",
   authenticateUser,
@@ -56,5 +34,27 @@ router.post(
   checkProjectPermission(2), // editor+
   deleteTask
 );
+
+// ---- TASK DEFINITIONS ----
+// router.post(
+//   "/get-definitions",
+//   authenticateUser,
+//   checkProjectPermission(1), // viewer+
+//   getAllTaskDefinitions
+// );
+
+// router.post(
+//   "/upsert-definition",
+//   authenticateUser,
+//   checkProjectPermission(3), // owner+
+//   upsertTaskDefinition
+// );
+
+// router.post(
+//   "/delete-definition",
+//   authenticateUser,
+//   checkProjectPermission(3), // owner+
+//   deleteTaskDefinition
+// );
 
 export default router;

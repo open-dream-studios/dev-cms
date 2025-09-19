@@ -37,13 +37,10 @@ import { IoImagesOutline } from "react-icons/io5";
 import { IoImageOutline } from "react-icons/io5";
 import { Job, JobDefinition } from "@/types/jobs";
 import { flushSync } from "react-dom";
-import ProductProgressCard from "./ProductProgressCard";
 import { Box } from "lucide-react";
-import { getCardStyle } from "@/styles/themeStyles";
+import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import ProductJobs from "./ProductJobs";
 import ProductJobCard from "./ProductJobCard";
-import { AiFillProduct } from "react-icons/ai";
-import ProductJobCard2 from "./ProductJobCard2";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const sample = {
@@ -103,7 +100,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
   const form = useProductForm();
   const customerId = form.watch("customer_id");
-  const description = form.watch("description") 
+  const description = form.watch("description");
 
   const initialFormState = useRef<Partial<ProductFormData> | null>(null);
 
@@ -298,9 +295,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onFormSubmitButton)}
-      className="w-[100%] h-[100%] overflow-scroll"
+    <div
+      className="w-[100%] h-[100%] overflow-scroll hide-scrollbar"
     >
       <UploadModal
         onClose={() => setUploadPopup(false)}
@@ -431,7 +427,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       )}
 
       <div
-        className={`max-w-4xl mx-auto px-[17px] pt-[28px] pb-[30px] flex flex-col`}
+        className={`max-w-4xl mx-auto px-[17px] pt-[18px] pb-[50px] flex flex-col`}
       >
         <div className="flex flex-row gap-[13px] ml-[3px]">
           <div
@@ -466,14 +462,15 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
               <h1 className="hidden [@media(min-width:480px)]:block">/</h1>
 
-              <div className="hidden [@media(min-width:480px)]:block cursor-pointer dim hover:brightness-75 text-[23px] mt-[1px]">
+              <div className="hidden [@media(min-width:480px)]:block cursor-pointer dim hover:brightness-75 text-[23px] mt-[2px]">
                 {serialNumber}
               </div>
             </div>
           )}
         </div>
 
-        <div
+        <form
+          onSubmit={form.handleSubmit(onFormSubmitButton)}
           className="mb-[2px] flex flex-col w-[100%] rounded-[15px] px-[35px] py-[30px]"
           style={getCardStyle(theme, t)}
         >
@@ -656,7 +653,9 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     >
                       {!descriptionEditorOpen ? (
                         <div className="opacity-[0.5] truncate w-[100%] min-h-[24px] text-[16px]">
-                          {description && description.length > 0 ? description : "..."}
+                          {description && description.length > 0
+                            ? description
+                            : "..."}
                         </div>
                       ) : (
                         <textarea
@@ -670,7 +669,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                           onClick={() => setDescriptionEditorOpen(false)}
                           className="flex justify-center items-center cursor-pointer hover:brightness-75 dim w-[36px] h-[26px] right-[10px] top-[10px] absolute z-[300]"
                         >
-                          <FaChevronUp className="opacity-[0.2]" size={25} />
+                          <FaChevronUp className="opacity-[0.2]" size={20} />
                         </div>
                       )}
                     </div>
@@ -678,53 +677,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
                   {!descriptionEditorOpen && (
                     <div className="flex flex-col">
-                      {/* {jobType === "resell" && (
-                        <div className="flex items-center font-[500] text-[17px] mb-[10px]">
-                          <p className="opacity-[0.5] mr-[10px]">Price</p>
-                          <div
-                            style={{
-                              backgroundColor:
-                                t.background_2,
-                            }}
-                            className="rounded-[6px] py-[2px] px-[9px] flex flex-row gap-[2px] w-[100%]"
-                          >
-                            <p className="opacity-[0.5] font-[500] text-[15px]">
-                              $
-                            </p>
-                            <ProductInputField
-                              label="Price ($)"
-                              name="price"
-                              inputMode="decimal"
-                              pattern="^\d+(\.\d{0,2})?$"
-                              inputType={"input"}
-                              onInput={(e) => {
-                                let value = e.currentTarget.value;
-                                value = value.replace(/[^0-9.]/g, "");
-                                const parts = value.split(".");
-                                if (parts.length > 2)
-                                  value = parts[0] + "." + parts[1];
-                                if (parts[1]?.length > 2) {
-                                  parts[1] = parts[1].slice(0, 2);
-                                  value = parts[0] + "." + parts[1];
-                                }
-                                e.currentTarget.value = value;
-                              }}
-                              register={form.register}
-                              registerOptions={{
-                                required: "Price is required",
-                                validate: (value) =>
-                                  /^\d+(\.\d{1,2})?$/.test(String(value)) ||
-                                  "Max 2 decimal places",
-                                setValueAs: (v) =>
-                                  v === "" ? undefined : parseFloat(v),
-                              }}
-                              error={form.formState.errors.price?.message}
-                              className="text-[15px] font-[500] opacity-[0.5]"
-                            />
-                          </div>
-                        </div>
-                      )} */}
-
                       <div className="w-[100%] flex flex-row items-center mb-[10px]">
                         <p className="opacity-[0.5] font-[500] text-[17px] mr-[11px] mt-[-2px]">
                           Make
@@ -939,7 +891,9 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
           <div className="mt-[11px]">
             <div
-              className={`relative rounded-[8px] ${noteEditorOpen ? "h-[150px]" : "h-[57px]"}`}
+              className={`relative rounded-[8px] ${
+                noteEditorOpen ? "h-[150px]" : "h-[57px]"
+              } transition-all duration-200 ease-in-out will-change-transform`}
               style={{
                 backgroundColor: appTheme[currentUser.theme].background_2,
               }}
@@ -947,7 +901,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
               <textarea
                 {...form.register("note")}
                 className="w-[calc(100%-45px)] h-[100%] text-[15px] opacity-[0.5] outline-none border-none resize-none input rounded-[7px] px-[15px] py-[8px]"
-                placeholder="Note..."
+                placeholder="Notes..."
               />
 
               <div
@@ -955,81 +909,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 className="flex justify-center items-center cursor-pointer hover:brightness-75 dim w-[36px] h-[26px] right-[10px] top-[6px] absolute z-[300]"
               >
                 {noteEditorOpen ? (
-                  <FaChevronUp className="opacity-[0.2]" size={25} />
+                  <FaChevronUp className="opacity-[0.2]" size={20} />
                 ) : (
-                  <FaChevronDown className="opacity-[0.2]" size={25} />
+                  <FaChevronDown className="opacity-[0.2]" size={20} />
                 )}
               </div>
-            </div>
-
-            <div className="flex flex-row w-[100%] gap-[20px]">
-              {/* <div className="h-[40px] flex flex-row gap-[9px] items-center">
-                <div className="font-[600] text-[16px] opacity-[0.5] mt-[-2px]">
-                  Job Type
-                </div>
-                <div
-                  style={{
-                    backgroundColor: t.background_2,
-                  }}
-                  className="rounded-full px-[5px]"
-                >
-                  <ProductInputField
-                    label="Job Type"
-                    name="job_type"
-                    register={form.register}
-                    className="cursor-pointer hover:brightness-75 dim"
-                    inputType={"dropdown"}
-                    options={["service", "refurbishment", "resell"]}
-                  />
-                </div>
-              </div> */}
-              {/* 
-              {productFormRef.current && (
-                <div className="h-[40px] flex flex-row gap-[9px] items-center">
-                  <div className="font-[600] text-[16px] opacity-[0.5] mt-[-2px]">
-                    Status
-                  </div>
-                  <div
-                    style={{
-                      backgroundColor:
-                        designateProductStatusColor(productStatus),
-                    }}
-                    className="rounded-full px-[5px]"
-                  >
-                    <ProductInputField
-                      label="Product Status"
-                      name="product_status"
-                      register={form.register}
-                      className="cursor-pointer hover:brightness-75 dim"
-                      inputType={"dropdown"}
-                      options={designateProductStatusOptions(jobType)}
-                    />
-                  </div>
-                </div>
-              )} */}
-
-              {/* {productFormRef.current &&
-                (productStatus === "complete" ||
-                  productStatus === "delivered") && (
-                  <ProductInputField
-                    label="Date Complete"
-                    name="date_complete"
-                    register={form.register}
-                    inputType={"date"}
-                    selected={dateComplete ?? undefined}
-                    disabled={false}
-                    onChange={(date: Date | null) =>
-                      form.setValue("date_complete", date ?? undefined, {
-                        shouldDirty: true,
-                      })
-                    }
-                    onCancel={() => {
-                      form.setValue("date_complete", undefined, {
-                        shouldDirty: true,
-                      });
-                    }}
-                  />
-                )} */}
             </div>
 
             <div className="flex flex-row gap-[16px]">
@@ -1063,7 +947,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
               )}
             </div>
           </div>
-        </div>
+        </form>
 
         {matchedProduct &&
           matchedProduct.id &&
@@ -1076,40 +960,35 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             );
             if (!matchedDefinition) return;
             return (
-              <div key={index} className="mt-[10px]">
-                {/* <ProductProgressCard product={sample} /> */}
-                {/* <ProductJobCard 
-                  job={productJob}
-                  jobDefinition={matchedDefinition}
-                  productIcon={<FaWrench />}
-                  tasks={[]}
-                  // className?: string;
-                  // onOpen?: (jobId: string | null) => void;
-                /> */}
-                <ProductJobCard2 matchedDefinition={matchedDefinition} productJob={productJob}/>
+              <div key={index} className={`${index === 0? "mt-[12px]" : "mt-[34px]"}`}>
+                <ProductJobCard
+                  matchedProduct={matchedProduct}
+                  matchedDefinition={matchedDefinition}
+                  productJob={productJob}
+                />
               </div>
             );
           })}
 
         <div className="w-[100%] mt-[10px] flex justify-end">
           <div
-            style={getCardStyle(theme, t)}
-            className="cursor-pointer hover:brightness-90 dim py-[10px] px-[20px] rounded-[10px] flex items-center justify-center gap-[7px] flex-row"
+            style={getInnerCardStyle(theme, t)}
+            className="cursor-pointer hover:brightness-90 dim py-[6px] pl-[16px] pr-[20px] rounded-[10px] flex items-center justify-center gap-[8px] flex-row"
             onClick={handleAddJobClick}
           >
             <div
               style={{
                 backgroundColor: t.background_2_2,
               }}
-              className="opacity-[0.8] w-[28px] h-[28px] rounded-[20px] flex items-center justify-center"
+              className="opacity-[0.8] w-[22px] h-[22px] rounded-[20px] flex items-center justify-center"
             >
-              <FaPlus size={16} color={t.text_1} className="opacity-[0.5]" />
+              <FaPlus size={13} color={t.text_1} className="opacity-[0.8]" />
             </div>
-            <div className="text-[16px] font-[500]">Add Job</div>
+            <div className="text-[15px] font-[500] opacity-[0.8] mt-[-1px]">Add Job</div>
           </div>
         </div>
       </div>
-    </form>
+    </div>
   );
 };
 

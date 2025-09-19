@@ -102,3 +102,10 @@ export const generateSerial = (length, width, make, total) => {
     .toString()
     .padStart(3, "0")}`;
 };
+
+export function storeStringAsUTC(input, projectTimezone) {
+  if (!input) return null;
+  const dt = DateTime.fromFormat(input, "yyyy-MM-dd HH:mm:ss", { zone: projectTimezone });
+  if (!dt.isValid) return null;
+  return dt.toUTC().toFormat("yyyy-MM-dd HH:mm:ss");
+}
