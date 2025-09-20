@@ -40,6 +40,8 @@ export const appTheme = {
     app_color_2: "#366A7F",
     app_color_3: "#318CBF",
     app_text_color_1: "#5CABD9",
+
+    delete: "#cf2d27",
   },
   dark: {
     // Backgrounds
@@ -81,6 +83,8 @@ export const appTheme = {
     app_color_2: "#366A7F",
     app_color_3: "#318CBF",
     app_text_color_1: "#5CABD9",
+    
+    delete: "#cf2d27",
   },
 };
 

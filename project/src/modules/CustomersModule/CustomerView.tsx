@@ -276,6 +276,9 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
               </div>
 
               <input
+                style={{
+                  color: currentUser.theme === "light" ? appTheme[currentUser.theme].text_3 : appTheme[currentUser.theme].text_4
+                }}
                 {...customerForm.register("email", {
                   required: "Email is required",
                   pattern: {

@@ -22,6 +22,7 @@ import { useContext, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { MediaLink } from "@/types/media";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
+import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 
 function SortableImage({
   id,
@@ -126,6 +127,7 @@ export default function ProductImages({
   singleRow: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
+  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   const sensors = useSensors(
     useSensor(PointerSensor),

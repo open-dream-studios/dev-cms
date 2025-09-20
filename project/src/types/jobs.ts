@@ -49,7 +49,6 @@ export type Task = {
   status: TaskStatusOption;
   priority: PriorityOption;
   scheduled_start_date: string | Date | null;
-  completed_date: string | Date | null;
   task: string | null;
-  description: string;
+  description: string | null;
 };

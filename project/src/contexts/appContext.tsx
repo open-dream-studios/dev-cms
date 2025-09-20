@@ -95,12 +95,7 @@ type AppContextType = {
   originalImagesRef: React.RefObject<TempMediaLink[] | null>;
   handleProductFormSubmit: (data: ProductFormData) => Promise<boolean>;
   screenHistoryRef: React.RefObject<{ screen: Screen; page: string | null }[]>;
-
   formatDropdownOption: (option: string) => string;
-  // designateProductStatusOptions: (
-  //   jobType: ProductJobType
-  // ) => ProductStatusOption[];
-  // designateProductStatusColor: (status: ProductStatusOption) => string;
 };
 
 export type FileImage = {
@@ -710,43 +705,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       .join(" ");
   };
 
-  // const designateProductStatusOptions = (jobType: ProductJobType) => {
-  //   let statusOptions: ProductStatusOption[] = [];
-  //   if (jobType === "resell") {
-  //     statusOptions = [
-  //       "waiting_work",
-  //       "waiting_listing",
-  //       "listed",
-  //       "waiting_delivery",
-  //       "delivered",
-  //     ].map((item) => item as ProductStatusOption);
-  //   }
-  //   if (jobType === "refurbishment") {
-  //     statusOptions = ["waiting_work", "waiting_delivery", "delivered"].map(
-  //       (item) => item as ProductStatusOption
-  //     );
-  //   }
-  //   if (jobType === "service") {
-  //     statusOptions = ["waiting_diagnosis", "waiting_work", "complete"].map(
-  //       (item) => item as ProductStatusOption
-  //     );
-  //   }
-
-  //   return statusOptions;
-  // };
-
-  // const designateProductStatusColor = (status: ProductStatusOption) => {
-  //   if (!currentUser) return "white"
-  //   if (status === "waiting_diagnosis") return "red";
-  //   if (status === "waiting_work") return "red";
-  //   if (status === "waiting_listing") return "red";
-  //   if (status === "listed") return "orange";
-  //   if (status === "waiting_delivery") return "orange";
-  //   if (status === "delivered") return "green";
-  //   if (status === "complete") return "green";
-  //   return appTheme[currentUser.theme].background_3
-  // };
-
   return (
     <AppContext.Provider
       value={{
@@ -797,8 +755,6 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         handleProductFormSubmit,
         screenHistoryRef,
         formatDropdownOption,
-        // designateProductStatusOptions,
-        // designateProductStatusColor,
       }}
     >
       {children}

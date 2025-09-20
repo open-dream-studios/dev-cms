@@ -41,6 +41,7 @@ import { Box } from "lucide-react";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import ProductJobs from "./ProductJobs";
 import ProductJobCard from "./ProductJobCard";
+import { Product } from "@/types/products";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const sample = {
@@ -106,7 +107,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
   const matchedProduct = useMemo(() => {
     return productsData.find(
-      (product) => product.serial_number === serialNumber
+      (product: Product) => product.serial_number === serialNumber
     );
   }, [productsData]);
 
@@ -164,7 +165,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   useEffect(() => {
     if (!newProduct && serialNumber && productsData?.length) {
       const matchedProduct = productsData.find(
-        (product) => product.serial_number === serialNumber
+        (product: Product) => product.serial_number === serialNumber
       );
       if (!matchedProduct) {
         console.warn("No product found for serial number:", serialNumber);
@@ -970,7 +971,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             );
           })}
 
-        <div className="w-[100%] mt-[10px] flex justify-end">
+        <div className="w-[100%] mt-[12px] flex justify-end">
           <div
             style={getInnerCardStyle(theme, t)}
             className="cursor-pointer hover:brightness-90 dim py-[6px] pl-[16px] pr-[20px] rounded-[10px] flex items-center justify-center gap-[8px] flex-row"

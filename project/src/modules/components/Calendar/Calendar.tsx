@@ -38,18 +38,23 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Calendar.css";
 import { JobDefinition } from "@/types/jobs";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import { JobFormData } from "@/util/schemas/jobSchema";
+import { DelayType } from "@/hooks/useAutoSave";
 
 // ---------- ScheduleTimeline ----------
 type ScheduleTimelineProps = {
   form: UseFormReturn<JobFormData> | null;
   matchedDefinition: JobDefinition;
+  cancelTimer: () => void;
+  callSubmitForm: () => void;
 };
 
 export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   form,
   matchedDefinition,
+  cancelTimer,
+  callSubmitForm
 }) => {
   const { currentUser } = React.useContext(AuthContext);
   const theme = currentUser?.theme ?? "dark";
@@ -65,25 +70,25 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const SNAP_DEBOUNCE = 80; // ms
 
   const [isMini, setIsMini] = useState<boolean>(true);
-  // const [localStart, setLocalStart] = useState<Date | null>(start ?? null);
-  // const [localEnd, setLocalEnd] = useState<Date | null>(end ?? null);
-  // useEffect(() => setLocalStart(start ?? null), [start]);
-  // useEffect(() => setLocalEnd(end ?? null), [end]);
+  const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(false);
 
-const scheduled_start_date_raw = form.watch("scheduled_start_date");
-const completed_date_raw = form.watch("completed_date");
+  const scheduled_start_date_raw = useWatch({ control: form.control, name: "scheduled_start_date" });
+  const completed_date_raw = useWatch({ control: form.control, name: "completed_date" });
+  
+  const scheduled_start_date = scheduled_start_date_raw
+    ? new Date(scheduled_start_date_raw)
+    : null;
 
-const scheduled_start_date = scheduled_start_date_raw
-  ? new Date(scheduled_start_date_raw)
-  : null;
+  const completed_date = completed_date_raw
+    ? new Date(completed_date_raw)
+    : null;
 
-const completed_date = completed_date_raw
-  ? new Date(completed_date_raw)
-  : null;
-
-const effectiveStart = scheduled_start_date ?? new Date();
-const effectiveEnd =
-  completed_date ?? new Date((scheduled_start_date ?? new Date()).getTime() + 4 * 60 * 60 * 1000);
+  const effectiveStart = scheduled_start_date ?? new Date();
+  const effectiveEnd =
+    completed_date ??
+    new Date(
+      (scheduled_start_date ?? new Date()).getTime() + 4 * 60 * 60 * 1000
+    );
 
   // weekOffset concept preserved but we compute central index instead
   const [weekCenteredIndex, setWeekCenteredIndex] = useState<number>(() => {
@@ -254,22 +259,43 @@ const effectiveEnd =
   );
 
   // compute index for effectiveStart's week and initialize view
+  const prevCollapsedRef = useRef<boolean>(calendarCollapsed);
+  const prevStartDateRef = useRef<number | null>(null);
+
   useEffect(() => {
-    const startIndex = dateToIndex(effectiveStart);
-    // We want to show the week containing effectiveStart - left aligned (Sunday)
-    const sunday = new Date(effectiveStart);
+    const justExpanded = prevCollapsedRef.current && !calendarCollapsed;
+    prevCollapsedRef.current = calendarCollapsed;
+
+    if (!scheduled_start_date) return;
+
+    const ts = scheduled_start_date.getTime();
+    const startDateChanged = prevStartDateRef.current !== ts;
+    prevStartDateRef.current = ts;
+
+    // Only scroll if:
+    //   - we just expanded, OR
+    //   - the start date actually changed
+    if (!justExpanded && !startDateChanged) return;
+
+    const sunday = new Date(scheduled_start_date);
     sunday.setHours(0, 0, 0, 0);
     sunday.setDate(sunday.getDate() - sunday.getDay());
+
     const sundayIndex = dateToIndex(sunday);
 
-    // set state and scroll after mount
     setTimeout(() => {
       scrollToWeekContainingIndex(sundayIndex, "auto");
     }, 30);
-  }, []);
+  }, [
+    scheduled_start_date,
+    calendarCollapsed,
+    dateToIndex,
+    scrollToWeekContainingIndex,
+  ]);
 
   // "Schedule" button -> go to week of job start
   const handleGotoScheduleWeek = useCallback(() => {
+    setCalendarCollapsed(false);
     if (!scheduled_start_date) {
       // go to today week
       const today = new Date();
@@ -350,9 +376,11 @@ const effectiveEnd =
     scrollToWeekContainingIndex(sundayIndex, "smooth");
   };
 
-  const applyChange = (sN: Date | null, eN: Date | null) => {
+  const applyChange = async (sN: Date | null, eN: Date | null) => {
     form.setValue("scheduled_start_date", sN);
     form.setValue("completed_date", eN);
+    cancelTimer()
+    await callSubmitForm()
   };
 
   const timelineHeight = isMini ? 160 : HOURS * 40;
@@ -378,7 +406,11 @@ const effectiveEnd =
       }
     >
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 mb-2">
+      <div
+        className={`flex items-center justify-between gap-3 ${
+          !calendarCollapsed && "mb-2"
+        }`}
+      >
         <div className="flex items-center gap-2">
           <button
             onClick={handleGotoScheduleWeek}
@@ -394,7 +426,13 @@ const effectiveEnd =
           </button>
 
           <button
-            onClick={() => setIsMini((prev) => !prev)}
+            onClick={() => {
+              if (calendarCollapsed) {
+                setCalendarCollapsed(false);
+              } else {
+                setIsMini((prev) => !prev);
+              }
+            }}
             className="cursor-pointer hover:brightness-75 dim ml-1 px-2 py-1 rounded-md border border-gray-600"
             title={isMini ? "Expand" : "Collapse"}
           >
@@ -464,7 +502,9 @@ const effectiveEnd =
             <div className="w-[100px] relative">
               <DatePicker
                 selected={completed_date}
-                onChange={(date) => applyChange(scheduled_start_date ?? null, date)}
+                onChange={(date) =>
+                  applyChange(scheduled_start_date ?? null, date)
+                }
                 className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
                   theme === "dark"
                     ? "text-white border-[#3d3d3d] border-[1px]"
@@ -509,7 +549,9 @@ const effectiveEnd =
 
       {/* Calendar area */}
       <div
-        className="w-full overflow-hidden rounded-md pb-[16px] mt-[9px]"
+        className={`${
+          calendarCollapsed && "hidden"
+        } w-full overflow-hidden rounded-md pb-[16px] mt-[9px]`}
         style={{ border: "1px solid rgba(255,255,255,0.03)" }}
       >
         <div className="flex">
@@ -687,37 +729,52 @@ const effectiveEnd =
         </div>
       </div>
 
-      <div className="mt-2 text-xs opacity-70 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrevWeek}
-            className="cursor-pointer hover:brightness-75 dim px-2 py-1 rounded-md bg-white/4"
-            title="Prev week"
-          >
-            <ChevronLeft size={16} />
-          </button>
+      {!calendarCollapsed && (
+        <div className="mt-2 text-xs opacity-70 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrevWeek}
+              className="cursor-pointer hover:brightness-75 dim px-2 py-1 rounded-md bg-white/4"
+              title="Prev week"
+            >
+              <ChevronLeft size={16} />
+            </button>
 
-          <div className="text-sm opacity-80 px-2">
-            {(() => {
-              const sunday = indexToDate(weekCenteredIndex);
-              const sundayStart = new Date(sunday);
-              sundayStart.setHours(0, 0, 0, 0);
-              sundayStart.setDate(sundayStart.getDate() - sundayStart.getDay());
-              const saturday = new Date(sundayStart);
-              saturday.setDate(saturday.getDate() + 6);
-              return `${sundayStart.toLocaleDateString()} – ${saturday.toLocaleDateString()}`;
-            })()}
+            <div className="text-sm opacity-80 px-2">
+              {(() => {
+                const sunday = indexToDate(weekCenteredIndex);
+                const sundayStart = new Date(sunday);
+                sundayStart.setHours(0, 0, 0, 0);
+                sundayStart.setDate(
+                  sundayStart.getDate() - sundayStart.getDay()
+                );
+                const saturday = new Date(sundayStart);
+                saturday.setDate(saturday.getDate() + 6);
+                return `${sundayStart.toLocaleDateString()} – ${saturday.toLocaleDateString()}`;
+              })()}
+            </div>
+
+            <button
+              onClick={handleNextWeek}
+              className="cursor-pointer hover:brightness-75 dim px-2 py-1 rounded-md bg-white/4"
+              title="Next week"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
-
           <button
-            onClick={handleNextWeek}
+            onClick={() => setCalendarCollapsed((prev) => !prev)}
             className="cursor-pointer hover:brightness-75 dim px-2 py-1 rounded-md bg-white/4"
-            title="Next week"
+            title="Collapse"
           >
-            <ChevronRight size={16} />
+            {calendarCollapsed ? (
+              <ChevronDown size={16} className="opacity-[0.7]" />
+            ) : (
+              <ChevronUp size={16} className="opacity-[0.7]" />
+            )}
           </button>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 };

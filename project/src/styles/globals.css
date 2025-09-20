@@ -17,6 +17,10 @@ input:-webkit-autofill:active {
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+textarea::placeholder {
+  color: var(--placeholder-color);
+}
+
 select.custom-select {
   -webkit-appearance: none;
   -moz-appearance: none;
