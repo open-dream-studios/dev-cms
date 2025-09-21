@@ -31,8 +31,6 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  let saveCounter = 0;
-
   const upsertTaskMutation = useMutation({
     mutationFn: async (task: Task) => {
       const res = await makeRequest.post("/api/tasks/upsert", {
@@ -41,27 +39,13 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
       });
       return res.data;
     },
-    onSuccess: (updatedTask) => {
-      queryClient.setQueryData<Task[]>(["tasks", currentProjectId], (old) =>
-        old
-          ? old.map((t) =>
-              t.task_id === updatedTask.task_id ? updatedTask : t
-            )
-          : [updatedTask]
-      );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", currentProjectId] });
     },
   });
 
-  const saveCounters: Record<string, number> = {};
-
   const upsertTask = async (task: Task) => {
-    const id = task.task_id ?? "temp";
-    saveCounters[id] = (saveCounters[id] ?? 0) + 1;
-    const currentSave = saveCounters[id];
-
-    const result = await upsertTaskMutation.mutateAsync(task);
-
-    return currentSave === saveCounters[id] ? result : null;
+    return await upsertTaskMutation.mutateAsync(task);
   };
 
   const deleteTaskMutation = useMutation({

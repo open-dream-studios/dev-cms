@@ -170,7 +170,7 @@ const Navbar = () => {
               }}
             >
               <p className="hidden sm:block">
-                {currentProject ? currentProject.name : "Project CMS"}
+                {currentProject ? currentProject.short_name : "Project CMS"}
               </p>
               <p className="block sm:hidden">
                 {currentProject ? currentProject.short_name : "CMS"}

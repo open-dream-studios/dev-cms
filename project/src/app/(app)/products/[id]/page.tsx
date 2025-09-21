@@ -17,7 +17,11 @@ const Product = () => {
 
   return (
     <div className="w-[100%] h-[100%] flex flex-row">
-      {screen === "edit-customer-product" && <ModuleLeftBar />}
+      {screen === "edit-customer-product" && (
+        <div className="hidden min-[870px]:block">
+          <ModuleLeftBar />
+        </div>
+      )}
       <div className="flex-1">
         <ProductView serialNumber={serialNumber} />
       </div>

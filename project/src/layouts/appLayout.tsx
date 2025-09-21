@@ -109,12 +109,8 @@ const UnprotectedLayout = () => {
 };
 
 const ProtectedLayout = ({ children }: { children: ReactNode }) => {
-  const {
-    editingLock,
-    setSelectedProducts,
-    setEditMode,
-    setLocalData,
-  } = useAppContext();
+  const { editingLock, setSelectedProducts, setEditMode, setLocalData } =
+    useAppContext();
   const { productsData } = useContextQueries();
   const pathName = usePathname();
   const { currentUser } = useContext(AuthContext);
@@ -129,6 +125,18 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
       )
     );
   }, [setSelectedProducts, pathName]);
+
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     console.log(window.innerWidth, "px");
+  //   };
+  //   handleResize();
+
+  //   window.addEventListener("resize", handleResize);
+  //   return () => {
+  //     window.removeEventListener("resize", handleResize);
+  //   };
+  // }, []);
 
   if (!currentUser) return;
 

@@ -3,11 +3,9 @@ import { z } from "zod";
 
 export const JobSchema = z.object({
   valuation: z
-    .number()
-    .min(0, "Must be a positive number")
-    .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
-      message: "Max 2 decimal places",
-    })
+    .string()
+    .trim()
+    .regex(/^\d+(\.\d{1,2})?$/, "Must be a valid price with max 2 decimals")
     .optional()
     .nullable(),
   status: z.enum([
@@ -31,7 +29,7 @@ export const JobSchema = z.object({
 export type JobFormData = z.infer<typeof JobSchema>;
 
 export const defaultJobValues: JobFormData = {
-  valuation: 0,
+  valuation: "0",
   status: "waiting_work",
   priority: "medium",
   scheduled_start_date: null,
@@ -49,7 +47,7 @@ export const TaskSchema = z.object({
   ]),
   priority: z.enum(["low", "medium", "high", "urgent"]),
   scheduled_start_date: z.date().optional().nullable(),
-  task:  z.string().optional().nullable(),
+  task: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
 });
 

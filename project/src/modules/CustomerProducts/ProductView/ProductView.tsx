@@ -42,6 +42,7 @@ import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import ProductJobs from "./ProductJobs";
 import ProductJobCard from "./ProductJobCard";
 import { Product } from "@/types/products";
+import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const sample = {
@@ -84,6 +85,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   } = useContextQueries();
   const { currentProjectId } = useProjectContext();
   const pathname = usePathname();
+  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   const [imageView, setImageView] = useState<string | null>(null);
   const [imageDisplayed, setImageDisplayed] = useState<string | null>(null);
@@ -296,9 +298,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }
 
   return (
-    <div
-      className="w-[100%] h-[100%] overflow-scroll hide-scrollbar"
-    >
+    <div className="w-[100%] h-[100%] overflow-scroll hide-scrollbar">
       <UploadModal
         onClose={() => setUploadPopup(false)}
         multiple={true}
@@ -475,8 +475,14 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
           className="mb-[2px] flex flex-col w-[100%] rounded-[15px] px-[35px] py-[30px]"
           style={getCardStyle(theme, t)}
         >
-          <div className="w-[100%] flex flex-row gap-[18px]">
-            <div className="w-[218px] min-w-[218px] flex flex-col">
+          <div className="w-[100%] flex gap-[18px] flex-col min-[580px]:flex-row">
+            <div
+              className={`flex flex-col min-[500px]:max-w-[250px] w-[100%] min-[580px]:w-[160px] min-[650px]:w-[220px] min-[650px]:min-w-[220px] ${
+                leftBarOpen
+                  ? "min-[1024px]:w-[180px] min-[1024px]:min-w-[180px] min-[1100px]:w-[220px] min-[1100px]:min-w-[220px]"
+                  : ""
+              } `}
+            >
               {productImages.length >= 1 ? (
                 <div
                   onClick={() => {
@@ -538,7 +544,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             </div>
             {imageEditorOpen ? (
               <div className="w-[100%] h-auto flex flex-col">
-                <div className="flex items-center flex-row justify-between">
+                <div className="flex items-center flex-row justify-between mb-[7px]">
                   <div className="flex items-center flex-row gap-[12px] mt-[2px] mb-[8px]">
                     <div
                       onClick={() => {
@@ -599,11 +605,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 />
 
                 <div
-                  className={`flex flex-col h-[100%] ${
-                    descriptionEditorOpen ? "w-[100%]" : "w-[331px]"
+                  className={`flex flex-col w-[100%] ${
+                    descriptionEditorOpen
+                      ? "h-[260px] min-[580px]:h-[100%]"
+                      : "max-w-[331px]"
                   }`}
                 >
-                  <div className="mt-[7px mb-[10px] flex items-center font-[500] w-max text-[17px]">
+                  <div className="mt-[3px] mb-[10px] flex items-center font-[500] w-max text-[17px]">
                     <p className="opacity-[0.5] mr-[10px]">ID</p>
                     <div
                       style={{
@@ -677,7 +685,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   </div>
 
                   {!descriptionEditorOpen && (
-                    <div className="flex flex-col">
+                    <div className="flex flex-col w-[100%]">
                       <div className="w-[100%] flex flex-row items-center mb-[10px]">
                         <p className="opacity-[0.5] font-[500] text-[17px] mr-[11px] mt-[-2px]">
                           Make
@@ -714,7 +722,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                             name="model"
                             register={form.register}
                             error={form.formState.errors.model?.message}
-                            className="text-[15px] font-[500] opacity-[0.5]  w-[243px]"
+                            className="text-[15px] font-[500] opacity-[0.5]"
                             inputType={"input"}
                           />
                         </div>
@@ -723,131 +731,137 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                       <div
                         className={`flex flex-row gap-[5px] items-center mb-[10px]`}
                       >
-                        <p className="opacity-[0.5] font-[500] text-[17px] mr-[6px] mt-[-2px]">
+                        <p className="opacity-[0.5] font-[500] text-[17px] mr-[4px] mt-[-2px] min-w-[75px]">
                           L x W x H
                         </p>
-                        <div
-                          style={{
-                            backgroundColor: t.background_2,
-                          }}
-                          className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
-                        >
-                          <ProductInputField
-                            label="Length (in)"
-                            name="length"
-                            placeholder="L"
-                            inputMode="decimal"
-                            pattern="^\d+(\.\d{0,2})?$"
-                            inputType={"input"}
-                            onInput={(e) => {
-                              let value = e.currentTarget.value;
-                              value = value.replace(/[^0-9.]/g, "");
-                              const parts = value.split(".");
-                              if (parts.length > 2) {
-                                value = parts[0] + "." + parts[1];
-                              }
-                              if (parts[1]?.length > 2) {
-                                parts[1] = parts[1].slice(0, 2);
-                                value = parts[0] + "." + parts[1];
-                              }
-                              e.currentTarget.value = value;
+                        <div className="w-[100%] flex flex-row">
+                          <div
+                            style={{
+                              backgroundColor: t.background_2,
                             }}
-                            register={form.register}
-                            registerOptions={{
-                              required: "Length is required",
-                              validate: (value) =>
-                                /^\d+(\.\d{1,2})?$/.test(String(value)) ||
-                                "Max 2 decimal places",
-                              setValueAs: (v) =>
-                                v === "" ? undefined : parseFloat(v),
-                            }}
-                            error={form.formState.errors.length?.message}
-                            className="text-[15px] font-[500] opacity-[0.5]"
-                          />
-                        </div>
+                            className="rounded-[6px] py-[3px] px-[10px] w-[calc((100%-50px)*0.333)]"
+                          >
+                            <ProductInputField
+                              label="Length (in)"
+                              name="length"
+                              placeholder="L"
+                              inputMode="decimal"
+                              pattern="^\d+(\.\d{0,2})?$"
+                              inputType={"input"}
+                              onInput={(e) => {
+                                let value = e.currentTarget.value;
+                                value = value.replace(/[^0-9.]/g, "");
+                                const parts = value.split(".");
+                                if (parts.length > 2) {
+                                  value = parts[0] + "." + parts[1];
+                                }
+                                if (parts[1]?.length > 2) {
+                                  parts[1] = parts[1].slice(0, 2);
+                                  value = parts[0] + "." + parts[1];
+                                }
+                                e.currentTarget.value = value;
+                              }}
+                              register={form.register}
+                              registerOptions={{
+                                required: "Length is required",
+                                validate: (value) =>
+                                  /^\d+(\.\d{1,2})?$/.test(String(value)) ||
+                                  "Max 2 decimal places",
+                                setValueAs: (v) =>
+                                  v === "" ? undefined : parseFloat(v),
+                              }}
+                              error={form.formState.errors.length?.message}
+                              className="text-[15px] font-[500] opacity-[0.5]"
+                            />
+                          </div>
 
-                        <div className="opacity-50 text-[14px] mx-[1px]">X</div>
+                          <div className="opacity-50 text-[14px] w-[25px] flex items-center justify-center">
+                            X
+                          </div>
 
-                        <div
-                          style={{
-                            backgroundColor: t.background_2,
-                          }}
-                          className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
-                        >
-                          <ProductInputField
-                            label="Width (in)"
-                            name="width"
-                            placeholder="W"
-                            inputMode="decimal"
-                            pattern="^\d+(\.\d{0,2})?$"
-                            inputType={"input"}
-                            onInput={(e) => {
-                              let value = e.currentTarget.value;
-                              value = value.replace(/[^0-9.]/g, "");
-                              const parts = value.split(".");
-                              if (parts.length > 2) {
-                                value = parts[0] + "." + parts[1];
-                              }
-                              if (parts[1]?.length > 2) {
-                                parts[1] = parts[1].slice(0, 2);
-                                value = parts[0] + "." + parts[1];
-                              }
-                              e.currentTarget.value = value;
+                          <div
+                            style={{
+                              backgroundColor: t.background_2,
                             }}
-                            register={form.register}
-                            registerOptions={{
-                              required: "Width is required",
-                              validate: (value) =>
-                                /^\d+(\.\d{1,2})?$/.test(String(value)) ||
-                                "Max 2 decimal places",
-                              setValueAs: (v) =>
-                                v === "" ? undefined : parseFloat(v),
-                            }}
-                            error={form.formState.errors.width?.message}
-                            className="text-[15px] font-[500] opacity-[0.5]"
-                          />
-                        </div>
+                            className="rounded-[6px] py-[3px] px-[10px] w-[calc((100%-50px)*0.333)]"
+                          >
+                            <ProductInputField
+                              label="Width (in)"
+                              name="width"
+                              placeholder="W"
+                              inputMode="decimal"
+                              pattern="^\d+(\.\d{0,2})?$"
+                              inputType={"input"}
+                              onInput={(e) => {
+                                let value = e.currentTarget.value;
+                                value = value.replace(/[^0-9.]/g, "");
+                                const parts = value.split(".");
+                                if (parts.length > 2) {
+                                  value = parts[0] + "." + parts[1];
+                                }
+                                if (parts[1]?.length > 2) {
+                                  parts[1] = parts[1].slice(0, 2);
+                                  value = parts[0] + "." + parts[1];
+                                }
+                                e.currentTarget.value = value;
+                              }}
+                              register={form.register}
+                              registerOptions={{
+                                required: "Width is required",
+                                validate: (value) =>
+                                  /^\d+(\.\d{1,2})?$/.test(String(value)) ||
+                                  "Max 2 decimal places",
+                                setValueAs: (v) =>
+                                  v === "" ? undefined : parseFloat(v),
+                              }}
+                              error={form.formState.errors.width?.message}
+                              className="text-[15px] font-[500] opacity-[0.5]"
+                            />
+                          </div>
 
-                        <div className="opacity-50 text-[14px] mx-[1px]">X</div>
+                          <div className="opacity-50 text-[14px] w-[25px] flex items-center justify-center">
+                            X
+                          </div>
 
-                        <div
-                          style={{
-                            backgroundColor: t.background_2,
-                          }}
-                          className="rounded-[6px] py-[3px] px-[10px] w-[68px]"
-                        >
-                          <ProductInputField
-                            label="Height (in)"
-                            placeholder="H"
-                            name="height"
-                            inputMode="decimal"
-                            pattern="^\d+(\.\d{0,2})?$"
-                            inputType={"input"}
-                            onInput={(e) => {
-                              let value = e.currentTarget.value;
-                              value = value.replace(/[^0-9.]/g, "");
-                              const parts = value.split(".");
-                              if (parts.length > 2) {
-                                value = parts[0] + "." + parts[1];
-                              }
-                              if (parts[1]?.length > 2) {
-                                parts[1] = parts[1].slice(0, 2);
-                                value = parts[0] + "." + parts[1];
-                              }
-                              e.currentTarget.value = value;
+                          <div
+                            style={{
+                              backgroundColor: t.background_2,
                             }}
-                            register={form.register}
-                            registerOptions={{
-                              required: "Height is required",
-                              validate: (value) =>
-                                /^\d+(\.\d{1,2})?$/.test(String(value)) ||
-                                "Max 2 decimal places",
-                              setValueAs: (v) =>
-                                v === "" ? undefined : parseFloat(v),
-                            }}
-                            error={form.formState.errors.height?.message}
-                            className="text-[15px] font-[500] opacity-[0.5]"
-                          />
+                            className="rounded-[6px] py-[3px] px-[10px] w-[calc((100%-50px)*0.333)]"
+                          >
+                            <ProductInputField
+                              label="Height (in)"
+                              placeholder="H"
+                              name="height"
+                              inputMode="decimal"
+                              pattern="^\d+(\.\d{0,2})?$"
+                              inputType={"input"}
+                              onInput={(e) => {
+                                let value = e.currentTarget.value;
+                                value = value.replace(/[^0-9.]/g, "");
+                                const parts = value.split(".");
+                                if (parts.length > 2) {
+                                  value = parts[0] + "." + parts[1];
+                                }
+                                if (parts[1]?.length > 2) {
+                                  parts[1] = parts[1].slice(0, 2);
+                                  value = parts[0] + "." + parts[1];
+                                }
+                                e.currentTarget.value = value;
+                              }}
+                              register={form.register}
+                              registerOptions={{
+                                required: "Height is required",
+                                validate: (value) =>
+                                  /^\d+(\.\d{1,2})?$/.test(String(value)) ||
+                                  "Max 2 decimal places",
+                                setValueAs: (v) =>
+                                  v === "" ? undefined : parseFloat(v),
+                              }}
+                              error={form.formState.errors.height?.message}
+                              className="text-[15px] font-[500] opacity-[0.5]"
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -890,7 +904,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             )}
           </div>
 
-          <div className="mt-[11px]">
+          <div
+            className={`mt-[11px] ${
+              imageEditorOpen || descriptionEditorOpen ? "hidden" : "block"
+            } min-[580px]:block`}
+          >
             <div
               className={`relative rounded-[8px] ${
                 noteEditorOpen ? "h-[150px]" : "h-[57px]"
@@ -961,7 +979,10 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             );
             if (!matchedDefinition) return;
             return (
-              <div key={index} className={`${index === 0? "mt-[12px]" : "mt-[34px]"}`}>
+              <div
+                key={index}
+                className={`w-[100%] ${index === 0 ? "mt-[12px]" : "mt-[34px]"}`}
+              >
                 <ProductJobCard
                   matchedProduct={matchedProduct}
                   matchedDefinition={matchedDefinition}
@@ -985,7 +1006,9 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             >
               <FaPlus size={13} color={t.text_1} className="opacity-[0.8]" />
             </div>
-            <div className="text-[15px] font-[500] opacity-[0.8] mt-[-1px]">Add Job</div>
+            <div className="text-[15px] font-[500] opacity-[0.8] mt-[-1px]">
+              Add Job
+            </div>
           </div>
         </div>
       </div>

@@ -12,7 +12,7 @@ export const getTasks = (req, res) => {
   const q = `
     SELECT * FROM tasks
     WHERE project_idx = ?
-    ORDER BY created_at DESC
+    ORDER BY created_at ASC
   `;
 
   db.query(q, [project_idx], (err, rows) => {
@@ -32,8 +32,8 @@ export const upsertTask = async (req, res) => {
     priority,
     scheduled_start_date,
     completed_date,
+    task,
     description,
-    notes,
   } = req.body;
   const project_idx = req.user?.project_idx;
 
@@ -50,7 +50,7 @@ export const upsertTask = async (req, res) => {
     const query = `
       INSERT INTO tasks (
         task_id, project_idx, job_id, status, priority, 
-        scheduled_start_date, completed_date, description, notes
+        scheduled_start_date, completed_date, task, description
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
@@ -59,8 +59,8 @@ export const upsertTask = async (req, res) => {
         priority = VALUES(priority),
         scheduled_start_date = VALUES(scheduled_start_date),
         completed_date = VALUES(completed_date),
+        task = VALUES(task),
         description = VALUES(description),
-        notes = VALUES(notes),
         updated_at = NOW()
     `;
 
@@ -72,8 +72,8 @@ export const upsertTask = async (req, res) => {
       priority || "medium",
       scheduled_start_date || null,
       completed_date || null,
+      task || null,
       description || null,
-      notes || null,
     ];
 
     const [result] = await db.promise().query(query, values);

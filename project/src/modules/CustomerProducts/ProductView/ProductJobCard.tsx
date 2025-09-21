@@ -1,5 +1,12 @@
 // project/src/modules/Jobs/JobCard.tsx
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Check,
   Activity,
@@ -37,6 +44,7 @@ import { dateToString, formatDateTime } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { DelayType, useAutoSave } from "@/hooks/useAutoSave";
+import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 
 // ---------- CircularProgress ----------
 const CircularProgress: React.FC<{
@@ -345,10 +353,12 @@ const TaskCard: React.FC<{
   const { upsertTask, deleteTask } = useContextQueries();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
+  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   if (!productJob || !matchedDefinition) return null;
 
   const taskForm = useTaskForm();
+  const taskStatus = useWatch({ control: taskForm.control, name: "status" });
 
   const scheduled_start_date = useWatch({
     control: taskForm.control,
@@ -410,7 +420,9 @@ const TaskCard: React.FC<{
     return (
       <form
         onSubmit={taskForm.handleSubmit(onFormSubmitButton)}
-        className="cursor-pointer hover:brightness-[86%] dim rounded-xl relative"
+        className={`${
+          taskStatus === "cancelled" && "opacity-[0.5]"
+        } cursor-pointer hover:brightness-[86%] dim rounded-xl relative`}
         style={getInnerCardStyle(theme, t)}
       >
         <div
@@ -436,7 +448,7 @@ const TaskCard: React.FC<{
                 <div className="mt-[3px] w-[100%] text-[15px] font-[500] outline-none truncate">
                   {task.task && task.task.trim().length > 0
                     ? task.task
-                    : `Task ${index}`}
+                    : `Task ${index + 1}`}
                 </div>
               </div>
 
@@ -467,7 +479,9 @@ const TaskCard: React.FC<{
   return (
     <form
       onSubmit={taskForm.handleSubmit(onFormSubmitButton)}
-      className="rounded-xl relative"
+      className={`${
+        taskStatus === "cancelled" && "opacity-[0.5]"
+      } rounded-xl relative`}
       style={{
         ...getInnerCardStyle(theme, t),
         transform: "translateZ(0)",
@@ -486,20 +500,18 @@ const TaskCard: React.FC<{
             border: "1px solid " + t.background_3,
             backgroundColor: t.background_2,
           }}
+          onClick={async () => {
+            if (task.task_id) {
+              await deleteTask(task.task_id);
+            }
+          }}
           className={`${
             deleteButtonVisible
               ? "pointer-events-auto z-[501]"
               : "opacity-0 pointer-events-none"
           } transition-all duration-300 ease-in-out absolute right-[10px] top-[25px] shadow-xl z-[502] w-[100px] h-[35px] rounded-[6px] flex items-center justify-center cursor-pointer hover:brightness-90 dim`}
         >
-          <div
-            onClick={async () => {
-              if (task.task_id) {
-                await deleteTask(task.task_id);
-              }
-            }}
-            className="text-[13px] font-[500] opacity-[0.8]"
-          >
+          <div className="text-[13px] font-[500] opacity-[0.8]">
             Delete Task
           </div>
         </div>
@@ -525,45 +537,50 @@ const TaskCard: React.FC<{
         >
           {completed ? <Check size={18} /> : <Activity size={18} />}
         </div>
+        <div className="flex-1 flex flex-col min-[600px]:flex-row items-start justify-between gap-[12px]">
+          <div className="flex flex-col gap-[8px] w-[100%]">
+            <input
+              {...taskForm.register("task")}
+              type="text"
+              className="mt-[3px] w-[100%] text-[15px] font-[500] outline-none truncate"
+              placeholder="Task..."
+            />
 
-        <div className="flex-1">
-          <div className="flex items-start justify-between gap-[12px]">
-            <div className="flex flex-col gap-[8px] w-[100%]">
-              <input
-                {...taskForm.register("task")}
-                type="text"
-                className="mt-[3px] w-[100%] text-[15px] font-[500] outline-none truncate"
-                placeholder="Task..."
+            <div
+              className={`relative rounded-[5px] transition-all duration-200 ${
+                descriptionOpen ? "h-[120px]" : "h-[30px]"
+              }`}
+              style={{ backgroundColor: appTheme[theme].background_2 }}
+            >
+              <textarea
+                {...taskForm.register("description")}
+                onChange={(e) => {
+                  resetTimer("slow");
+                }}
+                className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] leading-[16px] opacity-[0.7] outline-none border-none resize-none px-3 py-[6.7px]"
+                placeholder="Description..."
               />
 
               <div
-                className={`relative rounded-[5px] transition-all duration-200 ${
-                  descriptionOpen ? "h-[120px]" : "h-[30px]"
-                }`}
-                style={{ backgroundColor: appTheme[theme].background_2 }}
+                onClick={() => setDescriptionOpen((prev) => !prev)}
+                className="flex justify-center items-center cursor-pointer hover:brightness-90 dim w-[36px] h-[30px] right-[3px] top-[0px] absolute z-[300]"
               >
-                <textarea
-                  {...taskForm.register("description")}
-                  onChange={(e) => {
-                    resetTimer("slow");
-                  }}
-                  className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] leading-[16px] opacity-[0.7] outline-none border-none resize-none px-3 py-[6.7px]"
-                  placeholder="Description..."
-                />
-
-                <div
-                  onClick={() => setDescriptionOpen((prev) => !prev)}
-                  className="flex justify-center items-center cursor-pointer hover:brightness-90 dim w-[36px] h-[30px] right-[3px] top-[0px] absolute z-[300]"
-                >
-                  {descriptionOpen ? (
-                    <ChevronUp size={22} className="opacity-30" />
-                  ) : (
-                    <ChevronDown size={22} className="opacity-30" />
-                  )}
-                </div>
+                {descriptionOpen ? (
+                  <ChevronUp size={22} className="opacity-30" />
+                ) : (
+                  <ChevronDown size={22} className="opacity-30" />
+                )}
               </div>
+            </div>
 
-              <div className="flex flex-start gap-[8px] mt-[1px] flex-row w-[100%]">
+            <div
+              className={`flex w-[100%] mt-[1px] gap-[8px] flex-col-reverse min-[1000px]:flex-row ${
+                leftBarOpen
+                  ? "min-[1024px]:flex-col-reverse min-[1300px]:flex-row"
+                  : ""
+              }`}
+            >
+              <div className="flex flex-row gap-[8px]">
                 <Calendar
                   size={15}
                   className="opacity-[0.4] min-w-[15px] mt-[6px]"
@@ -576,8 +593,8 @@ const TaskCard: React.FC<{
                       const dateTime = new Date(date);
                       dateTime.setHours(12, 0, 0, 0);
                       taskForm.setValue("scheduled_start_date", dateTime);
-                      cancelTimer()
-                      await callSubmitForm()
+                      cancelTimer();
+                      await callSubmitForm();
                     }}
                     className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
                       theme === "dark"
@@ -592,7 +609,15 @@ const TaskCard: React.FC<{
                     }
                   />
                 </div>
+              </div>
 
+              <div
+                className={`flex gap-[8px] w-[100%] flex-col min-[700px]:flex-row ${
+                  leftBarOpen
+                    ? "min-[1024px]:flex-col min-[1070px]:flex-row"
+                    : "min-[1070px]:flex-row"
+                }`}
+              >
                 <div className="ml-[9px] mt-[4px] mr-[3px] opacity-[0.6] text-[12px] font-[500]">
                   Assignment
                 </div>
@@ -657,30 +682,36 @@ const TaskCard: React.FC<{
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center flex-row gap-[10px]">
-              <div className="flex flex-col gap-[4px]">
-                <div className="select-none ml-[3px] opacity-[0.2] text-[13px] font-[500]">
-                  Priority
-                </div>
-                <PriorityBadge
-                  form={taskForm}
-                  cancelTimer={cancelTimer}
-                  callSubmitForm={callSubmitForm}
-                />
+          <div
+            className={`flex gap-[10px] ${
+              leftBarOpen
+                ? "flex-col-reverse min-[1400px]:flex-row min-[1400px]:items-center"
+                : "flex-col-reverse min-[1090px]:flex-row min-[1090px]:items-center"
+            }`}
+          >
+            <div className="flex flex-col gap-[4px]">
+              <div className="select-none ml-[3px] opacity-[0.2] text-[13px] font-[500]">
+                Priority
               </div>
+              <PriorityBadge
+                form={taskForm}
+                cancelTimer={cancelTimer}
+                callSubmitForm={callSubmitForm}
+              />
+            </div>
 
-              <div className="flex flex-col gap-[4px]">
-                <div className="select-none ml-[4px] opacity-[0.2] text-[13px] font-[500]">
-                  Status
-                </div>
-                <TaskStatusBadge
-                  form={taskForm}
-                  matchedDefinition={matchedDefinition}
-                  cancelTimer={cancelTimer}
-                  callSubmitForm={callSubmitForm}
-                />
+            <div className="flex flex-col gap-[4px]">
+              <div className="select-none ml-[4px] opacity-[0.2] text-[13px] font-[500]">
+                Status
               </div>
+              <TaskStatusBadge
+                form={taskForm}
+                matchedDefinition={matchedDefinition}
+                cancelTimer={cancelTimer}
+                callSubmitForm={callSubmitForm}
+              />
             </div>
           </div>
         </div>
@@ -708,6 +739,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   if (!matchedDefinition || !productJob) return null;
 
@@ -718,13 +750,20 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   }, [productJob?.job_id]);
 
   const jobForm = useJobForm();
+  const status = useWatch({ control: jobForm.control, name: "status" });
 
   const onFormSubmitButton = async (data: JobFormData) => {
+    const safeValuation = (() => {
+      if (!data.valuation) return 0;
+      const num = parseFloat(data.valuation);
+      return isNaN(num) ? 0 : num;
+    })();
+
     const submitValue = {
       ...data,
       scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
       completed_date: dateToString(data.completed_date ?? null),
-      valuation: data.valuation ?? 0,
+      valuation: safeValuation,
       job_id: productJob.job_id ? productJob.job_id : null,
       job_definition_id: matchedDefinition.id,
       product_id:
@@ -743,7 +782,9 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     },
   });
   const callSubmitForm = async () => {
-    await jobForm.handleSubmit(onFormSubmitButton)();
+    await jobForm.handleSubmit(onFormSubmitButton, (errors) => {
+      console.error("Submit blocked by validation errors:", errors);
+    })();
   };
   useEffect(() => {
     const subscription = jobForm.watch((values, { name, type }) => {
@@ -831,11 +872,15 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     });
   };
 
+  const calendarContainerRef = useRef<HTMLDivElement | null>(null);
+
   if (!currentUser) return null;
 
   return (
     <div
-      className="w-[100%] rounded-2xl px-[16px] pt-[14px]"
+      className={`${
+        status === "cancelled" && "opacity-[0.5]"
+      } w-[100%] rounded-2xl px-[16px] pt-[14px]`}
       style={getCardStyle(theme, t)}
       ref={parentRef}
     >
@@ -844,7 +889,11 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
         className="flex flex-col"
       >
         {/* TOP ROW */}
-        <div className="flex items-start justify-between w-full">
+        <div
+          className={`flex flex-col gap-[15px] min-[750px]:flex-row min-[870px]:flex-col min-[990px]:flex-row ${
+            leftBarOpen ? "min-[1024px]:flex-col min-[1220px]:flex-row" : ""
+          } items-start justify-between w-full`}
+        >
           <div className="flex items-center gap-[15px]">
             <div
               className="p-3 rounded-xl shadow-sm"
@@ -890,16 +939,14 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                         border: "1px solid " + t.background_3,
                         backgroundColor: t.delete,
                       }}
+                      onClick={async () => {
+                        if (productJob.job_id) {
+                          handleDeleteJob(productJob.job_id);
+                        }
+                      }}
                       className="absolute right-0 top-[-6px] shadow-xl z-[502] w-[90px] h-[27px] rounded-[6px] flex items-center justify-center cursor-pointer hover:brightness-90 dim"
                     >
-                      <div
-                        onClick={async () => {
-                          if (productJob.job_id) {
-                            handleDeleteJob(productJob.job_id);
-                          }
-                        }}
-                        className="text-[12.5px] font-[500] opacity-[0.8]"
-                      >
+                      <div className="text-[12.5px] font-[500] opacity-[0.8]">
                         Delete Job
                       </div>
                     </div>
@@ -948,7 +995,11 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
         </div>
 
         {matchedDefinition.type === "Resell" && (
-          <div className="flex items-center mt-[1px]">
+          <div
+            className={`flex items-center mt-[11px] min-[750px]:mt-0 min-[870px]:mt-[11px] min-[990px]:mt-0 ${
+              leftBarOpen ? "min-[1024px]:mt-[11px] min-[1220px]:mt-0" : ""
+            }`}
+          >
             <p className="opacity-[0.4] mr-[10px] text-[15px] font-[500]">
               Resell Price
             </p>
@@ -962,10 +1013,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
               <input
                 {...jobForm.register("valuation", {
                   required: "Price is required",
-                  validate: (value) =>
-                    /^\d+(\.\d{1,2})?$/.test(String(value)) ||
-                    "Max 2 decimal places",
-                  setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
+                  setValueAs: (v) => (v === "" ? null : String(v)), // always string or null
                 })}
                 inputMode="decimal"
                 type="text"
@@ -1110,20 +1158,19 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                     <FiEdit size={12} className="opacity-[0.6]" />
                   </div>
                 </div>
-
-                {/* <div className="flex items-center gap-2 text-[13px] opacity-[0.45]">
-                <Tag size={14} /> <span>{job.job_id ?? "—"}</span>
-              </div> */}
               </div>
             </div>
           </div>
 
-          <ScheduleTimeline
-            form={jobForm}
-            matchedDefinition={matchedDefinition}
-            cancelTimer={cancelTimer}
-            callSubmitForm={callSubmitForm}
-          />
+          <div ref={calendarContainerRef} className="w-[100%]">
+            <ScheduleTimeline
+              form={jobForm}
+              matchedDefinition={matchedDefinition}
+              cancelTimer={cancelTimer}
+              callSubmitForm={callSubmitForm}
+              calendarContainerRef={calendarContainerRef}
+            />
+          </div>
         </div>
       </form>
 
@@ -1134,20 +1181,22 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
             Tasks
           </div>
           <div className="flex items-center gap-2 mt-[-2px]">
-            <div
-              onClick={() => setTasksCollapsed((prev) => !prev)}
-              className="h-[30px] cursor-pointer hover:brightness-75 dim flex flex-row items-center gap-[6px] pl-[12px] pr-[8px] rounded bg-[rgba(255,255,255,0.03)]"
-            >
-              <div className="font-[400] text-[13px] opacity-[0.5]">
-                {jobTasks.length} Tasks
+            {jobTasks.length > 0 && (
+              <div
+                onClick={() => setTasksCollapsed((prev) => !prev)}
+                className="h-[30px] cursor-pointer hover:brightness-75 dim flex flex-row items-center gap-[6px] pl-[12px] pr-[8px] rounded bg-[rgba(255,255,255,0.03)]"
+              >
+                <div className="font-[400] text-[13px] opacity-[0.5]">
+                  {jobTasks.length} Tasks
+                </div>
+                <ChevronDown
+                  size={19}
+                  className={`opacity-[0.4] transition-transform duration-100 ease-in-out ${
+                    !tasksCollapsed && "rotate-180"
+                  }`}
+                />
               </div>
-              <ChevronDown
-                size={19}
-                className={`opacity-[0.4] transition-transform duration-100 ease-in-out ${
-                  !tasksCollapsed && "rotate-180"
-                }`}
-              />
-            </div>
+            )}
             <div
               onClick={addTask}
               className="cursor-pointer hover:brightness-75 dim h-[30px] flex items-center gap-2 pl-[8px] pr-[12px] rounded bg-[rgba(255,255,255,0.03)] text-[13px] font-[400]"

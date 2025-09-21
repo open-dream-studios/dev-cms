@@ -52,10 +52,12 @@ export function useAutoSave({
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
-        onSave();
+        // ⚠️ Important: run onSave once and only once
+        // But defer it to the event loop to avoid React teardown loops
+        Promise.resolve().then(() => onSave());
       }
     };
-  }, [onSave]);
+  }, []);
 
   return { startTimer, resetTimer, cancelTimer };
 }

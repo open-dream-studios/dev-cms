@@ -92,7 +92,9 @@ function SortableImage({
       onMouseUp={handleMouseUp}
     >
       <div className="select-none cursor-pointer hover:brightness-75 dim w-[100%] h-[100%] inset-0">
-        {!singleRow && <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />}
+        {!singleRow && (
+          <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />
+        )}
         <RenderedImage url={url} />
         {!singleRow && (
           <div
@@ -186,11 +188,16 @@ export default function ProductImages({
       >
         {productImages.length > 0 && (
           <div
-            className={`${
+            className={
               singleRow
-                ? "flex flex-row h-[100%]"
-                : "grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 py-[2px] sm:py-[4px] md:py-[6px]"
-            } gap-[11px] touch-none`}
+                ? "flex flex-row h-[100%] gap-[11px] touch-none"
+                : `gap-[11px] touch-none py-[4px] md:py-[6px] grid grid-cols-3 min-[400px]:grid-cols-4 min-[500px]:grid-cols-5 min-[580px]:grid-cols-4 min-[720px]:grid-cols-5 min-[870px]:grid-cols-4 
+                ${
+                  leftBarOpen
+                    ? "min-[1230px]:grid-cols-5 min-[1330px]:grid-cols-6"
+                    : "min-[1010px]:grid-cols-5 min-[1100px]:grid-cols-6"
+                }`
+            }
           >
             {items.map((item: any, index: number) => (
               <SortableImage
