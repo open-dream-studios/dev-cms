@@ -254,7 +254,9 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       const overlapEnd = new Date(
         Math.min(effectiveEnd.getTime(), dayEnd.getTime())
       );
-      if (overlapEnd <= overlapStart) {
+      if (!scheduled_start_date) {
+        map.set(i, null);
+      } else if (overlapEnd <= overlapStart) {
         map.set(i, null);
       } else {
         const topPct = timeToPct(overlapStart);

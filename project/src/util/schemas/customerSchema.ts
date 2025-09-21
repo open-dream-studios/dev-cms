@@ -9,7 +9,8 @@ export const CustomerSchema = z.object({
     .string()
     .email({ message: "Invalid email address" })
     .or(z.literal("")) // allow empty string
-    .optional(),
+    .optional()
+    .nullable(),
   phone: z
     .string()
     .or(z.literal("")) // allow empty string
@@ -17,7 +18,8 @@ export const CustomerSchema = z.object({
       message: "Phone number must be exactly 10 digits",
     })
     .transform((val) => (val ? val.replace(/\D/g, "") : ""))
-    .optional(),
+    .optional()
+    .nullable(),
   address_line1: z.string().optional(),
   address_line2: z.string().optional(),
   city: z.string().optional(),

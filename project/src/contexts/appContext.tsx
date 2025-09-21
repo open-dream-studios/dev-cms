@@ -424,6 +424,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       ...data,
       phone: data.phone?.replace(/\D/g, "") ?? "",
     });
+    setAddingCustomer(false);
   };
 
   const screenHistoryRef = useRef<{ screen: Screen; page: string | null }[]>(
