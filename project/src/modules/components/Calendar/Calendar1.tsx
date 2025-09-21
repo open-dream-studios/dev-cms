@@ -9,27 +9,13 @@ import React, {
 } from "react";
 import { motion } from "framer-motion";
 import {
-  Box,
-  Check,
-  Activity,
   Calendar,
-  Clock,
-  Tag,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   ChevronRight,
   Minimize2,
   Maximize2,
-  User,
-  Plus,
-  Truck,
-  Package,
-  AlertCircle,
-  Edit,
-  Trash,
-  Clock11,
-  MapPin,
 } from "lucide-react";
 import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
@@ -40,7 +26,6 @@ import "./Calendar.css";
 import { JobDefinition } from "@/types/jobs";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { JobFormData } from "@/util/schemas/jobSchema";
-import { DelayType } from "@/hooks/useAutoSave";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 
 // ---------- ScheduleTimeline ----------
@@ -62,6 +47,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const { currentUser } = React.useContext(AuthContext);
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
+  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   if (!form) return null;
 
@@ -71,8 +57,6 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const BUFFER_DAYS = 1500; // => ~4 years forward/back (adjust if desired)
   const CENTER_INDEX = Math.floor(BUFFER_DAYS / 2); // index for "today" week center
   const SNAP_DEBOUNCE = 80; // ms
-
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   const [isMini, setIsMini] = useState<boolean>(true);
   const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(false);
@@ -110,7 +94,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   // --- refs ---
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const daysTrackRef = useRef<HTMLDivElement | null>(null);
-  const columnWidthRef = useRef<number>(0);
+  const columnWidthRef = useRef<number>(90);
   const containerWidthRef = useRef<number>(0);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const snapTimeoutRef = useRef<number | null>(null);
@@ -175,32 +159,62 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   );
 
   // column width: we want 7 columns occupying the visible width
+  const [columnWidth, setColumnWidth] = useState<number>(90);
+  const [columnAreaWidth, setColumnAreaWidth] = useState<number>(300);
+  // const recalcColumnSizing = useCallback(() => {
+  //   const container = scrollerRef.current;
+  //   const daysTrack = daysTrackRef.current;
+  //   if (!container || !daysTrack) return;
+  //   // const w = container.clientWidth;
+  //   // containerWidthRef.current = w;
+  //   // const col = Math.max(50, Math.floor(w / 7)); // enforce min width for readability
+  //   // columnWidthRef.current = col;
+  //   // setColumnWidth(col);
+  //   // daysTrack.style.width = `${col * daysCount}px`;
+
+  //   if (calendarContainerRef.current) {
+  //     // const rect = calendarContainerRef.current.getBoundingClientRect();
+  //     // const columnsAreaWidth = rect.width - 4 - 28 - 50;
+  //     // console.log(columnsAreaWidth);
+  //     // setColumnAreaWidth(columnsAreaWidth);
+  //     // const col = columnsAreaWidth / 7;
+  //     // setColumnWidth(col);
+  //     // console.log(col)
+  //     // columnWidthRef.current = col;
+  //     // console.log("ref", columnWidthRef.current)
+  //     // daysTrack.style.width = `${col * daysCount}px`;
+  //   }
+  // }, [daysCount]);
+
   const recalcColumnSizing = useCallback(() => {
     const container = scrollerRef.current;
     const daysTrack = daysTrackRef.current;
     if (!container || !daysTrack) return;
+
     const w = container.clientWidth;
     containerWidthRef.current = w;
-    const col = Math.max(90, Math.floor(w / 7)); // enforce min width for readability
+
+    // divide width by 7 columns
+    const col = Math.max(50, Math.floor(w / 7));
     columnWidthRef.current = col;
-    // set width of days track so each column uses this width
-    // but we must set inline style on daysTrack (we'll update children style too)
-    // daysTrack.style.width = `${col * daysCount}px`;
+    setColumnWidth(col);
+
+    daysTrack.style.width = `${col * daysCount}px`;
   }, [daysCount]);
 
-  // setup ResizeObserver to update column sizing
-  useLayoutEffect(() => {
-    recalcColumnSizing();
-    if (!scrollerRef.current) return;
-    resizeObserverRef.current = new ResizeObserver(() => {
-      recalcColumnSizing();
-      snapToNearestDay();
-    });
-    resizeObserverRef.current.observe(scrollerRef.current);
-    return () => {
-      resizeObserverRef.current?.disconnect();
-    };
-  }, [recalcColumnSizing]);
+  // // setup ResizeObserver to update column sizing
+  // useLayoutEffect(() => {
+  //   recalcColumnSizing();
+  //   if (!scrollerRef.current) return;
+  //   resizeObserverRef.current = new ResizeObserver(() => {
+  //     recalcColumnSizing();
+  //     snapToNearestDay();
+  //   });
+  //   resizeObserverRef.current.observe(scrollerRef.current);
+  //   return () => {
+  //     resizeObserverRef.current?.disconnect();
+  //   };
+  // }, [recalcColumnSizing]);
 
   // --- blocks calculation for visible week (we still render blocks per day) ---
   // We'll find blocks by comparing effectiveStart/effectiveEnd to each day's day span
@@ -255,6 +269,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     (index: number, behavior: ScrollBehavior = "smooth") => {
       const scroller = scrollerRef.current;
       if (!scroller || !columnWidthRef.current) return;
+
       // We want the left edge to be the Sunday of that week (first column).
       // First compute Sunday index for the provided index
       const dt = indexToDate(index);
@@ -289,6 +304,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     if (!justExpanded && !startDateChanged) return;
 
     const sunday = new Date(scheduled_start_date);
+    console.log("SUNDAY", sunday)
     sunday.setHours(0, 0, 0, 0);
     sunday.setDate(sunday.getDate() - sunday.getDay());
 
@@ -313,7 +329,9 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       today.setHours(0, 0, 0, 0);
       const sunday = new Date(today);
       sunday.setDate(sunday.getDate() - sunday.getDay());
-      scrollToWeekContainingIndex(dateToIndex(sunday));
+      // scrollToWeekContainingIndex(dateToIndex(sunday));
+      const sundayIndex = dateToIndex(sunday);
+      scrollToWeekContainingIndex(sundayIndex);
       return;
     }
     const sunday = new Date(scheduled_start_date);
@@ -335,6 +353,27 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     },
     []
   );
+
+  // useLayoutEffect(() => {
+  //   const handleResize = () => {
+  //     recalcColumnSizing();
+  //     snapToNearestDay();
+  //   };
+  //   window.addEventListener("resize", handleResize);
+  //   handleResize();
+
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, [recalcColumnSizing, snapToNearestDay]);
+
+  useLayoutEffect(() => {
+    if (!calendarContainerRef.current) return;
+    const obs = new ResizeObserver(() => {
+      recalcColumnSizing();
+      snapToNearestDay();
+    });
+    obs.observe(calendarContainerRef.current);
+    return () => obs.disconnect();
+  }, [recalcColumnSizing, snapToNearestDay]);
 
   // debounce wrapper for onScroll
   useEffect(() => {
@@ -398,32 +437,88 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const headerHeight = 34;
   const gridHeight = Math.max(48, timelineHeight - headerHeight);
 
-  const [containerWidth, setContainerWidth] = useState<number>();
-  const getContainerWidth = () => {
-    if (calendarContainerRef.current) {
-      return (
-        calendarContainerRef.current.getBoundingClientRect().width - 66 - 28
-      );
+  // --- virtualization state ---
+  const WEEKS_BEFORE = 8;
+  const WEEKS_AFTER = 8;
+  const DAYS_PER_WEEK = 7;
+
+  const [anchorDate, setAnchorDate] = useState<Date>(() => {
+    const base = scheduled_start_date ?? new Date();
+    base.setHours(0, 0, 0, 0);
+    base.setDate(base.getDate() - base.getDay()); // align to Sunday
+    return base;
+  });
+
+  // store the currently visible window of weeks
+  const [windowStart, setWindowStart] = useState<Date>(() => {
+    const d = new Date(anchorDate);
+    d.setDate(d.getDate() - WEEKS_BEFORE * DAYS_PER_WEEK);
+    return d;
+  });
+  const [windowEnd, setWindowEnd] = useState<Date>(() => {
+    const d = new Date(anchorDate);
+    d.setDate(d.getDate() + WEEKS_AFTER * DAYS_PER_WEEK);
+    return d;
+  });
+
+  // utility: generate days between start and end
+  function generateDays(start: Date, end: Date): Date[] {
+    const days: Date[] = [];
+    const d = new Date(start);
+    while (d <= end) {
+      days.push(new Date(d));
+      d.setDate(d.getDate() + 1);
     }
-    return 0;
-  };
+    return days;
+  }
 
+  const visibleDays = useMemo(
+    () => generateDays(windowStart, windowEnd),
+    [windowStart, windowEnd]
+  );
+
+  // --- extend window when scrolling near edges ---
+  const handleScroll = useCallback(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || !columnWidthRef.current) return;
+
+    const scrollLeft = scroller.scrollLeft;
+    const currentIndex = Math.floor(scrollLeft / columnWidthRef.current);
+
+    const currentDate = new Date(windowStart);
+    currentDate.setDate(currentDate.getDate() + currentIndex);
+
+    // if user scrolls near the start, prepend more weeks
+    if (currentDate < addDays(windowStart, 7)) {
+      const newStart = addDays(windowStart, -WEEKS_BEFORE * DAYS_PER_WEEK);
+      setWindowStart(newStart);
+    }
+
+    // if user scrolls near the end, append more weeks
+    if (currentDate > addDays(windowEnd, -7)) {
+      const newEnd = addDays(windowEnd, WEEKS_AFTER * DAYS_PER_WEEK);
+      setWindowEnd(newEnd);
+    }
+  }, [windowStart, windowEnd]);
+
+  function addDays(date: Date, days: number): Date {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  // attach scroll listener
   useEffect(() => {
-    const handleResize = () => {
-      setContainerWidth(() => getContainerWidth());
-    };
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    scroller.addEventListener("scroll", handleScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   return (
     <motion.div
       initial={false}
-      className={`ScheduleTimeline w-[100%] overflow-hidden rounded-xl px-[14px] py-[9px] bg-opacity-80`}
+      className={`ScheduleTimeline w-full rounded-xl px-[14px] py-[9px] bg-opacity-80`}
       style={
         {
           ...getInnerCardStyle?.(theme, t),
@@ -589,17 +684,21 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       <div
         className={`${
           calendarCollapsed && "hidden"
-        } w-[100%]] overflow-x-hidden rounded-md pb-[16px] mt-[9px]`}
+        } w-full overflow-hidden rounded-md pb-[16px] mt-[9px]`}
         style={{ border: "1px solid rgba(255,255,255,0.03)" }}
       >
-        <div className="flex w-[100%] overflow-hidden">
+        <div className="flex">
+          {/* Time labels column */}
           <div
             className={`relative ${
               isMini ? "text-[10px]" : "text-[11px]"
             } opacity-70 mt-[-9px] border-r-gray-700 border-r-[0.5px]`}
             style={{ minWidth: 50 }}
           >
+            {/* spacer to match the date header height so everything lines up */}
             <div style={{ height: `${headerHeight}px` }} />
+
+            {/* labels container (absolute labels placed at the exact same percentage positions as the grid lines) */}
             <div style={{ height: `${gridHeight}px`, position: "relative" }}>
               {Array.from({ length: HOURS + 1 }).map((_, h) => {
                 const hour = DAY_START_HOUR + h;
@@ -626,6 +725,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
             </div>
           </div>
 
+          {/* Scrollable days track (horizontal) */}
           <div
             ref={scrollerRef}
             className={`flex-1 overflow-x-auto overflow-y-hidden touch-pan-x hide-scrollbar smooth-scroll`}
@@ -638,7 +738,6 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
               ref={daysTrackRef}
               className="relative"
               style={{
-                width: "290px",
                 // width: `${
                 //   (columnWidthRef.current ||
                 //     Math.max(
@@ -646,24 +745,24 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                 //       Math.floor((containerWidthRef.current || 700) / 7)
                 //     )) * daysArray.length
                 // }px`,
+                width: `${columnAreaWidth}px`,
+                // width: `${(columnWidthRef.current || 90) * daysCount}px`,
               }}
             >
+              {/* Date header row (scrolls horizontally with columns) */}
               <div
-                className="flex items-center ml-[1px] border-b-gray-700 border-b-[0.5px]"
+                className="flex items-center"
                 style={{ height: `${headerHeight - 5}`, zIndex: 20 }}
               >
-                {daysArray.map((d, idx) => {
-                  const colW =
-                    columnWidthRef.current ||
-                    Math.max(
-                      90,
-                      Math.floor((containerWidthRef.current || 700) / 7)
-                    );
+                {visibleDays.map((d) => {
                   return (
                     <div
-                      key={idx}
+                      key={d.toISOString()}
                       className="flex-shrink-0 flex items-center justify-center border-r border-gray-700"
-                      style={{ width: `${colW}px`, padding: "6px 4px" }}
+                      style={{
+                        width: `${columnWidthRef.current || 90}px`,
+                        padding: "6px 4px",
+                      }}
                     >
                       <div className="text-center font-semibold text-[11px] leading-[13px]">
                         {d.toLocaleDateString(undefined, {
@@ -677,24 +776,21 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                 })}
               </div>
 
+              {/* Grid area (directly under the date header) */}
               <div
                 className="flex"
                 style={{ height: `${gridHeight}px`, position: "relative" }}
               >
-                {daysArray.map((d, idx) => {
-                  const colW =
-                    columnWidthRef.current ||
-                    Math.max(
-                      90,
-                      Math.floor((containerWidthRef.current || 700) / 7)
-                    );
-                  const blk = blocksByIndex.get(idx);
+                {visibleDays.map((d, idx) => {
+                  const blk = blocksByIndex.get(
+                    /* convert date to index */ dateToIndex(d)
+                  );
                   return (
                     <div
-                      key={idx}
-                      className="relative border-l border-gray-700 flex-shrink-0"
+                      key={d.toISOString()}
+                      className="relative border-r border-gray-700 flex-shrink-0"
                       style={{
-                        width: `${colW}px`,
+                        width: `${columnWidthRef.current || 90}px`,
                         height: `${gridHeight}px`,
                         scrollSnapAlign: "start",
                         padding: "0 8px",
@@ -714,8 +810,13 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                       })}
 
                       <div
-                        className="absolute left-0 right-0 border-t border-gray-800"
+                        className="absolute left-0 right-0 border-t-[1px] border-gray-700"
                         style={{ bottom: 0 }}
+                      />
+
+                      <div
+                        className="absolute left-0 right-0 border-t-[1px] border-gray-700"
+                        style={{ top: 0 }}
                       />
 
                       {blk && blk !== null && (
@@ -733,7 +834,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                           }}
                         >
                           <div className="flex flex-col items-center">
-                            <div className="text-[12px] font-semibold opacity-[0.79]">{`Job`}</div>
+                            <div className="text-[12px] font-semibold">{`Job`}</div>
                             {!isMini && (
                               <div className="text-[11px] opacity-90">
                                 {blk.s.toLocaleTimeString([], {
