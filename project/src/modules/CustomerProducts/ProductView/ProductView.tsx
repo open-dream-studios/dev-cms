@@ -175,6 +175,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       }
       const formDefaults: Partial<ProductFormData> = {
         ...matchedProduct,
+        name: matchedProduct.name && matchedProduct.name.length >=1 ? matchedProduct.name : "",
         serial_number: matchedProduct.serial_number
           ? matchedProduct.serial_number
           : "",

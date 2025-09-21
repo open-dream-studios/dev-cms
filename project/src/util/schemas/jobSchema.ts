@@ -6,6 +6,7 @@ export const JobSchema = z.object({
     .string()
     .trim()
     .regex(/^\d+(\.\d{1,2})?$/, "Must be a valid price with max 2 decimals")
+    .or(z.literal(""))
     .optional()
     .nullable(),
   status: z.enum([

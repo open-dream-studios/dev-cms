@@ -9,7 +9,7 @@ export const ProductSchema = z.object({
     .refine((val) => /^[A-Z0-9]+$/.test(val), {
       message: "Only uppercase letters and numbers allowed",
     }),
-  name: z.string().optional().nullable(),
+  name: z.string().min(1, "Name is required"),
   customer_id: z.number().optional().nullable(),
   make: z.string().nullable(),
   model: z.string().nullable(),
@@ -45,7 +45,7 @@ export type ProductFormData = z.infer<typeof ProductSchema>;
 
 export const defaultProductValues: ProductFormData = {
   serial_number: "",
-  name: null,
+  name: "",
   customer_id: undefined,
   make: null,
   model: null,

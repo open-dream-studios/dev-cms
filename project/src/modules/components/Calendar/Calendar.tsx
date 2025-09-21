@@ -335,7 +335,6 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const prevStartDateRef = useRef<number | null>(null);
 
   const goToWeek = useCallback(() => {
-    console.log("GO TO", scheduled_start_date);
     if (!scheduled_start_date) return;
 
     const sunday = new Date(scheduled_start_date);
@@ -343,10 +342,18 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     sunday.setDate(sunday.getDate() - sunday.getDay());
 
     const sundayIndex = dateToIndex(sunday);
-    console.log("sundayIndex:", sundayIndex);
 
     setTimeout(() => {
-      console.log("scrollingg......");
+      scrollToWeekContainingIndex(sundayIndex, "auto");
+    }, 1000);
+  }, [scheduled_start_date, dateToIndex, scrollToWeekContainingIndex]);
+
+  const goToCurrentWeek = useCallback(() => {
+    const sunday = new Date();
+    sunday.setHours(0, 0, 0, 0);
+    sunday.setDate(sunday.getDate() - sunday.getDay());
+    const sundayIndex = dateToIndex(sunday);
+    setTimeout(() => {
       scrollToWeekContainingIndex(sundayIndex, "auto");
     }, 1000);
   }, [scheduled_start_date, dateToIndex, scrollToWeekContainingIndex]);
@@ -354,7 +361,10 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   useEffect(() => {
     const justExpanded = prevCollapsedRef.current && !calendarCollapsed;
     prevCollapsedRef.current = calendarCollapsed;
-    if (!scheduled_start_date) return;
+    if (!scheduled_start_date) {
+      goToCurrentWeek();
+      return;
+    }
 
     const ts = scheduled_start_date.getTime();
     const startDateChanged = prevStartDateRef.current !== ts;
@@ -536,7 +546,6 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       const currentWidth = scrollerRef.current?.clientWidth;
       if (currentWidth && currentWidth !== prevWidth) {
         prevWidth = currentWidth;
-        console.log("resize finished (width changed)");
         goToWeek();
       }
     });
