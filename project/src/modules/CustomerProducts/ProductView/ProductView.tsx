@@ -175,7 +175,10 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       }
       const formDefaults: Partial<ProductFormData> = {
         ...matchedProduct,
-        name: matchedProduct.name && matchedProduct.name.length >=1 ? matchedProduct.name : "",
+        name:
+          matchedProduct.name && matchedProduct.name.length >= 1
+            ? matchedProduct.name
+            : "",
         serial_number: matchedProduct.serial_number
           ? matchedProduct.serial_number
           : "",
@@ -982,7 +985,9 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             return (
               <div
                 key={index}
-                className={`w-[100%] ${index === 0 ? "mt-[12px]" : "mt-[34px]"}`}
+                className={`w-[100%] ${
+                  index === 0 ? "mt-[12px]" : "mt-[34px]"
+                }`}
               >
                 <ProductJobCard
                   matchedProduct={matchedProduct}
@@ -993,25 +998,27 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             );
           })}
 
-        <div className="w-[100%] mt-[12px] flex justify-end">
-          <div
-            style={getInnerCardStyle(theme, t)}
-            className="cursor-pointer hover:brightness-90 dim py-[6px] pl-[16px] pr-[20px] rounded-[10px] flex items-center justify-center gap-[8px] flex-row"
-            onClick={handleAddJobClick}
-          >
+        {screen === "edit-customer-product" && matchedProduct &&(
+          <div className="w-[100%] mt-[12px] flex justify-end">
             <div
-              style={{
-                backgroundColor: t.background_2_2,
-              }}
-              className="opacity-[0.8] w-[22px] h-[22px] rounded-[20px] flex items-center justify-center"
+              style={getInnerCardStyle(theme, t)}
+              className="cursor-pointer hover:brightness-90 dim py-[6px] pl-[16px] pr-[20px] rounded-[10px] flex items-center justify-center gap-[8px] flex-row"
+              onClick={handleAddJobClick}
             >
-              <FaPlus size={13} color={t.text_1} className="opacity-[0.8]" />
-            </div>
-            <div className="text-[15px] font-[500] opacity-[0.8] mt-[-1px]">
-              Add Job
+              <div
+                style={{
+                  backgroundColor: t.background_2_2,
+                }}
+                className="opacity-[0.8] w-[22px] h-[22px] rounded-[20px] flex items-center justify-center"
+              >
+                <FaPlus size={13} color={t.text_1} className="opacity-[0.8]" />
+              </div>
+              <div className="text-[15px] font-[500] opacity-[0.8] mt-[-1px]">
+                Add Job
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
