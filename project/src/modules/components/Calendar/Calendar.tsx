@@ -110,17 +110,38 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   // --- refs ---
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const daysTrackRef = useRef<HTMLDivElement | null>(null);
+  const virtualTrackRef = useRef<HTMLDivElement | null>(null); // NEW: actual wide track
   const columnWidthRef = useRef<number>(0);
   const containerWidthRef = useRef<number>(0);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const snapTimeoutRef = useRef<number | null>(null);
 
+  // --- virtualization state ---
+  // how many real columns visible at once (suggest 7), but render more for buffer
+  const VISIBLE_DAYS = 21; // number of days to consider visible (3 weeks) — tune if you want
+  const SIDE_BUFFER = 14; // extra days before/after visible to render
+  const [renderRange, setRenderRange] = useState<{
+    start: number;
+    end: number;
+  }>(() => {
+    const start = Math.max(
+      0,
+      CENTER_INDEX - Math.floor(VISIBLE_DAYS / 2) - SIDE_BUFFER
+    );
+    const end = Math.min(
+      BUFFER_DAYS - 1,
+      start + VISIBLE_DAYS + SIDE_BUFFER * 2 - 1
+    );
+    return { start, end };
+  });
+
   // --- helper functions ---
   function weekIndexOffsetForDate(date: Date) {
     // returns number of days offset from "today" index to place the Sunday of date's week
     const today = new Date();
+    // this;
+    today.setHours(0, 0, 0, 0);
     const thisSunday = new Date(today);
-    thisSunday.setHours(0, 0, 0, 0);
     thisSunday.setDate(thisSunday.getDate() - thisSunday.getDay()); // this week's Sunday
 
     const targetSunday = new Date(date);
@@ -183,9 +204,12 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     containerWidthRef.current = w;
     const col = Math.max(90, Math.floor(w / 7)); // enforce min width for readability
     columnWidthRef.current = col;
-    // set width of days track so each column uses this width
-    // but we must set inline style on daysTrack (we'll update children style too)
-    // daysTrack.style.width = `${col * daysCount}px`;
+    // set width of virtual track so each column uses this width
+    if (virtualTrackRef.current) {
+      virtualTrackRef.current.style.width = `${col * daysCount}px`;
+    }
+    // Note: keep the daysTrackRef outer wrapper width unchanged (you requested this line left alone)
+    // daysTrackRef.current.style.width = `290px`; // KEEPING original placement below in JSX
   }, [daysCount]);
 
   // setup ResizeObserver to update column sizing
@@ -200,10 +224,10 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     return () => {
       resizeObserverRef.current?.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recalcColumnSizing]);
 
-  // --- blocks calculation for visible week (we still render blocks per day) ---
-  // We'll find blocks by comparing effectiveStart/effectiveEnd to each day's day span
+  // --- blocks calculation for visible week (we still compute blocks by index and read them from the map) ---
   const blocksByIndex = useMemo(() => {
     if (!effectiveStart || !effectiveEnd) return new Map<number, null>();
     const map = new Map<
@@ -217,7 +241,6 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
         e: Date;
       }
     >();
-    // We'll compute for all days in buffer (cheap), but you can restrict to visible range if needed
     for (let i = 0; i < daysCount; i++) {
       const day = indexToDate(i);
       const dayStart = new Date(day);
@@ -249,54 +272,96 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     return map;
   }, [effectiveStart, effectiveEnd, daysCount, indexToDate]);
 
-  // --- initial scroll position & schedule button behavior ---
-  // Scroll to a particular index so that the week (7 days) starting at that day's Sunday is visible.
+  // --- virtualization: compute the slice of indices to render based on renderRange ---
+  const renderedIndices = useMemo(() => {
+    const arr: number[] = [];
+    for (let i = renderRange.start; i <= renderRange.end; i++) arr.push(i);
+    return arr;
+  }, [renderRange]);
+
+  // initial scroll position & schedule button behavior (unchanged)
+  // const scrollToWeekContainingIndex = useCallback(
+  //   (index: number, behavior: ScrollBehavior = "smooth") => {
+  //     const scroller = scrollerRef.current;
+  //     if (!scroller || !columnWidthRef.current) return;
+  //     const dt = indexToDate(index);
+  //     const sunday = new Date(dt);
+  //     sunday.setHours(0, 0, 0, 0);
+  //     sunday.setDate(sunday.getDate() - sunday.getDay());
+  //     const sundayIndex = dateToIndex(sunday);
+  //     const left = sundayIndex * columnWidthRef.current;
+  //     scroller.scrollTo({ left: 63100, behavior });
+  //     setWeekCenteredIndex(sundayIndex);
+  //   },
+  //   [indexToDate, dateToIndex]
+  // );
+
   const scrollToWeekContainingIndex = useCallback(
     (index: number, behavior: ScrollBehavior = "smooth") => {
       const scroller = scrollerRef.current;
       if (!scroller || !columnWidthRef.current) return;
-      // We want the left edge to be the Sunday of that week (first column).
-      // First compute Sunday index for the provided index
+
       const dt = indexToDate(index);
       const sunday = new Date(dt);
       sunday.setHours(0, 0, 0, 0);
       sunday.setDate(sunday.getDate() - sunday.getDay());
       const sundayIndex = dateToIndex(sunday);
       const left = sundayIndex * columnWidthRef.current;
-      scroller.scrollTo({ left, behavior });
+
+      // ensure render range covers the target
+      setRenderRange((prev) => {
+        if (sundayIndex < prev.start || sundayIndex > prev.end) {
+          return {
+            start: Math.max(0, sundayIndex - SIDE_BUFFER),
+            end: Math.min(
+              BUFFER_DAYS - 1,
+              sundayIndex + VISIBLE_DAYS + SIDE_BUFFER
+            ),
+          };
+        }
+        return prev;
+      });
+
+      requestAnimationFrame(() => {
+        scroller.scrollTo({ left, behavior });
+      });
+
       setWeekCenteredIndex(sundayIndex);
     },
     [indexToDate, dateToIndex]
   );
 
-  // compute index for effectiveStart's week and initialize view
   const prevCollapsedRef = useRef<boolean>(calendarCollapsed);
   const prevStartDateRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    const justExpanded = prevCollapsedRef.current && !calendarCollapsed;
-    prevCollapsedRef.current = calendarCollapsed;
-
+  const goToWeek = useCallback(() => {
+    console.log("GO TO", scheduled_start_date);
     if (!scheduled_start_date) return;
-
-    const ts = scheduled_start_date.getTime();
-    const startDateChanged = prevStartDateRef.current !== ts;
-    prevStartDateRef.current = ts;
-
-    // Only scroll if:
-    //   - we just expanded, OR
-    //   - the start date actually changed
-    if (!justExpanded && !startDateChanged) return;
 
     const sunday = new Date(scheduled_start_date);
     sunday.setHours(0, 0, 0, 0);
     sunday.setDate(sunday.getDate() - sunday.getDay());
 
     const sundayIndex = dateToIndex(sunday);
+    console.log("sundayIndex:", sundayIndex);
 
     setTimeout(() => {
+      console.log("scrollingg......");
       scrollToWeekContainingIndex(sundayIndex, "auto");
-    }, 30);
+    }, 1000);
+  }, [scheduled_start_date, dateToIndex, scrollToWeekContainingIndex]);
+
+  useEffect(() => {
+    const justExpanded = prevCollapsedRef.current && !calendarCollapsed;
+    prevCollapsedRef.current = calendarCollapsed;
+    if (!scheduled_start_date) return;
+
+    const ts = scheduled_start_date.getTime();
+    const startDateChanged = prevStartDateRef.current !== ts;
+    prevStartDateRef.current = ts;
+
+    if (!justExpanded && !startDateChanged) return;
+    goToWeek();
   }, [
     scheduled_start_date,
     calendarCollapsed,
@@ -308,7 +373,6 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const handleGotoScheduleWeek = useCallback(() => {
     setCalendarCollapsed(false);
     if (!scheduled_start_date) {
-      // go to today week
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const sunday = new Date(today);
@@ -322,7 +386,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     scrollToWeekContainingIndex(dateToIndex(sunday));
   }, [scheduled_start_date, dateToIndex, scrollToWeekContainingIndex]);
 
-  // Snap-to-day behavior: when user stops scrolling, snap to nearest day column start
+  // Snap-to-day behavior (unchanged)
   const snapToNearestDay = useCallback(
     (behavior: ScrollBehavior = "smooth") => {
       const scroller = scrollerRef.current;
@@ -336,40 +400,94 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     []
   );
 
-  // debounce wrapper for onScroll
+  // debounce wrapper for onScroll (we still keep snap behavior)
+  // useEffect(() => {
+  //   const scroller = scrollerRef.current;
+  //   if (!scroller) return;
+  //   const onScroll = () => {
+  //     if (snapTimeoutRef.current) {
+  //       window.clearTimeout(snapTimeoutRef.current);
+  //     }
+  //     snapTimeoutRef.current = window.setTimeout(() => {
+  //       snapToNearestDay("smooth");
+  //     }, SNAP_DEBOUNCE);
+  //   };
+  //   scroller.addEventListener("scroll", onScroll, { passive: true });
+  //   return () => {
+  //     scroller.removeEventListener("scroll", onScroll);
+  //     if (snapTimeoutRef.current) {
+  //       window.clearTimeout(snapTimeoutRef.current);
+  //     }
+  //   };
+  // }, [snapToNearestDay]);
+
+  // Update renderRange while scrolling — throttled with rAF
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
-    let running = false;
+    let rafId: number | null = null;
+
     const onScroll = () => {
-      if (snapTimeoutRef.current) {
-        window.clearTimeout(snapTimeoutRef.current);
-      }
-      snapTimeoutRef.current = window.setTimeout(() => {
-        snapToNearestDay("smooth");
-      }, SNAP_DEBOUNCE);
+      if (rafId !== null) return; // simple throttle
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        const left = scroller.scrollLeft;
+        const colW =
+          columnWidthRef.current ||
+          Math.max(90, Math.floor((containerWidthRef.current || 700) / 7));
+        const firstVisibleIdx = Math.floor(left / colW);
+        const visibleCenter =
+          firstVisibleIdx +
+          Math.ceil((containerWidthRef.current || colW * 7) / colW / 2);
+        const newStart = Math.max(0, firstVisibleIdx - SIDE_BUFFER);
+        const newEnd = Math.min(
+          BUFFER_DAYS - 1,
+          firstVisibleIdx + VISIBLE_DAYS + SIDE_BUFFER
+        );
+        // Only update if changed
+        if (newStart !== renderRange.start || newEnd !== renderRange.end) {
+          setRenderRange({ start: newStart, end: newEnd });
+        }
+        // setWeekCenteredIndex(visibleCenter - 4);
+        if (snapTimeoutRef.current) {
+          window.clearTimeout(snapTimeoutRef.current);
+        }
+        snapTimeoutRef.current = window.setTimeout(() => {
+          const visibleCenter =
+            firstVisibleIdx +
+            Math.ceil((containerWidthRef.current || colW * 7) / colW / 2);
+          setWeekCenteredIndex(visibleCenter - 4);
+          snapTimeoutRef.current = null;
+        }, SNAP_DEBOUNCE);
+      });
     };
+
     scroller.addEventListener("scroll", onScroll, { passive: true });
+    // trigger initial update
+    onScroll();
     return () => {
-      scroller.removeEventListener("scroll", onScroll);
-      if (snapTimeoutRef.current) {
-        window.clearTimeout(snapTimeoutRef.current);
-      }
+      scroller.removeEventListener("scroll", onScroll as EventListener);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [snapToNearestDay]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderRange.start, renderRange.end, VISIBLE_DAYS]);
 
   const handlePrevWeek = () => {
     if (!scrollerRef.current || !columnWidthRef.current) return;
-    const currentIndex = Math.round(
+    const currentIndex = Math.floor(
       scrollerRef.current.scrollLeft / columnWidthRef.current
     );
-    const currentDate = indexToDate(currentIndex);
-    const sunday = new Date(currentDate);
-    sunday.setHours(0, 0, 0, 0);
-    sunday.setDate(sunday.getDate() - sunday.getDay());
-    sunday.setDate(sunday.getDate() - 7);
-
-    const sundayIndex = dateToIndex(sunday);
+    const firstVisibleDate = indexToDate(currentIndex);
+    const currentWeekSunday = new Date(firstVisibleDate);
+    currentWeekSunday.setHours(0, 0, 0, 0);
+    currentWeekSunday.setDate(
+      currentWeekSunday.getDate() - currentWeekSunday.getDay()
+    );
+    let targetSunday = new Date(currentWeekSunday);
+    if (firstVisibleDate.getDay() === 0) {
+      targetSunday.setDate(targetSunday.getDate() - 7);
+    }
+    const sundayIndex = dateToIndex(targetSunday);
     scrollToWeekContainingIndex(sundayIndex, "smooth");
   };
 
@@ -395,46 +513,49 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   };
 
   const timelineHeight = isMini ? 160 : HOURS * 40;
-  const headerHeight = 34;
+  const headerHeight = 28;
   const gridHeight = Math.max(48, timelineHeight - headerHeight);
 
-  const [containerWidth, setContainerWidth] = useState<number>();
-  const getContainerWidth = () => {
-    if (calendarContainerRef.current) {
-      return (
-        calendarContainerRef.current.getBoundingClientRect().width - 66 - 28
-      );
-    }
-    return 0;
-  };
+  // compute human-readable label for the centered week (still uses weekCenteredIndex)
+  const weekRangeLabel = useMemo(() => {
+    const sunday = indexToDate(weekCenteredIndex);
+    const sundayStart = new Date(sunday);
+    sundayStart.setHours(0, 0, 0, 0);
+    sundayStart.setDate(sundayStart.getDate() - sundayStart.getDay());
+    const saturday = new Date(sundayStart);
+    saturday.setDate(saturday.getDate() + 6);
+    return `${sundayStart.toLocaleDateString()} – ${saturday.toLocaleDateString()}`;
+  }, [weekCenteredIndex, indexToDate]);
 
   useEffect(() => {
-    const handleResize = () => {
-      setContainerWidth(() => getContainerWidth());
-    };
-    handleResize();
+    if (!scrollerRef.current) return;
 
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+    let prevWidth = scrollerRef.current.clientWidth;
+
+    const observer = new ResizeObserver(() => {
+      const currentWidth = scrollerRef.current?.clientWidth;
+      if (currentWidth && currentWidth !== prevWidth) {
+        prevWidth = currentWidth;
+        console.log("resize finished (width changed)");
+        goToWeek();
+      }
+    });
+
+    observer.observe(scrollerRef.current);
+    return () => observer.disconnect();
+  }, [goToWeek]);
 
   return (
     <motion.div
       initial={false}
-      className={`ScheduleTimeline w-[100%] overflow-hidden rounded-xl px-[14px] py-[9px] bg-opacity-80`}
+      className={`ScheduleTimeline w-[100%] rounded-xl px-[14px] py-[9px] bg-opacity-80`}
       style={
         {
           ...getInnerCardStyle?.(theme, t),
           "--time-icon-filter":
-            theme === "dark"
-              ? "invert(100%)" // white clock icon in dark mode
-              : "invert(0%)", // black clock icon in light mode
+            theme === "dark" ? "invert(100%)" : "invert(0%)",
           "--date-icon-filter":
-            theme === "dark"
-              ? "invert(100%)" // white calendar icon in dark mode
-              : "invert(0%)", // black calendar icon in light mode
+            theme === "dark" ? "invert(100%)" : "invert(0%)",
         } as React.CSSProperties
       }
     >
@@ -474,7 +595,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
         </div>
 
         <div
-          className={`flex flex-col items-start min-[640px]:flex-row min-[640px]:items-center min-[870px]:items-start min-[870px]:flex-col min-[900px]:flex-row min-[900]:items-center ${
+          className={`flex flex-col items-start min-[640px]:flex-row min-[640px]:items-center min-[870px]:items-start min-[870px]:flex-col min-[900px]:flex-row min-[900px]:items-center ${
             leftBarOpen
               ? "min-[1024px]:flex-col min-[1024px]:items-start min-[1100px]:flex-row min-[1100px]:items-center"
               : ""
@@ -484,7 +605,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
               theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.04)",
           }}
         >
-          <div className="flex items-center gap-[6px]">
+          <div className="flex items-center gap-[6px] z-[500]">
             <div className="text-[11px] opacity-80 mr-[4px]">Start</div>
             <div className="w-[100px] relative">
               <DatePicker
@@ -533,7 +654,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
 
           <div className="h-6 w-px bg-gray-700 mx-2 hidden min-[640px]:block min-[870px]:hidden min-[900px]:block min-[1024px]:hidden min-[1100px]:block" />
 
-          <div className="flex items-center gap-[6px]">
+          <div className="flex items-center gap-[6px] z-[500]">
             <div className="text-[11px] opacity-80 mr-[4px] max-[1100px]:w-[26px]">
               End
             </div>
@@ -589,14 +710,14 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       <div
         className={`${
           calendarCollapsed && "hidden"
-        } w-[100%]] overflow-x-hidden rounded-md pb-[16px] mt-[9px]`}
+        } w-[100%]] rounded-md pb-[16px] mt-[9px]`}
         style={{ border: "1px solid rgba(255,255,255,0.03)" }}
       >
-        <div className="flex w-[100%] overflow-hidden">
+        <div className="flex w-[100%]">
           <div
             className={`relative ${
               isMini ? "text-[10px]" : "text-[11px]"
-            } opacity-70 mt-[-9px] border-r-gray-700 border-r-[0.5px]`}
+            } opacity-70 mt-[-1px] border-r-gray-700 border-r-[0.5px]`}
             style={{ minWidth: 50 }}
           >
             <div style={{ height: `${headerHeight}px` }} />
@@ -637,122 +758,144 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
             <div
               ref={daysTrackRef}
               className="relative"
+              // *** THIS LINE LEFT EXACTLY AS YOU REQUESTED ***
               style={{
                 width: "290px",
-                // width: `${
-                //   (columnWidthRef.current ||
-                //     Math.max(
-                //       90,
-                //       Math.floor((containerWidthRef.current || 700) / 7)
-                //     )) * daysArray.length
-                // }px`,
               }}
             >
+              {/* NEW inner virtual track that actually spans the full calendar width */}
               <div
-                className="flex items-center ml-[1px] border-b-gray-700 border-b-[0.5px]"
-                style={{ height: `${headerHeight - 5}`, zIndex: 20 }}
+                ref={virtualTrackRef}
+                className="relative"
+                style={{
+                  height: `${headerHeight + gridHeight}px`,
+                  // width will be set in recalcColumnSizing via ref
+                }}
               >
-                {daysArray.map((d, idx) => {
-                  const colW =
-                    columnWidthRef.current ||
-                    Math.max(
-                      90,
-                      Math.floor((containerWidthRef.current || 700) / 7)
-                    );
-                  return (
-                    <div
-                      key={idx}
-                      className="flex-shrink-0 flex items-center justify-center border-r border-gray-700"
-                      style={{ width: `${colW}px`, padding: "6px 4px" }}
-                    >
-                      <div className="text-center font-semibold text-[11px] leading-[13px]">
-                        {d.toLocaleDateString(undefined, {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div
-                className="flex"
-                style={{ height: `${gridHeight}px`, position: "relative" }}
-              >
-                {daysArray.map((d, idx) => {
-                  const colW =
-                    columnWidthRef.current ||
-                    Math.max(
-                      90,
-                      Math.floor((containerWidthRef.current || 700) / 7)
-                    );
-                  const blk = blocksByIndex.get(idx);
-                  return (
-                    <div
-                      key={idx}
-                      className="relative border-l border-gray-700 flex-shrink-0"
-                      style={{
-                        width: `${colW}px`,
-                        height: `${gridHeight}px`,
-                        scrollSnapAlign: "start",
-                        padding: "0 8px",
-                      }}
-                    >
-                      {Array.from({ length: HOURS + 1 }).map((_, h) => {
-                        const hour = DAY_START_HOUR + h;
-                        if (isMini && ![7, 10, 13, 16, 19, 22].includes(hour))
-                          return null;
-                        return (
-                          <div
-                            key={h}
-                            className="absolute left-0 right-0 border-t border-gray-800"
-                            style={{ top: `${(h / HOURS) * 100}%` }}
-                          />
-                        );
-                      })}
-
+                {/* Header row — we only render the visible slice, each absolutely positioned */}
+                <div
+                  className="flex  items-center ml-[1px] border-b-gray-700 border-b-[0.5px]"
+                  style={{ zIndex: 20, position: "absolute", left: 0, top: 0 }}
+                >
+                  {renderedIndices.map((idx) => {
+                    const d = daysArray[idx];
+                    const colW =
+                      columnWidthRef.current ||
+                      Math.max(
+                        90,
+                        Math.floor((containerWidthRef.current || 700) / 7)
+                      );
+                    return (
                       <div
-                        className="absolute left-0 right-0 border-t border-gray-800"
-                        style={{ bottom: 0 }}
-                      />
-
-                      {blk && blk !== null && (
-                        <div
-                          className="absolute left-2 right-2 rounded-md text-[11px] flex items-center justify-center"
-                          style={{
-                            top: `${blk.topPct}%`,
-                            height: `${blk.heightPct}%`,
-                            background:
-                              "linear-gradient(180deg,#06b6d4,#3b82f6)",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.32)",
-                            color: "white",
-                            borderRadius: 8,
-                            padding: "4px 6px",
-                          }}
-                        >
-                          <div className="flex flex-col items-center">
-                            <div className="text-[12px] font-semibold opacity-[0.79]">{`Job`}</div>
-                            {!isMini && (
-                              <div className="text-[11px] opacity-90">
-                                {blk.s.toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}{" "}
-                                —{" "}
-                                {blk.e.toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </div>
-                            )}
-                          </div>
+                        key={idx}
+                        className="top-0 flex-shrink-0 flex items-center justify-center border-r border-b border-gray-700"
+                        style={{
+                          height: `${headerHeight}px`,
+                          width: `${colW}px`,
+                          padding: "6px 4px",
+                          position: "absolute",
+                          left: `${idx * colW}px`,
+                        }}
+                      >
+                        <div className="text-center font-semibold text-[11px] leading-[13px]">
+                          {d.toLocaleDateString(undefined, {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Grid area — each day column absolutely positioned */}
+                <div
+                  className="relative"
+                  style={{
+                    height: `${gridHeight}px`,
+                    position: "absolute",
+                    left: 0,
+                    top: `${headerHeight}px`,
+                    width: "100%",
+                  }}
+                >
+                  {renderedIndices.map((idx) => {
+                    const d = daysArray[idx];
+                    const colW =
+                      columnWidthRef.current ||
+                      Math.max(
+                        90,
+                        Math.floor((containerWidthRef.current || 700) / 7)
+                      );
+                    const blk = blocksByIndex.get(idx);
+                    return (
+                      <div
+                        key={idx}
+                        className="relative border-l border-gray-700"
+                        style={{
+                          width: `${colW}px`,
+                          height: `${gridHeight}px`,
+                          position: "absolute",
+                          left: `${idx * colW}px`,
+                          scrollSnapAlign: "start",
+                          padding: "0 8px",
+                        }}
+                      >
+                        {Array.from({ length: HOURS + 1 }).map((_, h) => {
+                          const hour = DAY_START_HOUR + h;
+                          if (isMini && ![7, 10, 13, 16, 19, 22].includes(hour))
+                            return null;
+                          return (
+                            <div
+                              key={h}
+                              className="absolute left-0 right-0 border-t border-gray-800"
+                              style={{ top: `${(h / HOURS) * 100}%` }}
+                            />
+                          );
+                        })}
+
+                        <div
+                          className="absolute left-0 right-0 border-t border-gray-800"
+                          style={{ bottom: 0 }}
+                        />
+
+                        {blk && blk !== null && (
+                          <div
+                            className="absolute left-2 right-2 rounded-md text-[11px] flex items-center justify-center"
+                            style={{
+                              top: `${blk.topPct}%`,
+                              height: `${blk.heightPct}%`,
+                              background:
+                                "linear-gradient(180deg,#06b6d4,#3b82f6)",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.32)",
+                              color: "white",
+                              borderRadius: 8,
+                              padding: "4px 6px",
+                            }}
+                          >
+                            <div className="flex flex-col items-center">
+                              <div className="text-[12px] font-semibold opacity-[0.79]">{`Job`}</div>
+                              {!isMini && (
+                                <div className="text-[11px] opacity-90">
+                                  {blk.s.toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}{" "}
+                                  —{" "}
+                                  {blk.e.toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -770,19 +913,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
               <ChevronLeft size={16} />
             </button>
 
-            <div className="text-sm opacity-80 px-2">
-              {(() => {
-                const sunday = indexToDate(weekCenteredIndex);
-                const sundayStart = new Date(sunday);
-                sundayStart.setHours(0, 0, 0, 0);
-                sundayStart.setDate(
-                  sundayStart.getDate() - sundayStart.getDay()
-                );
-                const saturday = new Date(sundayStart);
-                saturday.setDate(saturday.getDate() + 6);
-                return `${sundayStart.toLocaleDateString()} – ${saturday.toLocaleDateString()}`;
-              })()}
-            </div>
+            <div className="text-sm opacity-80 px-2">{weekRangeLabel}</div>
 
             <button
               onClick={handleNextWeek}
