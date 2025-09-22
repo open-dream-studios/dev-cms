@@ -224,11 +224,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }, [mediaLinks, matchedProduct]);
 
   const handleBackButton = async () => {
-    if (screenHistoryRef.current && screenHistoryRef.current.length >= 2) {
-      await goToPrev();
-    } else {
-      await screenClick("customer-products", "/products");
-    }
+    await screenClick("customer-products", "/products");
   };
 
   const handleProductsClick = async () => {
@@ -962,7 +958,9 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   className="mt-[12px] cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold flex items-center justify-center"
                   style={{
                     backgroundColor:
-                      currentUser.theme === "dark" ? "#999" : "#bbb",
+                      currentUser.theme === "dark"
+                        ? appTheme[currentUser.theme].background_4
+                        : "#bbb",
                   }}
                 >
                   Cancel
@@ -998,7 +996,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             );
           })}
 
-        {screen === "edit-customer-product" && matchedProduct &&(
+        {screen === "edit-customer-product" && matchedProduct && (
           <div className="w-[100%] mt-[12px] flex justify-end">
             <div
               style={getInnerCardStyle(theme, t)}

@@ -30,6 +30,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Product } from "@/types/products";
 import ProductFrame from "../components/ProductCard/CustomerProductFrame";
 import { useAppContext } from "@/contexts/appContext";
+import { getCardStyle } from "@/styles/themeStyles";
 
 type CustomerViewProps = {
   onDirtyChange?: (dirty: boolean) => void;
@@ -46,6 +47,8 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
   const { productsData } = useContextQueries();
   const { currentCustomer, currentProjectId } = useProjectContext();
   const { setExposedCustomerForm, onCustomerSubmit } = useAppContext();
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const customerForm = useCustomerForm(currentCustomer);
   const { formState } = customerForm;
@@ -186,10 +189,11 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
           onCustomerSubmit as SubmitHandler<any>
         )}
         className="w-[100%] max-w-[550px] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
-        style={{
-          backgroundColor: appTheme[currentUser.theme].background_2,
-          color: appTheme[currentUser.theme].text_4,
-        }}
+        style={getCardStyle(theme, t)}
+        // style={{
+        // backgroundColor: appTheme[currentUser.theme].background_2,
+        // color: appTheme[currentUser.theme].text_4,
+        // }}
       >
         <div className="flex flex-row gap-[10px]">
           <div className="flex items-center gap-4 pb-[10px]">
@@ -277,7 +281,10 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
 
               <input
                 style={{
-                  color: currentUser.theme === "light" ? appTheme[currentUser.theme].text_3 : appTheme[currentUser.theme].text_4
+                  color:
+                    currentUser.theme === "light"
+                      ? appTheme[currentUser.theme].text_3
+                      : appTheme[currentUser.theme].text_4,
                 }}
                 {...customerForm.register("email", {
                   required: "Email is required",
@@ -336,7 +343,7 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
 
           <div
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_3,
+              backgroundColor: appTheme[currentUser.theme].background_2,
             }}
             className="rounded-[8px] w-[50%] h-[100%] px-[9px]"
           >

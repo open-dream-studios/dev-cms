@@ -2,9 +2,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  defaultEmployeeValues,
   EmployeeFormData,
   EmployeeSchema,
+  employeeToForm,
 } from "@/util/schemas/employeeSchema";
 
 export const useEmployeeForm = (initialData?: Partial<EmployeeFormData>) => {
@@ -12,7 +12,7 @@ export const useEmployeeForm = (initialData?: Partial<EmployeeFormData>) => {
     resolver: zodResolver(EmployeeSchema),
     mode: "onChange",
     defaultValues: {
-      ...defaultEmployeeValues,
+      ...employeeToForm(null),
       ...initialData,
     },
   });

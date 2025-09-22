@@ -16,7 +16,7 @@ const CustomerTag = ({
 }) => {
   const { currentUser } = useContext(AuthContext);
   const { setCurrentCustomerData } = useProjectContext();
-  const { screenClick, productFormRef } = useAppContext();
+  const { screen, screenClick, productFormRef } = useAppContext();
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -43,7 +43,7 @@ const CustomerTag = ({
         style={{
           backgroundColor: appTheme[currentUser.theme].background_2,
         }}
-        className="max-w-[260px] w-[100%] cursor-pointer dim hover:brightness-90 items-center flex flex-row gap-[9px] rounded-full px-[10.5px] py-[5.9px]"
+        className={`max-w-[260px] w-[100%] cursor-pointer dim ${screen === "customers" ? "pointer-events-none" : "hover:brightness-90"} items-center flex flex-row gap-[9px] rounded-full px-[10.5px] py-[5.9px]`}
         onClick={async (e) => {
           e.stopPropagation();
           setCurrentCustomerData(productCustomer);

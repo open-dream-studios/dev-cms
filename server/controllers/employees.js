@@ -31,6 +31,11 @@ export const upsertEmployee = async (req, res) => {
     last_name,
     email,
     phone,
+    address_line1,
+    address_line2,
+    city,
+    state,
+    zip,
     position,
     department,
     hire_date,
@@ -60,18 +65,28 @@ export const upsertEmployee = async (req, res) => {
         last_name,
         email,
         phone,
+        address_line1,
+        address_line2,
+        city,
+        state,
+        zip,
         position,
         department,
         hire_date,
         termination_date,
         notes
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         first_name = VALUES(first_name),
         last_name = VALUES(last_name),
         email = VALUES(email),
         phone = VALUES(phone),
+        address_line1 = VALUES(address_line1),
+        address_line2 = VALUES(address_line2),
+        city = VALUES(city),
+        state = VALUES(state),
+        zip = VALUES(zip),
         position = VALUES(position),
         department = VALUES(department),
         hire_date = VALUES(hire_date),
@@ -87,6 +102,11 @@ export const upsertEmployee = async (req, res) => {
       last_name,
       email,
       phone,
+      address_line1,
+      address_line2,
+      city,
+      state,
+      zip,
       position,
       department,
       hire_date,
@@ -151,7 +171,12 @@ export const addEmployeeAssignment = (req, res) => {
   const { employee_id, task_id, job_id } = req.body;
   const project_idx = req.user?.project_idx;
 
-  if (!project_idx || !employee_id || (!task_id && !job_id) || (task_id && job_id)) {
+  if (
+    !project_idx ||
+    !employee_id ||
+    (!task_id && !job_id) ||
+    (task_id && job_id)
+  ) {
     return res
       .status(400)
       .json({ message: "Must provide either task_id or job_id (not both)" });
@@ -163,16 +188,20 @@ export const addEmployeeAssignment = (req, res) => {
     ON DUPLICATE KEY UPDATE project_idx = VALUES(project_idx)
   `;
 
-  db.query(q, [project_idx, employee_id, task_id || null, job_id || null], (err, result) => {
-    if (err) {
-      console.error("❌ Add assignment error:", err);
-      return res.status(500).json({ message: "Server error" });
+  db.query(
+    q,
+    [project_idx, employee_id, task_id || null, job_id || null],
+    (err, result) => {
+      if (err) {
+        console.error("❌ Add assignment error:", err);
+        return res.status(500).json({ message: "Server error" });
+      }
+      return res.status(200).json({
+        success: true,
+        id: result.insertId || null,
+      });
     }
-    return res.status(200).json({
-      success: true,
-      id: result.insertId || null,
-    });
-  });
+  );
 };
 
 export const deleteEmployeeAssignment = (req, res) => {

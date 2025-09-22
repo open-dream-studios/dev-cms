@@ -13,6 +13,7 @@ import app_details from "../../../util/appDetails.json";
 import { MediaLink } from "@/types/media";
 import { useAppContext } from "@/contexts/appContext";
 import CustomerTag from "./CustomerTag";
+import { getCardStyle } from "@/styles/themeStyles";
 
 const CustomerProductFrame = ({
   product,
@@ -24,6 +25,9 @@ const CustomerProductFrame = ({
   const { currentUser } = useContext(AuthContext);
   const { screenClick } = useAppContext();
   const { customers, mediaLinks } = useContextQueries();
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const handleClick = async () => {
     await screenClick(
@@ -53,9 +57,7 @@ const CustomerProductFrame = ({
     <div
       onClick={handleClick}
       className="aspect-[16/11] select-none group cursor-pointer rounded-[15px] overflow-hidden relative w-[100%] flex flex-col"
-      style={{
-        backgroundColor: appTheme[currentUser.theme].background_2,
-      }}
+      style={getCardStyle(theme, t)}
     >
       <div className="w-[100%] h-[60%] select-none py-[25px] px-[28px] flex flex-row gap-[15px]">
         <div className="h-[100%] aspect-[1/1]">

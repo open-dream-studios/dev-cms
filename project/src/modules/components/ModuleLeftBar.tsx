@@ -17,7 +17,7 @@ import { Product } from "@/types/products";
 import { usePathname } from "next/navigation";
 import { Employee } from "@/types/employees";
 import { EmployeeMiniCard } from "../EmployeesModule/EmployeeCatalog";
-import { defaultEmployeeValues } from "@/util/schemas/employeeSchema";
+import { employeeToForm } from "@/util/schemas/employeeSchema";
 
 const ModuleLeftBar = () => {
   const {
@@ -118,11 +118,19 @@ const ModuleLeftBar = () => {
     setAddingCustomer(true);
   };
 
-  const handleAddEmployeeClick = () => {
+  const handleAddEmployeeClick = async () => {
+    if (
+      employeeForm &&
+      Object.keys(employeeForm.formState.dirtyFields).length > 0
+    ) {
+      console.log(employeeForm.formState.dirtyFields);
+      const values = employeeForm.getValues();
+      await onEmployeeFormSubmit(values);
+    }
     setCurrentEmployeeData(null);
     setAddingEmployee(true);
     if (employeeForm) {
-      employeeForm.reset(defaultEmployeeValues);
+      employeeForm.reset(employeeToForm(null));
     }
   };
 
@@ -174,7 +182,10 @@ const ModuleLeftBar = () => {
   };
 
   const handleEmployeeClick = async (employee: Employee) => {
-    if (employeeForm && Object.keys(employeeForm.formState.dirtyFields).length > 0) {
+    if (
+      employeeForm &&
+      Object.keys(employeeForm.formState.dirtyFields).length > 0
+    ) {
       const values = employeeForm.getValues();
       await onEmployeeFormSubmit(values);
     }
@@ -261,7 +272,7 @@ const ModuleLeftBar = () => {
       )}
 
       <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
-        <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
+        <div className="select-none flex flex-row gap-[13.5px] items-center w-[100%]">
           <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
             {screen === "customers" && "Customers"}
             {screen === "employees" && "Employees"}
@@ -358,8 +369,8 @@ const ModuleLeftBar = () => {
                     backgroundColor:
                       currentProductId &&
                       currentProductId === product.serial_number
-                        ? appTheme[currentUser.theme].background_2_selected
-                        : appTheme[currentUser.theme].background_2,
+                        ? "rgba(255,255,255,0.057)"
+                        : "rgba(255,255,255,0.028)",
                   }}
                   className="w-[100%] h-[58px] rounded-[9px] items-center hover:brightness-[86%] dim cursor-pointer flex flex-row gap-[10px] py-[9px] px-[12px]"
                   onClick={() => handleProductClick(product)}

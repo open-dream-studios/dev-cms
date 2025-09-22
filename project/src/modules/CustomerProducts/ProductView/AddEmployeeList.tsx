@@ -5,15 +5,9 @@ import React from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import Modal2MultiStepModalInput, {
-  StepConfig,
-} from "@/modals/Modal2MultiStepInput";
-import { useModal1Store, useModal2Store } from "@/store/useModalStore";
-import { JobDefinition } from "@/types/jobs";
-import { Product } from "@/types/products";
+import { useModal1Store } from "@/store/useModalStore";
 import { appTheme } from "@/util/appTheme";
-import { useContext, useEffect, useState } from "react";
-import { FaPlus } from "react-icons/fa6";
+import { useContext } from "react";
 import { Employee } from "@/types/employees";
 
 const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {

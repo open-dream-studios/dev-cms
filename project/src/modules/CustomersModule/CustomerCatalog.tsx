@@ -41,8 +41,8 @@ export const CustomerMiniCard = ({
       style={{
         backgroundColor:
           currentCustomer && currentCustomer.id === customer.id
-            ? appTheme[currentUser.theme].background_3
-            : appTheme[currentUser.theme].background_2,
+            ? "rgba(255,255,255,0.057)"
+            : "rgba(255,255,255,0.028)",
         color: appTheme[currentUser.theme].text_4,
       }}
       className="mb-[9.5px] w-full h-[70px] pl-[14px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 

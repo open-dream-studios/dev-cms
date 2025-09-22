@@ -33,8 +33,8 @@ import { Modal, Screen, UIState } from "@/types/screens";
 import { MediaLink, TempMediaLink } from "@/types/media";
 import { AuthContext } from "./authContext";
 import {
-  defaultEmployeeValues,
   EmployeeFormData,
+  employeeToForm,
 } from "@/util/schemas/employeeSchema";
 import { useEmployeeForm } from "@/hooks/useEmployeeForm";
 import { Employee } from "@/types/employees";
@@ -565,7 +565,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       employeeForm &&
       Object.keys(employeeForm.formState.dirtyFields).length > 0
     ) {
-      console.log(employeeForm.formState.dirtyFields)
+      console.log(employeeForm.formState.dirtyFields);
       const values = employeeForm.getValues();
       await onEmployeeFormSubmit(values);
     }
@@ -731,25 +731,18 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
 
-  const employeeFormInstance = useEmployeeForm(
-    currentEmployee
-      ? {
-          first_name: currentEmployee.first_name ?? "",
-          last_name: currentEmployee.last_name ?? "",
-          email: currentEmployee.email,
-          phone: currentEmployee.phone,
-          position: currentEmployee.position,
-          department: currentEmployee.department,
-          hire_date: currentEmployee.hire_date
-            ? new Date(currentEmployee.hire_date)
-            : null,
-          termination_date: currentEmployee.termination_date
-            ? new Date(currentEmployee.termination_date)
-            : null,
-          notes: currentEmployee.notes,
-        }
-      : defaultEmployeeValues
-  );
+  // const employeeFormInstance = useEmployeeForm(
+  //   currentEmployee ? employeeToForm(currentEmployee) : employeeToForm(null)
+  // );
+  const employeeFormInstance = useEmployeeForm();
+
+  useEffect(() => {
+    if (currentEmployee) {
+      employeeFormInstance.reset(employeeToForm(currentEmployee));
+    } else {
+      employeeFormInstance.reset(employeeToForm(null));
+    }
+  }, [currentEmployee]);
 
   useEffect(() => {
     setEmployeeForm(employeeFormInstance);
@@ -766,23 +759,29 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       hire_date: dateToString(data.hire_date ?? null),
       termination_date: dateToString(data.termination_date ?? null),
     } as Employee;
-    const newEmployeeId = await upsertEmployee(submitValue);
+    console.log(submitValue);
     const newFormState = {
       first_name: data.first_name ?? "",
       last_name: data.last_name ?? "",
-      email: data.email ?? null,
-      phone: data.phone ?? null,
-      position: data.position ?? null,
-      department: data.department ?? null,
+      email: data.email ?? "",
+      phone: data.phone ?? "",
+      address_line1: data.address_line1 ?? "",
+      address_line2: data.address_line2 ?? "",
+      city: data.city ?? "",
+      state: data.state ?? "",
+      zip: data.zip ?? "",
+      position: data.position ?? "",
+      department: data.department ?? "",
       hire_date: data.hire_date ?? null,
       termination_date: data.termination_date ?? null,
-      notes: data.notes ?? null,
+      notes: data.notes ?? "",
     };
     employeeForm.reset(newFormState);
+    const newEmployeeId = await upsertEmployee(submitValue);
     if (newEmployeeId) {
       setCurrentEmployeeData({
+        ...submitValue,
         employee_id: newEmployeeId,
-        ...newFormState,
       });
       setAddingEmployee(false);
     }

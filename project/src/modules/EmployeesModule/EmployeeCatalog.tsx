@@ -30,10 +30,12 @@ export const EmployeeMiniCard = ({
       onContextMenu={(e) => handleContextMenu(e, employee)}
       onClick={() => handleEmployeeClick(employee)}
       style={{
-        backgroundColor:
-          currentEmployee && currentEmployee.employee_id && currentEmployee.employee_id === employee.employee_id
-            ? appTheme[currentUser.theme].background_3
-            : appTheme[currentUser.theme].background_2,
+        background:
+          currentEmployee &&
+          currentEmployee.employee_id &&
+          currentEmployee.employee_id === employee.employee_id
+            ?  "rgba(255,255,255,0.057)"
+            : "rgba(255,255,255,0.028)",
         color: appTheme[currentUser.theme].text_4,
       }}
       className="mb-[9.5px] w-full h-[70px] pl-[14px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 
@@ -60,7 +62,7 @@ export const EmployeeMiniCard = ({
         </p>
 
         <div className="w-[100%] flex flex-col text-[13px] leading-[22px] opacity-70 truncate">
-          {employee.email && <p className="truncate">{employee.email}</p>}
+          {employee.position && <p className="truncate">{employee.position}</p>}
           {employee.phone && (
             <p className="truncate">{formatPhone(employee.phone)}</p>
           )}
@@ -82,9 +84,7 @@ const EmployeeCatalog = () => {
       <ModuleLeftBar />
       <div className="flex-1">
         {(currentEmployee || addingEmployee) && (
-          <EmployeeView
-            key={currentEmployee?.id ?? "new"}
-          />
+          <EmployeeView key={currentEmployee?.id ?? "new"} />
         )}
       </div>
     </div>

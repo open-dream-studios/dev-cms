@@ -47,6 +47,8 @@ import { DelayType, useAutoSave } from "@/hooks/useAutoSave";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import AddEmployeeList from "./AddEmployeeList";
 import { Employee, EmployeeAssignment } from "@/types/employees";
+import { useAppContext } from "@/contexts/appContext";
+import { useProjectContext } from "@/contexts/projectContext";
 
 // ---------- CircularProgress ----------
 const CircularProgress: React.FC<{
@@ -352,8 +354,15 @@ const TaskCard: React.FC<{
   setTasksCollapsed,
 }) => {
   const { currentUser } = React.useContext(AuthContext);
-  const { upsertTask, deleteTask, employeeAssignments, employees, deleteEmployeeAssignment } =
-    useContextQueries();
+  const {
+    upsertTask,
+    deleteTask,
+    employeeAssignments,
+    employees,
+    deleteEmployeeAssignment,
+  } = useContextQueries();
+  const { screenClick } = useAppContext();
+  const { setCurrentEmployeeData } = useProjectContext();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -433,6 +442,7 @@ const TaskCard: React.FC<{
       borderRadius: "rounded-[15px] md:rounded-[20px]",
       content: <AddEmployeeList assignment={task ?? null} />,
     });
+    setEditAssignment(false);
   };
 
   if (tasksCollapsed)
@@ -673,6 +683,10 @@ const TaskCard: React.FC<{
                               backgroundColor: "#60a5fa20",
                             }}
                             className="relative h-[25px] px-[15px] rounded-full flex items-center cursor-pointer hover:brightness-[80%] dim "
+                            onClick={async () => {
+                              await screenClick("employees", "/");
+                              setCurrentEmployeeData(matchingEmployee);
+                            }}
                           >
                             <div
                               style={{
@@ -717,16 +731,23 @@ const TaskCard: React.FC<{
                     <FaPlus size={12} className="opacity-[0.6]" />
                   </div>
 
-                  <div
-                    className="cursor-pointer mt-[-0.5px] hover:brightness-90 dim w-[26px] h-[26px] rounded-full flex items-center justify-center"
-                    style={{
-                      backgroundColor: t.background_2,
-                      border: editAssignment ? "1px solid " + t.text_3 : "none",
-                    }}
-                    onClick={() => setEditAssignment((prev) => !prev)}
-                  >
-                    <FiEdit size={12} className="opacity-[0.6]" />
-                  </div>
+                  {employeeAssignments.filter(
+                    (assignment: EmployeeAssignment) =>
+                      assignment.task_id === task.task_id
+                  ).length > 0 && (
+                    <div
+                      className="cursor-pointer mt-[-0.5px] hover:brightness-90 dim w-[26px] h-[26px] rounded-full flex items-center justify-center"
+                      style={{
+                        backgroundColor: t.background_2,
+                        border: editAssignment
+                          ? "1px solid " + t.text_3
+                          : "none",
+                      }}
+                      onClick={() => setEditAssignment((prev) => !prev)}
+                    >
+                      <FiEdit size={12} className="opacity-[0.6]" />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -790,6 +811,8 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     employeeAssignments,
     deleteEmployeeAssignment,
   } = useContextQueries();
+  const { screenClick } = useAppContext();
+  const { setCurrentEmployeeData } = useProjectContext();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
@@ -943,6 +966,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
       borderRadius: "rounded-[15px] md:rounded-[20px]",
       content: <AddEmployeeList assignment={productJob ?? null} />,
     });
+    setEditAssignment(false);
   };
 
   if (!currentUser) return null;
@@ -1203,6 +1227,10 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                               backgroundColor: "#60a5fa20",
                             }}
                             className="relative h-[25px] px-[15px] rounded-full flex items-center cursor-pointer hover:brightness-[80%] dim "
+                            onClick={async () => {
+                              await screenClick("employees", "/");
+                              setCurrentEmployeeData(matchingEmployee);
+                            }}
                           >
                             <div
                               style={{
@@ -1247,16 +1275,23 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                     <FaPlus size={12} className="opacity-[0.6]" />
                   </div>
 
-                  <div
-                    className="cursor-pointer mt-[-0.5px] hover:brightness-90 dim w-[26px] h-[26px] rounded-full flex items-center justify-center"
-                    style={{
-                      backgroundColor: t.background_2,
-                      border: editAssignment ? "1px solid " + t.text_3 : "none",
-                    }}
-                    onClick={() => setEditAssignment((prev) => !prev)}
-                  >
-                    <FiEdit size={12} className="opacity-[0.6]" />
-                  </div>
+                  {employeeAssignments.filter(
+                    (assignment: EmployeeAssignment) =>
+                      assignment.job_id === productJob.job_id
+                  ).length > 0 && (
+                    <div
+                      className="cursor-pointer mt-[-0.5px] hover:brightness-90 dim w-[26px] h-[26px] rounded-full flex items-center justify-center"
+                      style={{
+                        backgroundColor: t.background_2,
+                        border: editAssignment
+                          ? "1px solid " + t.text_3
+                          : "none",
+                      }}
+                      onClick={() => setEditAssignment((prev) => !prev)}
+                    >
+                      <FiEdit size={12} className="opacity-[0.6]" />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

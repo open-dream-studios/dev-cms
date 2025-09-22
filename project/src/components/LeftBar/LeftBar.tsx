@@ -294,15 +294,6 @@ const LeftBar = () => {
     );
   }
 
-  if (hasProjectModule("customers-module")) {
-    displayedModules.push({
-      title: "Customers",
-      icon: <IoPersonSharp className="brightness-75 mt-[1px]" size={16} />,
-      pages: ["customers" as Screen],
-      onClick: () => handleTabClick("customers"),
-    });
-  }
-
   if (hasProjectModule("customer-products-module")) {
     displayedModules.push({
       title: "Inventory",
@@ -317,20 +308,12 @@ const LeftBar = () => {
     });
   }
 
-  if (hasProjectModule("tasks-module")) {
+  if (hasProjectModule("customers-module")) {
     displayedModules.push({
-      title: "Tasks",
-      icon: (
-        <div
-          className={`${
-            currentUser.theme === "dark" ? "opacity-[65%]" : "opacity-[80%]"
-          } mt-[2.85px]`}
-        >
-          <ProductsDataIcon size={22} />
-        </div>
-      ),
-      pages: ["tasks" as Screen],
-      onClick: () => handleTabClick("tasks"),
+      title: "Customers",
+      icon: <IoPersonSharp className="brightness-75 mt-[1px]" size={16} />,
+      pages: ["customers" as Screen],
+      onClick: () => handleTabClick("customers"),
     });
   }
 
@@ -348,6 +331,23 @@ const LeftBar = () => {
       ),
       pages: ["employees" as Screen],
       onClick: () => handleTabClick("employees"),
+    });
+  }
+  
+  if (hasProjectModule("tasks-module")) {
+    displayedModules.push({
+      title: "Tasks",
+      icon: (
+        <div
+          className={`${
+            currentUser.theme === "dark" ? "opacity-[65%]" : "opacity-[80%]"
+          } mt-[2.85px]`}
+        >
+          <ProductsDataIcon size={22} />
+        </div>
+      ),
+      pages: ["tasks" as Screen],
+      onClick: () => handleTabClick("tasks"),
     });
   }
 
