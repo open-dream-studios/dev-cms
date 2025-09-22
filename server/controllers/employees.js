@@ -124,3 +124,75 @@ export const deleteEmployee = (req, res) => {
     return res.status(200).json({ message: "Employee deleted" });
   });
 };
+
+// ---------- ASSIGNMENTS (tasks + jobs) ----------
+export const getEmployeeAssignments = (req, res) => {
+  const project_idx = req.user?.project_idx;
+  if (!project_idx) {
+    return res.status(400).json({ message: "Missing project_idx" });
+  }
+
+  const q = `
+    SELECT * FROM assignments
+    WHERE project_idx = ?
+    ORDER BY created_at ASC
+  `;
+
+  db.query(q, [project_idx], (err, rows) => {
+    if (err) {
+      console.error("❌ Fetch assignments error:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+    return res.json({ employeeAssignments: rows });
+  });
+};
+
+export const addEmployeeAssignment = (req, res) => {
+  const { employee_id, task_id, job_id } = req.body;
+  const project_idx = req.user?.project_idx;
+
+  if (!project_idx || !employee_id || (!task_id && !job_id) || (task_id && job_id)) {
+    return res
+      .status(400)
+      .json({ message: "Must provide either task_id or job_id (not both)" });
+  }
+
+  const q = `
+    INSERT INTO assignments (project_idx, employee_id, task_id, job_id)
+    VALUES (?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE project_idx = VALUES(project_idx)
+  `;
+
+  db.query(q, [project_idx, employee_id, task_id || null, job_id || null], (err, result) => {
+    if (err) {
+      console.error("❌ Add assignment error:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+    return res.status(200).json({
+      success: true,
+      id: result.insertId || null,
+    });
+  });
+};
+
+export const deleteEmployeeAssignment = (req, res) => {
+  const { id } = req.body;
+  const project_idx = req.user?.project_idx;
+
+  if (!project_idx || !id) {
+    return res.status(400).json({ message: "Missing fields" });
+  }
+
+  const q = `
+    DELETE FROM assignments
+    WHERE id = ? AND project_idx = ?
+  `;
+
+  db.query(q, [id, project_idx], (err) => {
+    if (err) {
+      console.error("❌ Delete assignment error:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+    return res.status(200).json({ success: true });
+  });
+};

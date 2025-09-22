@@ -42,9 +42,11 @@ import { UseFormReturn, Path, useWatch } from "react-hook-form";
 import { Product } from "@/types/products";
 import { dateToString, formatDateTime } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore";
+import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { DelayType, useAutoSave } from "@/hooks/useAutoSave";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
+import AddEmployeeList from "./AddEmployeeList";
+import { Employee, EmployeeAssignment } from "@/types/employees";
 
 // ---------- CircularProgress ----------
 const CircularProgress: React.FC<{
@@ -318,7 +320,7 @@ const PriorityBadge = <T extends PriorityBadgeForm>({
               ? "brightness(140%)"
               : "none",
         }}
-        className="cursor-pointer font-[500] outline-none border-none rounded-full pl-[10px] w-[90px] h-[25px] text-[13px] opacity-[0.95]"
+        className="cursor-pointer font-[500] outline-none border-none rounded-full pl-[10px] min-w-[80px] w-[100%] h-[25px] text-[13px] opacity-[0.95]"
       >
         <option value="low">Low</option>
         <option value="medium">Medium</option>
@@ -350,10 +352,13 @@ const TaskCard: React.FC<{
   setTasksCollapsed,
 }) => {
   const { currentUser } = React.useContext(AuthContext);
-  const { upsertTask, deleteTask } = useContextQueries();
+  const { upsertTask, deleteTask, employeeAssignments, employees, deleteEmployeeAssignment } =
+    useContextQueries();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const modal1 = useModal1Store((state: any) => state.modal1);
+  const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   if (!productJob || !matchedDefinition) return null;
 
@@ -410,11 +415,25 @@ const TaskCard: React.FC<{
 
   const completed = task.status === "complete";
 
-  const people = ["Paul", "Dan"];
   const [deleteButtonVisible, setDeleteButtonVisible] =
     useState<boolean>(false);
   const [descriptionOpen, setDescriptionOpen] = useState<boolean>(false);
   const [editAssignment, setEditAssignment] = useState<boolean>(false);
+
+  const handleAddAssignmentClick = () => {
+    if (!productJob) return;
+    setModal1({
+      ...modal1,
+      open: !modal1.open,
+      showClose: true,
+      offClickClose: true,
+      width: "w-[90vw] md:w-[80vw]",
+      maxWidth: "md:max-w-[1000px]",
+      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+      borderRadius: "rounded-[15px] md:rounded-[20px]",
+      content: <AddEmployeeList assignment={task ?? null} />,
+    });
+  };
 
   if (tasksCollapsed)
     return (
@@ -623,48 +642,77 @@ const TaskCard: React.FC<{
                 </div>
 
                 <div className="w-[100%] flex-wrap gap-[8px] flex flex-row mt-[1px]">
-                  {people.map((person: any, index: number) => {
-                    return (
-                      <div className="relative" key={index}>
-                        <div
-                          style={{
-                            backgroundColor: "#60a5fa20",
-                          }}
-                          className="relative h-[25px] px-[15px] rounded-full flex items-center cursor-pointer hover:brightness-[80%] dim "
-                        >
+                  {employeeAssignments
+                    .filter(
+                      (assignment: EmployeeAssignment) =>
+                        assignment.task_id === task.task_id
+                    )
+                    .map((assignment: EmployeeAssignment, index: number) => {
+                      const matchingEmployee = employees.find(
+                        (employee: Employee) =>
+                          employee.employee_id === assignment.employee_id
+                      );
+                      if (!matchingEmployee) return;
+                      let displayName = matchingEmployee.first_name;
+                      if (
+                        employees.filter(
+                          (employee: Employee) =>
+                            employee.first_name === matchingEmployee.first_name
+                        ).length > 1 &&
+                        matchingEmployee.last_name &&
+                        matchingEmployee.last_name.length > 0
+                      ) {
+                        displayName =
+                          matchingEmployee.first_name +
+                          matchingEmployee.last_name[0];
+                      }
+                      return (
+                        <div className="relative" key={index}>
                           <div
                             style={{
-                              color: "#60a5fa",
+                              backgroundColor: "#60a5fa20",
                             }}
-                            className="select-none brightness-130 text-[12px] font-[500] mt-[-0.8px]"
-                          >
-                            {person}
-                          </div>
-                        </div>
-                        {editAssignment && (
-                          <div
-                            style={{
-                              backgroundColor: t.background_4,
-                            }}
-                            className="cursor-pointer hover:brightness-[45%] dim brightness-[55%] w-[13px] h-[13px] z-[300] absolute right-[-5px] top-[-5px] rounded-full bg-red-400 flex items-center justify-center"
+                            className="relative h-[25px] px-[15px] rounded-full flex items-center cursor-pointer hover:brightness-[80%] dim "
                           >
                             <div
-                              className="w-[6px] h-[1.5px] rounded-full"
                               style={{
-                                backgroundColor: t.text_1,
+                                color: "#60a5fa",
                               }}
-                            />
+                              className="select-none brightness-130 text-[12px] font-[500] mt-[-0.8px]"
+                            >
+                              {displayName}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          {editAssignment && (
+                            <div
+                              style={{
+                                backgroundColor: t.background_4,
+                              }}
+                              onClick={async () => {
+                                if (assignment.id) {
+                                  await deleteEmployeeAssignment(assignment.id);
+                                }
+                              }}
+                              className="cursor-pointer hover:brightness-[45%] dim brightness-[55%] w-[13px] h-[13px] z-[300] absolute right-[-5px] top-[-5px] rounded-full bg-red-400 flex items-center justify-center"
+                            >
+                              <div
+                                className="w-[6px] h-[1.5px] rounded-full"
+                                style={{
+                                  backgroundColor: t.text_1,
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
 
                   <div
                     className="ml-[1px] cursor-pointer hover:brightness-90 dim w-[25px] h-[25px] rounded-full flex items-center justify-center"
                     style={{
                       backgroundColor: t.background_2,
                     }}
+                    onClick={handleAddAssignmentClick}
                   >
                     <FaPlus size={12} className="opacity-[0.6]" />
                   </div>
@@ -733,10 +781,20 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   matchedProduct,
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { tasks, upsertTask, deleteJob, upsertJob } = useContextQueries();
+  const {
+    tasks,
+    upsertTask,
+    deleteJob,
+    upsertJob,
+    employees,
+    employeeAssignments,
+    deleteEmployeeAssignment,
+  } = useContextQueries();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
+  const modal1 = useModal1Store((state: any) => state.modal1);
+  const setModal1 = useModal1Store((state: any) => state.setModal1);
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -850,8 +908,6 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     setTasksCollapsed(false);
   };
 
-  const people = ["Paul", "Dan"];
-
   const handleDeleteJob = (job_id: string) => {
     setModal2({
       ...modal2,
@@ -873,6 +929,21 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   };
 
   const calendarContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const handleAddAssignmentClick = () => {
+    if (!productJob) return;
+    setModal1({
+      ...modal1,
+      open: !modal1.open,
+      showClose: true,
+      offClickClose: true,
+      width: "w-[90vw] md:w-[80vw]",
+      maxWidth: "md:max-w-[1000px]",
+      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+      borderRadius: "rounded-[15px] md:rounded-[20px]",
+      content: <AddEmployeeList assignment={productJob ?? null} />,
+    });
+  };
 
   if (!currentUser) return null;
 
@@ -1101,48 +1172,77 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                 </div>
 
                 <div className="w-[100%] flex-wrap gap-[8px] flex flex-row mt-[1px]">
-                  {people.map((person: any, index: number) => {
-                    return (
-                      <div className="relative" key={index}>
-                        <div
-                          style={{
-                            backgroundColor: "#60a5fa20",
-                          }}
-                          className="relative h-[25px] px-[15px] rounded-full flex items-center cursor-pointer hover:brightness-[80%] dim "
-                        >
+                  {employeeAssignments
+                    .filter(
+                      (assignment: EmployeeAssignment) =>
+                        assignment.job_id === productJob.job_id
+                    )
+                    .map((assignment: EmployeeAssignment, index: number) => {
+                      const matchingEmployee = employees.find(
+                        (employee: Employee) =>
+                          employee.employee_id === assignment.employee_id
+                      );
+                      if (!matchingEmployee) return;
+                      let displayName = matchingEmployee.first_name;
+                      if (
+                        employees.filter(
+                          (employee: Employee) =>
+                            employee.first_name === matchingEmployee.first_name
+                        ).length > 1 &&
+                        matchingEmployee.last_name &&
+                        matchingEmployee.last_name.length > 0
+                      ) {
+                        displayName =
+                          matchingEmployee.first_name +
+                          matchingEmployee.last_name[0];
+                      }
+                      return (
+                        <div className="relative" key={index}>
                           <div
                             style={{
-                              color: "#60a5fa",
+                              backgroundColor: "#60a5fa20",
                             }}
-                            className="select-none brightness-130 text-[12px] font-[500] mt-[-0.8px]"
-                          >
-                            {person}
-                          </div>
-                        </div>
-                        {editAssignment && (
-                          <div
-                            style={{
-                              backgroundColor: t.background_4,
-                            }}
-                            className="cursor-pointer hover:brightness-[45%] dim brightness-[55%] w-[13px] h-[13px] z-[300] absolute right-[-5px] top-[-5px] rounded-full bg-red-400 flex items-center justify-center"
+                            className="relative h-[25px] px-[15px] rounded-full flex items-center cursor-pointer hover:brightness-[80%] dim "
                           >
                             <div
-                              className="w-[6px] h-[1.5px] rounded-full"
                               style={{
-                                backgroundColor: t.text_1,
+                                color: "#60a5fa",
                               }}
-                            />
+                              className="select-none brightness-130 text-[12px] font-[500] mt-[-0.8px]"
+                            >
+                              {displayName}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          {editAssignment && (
+                            <div
+                              style={{
+                                backgroundColor: t.background_4,
+                              }}
+                              onClick={async () => {
+                                if (assignment.id) {
+                                  await deleteEmployeeAssignment(assignment.id);
+                                }
+                              }}
+                              className="cursor-pointer hover:brightness-[45%] dim brightness-[55%] w-[13px] h-[13px] z-[300] absolute right-[-5px] top-[-5px] rounded-full bg-red-400 flex items-center justify-center"
+                            >
+                              <div
+                                className="w-[6px] h-[1.5px] rounded-full"
+                                style={{
+                                  backgroundColor: t.text_1,
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
 
                   <div
                     className="ml-[1px] cursor-pointer hover:brightness-90 dim w-[25px] h-[25px] rounded-full flex items-center justify-center"
                     style={{
                       backgroundColor: t.background_2,
                     }}
+                    onClick={handleAddAssignmentClick}
                   >
                     <FaPlus size={12} className="opacity-[0.6]" />
                   </div>

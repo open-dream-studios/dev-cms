@@ -47,7 +47,8 @@ const ModuleLeftBar = () => {
     screen,
     setAddingEmployee,
     employeeForm,
-    addingEmployee
+    addingEmployee,
+    onEmployeeFormSubmit,
   } = useAppContext();
   const pathname = usePathname();
 
@@ -172,7 +173,11 @@ const ModuleLeftBar = () => {
     }
   };
 
-  const handleEmployeeClick = (employee: Employee) => {
+  const handleEmployeeClick = async (employee: Employee) => {
+    if (employeeForm && Object.keys(employeeForm.formState.dirtyFields).length > 0) {
+      const values = employeeForm.getValues();
+      await onEmployeeFormSubmit(values);
+    }
     setCurrentEmployeeData(employee);
     setAddingEmployee(false);
   };
@@ -265,17 +270,19 @@ const ModuleLeftBar = () => {
               "Products"}
           </p>
         </div>
-        {!addingCustomer && !addingEmployee && screen !== "add-customer-product" && (
-          <div
-            onClick={handlePlusClick}
-            className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
-            style={{
-              backgroundColor: appTheme[currentUser.theme].background_1_2,
-            }}
-          >
-            <FaPlus size={12} />
-          </div>
-        )}
+        {!addingCustomer &&
+          !addingEmployee &&
+          screen !== "add-customer-product" && (
+            <div
+              onClick={handlePlusClick}
+              className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+              style={{
+                backgroundColor: appTheme[currentUser.theme].background_1_2,
+              }}
+            >
+              <FaPlus size={12} />
+            </div>
+          )}
       </div>
 
       <Divider />

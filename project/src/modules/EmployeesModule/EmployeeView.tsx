@@ -181,22 +181,17 @@ const PriorityBadge = <T extends PriorityBadgeForm>({
 // ---------- EmployeeCard ----------
 const EmployeeCard: React.FC<{}> = ({}) => {
   const { currentUser } = React.useContext(AuthContext);
-  const { currentEmployee, setCurrentEmployeeData } = useProjectContext();
-  const { addingEmployee, setAddingEmployee, employeeForm, setEmployeeForm } = useAppContext();
-  const { upsertEmployee, employees } = useContextQueries();
+  const { currentEmployee } = useProjectContext();
+  const { addingEmployee, employeeForm, onEmployeeFormSubmit } =
+    useAppContext();
+  const { employees } = useContextQueries();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
-  if (!employeeForm) return null;
-
+  if (!employeeForm || (!currentEmployee && !addingEmployee)) return null;
   const { formState } = employeeForm;
   const { isDirty, isValid } = formState;
-  // const test = useWatch({ control: taskForm.control, name: "test" });
-
-  if (!currentEmployee && !addingEmployee) return null;
-  // const employee = addingEmployee ? null : currentEmployee;
-
   const matchedEmployee = useMemo(() => {
     if (!currentEmployee) return null;
     return employees.find(
@@ -214,35 +209,7 @@ const EmployeeCard: React.FC<{}> = ({}) => {
   }, [matchedEmployee]);
 
   const onFormSubmitButton = async (data: EmployeeFormData) => {
-    const submitValue = {
-      ...data,
-      employee_id:
-        currentEmployee && currentEmployee.employee_id
-          ? currentEmployee.employee_id
-          : null,
-      hire_date: dateToString(data.hire_date ?? null),
-      termination_date: dateToString(data.termination_date ?? null),
-    } as Employee;
-    const newEmployeeId = await upsertEmployee(submitValue);
-    const newFormState = {
-      first_name: data.first_name ?? "",
-      last_name: data.last_name ?? "",
-      email: data.email ?? null,
-      phone: data.phone ?? null,
-      position: data.position ?? null,
-      department: data.department ?? null,
-      hire_date: data.hire_date ?? null,
-      termination_date: data.termination_date ?? null,
-      notes: data.notes ?? null,
-    };
-    employeeForm.reset(newFormState);
-    if (newEmployeeId) {
-      setCurrentEmployeeData({
-        employee_id: newEmployeeId,
-        ...newFormState,
-      });
-      setAddingEmployee(false)
-    }
+    await onEmployeeFormSubmit(data);
   };
 
   useEffect(() => {

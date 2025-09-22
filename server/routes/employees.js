@@ -4,6 +4,9 @@ import {
   upsertEmployee,
   deleteEmployee,
   getEmployees,
+  getEmployeeAssignments,
+  deleteEmployeeAssignment,
+  addEmployeeAssignment,
 } from "../controllers/employees.js";
 import { authenticateUser } from "../util/auth.js";
 import { checkProjectPermission } from "../util/permissions.js";
@@ -30,6 +33,27 @@ router.post(
   authenticateUser,
   checkProjectPermission(3), // owner+
   deleteEmployee
+);
+
+router.post(
+  "/assignments/get",
+  authenticateUser,
+  checkProjectPermission(1), // viewer+
+  getEmployeeAssignments
+);
+
+router.post(
+  "/assignments/add",
+  authenticateUser,
+  checkProjectPermission(2), // editor+
+  addEmployeeAssignment
+);
+
+router.post(
+  "/assignments/delete",
+  authenticateUser,
+  checkProjectPermission(2), // editor+
+  deleteEmployeeAssignment
 );
 
 export default router;

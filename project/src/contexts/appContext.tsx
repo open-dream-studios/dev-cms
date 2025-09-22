@@ -38,6 +38,7 @@ import {
 } from "@/util/schemas/employeeSchema";
 import { useEmployeeForm } from "@/hooks/useEmployeeForm";
 import { Employee } from "@/types/employees";
+import { dateToString } from "@/util/functions/Time";
 
 export type ExposedEmployeeForm = UseFormReturn<EmployeeFormData>;
 
@@ -103,6 +104,7 @@ type AppContextType = {
   setEmployeeForm: React.Dispatch<
     React.SetStateAction<ExposedEmployeeForm | null>
   >;
+  onEmployeeFormSubmit: (data: EmployeeFormData) => void;
 };
 
 export type FileImage = {
@@ -128,6 +130,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     setCurrentSectionData,
     setCurrentPageData,
     currentEmployee,
+    setCurrentEmployeeData,
   } = useProjectContext();
   const {
     productsData,
@@ -141,6 +144,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     refetchMediaLinks,
     mediaLinks,
     deleteMediaLinks,
+    upsertEmployee,
   } = useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
@@ -557,6 +561,15 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       await exposedCustomerForm?.handleSubmit(onCustomerSubmit)();
     }
 
+    if (
+      employeeForm &&
+      Object.keys(employeeForm.formState.dirtyFields).length > 0
+    ) {
+      console.log(employeeForm.formState.dirtyFields)
+      const values = employeeForm.getValues();
+      await onEmployeeFormSubmit(values);
+    }
+
     const onContinue = async () => {
       if (productFormRef.current) {
         const data = productFormRef.current.getValues();
@@ -742,6 +755,39 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     setEmployeeForm(employeeFormInstance);
   }, [currentEmployee, employeeFormInstance]);
 
+  const onEmployeeFormSubmit = async (data: EmployeeFormData) => {
+    if (!employeeForm) return;
+    const submitValue = {
+      ...data,
+      employee_id:
+        currentEmployee && currentEmployee.employee_id
+          ? currentEmployee.employee_id
+          : null,
+      hire_date: dateToString(data.hire_date ?? null),
+      termination_date: dateToString(data.termination_date ?? null),
+    } as Employee;
+    const newEmployeeId = await upsertEmployee(submitValue);
+    const newFormState = {
+      first_name: data.first_name ?? "",
+      last_name: data.last_name ?? "",
+      email: data.email ?? null,
+      phone: data.phone ?? null,
+      position: data.position ?? null,
+      department: data.department ?? null,
+      hire_date: data.hire_date ?? null,
+      termination_date: data.termination_date ?? null,
+      notes: data.notes ?? null,
+    };
+    employeeForm.reset(newFormState);
+    if (newEmployeeId) {
+      setCurrentEmployeeData({
+        employee_id: newEmployeeId,
+        ...newFormState,
+      });
+      setAddingEmployee(false);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -796,6 +842,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         setAddingEmployee,
         employeeForm,
         setEmployeeForm,
+        onEmployeeFormSubmit,
       }}
     >
       {children}

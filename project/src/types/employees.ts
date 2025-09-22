@@ -13,3 +13,12 @@ export type Employee = {
   notes: string | null;
   updated_at?: string | Date | null;
 };
+
+export type EmployeeAssignment = {
+  id?: number;
+  project_idx: number;
+  employee_id: string;
+  task_id: string | null;
+  job_id: string | null;
+  created_at?: string;
+}

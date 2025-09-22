@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { utcToProjectTimezone } from "@/util/functions/Time";
-import { Employee } from "@/types/employees";
+import { Employee, EmployeeAssignment } from "@/types/employees";
 
 export function useEmployees(
   isLoggedIn: boolean,
@@ -53,7 +53,7 @@ export function useEmployees(
 
   const upsertEmployee = async (employee: Employee): Promise<string> => {
     const res = await upsertEmployeeMutation.mutateAsync(employee);
-    return res.employee_id;  
+    return res.employee_id;
   };
 
   const deleteEmployeeMutation = useMutation({
@@ -75,11 +75,78 @@ export function useEmployees(
     await deleteEmployeeMutation.mutateAsync(employee_id);
   };
 
+  const {
+    data: employeeAssignments,
+    isLoading: isLoadingEmployeeAssignments,
+    refetch: refetchEmployeeAssignments,
+  } = useQuery<EmployeeAssignment[]>({
+    queryKey: ["employeeAssignments", currentProjectId],
+    queryFn: async () => {
+      if (!currentProjectId) return [];
+      const res = await makeRequest.post("/api/employees/assignments/get", {
+        project_idx: currentProjectId,
+      });
+      return res.data.employeeAssignments || [];
+    },
+    enabled: isLoggedIn && !!currentProjectId,
+  });
+
+  const addEmployeeAssignmentMutation = useMutation({
+    mutationFn: async (assignment: {
+      employee_id: string;
+      task_id?: string;
+      job_id?: string;
+    }) => {
+      const res = await makeRequest.post("/api/employees/assignments/add", {
+        ...assignment,
+        project_idx: currentProjectId,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["employeeAssignments", currentProjectId],
+      });
+    },
+  });
+
+  const deleteEmployeeAssignmentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await makeRequest.post("/api/employees/assignments/delete", {
+        id,
+        project_idx: currentProjectId,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["employeeAssignments", currentProjectId],
+      });
+    },
+  });
+
+  const addEmployeeAssignment = async (assignment: {
+    employee_id: string;
+    task_id?: string;
+    job_id?: string;
+  }) => {
+    await addEmployeeAssignmentMutation.mutateAsync(assignment);
+  };
+
+  const deleteEmployeeAssignment = async (id: number) => {
+    await deleteEmployeeAssignmentMutation.mutateAsync(id);
+  };
+
   return {
     employeesData,
     isLoadingEmployees,
     refetchEmployees,
     upsertEmployee,
     deleteEmployee,
+    employeeAssignments,
+    isLoadingEmployeeAssignments,
+    refetchEmployeeAssignments,
+    addEmployeeAssignment,
+    deleteEmployeeAssignment,
   };
 }

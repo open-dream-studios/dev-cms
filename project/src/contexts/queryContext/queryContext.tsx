@@ -48,7 +48,7 @@ import { useJobDefinitions } from "./queries/jobDefinitions";
 import { useJobs } from "./queries/jobs";
 import { useTasks } from "./queries/tasks";
 import { useEmployees } from "./queries/employees";
-import { Employee } from "@/types/employees";
+import { Employee, EmployeeAssignment } from "@/types/employees";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -261,6 +261,17 @@ export type QueryContextType = {
   refetchEmployees: () => Promise<any>;
   upsertEmployee: (employee: Employee) => Promise<string>;
   deleteEmployee: (employee_id: string) => Promise<void>;
+
+  // ---- EmployeeTasks ----
+  employeeAssignments: EmployeeAssignment[];
+  isLoadingEmployeeAssignments: boolean;
+  refetchEmployeeAssignments: () => Promise<any>;
+  addEmployeeAssignment: (assignment: {
+    employee_id: string;
+    task_id?: string;
+    job_id?: string;
+  }) => Promise<void>;
+  deleteEmployeeAssignment: (id: number) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -410,6 +421,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     refetchEmployees,
     upsertEmployee,
     deleteEmployee,
+    employeeAssignments,
+    isLoadingEmployeeAssignments,
+    refetchEmployeeAssignments,
+    addEmployeeAssignment,
+    deleteEmployeeAssignment,
   } = useEmployees(isLoggedIn, currentProjectId);
 
   return (
@@ -531,6 +547,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchEmployees,
         upsertEmployee,
         deleteEmployee,
+        employeeAssignments: employeeAssignments ?? [],
+        isLoadingEmployeeAssignments,
+        refetchEmployeeAssignments,
+        addEmployeeAssignment,
+        deleteEmployeeAssignment,
       }}
     >
       {children}
