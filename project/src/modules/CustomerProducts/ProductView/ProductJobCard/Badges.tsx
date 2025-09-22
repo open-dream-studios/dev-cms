@@ -159,35 +159,11 @@ export const TaskStatusBadge: React.FC<{
             await callSubmitForm();
           },
         })}
-        className={`${
-          oneSize
-            ? "py-2 text-sm"
-            : "hidden min-[800px]:flex py-[3%] text-[calc(10px+0.2vw)]"
-        } brightness-[140%] pl-[17%] pr-[4%] rounded-full ml-[-20%] cursor-pointer outline-none border-none`}
-      >
-        <option value="waiting_work">{mapping["waiting_work"].label}</option>
-        <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
-        {matchedDefinition.type.toLowerCase() === "service" && (
-          <option value="waiting_customer">
-            {mapping["waiting_customer"].label}
-          </option>
-        )}
-        <option value="complete">{mapping["complete"].label}</option>
-        <option value="cancelled">{mapping["cancelled"].label}</option>
-      </select>
-
-      <select
-        {...form.register("status", {
-          onChange: async () => {
-            cancelTimer();
-            await callSubmitForm();
-          },
-        })}
         className={`relative ${
           oneSize
-            ? "hidden"
-            : "w-[calc(23px+3vw)] max-[800px]:flex hidden py-[3%] text-[calc(10px+0.2vw)]"
-        } brightness-[140%] rounded-full cursor-pointer outline-none border-none text-transparent`}
+            ? "py-2 text-sm"
+            : "max-[800px]:w-[calc(23px+3vw)] min-[800px]:flex py-[3%] text-[calc(10px+0.2vw)]"
+        } brightness-[140%] rounded-full cursor-pointer outline-none border-none max-[800px]:text-transparent`}
       >
         <option value="waiting_work">{mapping["waiting_work"].label}</option>
         <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
@@ -201,7 +177,7 @@ export const TaskStatusBadge: React.FC<{
       </select>
 
       <div className="w-[100%] ml-[-6%] mt-[1%] justify-center max-[800px]:flex hidden absolute top-1/2 -translate-y-1/2 pointer-events-none">
-        {status === "complete" ? <Check size={18} /> : <Dot  size={33} />}
+        {status === "complete" ? <Check size={18} /> : <Dot size={33} />}
       </div>
     </div>
   );
