@@ -31,6 +31,7 @@ import HoverBox from "@/lib/blocks/HoverBox";
 import { IoPersonSharp } from "react-icons/io5";
 import { useAppContext } from "@/contexts/appContext";
 import { Screen } from "@/types/screens";
+import { BsFillPersonVcardFill } from "react-icons/bs";
 
 type BoxItem = {
   title: string;
@@ -330,6 +331,23 @@ const LeftBar = () => {
       ),
       pages: ["tasks" as Screen],
       onClick: () => handleTabClick("tasks"),
+    });
+  }
+
+  if (hasProjectModule("employees-module")) {
+    displayedModules.push({
+      title: "Employees",
+      icon: (
+        <div
+          className={`${
+            currentUser.theme === "dark" ? "opacity-[65%]" : "opacity-[80%]"
+          } mt-[-1.8px] mr-[2px]`}
+        >
+          <BsFillPersonVcardFill size={20} />
+        </div>
+      ),
+      pages: ["employees" as Screen],
+      onClick: () => handleTabClick("employees"),
     });
   }
 

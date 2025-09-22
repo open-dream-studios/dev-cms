@@ -47,6 +47,8 @@ import { Job, JobDefinition, Task } from "@/types/jobs";
 import { useJobDefinitions } from "./queries/jobDefinitions";
 import { useJobs } from "./queries/jobs";
 import { useTasks } from "./queries/tasks";
+import { useEmployees } from "./queries/employees";
+import { Employee } from "@/types/employees";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -252,6 +254,13 @@ export type QueryContextType = {
   refetchTasks: () => Promise<any>;
   upsertTask: (task: Task) => Promise<any>;
   deleteTask: (task_id: string) => Promise<void>;
+
+  // ---- Employees ----
+  employees: Employee[];
+  isLoadingEmployees: boolean;
+  refetchEmployees: () => Promise<any>;
+  upsertEmployee: (employee: Employee) => Promise<string>;
+  deleteEmployee: (employee_id: string) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -395,6 +404,14 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const { tasksData, isLoadingTasks, refetchTasks, upsertTask, deleteTask } =
     useTasks(isLoggedIn, currentProjectId);
 
+  const {
+    employeesData,
+    isLoadingEmployees,
+    refetchEmployees,
+    upsertEmployee,
+    deleteEmployee,
+  } = useEmployees(isLoggedIn, currentProjectId);
+
   return (
     <QueryContext.Provider
       value={{
@@ -509,6 +526,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchTasks,
         upsertTask,
         deleteTask,
+        employees: employeesData ?? [],
+        isLoadingEmployees,
+        refetchEmployees,
+        upsertEmployee,
+        deleteEmployee,
       }}
     >
       {children}

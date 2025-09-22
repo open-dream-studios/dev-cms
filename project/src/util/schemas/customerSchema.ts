@@ -29,7 +29,6 @@ export const CustomerSchema = z.object({
 });
 
 export type CustomerFormData = z.infer<typeof CustomerSchema>;
-
 /**
  * Normalize DB Customer -> Form values
  */

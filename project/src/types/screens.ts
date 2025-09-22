@@ -15,7 +15,8 @@ export type Screen =
   | "add-customer-product"
   | "edit-customer-product"
   | "customer-products-table"
-  | "tasks";
+  | "tasks"
+  | "employees";
 
 export type Modal =
   | { type: "mediaUpload" }

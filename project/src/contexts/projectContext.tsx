@@ -2,6 +2,7 @@
 "use client";
 
 import { Customer } from "@/types/customers";
+import { Employee } from "@/types/employees";
 import { ProjectPage, Section } from "@/types/pages";
 import { Project } from "@/types/project";
 import { createContext, useContext, useState, ReactNode } from "react";
@@ -19,6 +20,9 @@ type ProjectContextType = {
   currentCustomer: Customer | null;
   currentCustomerId: number | null;
   setCurrentCustomerData: (customer: Customer | null) => void;
+  currentEmployee: Employee | null;
+  currentEmployeeId: number | null;
+  setCurrentEmployeeData: (employee: Employee | null) => void;
 };
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -38,6 +42,10 @@ export const ProjectContextProvider = ({
     null
   );
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
+  const [currentEmployeeId, setCurrentEmployeeId] = useState<number | null>(
+    null
+  );
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
 
   const setCurrentProjectData = (project: Project | null) => {
     setCurrentProjectId(project ? project.id : null);
@@ -59,6 +67,11 @@ export const ProjectContextProvider = ({
     setCurrentCustomer(customer);
   };
 
+  const setCurrentEmployeeData = (employee: Employee | null) => {
+    setCurrentEmployeeId(employee && employee.id ? employee.id : null);
+    setCurrentEmployee(employee);
+  };
+
   return (
     <ProjectContext.Provider
       value={{
@@ -74,6 +87,9 @@ export const ProjectContextProvider = ({
         currentCustomer,
         currentCustomerId,
         setCurrentCustomerData,
+        currentEmployee,
+        currentEmployeeId,
+        setCurrentEmployeeData,
       }}
     >
       {children}

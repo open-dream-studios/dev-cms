@@ -19,6 +19,7 @@ import customerRoutes from "./routes/customers.js";
 import mediaLinkRoutes from "./routes/mediaLinks.js";
 import jobRoutes from "./routes/jobs.js";
 import taskRoutes from "./routes/tasks.js";
+import employeeRoutes from "./routes/employees.js";
 import { db } from "./connection/connect.js";
 dotenv.config();
 
@@ -86,6 +87,7 @@ app.use("/api/sections", sectionRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/employees", employeeRoutes);
 
 // Database
 db.getConnection((err, connection) => {

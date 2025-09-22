@@ -15,12 +15,7 @@ import {
   getNextOrdinal,
 } from "@/util/functions/Data";
 import axios from "axios";
-import {
-  SubmitHandler,
-  UseFormGetValues,
-  UseFormReturn,
-  UseFormSetValue,
-} from "react-hook-form";
+import { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { ProductFormData } from "@/util/schemas/productSchema";
 import { useContextQueries } from "./queryContext/queryContext";
 import { toast } from "react-toastify";
@@ -36,9 +31,15 @@ import { ExposedCustomerForm } from "@/modules/CustomersModule/CustomerView";
 import { CustomerFormData } from "@/util/schemas/customerSchema";
 import { Modal, Screen, UIState } from "@/types/screens";
 import { MediaLink, TempMediaLink } from "@/types/media";
-import { JobStatusOption } from "@/types/jobs";
-import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "./authContext";
+import {
+  defaultEmployeeValues,
+  EmployeeFormData,
+} from "@/util/schemas/employeeSchema";
+import { useEmployeeForm } from "@/hooks/useEmployeeForm";
+import { Employee } from "@/types/employees";
+
+export type ExposedEmployeeForm = UseFormReturn<EmployeeFormData>;
 
 type AppContextType = {
   localData: Product[];
@@ -96,6 +97,12 @@ type AppContextType = {
   handleProductFormSubmit: (data: ProductFormData) => Promise<boolean>;
   screenHistoryRef: React.RefObject<{ screen: Screen; page: string | null }[]>;
   formatDropdownOption: (option: string) => string;
+  addingEmployee: boolean;
+  setAddingEmployee: React.Dispatch<React.SetStateAction<boolean>>;
+  employeeForm: ExposedEmployeeForm | null;
+  setEmployeeForm: React.Dispatch<
+    React.SetStateAction<ExposedEmployeeForm | null>
+  >;
 };
 
 export type FileImage = {
@@ -112,7 +119,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { currentUser } = useContext(AuthContext)
+  const { currentUser } = useContext(AuthContext);
   const {
     currentProjectId,
     setCurrentProjectData,
@@ -120,6 +127,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     setCurrentCustomerData,
     setCurrentSectionData,
     setCurrentPageData,
+    currentEmployee,
   } = useProjectContext();
   const {
     productsData,
@@ -705,6 +713,34 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       .map((word) => capitalizeFirstLetter(word))
       .join(" ");
   };
+  const [addingEmployee, setAddingEmployee] = useState<boolean>(false);
+  const [employeeForm, setEmployeeForm] = useState<ExposedEmployeeForm | null>(
+    null
+  );
+
+  const employeeFormInstance = useEmployeeForm(
+    currentEmployee
+      ? {
+          first_name: currentEmployee.first_name ?? "",
+          last_name: currentEmployee.last_name ?? "",
+          email: currentEmployee.email,
+          phone: currentEmployee.phone,
+          position: currentEmployee.position,
+          department: currentEmployee.department,
+          hire_date: currentEmployee.hire_date
+            ? new Date(currentEmployee.hire_date)
+            : null,
+          termination_date: currentEmployee.termination_date
+            ? new Date(currentEmployee.termination_date)
+            : null,
+          notes: currentEmployee.notes,
+        }
+      : defaultEmployeeValues
+  );
+
+  useEffect(() => {
+    setEmployeeForm(employeeFormInstance);
+  }, [currentEmployee, employeeFormInstance]);
 
   return (
     <AppContext.Provider
@@ -756,6 +792,10 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
         handleProductFormSubmit,
         screenHistoryRef,
         formatDropdownOption,
+        addingEmployee,
+        setAddingEmployee,
+        employeeForm,
+        setEmployeeForm,
       }}
     >
       {children}

@@ -15,13 +15,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MediaLink } from "@/types/media";
 import { Product } from "@/types/products";
 import { usePathname } from "next/navigation";
+import { Employee } from "@/types/employees";
+import { EmployeeMiniCard } from "../EmployeesModule/EmployeeCatalog";
+import { defaultEmployeeValues } from "@/util/schemas/employeeSchema";
 
 const ModuleLeftBar = () => {
-  const { currentProjectId, currentCustomer, setCurrentCustomerData } =
-    useProjectContext();
+  const {
+    currentProjectId,
+    currentCustomer,
+    setCurrentCustomerData,
+    currentEmployee,
+    setCurrentEmployeeData,
+  } = useProjectContext();
   const { currentUser } = useContext(AuthContext);
-  const { customers, deleteCustomer, isLoadingProductsData, mediaLinks } =
-    useContextQueries();
+  const {
+    customers,
+    deleteCustomer,
+    isLoadingProductsData,
+    mediaLinks,
+    deleteEmployee,
+    employees,
+  } = useContextQueries();
   const {
     onCustomerSubmit,
     addingCustomer,
@@ -31,6 +45,9 @@ const ModuleLeftBar = () => {
     localDataRef,
     screenClick,
     screen,
+    setAddingEmployee,
+    employeeForm,
+    addingEmployee
   } = useAppContext();
   const pathname = usePathname();
 
@@ -43,16 +60,29 @@ const ModuleLeftBar = () => {
       setCurrentCustomerData(null);
       setAddingCustomer(true);
     }
-    await deleteCustomer({
-      project_idx: currentProjectId,
-      id: contextMenu.input.id,
-    });
+    const customerInput = contextMenu.input as Customer;
+    if (customerInput.id) {
+      await deleteCustomer({
+        project_idx: currentProjectId,
+        id: customerInput.id,
+      });
+    }
+  };
+
+  const handleDeleteEmployee = async () => {
+    if (!currentProjectId || !contextMenu || !contextMenu.input) return;
+    setCurrentEmployeeData(null);
+    setAddingEmployee(true);
+    const employeeInput = contextMenu.input as Employee;
+    if (employeeInput.employee_id) {
+      await deleteEmployee(employeeInput.employee_id);
+    }
   };
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
-    input: Customer;
+    input: Customer | Employee;
   } | null>(null);
 
   useEffect(() => {
@@ -68,7 +98,10 @@ const ModuleLeftBar = () => {
     };
   }, []);
 
-  const handleContextMenu = (e: React.MouseEvent, input: Customer) => {
+  const handleContextMenu = (
+    e: React.MouseEvent,
+    input: Customer | Employee
+  ) => {
     e.preventDefault();
     setContextMenu({
       x: e.clientX,
@@ -79,9 +112,17 @@ const ModuleLeftBar = () => {
 
   const handleCloseContextMenu = () => setContextMenu(null);
 
-  const handleAddItemClick = () => {
+  const handleAddCustomerClick = () => {
     setCurrentCustomerData(null);
     setAddingCustomer(true);
+  };
+
+  const handleAddEmployeeClick = () => {
+    setCurrentEmployeeData(null);
+    setAddingEmployee(true);
+    if (employeeForm) {
+      employeeForm.reset(defaultEmployeeValues);
+    }
   };
 
   useEffect(() => {
@@ -131,6 +172,11 @@ const ModuleLeftBar = () => {
     }
   };
 
+  const handleEmployeeClick = (employee: Employee) => {
+    setCurrentEmployeeData(employee);
+    setAddingEmployee(false);
+  };
+
   const handleProductClick = async (product: Product) => {
     await screenClick(
       "edit-customer-product",
@@ -140,10 +186,13 @@ const ModuleLeftBar = () => {
 
   const handlePlusClick = async () => {
     if (screen === "customers") {
-      handleAddItemClick();
+      handleAddCustomerClick();
     }
     if (screen === "edit-customer-product") {
       screenClick("add-customer-product", "/products");
+    }
+    if (screen === "employees") {
+      handleAddEmployeeClick();
     }
   };
 
@@ -160,7 +209,9 @@ const ModuleLeftBar = () => {
 
   return (
     <div
-      className={`${screen === "customer-products" ? "hidden xl:flex" : "flex"} w-[240px] min-w-[240px] h-[100%] flex-col px-[15px] overflow-hidden`}
+      className={`${
+        screen === "customer-products" ? "hidden xl:flex" : "flex"
+      } w-[240px] min-w-[240px] h-[100%] flex-col px-[15px] overflow-hidden`}
       style={{
         borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2}`,
       }}
@@ -184,17 +235,37 @@ const ModuleLeftBar = () => {
           </button>
         </div>
       )}
+      {contextMenu && screen === "employees" && (
+        <div
+          className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
+          style={{
+            top: contextMenu.y,
+            left: contextMenu.x,
+            backgroundColor: appTheme[currentUser.theme].background_1_2,
+            border: "1px solid" + appTheme[currentUser.theme].background_3,
+          }}
+          onContextMenu={handleCloseContextMenu}
+        >
+          <button
+            onClick={handleDeleteEmployee}
+            className="hover:brightness-50 dim cursor-pointer w-full text-left px-3 py-2 text-sm"
+          >
+            {`Delete employee`}
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
         <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
           <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
             {screen === "customers" && "Customers"}
+            {screen === "employees" && "Employees"}
             {(screen === "edit-customer-product" ||
               screen === "add-customer-product") &&
               "Products"}
           </p>
         </div>
-        {!addingCustomer && screen !== "add-customer-product" && (
+        {!addingCustomer && !addingEmployee && screen !== "add-customer-product" && (
           <div
             onClick={handlePlusClick}
             className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
@@ -218,6 +289,21 @@ const ModuleLeftBar = () => {
                 index={index}
                 handleContextMenu={handleContextMenu}
                 handleCustomerClick={handleCustomerClick}
+              />
+            );
+          })}
+        </>
+      )}
+      {screen === "employees" && (
+        <>
+          {employees.map((employee: Employee, index: number) => {
+            return (
+              <EmployeeMiniCard
+                employee={employee}
+                key={index}
+                index={index}
+                handleContextMenu={handleContextMenu}
+                handleEmployeeClick={handleEmployeeClick}
               />
             );
           })}
