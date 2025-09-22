@@ -1,12 +1,5 @@
-// project/src/modules/Jobs/JobCard.tsx
-import React, {
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+// project/src/modules/CustomerProducts/ProductView/ProductJobCard/ProductJobCard.tsx
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   Activity,
@@ -24,16 +17,14 @@ import type {
   Job,
   JobDefinition,
   Task,
-  PriorityOption,
   JobStatusOption,
   TaskStatusOption,
 } from "@/types/jobs";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus, FaWrench } from "react-icons/fa6";
-import { FaUserLarge } from "react-icons/fa6";
 import ScheduleTimeline from "@/modules/components/Calendar/Calendar";
 import DatePicker from "react-datepicker";
-import "../../components/Calendar/Calendar.css";
+import "../../../components/Calendar/Calendar.css";
 import { BsThreeDots, BsThreeDotsVertical } from "react-icons/bs";
 import { FiEdit } from "react-icons/fi";
 import { useJobForm, useTaskForm } from "@/hooks/useJobForm";
@@ -43,295 +34,15 @@ import { Product } from "@/types/products";
 import { dateToString, formatDateTime } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
-import { DelayType, useAutoSave } from "@/hooks/useAutoSave";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import AddEmployeeList from "./AddEmployeeList";
+import AddEmployeeList from "../AddEmployeeList";
 import { Employee, EmployeeAssignment } from "@/types/employees";
 import { useAppContext } from "@/contexts/appContext";
 import { useProjectContext } from "@/contexts/projectContext";
-
-// ---------- CircularProgress ----------
-const CircularProgress: React.FC<{
-  value: number; // 0-100
-  size?: number;
-  stroke?: number;
-  color?: string;
-  bg?: string;
-}> = ({
-  value,
-  size = 56,
-  stroke = 7,
-  color = "#06b6d4",
-  bg = "rgba(255,255,255,0.06)",
-}) => {
-  const radius = (size - stroke) / 2;
-  const cx = size / 2;
-  const cy = size / 2;
-  const circumference = 2 * Math.PI * radius;
-  const dash = (value / 100) * circumference;
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className="block"
-    >
-      <circle
-        cx={cx}
-        cy={cy}
-        r={radius}
-        stroke={bg}
-        strokeWidth={stroke}
-        fill="none"
-        strokeLinecap="round"
-      />
-      <circle
-        cx={cx}
-        cy={cy}
-        r={radius}
-        stroke={color}
-        strokeWidth={stroke}
-        fill="none"
-        strokeLinecap="round"
-        strokeDasharray={`${dash} ${circumference - dash}`}
-        transform={`rotate(-90 ${cx} ${cy})`}
-      />
-      <text
-        x="50%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fontSize={11.2}
-        style={{ fontWeight: 700, fill: "white", opacity: 0.5 }}
-      >
-        {Math.round(value)}%
-      </text>
-    </svg>
-  );
-};
-
-// ---------- StatusBadge ----------
-const StatusBadge: React.FC<{
-  form: UseFormReturn<JobFormData> | null;
-  matchedDefinition: JobDefinition | null;
-  cancelTimer: () => void;
-  callSubmitForm: () => void;
-}> = ({ form, matchedDefinition, cancelTimer, callSubmitForm }) => {
-  if (!form || !matchedDefinition) return null;
-  const status = useWatch({ control: form.control, name: "status" });
-  const mapping: Record<string, { color: string; label: string }> = {
-    waiting_diagnosis: { color: "#06b6d4", label: "Waiting On Diagnosis" },
-    waiting_work: { color: "#60a5fa", label: "Work Required" },
-    waiting_parts: { color: "#f59e0b", label: "Waiting On Parts" },
-    waiting_customer: { color: "#f59e0b", label: "Waiting On Customer" },
-    waiting_listing: { color: "#8b5cf6", label: "Ready To List" },
-    listed: { color: "#8b5cf6", label: "Listed" },
-    waiting_delivery: { color: "#60a5fa", label: "Ready For Delivery" },
-    delivered: { color: "#16a34a", label: "Delivered" },
-    complete: { color: "#16a34a", label: "Complete" },
-    cancelled: { color: "#ef4444", label: "Cancelled" },
-  };
-  const info = mapping[status] ?? {
-    color: "#94a3b8",
-    label: status || "Unknown",
-  };
-  return (
-    <div
-      className="cursor-pointer hover:brightness-75 dim inline-flex items-center gap-2 pl-[12px] pr-[14px] rounded-full text-[13px] font-semibold"
-      style={{ background: `${info.color}20`, color: info.color }}
-    >
-      <span
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: 999,
-          background: info.color,
-          boxShadow: "0 0 8px rgba(0,0,0,0.18)",
-        }}
-        className="brightness-[140%]"
-      />
-      <select
-        {...form.register("status", {
-          onChange: async () => {
-            cancelTimer();
-            await callSubmitForm();
-          },
-        })}
-        className="brightness-[140%] pl-[24px] pr-[5px] rounded-full ml-[-26px] cursor-pointer py-2 text-sm outline-none border-none"
-      >
-        {matchedDefinition.type.toLowerCase() === "service" && (
-          <option value="waiting_diagnosis">
-            {mapping["waiting_diagnosis"].label}
-          </option>
-        )}
-        <option value="waiting_work">{mapping["waiting_work"].label}</option>
-        <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
-        {matchedDefinition.type.toLowerCase() !== "resell" && (
-          <option value="waiting_customer">
-            {mapping["waiting_customer"].label}
-          </option>
-        )}
-        {matchedDefinition.type.toLowerCase() === "resell" && (
-          <option value="waiting_listing">
-            {mapping["waiting_listing"].label}
-          </option>
-        )}
-        {matchedDefinition.type.toLowerCase() === "resell" && (
-          <option value="listed">{mapping["listed"].label}</option>
-        )}
-        {matchedDefinition.type.toLowerCase() !== "service" && (
-          <option value="waiting_delivery">
-            {mapping["waiting_delivery"].label}
-          </option>
-        )}
-        {matchedDefinition.type.toLowerCase() !== "service" && (
-          <option value="delivered">{mapping["delivered"].label}</option>
-        )}
-        {matchedDefinition.type.toLowerCase() === "service" && (
-          <option value="complete">{mapping["complete"].label}</option>
-        )}
-        <option value="cancelled">{mapping["cancelled"].label}</option>
-      </select>
-    </div>
-  );
-};
-
-// ---------- TaskStatusBadge ----------
-const TaskStatusBadge: React.FC<{
-  form: UseFormReturn<TaskFormData> | null;
-  matchedDefinition: JobDefinition | null;
-  cancelTimer: () => void;
-  callSubmitForm: () => void;
-}> = ({ form, matchedDefinition, cancelTimer, callSubmitForm }) => {
-  if (!form || !matchedDefinition) return null;
-  const status = useWatch({ control: form.control, name: "status" });
-  const mapping: Record<string, { color: string; label: string }> = {
-    waiting_work: { color: "#60a5fa", label: "Work Required" },
-    waiting_parts: { color: "#f59e0b", label: "Waiting On Parts" },
-    waiting_customer: { color: "#f59e0b", label: "Waiting On Customer" },
-    complete: { color: "#16a34a", label: "Complete" },
-    cancelled: { color: "#ef4444", label: "Cancelled" },
-  };
-  const info = mapping[status] ?? {
-    color: "#94a3b8",
-    label: status || "Unknown",
-  };
-  return (
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="cursor-pointer hover:brightness-75 dim inline-flex items-center gap-2 pl-[12px] pr-[10px] rounded-full text-[13px] font-semibold"
-      style={{ background: `${info.color}20`, color: info.color }}
-    >
-      <span
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: 999,
-          background: info.color,
-          boxShadow: "0 0 8px rgba(0,0,0,0.18)",
-        }}
-        className="brightness-[140%]"
-      />
-      <select
-        {...form.register("status", {
-          onChange: async () => {
-            cancelTimer();
-            await callSubmitForm();
-          },
-        })}
-        className="brightness-[140%] pl-[22px] pr-[5px] rounded-full ml-[-26px] cursor-pointer h-[25px] text-[13px] outline-none border-none"
-      >
-        <option value="waiting_work">{mapping["waiting_work"].label}</option>
-        <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
-        {matchedDefinition.type.toLowerCase() === "service" && (
-          <option value="waiting_customer">
-            {mapping["waiting_customer"].label}
-          </option>
-        )}
-        <option value="complete">{mapping["complete"].label}</option>
-        <option value="cancelled">{mapping["cancelled"].label}</option>
-      </select>
-    </div>
-  );
-};
-
-// ---------- PriorityBadge ----------
-type PriorityBadgeForm = {
-  priority: "low" | "medium" | "high" | "urgent";
-  status: JobStatusOption | TaskStatusOption;
-};
-
-const PriorityBadge = <T extends PriorityBadgeForm>({
-  form,
-  cancelTimer,
-  callSubmitForm,
-}: {
-  form: UseFormReturn<T> | null;
-  cancelTimer: () => void;
-  callSubmitForm: () => void;
-}) => {
-  const { currentUser } = React.useContext(AuthContext);
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
-
-  if (!form) return null;
-
-  const priority = useWatch({
-    control: form.control,
-    name: "priority" as Path<T>,
-  });
-  const status = useWatch({ control: form.control, name: "status" as Path<T> });
-
-  return (
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="rounded-full pr-[10px] cursor-pointer hover:brightness-[93%] dim"
-      style={{
-        background:
-          status === "complete" ||
-          status === "cancelled" ||
-          status === "delivered"
-            ? t.background_2
-            : priority === "urgent"
-            ? "rgba(239,68,68,0.12)"
-            : priority === "high"
-            ? "#f59e0b20"
-            : t.background_2,
-      }}
-    >
-      <select
-        {...form.register("priority" as Path<T>, {
-          onChange: async () => {
-            cancelTimer();
-            await callSubmitForm();
-          },
-        })}
-        style={{
-          color:
-            status === "complete" ||
-            status === "cancelled" ||
-            status === "delivered"
-              ? t.text_1
-              : priority === "urgent"
-              ? "#ef4444"
-              : priority === "high"
-              ? "#f59e0b"
-              : t.text_1,
-          filter:
-            priority === "urgent" || priority === "high"
-              ? "brightness(140%)"
-              : "none",
-        }}
-        className="cursor-pointer font-[500] outline-none border-none rounded-full pl-[10px] min-w-[80px] w-[100%] h-[25px] text-[13px] opacity-[0.95]"
-      >
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-        <option value="urgent">Urgent</option>
-      </select>
-    </div>
-  );
-};
+import { Customer } from "@/types/customers";
+import CircularProgress from "./CircularProgress";
+import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
 
 // ---------- TaskCard ----------
 const TaskCard: React.FC<{
@@ -487,6 +198,7 @@ const TaskCard: React.FC<{
                     form={taskForm}
                     cancelTimer={cancelTimer}
                     callSubmitForm={callSubmitForm}
+                    oneSize={true}
                   />
                 </div>
 
@@ -496,6 +208,7 @@ const TaskCard: React.FC<{
                     matchedDefinition={matchedDefinition}
                     cancelTimer={cancelTimer}
                     callSubmitForm={callSubmitForm}
+                    oneSize={true}
                   />
                 </div>
               </div>
@@ -768,6 +481,7 @@ const TaskCard: React.FC<{
                 form={taskForm}
                 cancelTimer={cancelTimer}
                 callSubmitForm={callSubmitForm}
+                oneSize={true}
               />
             </div>
 
@@ -780,6 +494,7 @@ const TaskCard: React.FC<{
                 matchedDefinition={matchedDefinition}
                 cancelTimer={cancelTimer}
                 callSubmitForm={callSubmitForm}
+                oneSize={true}
               />
             </div>
           </div>
@@ -810,6 +525,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     employees,
     employeeAssignments,
     deleteEmployeeAssignment,
+    customers,
   } = useContextQueries();
   const { screenClick } = useAppContext();
   const { setCurrentEmployeeData } = useProjectContext();
@@ -840,6 +556,13 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
       return isNaN(num) ? 0 : num;
     })();
 
+    const matchedCustomer =
+      matchedProduct && matchedProduct.customer_id
+        ? customers.find(
+            (customer: Customer) => customer.id === matchedProduct.customer_id
+          )
+        : null;
+
     const submitValue = {
       ...data,
       scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
@@ -849,10 +572,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
       job_definition_id: matchedDefinition.id,
       product_id:
         matchedProduct && matchedProduct.id ? matchedProduct.id : null,
-      customer_id:
-        matchedProduct && matchedProduct.customer_id
-          ? matchedProduct.customer_id
-          : null,
+      customer_id: matchedCustomer ? matchedCustomer.id : null,
     } as Job;
     await upsertJob(submitValue);
   };
@@ -983,7 +703,6 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
         onSubmit={jobForm.handleSubmit(onFormSubmitButton)}
         className="flex flex-col"
       >
-        {/* TOP ROW */}
         <div
           className={`flex flex-col gap-[15px] min-[750px]:flex-row min-[870px]:flex-col min-[990px]:flex-row ${
             leftBarOpen ? "min-[1024px]:flex-col min-[1220px]:flex-row" : ""
@@ -1057,6 +776,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                   form={jobForm}
                   cancelTimer={cancelTimer}
                   callSubmitForm={callSubmitForm}
+                  oneSize={true}
                 />
               </div>
             </div>
@@ -1075,6 +795,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                 matchedDefinition={matchedDefinition}
                 cancelTimer={cancelTimer}
                 callSubmitForm={callSubmitForm}
+                oneSize={true}
               />
             </div>
             <CircularProgress

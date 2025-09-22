@@ -46,7 +46,7 @@ const CustomerProducts = () => {
                     <div className="h-[60px] w-[100%]" />
                   </div>
                 ) : isLoadingProductsData ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[20px] md:gap-[30px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-[20px] lg:gap-[30px]">
                     {Array.from({ length: 6 }, (_, index) => {
                       return (
                         <div key={index}>

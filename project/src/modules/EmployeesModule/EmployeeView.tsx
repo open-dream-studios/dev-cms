@@ -201,8 +201,8 @@ const EmployeeCard: React.FC = () => {
       }}
     >
       <div
-        className={`p-4 w-full max-w-[720px] ${
-          leftBarOpen ? "min-[1024px]:pr-[38px]" : "pr-[35px] md:pr-[60px]"
+        className={`p-4 w-full max-w-[720px] pr-[35px] md:pr-[60px] ${
+          leftBarOpen ? "min-[1024px]:pr-[38px]" : ""
         }`}
       >
         {/* Header */}

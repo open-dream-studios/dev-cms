@@ -9,10 +9,13 @@ import { formatPhone } from "@/util/functions/Customers";
 import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import CustomerSelection from "../Customers/CustomerSelection";
+
 const CustomerTag = ({
   productCustomer,
+  oneSize,
 }: {
   productCustomer: Customer | null;
+  oneSize: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
   const { setCurrentCustomerData } = useProjectContext();
@@ -43,7 +46,13 @@ const CustomerTag = ({
         style={{
           backgroundColor: appTheme[currentUser.theme].background_2,
         }}
-        className={`max-w-[260px] w-[100%] cursor-pointer dim ${screen === "customers" ? "pointer-events-none" : "hover:brightness-90"} items-center flex flex-row gap-[9px] rounded-full px-[10.5px] py-[5.9px]`}
+        className={`${
+          oneSize
+            ? "max-w-[260px] gap-[9px] px-[10.5px] py-[5.9px]"
+            : "gap-[4%] px-[calc(7px+0.1vw)] py-[1.5%]"
+        } w-[100%] cursor-pointer dim ${
+          screen === "customers" ? "pointer-events-none" : "hover:brightness-90"
+        } items-center flex flex-row rounded-full`}
         onClick={async (e) => {
           e.stopPropagation();
           setCurrentCustomerData(productCustomer);
@@ -51,7 +60,11 @@ const CustomerTag = ({
         }}
       >
         <div
-          className="w-[34px] h-[34px] flex items-center justify-center rounded-full border font-semibold text-[13px] min-w-[33px] min-h-[33px]"
+          className={`${
+            oneSize
+              ? "w-[34px] h-[34px] text-[13px] min-w-[33px] min-h-[33px]"
+              : "p-[2%] aspect-[1/1] text-[calc(8px+0.2vw)]"
+          } flex items-center justify-center rounded-full border font-semibold`}
           style={{
             borderColor: appTheme[currentUser.theme].text_3,
             color: appTheme[currentUser.theme].text_3,
@@ -61,15 +74,29 @@ const CustomerTag = ({
             productCustomer.last_name?.[0] ?? ""
           }`.toUpperCase()}
         </div>
-        <div className="w-[100%] flex flex-1 pt-[2px] flex-col gap-[1px] h-[100%] justify-center">
-          <div className="truncate text-[15px] leading-[17px] font-[600]">
+        <div
+          className={`${
+            oneSize && "pt-[2px]"
+          } w-[100%] flex flex-1 flex-col gap-[1px] h-[100%] justify-center`}
+        >
+          <div
+            className={`${
+              oneSize
+                ? "text-[15px] leading-[17px]"
+                : "text-[calc(11.5px+0.15vw)] leading-[calc(13px+0.4vw)]"
+            } truncate font-[600]`}
+          >
             {productCustomer.first_name} {productCustomer.last_name}
           </div>
           <div
             style={{
               color: appTheme[currentUser.theme].text_4,
             }}
-            className="text-[14px] leading-[17px] font-[400] flex flex-row gap-[8px] w-[100%] min-h-[20px]"
+            className={`${
+              oneSize
+                ? "text-[14px] leading-[17px] gap-[8px] min-h-[20px]"
+                : "text-[calc(11px+0.12vw)] leading-[calc(10px+0.3vw)] gap-[calc(6px+0.3vw)]"
+            } font-[400] flex flex-row w-[100%]`}
           >
             <div className="flex items-center gap-2">
               {productCustomer.phone && (
@@ -88,11 +115,18 @@ const CustomerTag = ({
         style={{
           backgroundColor: appTheme[currentUser.theme].background_2,
         }}
-        className="max-w-[220px] w-[100%] cursor-pointer dim hover:brightness-90 items-center flex flex-row gap-[9px] rounded-full px-[12px] py-[10px]"
+        className={`${
+          oneSize
+            ? "max-w-[220px] gap-[9px] px-[12px] py-[10px]"
+            : "gap-[4%] px-[2.8%] py-[1.5%]"
+        }
+       w-[100%] cursor-pointer dim hover:brightness-90 items-center flex flex-row rounded-full`}
         onClick={handleAddCustomerClick}
       >
         <div
-          className="opacity-[0.8] w-[24px] h-[24px] flex items-center justify-center rounded-full border font-semibold text-[13px]"
+          className={`${
+            oneSize ? "w-[24px] h-[24px]" : "w-[8%] aspect-[1/1]"
+          } opacity-[0.8] flex items-center justify-center rounded-full border font-semibold`}
           style={{
             borderColor: appTheme[currentUser.theme].text_3,
             color: appTheme[currentUser.theme].text_3,

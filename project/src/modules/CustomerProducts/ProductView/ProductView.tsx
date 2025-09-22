@@ -40,7 +40,7 @@ import { flushSync } from "react-dom";
 import { Box } from "lucide-react";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import ProductJobs from "./ProductJobs";
-import ProductJobCard from "./ProductJobCard";
+import ProductJobCard from "./ProductJobCard/ProductJobCard";
 import { Product } from "@/types/products";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 
@@ -867,9 +867,9 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
                       <div className="flex flex-row">
                         {matchedCustomer ? (
-                          <CustomerTag productCustomer={matchedCustomer} />
+                          <CustomerTag productCustomer={matchedCustomer}  oneSize={true}/>
                         ) : (
-                          <CustomerTag productCustomer={null} />
+                          <CustomerTag productCustomer={null}  oneSize={true}/>
                         )}
 
                         {matchedCustomer && (

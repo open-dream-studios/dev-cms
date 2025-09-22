@@ -66,6 +66,7 @@ function SortableItem({
   };
 
   const handleDeleteProduct = async (item: Product) => {
+    if (!item.serial_number) return
     try {
       await saveProducts();
       await deleteProducts([item.serial_number]);
@@ -82,9 +83,9 @@ function SortableItem({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="relative w-full"
+      className="relative w-full h-[100%]"
     >
-      <div className="group/grabber relative w-full h-full cursor-pointer">
+      <div className="group/grabber relative w-full h-[100%] cursor-pointer">
         {editMode && (
           <div
             {...listeners}
@@ -105,7 +106,7 @@ function SortableItem({
           </div>
         )}
 
-        <div className="dim cursor-pointer hover:brightness-[86%]">
+        <div className="dim cursor-pointer hover:brightness-[86%] h-[100%]">
           {sheet ? (
             <InventoryRow index={index} product={product} />
           ) : (
@@ -175,17 +176,17 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
         modifiers={[restrictToParentElement]}
       >
         <SortableContext
-          items={localDataRef.current.map((p) => p.serial_number)}
+          items={localDataRef.current.map((p) => p.serial_number ?? "")}
           strategy={rectSortingStrategy}
         >
           <div
             ref={containerRef}
-            className="relative pt-[8px] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-[20px] md:gap-[30px]"
+            className="relative pt-[8px] grid grid-cols-2 min-[1570px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
           >
             {filteredProducts(localDataRef.current).map((product, index) => (
               <SortableItem
                 key={product.serial_number}
-                id={product.serial_number}
+                id={product.serial_number ?? ""}
                 product={product}
                 index={index}
                 sheet={sheet}
@@ -205,14 +206,14 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
       modifiers={[restrictToVerticalAxis, restrictToParentElement]}
     >
       <SortableContext
-        items={localDataRef.current.map((p) => p.serial_number)}
+        items={localDataRef.current.map((p) => p.serial_number ?? "")}
         strategy={verticalListSortingStrategy}
       >
         <div className="flex flex-col max-h-full pb-[46px] mb-[46px]">
           {filteredProducts(localDataRef.current).map((product, index) => (
             <SortableItem
               key={product.serial_number}
-              id={product.serial_number}
+              id={product.serial_number ?? ""}
               product={product}
               index={index}
               sheet={sheet}

@@ -28,7 +28,7 @@ import {
 import { Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
 import { Product } from "@/types/products";
-import ProductFrame from "../components/ProductCard/CustomerProductFrame";
+import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
 import { useAppContext } from "@/contexts/appContext";
 import { getCardStyle } from "@/styles/themeStyles";
 
@@ -458,7 +458,7 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
 
       {currentCustomer && (
         <div className="flex-1 w-[100%] pt-[30px]">
-          <div className="h-[100%] w-[100%] grid grid-cols-2 gap-[20px]">
+          <div className="h-[100%] w-[100%] grid grid-cols-3 xl:grid-cols-4 gap-[20px]">
             {productsData
               .filter(
                 (product: Product) => product.customer_id === currentCustomer.id
@@ -467,9 +467,9 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
                 return (
                   <div
                     key={index}
-                    className="hover:brightness-[86%] dim cursor-pointer"
+                    className="col-span-3 max-w-[600px] hover:brightness-[86%] dim cursor-pointer"
                   >
-                    <ProductFrame product={product} index={index} />
+                    <CustomerProductFrame product={product} index={index} />
                   </div>
                 );
               })}
