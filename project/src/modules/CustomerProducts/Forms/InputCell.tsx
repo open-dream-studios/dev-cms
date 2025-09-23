@@ -122,7 +122,7 @@ const InputCell = <T extends FieldValues>({
           <DatePicker
             selected={selected}
             onChange={onChange}
-            className="text-[12px] pl-[8px] pb-[2px] w-[100%] h-[100%] min-h-[60px]"
+            className="z-[999] text-[12px] pl-[8px] pb-[2px] w-[100%] h-[100%] min-h-[60px]"
             placeholderText="Select Date"
           />
         </div>

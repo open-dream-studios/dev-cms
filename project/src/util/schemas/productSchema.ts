@@ -8,7 +8,8 @@ export const ProductSchema = z.object({
     .transform((val) => val.toUpperCase())
     .refine((val) => /^[A-Z0-9]+$/.test(val), {
       message: "Only uppercase letters and numbers allowed",
-    }),
+    })
+    .nullable(),
   name: z.string().min(1, "Name is required"),
   customer_id: z.number().optional().nullable(),
   make: z.string().nullable(),

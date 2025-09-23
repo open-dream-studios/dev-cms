@@ -67,7 +67,7 @@ const CustomerTag = ({
           className={`${
             oneSize
               ? "w-[34px] h-[34px] text-[13px] min-w-[33px] min-h-[33px]"
-              : "p-[2%] aspect-[1/1] text-[calc(8px+0.2vw)]"
+              : "min-w-[calc(22px+0.6vw)] min-h-[calc(22px+0.6vw)] aspect-[1/1] text-[calc(8px+0.2vw)]"
           } flex items-center justify-center rounded-full border font-semibold`}
           style={{
             borderColor: appTheme[currentUser.theme].text_3,

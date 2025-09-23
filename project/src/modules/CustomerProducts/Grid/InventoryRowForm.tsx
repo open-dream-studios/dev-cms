@@ -34,11 +34,11 @@ const InventoryRowForm = ({
   const { productsData, mediaLinks } = useContextQueries();
   const form = useProductForm();
   const router = useRouter();
-  registerFormRef(product.serial_number, form);
+  // registerFormRef(product.serial_number, form);
 
   let newProduct = false;
 
-  const dateComplete = form.watch("date_complete");
+  // const dateComplete = form.watch("date_complete");
 
   useEffect(() => {
     if (!newProduct && product.serial_number) {
@@ -46,17 +46,19 @@ const InventoryRowForm = ({
         (item) => item.serial_number === product.serial_number
       );
       if (!matchingProduct) return;
+      if (!matchingProduct || !matchingProduct.serial_number) return;
       const formDefaults: Partial<ProductFormData> = {
         ...matchingProduct,
-        customer_id: matchingProduct.customer_id
-          ? matchingProduct.customer_id
-          : undefined,
-        date_complete: matchingProduct.date_complete
-          ? new Date(matchingProduct.date_complete)
-          : undefined,
-        price: matchingProduct.price ? Number(matchingProduct.price) : 0,
+        serial_number: matchingProduct.serial_number ?? "",
+        customer_id: matchingProduct.customer_id ?? undefined,
+        name: matchingProduct.name ?? "",
+        make: matchingProduct.make ?? null,
+        model: matchingProduct.model ?? null,
+        description: matchingProduct.description ?? null,
+        note: matchingProduct.note ?? null,
         length: matchingProduct.length ? Number(matchingProduct.length) : 0,
         width: matchingProduct.width ? Number(matchingProduct.width) : 0,
+        height: matchingProduct.height ? Number(matchingProduct.height) : 0,
       };
       form.reset(formDefaults);
     }
@@ -308,9 +310,42 @@ const InventoryRowForm = ({
       />
 
       <ProductInputCell
-        name="product_status"
+        name="height"
+        inputMode="decimal"
+        pattern="^\d+(\.\d{0,2})?$"
+        inputType={"input"}
+        onInput={(e) => {
+          let value = e.currentTarget.value;
+          value = value.replace(/[^0-9.]/g, "");
+          const parts = value.split(".");
+          if (parts.length > 2) {
+            value = parts[0] + "." + parts[1];
+          }
+          if (parts[1]?.length > 2) {
+            parts[1] = parts[1].slice(0, 2);
+            value = parts[0] + "." + parts[1];
+          }
+          e.currentTarget.value = value;
+          // form.setValue("width", parseFloat(value), {
+          //   shouldDirty: true,
+          //   shouldValidate: true,
+          // });
+        }}
         register={form.register}
+        registerOptions={{
+          required: "Width is required",
+          validate: (value) =>
+            /^\d+(\.\d{1,2})?$/.test(String(value)) || "Max 2 decimal places",
+          setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
+        }}
+        error={form.formState.errors.width?.message}
         className={`h-[100%] ${inventoryDataLayout[8].className}`}
+      />
+
+      <ProductInputCell
+        name="repair_status"
+        register={form.register}
+        className={`h-[100%] ${inventoryDataLayout[9].className}`}
         inputType={"dropdown"}
         options={[]}
         onInput={(e) => {
@@ -325,21 +360,58 @@ const InventoryRowForm = ({
       />
 
       <ProductInputCell
-        name="date_complete"
+        name="sale_status"
+        register={form.register}
+        className={`h-[100%] ${inventoryDataLayout[10].className}`}
+        inputType={"dropdown"}
+        options={[]}
+        onInput={(e) => {
+          // form.setValue(
+          //   "product_status",
+          //   e.currentTarget.value as "In Progress" | "Complete",
+          //   {
+          //     shouldDirty: true,
+          //   }
+          // );
+        }}
+      />
+
+      <ProductInputCell
+        name="date_entered"
         register={form.register}
         className={`h-[100%] ${inventoryDataLayout[11].className}`}
         inputType={"date"}
-        selected={dateComplete ?? undefined}
-        onChange={(date: Date | null) =>
-          form.setValue("date_complete", date ?? undefined, {
-            shouldDirty: true,
-          })
-        }
-        onCancel={() => {
-          form.setValue("date_complete", undefined, {
-            shouldDirty: true,
-          });
-        }}
+        // selected={dateComplete ?? undefined}
+        selected={undefined}
+        // onChange={(date: Date | null) =>
+        //   form.setValue("date_complete", date ?? undefined, {
+        //     shouldDirty: true,
+        //   })
+        // }
+        // onCancel={() => {
+        //   form.setValue("date_complete", undefined, {
+        //     shouldDirty: true,
+        //   });
+        // }}
+      />
+
+      <ProductInputCell
+        name="date_complete"
+        register={form.register}
+        className={`h-[100%] ${inventoryDataLayout[12].className}`}
+        inputType={"date"}
+        // selected={dateComplete ?? undefined}
+        selected={undefined}
+        // onChange={(date: Date | null) =>
+        //   form.setValue("date_complete", date ?? undefined, {
+        //     shouldDirty: true,
+        //   })
+        // }
+        // onCancel={() => {
+        //   form.setValue("date_complete", undefined, {
+        //     shouldDirty: true,
+        //   });
+        // }}
       />
 
       <ProductInputCell
@@ -348,7 +420,7 @@ const InventoryRowForm = ({
         error={form.formState.errors.description?.message}
         inputType={"textarea"}
         rows={1}
-        className={`h-[100%] ${inventoryDataLayout[12].className}`}
+        className={`h-[100%] ${inventoryDataLayout[13].className}`}
         onType={(newValue: string) => {
           form.setValue("description", newValue, {
             shouldDirty: true,
@@ -362,7 +434,7 @@ const InventoryRowForm = ({
         error={form.formState.errors.note?.message}
         inputType={"textarea"}
         rows={1}
-        className={`h-[100%] ${inventoryDataLayout[13].className}`}
+        className={`h-[100%] ${inventoryDataLayout[14].className}`}
         onType={(newValue: string) => {
           form.setValue("note", newValue, {
             shouldDirty: true,

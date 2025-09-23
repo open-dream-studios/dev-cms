@@ -670,7 +670,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const isNew = overrideNewProduct ?? screen === "add-customer-product";
 
-      if (data.serial_number.length < 14) {
+      if (!data.serial_number || data.serial_number.length < 14) {
         toast.error("Serial # is not at least 14 characters");
         return null;
       }

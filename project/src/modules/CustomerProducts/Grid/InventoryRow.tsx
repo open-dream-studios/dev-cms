@@ -27,7 +27,7 @@ const InventoryRow = ({
     selectedProducts,
     setSelectedProducts,
     formRefs,
-    localData
+    localData,
   } = useAppContext();
   const { productsData } = useContextQueries();
 
@@ -73,6 +73,7 @@ const InventoryRow = ({
             ) && (
               <div
                 onClick={() => {
+                  if (!product.serial_number) return;
                   if (selectedProducts.includes(product.serial_number)) {
                     setSelectedProducts(
                       selectedProducts.filter(
@@ -90,17 +91,18 @@ const InventoryRow = ({
                   border: `1px solid ${
                     appTheme[currentUser.theme].background_3
                   }`,
-                  backgroundColor: selectedProducts.includes(
-                    product.serial_number
-                  )
-                    ? appTheme[currentUser.theme].app_color_1
-                    : "transparent",
+                  backgroundColor:
+                    product.serial_number &&
+                    selectedProducts.includes(product.serial_number)
+                      ? appTheme[currentUser.theme].app_color_1
+                      : "transparent",
                 }}
                 className="cursor-pointer dim w-[17px] h-[17px] rounded-[4px] flex items-center justify-center"
               >
-                {selectedProducts.includes(product.serial_number) && (
-                  <FaCheck color={"white"} size={11} />
-                )}
+                {product.serial_number &&
+                  selectedProducts.includes(product.serial_number) && (
+                    <FaCheck color={"white"} size={11} />
+                  )}
               </div>
             )}
           </>
