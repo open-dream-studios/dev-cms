@@ -9,11 +9,14 @@ import { formatPhone } from "@/util/functions/Customers";
 import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import CustomerSelection from "../Customers/CustomerSelection";
+import { Product } from "@/types/products";
 
 const CustomerTag = ({
+  product,
   productCustomer,
   oneSize,
 }: {
+  product: Product | null;
   productCustomer: Customer | null;
   oneSize: boolean;
 }) => {
@@ -25,6 +28,7 @@ const CustomerTag = ({
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   const handleAddCustomerClick = () => {
+    if (!product) return;
     setModal1({
       ...modal1,
       open: !modal1.open,
@@ -34,7 +38,7 @@ const CustomerTag = ({
       maxWidth: "md:max-w-[1000px]",
       aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
       borderRadius: "rounded-[15px] md:rounded-[20px]",
-      content: <CustomerSelection />,
+      content: <CustomerSelection product={product} />,
     });
   };
 
@@ -121,7 +125,10 @@ const CustomerTag = ({
             : "gap-[4%] px-[2.8%] py-[1.5%]"
         }
        w-[100%] cursor-pointer dim hover:brightness-90 items-center flex flex-row rounded-full`}
-        onClick={handleAddCustomerClick}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleAddCustomerClick();
+        }}
       >
         <div
           className={`${

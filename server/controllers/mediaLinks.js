@@ -25,34 +25,81 @@ export const getProjectMediaLinks = (req, res) => {
 };
 
 // ✅ Bulk add or update
-export const upsertMediaLinks = (req, res) => {
+// export const upsertMediaLinks = (req, res) => {
+//   const { project_idx, items } = req.body;
+//   if (!project_idx || !Array.isArray(items) || items.length === 0) {
+//     return res.status(400).json({ message: "Missing required fields" });
+//   }
+
+//   // map only the fields needed for the insert
+//   const inserts = items.map(i => [
+//     i.entity_type,
+//     i.entity_id,
+//     i.media_id,
+//     i.ordinal ?? 0
+//   ]);
+
+//   const q = `
+//     INSERT INTO media_link (entity_type, entity_id, media_id, ordinal)
+//     VALUES ?
+//     ON DUPLICATE KEY UPDATE
+//       ordinal = VALUES(ordinal),
+//       updated_at = NOW()
+//   `;
+
+//   db.query(q, [inserts], (err) => {
+//     if (err) {
+//       console.error("Upsert error:", err);
+//       return res.status(500).json({ message: "Server error" });
+//     }
+//     return res.json({ success: true });
+//   });
+// };
+export const upsertMediaLinks = async (req, res) => {
   const { project_idx, items } = req.body;
+
   if (!project_idx || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  // map only the fields needed for the insert
-  const inserts = items.map(i => [
-    i.entity_type,
-    i.entity_id,
-    i.media_id,
-    i.ordinal ?? 0
-  ]);
-
-  const q = `
-    INSERT INTO media_link (entity_type, entity_id, media_id, ordinal)
-    VALUES ?
-    ON DUPLICATE KEY UPDATE
-      ordinal = VALUES(ordinal),
-      updated_at = NOW()
-  `;
-
-  db.query(q, [inserts], (err) => {
-    if (err) {
-      console.error("Upsert error:", err);
-      return res.status(500).json({ message: "Server error" });
-    }
+  try {
+    await upsertMediaLinksService(items);
     return res.json({ success: true });
+  } catch (err) {
+    console.error("Upsert error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const upsertMediaLinksService = (
+  items
+) => {
+  return new Promise((resolve, reject) => {
+    if (!Array.isArray(items) || items.length === 0) {
+      return reject(new Error("No items provided"));
+    }
+
+    const inserts = items.map((i) => [
+      i.entity_type,
+      i.entity_id,
+      i.media_id,
+      i.ordinal ?? 0,
+    ]);
+
+    const q = `
+      INSERT INTO media_link (entity_type, entity_id, media_id, ordinal)
+      VALUES ?
+      ON DUPLICATE KEY UPDATE
+        ordinal = VALUES(ordinal),
+        updated_at = NOW()
+    `;
+
+    db.query(q, [inserts], (err) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
   });
 };
 

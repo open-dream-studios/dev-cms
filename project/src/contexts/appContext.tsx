@@ -39,6 +39,7 @@ import {
 import { useEmployeeForm } from "@/hooks/useEmployeeForm";
 import { Employee } from "@/types/employees";
 import { dateToString } from "@/util/functions/Time";
+import { Job, JobDefinition } from "@/types/jobs";
 
 export type ExposedEmployeeForm = UseFormReturn<EmployeeFormData>;
 
@@ -112,8 +113,11 @@ export type FileImage = {
   file: File;
 };
 
+export type jobType = "Service" | "Refurbishment" | "Resell";
+export type productFilter = "Active" | "Complete";
 export type DataFilters = {
-  listings: "All" | "Active" | "Sold";
+  products: productFilter[];
+  jobType: jobType[];
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -145,6 +149,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     mediaLinks,
     deleteMediaLinks,
     upsertEmployee,
+    jobDefinitions,
+    jobs,
   } = useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
@@ -270,27 +276,75 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const [dataFilters, setDataFilters] = useState<DataFilters>({
-    listings: "All",
+    products: [],
+    jobType: [],
   });
 
   const filteredProducts = (products: Product[]) => {
-    // if (products.length === 0) return [];
-    // if (dataFilters.listings === "All") {
-    //   return products;
-    // } else if (dataFilters.listings === "Sold") {
-    //   return products.filter(
-    //     (product) =>
-    //       product.sale_status === "Sold Awaiting Delivery" ||
-    //       product.sale_status === "Delivered"
-    //   );
-    // } else {
-    //   return products.filter(
-    //     (product) =>
-    //       product.sale_status === "Not Yet Posted" ||
-    //       product.sale_status === "Awaiting Sale"
-    //   );
-    // }
-    return products;
+    const filterProducts = (products: Product[]) => {
+      // if no filters, just return everything
+      if (dataFilters.products.length === 0) return products;
+
+      return products.filter((product: Product) => {
+        const productJobs = jobs.filter(
+          (job: Job) => job.product_id === product.id
+        );
+
+        // check each active filter
+        return dataFilters.products.some((filter) => {
+          if (filter === "Complete") {
+            return productJobs.some(
+              (job: Job) =>
+                job.status === "delivered" || job.status === "complete"
+            );
+          }
+          if (filter === "Active") {
+            return productJobs.some(
+              (job: Job) =>
+                job.status !== "delivered" &&
+                job.status !== "complete" &&
+                job.status !== "cancelled"
+            );
+          }
+          return false;
+        });
+      });
+    };
+
+    const filterJobType = (products: Product[]) => {
+      if (dataFilters.jobType.length === 0) return products
+      const resultSet = new Set<Product>();
+      const addProductsByType = (type: string) => {
+        const definition = jobDefinitions.find(
+          (def: JobDefinition) => def.type.toLowerCase() === type.toLowerCase()
+        );
+        if (!definition?.id) return;
+        const filtered = products.filter((product: Product) => {
+          const productJobs = jobs.filter(
+            (job: Job) => job.product_id === product.id
+          );
+          return productJobs.some(
+            (job: Job) => job.job_definition_id === definition.id
+          );
+        });
+        filtered.forEach((p) => resultSet.add(p));
+      };
+      if (dataFilters.jobType.includes("Service")) {
+        addProductsByType("Service");
+      }
+      if (dataFilters.jobType.includes("Refurbishment")) {
+        addProductsByType("Refurbishment");
+      }
+      if (dataFilters.jobType.includes("Resell")) {
+        addProductsByType("Resell");
+      }
+      return Array.from(resultSet);
+    };
+
+    if (products.length === 0) return [];
+    let filteredList = filterProducts(products);
+    filteredList = filterJobType(filteredList);
+    return filteredList;
   };
 
   const [editMode, setEditMode] = useState<boolean>(false);

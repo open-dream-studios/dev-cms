@@ -867,9 +867,17 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
                       <div className="flex flex-row">
                         {matchedCustomer ? (
-                          <CustomerTag productCustomer={matchedCustomer}  oneSize={true}/>
+                          <CustomerTag
+                            productCustomer={matchedCustomer}
+                            oneSize={true}
+                            product={matchedProduct ?? null}
+                          />
                         ) : (
-                          <CustomerTag productCustomer={null}  oneSize={true}/>
+                          <CustomerTag
+                            productCustomer={null}
+                            oneSize={true}
+                            product={matchedProduct ?? null}
+                          />
                         )}
 
                         {matchedCustomer && (
@@ -885,7 +893,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                                 aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
                                 borderRadius:
                                   "rounded-[15px] md:rounded-[20px]",
-                                content: <CustomerSelection />,
+                                content: (
+                                  <CustomerSelection
+                                    product={matchedProduct ?? null}
+                                  />
+                                ),
                               });
                             }}
                             className="h-[100%] px-[1px] flex items-center cursor-pointer hover:brightness-75 dim"

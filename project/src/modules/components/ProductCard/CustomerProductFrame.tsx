@@ -134,16 +134,13 @@ const CustomerProductFrame = ({
   const {
     tasks,
     upsertJob,
-    employees,
-    employeeAssignments,
-    deleteEmployeeAssignment,
+    productsData,
     customers,
     mediaLinks,
     jobs,
     jobDefinitions,
   } = useContextQueries();
-  const { setCurrentEmployeeData } = useProjectContext();
-  const { screenClick } = useAppContext();
+  const { screenClick, screen } = useAppContext();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
@@ -159,7 +156,7 @@ const CustomerProductFrame = ({
     return customers.find(
       (customer: Customer) => customer.id === product.customer_id
     );
-  }, [customers]);
+  }, [customers, productsData, product.customer_id]);
 
   const itemImage = useMemo(() => {
     const mediaLinksFound = mediaLinks.filter(
@@ -242,8 +239,8 @@ const CustomerProductFrame = ({
     setEditAssignment(false);
   };
 
-  if (!matchedDefinition || !productJob) return null;
   const onFormSubmitButton = async (data: JobFormData) => {
+    if (!matchedDefinition || !productJob) return null;
     const safeValuation = (() => {
       if (!data.valuation) return 0;
       const num = parseFloat(data.valuation);
@@ -275,14 +272,16 @@ const CustomerProductFrame = ({
   return (
     <div
       onClick={handleClick}
-      className="select-none min-h-[100%] group cursor-pointer rounded-[15px] overflow-hidden relative w-[100%] flex flex-col"
+      className={`select-none ${
+        screen !== "customers" && "min-h-[100%]"
+      } group cursor-pointer rounded-[15px] overflow-hidden relative w-[100%] flex flex-col`}
       style={getCardStyle(theme, t)}
     >
       <form
         onSubmit={jobForm.handleSubmit(onFormSubmitButton)}
         className="w-[100%] select-none pt-[20px] pb-[5px] px-[20px] min-[800px]:pt-[4.7%] min-[800px]:px-[4.7%] min-[800px]:pb-[2px] flex flex-col min-[670px]:flex-row gap-[15px]"
       >
-        <div className="h-[100%] w-[100%] min-[800px]:w-[calc(60px+10vw)] aspect-[1/1]">
+        <div className="h-[100%] min-[510px]:w-[100%] min-[800px]:w-[calc(60px+10vw)] aspect-[1/1]">
           <div className="w-[100%] h-[100%] rounded-[10px] overflow-hidden">
             {!itemImage ? (
               <img
@@ -326,69 +325,75 @@ const CustomerProductFrame = ({
             <div className="font-[600] text-[calc(12px+0.3vw)] leading-[calc(15px+0.3vw)]">
               {product.name}
             </div>
-            {productCustomer && (
-              <CustomerTag productCustomer={productCustomer} oneSize={false} />
-            )}
+
+            <CustomerTag
+              productCustomer={productCustomer ?? null}
+              oneSize={false}
+              product={product}
+            />
           </div>
           <div
             className={`mt-[8px] min-[800px]:mt-[4px] flex flex-col min-[750px]:flex-row min-[870px]:flex-col min-[990px]:flex-row ${
               leftBarOpen ? "min-[1024px]:flex-col min-[1220px]:flex-row" : ""
             } items-start justify-between w-full`}
           >
-            <div className="mt-[-2px] flex items-start gap-[4%] w-[100%]">
-              <div
-                className="hidden min-[870px]:flex min-[1024px]:hidden min-[1200px]:flex mt-[2px] p-[4px] rounded-[7px] shadow-sm"
-                style={{
-                  backgroundColor: t.background_3,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: 35,
-                  minHeight: 35,
-                }}
-              >
-                <FaWrench
-                  size={14}
-                  className="opacity-[0.65]"
-                  style={{ color: t.text_1 }}
-                />
-              </div>
-
-              <div className="flex flex-col max-[800px]:items-start gap-[calc(5px+0.3vw)] min-[800px]:gap-[calc(3px+0.2vw)] w-[100%] items-end">
-                <div className="flex flex-col gap-[calc(5px+0.3vw)] min-[800px]:gap-[calc(3px+0.2vw)] min-[800px]:flex-row min-[800px]:items-center justify-between  w-[100%] mt-[1px]">
-                  <div
+            {matchedDefinition && (
+              <div className="mt-[-2px] flex items-start gap-[4%] w-[100%]">
+                <div
+                  className="hidden min-[870px]:flex min-[1024px]:hidden min-[1200px]:flex mt-[2px] p-[4px] rounded-[7px] shadow-sm"
+                  style={{
+                    backgroundColor: t.background_3,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minWidth: 35,
+                    minHeight: 35,
+                  }}
+                >
+                  <FaWrench
+                    size={14}
+                    className="opacity-[0.65]"
                     style={{ color: t.text_1 }}
-                    className="text-[14.5px] leading-[16px] font-semibold"
-                  >
-                    {matchedDefinition.type}
-                  </div>
-
-                  <div className="max-[800px]:w-[100%] max-[800px]:flex max-[800px]:justify-start min-[800px]:flex min-[800px]:flex-1 min-[800px]:justify-end">
-                    <PriorityBadge
-                      form={jobForm}
-                      cancelTimer={cancelTimer}
-                      callSubmitForm={callSubmitForm}
-                      oneSize={false}
-                    />
-                  </div>
+                  />
                 </div>
 
-                <StatusBadge
-                  form={jobForm}
-                  matchedDefinition={matchedDefinition}
-                  cancelTimer={cancelTimer}
-                  callSubmitForm={callSubmitForm}
-                  oneSize={false}
-                />
+                <div className="flex flex-col max-[800px]:items-start gap-[calc(5px+0.3vw)] min-[800px]:gap-[calc(3px+0.2vw)] w-[100%] items-end">
+                  <div className="flex flex-col gap-[calc(5px+0.3vw)] min-[800px]:gap-[calc(3px+0.2vw)] min-[800px]:flex-row min-[800px]:items-center justify-between  w-[100%] mt-[1px]">
+                    <div
+                      style={{ color: t.text_1 }}
+                      className="text-[14.5px] leading-[16px] font-semibold"
+                    >
+                      {matchedDefinition.type}
+                    </div>
+
+                    <div className="max-[800px]:w-[100%] max-[800px]:flex max-[800px]:justify-start min-[800px]:flex min-[800px]:flex-1 min-[800px]:justify-end">
+                      <PriorityBadge
+                        form={jobForm}
+                        cancelTimer={cancelTimer}
+                        callSubmitForm={callSubmitForm}
+                        oneSize={false}
+                      />
+                    </div>
+                  </div>
+
+                  <StatusBadge
+                    form={jobForm}
+                    matchedDefinition={matchedDefinition}
+                    cancelTimer={cancelTimer}
+                    callSubmitForm={callSubmitForm}
+                    oneSize={false}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </form>
       <div className="flex-1 px-[13px] pb-[13px] min-[800px]:px-[4%] min-[800px]:pb-[4%] mt-[2%]">
-        <div
-          className={`${status === "cancelled" && "opacity-[0.5]"} w-[100%]`}
-        >
-          {/* <div className="w-[100%] h-auto mt-[8px] gap-[14px] flex flex-col">
+        {matchedDefinition && (
+          <div
+            className={`${status === "cancelled" && "opacity-[0.5]"} w-[100%]`}
+          >
+            {/* <div className="w-[100%] h-auto mt-[8px] gap-[14px] flex flex-col">
             <div className="flex flex-col gap-[12px]">
               <div
                 className="rounded-xl px-[15px] pt-[11px] pb-[10px] w-[100%]"
@@ -501,20 +506,21 @@ const CustomerProductFrame = ({
             </div>
           </div> */}
 
-          {jobTasks.length > 0 && (
-            <div className="flex flex-col gap-[6px] min-[800px:gap-[calc(3px+0.3vw)]">
-              {jobTasks.slice(0, 3).map((task_item: Task, index: number) => (
-                <MiniTaskCard
-                  key={index}
-                  index={index}
-                  task={task_item}
-                  matchedDefinition={matchedDefinition}
-                  productJob={productJob}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+            {jobTasks.length > 0 && (
+              <div className="flex flex-col gap-[6px] min-[800px:gap-[calc(3px+0.3vw)]">
+                {jobTasks.slice(0, 3).map((task_item: Task, index: number) => (
+                  <MiniTaskCard
+                    key={index}
+                    index={index}
+                    task={task_item}
+                    matchedDefinition={matchedDefinition}
+                    productJob={productJob}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

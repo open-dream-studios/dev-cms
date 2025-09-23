@@ -3,26 +3,44 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
 import { Customer } from "@/types/customers";
+import { Product } from "@/types/products";
 import { appTheme } from "@/util/appTheme";
 import { formatPhone } from "@/util/functions/Customers";
 import { useContext } from "react";
 import { IoTrashSharp } from "react-icons/io5";
 
-const CustomerSelection = () => {
+const CustomerSelection = ({ product }: { product: Product | null }) => {
   const { currentUser } = useContext(AuthContext);
-  const { customers } = useContextQueries();
-  const { productFormRef } = useAppContext();
+  const { customers, updateProducts, refetchProductsData } =
+    useContextQueries();
+  const { productFormRef, screen } = useAppContext();
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
-  const handleSelectCustomer = (customer: Customer) => {
+  const handleSelectCustomer = async (customer: Customer) => {
     if (productFormRef.current) {
       productFormRef.current.setValue("customer_id", customer.id, {
         shouldDirty: true,
         shouldValidate: true,
       });
       setModal1({ ...modal1, open: false });
+    }
+
+    if (screen === "customer-products") {
+      console.log("updating...");
+      await updateProducts([
+        {
+          ...product,
+          customer_id: customer.id,
+        } as Product,
+      ]);
+
+      setModal1({
+        ...modal1,
+        open: false,
+      });
+      await refetchProductsData();
     }
   };
 
@@ -36,7 +54,7 @@ const CustomerSelection = () => {
     }
   };
 
-  if (!currentUser) return null;
+  if (!currentUser || !product) return null;
 
   return (
     <div className="w-[100%] h-[100%] pl-[50px] lg:pl-[80px] pr-[25px] lg:pr-[55px] pt-[40px] flex flex-col gap-[12px]">

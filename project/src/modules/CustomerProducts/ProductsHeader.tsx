@@ -7,7 +7,11 @@ import { BsWindow } from "react-icons/bs";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import { toast } from "react-toastify";
-import { DataFilters, useAppContext } from "@/contexts/appContext";
+import {
+  DataFilters,
+  productFilter,
+  useAppContext,
+} from "@/contexts/appContext";
 import { IoTrashSharp } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { usePathname } from "next/navigation";
@@ -166,21 +170,15 @@ const ProductsHeader = ({ title }: { title: String }) => {
       allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
 
     const newProduct: Product = {
-      id: null,
       serial_number: newSerial,
       customer_id: null,
       name: "",
-      project_idx: currentProjectId,
       highlight: null,
-      price: 0,
       make: newMake,
       model: newModel,
       length: 0,
       width: 0,
       height: 0,
-      job_type: "service",
-      product_status: "waiting_work",
-      date_complete: undefined,
       description: "",
       note: "",
       ordinal: nextOrdinal,
@@ -189,25 +187,45 @@ const ProductsHeader = ({ title }: { title: String }) => {
   };
 
   const handleEditClick = () => {
-    if (dataFilters.listings === "All") {
-      setEditMode((prev) => !prev);
+    setDataFilters({ jobType: [], products: [] });
+    setEditMode((prev) => !prev);
+  };
+
+  const handleFilterClick = async (filter: productFilter) => {
+    let active = [...dataFilters.products];
+
+    if (active.includes(filter)) {
+      active = active.filter((f) => f !== filter);
     } else {
-      if (editMode) {
-        setEditMode((prev) => !prev);
-      } else {
-        setDataFilters({ ...dataFilters, listings: "All" });
-        setEditMode((prev) => !prev);
-      }
+      active.push(filter);
+    }
+    setDataFilters({ ...dataFilters, products: active });
+    setSelectedProducts([]);
+    if (screen === "customer-products") {
+      setEditMode(false);
+    }
+    if (screen === "customer-products-table") {
+      await saveProducts();
     }
   };
 
-  const handleFilterClick = async (filter: DataFilters["listings"]) => {
-    setDataFilters({ ...dataFilters, listings: filter });
+  const handleJobFilterClick = async (
+    filter: "Service" | "Refurbishment" | "Resell"
+  ) => {
+    let active = [...dataFilters.jobType];
+    if (active.includes(filter)) {
+      active = active.filter((f) => f !== filter);
+    } else {
+      active.push(filter);
+    }
+    setDataFilters({ ...dataFilters, jobType: active });
     setSelectedProducts([]);
-    if (pathname === "/" && (filter === "Active" || filter === "Sold")) {
+    if (screen === "customer-products") {
       setEditMode(false);
     }
-    await saveProducts();
+    if (screen === "customer-products-table") {
+      await saveProducts();
+    }
   };
 
   const handleViewClick = (view: string) => {
@@ -243,7 +261,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
                       ? appTheme[currentUser.theme].header_1_2
                       : "transparent",
                 }}
-                className="cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+                className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
               >
                 List
               </div>
@@ -255,7 +273,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
                       ? appTheme[currentUser.theme].header_1_2
                       : "transparent",
                 }}
-                className="cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+                className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
               >
                 Table
               </div>
@@ -265,57 +283,101 @@ const ProductsHeader = ({ title }: { title: String }) => {
               style={{
                 backgroundColor: appTheme[currentUser.theme].header_1_1,
               }}
-              className="flex w-[202px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
+              className="flex w-[180px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
             >
-              <div
-                onClick={() => handleFilterClick("All")}
-                style={{
-                  backgroundColor:
-                    dataFilters.listings === "All"
-                      ? appTheme[currentUser.theme].header_1_2
-                      : "transparent",
-                }}
-                className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-              >
-                All
-              </div>
-              <div
-                className="w-[1px] h-[22px] rounded-[4px]"
-                style={{
-                  opacity: dataFilters.listings === "Sold" ? "0.1" : 0,
-                  backgroundColor: appTheme[currentUser.theme].text_1,
-                }}
-              />
               <div
                 onClick={() => handleFilterClick("Active")}
                 style={{
-                  backgroundColor:
-                    dataFilters.listings === "Active"
-                      ? appTheme[currentUser.theme].header_1_2
-                      : "transparent",
+                  backgroundColor: dataFilters.products.includes("Active")
+                    ? appTheme[currentUser.theme].header_1_2
+                    : "transparent",
                 }}
-                className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+                className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
               >
                 Active
               </div>
               <div
-                className="w-[1px] h-[22px] rounded-[4px]"
+                className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
                 style={{
-                  opacity: dataFilters.listings === "All" ? "0.1" : 0,
+                  opacity: dataFilters.products.length === 0 ? "0.1" : 0,
                   backgroundColor: appTheme[currentUser.theme].text_1,
                 }}
               />
               <div
-                onClick={() => handleFilterClick("Sold")}
+                onClick={() => handleFilterClick("Complete")}
                 style={{
-                  backgroundColor:
-                    dataFilters.listings === "Sold"
-                      ? appTheme[currentUser.theme].header_1_2
-                      : "transparent",
+                  backgroundColor: dataFilters.products.includes("Complete")
+                    ? appTheme[currentUser.theme].header_1_2
+                    : "transparent",
                 }}
-                className="cursor-pointer w-[64px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+                className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
               >
-                Sold
+                Complete
+              </div>
+            </div>
+
+            <div
+              style={{
+                backgroundColor: appTheme[currentUser.theme].header_1_1,
+              }}
+              className="flex w-[322px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
+            >
+              <div
+                onClick={() => handleJobFilterClick("Service")}
+                style={{
+                  backgroundColor: dataFilters.jobType.includes("Service")
+                    ? appTheme[currentUser.theme].header_1_2
+                    : "transparent",
+                }}
+                className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              >
+                Service
+              </div>
+              <div
+                className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
+                style={{
+                  opacity:
+                    (dataFilters.jobType.length === 1 &&
+                      dataFilters.jobType[0] === "Resell") ||
+                    dataFilters.jobType.length === 0
+                      ? "0.1"
+                      : 0,
+                  backgroundColor: appTheme[currentUser.theme].text_1,
+                }}
+              />
+              <div
+                onClick={() => handleJobFilterClick("Refurbishment")}
+                style={{
+                  backgroundColor: dataFilters.jobType.includes("Refurbishment")
+                    ? appTheme[currentUser.theme].header_1_2
+                    : "transparent",
+                }}
+                className="select-none cursor-pointer w-[124px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              >
+                Refurbishment
+              </div>
+              <div
+                className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
+                style={{
+                  opacity:
+                    (dataFilters.jobType.length === 1 &&
+                      dataFilters.jobType[0] === "Service") ||
+                    dataFilters.jobType.length === 0
+                      ? "0.1"
+                      : 0,
+                  backgroundColor: appTheme[currentUser.theme].text_1,
+                }}
+              />
+              <div
+                onClick={() => handleJobFilterClick("Resell")}
+                style={{
+                  backgroundColor: dataFilters.jobType.includes("Resell")
+                    ? appTheme[currentUser.theme].header_1_2
+                    : "transparent",
+                }}
+                className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+              >
+                Resell
               </div>
             </div>
           </div>

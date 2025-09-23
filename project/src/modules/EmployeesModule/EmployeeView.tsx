@@ -411,9 +411,7 @@ const EmployeeCard: React.FC = () => {
                     className="flex-1 bg-transparent outline-none text-[14px] placeholder:opacity-60 w-[100%] truncate"
                     onChange={(e) => {
                       let value = e.target.value;
-                      value =
-                        value.charAt(0).toUpperCase() +
-                        value.slice(1).toLowerCase();
+                      value = value.charAt(0).toUpperCase() + value.slice(1);
                       employeeForm.setValue("position", value, {
                         shouldValidate: true,
                         shouldDirty: true,
@@ -447,9 +445,7 @@ const EmployeeCard: React.FC = () => {
                     className="flex-1 bg-transparent outline-none text-[14px] placeholder:opacity-60 w-[100%] truncate"
                     onChange={(e) => {
                       let value = e.target.value;
-                      value =
-                        value.charAt(0).toUpperCase() +
-                        value.slice(1).toLowerCase();
+                      value = value.charAt(0).toUpperCase() + value.slice(1);
                       employeeForm.setValue("department", value, {
                         shouldValidate: true,
                         shouldDirty: true,
@@ -484,9 +480,7 @@ const EmployeeCard: React.FC = () => {
                       className="flex-1 bg-transparent outline-none text-[14px] placeholder:opacity-60 w-[100%] truncate"
                       onChange={(e) => {
                         let value = e.target.value;
-                        value =
-                          value.charAt(0).toUpperCase() +
-                          value.slice(1).toLowerCase();
+                        value = value.charAt(0).toUpperCase() + value.slice(1);
                         employeeForm.setValue("address_line1", value, {
                           shouldValidate: true,
                           shouldDirty: true,
@@ -551,9 +545,7 @@ const EmployeeCard: React.FC = () => {
                     className="flex-1 bg-transparent outline-none text-[14px] placeholder:opacity-60 w-[100%] truncate"
                     onChange={(e) => {
                       let value = e.target.value;
-                      value =
-                        value.charAt(0).toUpperCase() +
-                        value.slice(1).toLowerCase();
+                      value = value.charAt(0).toUpperCase() + value.slice(1);
                       employeeForm.setValue("address_line2", value, {
                         shouldValidate: true,
                         shouldDirty: true,
@@ -585,9 +577,7 @@ const EmployeeCard: React.FC = () => {
                           /[^A-Za-z0-9-]/g,
                           ""
                         ); // allow only letters + numbers + dashes
-                        value =
-                          value.charAt(0).toUpperCase() +
-                          value.slice(1).toLowerCase();
+                        value = value.charAt(0).toUpperCase() + value.slice(1);
                         employeeForm.setValue("city", value, {
                           shouldValidate: true,
                           shouldDirty: true,
@@ -618,9 +608,7 @@ const EmployeeCard: React.FC = () => {
                           /[^A-Za-z0-9-]/g,
                           ""
                         ); // allow only letters + numbers + dashes
-                        value =
-                          value.charAt(0).toUpperCase() +
-                          value.slice(1).toLowerCase();
+                        value = value.charAt(0).toUpperCase() + value.slice(1);
                         employeeForm.setValue("state", value, {
                           shouldValidate: true,
                           shouldDirty: true,

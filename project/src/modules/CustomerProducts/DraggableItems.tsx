@@ -181,7 +181,7 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
         >
           <div
             ref={containerRef}
-            className="relative pt-[8px] grid grid-cols-2 min-[1570px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
+            className="relative pt-[8px] grid grid-cols-1 sm:grid-cols-2 min-[1570px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
           >
             {filteredProducts(localDataRef.current).map((product, index) => (
               <SortableItem

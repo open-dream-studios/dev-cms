@@ -4,7 +4,7 @@ import { IoPlayCircleOutline } from "react-icons/io5";
 
 const RenderedImage = ({ url }: { url: string }) => {
   return (
-    <div className="w-[100%] h-[100%]">
+    <div className="w-[100%] aspect-[1/1]">
       {/\.(mp4|mov)$/i.test(url) ? (
         <>
           <video
