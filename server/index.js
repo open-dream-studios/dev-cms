@@ -26,11 +26,10 @@ import twilio from "twilio";
 const { twiml } = twilio;
 import "./env.js";
 import { WebSocketServer } from "ws";
-import path from "path";
-import { Readable } from "stream";
-import { PassThrough } from "stream";
-import os from "os";
-import wav from "wav";
+import callRoutes from "./routes/calls.js"
+import { handleTwilioStream } from "./services/twilio/twilio.js";
+import { initCallState } from "./services/twilio/callState.js";
+
 dotenv.config();
 
 // const isProduction = process.env.NODE_ENV === "production";
@@ -99,233 +98,28 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
+app.get("/__debug/ws_clients", (req, res) => {
+  const wss = req.app.get("wss");
+  if (!wss) return res.status(500).json({ error: "no wss" });
 
-app.post("/api/voice", (req, res) => {
-  try {
-    const { VoiceResponse } = twilio.twiml;
-    const vr = new VoiceResponse();
-
-    vr.say(
-      { voice: "alice" },
-      "This call is being recorded to help us improve customer care."
-    );
-
-    const connect = vr.connect();
-    connect.stream({
-      url: "wss://8cdd0c4ec1b9.ngrok-free.app/voice-stream",
+  const list = [];
+  wss.clients.forEach((c) => {
+    list.push({
+      readyState: c.readyState,
+      projectId: c.projectId,
+      remoteAddress: c._socket?.remoteAddress,
     });
-
-    res.type("text/xml");
-    res.send(vr.toString());
-  } catch (err) {
-    console.error("Voice webhook error:", err.message);
-    res.status(500).send("Error generating TwiML");
-  }
-});
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Attach WS server to Express HTTP server
-const wss = new WebSocketServer({ server, path: "/voice-stream" });
-
-// Buffer for incoming audio per call
-const callBuffers = {};
-
-// μ-law decode lookup (standard G.711)
-function mulawDecode(muLawByte) {
-  muLawByte = ~muLawByte & 0xff;
-
-  const sign = muLawByte & 0x80 ? -1 : 1;
-  let exponent = (muLawByte >> 4) & 0x07;
-  let mantissa = muLawByte & 0x0f;
-  let sample = ((mantissa << 1) + 1) << (exponent + 2);
-
-  return sign * sample;
-}
-
-function decodeMuLawBuffer(muLawBuffer) {
-  const pcmBuffer = Buffer.alloc(muLawBuffer.length * 2);
-  for (let i = 0; i < muLawBuffer.length; i++) {
-    const decoded = mulawDecode(muLawBuffer[i]);
-    pcmBuffer.writeInt16LE(decoded, i * 2);
-  }
-  return pcmBuffer;
-}
-
-wss.on("connection", (ws) => {
-  console.log("🔗 Twilio connected to voice stream");
-
-  ws.on("message", async (msg) => {
-    const data = JSON.parse(msg.toString());
-
-    if (data.event === "start") {
-      console.log("📞 Call started:", data.start);
-      callBuffers[data.start.streamSid] = []; // <-- use streamSid here
-    } else if (data.event === "media") {
-      // const audioChunk = Buffer.from(data.media.payload, "base64");
-      // if (!callBuffers[data.streamSid]) {
-      //   callBuffers[data.streamSid] = [];
-      // }
-      // callBuffers[data.streamSid].push(audioChunk);
-      const audioChunk = Buffer.from(data.media.payload, "base64");
-      const pcmChunk = decodeMuLawBuffer(audioChunk); // decode μ-law → PCM16
-      callBuffers[data.streamSid].push(pcmChunk);
-
-      // if (callBuffers[data.streamSid].length > 200) {
-      //   const pcmData = Buffer.concat(callBuffers[data.streamSid]);
-      //   callBuffers[data.streamSid] = [];
-
-      //   // Write PCM → WAV, then transcribe
-      //   const filePath = path.join(process.cwd(), "recordings", `${data.streamSid}.wav`);
-      //   const writer = new wav.FileWriter(filePath, {
-      //     sampleRate: 8000,
-      //     channels: 1,
-      //   });
-      //   writer.write(pcmData);
-      //   writer.end();
-
-      //   try {
-      //     const response = await openai.audio.transcriptions.create({
-      //       file: fs.createReadStream(filePath),
-      //       model: "whisper-1",
-      //     });
-      //     console.log("📝 Transcript chunk:", response.text);
-      //   } catch (err) {
-      //     console.error("❌ Transcription error:", err.message);
-      //   }
-      // }
-
-      // if (callBuffers[data.streamSid].length > 200) {
-      //   const pcmData = Buffer.concat(callBuffers[data.streamSid]);
-      //   callBuffers[data.streamSid] = [];
-
-      //   // Wrap buffer in a readable stream
-      //   const audioStream = Readable.from(pcmData);
-
-      //   try {
-      //     const response = await openai.audio.transcriptions.create({
-      //       file: audioStream,
-      //       model: "whisper-1",
-      //     });
-      //     console.log("📝 Transcript chunk:", response.text);
-      //   } catch (err) {
-      //     console.error("❌ Transcription error:", err.message);
-      //   }
-      // }
-
-      // if (callBuffers[data.streamSid].length > 200) {
-      //   const pcmData = Buffer.concat(callBuffers[data.streamSid]);
-      //   callBuffers[data.streamSid] = [];
-
-      //   // Convert PCM to WAV in memory
-      //   // const wavStream = new PassThrough();
-      //   // const wavWriter = new wav.Writer({
-      //   //   sampleRate: 8000, // Twilio sends 8000Hz
-      //   //   channels: 1,
-      //   //   bitDepth: 16, // Whisper expects PCM16 inside WAV
-      //   // });
-
-      //   // wavWriter.pipe(wavStream);
-      //   // wavWriter.write(pcmData);
-      //   // wavWriter.end();
-
-      //   // try {
-      //   //   const response = await openai.audio.transcriptions.create({
-      //   //     file: wavStream, // <-- now a valid .wav stream
-      //   //     model: "whisper-1",
-      //   //   });
-      //   //   console.log("📝 Transcript chunk:", response.text);
-      //   // } catch (err) {
-      //   //   console.error(
-      //   //     "❌ Transcription error:",
-      //   //     err.response?.data || err.message
-      //   //   );
-      //   // }
-      //   const wavStream = new PassThrough();
-      //   const wavWriter = new wav.Writer({
-      //     sampleRate: 8000,
-      //     channels: 1,
-      //     bitDepth: 16,
-      //   });
-
-      //   wavWriter.pipe(wavStream);
-      //   wavWriter.write(pcmData);
-      //   wavWriter.end();
-
-      //   // Add fake filename to satisfy FormData
-      //   wavStream.path = "audio.wav";
-
-      //   try {
-      //     const response = await openai.audio.transcriptions.create({
-      //       file: wavStream,
-      //       model: "whisper-1",
-      //     });
-      //     console.log("📝 Transcript chunk:", response.text);
-      //   } catch (err) {
-      //     console.error(
-      //       "❌ Transcription error:",
-      //       err.response?.data || err.message
-      //     );
-      //   }
-      // }
-
-      if (callBuffers[data.streamSid].length > 200) {
-        const pcmData = Buffer.concat(callBuffers[data.streamSid]);
-        callBuffers[data.streamSid] = [];
-
-        // const tmpDir = os.tmpdir();
-        // fs.mkdirSync(tmpDir, { recursive: true });
-        // const filePath = path.join(
-        //   tmpDir,
-        //   `${data.streamSid}-${Date.now()}.wav`
-        // );
-
-        const recordingsDir = path.join(process.cwd(), "recordings");
-        fs.mkdirSync(recordingsDir, { recursive: true });
-        const filePath = path.join(
-          recordingsDir,
-          `${data.streamSid}-${Date.now()}.wav`
-        );
-
-        // const filePath = path.join(
-        //   os.tmpdir(),
-        //   `${data.streamSid}-${Date.now()}.wav`
-        // );
-
-        // Write PCM → WAV file
-        const writer = new wav.FileWriter(filePath, {
-          sampleRate: 8000,
-          channels: 1,
-          bitDepth: 16,
-        });
-        writer.write(pcmData);
-        writer.end();
-
-        writer.on("finish", async () => {
-          try {
-            const response = await openai.audio.transcriptions.create({
-              file: fs.createReadStream(filePath),
-              model: "whisper-1",
-            });
-            console.log("📝 Transcript chunk:", response.text);
-          } catch (err) {
-            console.error(
-              "❌ Transcription error:",
-              err.response?.data || err.message
-            );
-          } finally {
-            fs.unlink(filePath, () => {}); // cleanup temp file
-          }
-        });
-      }
-    } else if (data.event === "stop") {
-      console.log("📴 Call ended");
-      delete callBuffers[data.streamSid];
-    }
   });
-
-  ws.on("close", () => console.log("❌ Twilio WS disconnected"));
+  res.json({ clients: list });
 });
+app.use("/api/voice", callRoutes)
+const wss = new WebSocketServer({ server });
+// make it available to request handlers
+app.set("wss", wss);
+// initialize call state module with the server reference
+initCallState(wss);
+// start the handler that sets ws.projectId etc
+handleTwilioStream(wss);
 
 // Database
 db.getConnection((err, connection) => {

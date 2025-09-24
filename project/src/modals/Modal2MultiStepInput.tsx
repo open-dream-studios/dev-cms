@@ -3,9 +3,10 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { appTheme } from "../util/appTheme";
 import { AuthContext } from "../contexts/authContext";
 import { useModal2Store } from "../store/useModalStore";
+import { formatPhone } from "@/util/functions/Customers";
 
 export type StepConfig = {
-  name: string; 
+  name: string;
   placeholder: string;
   initialValue?: string;
   sanitize?: (value: string) => string;
@@ -83,11 +84,14 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
           type="text"
           ref={inputRef}
           value={currentInput}
-          onChange={(e) =>
-            setCurrentInput(
-              config.sanitize ? config.sanitize(e.target.value) : e.target.value
-            )
-          }
+          onChange={(e) => {
+            const sanitized = config.sanitize
+              ? config.sanitize(e.target.value)
+              : e.target.value;
+            const display =
+              config.name === "phone" ? formatPhone(sanitized) : sanitized;
+            setCurrentInput(display);
+          }}
           placeholder={config.placeholder}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

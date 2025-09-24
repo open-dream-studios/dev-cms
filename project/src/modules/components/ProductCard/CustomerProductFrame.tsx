@@ -267,6 +267,10 @@ const CustomerProductFrame = ({
     await upsertJob(submitValue);
   };
 
+  const productJobs = useMemo(() => {
+    return jobs.filter((job: Job) => job.product_id === product.id);
+  }, [jobs]);
+
   if (!currentUser) return null;
 
   return (
@@ -362,7 +366,7 @@ const CustomerProductFrame = ({
                       style={{ color: t.text_1 }}
                       className="text-[14.5px] leading-[16px] font-semibold"
                     >
-                      {matchedDefinition.type}
+                      {productJobs.length === 1 ? matchedDefinition.type : productJobs.length + " Jobs"}
                     </div>
 
                     <div className="max-[800px]:w-[100%] max-[800px]:flex max-[800px]:justify-start min-[800px]:flex min-[800px]:flex-1 min-[800px]:justify-end">

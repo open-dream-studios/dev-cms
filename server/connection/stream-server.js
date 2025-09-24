@@ -1,9 +1,9 @@
 // server/connection/stream-server.js
-import { WebSocketServer } from "ws";
-import OpenAI from "openai";
-import "../env.js"
+// import { WebSocketServer } from "ws";
+// import OpenAI from "openai";
+// import "../env.js"
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Create WS server
 // const wss = new WebSocketServer({ port: 8081 });
@@ -42,13 +42,13 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // });
 
 
-const wss = new WebSocketServer({ server });
+// const wss = new WebSocketServer({ server });
 
-wss.on("connection", (ws) => {
-  console.log("🔗 Twilio connected to voice stream");
+// wss.on("connection", (ws) => {
+//   console.log("🔗 Twilio connected to voice stream");
 
-  ws.on("message", (msg) => {
-    const data = JSON.parse(msg.toString());
-    console.log("Event:", data.event);
-  });
-});
+//   ws.on("message", (msg) => {
+//     const data = JSON.parse(msg.toString());
+//     console.log("Event:", data.event);
+//   });
+// });

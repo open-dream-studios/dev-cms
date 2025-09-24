@@ -38,6 +38,7 @@ import {
   ProjectContextProvider,
   useProjectContext,
 } from "@/contexts/projectContext";
+import CustomerCalls from "@/modules/CustomerCallsModule/CustomerCalls";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -92,7 +93,10 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   if (!currentUser && pathname !== "/") return null;
 
   return currentUser ? (
-    <ProtectedLayout>{children}</ProtectedLayout>
+    <ProtectedLayout>
+      {children}
+      <CustomerCalls />
+    </ProtectedLayout>
   ) : (
     <UnprotectedLayout />
   );
