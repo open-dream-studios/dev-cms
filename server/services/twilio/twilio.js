@@ -8,10 +8,13 @@ import {
   addClientToProject,
   removeClientFromProject,
 } from "./activeClients.js";
+import { broadcastToProject } from "../ws/broadcast.js";
 
 const openai = new OpenAI();
 
 const callBuffers = {}; // keeps per-stream PCM buffers
+
+export const answeredCalls = new Map();
 
 // ITU G.711 µ-law decoder → signed PCM16
 export function mulawDecode(muLawByte) {
@@ -53,6 +56,35 @@ export function handleTwilioStream(wss) {
     );
 
     ws.on("message", (msg) => {
+      const data = JSON.parse(msg);
+
+      if (data.type === "active_call") {
+        answeredCalls.set(data.callSid, data.answeredBy);
+        const projId = Number(data.projectId);
+
+        // Broadcast using this wss instance
+        broadcastToProject(wss, projId, {
+          type: "active_call",
+          projectId: projId,
+          identity: "twilio-system",
+          answeredBy: data.answeredBy,
+          callSid: data.callSid,
+        });
+      }
+
+      if (data.type === "call_ended") {
+        answeredCalls.delete(data.callSid);
+        const projId = Number(data.projectId);
+        console.log(
+          `📡 got call_ended from ${ws.twilioIdentity} for project ${projId}, callSid=${data.callSid}`
+        );
+        broadcastToProject(wss, projId, {
+          type: "call_ended",
+          projectId: projId,
+          callSid: data.callSid,
+        });
+      }
+
       try {
         const maybe = JSON.parse(msg.toString());
         if (maybe.type === "hello") {

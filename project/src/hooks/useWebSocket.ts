@@ -1,9 +1,14 @@
 // project/src/hooks/useWebSocket.ts
 import { useEffect, useRef, useState, useCallback } from "react";
 
+type MsgHandler = (ev: MessageEvent) => void;
+
 export function useWebSocket(url: string | null) {
   const socketRef = useRef<WebSocket | null>(null);
   const [ready, setReady] = useState(false);
+
+  // keep a Set of listeners so multiple callers can subscribe
+  const listenersRef = useRef(new Set<MsgHandler>());
 
   useEffect(() => {
     if (!url) return;
@@ -17,8 +22,20 @@ export function useWebSocket(url: string | null) {
       console.error("WS error", err);
     };
 
-    // keep default no-op for message so component registers it
-    ws.onmessage = () => {};
+    // central onmessage distributes to all registered listeners
+    ws.onmessage = (ev: MessageEvent) => {
+      try {
+        listenersRef.current.forEach((h) => {
+          try {
+            h(ev);
+          } catch (err) {
+            console.error("WS listener error", err);
+          }
+        });
+      } catch (err) {
+        console.error("WS onmessage dispatch failed", err);
+      }
+    };
 
     return () => {
       try {
@@ -26,12 +43,21 @@ export function useWebSocket(url: string | null) {
       } catch (e) {}
       socketRef.current = null;
       setReady(false);
+      listenersRef.current.clear();
     };
   }, [url]);
 
-  // safe setter for onmessage, keeps same WebSocket reference
-  const setOnMessage = useCallback((handler: (ev: MessageEvent) => void) => {
-    if (socketRef.current) socketRef.current.onmessage = handler;
+  // Add a listener (returns an unsubscribe function)
+  const addMessageListener = useCallback((handler: MsgHandler) => {
+    listenersRef.current.add(handler);
+    return () => {
+      listenersRef.current.delete(handler);
+    };
+  }, []);
+
+  // Remove explicitly
+  const removeMessageListener = useCallback((handler: MsgHandler) => {
+    listenersRef.current.delete(handler);
   }, []);
 
   const send = useCallback((data: any) => {
@@ -49,7 +75,8 @@ export function useWebSocket(url: string | null) {
   return {
     ws: socketRef.current,
     ready,
-    setOnMessage,
+    addMessageListener,
+    removeMessageListener,
     send,
   };
 }

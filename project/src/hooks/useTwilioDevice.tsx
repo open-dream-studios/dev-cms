@@ -1,90 +1,76 @@
-import { useEffect, useState } from "react";
+// project/src/hooks/useTwilioDevice.tsx
+import { useContext, useEffect, useState } from "react";
 import { Device } from "@twilio/voice-sdk";
 import { useProjectContext } from "@/contexts/projectContext";
 import { makeRequest } from "@/util/axios";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import { AuthContext } from "@/contexts/authContext";
 
 export function useTwilioDevice() {
   const [device, setDevice] = useState<Device | null>(null);
-  const [connection, setConnection] = useState<any>(null); // active call
-  const [incoming, setIncoming] = useState<any>(null); // ringing inbound
-  const [dialing, setDialing] = useState<any>(null); // ringing outbound
+  const [connection, setConnection] = useState<any>(null);
+  const [incoming, setIncoming] = useState<any>(null);
+  const [dialing, setDialing] = useState<any>(null);
   const [identity, setIdentity] = useState<string | null>(null);
   const { currentProjectId } = useProjectContext();
+  const { currentUser } = useContext(AuthContext);
+
+  const wsUrl = currentProjectId
+    ? `${process.env.NEXT_PUBLIC_WS_URL}?projectId=${currentProjectId}`
+    : null;
+
+  const { send } = useWebSocket(wsUrl);
 
   useEffect(() => {
     async function setup() {
       if (!currentProjectId) return;
+
       const res = await makeRequest.post(
-        `/api/voice/token?projectId=${currentProjectId}`,
-        {}
+        `/api/voice/token?projectId=${currentProjectId}`
       );
       const { token, identity: fetchedIdentity } = res.data;
+      if (!token) return;
+
       if (typeof window !== "undefined") {
         sessionStorage.setItem("twilioIdentity", fetchedIdentity);
       }
       setIdentity(fetchedIdentity);
 
-      if (!token) return;
       const twilioDevice = new Device(token, {
         codecPreferences: ["opus", "pcmu"] as any,
-        logLevel: "debug",
+        logLevel: "error",
       });
 
       twilioDevice.on("registered", () =>
         console.log("📟 Twilio Device registered")
       );
 
-      // 🔔 incoming call
-      // twilioDevice.on("incoming", (conn: any) => {
-      //   console.log("📞 Incoming call", conn.parameters);
-      //   setIncoming(conn);
-
-      //   conn.on("accept", () => {
-      //     console.log("✅ Incoming call accepted");
-      //     setConnection(conn);
-      //     setIncoming(null);
-      //   });
-
-      //   conn.on("disconnect", () => {
-      //     console.log("📴 Incoming call ended");
-      //     setConnection(null);
-      //   });
-
-      //   conn.on("cancel", () => {
-      //     console.log("❌ Incoming call canceled");
-      //     setIncoming(null);
-      //   });
-      // });
-
+      // incoming call
       twilioDevice.on("incoming", (conn: any) => {
         console.log("📞 Incoming call", conn.parameters);
         setIncoming(conn);
 
         conn.on("accept", () => {
-          console.log("✅ Incoming call accepted");
           setConnection(conn);
           setIncoming(null);
         });
 
         conn.on("disconnect", () => {
-          console.log("📴 Incoming call ended");
           setConnection(null);
-          setIncoming(null); // <-- add this
+          setIncoming(null);
         });
 
         conn.on("cancel", () => {
-          console.log("❌ Incoming call canceled");
           setIncoming(null);
-          setConnection(null); // <-- add this too just in case
+          setConnection(null);
         });
 
         conn.on("reject", () => {
-          console.log("🚫 Incoming call rejected by remote");
           setIncoming(null);
           setConnection(null);
         });
       });
-      
+
       twilioDevice.register();
       setDevice(twilioDevice);
     }
@@ -95,46 +81,79 @@ export function useTwilioDevice() {
     };
   }, [currentProjectId]);
 
-  // Outgoing
+  // outgoing
   const startCall = (to: string) => {
     if (!device) return;
-
-    // Create the connection
     const conn: any = device.connect({ params: { To: to } });
     setDialing(conn);
 
     conn.on("accept", () => {
-      console.log("📞 Call accepted by remote party");
       setConnection(conn);
       setDialing(null);
     });
 
     conn.on("disconnect", () => {
-      console.log("📴 Call disconnected");
       setConnection(null);
       setDialing(null);
+      setIncoming(null);
+      send({
+        type: "call_ended",
+        projectId: currentProjectId,
+        identity,
+        callSid: connection?.parameters?.CallSid,
+      });
     });
 
     conn.on("reject", () => {
-      console.log("❌ Call rejected");
       setConnection(null);
       setDialing(null);
     });
 
     conn.on("cancel", () => {
-      console.log("❌ Call canceled before pickup");
       setConnection(null);
       setDialing(null);
     });
   };
 
-  // Accept incoming
-  const acceptCall = () => {
+  const acceptCall = async () => {
     if (!incoming) return;
     incoming.accept();
+
+    const answeredBy = currentUser?.email || identity;
+    const callSid = incoming.parameters?.CallSid;
+    setConnection(incoming);
+    console.log("accepted", {
+      type: "active_call",
+      projectId: currentProjectId,
+      identity,
+      answeredBy,
+      callSid,
+    });
+    try {
+      send({
+        type: "active_call",
+        projectId: currentProjectId,
+        identity,
+        answeredBy,
+        callSid,
+      });
+    } catch (err) {
+      console.error("Failed to broadcast active_call", err);
+    }
+
+    // ✅ Also tell backend so Twilio status callback can align
+    try {
+      await makeRequest.post("/api/voice/answered", {
+        CallSid: incoming.parameters?.CallSid,
+        projectId: currentProjectId,
+        identity: answeredBy,
+        answeredBy,
+      });
+    } catch (err) {
+      console.error("❌ Failed to POST answered:", err);
+    }
   };
 
-  // Hangup
   const hangupCall = () => {
     if (connection) {
       connection.disconnect();
@@ -144,13 +163,23 @@ export function useTwilioDevice() {
       dialing.disconnect();
       setDialing(null);
     }
+
+    // Broadcast call ended
+    try {
+      send({
+        type: "call_ended",
+        projectId: currentProjectId,
+        identity,
+        callSid: connection?.parameters?.CallSid,
+      });
+    } catch (err) {
+      console.error("Failed to broadcast call_ended", err);
+    }
   };
 
-  // inside useTwilioDevice
   const rejectCall = () => {
     if (incoming) {
-      console.log("🚫 Rejecting incoming call");
-      incoming.reject(); // decline before answering
+      incoming.reject();
       setIncoming(null);
     }
   };

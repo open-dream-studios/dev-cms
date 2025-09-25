@@ -1,3 +1,4 @@
+// project/src/modules/CustomerCalls/CustomerCalls.tsx
 "use client";
 import { useModal2Store } from "@/store/useModalStore";
 import { useTwilioDevice } from "../../hooks/useTwilioDevice";
@@ -15,6 +16,7 @@ import { Customer } from "@/types/customers";
 import { normalizeUSNumber } from "@/util/functions/Calls";
 import { formatPhoneNumber } from "@/util/functions/Customers";
 import { useAppContext } from "@/contexts/appContext";
+import { makeRequest } from "@/util/axios";
 
 const CustomerCalls = () => {
   const { currentUser } = useContext(AuthContext);
@@ -28,6 +30,7 @@ const CustomerCalls = () => {
     identity,
     dialing,
     rejectCall,
+    startCall,
   } = useTwilioDevice();
   const { projectUsers, customers } = useContextQueries();
   const { currentProjectId, setCurrentCustomerData } = useProjectContext();
@@ -42,44 +45,96 @@ const CustomerCalls = () => {
   const wsUrl = currentProjectId
     ? `${process.env.NEXT_PUBLIC_WS_URL}?projectId=${currentProjectId}`
     : null;
-  const { ws, ready, setOnMessage, send } = useWebSocket(wsUrl);
+  const { ws, ready, addMessageListener, send } = useWebSocket(wsUrl);
 
-  // -------------------------
-  // 1️⃣ WS message handler
-  // -------------------------
+  const handleReject = async () => {
+    if (incoming) {
+      console.log("🚫 Rejecting incoming call");
+      incoming.reject(); // immediately reject locally
+      setIncoming(null);
+      setIncomingCall(null);
+    }
+
+    // notify peers
+    send({ type: "call_declined", projectId: currentProjectId, identity });
+
+    // notify server to reject Twilio leg
+    if (incoming?.parameters?.CallSid) {
+      try {
+        await makeRequest.post("/api/voice/decline", {
+          CallSid: incoming.parameters.CallSid,
+          projectId: currentProjectId,
+          identity,
+        });
+      } catch (err) {
+        console.error("❌ Failed to POST decline:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    console.log("📟 activeCall state changed:", activeCall);
+  }, [activeCall]);
+
   useEffect(() => {
     if (!wsUrl) return;
+    if (!addMessageListener) return;
 
-    setOnMessage((event: MessageEvent) => {
+    const handler = (event: MessageEvent) => {
+      console.log("📨 RAW WS event:", event.data);
       try {
         const msg = JSON.parse(event.data);
+        console.log("📨 Parsed WS:", msg, "Current Project:", currentProjectId);
 
-        if (
-          typeof msg.projectId === "undefined" ||
-          Number(msg.projectId) !== Number(currentProjectId)
-        )
-          return;
+        // Debug project ID comparison
+        console.log(
+          "Project ID check",
+          String(msg.projectId),
+          String(currentProjectId),
+          String(msg.projectId) === String(currentProjectId)
+        );
+
+        // if (String(msg.projectId) !== String(currentProjectId)) {
+        //   console.log("🚫 Ignoring event: wrong project ID");
+        //   return;
+        // }
 
         switch (msg.type) {
-          case "incoming_call":
-            setIncomingCall(msg);
-            break;
           case "active_call":
-            setActiveCall(msg);
-            setIncomingCall(null);
+            console.log("✅ Setting active call:", msg);
+            setActiveCall({
+              callSid: msg.callSid,
+              answeredBy: msg.answeredBy || "Unknown",
+            });
+            if (msg.identity !== identity) {
+              setIncomingCall(null);
+            }
             break;
+
           case "call_ended":
+            console.log("📴 Call ended, clearing activeCall");
+            setActiveCall((prev: any) =>
+              prev && prev.callSid === msg.callSid ? null : prev
+            );
             setIncomingCall(null);
-            setActiveCall(null);
             break;
+
           default:
-            console.debug("Unhandled WS message type:", msg.type);
+            console.log("⚠️ Unhandled message:", msg.type);
         }
       } catch (err) {
-        console.error("Failed to parse WS message:", err);
+        console.error("❌ Failed to parse WS:", err);
       }
-    });
-  }, [wsUrl, setOnMessage, currentProjectId]);
+    };
+
+    // register
+    const unsubscribe = addMessageListener(handler);
+
+    return () => {
+      // unregister on cleanup
+      unsubscribe();
+    };
+  }, [wsUrl, addMessageListener, currentProjectId, identity, incoming]);
 
   // -------------------------
   // 2️⃣ WS hello handshake
@@ -137,13 +192,16 @@ const CustomerCalls = () => {
           steps={steps}
           onComplete={(values) => {
             const e164 = `+1${values.phone}`;
-            const conn = device?.connect({ params: { To: e164 } });
-            console.log("Twilio connection started", conn);
+            startCall(e164);
           }}
         />
       ),
     });
   };
+
+  useEffect(() => {
+    console.log("🔎 Call state changed", { incoming, connection, activeCall });
+  }, [incoming, connection, activeCall]);
 
   const matchedCustomer = useMemo(() => {
     return incoming && incoming.parameters?.From
@@ -166,9 +224,9 @@ const CustomerCalls = () => {
   if (!currentProjectId || !userIsInProject) return null;
 
   return (
-    <div className="fixed bottom-6 right-[22px] z-[60] pointer-events-auto">
+    <div className="fixed bottom-6 right-[22px] z-[999] pointer-events-auto">
       {/* ——— 1) Dial FAB (idle) ——— */}
-      {!incomingCall && !activeCall && !incoming && !connection && !dialing && (
+      {/* {!incomingCall && !activeCall && !incoming && !connection && !dialing && (
         <button
           onClick={handlePhoneCall}
           aria-label="Start call"
@@ -180,16 +238,14 @@ const CustomerCalls = () => {
             "cursor-pointer hover:brightness-[86%] dim"
           }
         >
-          {/* faint animated halo */}
           <span className="absolute w-[120%] h-[120%] -z-10 rounded-full call-fab-halo" />
-          {/* glossy inner sheen */}
           <span className="absolute inset-0 rounded-full pointer-events-none call-fab-sheen" />
           <RiPhoneFill
             size={20}
             className="relative z-10 text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.45)]"
           />
         </button>
-      )}
+      )} */}
 
       {/* ——— 2) Incoming call ——— */}
       {incoming && (
@@ -260,7 +316,7 @@ const CustomerCalls = () => {
             </button>
 
             <button
-              onClick={rejectCall}
+              onClick={handleReject}
               className={
                 "flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-sm font-semibold " +
                 "call-action-decline backdrop-blur-[6px] shadow-decline " +
@@ -378,6 +434,33 @@ const CustomerCalls = () => {
             >
               End Call
             </button>
+          </div>
+        </div>
+      )}
+
+      {activeCall && !connection && !incoming && !dialing && (
+        <div
+          className={
+            "w-[320px] call-card-glass p-3 rounded-2xl " +
+            "transform transition-all duration-380 ease-out animate-callPop z-50"
+          }
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-base font-semibold text-white truncate">
+                Someone is on a call…
+              </p>
+              {activeCall.answeredBy && (
+                <p className="text-[13px] text-white/70">
+                  Answered by {activeCall.answeredBy}
+                </p>
+              )}
+            </div>
+            <span className="px-3 py-1 rounded-full bg-white/8 text-white/80 text-sm">
+              Active
+            </span>
           </div>
         </div>
       )}
