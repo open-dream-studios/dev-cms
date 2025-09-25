@@ -199,18 +199,24 @@ const CustomerCalls = () => {
     });
   };
 
-  useEffect(() => {
-    console.log("🔎 Call state changed", { incoming, connection, activeCall });
-  }, [incoming, connection, activeCall]);
+  const callUiState = useMemo(() => {
+    if (connection) return "active";
+    if (dialing) return "dialing";
+    if (incoming) return "incoming";
+    if (activeCall) return "remoteActive";
+    return "idle";
+  }, [connection, dialing, incoming, activeCall]);
 
   const matchedCustomer = useMemo(() => {
-    return incoming && incoming.parameters?.From
-      ? customers?.find(
-          (c: Customer) =>
-            c.phone === normalizeUSNumber(incoming.parameters.From)
-        )
+    const phone =
+      incoming?.parameters?.From ??
+      connection?.parameters?.From ??
+      connection?.parameters?.To;
+
+    return phone
+      ? customers?.find((c: Customer) => c.phone === normalizeUSNumber(phone))
       : null;
-  }, [customers, incoming]);
+  }, [customers, incoming, connection]);
 
   if (!currentUser) return null;
 
@@ -248,7 +254,7 @@ const CustomerCalls = () => {
       )} */}
 
       {/* ——— 2) Incoming call ——— */}
-      {incoming && (
+      {callUiState === "incoming" && (
         <div
           className={
             "w-[340px] max-w-[90vw] call-card-glass p-4 rounded-2xl " +
@@ -330,7 +336,7 @@ const CustomerCalls = () => {
       )}
 
       {/* ——— 3) Outgoing dialing ——— */}
-      {dialing && (
+      {callUiState === "dialing" && (
         <div
           className={
             "w-[320px] call-card-glass p-3 rounded-2xl " +
@@ -371,7 +377,7 @@ const CustomerCalls = () => {
       )}
 
       {/* ——— 4) Active call ——— */}
-      {connection && (
+      {callUiState === "active" && (
         <div
           className={
             "w-[340px] max-w-[90vw] call-card-glass p-4 rounded-2xl " +
@@ -438,7 +444,7 @@ const CustomerCalls = () => {
         </div>
       )}
 
-      {activeCall && !connection && !incoming && !dialing && (
+      {callUiState === "remoteActive" && (
         <div
           className={
             "w-[320px] call-card-glass p-3 rounded-2xl " +
