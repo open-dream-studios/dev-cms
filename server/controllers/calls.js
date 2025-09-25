@@ -3,6 +3,7 @@ import twilio from "twilio"; // leave for VoiceResponse usage
 import { setActiveCall } from "../services/twilio/callState.js";
 import { db } from "../connection/connect.js";
 import { getClientsForProject } from "../services/twilio/activeClients.js";
+import { normalizeUSNumber } from "../functions/calls.js";
 
 const {
   jwt: { AccessToken },
@@ -55,17 +56,6 @@ export const tokenHandler = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-function normalizeUSNumber(num) {
-  if (!num) return "";
-  // remove non-digits
-  const digits = num.replace(/\D/g, "");
-  // if starts with 1 and is 11 digits, drop it
-  if (digits.length === 11 && digits.startsWith("1")) {
-    return digits.slice(1);
-  }
-  return digits;
-}
 
 export const handleIncomingCall = (req, res) => {
   try {

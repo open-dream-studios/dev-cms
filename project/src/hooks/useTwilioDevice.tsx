@@ -35,6 +35,27 @@ export function useTwilioDevice() {
       );
 
       // 🔔 incoming call
+      // twilioDevice.on("incoming", (conn: any) => {
+      //   console.log("📞 Incoming call", conn.parameters);
+      //   setIncoming(conn);
+
+      //   conn.on("accept", () => {
+      //     console.log("✅ Incoming call accepted");
+      //     setConnection(conn);
+      //     setIncoming(null);
+      //   });
+
+      //   conn.on("disconnect", () => {
+      //     console.log("📴 Incoming call ended");
+      //     setConnection(null);
+      //   });
+
+      //   conn.on("cancel", () => {
+      //     console.log("❌ Incoming call canceled");
+      //     setIncoming(null);
+      //   });
+      // });
+
       twilioDevice.on("incoming", (conn: any) => {
         console.log("📞 Incoming call", conn.parameters);
         setIncoming(conn);
@@ -48,14 +69,22 @@ export function useTwilioDevice() {
         conn.on("disconnect", () => {
           console.log("📴 Incoming call ended");
           setConnection(null);
+          setIncoming(null); // <-- add this
         });
 
         conn.on("cancel", () => {
           console.log("❌ Incoming call canceled");
           setIncoming(null);
+          setConnection(null); // <-- add this too just in case
+        });
+
+        conn.on("reject", () => {
+          console.log("🚫 Incoming call rejected by remote");
+          setIncoming(null);
+          setConnection(null);
         });
       });
-
+      
       twilioDevice.register();
       setDevice(twilioDevice);
     }

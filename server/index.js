@@ -98,27 +98,10 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
-app.get("/__debug/ws_clients", (req, res) => {
-  const wss = req.app.get("wss");
-  if (!wss) return res.status(500).json({ error: "no wss" });
-
-  const list = [];
-  wss.clients.forEach((c) => {
-    list.push({
-      readyState: c.readyState,
-      projectId: c.projectId,
-      remoteAddress: c._socket?.remoteAddress,
-    });
-  });
-  res.json({ clients: list });
-});
 app.use("/api/voice", callRoutes)
 const wss = new WebSocketServer({ server });
-// make it available to request handlers
 app.set("wss", wss);
-// initialize call state module with the server reference
 initCallState(wss);
-// start the handler that sets ws.projectId etc
 handleTwilioStream(wss);
 
 // Database

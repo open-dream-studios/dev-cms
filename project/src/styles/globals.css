@@ -3,6 +3,16 @@
 @custom-variant dark (&:is(.dark *));
 /* @import "tw-animate-css"; */
 
+:root{
+  --glass-bg: rgba(10,14,20,0.42);
+  --glass-2: rgba(255,255,255,0.04);
+  --accent-green-start: rgba(72,212,135,0.95);
+  --accent-green-end: rgba(20,184,166,0.98);
+  --accent-red-start: rgba(255,91,91,0.95);
+  --accent-red-end: rgba(255,46,46,0.98);
+  --card-shadow: 0 12px 30px rgba(6,9,15,0.45), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,

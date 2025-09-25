@@ -7,9 +7,14 @@ import Modal2MultiStepModalInput, {
 } from "@/modals/Modal2MultiStepInput";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useProjectContext } from "@/contexts/projectContext";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import "./CustomerCalls.css";
+import { Customer } from "@/types/customers";
+import { normalizeUSNumber } from "@/util/functions/Calls";
+import { formatPhoneNumber } from "@/util/functions/Customers";
+import { useAppContext } from "@/contexts/appContext";
 
 const CustomerCalls = () => {
   const { currentUser } = useContext(AuthContext);
@@ -21,11 +26,12 @@ const CustomerCalls = () => {
     hangupCall,
     device,
     identity,
-    dialing, 
-    rejectCall
+    dialing,
+    rejectCall,
   } = useTwilioDevice();
-  const { projectUsers } = useContextQueries();
-  const { currentProjectId } = useProjectContext();
+  const { projectUsers, customers } = useContextQueries();
+  const { currentProjectId, setCurrentCustomerData } = useProjectContext();
+  const { screenClick } = useAppContext();
 
   const [incomingCall, setIncomingCall] = useState<any>(null);
   const [activeCall, setActiveCall] = useState<any>(null);
@@ -99,16 +105,6 @@ const CustomerCalls = () => {
   // -------------------------
   // Only render if user is in project
   // -------------------------
-  if (!currentUser) return null;
-
-  const userIsInProject =
-    Array.isArray(projectUsers) &&
-    projectUsers.some(
-      (u: any) =>
-        Number(u.project_idx) === Number(currentProjectId) &&
-        u.email === currentUser.email
-    );
-  if (!currentProjectId || !userIsInProject) return null;
 
   // -------------------------
   // Handle outgoing call
@@ -149,80 +145,238 @@ const CustomerCalls = () => {
     });
   };
 
+  const matchedCustomer = useMemo(() => {
+    return incoming && incoming.parameters?.From
+      ? customers?.find(
+          (c: Customer) =>
+            c.phone === normalizeUSNumber(incoming.parameters.From)
+        )
+      : null;
+  }, [customers, incoming]);
+
+  if (!currentUser) return null;
+
+  const userIsInProject =
+    Array.isArray(projectUsers) &&
+    projectUsers.some(
+      (u: any) =>
+        Number(u.project_idx) === Number(currentProjectId) &&
+        u.email === currentUser.email
+    );
+  if (!currentProjectId || !userIsInProject) return null;
+
   return (
-    <div className="fixed bottom-4 right-4 shadow-lg">
-      {/* Dial button (idle) */}
+    <div className="fixed bottom-6 right-[22px] z-[60] pointer-events-auto">
+      {/* ——— 1) Dial FAB (idle) ——— */}
       {!incomingCall && !activeCall && !incoming && !connection && !dialing && (
         <button
           onClick={handlePhoneCall}
-          className="fixed bottom-4 right-4 bg-white/60 backdrop-blur p-[13px] rounded-full hover:brightness-75 shadow-lg"
+          aria-label="Start call"
+          className={
+            "relative flex items-center justify-center w-13 h-13 rounded-full " +
+            "call-fab-shadow bg-gradient-to-br from-white/6 to-white/4 backdrop-blur-[12px] " +
+            "transition-transform duration-350 ease-out transform " +
+            "hover:scale-105 active:scale-95 " +
+            "cursor-pointer hover:brightness-[86%] dim"
+          }
         >
-          <RiPhoneFill size={20} />
+          {/* faint animated halo */}
+          <span className="absolute w-[120%] h-[120%] -z-10 rounded-full call-fab-halo" />
+          {/* glossy inner sheen */}
+          <span className="absolute inset-0 rounded-full pointer-events-none call-fab-sheen" />
+          <RiPhoneFill
+            size={20}
+            className="relative z-10 text-white drop-shadow-[0_6px_18px_rgba(15,23,42,0.45)]"
+          />
         </button>
       )}
 
-      {/* Incoming call */}
+      {/* ——— 2) Incoming call ——— */}
       {incoming && (
-        <div className="p-3 bg-white rounded-lg shadow w-72">
-          <p className="font-bold text-black">
-            Incoming call from {incoming.parameters?.From}
-          </p>
-          <p className="text-sm text-black">
-            Project: {incomingCall?.projectId ?? currentProjectId}
-          </p>
-          <div className="mt-3 flex gap-2">
+        <div
+          className={
+            "w-[340px] max-w-[90vw] call-card-glass p-4 rounded-2xl " +
+            "transform transition-all duration-380 ease-out animate-callPop z-50"
+          }
+          role="dialog"
+          aria-live="polite"
+        >
+          <div className="flex items-center gap-[8px]">
+            {/* avatar-ish ring */}
+            <div className="w-12 h-12 rounded-full flex items-center justify-center relative call-avatar">
+              <div className="absolute inset-0 rounded-full call-avatar-blur" />
+              <div className="rounded-full w-10 h-10 flex items-center justify-center bg-white/8 backdrop-blur-sm">
+                <RiPhoneFill
+                  size={16}
+                  className="text-white/92 transform rotate-0"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-[8px] mb-[7px] pl-[2px]">
+                <p className="truncate text-base font-semibold text-white leading-tight">
+                  {incoming.parameters?.From &&
+                  normalizeUSNumber(incoming.parameters.From)
+                    ? formatPhoneNumber(
+                        normalizeUSNumber(incoming.parameters.From)
+                      )
+                    : "Unknown Caller"}
+                </p>
+
+                <span className="text-xs px-[15px] py-[4px] rounded-full bg-white/6 text-white/80 font-medium">
+                  Incoming
+                </span>
+              </div>
+
+              {matchedCustomer && (
+                <div
+                  onClick={async () => {
+                    await screenClick("customers", "/");
+                    setCurrentCustomerData(matchedCustomer);
+                  }}
+                  className="cursor-pointer w-fit hover:brightness-75 dim text-[13px] px-[18px] py-[4px] rounded-full bg-white/6 text-white/80 font-medium"
+                >
+                  {`${matchedCustomer.first_name} ${matchedCustomer.last_name}`}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* actions */}
+          <div className="mt-4 flex gap-3">
             <button
               onClick={acceptCall}
-              className="flex-1 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className={
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-sm font-semibold " +
+                "call-action-accept backdrop-blur-[6px] shadow-accept " +
+                "cursor-pointer hover:brightness-[86%] dim"
+              }
             >
+              <span className="inline-block transform rotate-y-0 ml-[-3px] mr-[0.5px]">
+                <RiPhoneFill size={16} />
+              </span>
               Accept
             </button>
+
             <button
               onClick={rejectCall}
-              className="flex-1 px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              className={
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-sm font-semibold " +
+                "call-action-decline backdrop-blur-[6px] shadow-decline " +
+                "cursor-pointer hover:brightness-[86%] dim"
+              }
             >
-              Ignore
+              Decline
             </button>
           </div>
         </div>
       )}
 
-      {/* Outgoing dialing */}
+      {/* ——— 3) Outgoing dialing ——— */}
       {dialing && (
-        <div className="p-3 bg-white rounded-lg shadow w-72">
-          <p className="font-bold text-black">
-            Calling {dialing.parameters?.To}
-          </p>
-          <p className="text-sm text-gray-600">Ringing…</p>
-          <div className="mt-3">
-            <button
-              onClick={hangupCall}
-              className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Cancel
-            </button>
+        <div
+          className={
+            "w-[320px] call-card-glass p-3 rounded-2xl " +
+            "transform transition-all duration-380 ease-out animate-callPop z-50"
+          }
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-base font-semibold text-white truncate">
+                Calling {dialing.parameters?.To ?? "…"}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[13px] text-white/70">Ringing</span>
+                <span className="inline-flex items-center gap-[6px]">
+                  <span className="dot-pulse" aria-hidden />
+                  <span className="dot-pulse delay-1" aria-hidden />
+                  <span className="dot-pulse delay-2" aria-hidden />
+                </span>
+              </div>
+            </div>
+
+            <div className="w-24">
+              <button
+                onClick={hangupCall}
+                className={
+                  "w-full py-2 rounded-full text-sm font-semibold text-white " +
+                  "call-action-cancel shadow-cancel " +
+                  "cursor-pointer hover:brightness-[86%] dim"
+                }
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Active call */}
+      {/* ——— 4) Active call ——— */}
       {connection && (
-        <div className="p-3 bg-white rounded-lg shadow w-72">
-          <p className="font-bold text-black">
-            On call —{" "}
-            {connection.parameters?.From ??
-              connection.parameters?.To ??
-              "unknown"}
-          </p>
-          <p className="text-sm text-black-500">
-            Project: {activeCall?.projectId ?? currentProjectId}
-          </p>
-          <div className="mt-3">
+        <div
+          className={
+            "w-[340px] max-w-[90vw] call-card-glass p-4 rounded-2xl " +
+            "transform transition-all duration-380 ease-out animate-callPop z-50"
+          }
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-center gap-[8px]">
+            {/* avatar-ish ring */}
+            <div className="w-12 h-12 rounded-full flex items-center justify-center relative call-avatar">
+              <div className="absolute inset-0 rounded-full call-avatar-blur" />
+              <div className="rounded-full w-10 h-10 flex items-center justify-center bg-white/8 backdrop-blur-sm">
+                <RiPhoneFill size={16} className="text-white/92" />
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-[8px] mb-[7px] pl-[2px]">
+                <p className="truncate text-base font-semibold text-white leading-tight">
+                  {connection.parameters?.From
+                    ? formatPhoneNumber(
+                        normalizeUSNumber(connection.parameters?.From)
+                      )
+                    : connection.parameters?.To
+                    ? formatPhoneNumber(
+                        normalizeUSNumber(connection.parameters?.To)
+                      )
+                    : "Unknown Caller"}
+                </p>
+
+                <span className="text-xs px-[15px] py-[4px] rounded-full bg-white/6 text-white/80 font-medium">
+                  On Call
+                </span>
+              </div>
+
+              {matchedCustomer && (
+                <div
+                  onClick={async () => {
+                    await screenClick("customers", "/");
+                    setCurrentCustomerData(matchedCustomer);
+                  }}
+                  className="cursor-pointer w-fit hover:brightness-75 dim text-[13px] px-[18px] py-[4px] rounded-full bg-white/6 text-white/80 font-medium"
+                >
+                  {`${matchedCustomer.first_name} ${matchedCustomer.last_name}`}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* actions */}
+          <div className="mt-4 flex gap-3">
             <button
               onClick={hangupCall}
-              className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              className={
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-sm font-semibold " +
+                "call-action-decline backdrop-blur-[6px] shadow-decline " +
+                "cursor-pointer hover:brightness-[86%] dim"
+              }
             >
-              Hang up
+              End Call
             </button>
           </div>
         </div>
