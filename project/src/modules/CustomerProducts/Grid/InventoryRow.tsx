@@ -58,7 +58,7 @@ const InventoryRow = ({
       <div
         className={`${
           editMode && "hover:brightness-75 dim"
-        } w-[48px] h-[100%] items-center justify-center flex`}
+        } w-[48px] min-w-[48px] h-[100%] items-center justify-center flex`}
         style={{
           cursor: editMode ? "pointer" : "auto",
           borderRight: `1px solid ${appTheme[currentUser.theme].background_3}`,

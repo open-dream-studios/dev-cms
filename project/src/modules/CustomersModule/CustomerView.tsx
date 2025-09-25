@@ -415,12 +415,12 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
             <input
               {...customerForm.register("city")}
               placeholder="City"
-              className="outline-none border-none rounded p-2 col-span-9 lg:col-span-4 text-[15px] font-[500]"
+              className="outline-none border-none rounded p-2 col-span-4 lg:col-span-4 text-[15px] font-[500]"
             />
             <input
               {...customerForm.register("state")}
               placeholder="State"
-              className="outline-none border-none rounded p-2 col-span-9 lg:col-span-3 text-[15px] font-[500]"
+              className="outline-none border-none rounded p-2 col-span-5 lg:col-span-3 text-[15px] font-[500]"
             />
             <input
               {...customerForm.register("zip")}
