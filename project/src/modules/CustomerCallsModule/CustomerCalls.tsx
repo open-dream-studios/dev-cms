@@ -157,9 +157,10 @@ const CustomerCalls = () => {
     return () => ws.removeEventListener("open", sendHello);
   }, [ws, wsUrl, identity, currentProjectId]);
 
-  // -------------------------
-  // Only render if user is in project
-  // -------------------------
+  const handleHangup = () => {
+    hangupCall();
+    setActiveCall(null); 
+  };
 
   // -------------------------
   // Handle outgoing call
@@ -362,7 +363,7 @@ const CustomerCalls = () => {
 
             <div className="w-24">
               <button
-                onClick={hangupCall}
+                onClick={handleHangup}
                 className={
                   "w-full py-2 rounded-full text-sm font-semibold text-white " +
                   "call-action-cancel shadow-cancel " +
@@ -431,7 +432,7 @@ const CustomerCalls = () => {
           {/* actions */}
           <div className="mt-4 flex gap-3">
             <button
-              onClick={hangupCall}
+              onClick={handleHangup}
               className={
                 "flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-sm font-semibold " +
                 "call-action-decline backdrop-blur-[6px] shadow-decline " +
