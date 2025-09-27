@@ -390,7 +390,7 @@ const LeftBar = () => {
                 src={
                   currentProject && currentProject.logo !== null
                     ? currentProject.logo
-                    : "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
+                    : appDetails.default_logo
                 }
                 alt="logo"
                 className={`select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}

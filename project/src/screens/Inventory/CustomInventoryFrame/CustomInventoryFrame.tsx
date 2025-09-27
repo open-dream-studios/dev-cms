@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Product } from "@/types/products";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import appDetails from "../../../util/appDetails.json";
 
 const CustomInventoryFrame = ({
   item,
@@ -114,7 +115,7 @@ const CustomInventoryFrame = ({
             src={
               currentProject && currentProject.logo !== null
                 ? currentProject.logo
-                : "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
+                : appDetails.default_logo
             }
           />
         </div>

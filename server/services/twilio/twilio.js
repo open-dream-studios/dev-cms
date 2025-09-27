@@ -148,13 +148,6 @@ export function handleTwilioStream(wss) {
         });
 
         if (foundProjectId !== null) {
-          // broadcastToProject(wss, foundProjectId, {
-          //   type: "call_ended",
-          //   projectId: foundProjectId,
-          //   callSid:
-          //     callSid || projectCallMap.get(foundProjectId)?.parentSid || null,
-          //   identity: "twilio-system",
-          // });
           projectCallMap.delete(foundProjectId);
         }
 

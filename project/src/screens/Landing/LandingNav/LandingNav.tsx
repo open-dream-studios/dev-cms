@@ -74,7 +74,7 @@ const LandingNav = () => {
           /> */}
           <div className="flex flex-row gap-[5px] items-center">
             <img
-              src="https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
+              src={appDetails.default_logo}
               alt="logo"
               className="select-none ml-[3px] mt-[-1px] w-[35px] h-[35px] object-cover"
             />

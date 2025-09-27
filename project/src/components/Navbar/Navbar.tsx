@@ -107,7 +107,6 @@ const Navbar = () => {
       borderRadius: "rounded-[15px] md:rounded-[20px]",
       content: <AdminController />,
     });
-
   };
 
   const handleLogoClick = () => {
@@ -115,7 +114,9 @@ const Navbar = () => {
   };
 
   if (!currentUser) return null;
-
+  if (currentProject) {
+    console.log(currentProject.logo);
+  }
   return (
     <div
       style={
@@ -124,14 +125,16 @@ const Navbar = () => {
           "--left-bar-width": removeWhiteSpace(appDetails.left_bar_width),
           "--nav-ml": appDetails.left_bar_width,
           backgroundColor: appTheme[currentUser.theme].background_1,
-          borderBottom: `0.5px solid ${appTheme[currentUser.theme].background_2
-            }`,
+          borderBottom: `0.5px solid ${
+            appTheme[currentUser.theme].background_2
+          }`,
         } as React.CSSProperties
       }
-      className={`fixed z-[900] ${appDetails.left_bar_full
-        ? "w-[100vw] lg:w-[calc(100vw-(var(--left-bar-width))] lg:ml-[calc(var(--nav-ml))]"
-        : "w-[100vw]"
-        } h-[var(--nav-height)]`}
+      className={`fixed z-[900] ${
+        appDetails.left_bar_full
+          ? "w-[100vw] lg:w-[calc(100vw-(var(--left-bar-width))] lg:ml-[calc(var(--nav-ml))]"
+          : "w-[100vw]"
+      } h-[var(--nav-height)]`}
     >
       <div className="w-[100%] h-[100%] absolute flex justify-between items-center">
         <div className="flex flex-row items-center px-[18px]">
@@ -139,8 +142,9 @@ const Navbar = () => {
             onClick={() => {
               toggleLeftBar();
             }}
-            className={`w-[30px] dim cursor-pointer ${leftBarOpen && "lg:hidden"
-              } ${!currentProject && "hidden"} hover:brightness-75 mx-[3px]`}
+            className={`w-[30px] dim cursor-pointer ${
+              leftBarOpen && "lg:hidden"
+            } ${!currentProject && "hidden"} hover:brightness-75 mx-[3px]`}
             color={appTheme[currentUser.theme].text_1}
             fontSize={29}
           />
@@ -152,15 +156,16 @@ const Navbar = () => {
               src={
                 currentProject && currentProject.logo !== null
                   ? currentProject.logo
-                  : "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917022/logo2_euwj1f.png"
+                  : appDetails.default_logo
               }
               alt="logo"
-              className={`${!currentProject
-                ? ""
-                : !leftBarOpen
+              className={`${
+                !currentProject
+                  ? ""
+                  : !leftBarOpen
                   ? "hidden"
                   : "hidden lg:block"
-                }  select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
+              }  select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
             />
 
             <div
