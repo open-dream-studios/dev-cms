@@ -1,68 +1,75 @@
 // server/controllers/calls.js
 import twilio from "twilio";
+import { db } from "../connection/connect.js";
+import {
+  getClientsForProject,
+  projectClients,
+} from "../services/twilio/activeClients.js";
+import { normalizeUSNumber } from "../functions/calls.js";
+import { getProjectByNumber } from "../repositories/twilio/getProjectByNumber.js";
 import {
   setActiveCall,
   clearActiveCall,
+  getActiveCall,
 } from "../services/twilio/callState.js";
-import { db } from "../connection/connect.js";
-import { getClientsForProject } from "../services/twilio/activeClients.js";
-import { normalizeUSNumber } from "../functions/calls.js";
 import { broadcastToProject } from "../services/ws/broadcast.js";
-import { answeredCalls } from "../services/twilio/twilio.js";
+import { projectCallMap } from "../services/twilio/twilio.js";
+import { getTwilioKeys } from "../repositories/twilio/getTwilioKeys.js";
 
 const {
   jwt: { AccessToken },
 } = twilio;
 const { VoiceGrant } = AccessToken;
 
+/**
+ * /token
+ * returns Twilio AccessToken for a project (web client to place/receive calls)
+ */
 export const tokenHandler = async (req, res) => {
   try {
     const projectId = Number(req.query.projectId);
-    if (Number.isNaN(projectId))
+    if (Number.isNaN(projectId)) {
       return res.status(400).json({ error: "Invalid projectId" });
+    }
 
-    // fetch Twilio credentials for this project
-    db.query(
-      "SELECT account_sid, api_key, api_secret, twiml_app_sid, numbers FROM twilio_apps WHERE project_idx = ? LIMIT 1",
-      [projectId],
-      (err, rows) => {
-        if (err) {
-          console.error("❌ DB error fetching Twilio credentials:", err);
-          return res.status(500).json({ error: "Database error" });
-        }
-        if (!rows.length)
-          return res.json({ token: null, identity: null, numbers: [] });
+    const project = await getTwilioKeys(projectId);
+    if (!project) {
+      return res.json({ token: null, identity: null, numbers: [] });
+    }
 
-        const { account_sid, api_key, api_secret, twiml_app_sid, numbers } =
-          rows[0];
+    const { account_sid, api_key, api_secret, twiml_app_sid, numbers } =
+      project;
 
-        const identity = `user-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 8)}`;
+    const identity = `user-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
 
-        const token = new AccessToken(account_sid, api_key, api_secret, {
-          identity,
-        });
-        const voiceGrant = new VoiceGrant({
-          outgoingApplicationSid: twiml_app_sid,
-          incomingAllow: true,
-        });
-        token.addGrant(voiceGrant);
+    const token = new AccessToken(account_sid, api_key, api_secret, {
+      identity,
+    });
+    const voiceGrant = new VoiceGrant({
+      outgoingApplicationSid: twiml_app_sid,
+      incomingAllow: true,
+    });
+    token.addGrant(voiceGrant);
 
-        res.json({
-          token: token.toJwt(),
-          identity,
-          numbers: JSON.parse(numbers || "[]"), // <-- works now
-        });
-      }
-    );
+    res.json({
+      token: token.toJwt(),
+      identity,
+      numbers,
+    });
   } catch (err) {
     console.error("❌ Failed to generate Twilio token:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-export const handleIncomingCall = (req, res) => {
+/**
+ * / (incoming call webhook)
+ * Twilio hits this when a call arrives to one of our Twilio numbers.
+ * We build TwiML: message, start Media Stream, then dial clients + numbers
+ */
+export const handleIncomingCall = async (req, res) => {
   try {
     const { VoiceResponse } = twilio.twiml;
     const vr = new VoiceResponse();
@@ -71,318 +78,302 @@ export const handleIncomingCall = (req, res) => {
     const to = normalizeUSNumber(req.body?.To || req.query?.To || null);
     const callSid = req.body?.CallSid;
 
-    console.log("🔔 Incoming call webhook", { from, to, callSid });
-
-    const q = "SELECT project_idx, numbers FROM twilio_apps";
-
-    db.query(q, [], (err, rows) => {
-      if (err) {
-        console.error("❌ DB lookup error:", err);
-        vr.say("Sorry, we are not available at the moment.");
-        return res.type("text/xml").send(vr.toString());
-      }
-
-      const app = rows.find((row) => {
-        let numbersArray = [];
-        if (Array.isArray(row.numbers)) {
-          numbersArray = row.numbers;
-        } else if (typeof row.numbers === "string") {
-          try {
-            const parsed = JSON.parse(row.numbers);
-            if (Array.isArray(parsed)) numbersArray = parsed;
-          } catch (e) {
-            console.warn(
-              "Failed to parse numbers for project",
-              row.project_idx,
-              e
-            );
-          }
-        }
-        return numbersArray.map(String).includes(to);
-      });
-
-      if (!app) {
-        console.error("❌ Project not found for number", to);
-        vr.say("Sorry, we are not available at the moment.");
-        return res.type("text/xml").send(vr.toString());
-      }
-
-      const projectId = app.project_idx;
-      console.log("📞 Incoming call matched project:", projectId);
-
-      // ✅ Caller hears this BEFORE ringing starts
-      vr.say(
-        { voice: "alice" },
-        "This call is being recorded to help improve customer care."
-      );
-
-      const dial = vr.dial({
-        timeout: 30,
-        answerOnBridge: true,
-        record: "record-from-answer",
-        // action: `${process.env.BASE_URL}/api/voice/call-ended`, // cleanup
-        method: "POST",
-        // statusCallback: `${process.env.BASE_URL}/api/voice/call-status`,
-        statusCallback: `${process.env.BASE_URL}/api/voice/call-status?projectId=${projectId}`,
-        statusCallbackMethod: "POST",
-        statusCallbackEvent: ["answered", "completed"],
-      });
-
-      // Numbers
-      ["+15555555555", "+15555555556"].forEach((n) => dial.number(n));
-
-      // Clients
-      const clientIdentities = getClientsForProject(projectId);
-      if (clientIdentities.length) {
-        clientIdentities.forEach((identity) => dial.client(identity));
-        console.log(
-          `📞 Dialing clients for project ${projectId}:`,
-          clientIdentities
-        );
-      } else {
-        console.log(`⚠️ No connected clients to dial for project ${projectId}`);
-      }
-
-      res.type("text/xml").send(vr.toString());
+    const projectId = await getProjectByNumber(to);
+    console.log("📞 Incoming Call Webhook", {
+      project: projectId,
+      from,
+      to,
+      callSid,
     });
+
+    if (!projectId) {
+      vr.say("Sorry, this number is currently unavailable.");
+      res.type("text/xml").send(vr.toString());
+      return;
+    }
+
+    // Inform caller about recording (optional)
+    vr.say(
+      { voice: "alice" },
+      "This call is being recorded to help improve customer care."
+    );
+
+    // Start Twilio Media Stream to our wss endpoint (keeps recording / future audio processing)
+    const stream = vr.start().stream({
+      url: `wss://${process.env.BASE_URL}/twilio-stream`,
+    });
+    stream.parameter({ name: "projectId", value: String(projectId) });
+    stream.parameter({ name: "from", value: from || "" });
+    stream.parameter({ name: "to", value: to || "" });
+
+    // Build Dial — we want to ring both web clients and configured project phone numbers.
+    // Dial options: answerOnBridge ensures call is bridged only after second leg answers.
+    const twilioActionUrl = `${process.env.HTTPS_BASE_URL}/api/voice/call-status?projectId=${projectId}`;
+    const dial = vr.dial({
+      timeout: 30,
+      answerOnBridge: true,
+      record: "record-from-answer",
+      action: twilioActionUrl, // parent leg action (when parent ends)
+    });
+
+    // 1) Dial web clients (Twilio client identities)
+    const clientIdentities = getClientsForProject(projectId);
+    if (clientIdentities && clientIdentities.length > 0) {
+      clientIdentities.forEach((identity) => {
+        dial.client(
+          {
+            statusCallback: twilioActionUrl,
+            statusCallbackEvent: [
+              "initiated",
+              "ringing",
+              "answered",
+              "completed",
+            ],
+            statusCallbackMethod: "POST",
+          },
+          identity
+        );
+      });
+      console.log("📞 Dialing web clients:", clientIdentities);
+    } else {
+      console.log(`⚠️ No connected web clients for project ${projectId}`);
+    }
+
+    // 2) Dial project phone numbers (if any are configured in DB)
+    const project = await getTwilioKeys(Number(projectId));
+    if (project && project.numbers && project.numbers.length > 0) {
+      const { connectedNumbers } = project;
+      console.log(connectedNumbers);
+      if (Array.isArray(connectedNumbers) && connectedNumbers.length > 0) {
+        connectedNumbers.forEach((num) => {
+          console.log("📞 Dialing project number:", num);
+          // dial.number(
+          //   {
+          //     statusCallback: twilioActionUrl,
+          //     statusCallbackEvent: [
+          //       "initiated",
+          //       "ringing",
+          //       "answered",
+          //       "completed",
+          //     ],
+          //     statusCallbackMethod: "POST",
+          //   },
+          //   num
+          // );
+        });
+      }
+    }
+
+    res.type("text/xml").send(vr.toString());
   } catch (err) {
     console.error("Voice webhook error:", err);
     res.status(500).send("Error generating TwiML");
   }
 };
 
-export const callStatusHandler = async (req, res) => {
-  const { CallStatus, CallSid, ParentCallSid } = req.body;
-  const projectId = req.query.projectId;
-
-  // Always choose one SID consistently:
-  const sidToUse = ParentCallSid || CallSid;
-
-  console.log("📞 [Twilio] Status Webhook");
-  console.log(" ├─ CallStatus:", CallStatus);
-  console.log(" ├─ CallSid:", CallSid);
-  console.log(" ├─ ParentCallSid:", ParentCallSid);
-  console.log(" ├─ Using SID:", sidToUse);
-  console.log(" └─ projectId:", projectId);
-
-  const wss = req.app?.get("wss");
-
-  // active call
-  if (["in-progress", "answered"].includes(CallStatus)) {
-    const answeringIdentity = answeredCalls.get(sidToUse) || "Unknown";
-    console.log("✅ Active call branch");
-    console.log(" ├─ answeringIdentity:", answeringIdentity);
-    if (wss) {
-      console.log(" └─ Broadcasting active_call…");
-      broadcastToProject(wss, projectId, {
-        type: "active_call",
-        projectId,
-        identity: "twilio-system",
-        answeredBy: answeringIdentity,
-        callSid: sidToUse,
-      });
-    } else {
-      console.log(
-        " ⚠️ No wss instance found when trying to broadcast active_call"
-      );
-    }
-  }
-
-  // call ended
-  if (
-    ["completed", "canceled", "busy", "failed", "no-answer"].includes(
-      CallStatus
-    )
-  ) {
-    console.log("🛑 Call ended branch");
-    console.log(" ├─ Clearing active call for SID:", sidToUse);
-    clearActiveCall(sidToUse);
-    if (wss) {
-      console.log(" └─ Broadcasting call_ended…");
-      broadcastToProject(wss, projectId, {
-        type: "call_ended",
-        projectId,
-        identity: "twilio-system",
-        callSid: sidToUse,
-      });
-    } else {
-      console.log(
-        " ⚠️ No wss instance found when trying to broadcast call_ended"
-      );
-    }
-  }
-
-  res.sendStatus(200);
-};
-
 export const declineCallHandler = async (req, res) => {
-  const { CallSid: providedSid, projectId, identity } = req.body;
-  if (!providedSid || !projectId) {
-    return res.status(400).json({ error: "CallSid and projectId required" });
-  }
-
   try {
-    const q = `
-      SELECT account_sid, api_key, api_secret
-      FROM twilio_apps
-      WHERE project_idx = ? LIMIT 1
-    `;
-    db.query(q, [projectId], async (err, rows) => {
-      if (err) {
-        console.error("❌ DB error fetching Twilio credentials:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
-      if (!rows.length) {
-        return res
-          .status(404)
-          .json({ error: "No Twilio app for this project" });
-      }
+    const { projectId } = req.body;
+    if (!projectId) {
+      return res.status(400).json({ error: "Missing projectId" });
+    }
 
-      const { account_sid, api_key, api_secret } = rows[0];
+    // Get active call for this project
+    const callInfo = projectCallMap.get(Number(projectId));
+    if (!callInfo || !callInfo.parentSid) {
+      return res.status(404).json({ error: "No active parent call found" });
+    }
 
-      // Twilio client with API Key + Secret (accountSid provided)
-      const client = twilio(api_key, api_secret, { accountSid: account_sid });
+    const parentSid = callInfo.parentSid;
 
-      try {
-        // 1) Fetch the call resource for the provided SID to detect parent/child relationships
-        const callResource = await client.calls(providedSid).fetch();
-        console.log("Fetched call resource:", {
-          sid: callResource.sid,
-          parentCallSid: callResource.parentCallSid,
-          status: callResource.status,
-        });
+    // Get Twilio creds for this project
+    const project = await getTwilioKeys(Number(projectId));
+    if (!project || !project.account_sid || !project.auth_token) {
+      return res
+        .status(404)
+        .json({ error: "No valid Twilio credentials found for project" });
+    }
 
-        // Determine parentCallSid. If providedSid is already the parent, parentSid === providedSid
-        const parentSid = callResource.parentCallSid || callResource.sid;
+    const { account_sid, auth_token } = project;
+    const client = twilio(account_sid, auth_token);
 
-        // 2) If there are child legs (calls whose parentCallSid === parentSid), complete them
-        const children = await client.calls.list({
-          parentCallSid: parentSid,
-          limit: 50,
-        });
-        if (children && children.length) {
-          console.log(
-            `Found ${children.length} child calls for parent ${parentSid}. Completing them...`
-          );
-          await Promise.all(
-            children.map(async (child) => {
-              try {
-                // Only update if not already completed
-                if (
-                  child.status !== "completed" &&
-                  child.status !== "canceled"
-                ) {
-                  await client.calls(child.sid).update({ status: "completed" });
-                  console.log(`✅ Completed child call ${child.sid}`);
-                } else {
-                  console.log(`ℹ️ Child ${child.sid} already ${child.status}`);
-                }
-              } catch (childErr) {
-                console.error(
-                  `❌ Failed to complete child ${child.sid}:`,
-                  childErr
-                );
-              }
-            })
-          );
-        } else {
-          console.log(`No child calls found for parent ${parentSid}`);
-        }
+    // Kill parent leg → Twilio automatically ends all children
+    await client.calls(parentSid).update({ status: "completed" });
 
-        // 3) Complete the parent call itself (if not already finished)
-        try {
-          if (
-            parentSid &&
-            parentSid !== providedSid &&
-            callResource.parentCallSid
-          ) {
-            // If we were given a child, fetch parent status
-            const parent = await client.calls(parentSid).fetch();
-            if (parent.status !== "completed" && parent.status !== "canceled") {
-              await client.calls(parentSid).update({ status: "completed" });
-              console.log(`✅ Completed parent call ${parentSid}`);
-            } else {
-              console.log(`ℹ️ Parent ${parentSid} already ${parent.status}`);
-            }
-          } else {
-            // Provided SID is likely the parent or there was no parentCallSid
-            if (
-              callResource.status !== "completed" &&
-              callResource.status !== "canceled"
-            ) {
-              await client
-                .calls(callResource.sid)
-                .update({ status: "completed" });
-              console.log(`✅ Completed call ${callResource.sid}`);
-            } else {
-              console.log(
-                `ℹ️ Call ${callResource.sid} already ${callResource.status}`
-              );
-            }
-          }
-        } catch (parentErr) {
-          console.error("❌ Failed to complete parent call:", parentErr);
-        }
-
-        // 4) Broadcast to project clients using the server wss stored on the express app
-        // Be sure index.js sets: app.set('wss', wss);
-        const wss = req.app && req.app.get ? req.app.get("wss") : null;
-        if (wss) {
-          broadcastToProject(wss, projectId, {
-            type: "call_declined",
-            projectId,
-            identity,
-            callSid: parentSid,
-          });
-          console.log("📡 Broadcasted call_declined to project", projectId);
-        } else {
-          console.warn(
-            "⚠️ No wss found on req.app — cannot broadcast call_declined"
-          );
-        }
-
-        // Ensure server-side active call state cleared
-        clearActiveCall(parentSid);
-
-        return res.json({ success: true });
-      } catch (apiErr) {
-        console.error("❌ Twilio API error in decline handler:", apiErr);
-        return res
-          .status(500)
-          .json({ error: "Twilio API error", detail: apiErr.message });
-      }
-    });
+    console.log(`✅ Call ${parentSid} declined for project ${projectId}`);
+    res.json({ success: true });
   } catch (err) {
     console.error("❌ declineCallHandler failed:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-export const answeredHandler = (req, res) => {
-  const { CallSid, projectId, answeredBy } = req.body;
-  if (!CallSid || !projectId) {
-    return res.status(400).json({ error: "CallSid and projectId required" });
+/**
+ * /call-status
+ * Primary status webhook handler: Twilio POSTs call progress events here.
+ *
+ * This handler is now the authoritative state updater:
+ * - figures out projectId (by phone number, or via client identity lookups)
+ * - handles initiated/ringing/answered/completed events
+ * - sets/clears active calls via callState helpers and broadcasts to ws clients
+ */
+export const callStatusHandler = async (req, res) => {
+  try {
+    // console.log("--- STATUS ---");
+    // console.log(
+    //   "📩 Raw Twilio status payload:",
+    //   JSON.stringify(req.body, null, 2)
+    // );
+
+    const payload = req.body || {};
+    const CallStatus = payload.CallStatus?.toLowerCase?.() || "";
+    const CallSid = payload.CallSid || null;
+    const ParentCallSid = payload.ParentCallSid || null;
+    const Called = payload.Called || payload.To || null; // "client:..." or phone
+    const From = payload.From || null;
+    const RecordingUrl = payload.RecordingUrl || null;
+    const RecordingSid = payload.RecordingSid || null;
+
+    // 1) Determine projectId
+    let projectId = null;
+
+    // If `To` or `Called` is a phone number we can map via getProjectByNumber
+    if (Called && Called.startsWith("+")) {
+      projectId = await getProjectByNumber(normalizeUSNumber(Called));
+    } else if (payload.To && payload.To.startsWith("+")) {
+      projectId = await getProjectByNumber(normalizeUSNumber(payload.To));
+    }
+
+    // 2) If this was a client: call (Called like "client:user-..."), determine project via reverse lookup
+    if (
+      (!projectId || projectId === null) &&
+      Called &&
+      Called.startsWith("client:")
+    ) {
+      // strip client:
+      const clientIdentity = Called.replace(/^client:/, "");
+      // projectClients is the Map exported by activeClients.js: projectId -> Set of identities
+      for (const [pid, set] of projectClients.entries()) {
+        if (set.has(clientIdentity)) {
+          projectId = pid;
+          break;
+        }
+      }
+    }
+
+    // 3) As fallback, try using From if it's a project number (less likely)
+    if ((!projectId || projectId === null) && From && From.startsWith("+")) {
+      projectId = await getProjectByNumber(normalizeUSNumber(From));
+    }
+
+    // Log resolved project
+    console.log("Resolved projectId:", projectId, { Called, From });
+
+    // If we still have no project, just ack and stop — nothing to broadcast
+    if (projectId === null || typeof projectId === "undefined") {
+      console.log("⚠️ No project found for this status event - ignoring.");
+      res.sendStatus(200);
+      return;
+    }
+
+    // Choose canonical SID to track active call: prefer ParentCallSid if present (parent represents the entire call)
+    const canonicalSid = ParentCallSid || CallSid;
+
+    // Decide action by CallStatus
+    switch (CallStatus) {
+      case "initiated":
+      case "ringing": {
+        // Twilio may send "ringing" for child legs; broadcast "call_ringing" so UI can show ring state.
+        broadcastToProject(req.app.get("wss"), projectId, {
+          type: "call_ringing",
+          projectId,
+          callSid: canonicalSid,
+          raw: { CallSid, ParentCallSid, CallStatus },
+          identity: "twilio-system",
+        });
+        break;
+      }
+
+      case "in-progress":
+      case "answered": {
+        // Mark active call. Determine who answered:
+        // - If "Called" is client: identity string is who answered (client identity).
+        // - If this event is for a number, answeredBy could be the phone number.
+        let answeredBy = null;
+        if (Called && Called.startsWith("client:")) {
+          answeredBy = Called.replace(/^client:/, "");
+        } else if (payload.CalledVia) {
+          answeredBy = payload.CalledVia;
+        } else if (payload.Called) {
+          answeredBy = payload.Called;
+        } else if (payload.To) {
+          answeredBy = payload.To;
+        } else if (payload.From) {
+          answeredBy = payload.From;
+        }
+
+        // Finally set active call (callState will broadcast an "active_call")
+        setActiveCall(canonicalSid, projectId, answeredBy);
+
+        // Also broadcast a separate informative payload
+        broadcastToProject(req.app.get("wss"), projectId, {
+          type: "call_active",
+          projectId,
+          callSid: canonicalSid,
+          answeredBy,
+          raw: {
+            CallSid,
+            ParentCallSid,
+            CallStatus,
+            RecordingUrl,
+            RecordingSid,
+          },
+          identity: "twilio-system",
+        });
+        break;
+      }
+
+      case "completed":
+      case "busy":
+      case "failed":
+      case "no-answer":
+      case "canceled": {
+        // Only end the whole call if this is the parent leg
+        if (ParentCallSid && ParentCallSid !== CallSid) {
+          // This is a child leg finishing, but parent is still alive
+          console.log(
+            `ℹ️ Child leg ${CallSid} ended (${CallStatus}), parent still active ${ParentCallSid}`
+          );
+          break;
+        }
+
+        // If it's the parent leg (or no ParentCallSid present), then really end
+        const existing = getActiveCall(canonicalSid);
+        broadcastToProject(req.app.get("wss"), projectId, {
+          type: "call_ended",
+          projectId,
+          callSid: canonicalSid,
+          recordingUrl: RecordingUrl || null,
+          recordingSid: RecordingSid || null,
+          raw: { CallSid, ParentCallSid, CallStatus },
+          identity: "twilio-system",
+        });
+
+        clearActiveCall(canonicalSid);
+        break;
+      }
+
+      default: {
+        // For any other statuses, still log and ack.
+        console.log("Unhandled CallStatus:", CallStatus);
+      }
+    }
+
+    // Always ACK Twilio quickly
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ callStatusHandler error:", err);
+    // Twilio expects 200/204 to mark webhook processed; return 500 if something exploded
+    res.status(500).send("Error processing call status");
   }
-
-  // track answered
-  answeredCalls.set(CallSid, answeredBy);
-  console.log("✅ Stored answered call", { CallSid, answeredBy });
-
-  // broadcast via wss (fetch from req.app)
-  const wss = req.app && req.app.get ? req.app.get("wss") : null;
-  if (wss) {
-    broadcastToProject(wss, projectId, {
-      type: "active_call",
-      projectId,
-      identity: "twilio-system",
-      answeredBy,
-      callSid: CallSid,
-    });
-  } else {
-    console.warn(
-      "⚠️ answeredHandler: no wss available to broadcast active_call"
-    );
-  }
-
-  res.sendStatus(200);
 };

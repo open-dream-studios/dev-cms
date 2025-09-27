@@ -1,11 +1,12 @@
 // project/src/contexts/ProjectContext.tsx
 "use client";
 
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { Customer } from "@/types/customers";
 import { Employee } from "@/types/employees";
 import { ProjectPage, Section } from "@/types/pages";
 import { Project } from "@/types/project";
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useMemo } from "react";
 
 type ProjectContextType = {
   currentProject: Project | null;
@@ -23,6 +24,11 @@ type ProjectContextType = {
   currentEmployee: Employee | null;
   currentEmployeeId: number | null;
   setCurrentEmployeeData: (employee: Employee | null) => void;
+  ws: WebSocket | null;
+  wsUrl: string | null;
+  ready: boolean;
+  send: (data: any) => void;
+  addMessageListener: (cb: (ev: MessageEvent) => void) => () => void;
 };
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -72,6 +78,12 @@ export const ProjectContextProvider = ({
     setCurrentEmployee(employee);
   };
 
+  const wsUrl = currentProjectId
+    ? `${process.env.NEXT_PUBLIC_WS_URL}?projectId=${currentProjectId}`
+    : null;
+
+  const { ws, ready, send, addMessageListener } = useWebSocket(wsUrl);
+
   return (
     <ProjectContext.Provider
       value={{
@@ -90,6 +102,11 @@ export const ProjectContextProvider = ({
         currentEmployee,
         currentEmployeeId,
         setCurrentEmployeeData,
+        ws,
+        wsUrl,
+        ready,
+        send,
+        addMessageListener,
       }}
     >
       {children}

@@ -6,7 +6,6 @@ export const projectClients = new Map();
  * Add a client identity to a project
  */
 export function addClientToProject(projectId, identity) {
-  console.log("setting client", projectId, identity, projectClients)
   if (!projectId || !identity) return;
   if (!projectClients.has(projectId)) projectClients.set(projectId, new Set());
   projectClients.get(projectId).add(identity);
@@ -15,12 +14,21 @@ export function addClientToProject(projectId, identity) {
 /**
  * Remove a client identity from a project
  */
-export function removeClientFromProject(projectId, identity) {
-  if (!projectId || !identity) return;
-  const set = projectClients.get(projectId);
-  if (!set) return;
-  set.delete(identity);
-  if (set.size === 0) projectClients.delete(projectId);
+export function removeClientFromProject(identity) {
+  if (!identity) return;
+  for (const [projectId, set] of projectClients.entries()) {
+    if (set.has(identity)) {
+      set.delete(identity);
+      if (set.size === 0) {
+        projectClients.delete(projectId);
+      }
+      console.log(
+        "❌ Disconnected WS client from project:",
+        identity,
+        projectId
+      );
+    }
+  }
 }
 
 /**

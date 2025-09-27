@@ -26,7 +26,7 @@ import twilio from "twilio";
 const { twiml } = twilio;
 import "./env.js";
 import { WebSocketServer } from "ws";
-import callRoutes from "./routes/calls.js"
+import callRoutes from "./routes/calls.js";
 import { handleTwilioStream } from "./services/twilio/twilio.js";
 import { initCallState } from "./services/twilio/callState.js";
 
@@ -98,7 +98,7 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
-app.use("/api/voice", callRoutes)
+app.use("/api/voice", callRoutes);
 const wss = new WebSocketServer({ server });
 app.set("wss", wss);
 initCallState(wss);

@@ -11,6 +11,16 @@ export function useWebSocket(url: string | null) {
   const listenersRef = useRef(new Set<MsgHandler>());
 
   useEffect(() => {
+    if (!socketRef.current) return;
+    const interval = setInterval(() => {
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify({ type: "ping" }));
+      }
+    }, 25000);
+    return () => clearInterval(interval);
+  }, [ready]);
+
+  useEffect(() => {
     if (!url) return;
 
     const ws = new WebSocket(url);
@@ -62,7 +72,10 @@ export function useWebSocket(url: string | null) {
 
   const send = useCallback((data: any) => {
     try {
-      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      if (
+        socketRef.current &&
+        socketRef.current.readyState === WebSocket.OPEN
+      ) {
         socketRef.current.send(JSON.stringify(data));
       } else {
         console.warn("WS not open, can't send:", data);

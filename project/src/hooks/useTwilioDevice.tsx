@@ -1,5 +1,5 @@
 // project/src/hooks/useTwilioDevice.tsx
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Device } from "@twilio/voice-sdk";
 import { useProjectContext } from "@/contexts/projectContext";
 import { makeRequest } from "@/util/axios";
@@ -12,15 +12,10 @@ export function useTwilioDevice() {
   const [incoming, setIncoming] = useState<any>(null);
   const [dialing, setDialing] = useState<any>(null);
   const [identity, setIdentity] = useState<string | null>(null);
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId, send, addMessageListener } = useProjectContext();
   const { currentUser } = useContext(AuthContext);
 
-  const wsUrl = currentProjectId
-    ? `${process.env.NEXT_PUBLIC_WS_URL}?projectId=${currentProjectId}`
-    : null;
-
-  const { send } = useWebSocket(wsUrl);
-
+  const deviceRef = useRef<Device | null>(null);
   useEffect(() => {
     async function setup() {
       if (!currentProjectId) return;
@@ -40,6 +35,8 @@ export function useTwilioDevice() {
         codecPreferences: ["opus", "pcmu"] as any,
         logLevel: "error",
       });
+      deviceRef.current = twilioDevice;
+      setDevice(twilioDevice);
 
       twilioDevice.on("registered", () =>
         console.log("📟 Twilio Device registered")
@@ -72,14 +69,41 @@ export function useTwilioDevice() {
       });
 
       twilioDevice.register();
-      setDevice(twilioDevice);
     }
     setup();
 
-    return () => {
-      device?.destroy();
+    // 🔔 Subscribe to backend WS messages (call_ended, call_declined)
+    const handleWsMessage = (ev: MessageEvent) => {
+      let msg: any;
+      try {
+        msg = JSON.parse(ev.data);
+      } catch {
+        return;
+      }
+
+      if (msg.type === "call_ended") {
+        console.log("📡 WS: call_ended received", msg);
+        setConnection(null);
+        setDialing(null);
+        setIncoming(null);
+      }
+
+      if (msg.type === "call_declined") {
+        console.log("📡 WS: call_declined received", msg);
+        setConnection(null);
+        setDialing(null);
+        setIncoming(null);
+      }
     };
-  }, [currentProjectId]);
+
+    const removeListener = addMessageListener(handleWsMessage);
+
+    return () => {
+      // cleanup WS subscription + Twilio device
+      removeListener();
+      deviceRef.current?.destroy();
+    };
+  }, [currentProjectId, addMessageListener]);
 
   // outgoing
   const startCall = (to: string) => {
@@ -100,7 +124,7 @@ export function useTwilioDevice() {
         type: "call_ended",
         projectId: currentProjectId,
         identity,
-        callSid: connection?.parameters?.CallSid,
+        callSid: conn.parameters?.CallSid,
       });
     });
 
@@ -140,18 +164,6 @@ export function useTwilioDevice() {
     } catch (err) {
       console.error("Failed to broadcast active_call", err);
     }
-
-    // ✅ Also tell backend so Twilio status callback can align
-    try {
-      await makeRequest.post("/api/voice/answered", {
-        CallSid: incoming.parameters?.CallSid,
-        projectId: currentProjectId,
-        identity: answeredBy,
-        answeredBy,
-      });
-    } catch (err) {
-      console.error("❌ Failed to POST answered:", err);
-    }
   };
 
   const hangupCall = () => {
@@ -170,7 +182,9 @@ export function useTwilioDevice() {
         type: "call_ended",
         projectId: currentProjectId,
         identity,
-        callSid: connection?.parameters?.CallSid,
+        callSid:
+          connection?.parameters?.ParentCallSid ||
+          connection?.parameters?.CallSid,
       });
     } catch (err) {
       console.error("Failed to broadcast call_ended", err);
@@ -183,6 +197,31 @@ export function useTwilioDevice() {
       setIncoming(null);
     }
   };
+
+  // Send hang up signal on page unmount
+  useEffect(() => {
+    const beforeUnload = () => {
+      if (connection) {
+        try {
+          send({
+            type: "call_ended",
+            projectId: currentProjectId,
+            identity,
+            callSid: connection?.parameters?.CallSid,
+          });
+        } catch (err) {
+          console.error("Failed to broadcast call_ended on unload", err);
+        }
+      }
+    };
+
+    window.addEventListener("beforeunload", beforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload);
+    };
+  }, [connection, currentProjectId, identity, send]);
+
+  // Update UI when hang up occurs
 
   return {
     device,

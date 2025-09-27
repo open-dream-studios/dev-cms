@@ -29,7 +29,7 @@ export function broadcastToProject(wss, projectId, payload) {
           ? Number(client.projectId)
           : null;
 
-      console.debug(`→ checking client id=${client.id ?? "?"} remote=${client._socket?.remoteAddress} proj=${clientProj} ready=${client.readyState}`);
+      // console.debug(`→ checking client id=${client.id ?? "?"} remote=${client._socket?.remoteAddress} proj=${clientProj} ready=${client.readyState}`);
 
       if (client.readyState !== 1) {
         return;
@@ -45,12 +45,12 @@ export function broadcastToProject(wss, projectId, payload) {
       if (clientProj === numericProjectId) {
         client.send(message);
         delivered++;
-        console.log(`✅ Delivered to client id=${client.id ?? "?"} (project ${clientProj})`);
+        console.log(`✅ Broadcasted to client id=${client.id ?? "?"} (project ${clientProj})`);
       }
     } catch (err) {
       console.error("❌ Failed to broadcast to client:", err);
     }
   });
 
-  console.log(`📡 Broadcast summary: project=${numericProjectId} eligible=${eligible} delivered=${delivered}`);
+  console.log(`🔉 Broadcast summary: project=${numericProjectId} eligible=${eligible} delivered=${delivered}`);
 }

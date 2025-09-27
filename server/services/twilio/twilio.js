@@ -1,115 +1,229 @@
 // server/services/twilio/twilio.js
 import fs from "fs";
 import path from "path";
-import wav from "wav";
-import os from "os";
-import OpenAI from "openai";
+import { fileURLToPath } from "url";
+import OpenAI from "openai"; // kept in file for future audio work
 import {
   addClientToProject,
   removeClientFromProject,
+  getClientsForProject,
 } from "./activeClients.js";
 import { broadcastToProject } from "../ws/broadcast.js";
+import { initCallState } from "./callState.js";
 
-const openai = new OpenAI();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const openai = new OpenAI(); // placeholder - only used later for transcriptions
 
-const callBuffers = {}; // keeps per-stream PCM buffers
+// Track stream buffers (kept minimal)
+export const callBuffers = {}; // streamSid -> { chunks:[], track }
 
-export const answeredCalls = new Map();
+// map projectId -> info about call (parent/child/stream)
+export const projectCallMap = new Map();
 
-// ITU G.711 µ-law decoder → signed PCM16
-export function mulawDecode(muLawByte) {
-  muLawByte = ~muLawByte & 0xff;
-  const sign = muLawByte & 0x80 ? -1 : 1;
-  const exponent = (muLawByte >> 4) & 0x07;
-  const mantissa = muLawByte & 0x0f;
-  const sample = ((mantissa << 1) + 1) << (exponent + 2);
-  return sign * sample;
+function heartbeat() {
+  this.isAlive = true;
 }
 
-export function decodeMuLawBuffer(muLawBuffer) {
-  const pcmBuffer = Buffer.alloc(muLawBuffer.length * 2);
-  for (let i = 0; i < muLawBuffer.length; i++) {
-    const decoded = mulawDecode(muLawBuffer[i]);
-    pcmBuffer.writeInt16LE(decoded, i * 2);
-  }
-  return pcmBuffer;
-}
-
+/**
+ * handleTwilioStream(wss)
+ * - establishes ws server listeners for Twilio media stream clients
+ * - on 'start' events from Twilio, we broadcast call_ringing to the project
+ * - on 'stop' events broadcast call_ended
+ *
+ * Important: actual authoritative "call_active"/"call_ended" state is handled by callStatusHandler (controller),
+ * but this service still announces immediate start/stop events coming from the media stream.
+ */
 export function handleTwilioStream(wss) {
+  // give callState a reference to wss so it can broadcast
+  initCallState(wss);
+
   wss.on("connection", (ws, req) => {
+    ws.isAlive = true;
+    ws.on("pong", heartbeat);
+
     ws.id = `${Date.now().toString(36)}-${Math.random()
       .toString(36)
       .slice(2, 8)}`;
 
+    // parse ?projectId=... from the ws connect URL if provided
     try {
       const url = new URL(req.url || "", `http://${req.headers.host}`);
       ws.projectId = url.searchParams.get("projectId")
         ? Number(url.searchParams.get("projectId"))
         : null;
       if (Number.isNaN(ws.projectId)) ws.projectId = null;
-    } catch {
+    } catch (err) {
       ws.projectId = null;
     }
 
-    console.log(
-      `👥 WS client connected id=${ws.id} project=${ws.projectId} identity=${ws.twilioIdentity} remote=${req.socket?.remoteAddress}`
-    );
+    ws.on("message", async (msg) => {
+      let data;
+      try {
+        data = JSON.parse(msg.toString());
+      } catch (err) {
+        return;
+      }
 
-    ws.on("message", (msg) => {
-      const data = JSON.parse(msg);
+      // Twilio media stream "start"
+      if (data.event === "start") {
+        const {
+          streamSid,
+          callSid,
+          tracks,
+          customParameters = {},
+        } = data.start || {};
+        const projectId = customParameters.projectId
+          ? Number(customParameters.projectId)
+          : null;
+        const from = customParameters.from || null;
+        const to = customParameters.to || null;
 
-      if (data.type === "active_call") {
-        answeredCalls.set(data.callSid, data.answeredBy);
-        const projId = Number(data.projectId);
+        if (
+          projectId === null ||
+          Number.isNaN(projectId) ||
+          (!callSid && !streamSid)
+        ) {
+          console.warn("Invalid start event – missing projectId or sids", {
+            projectId,
+            streamSid,
+            callSid,
+          });
+          return;
+        }
 
-        // Broadcast using this wss instance
-        broadcastToProject(wss, projId, {
-          type: "active_call",
-          projectId: projId,
+        console.log("📞 Call ringing (media stream start):", {
+          streamSid,
+          callSid,
+          projectId,
+          from,
+          to,
+        });
+
+        projectCallMap.set(projectId, {
+          parentSid: callSid,
+          childSid: null,
+          streamSid,
+          from,
+          to,
+          startedAt: Date.now(),
+        });
+
+        callBuffers[streamSid] = {
+          chunks: [],
+          track: tracks?.[0] || "unknown",
+        };
+
+        // Broadcast to project: an incoming call is ringing (fast, immediate)
+        broadcastToProject(wss, projectId, {
+          type: "call_ringing",
+          projectId,
+          callSid,
           identity: "twilio-system",
-          answeredBy: data.answeredBy,
-          callSid: data.callSid,
+          from,
+          to,
+        });
+      }
+
+      // Twilio media stream "media" messages could be used later for ASR/transcription.
+      if (data.event === "media") {
+        // (left intentionally blank for now — reserved for later audio processing)
+      }
+
+      // Twilio stream "stop" event
+      if (data.event === "stop") {
+        const { streamSid, callSid } = data.stop || {};
+        // try find project from map by matching streamSid
+        let foundProjectId = null;
+        for (const [pid, info] of projectCallMap.entries()) {
+          if (info.streamSid === streamSid || info.parentSid === callSid) {
+            foundProjectId = pid;
+            break;
+          }
+        }
+
+        console.log("📞 Media stream stop", {
+          streamSid,
+          callSid,
+          projectId: foundProjectId,
+        });
+
+        if (foundProjectId !== null) {
+          // broadcastToProject(wss, foundProjectId, {
+          //   type: "call_ended",
+          //   projectId: foundProjectId,
+          //   callSid:
+          //     callSid || projectCallMap.get(foundProjectId)?.parentSid || null,
+          //   identity: "twilio-system",
+          // });
+          projectCallMap.delete(foundProjectId);
+        }
+
+        // cleanup buffers
+        if (streamSid && callBuffers[streamSid]) delete callBuffers[streamSid];
+      }
+
+      // App-level hello: web clients (not Twilio) tell us identity and project so we maintain activeClients map
+      if (data.type === "hello") {
+        if (ws.twilioIdentity) {
+          removeClientFromProject(ws.twilioIdentity);
+        }
+        if (data.identity) ws.twilioIdentity = data.identity;
+        addClientToProject(ws.projectId, ws.twilioIdentity);
+        console.log(
+          `🟢 WS client connected id=${ws.id} project=${ws.projectId} identity=${ws.twilioIdentity}`
+        );
+      }
+
+      // If web clients post "active_call" or "call_ended" events we accept but don't treat them as authoritative:
+      // The server's callStatusHandler (Twilio webhook) is authoritative for active/ended state.
+      // However we still pass those on to project so UI can update quickly in local scenarios:
+      if (data.type === "active_call") {
+        const projId = Number(data.projectId);
+        broadcastToProject(wss, projId, {
+          type: "call_active",
+          projectId: projId,
+          callSid: data.callSid || null,
+          answeredBy: data.answeredBy || null,
+          identity: data.identity || "web-client",
         });
       }
 
       if (data.type === "call_ended") {
-        answeredCalls.delete(data.callSid);
         const projId = Number(data.projectId);
-        console.log(
-          `📡 got call_ended from ${ws.twilioIdentity} for project ${projId}, callSid=${data.callSid}`
-        );
         broadcastToProject(wss, projId, {
           type: "call_ended",
           projectId: projId,
-          callSid: data.callSid,
+          callSid: data.callSid || null,
+          identity: data.identity || "web-client",
         });
-      }
-
-      try {
-        const maybe = JSON.parse(msg.toString());
-        if (maybe.type === "hello") {
-          if (ws.projectId)
-            removeClientFromProject(ws.projectId, ws.twilioIdentity);
-          if (maybe.projectId) ws.projectId = Number(maybe.projectId);
-          if (maybe.identity) ws.twilioIdentity = maybe.identity;
-          addClientToProject(ws.projectId, ws.twilioIdentity);
-
-          console.log(
-            `🟢 WS client fully connected: id=${ws.id} project=${ws.projectId} identity=${ws.twilioIdentity} remote=${req.socket?.remoteAddress}`
-          );
-        }
-      } catch (e) {
-        // not JSON — ignore
       }
     });
 
     ws.on("close", () => {
-      if (ws.projectId && ws.twilioIdentity) {
-        removeClientFromProject(ws.projectId, ws.twilioIdentity);
+      if (ws.twilioIdentity) {
         console.log(
-          `❌ WS disconnected: id=${ws.id} identity=${ws.twilioIdentity} project=${ws.projectId}`
+          `❌ WS Disconnected web client id=${ws.id} project=${ws.projectId} identity=${ws.twilioIdentity}`
+        );
+        removeClientFromProject(ws.twilioIdentity);
+      } else {
+        console.log(
+          `ℹ️ Twilio media stream disconnected id=${ws.id} project=${ws.projectId}`
         );
       }
     });
   });
+
+  // heartbeat / cleanup
+  const interval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+      if (ws.isAlive === false) {
+        console.log("⚠️ Terminating dead WS client", ws.id);
+        return ws.terminate();
+      }
+      ws.isAlive = false;
+      ws.ping();
+    });
+  }, 30000);
+
+  wss.on("close", () => clearInterval(interval));
 }

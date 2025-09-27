@@ -42,10 +42,7 @@ const CustomerCalls = () => {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-  const wsUrl = currentProjectId
-    ? `${process.env.NEXT_PUBLIC_WS_URL}?projectId=${currentProjectId}`
-    : null;
-  const { ws, ready, addMessageListener, send } = useWebSocket(wsUrl);
+  const { ws, wsUrl, addMessageListener, send } = useProjectContext();
 
   const handleReject = async () => {
     if (incoming) {
@@ -55,16 +52,19 @@ const CustomerCalls = () => {
       setIncomingCall(null);
     }
 
-    // notify peers
-    send({ type: "call_declined", projectId: currentProjectId, identity });
+    // 🔔 broadcast decline to peers via WS
+    send({
+      type: "call_declined",
+      projectId: currentProjectId,
+      identity,
+      callSid: incoming?.parameters?.CallSid,
+    });
 
     // notify server to reject Twilio leg
     if (incoming?.parameters?.CallSid) {
       try {
         await makeRequest.post("/api/voice/decline", {
-          CallSid: incoming.parameters.CallSid,
           projectId: currentProjectId,
-          identity,
         });
       } catch (err) {
         console.error("❌ Failed to POST decline:", err);
@@ -103,7 +103,7 @@ const CustomerCalls = () => {
           case "active_call":
             console.log("✅ Setting active call:", msg);
             setActiveCall({
-              callSid: msg.callSid,
+              callSid: msg.parentCallSid || msg.callSid,
               answeredBy: msg.answeredBy || "Unknown",
             });
             if (msg.identity !== identity) {
@@ -111,12 +111,23 @@ const CustomerCalls = () => {
             }
             break;
 
+          case "call_declined":
+            console.log("📴 Call declined by peer", msg);
+            setActiveCall(null);
+            setIncomingCall(null);
+            break;
+
           case "call_ended":
             console.log("📴 Call ended, clearing activeCall");
-            setActiveCall((prev: any) =>
-              prev && prev.callSid === msg.callSid ? null : prev
-            );
+            setActiveCall(null);
             setIncomingCall(null);
+            if (connection) {
+              try {
+                connection.disconnect();
+              } catch (e) {
+                console.warn("connection already closed");
+              }
+            }
             break;
 
           default:
@@ -157,9 +168,16 @@ const CustomerCalls = () => {
     return () => ws.removeEventListener("open", sendHello);
   }, [ws, wsUrl, identity, currentProjectId]);
 
-  const handleHangup = () => {
+  const handleHangup = async () => {
+    setActiveCall(null);
+    try {
+      await makeRequest.post("/api/voice/decline", {
+        projectId: currentProjectId,
+      });
+    } catch (err) {
+      console.error("❌ Failed to POST decline:", err);
+    }
     hangupCall();
-    setActiveCall(null); 
   };
 
   // -------------------------
