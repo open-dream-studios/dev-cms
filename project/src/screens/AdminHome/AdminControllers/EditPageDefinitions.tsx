@@ -6,7 +6,12 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { usePageDefinitionsForm } from "@/hooks/usePageDefinitionsForm";
 import { PageDefinitionFormData } from "@/util/schemas/pageDefinitionsSchema";
 import { appTheme } from "@/util/appTheme";
-import { FaChevronLeft, FaPlus, FaRegCircleCheck, FaTrash } from "react-icons/fa6";
+import {
+  FaChevronLeft,
+  FaPlus,
+  FaRegCircleCheck,
+  FaTrash,
+} from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import Modal2Continue from "@/modals/Modal2Continue";
@@ -15,14 +20,18 @@ import { PageDefinition } from "@/types/pages";
 
 const EditPageDefinitions = () => {
   const { currentUser } = useContext(AuthContext);
-  const { pageDefinitions, upsertPageDefinition, deletePageDefinition, isLoadingPageDefinitions } =
-    useContextQueries();
+  const {
+    pageDefinitions,
+    upsertPageDefinition,
+    deletePageDefinition,
+    isLoadingPageDefinitions,
+  } = useContextQueries();
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const [selectedPage, setSelectedPage] = useState<PageDefinition | null>(null);
-  const [editingPage, setEditingPage] = useState<number | null>(null);
+  const [editingPage, setEditingPage] = useState<PageDefinition | null>(null);
   const [showForm, setShowForm] = useState(false);
   const form = usePageDefinitionsForm();
 
@@ -39,12 +48,13 @@ const EditPageDefinitions = () => {
     const parentId = selectedPage ? selectedPage.id : null;
 
     await upsertPageDefinition({
-      id: editingPage || undefined,
+      page_definition_id: editingPage ? editingPage.page_definition_id : null,
       name: data.name,
       identifier: data.identifier,
       allowed_sections: allowedSections,
       parent_page_definition_id: parentId,
-    });
+      config_schema: editingPage ? editingPage.config_schema : {},
+    } as PageDefinition);
 
     setEditingPage(null);
     setShowForm(false);
@@ -74,7 +84,7 @@ const EditPageDefinitions = () => {
       content: (
         <Modal2Continue
           text={`Delete page definition "${page.name}"?`}
-          onContinue={() => deletePageDefinition(page.id)}
+          onContinue={() => deletePageDefinition(page.page_definition_id)}
           threeOptions={false}
         />
       ),
@@ -83,7 +93,7 @@ const EditPageDefinitions = () => {
 
   const handleEditClick = (e: React.MouseEvent, page: PageDefinition) => {
     e.stopPropagation();
-    setEditingPage(page.id);
+    setEditingPage(page);
     form.reset({
       name: page.name,
       identifier: page.identifier,
@@ -119,7 +129,9 @@ const EditPageDefinitions = () => {
   const filteredPages = useMemo(() => {
     return selectedPage === null
       ? pageDefinitions.filter((p) => p.parent_page_definition_id === null)
-      : pageDefinitions.filter((p) => p.parent_page_definition_id === selectedPage.id);
+      : pageDefinitions.filter(
+          (p) => p.parent_page_definition_id === selectedPage.id
+        );
   }, [pageDefinitions, selectedPage]);
 
   return (
@@ -133,7 +145,10 @@ const EditPageDefinitions = () => {
             onClick={handleBackClick}
             className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[33px] rounded-full w-[33px] opacity-[30%]"
           >
-            <FaChevronLeft size={22} color={appTheme[currentUser.theme].text_3} />
+            <FaChevronLeft
+              size={22}
+              color={appTheme[currentUser.theme].text_3}
+            />
           </div>
         )}
         <h2 className="text-[24px] ml-[4px] font-bold mt-[-5px] mr-[14px]">
@@ -144,7 +159,10 @@ const EditPageDefinitions = () => {
           <div className="flex gap-[9px]">
             <button
               type="submit"
-              style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+              style={{
+                backgroundColor:
+                  appTheme[currentUser.theme].background_2_selected,
+              }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px] py-[6px] rounded-full"
             >
               <FaRegCircleCheck /> Save
@@ -152,7 +170,10 @@ const EditPageDefinitions = () => {
             <button
               type="button"
               onClick={handleCancelForm}
-              style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+              style={{
+                backgroundColor:
+                  appTheme[currentUser.theme].background_2_selected,
+              }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
             >
               <IoClose size={19} /> Cancel
@@ -162,7 +183,10 @@ const EditPageDefinitions = () => {
           <button
             type="button"
             onClick={handleShowForm}
-            style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+            style={{
+              backgroundColor:
+                appTheme[currentUser.theme].background_2_selected,
+            }}
             className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
             <FaPlus size={16} color={appTheme[currentUser.theme].text_4} />
@@ -172,7 +196,9 @@ const EditPageDefinitions = () => {
 
       {showForm && (
         <div
-          style={{ backgroundColor: appTheme[currentUser.theme].background_1_2 }}
+          style={{
+            backgroundColor: appTheme[currentUser.theme].background_1_2,
+          }}
           className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
         >
           <div className="w-full">
@@ -188,7 +214,9 @@ const EditPageDefinitions = () => {
             />
 
             <div className="mt-4 px-2">
-              <p className="font-semibold text-[17px] mb-[6px]">Allowed Sections</p>
+              <p className="font-semibold text-[17px] mb-[6px]">
+                Allowed Sections
+              </p>
               {allowedSections.length > 0 && (
                 <div className="flex flex-wrap gap-2 my-1">
                   {allowedSections.map((s) => (
@@ -196,7 +224,8 @@ const EditPageDefinitions = () => {
                       key={s}
                       className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
                       style={{
-                        backgroundColor: appTheme[currentUser.theme].background_2_selected,
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_2_selected,
                         color: appTheme[currentUser.theme].text_4,
                       }}
                     >
@@ -222,7 +251,9 @@ const EditPageDefinitions = () => {
                 <button
                   type="button"
                   onClick={handleAddSection}
-                  style={{ backgroundColor: appTheme[currentUser.theme].background_2_2 }}
+                  style={{
+                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                  }}
                   className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm"
                 >
                   Add
@@ -241,15 +272,21 @@ const EditPageDefinitions = () => {
             filteredPages.map((page) => (
               <div
                 key={page.id}
-                style={{ backgroundColor: appTheme[currentUser.theme].background_1_2 }}
+                style={{
+                  backgroundColor: appTheme[currentUser.theme].background_1_2,
+                }}
                 className={`${
-                  selectedPage === null && "hover:brightness-[88%] dim cursor-pointer"
+                  selectedPage === null &&
+                  "hover:brightness-[88%] dim cursor-pointer"
                 } flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
                 onClick={() => handlePageClick(page)}
               >
                 <div className="w-[calc(100%-90px)] truncate">
                   <p className="font-semibold truncate">{page.name}</p>
-                  <p style={{ color: appTheme[currentUser.theme].text_4 }} className="text-sm truncate">
+                  <p
+                    style={{ color: appTheme[currentUser.theme].text_4 }}
+                    className="text-sm truncate"
+                  >
                     {page.identifier}
                   </p>
                 </div>
@@ -257,20 +294,32 @@ const EditPageDefinitions = () => {
                   <div className="flex flex-row gap-[8px]">
                     <div
                       onClick={(e) => handleEditClick(e, page)}
-                      style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+                      style={{
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_2_selected,
+                      }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FiEdit size={18} color={appTheme[currentUser.theme].text_4} />
+                      <FiEdit
+                        size={18}
+                        color={appTheme[currentUser.theme].text_4}
+                      />
                     </div>
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeletePage(page);
                       }}
-                      style={{ backgroundColor: appTheme[currentUser.theme].background_2_selected }}
+                      style={{
+                        backgroundColor:
+                          appTheme[currentUser.theme].background_2_selected,
+                      }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FaTrash size={15} color={appTheme[currentUser.theme].text_4} />
+                      <FaTrash
+                        size={15}
+                        color={appTheme[currentUser.theme].text_4}
+                      />
                     </div>
                   </div>
                 )}

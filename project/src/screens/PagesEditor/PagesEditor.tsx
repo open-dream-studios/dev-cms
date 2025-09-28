@@ -48,12 +48,12 @@ const ProjectPagesEditor = () => {
   } = useProjectContext();
   const {
     projectPages,
-    addProjectPage,
+    upsertProjectPage,
     deleteProjectPage,
     pageDefinitions,
     deleteSection,
     sectionDefinitions,
-    addSection,
+    upsertSection,
     projectSections,
   } = useContextQueries();
 
@@ -70,7 +70,7 @@ const ProjectPagesEditor = () => {
   //   console.log({ isDirty, isValid, errors });
   // }, [isDirty, isValid, errors]);
 
-  const [siteEditorKey, setSiteEditorKey] = useState<number>(0)
+  const [siteEditorKey, setSiteEditorKey] = useState<number>(0);
 
   useEffect(() => {
     if (editingPage) {
@@ -95,17 +95,27 @@ const ProjectPagesEditor = () => {
   }, [editingPage, addingPage]);
 
   const onSubmit: SubmitHandler<ProjectPagesFormData> = async (data) => {
-    if (!currentProjectId) return;
+    if (!currentProjectId || !data.definition_id) return;
     try {
-      await addProjectPage({
-        ...data,
-        id: editingPage?.id || undefined,
-        project_idx: currentProjectId,
-      });
+      await upsertProjectPage({
+        page_id: editingPage ? editingPage.page_id : null,
+        definition_id: data.definition_id,
+        parent_page_id: currentPage ? currentPage.id : null,
+        title: data.title,
+        slug: data.slug,
+        order_index: editingPage
+          ? editingPage.order_index
+          : filteredActivePages.length,
+        seo_title: data.seo_title,
+        seo_description: data.seo_title,
+        seo_keywords: data.seo_title,
+        template: data.template,
+        published: true,
+      } as ProjectPage);
       setAddingPage(false);
       setEditingPage(null);
       pageForm.reset();
-      setSiteEditorKey((prev) => prev + 1)
+      setSiteEditorKey((prev) => prev + 1);
     } catch (err) {
       console.error("Failed to save page:", err);
     }
@@ -132,38 +142,38 @@ const ProjectPagesEditor = () => {
   ) => {
     if (!currentProjectId || !currentPage) return;
     try {
-      await addSection({
-        ...data,
-        id: editingSection?.id || undefined,
-        project_idx: currentProjectId,
+      await upsertSection({
+        section_id: editingSection ? editingSection.section_id : null,
         parent_section_id: editingSection
           ? editingSection.parent_section_id
           : currentSection
           ? currentSection.id
           : null,
         project_page_id: currentPage.id,
-      });
+        definition_id: data.definition_id,
+        name: data.name,
+        config: data.config || {},
+        order_index: editingSection
+          ? editingSection.order_index
+          : filteredActiveSections.length,
+      } as Section);
       setAddingSection(false);
       setEditingSection(null);
       sectionForm.reset();
-      setSiteEditorKey((prev) => prev + 1)
+      setSiteEditorKey((prev) => prev + 1);
     } catch (err) {
       console.error("Failed to save section:", err);
     }
   };
 
   const handleDeletePage = async () => {
-    if (
-      !currentProjectId ||
-      !contextMenu ||
-      contextMenu.type !== "page" ||
-      !contextMenu.input
-    )
-      return;
-    await deleteProjectPage({
-      project_idx: currentProjectId,
-      id: contextMenu.input.id,
-    });
+    if (!currentProjectId || !contextMenu || !contextMenu.input) return;
+    if (contextMenu.type === "page") {
+      const page = contextMenu.input as ProjectPage;
+      if (page.page_id) {
+        await deleteProjectPage(page.page_id);
+      }
+    }
   };
 
   const handleDeleteSection = async () => {
@@ -174,10 +184,7 @@ const ProjectPagesEditor = () => {
       !contextMenu.input
     )
       return;
-    await deleteSection({
-      project_idx: currentProjectId,
-      id: contextMenu.input.id,
-    });
+    // await deleteSection(contextMenu.input.section_id);
   };
 
   const [contextMenu, setContextMenu] = useState<{
@@ -549,7 +556,9 @@ const ProjectPagesEditor = () => {
       <div className="flex-1 flex flex-col">
         <PagesEditorToolbar />
 
-        {currentProject && siteUrl && <SiteEditor key={siteEditorKey} src={siteUrl} />}
+        {currentProject && siteUrl && (
+          <SiteEditor key={siteEditorKey} src={siteUrl} />
+        )}
       </div>
     </div>
   );

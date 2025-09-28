@@ -36,7 +36,8 @@ const EditSectionDefinitions = () => {
 
   const [selectedSection, setSelectedSection] =
     useState<SectionDefinition | null>(null);
-  const [editingSection, setEditingSection] = useState<number | null>(null);
+  const [editingSection, setEditingSection] =
+    useState<SectionDefinition | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   const [name, setName] = useState("");
@@ -92,13 +93,15 @@ const EditSectionDefinitions = () => {
     const errors = validateUniqueKeys(configSchema.fields);
     if (errors.length === 0) {
       await upsertSectionDefinition({
-        id: editingSection || undefined,
+        section_definition_id: editingSection
+          ? editingSection.section_definition_id
+          : null,
         name,
         identifier,
         allowed_elements: allowedElements,
         parent_section_definition_id: parentId,
         config_schema: configSchema,
-      });
+      } as SectionDefinition);
 
       resetForm();
     } else {
@@ -123,28 +126,37 @@ const EditSectionDefinitions = () => {
   };
 
   const handleDeleteSectionDef = (section: SectionDefinition) => {
+    if (!section.section_definition_id) return;
     setModal2({
       ...modal2,
       open: !modal2.open,
       content: (
         <Modal2Continue
           text={`Delete section definition "${section.name}"?`}
-          onContinue={() => deleteSectionDefinition(section.id)}
+          onContinue={() => {
+            if (section.section_definition_id) {
+              deleteSectionDefinition(section.section_definition_id);
+            }
+          }}
           threeOptions={false}
         />
       ),
     });
   };
 
-  const handleEditClick = (e: React.MouseEvent, section: SectionDefinition) => {
+  const handleEditClick = (
+    e: React.MouseEvent,
+    sectionDefinition: SectionDefinition
+  ) => {
     e.stopPropagation();
-    setEditingSection(section.id);
-    setName(section.name);
-    setIdentifier(section.identifier);
-    setAllowedElements(section.allowed_elements || []);
+    setEditingSection(sectionDefinition);
+    setName(sectionDefinition.name);
+    setIdentifier(sectionDefinition.identifier);
+    setAllowedElements(sectionDefinition.allowed_elements || []);
     setConfigSchema(
-      (section as any).config_schema && (section as any).config_schema.fields
-        ? (section as any).config_schema
+      (sectionDefinition as any).config_schema &&
+        (sectionDefinition as any).config_schema.fields
+        ? (sectionDefinition as any).config_schema
         : { fields: [] }
     );
     setShowForm(true);

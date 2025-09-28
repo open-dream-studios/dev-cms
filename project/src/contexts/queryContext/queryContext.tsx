@@ -10,7 +10,6 @@ import React, {
 import { QueryObserverResult, useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "../authContext";
 import {
-  AddProjectInput,
   Integration,
   Module,
   Project,
@@ -64,23 +63,14 @@ export type QueryContextType = {
   projectsData: Project[];
   isLoadingProjects: boolean;
   refetchProjects: () => void;
-  addProject: (projectData: AddProjectInput) => Promise<void>;
-  deleteProject: (project: Project) => Promise<void>;
-  updateProject: (data: {
-    project_idx: number;
-    name: string;
-    short_name?: string;
-    domain?: string;
-    backend_domain?: string;
-    brand?: string;
-    logo?: string | null;
-  }) => Promise<void>;
+  upsertProject: (project: Project) => Promise<void>;
+  deleteProject: (project_id: string) => Promise<void>;
 
   // ---- Project Users ----
   projectUsers: ProjectUser[];
   isLoadingProjectUsers: boolean;
   refetchProjectUsers: () => void;
-  updateProjectUser: (projectUser: ProjectUser) => Promise<void>;
+  upsertProjectUser: (projectUser: ProjectUser) => Promise<void>;
   deleteProjectUser: (projectUser: ProjectUser) => Promise<void>;
 
   // ---- Project Modules ----
@@ -169,55 +159,38 @@ export type QueryContextType = {
   pageDefinitions: PageDefinition[];
   isLoadingPageDefinitions: boolean;
   refetchPageDefinitions: () => Promise<any>;
-  upsertPageDefinition: (data: {
-    id?: number;
-    identifier: string;
-    name: string;
-    parent_page_definition_id?: number | null;
-    allowed_sections?: string[];
-    config_schema?: Record<string, any>;
-  }) => Promise<void>;
-  deletePageDefinition: (id: number) => Promise<void>;
+  upsertPageDefinition: (data: PageDefinition) => Promise<void>;
+  deletePageDefinition: (page_definition_id: string) => Promise<void>;
 
   // ---- Project Pages ----
   projectPages: ProjectPage[];
   isLoadingProjectPages: boolean;
   refetchProjectPages: () => Promise<any>;
-  addProjectPage: (data: any) => Promise<void>;
-  deleteProjectPage: (data: {
-    project_idx: number;
-    id: number;
-  }) => Promise<void>;
+  upsertProjectPage: (data: ProjectPage) => Promise<void>;
+  deleteProjectPage: (page_id: string) => Promise<void>;
   reorderProjectPages: (data: {
     project_idx: number;
     parent_page_id: number | null;
-    orderedIds: number[];
+    orderedIds: string[];
   }) => void;
 
   // ---- SECTIONS ----
   sectionDefinitions: SectionDefinition[];
   isLoadingSectionDefinitions: boolean;
   refetchSectionDefinitions: () => Promise<any>;
-  upsertSectionDefinition: (data: {
-    id?: number;
-    identifier: string;
-    name: string;
-    parent_section_definition_id?: number | null;
-    allowed_elements?: string[];
-    config_schema?: Record<string, any>;
-  }) => Promise<void>;
-  deleteSectionDefinition: (id: number) => Promise<void>;
+  upsertSectionDefinition: (data: SectionDefinition) => Promise<void>;
+  deleteSectionDefinition: (section_definition_id: string) => Promise<void>;
 
   projectSections: Section[];
   isLoadingSections: boolean;
   refetchSections: () => Promise<any>;
-  addSection: (data: any) => Promise<void>;
-  deleteSection: (data: { project_idx: number; id: number }) => Promise<void>;
+  upsertSection: (data: Section) => Promise<void>;
+  deleteSection: (section_id: string) => Promise<void>;
   reorderSections: (data: {
     project_idx: number;
     project_page_id: number;
     parent_section_id: number | null;
-    orderedIds: number[];
+    orderedIds: string[];
   }) => void;
 
   // Customers
@@ -292,8 +265,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     projectsData,
     isLoadingProjects,
     refetchProjects,
-    updateProject,
-    addProject,
+    upsertProject,
     deleteProject,
   } = useProjects(isLoggedIn, currentProjectId);
   const {
@@ -304,10 +276,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     deleteProducts,
   } = useProducts(isLoggedIn, currentProjectId, isOptimisticUpdate);
   const {
-    projectUsers,
+    projectUsersData,
     isLoadingProjectUsers,
     refetchProjectUsers,
-    updateProjectUser,
+    upsertProjectUser,
     deleteProjectUser,
   } = useProjectUsers(isLoggedIn, currentProjectId);
   const {
@@ -324,7 +296,12 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     refetchIntegrations,
     upsertIntegration,
     deleteIntegrationKey,
-  } = useIntegrations(isLoggedIn, currentProjectId, currentUser, projectUsers);
+  } = useIntegrations(
+    isLoggedIn,
+    currentProjectId,
+    currentUser,
+    projectUsersData ?? []
+  );
   const {
     modules,
     isLoadingModules,
@@ -368,7 +345,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     projectPages,
     isLoadingProjectPages,
     refetchProjectPages,
-    addProjectPageMutation,
+    upsertProjectPageMutation,
     deleteProjectPageMutation,
     reorderProjectPagesMutation,
   } = useProjectPages(isLoggedIn, currentProjectId);
@@ -383,7 +360,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     projectSections,
     isLoadingSections,
     refetchSections,
-    addSection,
+    upsertSection,
     deleteSection,
     reorderSections,
   } = useSections(isLoggedIn, currentProjectId, currentPageId);
@@ -437,15 +414,15 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchProductsData,
         updateProducts,
         deleteProducts,
-        projectsData,
+        projectsData: projectsData ?? [],
         isLoadingProjects,
         refetchProjects,
-        addProject,
+        upsertProject,
         deleteProject,
-        projectUsers,
+        projectUsers: projectUsersData ?? [],
         isLoadingProjectUsers,
         refetchProjectUsers,
-        updateProjectUser,
+        upsertProjectUser,
         deleteProjectUser,
         projectModules,
         isLoadingProjectModules,
@@ -470,7 +447,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchModules,
         upsertModule,
         deleteModule,
-        updateProject,
         media,
         mediaFolders,
         isLoadingMedia,
@@ -498,13 +474,14 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         projectPages,
         isLoadingProjectPages,
         refetchProjectPages,
-        addProjectPage: (data: any) => addProjectPageMutation.mutateAsync(data),
-        deleteProjectPage: (data: { project_idx: number; id: number }) =>
-          deleteProjectPageMutation.mutateAsync(data),
+        upsertProjectPage: (data: ProjectPage) =>
+          upsertProjectPageMutation.mutateAsync(data),
+        deleteProjectPage: (page_id: string) =>
+          deleteProjectPageMutation.mutateAsync(page_id),
         reorderProjectPages: (data: {
           project_idx: number;
           parent_page_id: number | null;
-          orderedIds: number[];
+          orderedIds: string[];
         }) => reorderProjectPagesMutation.mutateAsync(data),
         sectionDefinitions,
         isLoadingSectionDefinitions,
@@ -514,7 +491,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         projectSections,
         isLoadingSections,
         refetchSections,
-        addSection,
+        upsertSection,
         deleteSection,
         reorderSections,
         customers,
@@ -532,11 +509,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchJobs,
         upsertJob,
         deleteJob,
-        // taskDefinitions: taskDefinitionsData ?? [],
-        // isLoadingTaskDefinitions,
-        // refetchTaskDefinitions,
-        // upsertTaskDefinition,
-        // deleteTaskDefinition,
         tasks: tasksData ?? [],
         isLoadingTasks,
         refetchTasks,

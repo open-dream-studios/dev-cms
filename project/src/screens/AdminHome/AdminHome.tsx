@@ -52,7 +52,9 @@ const ProjectItem = ({
   };
 
   const handleDeleteProject = async () => {
-    await deleteProject(project);
+    if (project.project_id) {
+      await deleteProject(project.project_id);
+    }
   };
 
   if (!currentUser) return null;
@@ -96,7 +98,8 @@ const ProjectItem = ({
 const AdminHome = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
-  const { projectsData, addProject, isLoadingProjects } = useContextQueries();
+  const { projectsData, upsertProject, isLoadingProjects } =
+    useContextQueries();
   const [editProjectsMode, setEditProjectsMode] = useState<boolean>(false);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
@@ -140,7 +143,15 @@ const AdminHome = () => {
 
   const addNewProject = async (name: string, domain?: string) => {
     if (!name) return;
-    await addProject({ name, domain: domain || undefined });
+    await upsertProject({
+      project_id: null,
+      name,
+      short_name: null,
+      domain,
+      backend_domain: null,
+      brand: null,
+      logo: null,
+    } as Project);
     queryClient.invalidateQueries({ queryKey: ["projectUsers"] });
   };
 

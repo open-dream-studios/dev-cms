@@ -17,7 +17,7 @@ import { useProjectContext } from "@/contexts/projectContext";
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useProjectContext();
-  const { updateProjectUser, projectUsers, deleteProjectUser, projectsData } =
+  const { upsertProjectUser, projectUsers, deleteProjectUser, projectsData } =
     useContextQueries();
 
   const currentProject = useMemo(() => {
@@ -36,7 +36,7 @@ const UserAccess = () => {
 
   const onSubmit = async (data: ProjectUserFormData) => {
     if (!currentProject) return;
-    await updateProjectUser({
+    await upsertProjectUser({
       email: data.email,
       role: data.role as UserRole,
       project_idx: currentProject.id,
@@ -263,10 +263,9 @@ const UserAccess = () => {
                           className="cursor-pointer hover:brightness-75 dim w-[61px] text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
                           onChange={async (e) => {
                             const newRole = e.target.value;
-                            await updateProjectUser({
-                              ...user,
-                              id: currentProject.id,
-                              project_id: currentProject.project_id,
+                            await upsertProjectUser({
+                              email: user.email,
+                              project_idx: currentProject.id,
                               role: newRole,
                             } as ProjectUser);
                           }}

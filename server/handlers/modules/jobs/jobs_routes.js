@@ -1,4 +1,4 @@
-// server/routes/jobs.js
+// server/handlers/modules/jobs/jobs_routes.js
 import express from "express";
 import {
   upsertJob,
@@ -8,8 +8,8 @@ import {
   upsertJobDefinition,
   deleteJobDefinition,
 } from "./jobs_controllers.js";
-import { authenticateUser } from "../../util/auth.js";
-import { checkProjectPermission } from "../../util/permissions.js";
+import { authenticateUser } from "../../../util/auth.js";
+import { checkProjectPermission } from "../../../util/permissions.js";
 
 const router = express.Router();
 

@@ -5,7 +5,6 @@ import { PageDefinition } from "@/types/pages";
 
 export function usePageDefinitions(isLoggedIn: boolean) {
   const queryClient = useQueryClient();
-
   const {
     data: pageDefinitions = [],
     isLoading: isLoadingPageDefinitions,
@@ -20,14 +19,7 @@ export function usePageDefinitions(isLoggedIn: boolean) {
   });
 
   const upsertPageDefinitionMutation = useMutation({
-    mutationFn: async (data: {
-      id?: number;
-      identifier: string;
-      name: string;
-      parent_page_definition_id?: number | null;
-      allowed_sections?: string[];
-      config_schema?: Record<string, any>;
-    }) => {
+    mutationFn: async (data: PageDefinition) => {
       await makeRequest.post("/api/pages/page-definitions/upsert", data);
     },
     onSuccess: () => {
@@ -36,8 +28,10 @@ export function usePageDefinitions(isLoggedIn: boolean) {
   });
 
   const deletePageDefinitionMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await makeRequest.post("/api/pages/page-definitions/delete", { id });
+    mutationFn: async (page_definition_id: string) => {
+      await makeRequest.post("/api/pages/page-definitions/delete", {
+        page_definition_id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pageDefinitions"] });
@@ -48,14 +42,9 @@ export function usePageDefinitions(isLoggedIn: boolean) {
     pageDefinitions,
     isLoadingPageDefinitions,
     refetchPageDefinitions,
-    upsertPageDefinition: (data: {
-      id?: number;
-      identifier: string;
-      name: string;
-      allowed_sections?: string[];
-      config_schema?: Record<string, any>;
-    }) => upsertPageDefinitionMutation.mutateAsync(data),
-    deletePageDefinition: (id: number) =>
-      deletePageDefinitionMutation.mutateAsync(id),
+    upsertPageDefinition: (data: PageDefinition) =>
+      upsertPageDefinitionMutation.mutateAsync(data),
+    deletePageDefinition: (page_definition_id: string) =>
+      deletePageDefinitionMutation.mutateAsync(page_definition_id),
   };
 }

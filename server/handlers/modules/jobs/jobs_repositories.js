@@ -1,7 +1,7 @@
-// server/modules/jobs/jobs_repositories.js
-import { db } from "../../connection/connect.js";
+// server/handlers/modules/jobs/jobs_repositories.js
+import { db } from "../../../connection/connect.js";
 import crypto from "crypto";
-import { storeStringAsUTC } from "../../functions/data.js";
+import { storeStringAsUTC } from "../../../functions/data.js";
 
 // ---------- JOB FUNCTIONS ----------
 export const getJobsFunction = async (project_idx) => {

@@ -13,21 +13,24 @@ export function useProjectPages(
     data: projectPages = [],
     isLoading: isLoadingProjectPages,
     refetch: refetchProjectPages,
-  } = useQuery({
+  } = useQuery<ProjectPage[]>({
     queryKey: ["projectPages", currentProjectId],
     queryFn: async () => {
       if (!currentProjectId) return [];
       const res = await makeRequest.post("/api/pages/get", {
         project_idx: currentProjectId,
       });
-      return res.data.projectPages;
+      return res.data.pages;
     },
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  const addProjectPageMutation = useMutation({
-    mutationFn: async (data: any) => {
-      await makeRequest.post("/api/pages/add", data);
+  const upsertProjectPageMutation = useMutation({
+    mutationFn: async (data: ProjectPage) => {
+      await makeRequest.post("/api/pages/upsert", {
+        project_idx: currentProjectId,
+        ...data,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -37,8 +40,11 @@ export function useProjectPages(
   });
 
   const deleteProjectPageMutation = useMutation({
-    mutationFn: async (data: { project_idx: number; id: number }) => {
-      await makeRequest.post("/api/pages/delete", data);
+    mutationFn: async (page_id: string) => {
+      await makeRequest.post("/api/pages/delete", {
+        project_idx: currentProjectId,
+        page_id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -51,7 +57,7 @@ export function useProjectPages(
     mutationFn: async (data: {
       project_idx: number;
       parent_page_id: number | null;
-      orderedIds: number[];
+      orderedIds: string[];
     }) => {
       await makeRequest.post("/api/pages/reorder", data);
     },
@@ -66,23 +72,23 @@ export function useProjectPages(
         currentProjectId,
       ]);
 
-      if (previousPages) {
-        const reordered = previousPages
-          .filter((p) => p.parent_page_id === data.parent_page_id)
-          .map((p) => p.id);
+      // if (previousPages) {
+      //   const reordered = previousPages
+      //     .filter((p) => p.parent_page_id === data.parent_page_id)
+      //     .map((p) => p.id);
 
-        // overwrite locally
-        queryClient.setQueryData<ProjectPage[]>(
-          ["projectPages", currentProjectId],
-          (old) => {
-            if (!old) return old;
-            const map = new Map(old.map((p) => [p.id, p]));
-            return data.orderedIds
-              .map((id) => map.get(id)!)
-              .concat(old.filter((p) => !data.orderedIds.includes(p.id)));
-          }
-        );
-      }
+      //   // overwrite locally
+      //   queryClient.setQueryData<ProjectPage[]>(
+      //     ["projectPages", currentProjectId],
+      //     (old) => {
+      //       if (!old) return old;
+      //       const map = new Map(old.map((p) => [p.id, p]));
+      //       return data.orderedIds
+      //         .map((id) => map.get(id)!)
+      //         .concat(old.filter((p) => !data.orderedIds.includes(p.id)));
+      //     }
+      //   );
+      // }
 
       return { previousPages };
     },
@@ -105,7 +111,7 @@ export function useProjectPages(
     projectPages,
     isLoadingProjectPages,
     refetchProjectPages,
-    addProjectPageMutation,
+    upsertProjectPageMutation,
     deleteProjectPageMutation,
     reorderProjectPagesMutation,
   };

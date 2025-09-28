@@ -1,5 +1,5 @@
-// server/controllers/employees.js
-import { db } from "../../connection/connect.js";
+// server/handlers/modules/employees/employees_repositories.js
+import { db } from "../../../connection/connect.js";
 
 // ---------- EMPLOYEE FUNCTIONS ----------
 export const getEmployeesFunction = async (project_idx) => {

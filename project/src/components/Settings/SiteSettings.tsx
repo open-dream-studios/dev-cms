@@ -12,7 +12,7 @@ import { useProjectContext } from "@/contexts/projectContext";
 const SiteSettings = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useProjectContext();
-  const { projectsData, updateProjectUser, projectUsers, deleteProjectUser } =
+  const { projectsData, upsertProjectUser, projectUsers, deleteProjectUser } =
     useContextQueries();
 
   const currentProject = useMemo(() => {
@@ -25,24 +25,12 @@ const SiteSettings = () => {
     .filter((u) => u.project_idx === currentProject.id)
     .map((u) => u.email);
 
-  const form = useProjectUserForm(emailsInProject);
-
-  const onSubmit = async (data: ProjectUserFormData) => {
-    if (!currentProject) return;
-    await updateProjectUser({
-      email: data.email,
-      role: data.role as UserRole,
-      project_idx: currentProject.id,
-    } as ProjectUser);
-    setShowAddProjectInput(false);
-  };
-
   const [showAddProjectInput, setShowAddProjectInput] =
     useState<boolean>(false);
   const [editListMode, setEditListMode] = useState<boolean>(false);
 
   const handleShowAddUserInput = () => {
-    form.reset({ email: "", role: validUserRoles[1] });
+    // form.reset({ email: "", role: validUserRoles[1] });
     setShowAddProjectInput(true);
     setEditListMode(false);
   };
@@ -82,7 +70,7 @@ const SiteSettings = () => {
 
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit)}
+      // onSubmit={form.handleSubmit(onSubmit)}
       className="ml-[5px] md:ml-[8px] w-full h-full flex flex-col pt-[50px]"
     >
       <div className="ml-[1px] flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]">

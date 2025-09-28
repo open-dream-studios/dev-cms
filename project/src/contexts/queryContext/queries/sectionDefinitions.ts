@@ -13,21 +13,16 @@ export function useSectionDefinitions(isLoggedIn: boolean) {
   } = useQuery<SectionDefinition[]>({
     queryKey: ["sectionDefinitions"],
     queryFn: async () => {
-      const res = await makeRequest.post("/api/sections/section-definitions/get-all");
+      const res = await makeRequest.post(
+        "/api/sections/section-definitions/get-all"
+      );
       return res.data.sectionDefinitions;
     },
     enabled: isLoggedIn,
   });
 
   const upsertSectionDefinitionMutation = useMutation({
-    mutationFn: async (data: {
-      id?: number;
-      identifier: string;
-      name: string;
-      parent_section_definition_id?: number | null;
-      allowed_elements?: string[];
-      config_schema?: Record<string, any>;
-    }) => {
+    mutationFn: async (data: SectionDefinition) => {
       await makeRequest.post("/api/sections/section-definitions/upsert", data);
     },
     onSuccess: () => {
@@ -36,8 +31,10 @@ export function useSectionDefinitions(isLoggedIn: boolean) {
   });
 
   const deleteSectionDefinitionMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await makeRequest.post("/api/sections/section-definitions/delete", { id });
+    mutationFn: async (section_definition_id: string) => {
+      await makeRequest.post("/api/sections/section-definitions/delete", {
+        section_definition_id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sectionDefinitions"] });
@@ -48,15 +45,9 @@ export function useSectionDefinitions(isLoggedIn: boolean) {
     sectionDefinitions,
     isLoadingSectionDefinitions,
     refetchSectionDefinitions,
-    upsertSectionDefinition: (data: {
-      id?: number;
-      identifier: string;
-      name: string;
-      parent_section_definition_id?: number | null;
-      allowed_elements?: string[];
-      config_schema?: Record<string, any>;
-    }) => upsertSectionDefinitionMutation.mutateAsync(data),
-    deleteSectionDefinition: (id: number) =>
-      deleteSectionDefinitionMutation.mutateAsync(id),
+    upsertSectionDefinition: (data: SectionDefinition) =>
+      upsertSectionDefinitionMutation.mutateAsync(data),
+    deleteSectionDefinition: (section_definition_id: string) =>
+      deleteSectionDefinitionMutation.mutateAsync(section_definition_id),
   };
 }

@@ -1,4 +1,4 @@
-// server/modules/jobs/jobs_controllers.js
+// server/handlers/modules/jobs/jobs_controllers.js
 import {
   deleteJobDefinitionFunction,
   deleteJobFunction,

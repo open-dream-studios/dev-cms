@@ -11,11 +11,16 @@ type Props = {
 
 const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
   const { currentUser } = useContext(AuthContext);
+  // const update = (key: string, val: any) => {
+  //   onChange({ ...values, [key]: val });
+  // };
   const update = (key: string, val: any) => {
-    onChange({ ...values, [key]: val });
+    onChange({ [key]: val }); // only send the single changed key
   };
 
   if (!currentUser) return null;
+
+  console.log(fields);
 
   return (
     <div className="flex flex-col gap-[14px] rounded-[8px]">

@@ -15,13 +15,12 @@ export function useSections(
     data: projectSections = [],
     isLoading: isLoadingSections,
     refetch: refetchSections,
-  } = useQuery({
+  } = useQuery<Section[]>({
     queryKey: ["sections", currentProjectId, currentPageId],
     queryFn: async () => {
       if (!currentProjectId || !currentPageId) return [];
       const res = await makeRequest.post("/api/sections/get", {
         project_idx: currentProjectId,
-        project_page_id: currentPageId,
       });
       return res.data.sections;
     },
@@ -29,9 +28,12 @@ export function useSections(
   });
 
   // Add or update a section
-  const addSectionMutation = useMutation({
-    mutationFn: async (data: any) => {
-      await makeRequest.post("/api/sections/add", data);
+  const upsertSectionMutation = useMutation({
+    mutationFn: async (data: Section) => {
+      await makeRequest.post("/api/sections/upsert", {
+        project_idx: currentProjectId,
+        ...data,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -42,8 +44,11 @@ export function useSections(
 
   // Delete section
   const deleteSectionMutation = useMutation({
-    mutationFn: async (data: { project_idx: number; id: number }) => {
-      await makeRequest.post("/api/sections/delete", data);
+    mutationFn: async (section_id: string) => {
+      await makeRequest.post("/api/sections/delete", {
+        project_idx: currentProjectId,
+        section_id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -58,7 +63,7 @@ export function useSections(
       project_idx: number;
       project_page_id: number;
       parent_section_id: number | null;
-      orderedIds: number[];
+      orderedIds: string[];
     }) => {
       await makeRequest.post("/api/sections/reorder", data);
     },
@@ -74,18 +79,18 @@ export function useSections(
         currentPageId,
       ]);
 
-      if (previousSections) {
-        queryClient.setQueryData<Section[]>(
-          ["sections", currentProjectId, currentPageId],
-          (old) => {
-            if (!old) return old;
-            const map = new Map(old.map((s) => [s.id, s]));
-            return data.orderedIds
-              .map((id) => map.get(id)!)
-              .concat(old.filter((s) => !data.orderedIds.includes(s.id)));
-          }
-        );
-      }
+      // if (previousSections) {
+      //   queryClient.setQueryData<Section[]>(
+      //     ["sections", currentProjectId, currentPageId],
+      //     (old) => {
+      //       if (!old) return old;
+      //       const map = new Map(old.map((s) => [s.id, s]));
+      //       return data.orderedIds
+      //         .map((id) => map.get(id)!)
+      //         .concat(old.filter((s) => !data.orderedIds.includes(s.id)));
+      //     }
+      //   );
+      // }
 
       return { previousSections };
     },
@@ -108,14 +113,14 @@ export function useSections(
     projectSections,
     isLoadingSections,
     refetchSections,
-    addSection: (data: any) => addSectionMutation.mutateAsync(data),
-    deleteSection: (data: { project_idx: number; id: number }) =>
-      deleteSectionMutation.mutateAsync(data),
+    upsertSection: (data: Section) => upsertSectionMutation.mutateAsync(data),
+    deleteSection: (section_id: string) =>
+      deleteSectionMutation.mutateAsync(section_id),
     reorderSections: (data: {
       project_idx: number;
       project_page_id: number;
       parent_section_id: number | null;
-      orderedIds: number[];
+      orderedIds: string[];
     }) => reorderSectionsMutation.mutate(data),
   };
 }

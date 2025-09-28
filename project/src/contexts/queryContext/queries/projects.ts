@@ -1,8 +1,7 @@
 // src/context/queryContext/queries/projects.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Project, AddProjectInput } from "@/types/project";
-import { useMemo } from "react";
+import { Project } from "@/types/project";
 
 export function useProjects(
   isLoggedIn: boolean,
@@ -11,7 +10,7 @@ export function useProjects(
   const queryClient = useQueryClient();
 
   const {
-    data: projectsData = [],
+    data: projectsData,
     isLoading: isLoadingProjects,
     refetch: refetchProjects,
   } = useQuery<Project[]>({
@@ -23,101 +22,44 @@ export function useProjects(
     enabled: isLoggedIn,
   });
 
-  const addProjectMutation = useMutation({
-    mutationFn: async (projectData: AddProjectInput) => {
-      await makeRequest.post("/api/projects/add", projectData);
+  const upsertProjectMutation = useMutation({
+    mutationFn: async (project: Project) => {
+      const res = await makeRequest.post("/api/projects/upsert", project);
+      return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-    },
-  });
-
-  const addProject = async (projectData: AddProjectInput) => {
-    await addProjectMutation.mutateAsync(projectData);
-  };
-
-  const updateProjectMutation = useMutation({
-    mutationFn: async (data: {
-      project_idx: number;
-      name: string;
-      short_name?: string;
-      domain?: string;
-      backend_domain?: string;
-      brand?: string;
-      logo?: string | null;
-    }) => {
-      const res = await makeRequest.post("/api/projects/update", data);
-      return res.data.project;
-    },
-    onSuccess: (updatedProject) => {
-      queryClient.setQueryData<Project[]>(["projects"], (old) => {
-        if (!old) return [];
-        return old.map((p) =>
-          p.id === updatedProject.id ? updatedProject : p
-        );
+      queryClient.invalidateQueries({
+        queryKey: ["projects"],
       });
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 
-  const updateProject = async (data: {
-    project_idx: number;
-    name: string;
-    short_name?: string;
-    domain?: string;
-    backend_domain?: string;
-    brand?: string;
-    logo?: string | null;
-  }) => {
-    await updateProjectMutation.mutateAsync(data);
+  const upsertProject = async (project: Project) => {
+    return await upsertProjectMutation.mutateAsync(project);
   };
 
-  const deleteProjectMutation = useMutation<
-    void,
-    Error,
-    string[],
-    { previousData: Project[] | undefined; queryKey: string[] }
-  >({
-    mutationFn: async (ids: string[]) => {
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (project_id: string) => {
       await makeRequest.post("/api/projects/delete", {
-        ids,
+        project_id,
       });
     },
-    onMutate: async (ids: string[]) => {
-      const queryKey = ["projects"];
-      await queryClient.cancelQueries({ queryKey });
-
-      const previousData = queryClient.getQueryData<Project[]>(queryKey);
-      if (!previousData) return { previousData, queryKey };
-
-      const newData = previousData.filter(
-        (project) => !ids.includes(project.project_id)
-      );
-      queryClient.setQueryData(queryKey, newData);
-      return { previousData, queryKey };
-    },
-    onError: (_err, _variables, context) => {
-      if (context?.previousData && context?.queryKey) {
-        queryClient.setQueryData(context.queryKey, context.previousData);
-      }
-    },
-    onSettled: (_data, _error, _variables, context) => {
-      if (context?.queryKey) {
-        queryClient.invalidateQueries({ queryKey: context.queryKey });
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["projects"],
+      });
     },
   });
 
-  const deleteProject = async (project: Project) => {
-    await deleteProjectMutation.mutateAsync([project.project_id]);
+  const deleteProject = async (project_id: string) => {
+    await deleteProjectMutation.mutateAsync(project_id);
   };
 
   return {
     projectsData,
     isLoadingProjects,
     refetchProjects,
-    addProject,
+    upsertProject,
     deleteProject,
-    updateProject
   };
 }

@@ -58,7 +58,7 @@ const SortableSectionItem = ({
     transition,
     isDragging,
   } = useSortable({
-    id: section.id,
+    id: section.section_id!,
   });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(
@@ -129,24 +129,29 @@ const SectionsSidebar = ({
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (currentProjectId && over && active.id !== over.id) {
-      const oldIndex = localSections.findIndex(
-        (p: Section) => p.id === active.id
-      );
-      const newIndex = localSections.findIndex(
-        (p: Section) => p.id === over.id
-      );
-      const newOrder = arrayMove(localSections, oldIndex, newIndex);
-      setLocalSections(newOrder);
+    if (!currentProjectId || !over || active.id === over.id) return;
 
-      if (!currentPage) return;
-      await reorderSections({
-        project_idx: currentProjectId,
-        project_page_id: currentPage.id,
-        parent_section_id: currentSection ? currentSection.id : null,
-        orderedIds: newOrder.map((p) => p.id),
-      });
-    }
+    const oldIndex = localSections.findIndex(
+      (s: Section) => s.section_id === active.id
+    );
+    const newIndex = localSections.findIndex(
+      (s: Section) => s.section_id === over.id
+    );
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newOrder = arrayMove(localSections, oldIndex, newIndex);
+    setLocalSections(newOrder);
+
+    if (!currentPage || !currentPage.page_id || !currentPage.id) return;
+
+    await reorderSections({
+      project_idx: currentProjectId,
+      project_page_id: currentPage.id,
+      parent_section_id:
+        currentSection && currentSection.id ? currentSection.id : null,
+      orderedIds: newOrder.map((s) => s.section_id!),
+    });
   };
 
   if (!currentUser) return null;
@@ -157,7 +162,7 @@ const SectionsSidebar = ({
       onDragEnd={handleDragEnd}
     >
       <SortableContext
-        items={localSections.map((p: Section) => p.id)}
+        items={localSections.map((p: Section) => p.section_id!)}
         strategy={verticalListSortingStrategy}
       >
         <div className="h-[100%] overflow-y-scroll flex flex-col gap-[9px]">

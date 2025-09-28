@@ -1,5 +1,5 @@
-// server/modules/calls/calls_repository.js
-import { db } from "../../connection/connect.js";
+// server/handlers/modules/calls/calls_repository.js
+import { db } from "../../../connection/connect.js";
 
 export async function getProjectByNumber(phoneNumber) {
   const q = "SELECT project_idx, numbers FROM twilio_apps";

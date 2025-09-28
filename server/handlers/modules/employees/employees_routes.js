@@ -1,4 +1,4 @@
-// server/routes/employees.js
+// server/handlers/modules/employees/employees_routes.js
 import express from "express";
 import {
   upsertEmployee,
@@ -8,8 +8,8 @@ import {
   deleteEmployeeAssignment,
   addEmployeeAssignment,
 } from "./employees_controller.js";
-import { authenticateUser } from "../../util/auth.js";
-import { checkProjectPermission } from "../../util/permissions.js";
+import { authenticateUser } from "../../../util/auth.js";
+import { checkProjectPermission } from "../../../util/permissions.js";
 
 const router = express.Router();
 

@@ -15,7 +15,7 @@ import { useAppContext } from "@/contexts/appContext";
 const ProjectSettings = () => {
   const { currentProjectId } = useProjectContext();
   const { currentUser } = useContext(AuthContext);
-  const { updateProject, projectsData } = useContextQueries();
+  const { upsertProject, projectsData } = useContextQueries();
   const { setUploadPopup } = useAppContext();
 
   const currentProjectData = projectsData.find(
@@ -45,10 +45,15 @@ const ProjectSettings = () => {
   }, [currentProjectData, form]);
 
   const onSubmit = async (data: ProjectSettingsFormData) => {
-    await updateProject({
-      project_idx: currentProjectData.id,
-      ...data,
-    });
+    await upsertProject({
+      project_id: currentProjectData.project_id,
+      name: data.name,
+      short_name: data.short_name,
+      domain: data.domain,
+      backend_domain: data.backend_domain,
+      brand: data.brand,
+      logo: data.logo,
+    } as Project);
     form.reset(data);
   };
 

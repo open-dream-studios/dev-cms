@@ -12,21 +12,21 @@ import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/products.js";
 import imageRouter from "./routes/images.js";
 import userRoutes from "./routes/users.js";
-import projectRoutes from "./routes/projects.js";
+import projectRoutes from "./handlers/projects/projects_routes.js"
 import integrationRoutes from "./routes/integrations.js";
 import projectModulesRoutes from "./routes/modules.js";
 import projectMediaRoutes from "./routes/media.js";
-import pageRoutes from "./routes/pages.js";
-import sectionRoutes from "./routes/sections.js";
+import pageRoutes from "./handlers/modules/pages/pages_routes.js";
+import sectionRoutes from "./handlers/modules/pages/sections_routes.js";
 import customerRoutes from "./routes/customers.js";
 import mediaLinkRoutes from "./routes/mediaLinks.js";
-import jobRoutes from "./modules/jobs/jobs_routes.js";
-import callRoutes from "./modules/calls/calls_routes.js";
-import taskRoutes from "./routes/tasks.js";
-import employeeRoutes from "./modules/employees/employees_routes.js";
+import jobRoutes from "./handlers/modules/jobs/jobs_routes.js";
+import callRoutes from "./handlers/modules/calls/calls_routes.js";
+import taskRoutes from "./handlers/modules/jobs/tasks_routes.js";
+import employeeRoutes from "./handlers/modules/employees/employees_routes.js";
 import { WebSocketServer } from "ws";
-import { handleTwilioStream } from "./modules/calls/twilio/twilio.js";
-import { initCallState } from "./modules/calls/twilio/callState.js";
+import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio.js";
+import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 
 dotenv.config();
 
