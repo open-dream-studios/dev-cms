@@ -1,11 +1,11 @@
-// server/routes/calls.js
+// server/modules/calls/calls_routes.js
 import express from "express";
 import {
   handleIncomingCall,
   tokenHandler,
   callStatusHandler,
   declineCallHandler
-} from "../controllers/calls.js";
+} from "./calls_controller.js";
 
 const router = express.Router();
 

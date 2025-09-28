@@ -1,4 +1,5 @@
-// server/services/twilio/activeClients.js
+// server/modules/calls/twilio/activeClients.js
+
 // projectId -> Set of client identities
 export const projectClients = new Map();
 

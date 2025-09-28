@@ -111,9 +111,9 @@ export function useEmployees(
   });
 
   const deleteEmployeeAssignmentMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (assignment_id: number) => {
       const res = await makeRequest.post("/api/employees/assignments/delete", {
-        id,
+        assignment_id,
         project_idx: currentProjectId,
       });
       return res.data;
@@ -133,8 +133,8 @@ export function useEmployees(
     await addEmployeeAssignmentMutation.mutateAsync(assignment);
   };
 
-  const deleteEmployeeAssignment = async (id: number) => {
-    await deleteEmployeeAssignmentMutation.mutateAsync(id);
+  const deleteEmployeeAssignment = async (assignment_id: number) => {
+    await deleteEmployeeAssignmentMutation.mutateAsync(assignment_id);
   };
 
   return {

@@ -1,20 +1,18 @@
-// server/controllers/calls.js
+// server/modules/calls/calls_controller.js
 import twilio from "twilio";
-import { db } from "../connection/connect.js";
 import {
   getClientsForProject,
   projectClients,
-} from "../services/twilio/activeClients.js";
-import { normalizeUSNumber } from "../functions/calls.js";
-import { getProjectByNumber } from "../repositories/twilio/getProjectByNumber.js";
+} from "./twilio/activeClients.js";
+import { normalizeUSNumber } from "./calls_helpers.js";
 import {
   setActiveCall,
   clearActiveCall,
   getActiveCall,
-} from "../services/twilio/callState.js";
-import { broadcastToProject } from "../services/ws/broadcast.js";
-import { projectCallMap } from "../services/twilio/twilio.js";
-import { getTwilioKeys } from "../repositories/twilio/getTwilioKeys.js";
+} from "./twilio/callState.js";
+import { broadcastToProject } from "../../services/ws/broadcast.js";
+import { projectCallMap } from "./twilio/twilio.js";
+import { getTwilioKeys, getProjectByNumber } from "./calls_repository.js";
 
 const {
   jwt: { AccessToken },

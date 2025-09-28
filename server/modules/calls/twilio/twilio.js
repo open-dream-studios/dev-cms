@@ -1,15 +1,14 @@
-// server/services/twilio/twilio.js
-import fs from "fs";
+// server/modules/calls/twilio/twilio.js
 import path from "path";
 import { fileURLToPath } from "url";
-import OpenAI from "openai"; // kept in file for future audio work
+import OpenAI from "openai"; 
 import {
   addClientToProject,
   removeClientFromProject,
-  getClientsForProject,
 } from "./activeClients.js";
-import { broadcastToProject } from "../ws/broadcast.js";
+import { broadcastToProject } from "../../../services/ws/broadcast.js";
 import { initCallState } from "./callState.js";
+import { decodeMuLawBuffer, flushStreamBuffer } from "../calls_helpers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const openai = new OpenAI(); // placeholder - only used later for transcriptions
@@ -99,14 +98,36 @@ export function handleTwilioStream(wss) {
           to,
         });
 
-        projectCallMap.set(projectId, {
-          parentSid: callSid,
-          childSid: null,
-          streamSid,
+        // projectCallMap.set(projectId, {
+        //   parentSid: callSid,
+        //   childSid: null,
+        //   streamSid,
+        //   from,
+        //   to,
+        //   startedAt: Date.now(),
+        // });
+
+        let info = projectCallMap.get(projectId) || {
+          parentSid: null,
+          childSids: [],
+          streams: [],
           from,
           to,
           startedAt: Date.now(),
-        });
+        };
+
+        if (!info.streams.includes(streamSid)) {
+          info.streams.push(streamSid);
+        }
+
+        // Track parent if not already set
+        if (!info.parentSid) {
+          info.parentSid = callSid;
+        } else if (!info.childSids.includes(callSid)) {
+          info.childSids.push(callSid);
+        }
+
+        projectCallMap.set(projectId, info);
 
         callBuffers[streamSid] = {
           chunks: [],
@@ -126,7 +147,19 @@ export function handleTwilioStream(wss) {
 
       // Twilio media stream "media" messages could be used later for ASR/transcription.
       if (data.event === "media") {
-        // (left intentionally blank for now — reserved for later audio processing)
+        const { streamSid, media } = data;
+        const buf = Buffer.from(media.payload, "base64");
+        const pcm = decodeMuLawBuffer(buf);
+
+        const s = callBuffers[streamSid];
+        if (!s) return;
+        s.chunks.push(pcm);
+
+        // flush every ~1s (8000 samples/sec * 2 bytes = 16kB)
+        if (!s.lastFlush || Date.now() - s.lastFlush > 1000) {
+          s.lastFlush = Date.now();
+          flushStreamBuffer(streamSid); // handles save + transcription
+        }
       }
 
       // Twilio stream "stop" event
@@ -147,8 +180,20 @@ export function handleTwilioStream(wss) {
           projectId: foundProjectId,
         });
 
+        // if (foundProjectId !== null) {
+        //   projectCallMap.delete(foundProjectId);
+        // }
         if (foundProjectId !== null) {
-          projectCallMap.delete(foundProjectId);
+          const info = projectCallMap.get(foundProjectId);
+          if (info) {
+            info.streams = info.streams.filter((s) => s !== streamSid);
+            info.childSids = info.childSids.filter((s) => s !== callSid);
+            if (info.streams.length === 0) {
+              projectCallMap.delete(foundProjectId);
+            } else {
+              projectCallMap.set(foundProjectId, info);
+            }
+          }
         }
 
         // cleanup buffers

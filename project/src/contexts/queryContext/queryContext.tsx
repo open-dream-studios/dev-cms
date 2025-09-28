@@ -271,7 +271,7 @@ export type QueryContextType = {
     task_id?: string;
     job_id?: string;
   }) => Promise<void>;
-  deleteEmployeeAssignment: (id: number) => Promise<void>;
+  deleteEmployeeAssignment: (assignment_id: number) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);

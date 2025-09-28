@@ -4,12 +4,12 @@ import {
   upsertJob,
   deleteJob,
   getJobs,
-  getAllJobDefinitions,
+  getJobDefinitions,
   upsertJobDefinition,
   deleteJobDefinition,
-} from "../controllers/jobs.js";
-import { authenticateUser } from "../util/auth.js";
-import { checkProjectPermission } from "../util/permissions.js";
+} from "./jobs_controllers.js";
+import { authenticateUser } from "../../util/auth.js";
+import { checkProjectPermission } from "../../util/permissions.js";
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.post(
   "/get-definitions",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getAllJobDefinitions
+  getJobDefinitions
 );
 
 router.post(

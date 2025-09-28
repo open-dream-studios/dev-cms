@@ -114,9 +114,7 @@ const Navbar = () => {
   };
 
   if (!currentUser) return null;
-  if (currentProject) {
-    console.log(currentProject.logo);
-  }
+
   return (
     <div
       style={

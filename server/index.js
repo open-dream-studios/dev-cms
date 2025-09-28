@@ -1,3 +1,6 @@
+// server/index.js
+import "./env.js";
+import { db } from "./connection/connect.js";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -17,18 +20,13 @@ import pageRoutes from "./routes/pages.js";
 import sectionRoutes from "./routes/sections.js";
 import customerRoutes from "./routes/customers.js";
 import mediaLinkRoutes from "./routes/mediaLinks.js";
-import jobRoutes from "./routes/jobs.js";
+import jobRoutes from "./modules/jobs/jobs_routes.js";
+import callRoutes from "./modules/calls/calls_routes.js";
 import taskRoutes from "./routes/tasks.js";
-import employeeRoutes from "./routes/employees.js";
-import { db } from "./connection/connect.js";
-import OpenAI from "openai";
-import twilio from "twilio";
-const { twiml } = twilio;
-import "./env.js";
+import employeeRoutes from "./modules/employees/employees_routes.js";
 import { WebSocketServer } from "ws";
-import callRoutes from "./routes/calls.js";
-import { handleTwilioStream } from "./services/twilio/twilio.js";
-import { initCallState } from "./services/twilio/callState.js";
+import { handleTwilioStream } from "./modules/calls/twilio/twilio.js";
+import { initCallState } from "./modules/calls/twilio/callState.js";
 
 dotenv.config();
 
@@ -99,6 +97,8 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/voice", callRoutes);
+
+// WebSocket
 const wss = new WebSocketServer({ server });
 app.set("wss", wss);
 initCallState(wss);

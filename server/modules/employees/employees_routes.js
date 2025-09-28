@@ -7,9 +7,9 @@ import {
   getEmployeeAssignments,
   deleteEmployeeAssignment,
   addEmployeeAssignment,
-} from "../controllers/employees.js";
-import { authenticateUser } from "../util/auth.js";
-import { checkProjectPermission } from "../util/permissions.js";
+} from "./employees_controller.js";
+import { authenticateUser } from "../../util/auth.js";
+import { checkProjectPermission } from "../../util/permissions.js";
 
 const router = express.Router();
 
