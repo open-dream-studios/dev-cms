@@ -1,4 +1,4 @@
-// server/handlers/modules/employees/employees_controller.js
+// server/handlers/modules/employees/employees_controllers.js
 import {
   addEmployeeAssignmentFunction,
   deleteEmployeeAssignmentFunction,

@@ -1,11 +1,11 @@
 // project/src/modules/runFrontendModule.ts
 import { moduleDefinitions } from "@/modules/moduleDefinitions";
-import { Integration, Module, Project, ProjectModule } from "@/types/project";
+import { Integration, ModuleDefinition, Project, ProjectModule } from "@/types/project";
 import { makeRequest } from "@/util/axios";
 import { toast } from "react-toastify";
 
 export type RunModuleContext = {
-  modules: Module[];
+  modules: ModuleDefinition[];
   projectModules: ProjectModule[];
   integrations: Integration[];
   localData?: any;
@@ -53,7 +53,7 @@ export const moduleRequest = async (identifier: string, args: Record<string, any
 };
 
 export const runFrontendModule = async (identifier: string, ctx: {
-  modules: Module[];
+  modules: ModuleDefinition[];
   projectModules: ProjectModule[];
   integrations: Integration[];
   localData?: any;

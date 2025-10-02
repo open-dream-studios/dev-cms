@@ -7,7 +7,7 @@ import {
   getEmployeeAssignments,
   deleteEmployeeAssignment,
   addEmployeeAssignment,
-} from "./employees_controller.js";
+} from "./employees_controllers.js";
 import { authenticateUser } from "../../../util/auth.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
 
@@ -15,7 +15,7 @@ const router = express.Router();
 
 // ---- EMPLOYEES ----
 router.post(
-  "/get",
+  "/",
   authenticateUser,
   checkProjectPermission(1), // viewer+
   getEmployees

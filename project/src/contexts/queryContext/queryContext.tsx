@@ -175,8 +175,8 @@ export type QueryContextType = {
   customers: Customer[];
   isLoadingCustomers: boolean;
   refetchCustomers: () => Promise<any>;
-  upsertCustomer: (data: any) => Promise<Customer>;
-  deleteCustomer: (data: { project_idx: number; id: number }) => Promise<void>;
+  upsertCustomer: (data: Customer) => Promise<string>;
+  deleteCustomer: (customer_id: string) => Promise<void>;
 
   // ---- Job Definitions ----
   jobDefinitions: JobDefinition[];
@@ -267,10 +267,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     refetchIntegrations,
     upsertIntegration,
     deleteIntegration,
-  } = useIntegrations(
-    isLoggedIn,
-    currentProjectId,
-  );
+  } = useIntegrations(isLoggedIn, currentProjectId);
   const {
     moduleDefinitions,
     isLoadingModuleDefinitions,
@@ -337,8 +334,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     customers,
     isLoadingCustomers,
     refetchCustomers,
-    upsertCustomerMutation,
-    deleteCustomerMutation,
+    upsertCustomer,
+    deleteCustomer,
   } = useCustomers(isLoggedIn, currentProjectId);
 
   const {
@@ -451,8 +448,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         customers,
         isLoadingCustomers,
         refetchCustomers,
-        upsertCustomer: (data: any) => upsertCustomerMutation.mutateAsync(data),
-        deleteCustomer: (data) => deleteCustomerMutation.mutateAsync(data),
+        upsertCustomer,
+        deleteCustomer,
         jobDefinitions: jobDefinitionsData ?? [],
         isLoadingJobDefinitions,
         refetchJobDefinitions,

@@ -40,7 +40,7 @@ export const CustomerMiniCard = ({
       onClick={() => handleCustomerClick(customer)}
       style={{
         backgroundColor:
-          currentCustomer && currentCustomer.id === customer.id
+          currentCustomer && currentCustomer.customer_id === customer.customer_id
             ? "rgba(255,255,255,0.057)"
             : "rgba(255,255,255,0.028)",
         color: appTheme[currentUser.theme].text_4,

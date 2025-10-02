@@ -1,8 +1,8 @@
 // src/types/customers.ts
-export interface Customer {
-  id: number;
+export type Customer = {
+  id?: number;
+  customer_id: string | null;
   project_idx: number;
-  customer_id: string; 
   first_name: string;
   last_name: string;
   email: string | null;
@@ -13,6 +13,6 @@ export interface Customer {
   state: string | null;
   zip: string | null;
   notes: string | null;
-  created_at: string;   
-  updated_at: string;   
-}
+  created_at?: string;
+  updated_at?: string;
+};

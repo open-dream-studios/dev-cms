@@ -25,7 +25,7 @@ export function formatPhone(value: string) {
 
 export async function fetchPredictions(address: string, sessionToken: string) {
   try {
-    const response = await makeRequest.post("/api/customers/autocomplete", {
+    const response = await makeRequest.post("/api/address/autocomplete", {
       address,
       sessiontoken: sessionToken,
     });
@@ -38,7 +38,7 @@ export async function fetchPredictions(address: string, sessionToken: string) {
 
 export async function fetchPlaceDetails(placeId: string, sessionToken: string) {
   try {
-    const response = await makeRequest.post("/api/customers/place-details", {
+    const response = await makeRequest.post("/api/address/place-details", {
       place_id: placeId,
       sessiontoken: sessionToken,
     });

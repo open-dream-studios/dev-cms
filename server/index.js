@@ -18,11 +18,12 @@ import moduleRoutes from "./handlers/modules/modules/modules_routes.js";
 import projectMediaRoutes from "./routes/media.js";
 import pageRoutes from "./handlers/modules/pages/pages_routes.js";
 import sectionRoutes from "./handlers/modules/pages/sections_routes.js";
-import customerRoutes from "./routes/customers.js";
+import customerRoutes from "./handlers/modules/customers/customers_routes.js";
 import mediaLinkRoutes from "./routes/mediaLinks.js";
 import jobRoutes from "./handlers/modules/jobs/jobs_routes.js";
 import callRoutes from "./handlers/modules/calls/calls_routes.js";
 import taskRoutes from "./handlers/modules/jobs/tasks_routes.js";
+import addressRoutes from "./handlers/data/addressData/addressData_routes.js";
 import employeeRoutes from "./handlers/modules/employees/employees_routes.js";
 import { WebSocketServer } from "ws";
 import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio.js";
@@ -97,6 +98,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/voice", callRoutes);
+app.use("/api/address", addressRoutes)
 
 // WebSocket
 const wss = new WebSocketServer({ server });

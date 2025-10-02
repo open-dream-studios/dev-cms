@@ -40,6 +40,7 @@ import { useEmployeeForm } from "@/hooks/useEmployeeForm";
 import { Employee } from "@/types/employees";
 import { dateToString } from "@/util/functions/Time";
 import { Job, JobDefinition } from "@/types/jobs";
+import { Customer } from "@/types/customers";
 
 export type ExposedEmployeeForm = UseFormReturn<EmployeeFormData>;
 
@@ -141,7 +142,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     isOptimisticUpdate,
     projectsData,
     projectModules,
-    modules,
+    moduleDefinitions,
     integrations,
     upsertCustomer,
     upsertMediaLinks,
@@ -151,6 +152,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     upsertEmployee,
     jobDefinitions,
     jobs,
+    customers,
   } = useContextQueries();
   const pathname = usePathname();
   const [previousPath, setPreviousPath] = useState<string | null>(null);
@@ -312,7 +314,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     const filterJobType = (products: Product[]) => {
-      if (dataFilters.jobType.length === 0) return products
+      if (dataFilters.jobType.length === 0) return products;
       const resultSet = new Set<Product>();
       const addProductsByType = (type: string) => {
         const definition = jobDefinitions.find(
@@ -474,16 +476,27 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const onCustomerSubmit: SubmitHandler<CustomerFormData> = async (data) => {
     if (!currentProjectId) return;
-    const saved = await upsertCustomer({
-      ...data,
+    const newCustomer: Customer = {
       project_idx: currentProjectId,
-      customer_id: currentCustomer?.customer_id,
-      id: currentCustomer?.id,
+      customer_id: currentCustomer ? currentCustomer.customer_id : null,
+      first_name: data.first_name,
+      last_name: data.last_name,
       phone: data.phone?.replace(/\D/g, "") ?? null,
-    });
-
-    if (saved) {
-      setCurrentCustomerData(saved);
+      email: data.email ?? null,
+      address_line1: data.address_line1 ?? null,
+      address_line2: data.address_line2 ?? null,
+      city: data.city ?? null,
+      state: data.state ?? null,
+      zip: data.zip ?? null,
+      notes: data.notes ?? null,
+    };
+    const newCustomerId = await upsertCustomer(newCustomer);
+    console.log(newCustomerId)
+    if (newCustomerId) {
+      setCurrentCustomerData({
+        ...newCustomer,
+        customer_id: newCustomerId,
+      });
     }
 
     exposedCustomerForm?.reset({
@@ -738,21 +751,21 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const handleRunModule = async (identifier: string) => {
-    if (!currentProject) return;
-    if (
-      projectModules.some(
-        (projectModule: ProjectModule) =>
-          projectModule.identifier === identifier
-      )
-    ) {
-      await runFrontendModule(identifier, {
-        modules,
-        projectModules,
-        integrations,
-        localData,
-        currentProject,
-      });
-    }
+    // if (!currentProject) return;
+    // if (
+    //   projectModules.some(
+    //     (projectModule: ProjectModule) =>
+    //       projectModule.identifier === identifier
+    //   )
+    // ) {
+    //   await runFrontendModule(identifier, {
+    //     modules,
+    //     projectModules,
+    //     integrations,
+    //     localData,
+    //     currentProject,
+    //   });
+    // }
   };
 
   const [addingCustomer, setAddingCustomer] = useState<boolean>(false);

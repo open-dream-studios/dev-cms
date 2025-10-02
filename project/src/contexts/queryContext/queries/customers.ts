@@ -18,7 +18,7 @@ export function useCustomers(
     queryKey: ["customers", currentProjectId],
     queryFn: async (): Promise<Customer[]> => {
       if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/customers/get", {
+      const res = await makeRequest.post("/api/customers", {
         project_idx: currentProjectId,
       });
 
@@ -40,20 +40,12 @@ export function useCustomers(
   });
 
   const upsertCustomerMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await makeRequest.post("/api/customers/update", data);
-      return res.data.customer;  
-    },
-    onSuccess: (customer) => {
-      queryClient.invalidateQueries({
-        queryKey: ["customers", currentProjectId],
+    mutationFn: async (data: Customer) => {
+      const res = await makeRequest.post("/api/customers/upsert", {
+        ...data,
+        project_idx: currentProjectId,
       });
-    },
-  });
-
-  const deleteCustomerMutation = useMutation({
-    mutationFn: async (data: { project_idx: number; id: number }) => {
-      await makeRequest.post("/api/customers/delete", data);
+      return res.data.customer_id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -62,11 +54,34 @@ export function useCustomers(
     },
   });
 
+  const deleteCustomerMutation = useMutation({
+    mutationFn: async (customer_id: string) => {
+      await makeRequest.post("/api/customers/delete", {
+        customer_id,
+        project_idx: currentProjectId,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["customers", currentProjectId],
+      });
+    },
+  });
+
+  const upsertCustomer = async (data: Customer) => {
+    const customer_id = await upsertCustomerMutation.mutateAsync(data);
+    return customer_id;
+  };
+
+  const deleteCustomer = async (customer_id: string) => {
+    await deleteCustomerMutation.mutateAsync(customer_id);
+  };
+
   return {
     customers,
     isLoadingCustomers,
     refetchCustomers,
-    upsertCustomerMutation,
-    deleteCustomerMutation,
+    upsertCustomer,
+    deleteCustomer,
   };
 }

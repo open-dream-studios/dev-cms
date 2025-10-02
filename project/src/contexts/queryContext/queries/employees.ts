@@ -18,7 +18,7 @@ export function useEmployees(
     queryKey: ["employees", currentProjectId],
     queryFn: async () => {
       if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/employees/get", {
+      const res = await makeRequest.post("/api/employees", {
         project_idx: currentProjectId,
       });
 

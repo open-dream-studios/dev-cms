@@ -18,6 +18,7 @@ import { usePathname } from "next/navigation";
 import { Employee } from "@/types/employees";
 import { EmployeeMiniCard } from "../EmployeesModule/EmployeeCatalog";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
+import { customerToForm } from "@/util/schemas/customerSchema";
 
 const ModuleLeftBar = () => {
   const {
@@ -62,11 +63,8 @@ const ModuleLeftBar = () => {
       setAddingCustomer(true);
     }
     const customerInput = contextMenu.input as Customer;
-    if (customerInput.id) {
-      await deleteCustomer({
-        project_idx: currentProjectId,
-        id: customerInput.id,
-      });
+    if (customerInput.customer_id) {
+      await deleteCustomer(customerInput.customer_id);
     }
   };
 
@@ -116,6 +114,9 @@ const ModuleLeftBar = () => {
   const handleAddCustomerClick = () => {
     setCurrentCustomerData(null);
     setAddingCustomer(true);
+    if (customerForm) {
+      customerForm.reset(customerToForm(null));
+    }
   };
 
   const handleAddEmployeeClick = async () => {
