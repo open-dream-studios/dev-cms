@@ -7,9 +7,7 @@ import { getUserAccess } from "@/util/functions/Users";
 
 export function useIntegrations(
   isLoggedIn: boolean,
-  currentProjectId: number | null,
-  currentUser: User | null,
-  projectUsers: ProjectUser[]
+  currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
   const {
@@ -25,19 +23,15 @@ export function useIntegrations(
       });
       return res.data.integrations || [];
     },
-    enabled:
-      isLoggedIn &&
-      !!currentProjectId &&
-      getUserAccess(currentProjectId, projectUsers, currentUser?.email) >= 3,
+    enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertIntegrationMutation = useMutation({
-    mutationFn: async (data: {
-      project_idx: number;
-      module_id: number;
-      config: Record<string, string>;
-    }) => {
-      await makeRequest.post("/api/integrations/update", data);
+    mutationFn: async (data: Integration) => {
+      await makeRequest.post("/api/integrations/upsert", {
+        ...data,
+        project_idx: currentProjectId,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -53,65 +47,24 @@ export function useIntegrations(
     },
   });
 
-  const upsertIntegration = async (data: {
-    project_idx: number;
-    module_id: number;
-    config: Record<string, string>;
-  }) => {
+  const upsertIntegration = async (data: Integration) => {
     await upsertIntegrationMutation.mutateAsync(data);
   };
 
-  const deleteIntegrationKeyMutation = useMutation({
-    mutationFn: async (integration: {
-      project_idx: number;
-      module_id: number;
-      key: string;
-    }) => {
+  const deleteIntegrationMutation = useMutation({
+    mutationFn: async (integration_id: string) => {
       await makeRequest.post("/api/integrations/delete", {
-        project_idx: integration.project_idx,
-        module_id: integration.module_id,
-        key: integration.key,
+        integration_id,
+        project_idx: currentProjectId,
       });
-      return integration;
     },
-    onMutate: async (deletedIntegration) => {
-      const queryKey = ["integrations", currentProjectId];
-      await queryClient.cancelQueries({ queryKey });
-
-      const previousData = queryClient.getQueryData<any[]>(queryKey);
-      if (!previousData) return { previousData, queryKey };
-
-      const newData = previousData.map((integration) => {
-        if (integration.module_id !== deletedIntegration.module_id)
-          return integration;
-
-        const newConfig = { ...integration.config };
-        delete newConfig[deletedIntegration.key];
-
-        return { ...integration, config: newConfig };
-      });
-
-      queryClient.setQueryData(queryKey, newData);
-      return { previousData, queryKey };
-    },
-    onError: (_err, _deletedIntegration, context) => {
-      if (context?.previousData && context?.queryKey) {
-        queryClient.setQueryData(context.queryKey, context.previousData);
-      }
-    },
-    onSettled: (_data, _err, _deletedIntegration, context) => {
-      if (context?.queryKey) {
-        queryClient.invalidateQueries({ queryKey: context.queryKey });
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["integrations"] });
     },
   });
 
-  const deleteIntegrationKey = async (data: {
-    project_idx: number;
-    module_id: number;
-    key: string;
-  }) => {
-    await deleteIntegrationKeyMutation.mutateAsync(data);
+  const deleteIntegration = async (integration_id: string) => {
+    await deleteIntegrationMutation.mutateAsync(integration_id);
   };
 
   return {
@@ -119,6 +72,6 @@ export function useIntegrations(
     isLoadingIntegrations,
     refetchIntegrations,
     upsertIntegration,
-    deleteIntegrationKey,
+    deleteIntegration,
   };
 }

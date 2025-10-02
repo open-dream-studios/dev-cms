@@ -5,7 +5,7 @@ import {
   upsertTaskFunction,
 } from "./tasks_repositories.js";
 
-// ---------- TASKS ----------
+// ---------- TASK CONTROLLERS ----------
 export const getTasks = async (req, res) => {
   const project_idx = req.user?.project_idx;
   if (!project_idx) {

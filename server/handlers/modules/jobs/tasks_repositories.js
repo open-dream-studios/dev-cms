@@ -1,7 +1,7 @@
 // server/handlers/modules/jobs/tasks_repositories.js
 import { db } from "../../../connection/connect.js";
 
-// ---------- TASKS ----------
+// ---------- TASK FUNCTIONS ----------
 export const getTasksFunction = async (project_idx) => {
   const q = `
     SELECT * FROM tasks

@@ -17,21 +17,20 @@ export function useProjectModules(
     queryKey: ["projectModules", currentProjectId],
     queryFn: async () => {
       if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/modules/get", {
+      const res = await makeRequest.post("/api/modules", {
         project_idx: currentProjectId,
       });
-      return res.data.projectModules;
+      return res.data.modules;
     },
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  const addProjectModuleMutation = useMutation({
-    mutationFn: async (data: {
-      project_idx: number;
-      module_id: number;
-      settings?: any;
-    }) => {
-      await makeRequest.post("/api/modules/add", data);
+  const upsertProjectModuleMutation = useMutation({
+    mutationFn: async (data: ProjectModule) => {
+      await makeRequest.post("/api/modules/upsert", {
+        ...data,
+        project_idx: currentProjectId,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -41,8 +40,11 @@ export function useProjectModules(
   });
 
   const deleteProjectModuleMutation = useMutation({
-    mutationFn: async (data: { project_idx: number; module_id: number }) => {
-      await makeRequest.post("/api/modules/delete", data);
+    mutationFn: async (module_definition_id: number) => {
+      await makeRequest.post("/api/modules/delete", {
+        module_definition_id,
+        project_idx: currentProjectId,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -55,12 +57,20 @@ export function useProjectModules(
     return projectModules?.some((pm) => pm.identifier === identifier);
   };
 
+  const upsertProjectModule = async (projectModule: ProjectModule) => {
+    await upsertProjectModuleMutation.mutateAsync(projectModule);
+  };
+
+  const deleteProjectModule = async (module_definition_id: number) => {
+    await deleteProjectModuleMutation.mutateAsync(module_definition_id);
+  };
+
   return {
     projectModules,
     isLoadingProjectModules,
     refetchProjectModules,
-    addProjectModuleMutation,
-    deleteProjectModuleMutation,
+    upsertProjectModule,
+    deleteProjectModule,
     hasProjectModule,
   };
 }

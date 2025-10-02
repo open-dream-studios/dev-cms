@@ -1,12 +1,11 @@
 // server/definitions/moduleHandlers.js
-import { db } from "../connection/connect.js";
-import { formatSQLDate } from "../functions/data.js";
-import { getConfigKeys } from "../functions/integrations.js";
-import { getSortedProducts } from "../functions/products.js";
+import { formatSQLDate } from "../../functions/data.js";
+import { getConfigKeys } from "../../functions/integrations.js";
+import { getSortedProducts } from "../../functions/products.js";
 import { updateGoogleSheet } from "./moduleHelpers/google.js";
 
 export const handlers = {
-  "products-export-to-sheets-module": async (moduleConfig, payload) => {
+  "products-export-to-sheets-module": async (moduleConfig) => {
     const project_idx = moduleConfig.project_idx;
     try {
       const configKeys = await getConfigKeys(moduleConfig);
@@ -57,20 +56,21 @@ export const handlers = {
         "Images",
       ];
 
-      return await updateGoogleSheet(
+      const success = await updateGoogleSheet(
         header,
         rows,
         spreadsheetId,
         sheetName,
         serviceAccountJson
       );
+      return success;
     } catch (err) {
       console.error(err);
-      throw new Error(err.message);
+      return false;
     }
   },
 
-  "products-wix-sync-cms-module": async (moduleConfig, payload) => {
+  "products-wix-sync-cms-module": async (moduleConfig) => {
     const project_idx = moduleConfig.project_idx;
     try {
       const configKeys = await getConfigKeys(moduleConfig);
@@ -104,16 +104,17 @@ export const handlers = {
         //   timeout: 10000,
         //   validateStatus: (status) => status < 500,
         // });
+        return true;
       } catch (err) {
         console.error(
           "Failed to sync with Wix:",
           err.response?.data || err.message
         );
-        throw new Error("Wix sync failed")
+        return false;
       }
     } catch (e) {
       console.error(e);
-      throw new Error("Wix sync failed");
+      return false;
     }
   },
 };

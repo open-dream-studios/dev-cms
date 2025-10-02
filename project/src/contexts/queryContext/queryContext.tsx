@@ -11,7 +11,7 @@ import { QueryObserverResult, useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "../authContext";
 import {
   Integration,
-  Module,
+  ModuleDefinition,
   Project,
   ProjectModule,
   ProjectUser,
@@ -26,7 +26,7 @@ import {
   useProducts,
   useProjectUsers,
   useIntegrations,
-  useModules,
+  useModuleDefinitions,
   useMediaFolders,
   useMedia,
   usePageDefinitions,
@@ -79,45 +79,23 @@ export type QueryContextType = {
   refetchProjectModules: () => Promise<
     QueryObserverResult<ProjectModule[], Error>
   >;
-  addProjectModule: (data: {
-    project_idx: number;
-    module_id: number;
-    settings?: any;
-  }) => Promise<void>;
-  deleteProjectModule: (data: {
-    project_idx: number;
-    module_id: number;
-  }) => Promise<void>;
+  upsertProjectModule: (data: ProjectModule) => Promise<void>;
+  deleteProjectModule: (module_definition_id: number) => Promise<void>;
   hasProjectModule: (identifier: string) => boolean;
 
   // ---- Integrations ----
   integrations: Integration[];
   isLoadingIntegrations: boolean;
   refetchIntegrations: () => Promise<any>;
-  upsertIntegration: (data: {
-    project_idx: number;
-    module_id: number;
-    config: Record<string, string>;
-  }) => Promise<void>;
-  deleteIntegrationKey: (data: {
-    project_idx: number;
-    module_id: number;
-    key: string;
-  }) => Promise<void>;
+  upsertIntegration: (data: Integration) => Promise<void>;
+  deleteIntegration: (integration_id: string) => Promise<void>;
 
-  // ---- Modules ----
-  modules: Module[];
-  isLoadingModules: boolean;
-  refetchModules: () => Promise<any>;
-  upsertModule: (data: {
-    id?: number;
-    name: string;
-    description?: string;
-    identifier: string;
-    config_schema?: string[];
-    parent_module_id: number | null;
-  }) => Promise<void>;
-  deleteModule: (id: number) => Promise<void>;
+  // ---- Modules Definitions ----
+  moduleDefinitions: ModuleDefinition[];
+  isLoadingModuleDefinitions: boolean;
+  refetchModuleDefinitions: () => Promise<any>;
+  upsertModuleDefinition: (data: ModuleDefinition) => Promise<void>;
+  deleteModuleDefinition: (module_definition_id: string) => Promise<void>;
 
   // ---- Media ----
   media: Media[];
@@ -214,13 +192,6 @@ export type QueryContextType = {
   upsertJob: (job: Job) => Promise<any>;
   deleteJob: (job_id: string) => Promise<void>;
 
-  // ---- Task Definitions ----
-  // taskDefinitions: TaskDefinition[];
-  // isLoadingTaskDefinitions: boolean;
-  // refetchTaskDefinitions: () => Promise<any>;
-  // upsertTaskDefinition: (definition: TaskDefinition) => Promise<any>;
-  // deleteTaskDefinition: (definition_id: string) => Promise<void>;
-
   // ---- Tasks ----
   tasks: Task[];
   isLoadingTasks: boolean;
@@ -286,8 +257,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     projectModules,
     isLoadingProjectModules,
     refetchProjectModules,
-    addProjectModuleMutation,
-    deleteProjectModuleMutation,
+    upsertProjectModule,
+    deleteProjectModule,
     hasProjectModule,
   } = useProjectModules(isLoggedIn, currentProjectId);
   const {
@@ -295,20 +266,18 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     isLoadingIntegrations,
     refetchIntegrations,
     upsertIntegration,
-    deleteIntegrationKey,
+    deleteIntegration,
   } = useIntegrations(
     isLoggedIn,
     currentProjectId,
-    currentUser,
-    projectUsersData ?? []
   );
   const {
-    modules,
-    isLoadingModules,
-    refetchModules,
-    upsertModule,
-    deleteModule,
-  } = useModules(isLoggedIn, currentProjectId);
+    moduleDefinitions,
+    isLoadingModuleDefinitions,
+    refetchModuleDefinitions,
+    upsertModuleDefinition,
+    deleteModuleDefinition,
+  } = useModuleDefinitions(isLoggedIn, currentProjectId);
   const {
     media,
     isLoadingMedia,
@@ -381,14 +350,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   } = useJobDefinitions(isLoggedIn, currentProjectId);
   const { jobsData, isLoadingJobs, refetchJobs, upsertJob, deleteJob } =
     useJobs(isLoggedIn, currentProjectId);
-
-  // const {
-  //   taskDefinitionsData,
-  //   isLoadingTaskDefinitions,
-  //   refetchTaskDefinitions,
-  //   upsertTaskDefinition,
-  //   deleteTaskDefinition,
-  // } = useTaskDefinitions(isLoggedIn, currentProjectId);
   const { tasksData, isLoadingTasks, refetchTasks, upsertTask, deleteTask } =
     useTasks(isLoggedIn, currentProjectId);
 
@@ -427,26 +388,19 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         projectModules,
         isLoadingProjectModules,
         refetchProjectModules,
-        addProjectModule: (data: {
-          project_idx: number;
-          module_id: number;
-          settings?: any;
-        }) => addProjectModuleMutation.mutateAsync(data),
-        deleteProjectModule: (data: {
-          project_idx: number;
-          module_id: number;
-        }) => deleteProjectModuleMutation.mutateAsync(data),
+        upsertProjectModule,
+        deleteProjectModule,
         hasProjectModule,
         integrations,
         isLoadingIntegrations,
         refetchIntegrations,
         upsertIntegration,
-        deleteIntegrationKey,
-        modules,
-        isLoadingModules,
-        refetchModules,
-        upsertModule,
-        deleteModule,
+        deleteIntegration,
+        moduleDefinitions,
+        isLoadingModuleDefinitions,
+        refetchModuleDefinitions,
+        upsertModuleDefinition,
+        deleteModuleDefinition,
         media,
         mediaFolders,
         isLoadingMedia,

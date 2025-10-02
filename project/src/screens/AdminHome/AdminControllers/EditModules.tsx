@@ -15,20 +15,28 @@ import {
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import { useState } from "react";
-import { Module } from "@/types/project";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
+import { ModuleDefinition } from "@/types/project";
 
 const EditModules = () => {
   const { currentUser } = useContext(AuthContext);
-  const { modules, upsertModule, deleteModule, isLoadingModules } =
-    useContextQueries();
+  const {
+    moduleDefinitions,
+    upsertModuleDefinition,
+    deleteModuleDefinition,
+    isLoadingModuleDefinitions,
+  } = useContextQueries();
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
-  const [editingModule, setEditingModule] = useState<number | null>(null);
+  const [selectedModule, setSelectedModule] = useState<ModuleDefinition | null>(
+    null
+  );
+  const [editingModule, setEditingModule] = useState<ModuleDefinition | null>(
+    null
+  );
   const [showForm, setShowForm] = useState(false);
   const form = useModulesForm();
 
@@ -41,21 +49,19 @@ const EditModules = () => {
   if (!currentUser) return null;
 
   const onSubmit = async (data: ModuleFormData) => {
-    const module = editingModule
-      ? modules.find((module: Module) => module.id === editingModule)
-      : null;
-
-    await upsertModule({
-      id: editingModule || undefined,
+    await upsertModuleDefinition({
+      module_definition_id: editingModule
+        ? editingModule.module_definition_id
+        : null,
       name: data.name,
-      description: data.description,
+      description: data.description ?? null,
       identifier: data.identifier,
       config_schema: configKeys,
-      parent_module_id: module
-        ? module.parent_module_id
-        : selectedModule === null
-        ? null
-        : selectedModule.id,
+      parent_module_id: editingModule
+        ? editingModule.parent_module_id
+        : selectedModule !== null && selectedModule.id
+        ? selectedModule.id
+        : null,
     });
     setEditingModule(null);
     setShowForm(false);
@@ -80,7 +86,7 @@ const EditModules = () => {
     setNewKey("");
   };
 
-  const handleDeleteModule = async (mod: Module) => {
+  const handleDeleteModule = async (moduleDefinition: ModuleDefinition) => {
     if (!currentUser) return null;
     setModal2({
       ...modal2,
@@ -93,8 +99,11 @@ const EditModules = () => {
       borderRadius: "rounded-[12px] md:rounded-[15px]",
       content: (
         <Modal2Continue
-          text={"Delete module " + mod.name + "?"}
-          onContinue={() => deleteModule(mod.id)}
+          text={"Delete module " + moduleDefinition.name + "?"}
+          onContinue={() => {
+            if (moduleDefinition.module_definition_id)
+              deleteModuleDefinition(moduleDefinition.module_definition_id);
+          }}
           threeOptions={false}
         />
       ),
@@ -115,29 +124,34 @@ const EditModules = () => {
     setConfigKeys(configKeys.filter((k) => k !== key));
   };
 
-  const handleModuleClick = (module: Module) => {
+  const handleModuleClick = (moduleDefinition: ModuleDefinition) => {
     if (selectedModule === null) {
-      setSelectedModule(module);
+      setSelectedModule(moduleDefinition);
     }
   };
 
-  const handleEditModuleClick = (e: React.MouseEvent, mod: Module) => {
+  const handleEditModuleClick = (
+    e: React.MouseEvent,
+    moduleDefinition: ModuleDefinition
+  ) => {
     e.stopPropagation();
-    setEditingModule(mod.id);
+    setEditingModule(moduleDefinition);
     form.reset({
-      name: mod.name,
-      description: mod.description || "",
-      identifier: mod.identifier || "",
+      name: moduleDefinition.name,
+      description: moduleDefinition.description || "",
+      identifier: moduleDefinition.identifier || "",
     });
-    setConfigKeys(mod.config_schema || []);
+    setConfigKeys(moduleDefinition.config_schema || []);
     setShowForm(true);
   };
 
   const filteredModules = useMemo(() => {
     return selectedModule === null
-      ? modules.filter((m) => m.parent_module_id === null)
-      : modules.filter((m) => m.parent_module_id === selectedModule.id);
-  }, [modules, selectedModule]);
+      ? moduleDefinitions.filter((m) => m.parent_module_id === null)
+      : moduleDefinitions.filter(
+          (m) => m.parent_module_id === selectedModule.id
+        );
+  }, [moduleDefinitions, selectedModule]);
 
   const handleBackClick = () => {
     setShowForm(false);
@@ -148,12 +162,15 @@ const EditModules = () => {
       identifier: "",
     });
     setConfigKeys([]);
-    setEditingModule(null)
+    setEditingModule(null);
   };
 
-  const handleDeleteModuleClick = (e: React.MouseEvent, mod: Module) => {
+  const handleDeleteModuleClick = (
+    e: React.MouseEvent,
+    moduleDefinitions: ModuleDefinition
+  ) => {
     e.stopPropagation();
-    handleDeleteModule(mod);
+    handleDeleteModule(moduleDefinitions);
   };
 
   return (
@@ -304,12 +321,12 @@ const EditModules = () => {
 
       {!editingModule && (
         <div className="flex flex-col gap-2">
-          {isLoadingModules ? (
+          {isLoadingModuleDefinitions ? (
             <p>Loading...</p>
           ) : (
-            filteredModules.map((mod: Module) => (
+            filteredModules.map((moduleDefinitions: ModuleDefinition) => (
               <div
-                key={mod.id}
+                key={moduleDefinitions.id}
                 style={{
                   backgroundColor: appTheme[currentUser.theme].background_1_2,
                 }}
@@ -317,22 +334,27 @@ const EditModules = () => {
                   selectedModule === null &&
                   "hover:brightness-[88%] dim cursor-pointer"
                 } flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
-                onClick={() => handleModuleClick(mod)}
+                onClick={() => handleModuleClick(moduleDefinitions)}
               >
                 <div className="w-[calc(100%-90px)] truncate">
-                  <p className="font-semibold truncate">{mod.name}</p>
+                  <p className="font-semibold truncate">
+                    {moduleDefinitions.name}
+                  </p>
                   <p
                     style={{ color: appTheme[currentUser.theme].text_4 }}
                     className="text-sm truncate"
                   >
-                    {mod.identifier} | {mod.description}
+                    {moduleDefinitions.identifier} |{" "}
+                    {moduleDefinitions.description}
                   </p>
                 </div>
 
                 {!showForm && (
                   <div className="flex flex-row gap-[8px]">
                     <div
-                      onClick={(e) => handleEditModuleClick(e, mod)}
+                      onClick={(e) =>
+                        handleEditModuleClick(e, moduleDefinitions)
+                      }
                       style={{
                         backgroundColor:
                           appTheme[currentUser.theme].background_2_selected,
@@ -346,7 +368,9 @@ const EditModules = () => {
                     </div>
 
                     <div
-                      onClick={(e) => handleDeleteModuleClick(e, mod)}
+                      onClick={(e) =>
+                        handleDeleteModuleClick(e, moduleDefinitions)
+                      }
                       style={{
                         backgroundColor:
                           appTheme[currentUser.theme].background_2_selected,

@@ -3,7 +3,7 @@ export * from "./products";
 export * from "./projectUsers";
 export * from "./projectModules";
 export * from "./integrations";
-export * from "./modules";
+export * from "./moduleDefinitions";
 export * from "./media";
 export * from "./mediaFolders";
 export * from "./pageDefinitions";

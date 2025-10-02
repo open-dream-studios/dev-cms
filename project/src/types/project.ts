@@ -1,3 +1,5 @@
+import { string } from "zod";
+
 // project/src/types/project.ts
 export type Project = {
   id?: number;
@@ -21,28 +23,33 @@ export type ProjectUser = {
   invited_at?: string;
 };
 
-export type Module = {
-  id: number;
+export type ModuleDefinition = {
+  id?: number;
+  module_definition_id: string | null;
   name: string;
   identifier: string;
   description: string | null;
-  config_schema?: string[];
   parent_module_id: number | null;
+  config_schema: string[];
 };
 
 export type ProjectModule = {
-  id: number;
+  id?: number;
+  module_id: string | null;
+  module_definition_id: number;
   project_idx: number;
-  module_id: number;
-  name: string;
-  description: string | null;
-  identifier: string;
   settings: any;
-  parent_module_id: number | null;
+  name?: string;
+  description?: string | null;
+  identifier?: string;
+  parent_module_id?: number | null;
 };
 
 export type Integration = {
+  id?: number;
+  integration_id: string | null;
   project_idx: number;
   module_id: number;
-  config: Record<string, string>;
+  integration_key: string;
+  integration_value: string | null;
 };
