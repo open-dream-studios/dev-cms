@@ -12,7 +12,7 @@ const router = express.Router();
 
 // ---- TASKS ----
 router.post(
-  "/get",
+  "/",
   authenticateUser,
   checkProjectPermission(1), // viewer+
   getTasks

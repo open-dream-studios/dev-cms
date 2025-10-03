@@ -17,7 +17,7 @@ export function useMediaLinks(
     queryKey: ["mediaLinks", currentProjectId],
     queryFn: async () => {
       if (!currentProjectId) return [];
-      const res = await makeRequest.get("/api/media-links/", {
+      const res = await makeRequest.get("/api/media/media-links/", {
         params: { project_idx: currentProjectId },
       });
       return res.data.mediaLinks || [];
@@ -27,7 +27,7 @@ export function useMediaLinks(
 
   const upsertMediaLinksMutation = useMutation({
     mutationFn: async (items: MediaLink[]) => {
-      await makeRequest.post("/api/media-links/update", {
+      await makeRequest.post("/api/media/media-links/update", {
         project_idx: currentProjectId,
         items,
       });
@@ -47,7 +47,7 @@ export function useMediaLinks(
   // ✅ Bulk delete
   const deleteMediaLinksMutation = useMutation({
     mutationFn: async (ids: number[]) => {
-      await makeRequest.post("/api/media-links/delete", { ids, project_idx: currentProjectId });
+      await makeRequest.post("/api/media/media-links/delete", { ids, project_idx: currentProjectId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -63,7 +63,7 @@ export function useMediaLinks(
   // ✅ Reorder
   const reorderMediaLinksMutation = useMutation({
     mutationFn: async (orderedIds: number[]) => {
-      await makeRequest.post("/api/media-links/reorder", {
+      await makeRequest.post("/api/media/media-links/reorder", {
         project_idx: currentProjectId,
         orderedIds,
       });

@@ -20,7 +20,7 @@ export function useMediaFolders(
       const res = await makeRequest.get("/api/media/folders", {
         params: { project_idx: currentProjectId },
       });
-      return res.data.folders || [];
+      return res.data.mediaFolders || [];
     },
     enabled: isLoggedIn && !!currentProjectId,
   });

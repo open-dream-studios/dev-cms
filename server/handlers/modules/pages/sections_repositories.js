@@ -91,40 +91,76 @@ export const upsertSectionFunction = async (project_idx, reqBody) => {
 };
 
 export const deleteSectionFunction = async (project_idx, section_id) => {
+  const connection = await db.promise().getConnection();
   try {
-    // 1. Look up the section we’re deleting
-    const [rows] = await db.promise().query(
-      `SELECT order_index, parent_section_id, project_page_id
+    await connection.beginTransaction();
+
+    // 1. Look up the section
+    const [rows] = await connection.query(
+      `SELECT parent_section_id, project_page_id
        FROM project_sections
-       WHERE section_id = ? AND project_idx = ?`,
+       WHERE section_id = ? AND project_idx = ?
+       LIMIT 1`,
       [section_id, project_idx]
     );
 
-    if (rows.length === 0) return false;
-    const { order_index, parent_section_id, project_page_id } = rows[0];
+    if (rows.length === 0) {
+      await connection.rollback();
+      connection.release();
+      return { success: false, message: "Section not found" };
+    }
+
+    const { parent_section_id, project_page_id } = rows[0];
 
     // 2. Delete the section
-    await db.promise().query(
+    const [deleteResult] = await connection.query(
       `DELETE FROM project_sections 
-       WHERE section_id = ? AND project_idx = ?`,
+       WHERE section_id = ? AND project_idx = ? 
+       LIMIT 1`,
       [section_id, project_idx]
     );
 
-    // 3. Shift siblings’ order_index down
-    await db.promise().query(
-      `UPDATE project_sections
-       SET order_index = order_index - 1
-       WHERE project_idx = ?
-       AND project_page_id = ?
-       AND (parent_section_id <=> ?)
-       AND order_index > ?`,
-      [project_idx, project_page_id, parent_section_id, order_index]
-    );
+    if (deleteResult.affectedRows === 0) {
+      await connection.rollback();
+      connection.release();
+      return { success: false, message: "No section deleted" };
+    }
 
-    return true;
+    // 3. Reindex siblings (same page + same parent_section_id, or NULL for root)
+    await connection.query(`SET @rownum := -1`);
+
+    const reindexQuery = `
+      UPDATE project_sections
+      JOIN (
+        SELECT id, (@rownum := @rownum + 1) AS new_order
+        FROM project_sections
+        WHERE project_idx = ? 
+          AND project_page_id = ?
+          AND ${
+            parent_section_id ? "parent_section_id = ?" : "parent_section_id IS NULL"
+          }
+        ORDER BY order_index
+      ) AS ordered
+      ON project_sections.id = ordered.id
+      SET project_sections.order_index = ordered.new_order
+    `;
+
+    if (parent_section_id) {
+      await connection.query(reindexQuery, [project_idx, project_page_id, parent_section_id]);
+    } else {
+      await connection.query(reindexQuery, [project_idx, project_page_id]);
+    }
+
+    // 4. Commit
+    await connection.commit();
+    connection.release();
+
+    return { success: true, deleted: 1 };
   } catch (err) {
+    await connection.rollback();
+    connection.release();
     console.error("❌ Function Error -> deleteSectionFunction:", err);
-    return false;
+    return { success: false, error: "Delete transaction failed" };
   }
 };
 

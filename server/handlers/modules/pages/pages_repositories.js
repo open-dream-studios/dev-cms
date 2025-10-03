@@ -112,40 +112,72 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
 };
 
 export const deletePageFunction = async (project_idx, page_id) => {
+  const connection = await db.promise().getConnection();
   try {
-    // 1. Look up the deleted page's order_index
-    const [rows] = await db.promise().query(
-      `SELECT order_index, parent_page_id 
+    await connection.beginTransaction();
+
+    // 1. Lookup parent_page_id for the page being deleted
+    const [rows] = await connection.query(
+      `SELECT parent_page_id 
        FROM project_pages 
-       WHERE page_id = ? AND project_idx = ?`,
+       WHERE page_id = ? AND project_idx = ? 
+       LIMIT 1`,
       [page_id, project_idx]
     );
 
-    if (rows.length === 0) return false;
-    const { order_index, parent_page_id } = rows[0];
+    if (rows.length === 0) {
+      await connection.rollback();
+      connection.release();
+      return { success: false, message: "Page not found" };
+    }
+
+    const parent_page_id = rows[0].parent_page_id;
 
     // 2. Delete the page
-    await db
-      .promise()
-      .query(
-        `DELETE FROM project_pages WHERE page_id = ? AND project_idx = ?`,
-        [page_id, project_idx]
-      );
-
-    // 3. Shift down all siblings with higher order_index
-    await db.promise().query(
-      `UPDATE project_pages
-       SET order_index = order_index - 1
-       WHERE project_idx = ?
-       AND (parent_page_id <=> ?)
-       AND order_index > ?`,
-      [project_idx, parent_page_id, order_index]
+    const [deleteResult] = await connection.query(
+      `DELETE FROM project_pages WHERE page_id = ? AND project_idx = ? LIMIT 1`,
+      [page_id, project_idx]
     );
 
-    return true;
+    if (deleteResult.affectedRows === 0) {
+      await connection.rollback();
+      connection.release();
+      return { success: false, message: "No page deleted" };
+    }
+
+    // 3. Reindex order_index for siblings (same parent, or root if null)
+    await connection.query(`SET @rownum := -1`);
+
+    const reindexQuery = `
+      UPDATE project_pages
+      JOIN (
+        SELECT id, (@rownum := @rownum + 1) AS new_order
+        FROM project_pages
+        WHERE project_idx = ? AND ${
+          parent_page_id ? "parent_page_id = ?" : "parent_page_id IS NULL"
+        }
+        ORDER BY order_index
+      ) AS ordered
+      ON project_pages.id = ordered.id
+      SET project_pages.order_index = ordered.new_order
+    `;
+
+    if (parent_page_id) {
+      await connection.query(reindexQuery, [project_idx, parent_page_id]);
+    } else {
+      await connection.query(reindexQuery, [project_idx]);
+    }
+
+    // 4. Commit
+    await connection.commit();
+    connection.release();
+
+    return { success: true, deleted: 1 };
   } catch (err) {
-    console.error("❌ Function Error -> deletePageFunction: ", err);
-    return false;
+    await connection.rollback();
+    connection.release();
+    console.error("❌ Function Error -> deletePageFunction:", err);
+    return { success: false, error: "Delete transaction failed" };
   }
 };
 

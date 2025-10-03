@@ -7,7 +7,7 @@ import MediaFoldersSidebar from "../MediaManager/MediaFoldersSidebar";
 import MediaGrid from "@/screens/MediaManager/MediaGrid";
 import MediaToolbar from "../MediaManager/MediaToolbar";
 import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
-import { Media, MediaFolder, MediaInsert } from "@/types/media";
+import { Media, MediaFolder } from "@/types/media";
 import { useAppContext } from "@/contexts/appContext";
 import { collectParentIds } from "@/util/functions/Tree";
 
@@ -39,11 +39,11 @@ const MediaManager = () => {
     : media;
 
   const handleReorder = (newOrder: Media[]) => {
-    if (!activeFolder) return;
-    reorderMedia({
-      folder_id: activeFolder.id,
-      orderedIds: newOrder.map((m) => m.id),
-    });
+    if (!activeFolder || !activeFolder.id) return;
+    // reorderMedia({
+    //   folder_id: activeFolder.id,
+    //   orderedIds: newOrder.map((m) => m.id),
+    // });
   };
 
   return (
@@ -53,16 +53,24 @@ const MediaManager = () => {
         onClose={() => setUploadPopup(false)}
         onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
           if (!activeFolder) return;
-          const upload_items = uploadObjects.map((upload: CloudinaryUpload) => {
-            return {
-              project_idx: currentProjectId,
-              public_id: upload.public_id,
-              url: upload.url,
-              type: "image",
-              folder_id: activeFolder.id,
-              media_usage: "general",
-            } as MediaInsert;
-          });
+          const folderImages = media.filter(
+            (m: Media) => m.folder_id === activeFolder.id
+          );
+          const upload_items = uploadObjects.map(
+            (upload: CloudinaryUpload, index: number) => {
+              return {
+                media_id: null,
+                project_idx: currentProjectId,
+                public_id: upload.public_id,
+                url: upload.url,
+                type: "image",
+                folder_id: activeFolder.id,
+                media_usage: "module",
+                tags: null,
+                ordinal: folderImages.length + index + 1,
+              } as Media;
+            }
+          );
           await addMedia(upload_items);
           refetchMedia();
         }}

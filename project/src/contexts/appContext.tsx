@@ -228,7 +228,7 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     try {
-      const response = await axios.post("/api/images/compress", formData, {
+      const response = await axios.post("/api/media/compress", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

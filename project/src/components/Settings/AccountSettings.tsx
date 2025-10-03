@@ -26,7 +26,7 @@ const AccountSettings = () => {
     { previousUser: User | null }
   >({
     mutationFn: async (newTheme) => {
-      await makeRequest.put("/api/users/update-current", { theme: newTheme });
+      await makeRequest.put("/api/auth/update-current-user", { theme: newTheme });
     },
     onMutate: (newTheme) => {
       queryClient.cancelQueries({ queryKey: ["currentUser"] });

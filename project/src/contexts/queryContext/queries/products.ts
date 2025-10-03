@@ -34,7 +34,7 @@ export function useProducts(
   const updateProductsMutation = useMutation({
     mutationFn: async (products: Product[]) => {
       if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/products/update", {
+      const res = await makeRequest.post("/api/products/upsert", {
         project_idx: currentProjectId,
         products,
       });

@@ -15,7 +15,7 @@ export function useJobs(isLoggedIn: boolean, currentProjectId: number | null) {
     queryKey: ["jobs", currentProjectId],
     queryFn: async () => {
       if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/jobs/get", {
+      const res = await makeRequest.post("/api/jobs", {
         project_idx: currentProjectId,
       });
 

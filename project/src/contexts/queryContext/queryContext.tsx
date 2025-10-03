@@ -18,7 +18,7 @@ import {
 } from "@/types/project";
 import { Product } from "@/types/products";
 import { useProjectContext } from "../projectContext";
-import { Media, MediaFolder, MediaInsert, MediaLink } from "@/types/media";
+import { Media, MediaFolder, MediaLink } from "@/types/media";
 import { useMediaLinks } from "./queries/mediaLinks";
 import {
   useProjectModules,
@@ -104,8 +104,8 @@ export type QueryContextType = {
   isLoadingMediaFolders: boolean;
   refetchMedia: () => void;
   refetchMediaFolders: () => void;
-  addMedia: (data: MediaInsert[]) => Promise<Media[]>;
-  deleteMedia: (id: number) => Promise<void>;
+  addMedia: (data: Media[]) => Promise<Media[]>;
+  deleteMedia: (media_id: string) => Promise<void>;
   reorderMedia: (data: {
     folder_id: number | null;
     orderedIds: number[];

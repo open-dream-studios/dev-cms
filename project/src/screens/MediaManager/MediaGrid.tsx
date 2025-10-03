@@ -23,7 +23,6 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 type SortableMediaItemProps = {
   media: Media;
-  id: number;
   disabled?: boolean;
   editMode: boolean;
   setMediaSelected: React.Dispatch<React.SetStateAction<Media | null>>;
@@ -34,7 +33,6 @@ type SortableMediaItemProps = {
 
 function SortableMediaItem({
   media,
-  id,
   disabled = false,
   editMode,
   setMediaSelected,
@@ -49,7 +47,7 @@ function SortableMediaItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, disabled, animateLayoutChanges: () => false });
+  } = useSortable({ id: media.media_id!, disabled, animateLayoutChanges: () => false });
 
   const { currentUser } = useContext(AuthContext);
   const { deleteMedia, mediaFolders } = useContextQueries();
@@ -134,7 +132,9 @@ function SortableMediaItem({
           className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
           onClick={async (e: any) => {
             e.stopPropagation();
-            await deleteMedia(id);
+            if (media.media_id) {
+              await deleteMedia(media.media_id);
+            }
           }}
         >
           <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
@@ -318,18 +318,19 @@ export default function MediaGrid({
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={localMedia.map((m) => m.id)}
+          items={localMedia.map((m: Media) => m.media_id!)}
           strategy={rectSortingStrategy}
         >
           <div
             className={`p-4 grid gap-4 ${
-              view === "grid" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"
+              view === "grid"
+                ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                : "grid-cols-1"
             }`}
           >
             {localMedia.map((m) => (
               <SortableMediaItem
                 key={m.id}
-                id={m.id}
                 media={m}
                 disabled={activeFolder === null}
                 editMode={editMode}

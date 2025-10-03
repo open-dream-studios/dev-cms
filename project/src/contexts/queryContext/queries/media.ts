@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/media.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Media, MediaInsert } from "@/types/media";
+import { Media } from "@/types/media";
 
 export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   const queryClient = useQueryClient();
@@ -25,7 +25,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   const addMediaMutation = useMutation<
     Media[],
     Error,
-    { project_idx: number; items: MediaInsert[] }
+    { project_idx: number; items: Media[] }
   >({
     mutationFn: async (data) => {
       const res = await makeRequest.post("/api/media/add", data);
@@ -36,7 +36,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     },
   });
 
-  const addMedia = async (items: MediaInsert[]): Promise<Media[]> => {
+  const addMedia = async (items: Media[]): Promise<Media[]> => {
     if (!currentProjectId) throw new Error("Project ID is missing");
     return await addMediaMutation.mutateAsync({
       project_idx: currentProjectId,
@@ -45,10 +45,10 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   };
 
   const deleteMediaMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (media_id: string) => {
       await makeRequest.post("/api/media/delete", {
         project_idx: currentProjectId,
-        id,
+        media_id,
       });
     },
     onSuccess: () => {
@@ -56,8 +56,8 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     },
   });
 
-  const deleteMedia = async (id: number) => {
-    deleteMediaMutation.mutateAsync(id);
+  const deleteMedia = async (media_id: string) => {
+    deleteMediaMutation.mutateAsync(media_id);
   };
 
   const reorderMediaMutation = useMutation({

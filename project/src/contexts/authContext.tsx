@@ -68,7 +68,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     useQuery<User | null>({
       queryKey: ["currentUser"],
       queryFn: async () => {
-        const res = await makeRequest.get("/api/users/current");
+        const res = await makeRequest.get("/api/auth/current-user");
         return res.data;
       },
       staleTime: 1000 * 60 * 5,

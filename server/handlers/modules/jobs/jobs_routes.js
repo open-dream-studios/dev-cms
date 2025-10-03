@@ -13,6 +13,28 @@ import { checkProjectPermission } from "../../../util/permissions.js";
 
 const router = express.Router();
 
+// ---- JOBS ----
+router.post(
+  "/",
+  authenticateUser,
+  checkProjectPermission(1), // viewer+
+  getJobs
+);
+
+router.post(
+  "/upsert",
+  authenticateUser,
+  checkProjectPermission(2), // editor+
+  upsertJob
+);
+
+router.post(
+  "/delete",
+  authenticateUser,
+  checkProjectPermission(2), // editor+
+  deleteJob
+);
+
 // ---- JOB DEFINITIONS ----
 router.post(
   "/get-definitions",
@@ -33,28 +55,6 @@ router.post(
   authenticateUser,
   checkProjectPermission(3), // owner+
   deleteJobDefinition
-);
-
-// ---- JOBS (PROJECT USAGE) ----
-router.post(
-  "/get",
-  authenticateUser,
-  checkProjectPermission(1), // viewer+
-  getJobs
-);
-
-router.post(
-  "/upsert",
-  authenticateUser,
-  checkProjectPermission(2), // editor+
-  upsertJob
-);
-
-router.post(
-  "/delete",
-  authenticateUser,
-  checkProjectPermission(2), // editor+
-  deleteJob
 );
 
 export default router;

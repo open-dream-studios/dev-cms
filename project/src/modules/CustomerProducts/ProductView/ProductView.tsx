@@ -25,7 +25,7 @@ import {
 import { useProductForm } from "@/hooks/useProductForm";
 import ProductInputField from "../Forms/InputField";
 import { useProjectContext } from "@/contexts/projectContext";
-import { MediaInsert, MediaLink, TempMediaLink } from "@/types/media";
+import { MediaLink } from "@/types/media";
 import { usePathname } from "next/navigation";
 import { Customer } from "@/types/customers";
 import CustomerTag from "@/modules/components/ProductCard/CustomerTag";
@@ -304,29 +304,45 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         multiple={true}
         onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
           if (!currentProjectId) return;
-          const media_items = uploadObjects.map((upload: CloudinaryUpload) => {
-            return {
-              project_idx: currentProjectId,
-              public_id: upload.public_id,
-              url: upload.url,
-              type: "image",
-              folder_id: null,
-              media_usage: "product",
-            } as MediaInsert;
-          });
-          const mediaObjects = await addMedia(media_items);
-          setProductImages((prev) => {
-            const startIndex = prev.length;
-            const newImages: TempMediaLink[] = mediaObjects.map((m, index) => ({
-              entity_type: "product",
-              entity_id: null,
-              media_id: m.id,
-              url: m.url,
-              ordinal: startIndex + index,
-              isTemp: true,
-            }));
-            return [...prev, ...newImages];
-          });
+            //  const folderImages = media.filter(
+            //           (m: Media) => m.folder_id === activeFolder.id
+            //         );
+          // const media_items = uploadObjects.map((upload: CloudinaryUpload) => {
+            
+          //             return {
+          //                   media_id: null,
+          //                   project_idx: currentProjectId,
+          //                   public_id: upload.public_id,
+          //                   url: upload.url,
+          //                   type: "image",
+          //                   folder_id: null,
+          //                   media_usage: "module",
+          //                   tags: null,
+          //                   ordinal: folderImages.length + index + 1,
+          //                 } as Media;
+
+          //   return {
+          //     project_idx: currentProjectId,
+          //     public_id: upload.public_id,
+          //     url: upload.url,
+          //     type: "image",
+          //     folder_id: null,
+          //     media_usage: "product",
+          //   } as Media;
+          // });
+          // const mediaObjects = await addMedia(media_items);
+          // setProductImages((prev) => {
+          //   const startIndex = prev.length;
+          //   const newImages: TempMediaLink[] = mediaObjects.map((m, index) => ({
+          //     entity_type: "product",
+          //     entity_id: null,
+          //     media_id: m.id,
+          //     url: m.url,
+          //     ordinal: startIndex + index,
+          //     isTemp: true,
+          //   }));
+          //   return [...prev, ...newImages];
+          // });
           refetchMedia();
         }}
       />

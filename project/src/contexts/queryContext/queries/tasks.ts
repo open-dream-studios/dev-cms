@@ -15,7 +15,7 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
     queryKey: ["tasks", currentProjectId],
     queryFn: async () => {
       if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/tasks/get", {
+      const res = await makeRequest.post("/api/tasks", {
         project_idx: currentProjectId,
       });
 

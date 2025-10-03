@@ -8,18 +8,15 @@ import http from "http";
 import https from "https";
 import fs from "fs";
 import cookieParser from "cookie-parser";
-import authRoutes from "./routes/auth.js";
-import productRoutes from "./routes/products.js";
-import imageRouter from "./routes/images.js";
-import userRoutes from "./routes/users.js";
+import authRoutes from "./handlers/auth/auth_routes.js";
+import productRoutes from "./handlers/modules/products/products_routes.js";
 import projectRoutes from "./handlers/projects/projects_routes.js"
 import integrationRoutes from "./handlers/integrations/integrations_routes.js";
 import moduleRoutes from "./handlers/modules/modules/modules_routes.js";
-import projectMediaRoutes from "./routes/media.js";
+import projectMediaRoutes from "./handlers/modules/media/media_routes.js";
 import pageRoutes from "./handlers/modules/pages/pages_routes.js";
 import sectionRoutes from "./handlers/modules/pages/sections_routes.js";
 import customerRoutes from "./handlers/modules/customers/customers_routes.js";
-import mediaLinkRoutes from "./routes/mediaLinks.js";
 import jobRoutes from "./handlers/modules/jobs/jobs_routes.js";
 import callRoutes from "./handlers/modules/calls/calls_routes.js";
 import taskRoutes from "./handlers/modules/jobs/tasks_routes.js";
@@ -83,14 +80,11 @@ app.use(
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api/images", imageRouter);
 app.use("/api/projects", projectRoutes);
 app.use("/api/integrations", integrationRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/media", projectMediaRoutes);
-app.use("/api/media-links", mediaLinkRoutes);
 app.use("/api/pages", pageRoutes);
 app.use("/api/sections", sectionRoutes);
 app.use("/api/customers", customerRoutes);
