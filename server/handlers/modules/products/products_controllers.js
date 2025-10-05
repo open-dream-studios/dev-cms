@@ -1,5 +1,6 @@
 // server/handlers/modules/products/products_controllers.js
-import { db } from "../../../connection/connect.js";
+
+import { deleteProductsFunction, getProductsFunction, upsertProductsFunction } from "./products_repositories.js";
 
 // ---------- PRODUCT CONTROLLERS ----------
 export const getProducts = async (req, res) => {
