@@ -1,10 +1,10 @@
 // project/src/modules/CustomerProducts/ProductView/ProductJobs.tsx
-import { AuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
+import { AuthContext } from "@/contexts/authContext"; 
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { Job, JobDefinition } from "@/types/jobs";
 import { Product } from "@/types/products";
@@ -19,7 +19,7 @@ interface ProductJobsProps {
 
 const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useProjectContext()
+  const { currentProject } = useCurrentDataStore()
   const {
     upsertJobDefinition,
     jobDefinitions,

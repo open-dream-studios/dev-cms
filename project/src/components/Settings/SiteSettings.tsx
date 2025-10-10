@@ -2,17 +2,13 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { ProjectUser, UserRole, validUserRoles } from "@/types/project";
-import { appTheme } from "@/util/appTheme";
-import { useContext, useMemo, useState } from "react";
-import { useProjectUserForm } from "@/hooks/useProjectUserForm";
-import { ProjectUserFormData } from "@/util/schemas/projectUserSchema";
-import { useProjectContext } from "@/contexts/projectContext";
+import { useContext, useMemo } from "react";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 const SiteSettings = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useProjectContext();
-  const { projectsData, upsertProjectUser, projectUsers, deleteProjectUser } =
+  const { currentProjectId } = useCurrentDataStore();
+  const { projectsData } =
     useContextQueries();
 
   const currentProject = useMemo(() => {
@@ -20,53 +16,6 @@ const SiteSettings = () => {
   }, [projectsData, currentProjectId]);
 
   if (!currentUser || !currentProject) return null;
-
-  const emailsInProject = projectUsers
-    .filter((u) => u.project_idx === currentProject.id)
-    .map((u) => u.email);
-
-  const [showAddProjectInput, setShowAddProjectInput] =
-    useState<boolean>(false);
-  const [editListMode, setEditListMode] = useState<boolean>(false);
-
-  const handleShowAddUserInput = () => {
-    // form.reset({ email: "", role: validUserRoles[1] });
-    setShowAddProjectInput(true);
-    setEditListMode(false);
-  };
-
-  const rowIsOwnerOrAdmin = () => {
-    return (
-      projectUsers.findIndex(
-        (user: ProjectUser) =>
-          user.email === currentUser.email &&
-          user.project_idx === currentProject.id &&
-          user.role === "owner"
-      ) !== -1 ||
-      projectUsers.findIndex(
-        (user: ProjectUser) =>
-          user.email === currentUser.email &&
-          user.project_idx === currentProject.id &&
-          user.role === "admin"
-      ) !== -1 ||
-      currentUser.admin === 1
-    );
-  };
-
-  const getCurrentRole = () => {
-    const indexFound = projectUsers.findIndex(
-      (user: ProjectUser) =>
-        user.email === currentUser.email &&
-        user.project_idx === currentProject.id
-    );
-    if (indexFound === -1) return null;
-    return projectUsers[indexFound].role;
-  };
-
-  const handleDeleteProjectUser = async (user: ProjectUser) => {
-    if (!currentProject) return;
-    await deleteProjectUser(user);
-  };
 
   return (
     <form

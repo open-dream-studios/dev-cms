@@ -24,14 +24,17 @@ import { verticalListSortingStrategy } from "@dnd-kit/sortable";
 import {
   restrictToVerticalAxis,
   restrictToParentElement,
-} from "@dnd-kit/modifiers";
-import { useAppContext } from "@/contexts/appContext";
+} from "@dnd-kit/modifiers"; 
 import { toast } from "react-toastify";
 import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
 import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@/types/products";
 import InventoryRow from "./Grid/InventoryRow";
+import { useUiStore } from "@/store/UIStore";
+import { useProductForm, useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { useDataFilters } from "@/hooks/useDataFilters";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 function SortableItem({
   id,
@@ -45,9 +48,10 @@ function SortableItem({
   sheet: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
-  const { editMode, saveProducts } = useAppContext();
+  const { editingProducts } = useUiStore();
+  const { saveProducts } = useProductFormSubmit()
   const { deleteProducts } = useContextQueries();
-  const { screen }  = useAppContext()
+  const { screen }  = useUiStore()
 
   const {
     attributes,
@@ -86,14 +90,14 @@ function SortableItem({
       className="relative w-full h-[100%]"
     >
       <div className="group/grabber relative w-full h-[100%] cursor-pointer">
-        {editMode && (
+        {editingProducts && (
           <div
             {...listeners}
             className="absolute top-0 left-0 w-full h-full z-[902] cursor-pointer touch-none"
           />
         )}
 
-        {editMode && screen !== "customer-products-table" && (
+        {editingProducts && screen !== "customer-products-table" && (
           <div
             style={{
               border: `1px solid ${appTheme[currentUser.theme].text_4}`,
@@ -130,27 +134,23 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
     useSensor(TouchSensor),
     useSensor(PointerSensor)
   );
-  const {
-    filteredProducts,
-    saveProducts,
-    localData,
-    setLocalData,
-    localDataRef,
-  } = useAppContext();
+  const { localProductsData, setLocalProductsData } = useCurrentDataStore()
+  const { saveProducts } = useProductFormSubmit()
+  const { filteredProducts } = useDataFilters()
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = localData.findIndex(
+    const oldIndex = localProductsData.findIndex(
       (item) => item.serial_number === active.id
     );
-    const newIndex = localData.findIndex(
+    const newIndex = localProductsData.findIndex(
       (item) => item.serial_number === over.id
     );
 
-    const reordered = arrayMove(localData, oldIndex, newIndex).map(
+    const reordered = arrayMove(localProductsData, oldIndex, newIndex).map(
       (product, i) => ({
         ...product,
         ordinal: i,
@@ -161,7 +161,7 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
       (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
     );
 
-    setLocalData(sorted);
+    setLocalProductsData(sorted);
     await saveProducts();
   };
 
@@ -176,14 +176,14 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
         modifiers={[restrictToParentElement]}
       >
         <SortableContext
-          items={localDataRef.current.map((p) => p.serial_number ?? "")}
+          items={localProductsData.map((p) => p.serial_number ?? "")}
           strategy={rectSortingStrategy}
         >
           <div
             ref={containerRef}
             className="relative pt-[8px] grid grid-cols-1 min-[640px]:grid-cols-2 min-[1500px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
           >
-            {filteredProducts(localDataRef.current).map((product, index) => (
+            {filteredProducts(localProductsData).map((product, index) => (
               <SortableItem
                 key={product.serial_number}
                 id={product.serial_number ?? ""}
@@ -206,11 +206,11 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
       modifiers={[restrictToVerticalAxis, restrictToParentElement]}
     >
       <SortableContext
-        items={localDataRef.current.map((p) => p.serial_number ?? "")}
+        items={localProductsData.map((p) => p.serial_number ?? "")}
         strategy={verticalListSortingStrategy}
       >
         <div className="flex flex-col max-h-full pb-[46px] mb-[46px]">
-          {filteredProducts(localDataRef.current).map((product, index) => (
+          {filteredProducts(localProductsData).map((product, index) => (
             <SortableItem
               key={product.serial_number}
               id={product.serial_number ?? ""}

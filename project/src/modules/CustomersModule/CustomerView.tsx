@@ -1,21 +1,8 @@
 // project/src/modules/CustomersModule/CustomerView.tsx
-import React, {
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
 import { appTheme } from "@/util/appTheme";
-import { useCustomerForm } from "@/hooks/useCustomerForm";
-import {
-  customerToForm,
-  CustomerFormData,
-} from "@/util/schemas/customerSchema";
-import { SubmitHandler, UseFormReturn } from "react-hook-form";
+import { customerToForm } from "@/util/schemas/customerSchema";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { CheckCircle2 } from "lucide-react";
 import FallbackUserImage from "@/components/blocks/FallbackUserImage";
@@ -29,34 +16,34 @@ import { Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
 import { Product } from "@/types/products";
 import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
-import { useAppContext } from "@/contexts/appContext";
 import { getCardStyle } from "@/styles/themeStyles";
+import {
+  useCustomerForm,
+  useCustomerFormSubmit,
+} from "@/hooks/forms/useCustomerForm";
+import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useUiStore } from "@/store/UIStore";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
-type CustomerViewProps = {
-  onDirtyChange?: (dirty: boolean) => void;
-  exposeForm?: (form: ExposedCustomerForm) => void;
-};
-
-export type ExposedCustomerForm = UseFormReturn<CustomerFormData> & {
-  focusFirstName?: () => void;
-  isDirty: boolean;
-};
-
-const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
+export const CustomerView = () => {
   const { currentUser } = useContext(AuthContext);
   const { productsData } = useContextQueries();
-  const { currentCustomer, currentProjectId } = useProjectContext();
-  const { setExposedCustomerForm, onCustomerSubmit } = useAppContext();
+
+  const { currentCustomer, currentProjectId } = useCurrentDataStore();
+  const { addingCustomer } = useUiStore();
+  const { onCustomerFormSubmit } = useCustomerFormSubmit();
+  const customerForm = useCustomerForm(currentCustomer);
+  const { registerForm, unregisterForm } = useFormInstanceStore();
+  const { handleSubmit, formState } = customerForm;
+  const { isDirty, isValid } = formState;
+
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
-  const customerForm = useCustomerForm(currentCustomer);
-  const { formState } = customerForm;
-  const { isDirty, isValid } = formState;
-
+  const [sessionToken] = useState(uuidv4());
   const [popupVisible, setPopupVisible] = useState(false);
   const [predictions, setPredictions] = useState([]);
-  const sessionToken = uuidv4();
 
   const firstNameInputRef = useRef<HTMLInputElement | null>(null);
   const lastNameInputRef = useRef<HTMLInputElement | null>(null);
@@ -64,20 +51,31 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
   const phoneInputRef = useRef<HTMLInputElement | null>(null);
   const addressLine1Ref = useRef<HTMLInputElement | null>(null);
 
+  const popupRef = useRef<HTMLDivElement | null>(null);
+  const addressContainerRef = useRef<HTMLDivElement | null>(null);
+  const addressInputRef = useRef("");
+
   useEffect(() => {
-    const exposed: ExposedCustomerForm = {
-      ...customerForm,
-      focusFirstName: () => firstNameInputRef.current?.focus(),
-      isDirty: customerForm.formState.isDirty,
-    };
-    exposeForm?.(exposed);
-    setExposedCustomerForm(exposed);
-  }, [
-    customerForm,
-    exposeForm,
-    setExposedCustomerForm,
-    customerForm.formState.isDirty,
-  ]);
+    const formKey = "customer";
+    registerForm(formKey, customerForm);
+    return () => unregisterForm(formKey);
+  }, [customerForm, registerForm, unregisterForm]);
+
+  useEffect(() => {
+    if (currentCustomer) {
+      customerForm.reset(customerToForm(currentCustomer), {
+        keepValues: false,
+      });
+    } else {
+      customerForm.reset({}, { keepValues: false });
+    }
+  }, [currentCustomer, customerForm]);
+
+  useEffect(() => {
+    if (addingCustomer) {
+      firstNameInputRef.current?.focus();
+    }
+  }, [addingCustomer]);
 
   const handleKeyDown =
     (nextRef: React.RefObject<HTMLElement | null>) =>
@@ -87,10 +85,6 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
         nextRef.current?.focus();
       }
     };
-
-  useEffect(() => {
-    onDirtyChange?.(isDirty);
-  }, [isDirty, onDirtyChange]);
 
   const handleSelectAddress = async (prediction: any) => {
     try {
@@ -122,43 +116,7 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
     }
   };
 
-  useEffect(() => {
-    if (currentCustomer) {
-      customerForm.reset(customerToForm(currentCustomer), {
-        keepValues: false,
-      });
-    } else {
-      customerForm.reset({}, { keepValues: false });
-    }
-  }, [currentCustomer, customerForm]);
-
-  if (!currentUser || !currentProjectId) return null;
-
-  const popupRef = useRef<HTMLDivElement | null>(null);
-  const addressContainerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node) &&
-        addressContainerRef.current &&
-        !addressContainerRef.current.contains(event.target as Node)
-      ) {
-        setPopupVisible(false);
-      }
-    }
-
-    if (popupVisible) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [popupVisible]);
-
-  const addressInputRef = useRef("");
+  useOutsideClick(popupRef, () => setPopupVisible(false));
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimer = () => {
     if (timerRef.current) {
@@ -182,18 +140,14 @@ const CustomerView = ({ onDirtyChange, exposeForm }: CustomerViewProps) => {
     startTimer();
   };
 
+  if (!currentUser || !currentProjectId) return null;
+
   return (
     <div className="flex flex-col items-start w-full h-[100%] p-6 overflow-scroll">
       <form
-        onSubmit={customerForm.handleSubmit(
-          onCustomerSubmit as SubmitHandler<any>
-        )}
+        onSubmit={handleSubmit(onCustomerFormSubmit)}
         className="w-[100%] max-w-[550px] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
         style={getCardStyle(theme, t)}
-        // style={{
-        // backgroundColor: appTheme[currentUser.theme].background_2,
-        // color: appTheme[currentUser.theme].text_4,
-        // }}
       >
         <div className="flex flex-row gap-[10px]">
           <div className="flex items-center gap-4 pb-[10px]">

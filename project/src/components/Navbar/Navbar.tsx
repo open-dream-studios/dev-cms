@@ -10,22 +10,24 @@ import {
 import { useModal1Store } from "../../store/useModalStore";
 import appDetails from "../../util/appDetails.json";
 import { removeWhiteSpace } from "../../util/functions/Data";
-import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
-import { useAppContext } from "@/contexts/appContext";
+import { usePageLayoutRefStore } from "@/store/usePageLayoutStore"; 
 import "./Navbar.css";
 import { IoMdSettings } from "react-icons/io";
 import Settings from "../Settings/Settings";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useProjectContext } from "@/contexts/projectContext";
 import { AiFillAppstore } from "react-icons/ai";
 import { LuBlocks } from "react-icons/lu";
 import UserImage from "../blocks/UserImage";
 import AdminController from "@/screens/AdminHome/AdminControllers/AdminController";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/UIStore";
+import { useRouting } from "@/hooks/useRouting";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setCurrentProjectData } = useProjectContext();
-  const { editingLock, screenClick } = useAppContext();
+  const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
+  const { screenClick } = useRouting();
+  const { updatingLock } = useUiStore()
   const { projectsData } = useContextQueries();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -183,7 +185,7 @@ const Navbar = () => {
         </div>
 
         <div className="h-[100%] mr-[12px] flex flex-row items-center gap-[12.5px]">
-          {editingLock && (
+          {updatingLock && (
             <div
               style={{
                 opacity: currentUser.theme === "dark" ? 0.1 : 0.7,

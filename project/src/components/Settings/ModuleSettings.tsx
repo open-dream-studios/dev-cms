@@ -1,3 +1,4 @@
+// project/src/components/Settings/ModuleSettings.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
@@ -6,18 +7,18 @@ import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FaCheck, FaPlus, FaRegCircleCheck, FaTrash } from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
-import { useProjectContext } from "@/contexts/projectContext";
 import { useIntegrationForm } from "@/hooks/useIntegrationForm";
 import { IntegrationFormData } from "@/util/schemas/integrationSchema";
 import { MdChevronLeft } from "react-icons/md";
 import { HiLockClosed } from "react-icons/hi2";
 import { FiEdit } from "react-icons/fi";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type IntegrationConfig = Record<string, string>;
 
 const ModuleSettings = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId } = useCurrentDataStore();
   const {
     projectModules,
     deleteProjectModule,

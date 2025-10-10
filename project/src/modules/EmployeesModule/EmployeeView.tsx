@@ -1,5 +1,5 @@
-// project/src/modules/Jobs/JobCard.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+// project/src/modules/EmployeesModule/EmployeeView.tsx
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   User,
   Mail,
@@ -7,10 +7,6 @@ import {
   Briefcase,
   MapPin,
   Home,
-  FileText,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   Check,
   X,
 } from "lucide-react";
@@ -19,8 +15,6 @@ import { AuthContext } from "@/contexts/authContext";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import { useProjectContext } from "@/contexts/projectContext";
-import { useAppContext } from "@/contexts/appContext";
 import {
   EmployeeFormData,
   employeeToForm,
@@ -34,75 +28,84 @@ import {
 } from "@/util/functions/Customers";
 import { v4 as uuidv4 } from "uuid";
 import { Controller } from "react-hook-form";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/UIStore";
+import {
+  useEmployeeForm,
+  useEmployeeFormSubmit,
+} from "@/hooks/forms/useEmployeeForm";
+import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 const EmployeeCard: React.FC = () => {
-  const { currentUser } = React.useContext(AuthContext);
-  const { employees } = useContextQueries();
-  const { currentEmployee, currentProjectId } = useProjectContext();
-  const { addingEmployee, employeeForm, onEmployeeFormSubmit } =
-    useAppContext();
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const { currentUser } = useContext(AuthContext);
+
+  const { currentEmployee, currentProjectId } = useCurrentDataStore();
+  const { addingEmployee } = useUiStore();
+  const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
+  const employeeForm = useEmployeeForm(currentEmployee);
+  const { registerForm, unregisterForm } = useFormInstanceStore();
+  const { handleSubmit, formState } = employeeForm;
+  const { isDirty, isValid } = formState;
   const leftBarOpen = useLeftBarOpenStore((s: any) => s.leftBarOpen);
 
-  if (!employeeForm || (!currentEmployee && !addingEmployee)) return null;
-  if (!currentUser || !currentProjectId) return null;
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
-  const { formState } = employeeForm;
-  const { isDirty, isValid } = formState;
-
-  const matchedEmployee = useMemo(() => {
-    if (!currentEmployee) return null;
-    return employees.find(
-      (e: Employee) => e.employee_id === currentEmployee.employee_id
-    );
-  }, [employees, currentEmployee]);
-
-  useEffect(() => {
-    if (matchedEmployee) {
-      employeeForm.reset(employeeToForm(matchedEmployee) as EmployeeFormData);
-    } else {
-      employeeForm.reset(employeeToForm(null));
-    }
-  }, [matchedEmployee, employeeForm]);
-
-  const onFormSubmitButton = async (data: EmployeeFormData) => {
-    await onEmployeeFormSubmit(data);
-  };
-
-  useEffect(() => {
-    if (addingEmployee) {
-      const id = setTimeout(() => employeeForm.setFocus("first_name"), 0);
-      return () => clearTimeout(id);
-    }
-  }, [addingEmployee, employeeForm]);
-
-  // Address autocomplete logic (kept from your code)
+  const [popupVisible, setPopupVisible] = useState<boolean>(false);
   const [predictions, setPredictions] = useState<any[]>([]);
-  const [popupVisible, setPopupVisible] = useState(false);
-  const sessionToken = useRef(uuidv4()).current;
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const addressInputRef = useRef("");
+  const [sessionToken] = useState(uuidv4());
+
+  const firstNameRef = useRef<HTMLInputElement | null>(null);
+  const lastNameRef = useRef<HTMLInputElement | null>(null);
+  const emailRef = useRef<HTMLInputElement | null>(null);
+  const phoneRef = useRef<HTMLInputElement | null>(null);
+  const positionRef = useRef<HTMLInputElement | null>(null);
+  const departmentRef = useRef<HTMLInputElement | null>(null);
+  const addressLine1Ref = useRef<HTMLInputElement | null>(null);
+  const addressLine2Ref = useRef<HTMLInputElement | null>(null);
+  const cityRef = useRef<HTMLInputElement | null>(null);
+  const stateRef = useRef<HTMLInputElement | null>(null);
+  const zipRef = useRef<HTMLInputElement | null>(null);
+  const notesRef = useRef<HTMLTextAreaElement | null>(null);
 
   const popupRef = useRef<HTMLDivElement | null>(null);
   const addressContainerRef = useRef<HTMLDivElement | null>(null);
+  const addressInputRef = useRef("");
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node) &&
-        addressContainerRef.current &&
-        !addressContainerRef.current.contains(event.target as Node)
-      ) {
-        setPopupVisible(false);
-      }
-    }
-    if (popupVisible)
-      document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [popupVisible]);
+    const formKey = "employee";
+    registerForm(formKey, employeeForm);
+    return () => unregisterForm(formKey);
+  }, [employeeForm, registerForm, unregisterForm]);
 
+  useEffect(() => {
+    if (currentEmployee) {
+      employeeForm.reset(employeeToForm(currentEmployee), {
+        keepValues: false,
+      });
+    } else {
+      employeeForm.reset({}, { keepValues: false });
+    }
+  }, [currentEmployee, employeeForm]);
+
+  useEffect(() => {
+    if (addingEmployee) {
+      firstNameRef.current?.focus();
+    }
+  }, [addingEmployee]);
+
+  const handleKeyDown =
+    (nextRef: React.RefObject<HTMLElement | null>) =>
+    (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | null>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        nextRef.current?.focus();
+      }
+    };
+
+  useOutsideClick(popupRef, () => setPopupVisible(false));
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
@@ -158,42 +161,11 @@ const EmployeeCard: React.FC = () => {
     }
   };
 
-  // helpers for keyboard navigation between inputs
-  const focusNext =
-    (nextRef: React.RefObject<HTMLElement | null>) =>
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        nextRef.current?.focus();
-      }
-    };
-
-  // small refs to allow Enter navigation
-  const firstNameRef = useRef<HTMLInputElement | null>(null);
-  const lastNameRef = useRef<HTMLInputElement | null>(null);
-  const emailRef = useRef<HTMLInputElement | null>(null);
-  const phoneRef = useRef<HTMLInputElement | null>(null);
-  const positionRef = useRef<HTMLInputElement | null>(null);
-  const departmentRef = useRef<HTMLInputElement | null>(null);
-  const addressLine1Ref = useRef<HTMLInputElement | null>(null);
-  const addressLine2Ref = useRef<HTMLInputElement | null>(null);
-  const cityRef = useRef<HTMLInputElement | null>(null);
-  const stateRef = useRef<HTMLInputElement | null>(null);
-  const zipRef = useRef<HTMLInputElement | null>(null);
-  const notesRef = useRef<HTMLTextAreaElement | null>(null);
-
-  const handleKeyDown =
-    (nextRef: React.RefObject<HTMLElement | null>) =>
-    (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | null>) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        nextRef.current?.focus();
-      }
-    };
+  if (!currentUser || !currentProjectId) return null;
 
   return (
     <form
-      onSubmit={employeeForm.handleSubmit(onFormSubmitButton)}
+      onSubmit={handleSubmit(onEmployeeFormSubmit)}
       className="rounded-xl relative w-full max-w-[900px]"
       style={{
         ...getInnerCardStyle(theme, t),
@@ -219,13 +191,13 @@ const EmployeeCard: React.FC = () => {
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-[24px] leading-[28px] font-semibold truncate">
-                  {matchedEmployee &&
-                    `${matchedEmployee.first_name} ${matchedEmployee.last_name}`}
+                  {currentEmployee &&
+                    `${currentEmployee.first_name} ${currentEmployee.last_name}`}
                 </div>
                 <div className="text-[15.5px] opacity-70 truncate mt-[1.8px]">
-                  {matchedEmployee &&
-                    matchedEmployee.position &&
-                    `${matchedEmployee.position}`}
+                  {currentEmployee &&
+                    currentEmployee.position &&
+                    `${currentEmployee.position}`}
                 </div>
               </div>
             </div>
@@ -697,8 +669,8 @@ const EmployeeCard: React.FC = () => {
                     color: t.text_2,
                   }}
                   onClick={() => {
-                    if (matchedEmployee) {
-                      employeeForm.reset(matchedEmployee as EmployeeFormData);
+                    if (currentEmployee) {
+                      employeeForm.reset(currentEmployee as EmployeeFormData);
                     } else {
                       employeeForm.reset(employeeToForm(null));
                     }
@@ -712,6 +684,30 @@ const EmployeeCard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active,
+        textarea:-webkit-autofill,
+        textarea:-webkit-autofill:hover,
+        textarea:-webkit-autofill:focus,
+        textarea:-webkit-autofill:active,
+        select:-webkit-autofill,
+        select:-webkit-autofill:hover,
+        select:-webkit-autofill:focus,
+        select:-webkit-autofill:active {
+          -webkit-text-fill-color: ${appTheme[currentUser.theme]
+            .text_4} !important;
+          -webkit-box-shadow: 0 0 0px 1000px
+            ${appTheme[currentUser.theme].background_2} inset !important;
+          box-shadow: 0 0 0px 1000px ${appTheme[currentUser.theme].background_2}
+            inset !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+          caret-color: ${appTheme[currentUser.theme].text_4} !important;
+        }
+      `}</style>
     </form>
   );
 };

@@ -1,6 +1,5 @@
 // project/src/modules/components/ModuleLeftBar.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
 import { Customer } from "@/types/customers";
@@ -8,7 +7,6 @@ import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { CustomerMiniCard } from "../CustomersModule/CustomerCatalog";
-import { useAppContext } from "@/contexts/appContext";
 import { useModal2Store } from "@/store/useModalStore";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,15 +17,16 @@ import { Employee } from "@/types/employees";
 import { EmployeeMiniCard } from "../EmployeesModule/EmployeeCatalog";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
 import { customerToForm } from "@/util/schemas/customerSchema";
+import { useUiStore } from "@/store/UIStore";
+import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useEmployeeFormSubmit } from "@/hooks/forms/useEmployeeForm";
+import { useRouting } from "@/hooks/useRouting";
 
 const ModuleLeftBar = () => {
-  const {
-    currentProjectId,
-    currentCustomer,
-    setCurrentCustomerData,
-    currentEmployee,
-    setCurrentEmployeeData,
-  } = useProjectContext();
+  const { setCurrentEmployeeData, setCurrentCustomerData } =
+    useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const {
     customers,
@@ -37,44 +36,50 @@ const ModuleLeftBar = () => {
     deleteEmployee,
     employees,
   } = useContextQueries();
+  const { localProductsData } = useCurrentDataStore();
+  const { screenClick } = useRouting();
+  const pathname = usePathname();
+  const { getForm } = useFormInstanceStore();
+
   const {
-    onCustomerSubmit,
+    screen,
     addingCustomer,
     setAddingCustomer,
-    customerForm,
-    isFormDirty,
-    localDataRef,
-    screenClick,
-    screen,
-    setAddingEmployee,
-    employeeForm,
     addingEmployee,
-    onEmployeeFormSubmit,
-  } = useAppContext();
-  const pathname = usePathname();
+    setAddingEmployee,
+  } = useUiStore();
+  const customerForm = getForm("customer");
+  const { onCustomerFormSubmit } = useCustomerFormSubmit();
+
+  const employeeForm = getForm("employee");
+  const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const handleDeleteCustomer = async () => {
-    if (!currentProjectId || !contextMenu || !contextMenu.input) return;
-    if (currentCustomer && currentCustomer.id === contextMenu.input.id) {
-      setCurrentCustomerData(null);
-      setAddingCustomer(true);
-    }
+    if (!contextMenu || !contextMenu.input) return;
     const customerInput = contextMenu.input as Customer;
     if (customerInput.customer_id) {
       await deleteCustomer(customerInput.customer_id);
+      if (customerForm) {
+        customerForm.reset(customerToForm(null));
+      }
+      setCurrentCustomerData(null);
+      setAddingCustomer(true);
     }
   };
 
   const handleDeleteEmployee = async () => {
-    if (!currentProjectId || !contextMenu || !contextMenu.input) return;
-    setCurrentEmployeeData(null);
-    setAddingEmployee(true);
+    if (!contextMenu || !contextMenu.input) return;
     const employeeInput = contextMenu.input as Employee;
     if (employeeInput.employee_id) {
       await deleteEmployee(employeeInput.employee_id);
+      if (employeeForm) {
+        employeeForm.reset(employeeToForm(null));
+      }
+      setCurrentEmployeeData(null);
+      setAddingEmployee(true);
     }
   };
 
@@ -111,7 +116,10 @@ const ModuleLeftBar = () => {
 
   const handleCloseContextMenu = () => setContextMenu(null);
 
-  const handleAddCustomerClick = () => {
+  const handleAddCustomerClick = async () => {
+    if (customerForm && customerForm.formState.isDirty) {
+      await customerForm.handleSubmit(onCustomerFormSubmit)();
+    }
     setCurrentCustomerData(null);
     setAddingCustomer(true);
     if (customerForm) {
@@ -120,13 +128,8 @@ const ModuleLeftBar = () => {
   };
 
   const handleAddEmployeeClick = async () => {
-    if (
-      employeeForm &&
-      Object.keys(employeeForm.formState.dirtyFields).length > 0
-    ) {
-      console.log(employeeForm.formState.dirtyFields);
-      const values = employeeForm.getValues();
-      await onEmployeeFormSubmit(values);
+    if (employeeForm && employeeForm.formState.isDirty) {
+      await employeeForm.handleSubmit(onEmployeeFormSubmit)();
     }
     setCurrentEmployeeData(null);
     setAddingEmployee(true);
@@ -135,22 +138,9 @@ const ModuleLeftBar = () => {
     }
   };
 
-  useEffect(() => {
-    if (addingCustomer && customerForm) {
-      customerForm.focusFirstName?.();
-    }
-  }, [addingCustomer, customerForm]);
-
-  // useEffect(() => {
-  //   if (customerForm) {
-  //     const { isDirty, isValid, errors } = customerForm.formState;
-  //     console.log({ isDirty, isValid, errors });
-  //   }
-  // }, [customerForm]);
-
   const handleCustomerClick = (customer: Customer) => {
-    if (!currentUser) return null;
-    if (isFormDirty) {
+    const customerForm = getForm("customer");
+    if (customerForm && customerForm.formState.isDirty) {
       setModal2({
         ...modal2,
         open: !modal2.open,
@@ -164,34 +154,56 @@ const ModuleLeftBar = () => {
           <Modal2Continue
             text={`Save customer info?`}
             onContinue={async () => {
-              await customerForm?.handleSubmit(onCustomerSubmit)();
+              await customerForm.handleSubmit(onCustomerFormSubmit)();
               setCurrentCustomerData(customer);
               setAddingCustomer(false);
             }}
             onNoSave={() => {
-              setAddingCustomer(false);
               setCurrentCustomerData(customer);
+              setAddingCustomer(false);
             }}
             threeOptions={true}
           />
         ),
       });
     } else {
-      setAddingCustomer(false);
       setCurrentCustomerData(customer);
+      setAddingCustomer(false);
     }
   };
 
-  const handleEmployeeClick = async (employee: Employee) => {
-    if (
-      employeeForm &&
-      Object.keys(employeeForm.formState.dirtyFields).length > 0
-    ) {
-      const values = employeeForm.getValues();
-      await onEmployeeFormSubmit(values);
+  const handleEmployeeClick = (employee: Employee) => {
+    const employeeForm = getForm("employee");
+    if (employeeForm && employeeForm.formState.isDirty) {
+      setModal2({
+        ...modal2,
+        open: !modal2.open,
+        showClose: false,
+        offClickClose: true,
+        width: "w-[300px]",
+        maxWidth: "max-w-[400px]",
+        aspectRatio: "aspect-[5/2]",
+        borderRadius: "rounded-[12px] md:rounded-[15px]",
+        content: (
+          <Modal2Continue
+            text={`Save employee info?`}
+            onContinue={async () => {
+              await employeeForm.handleSubmit(onEmployeeFormSubmit)();
+              setCurrentEmployeeData(employee);
+              setAddingEmployee(false);
+            }}
+            onNoSave={() => {
+              setCurrentEmployeeData(employee);
+              setAddingEmployee(false);
+            }}
+            threeOptions={true}
+          />
+        ),
+      });
+    } else {
+      setCurrentEmployeeData(employee);
+      setAddingEmployee(false);
     }
-    setCurrentEmployeeData(employee);
-    setAddingEmployee(false);
   };
 
   const handleProductClick = async (product: Product) => {
@@ -356,7 +368,7 @@ const ModuleLeftBar = () => {
               })}
             </>
           ) : (
-            localDataRef.current.map((product, index) => {
+            localProductsData.map((product, index) => {
               const foundLinks = mediaLinks.filter(
                 (mediaLink: MediaLink) =>
                   mediaLink.entity_id === product.id &&

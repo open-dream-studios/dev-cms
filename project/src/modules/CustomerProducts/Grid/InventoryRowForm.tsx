@@ -1,39 +1,33 @@
-// project/src/screens/Inventory/InventoryRowForm.tsx
+// project/src/modules/CustomerProducts/Grid/InventoryRowForm.tsx
 "use client";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useProductForm } from "@/hooks/useProductForm";
+import { useProductForm } from "@/hooks/forms/useProductForm";
 import { appTheme } from "@/util/appTheme";
 import ProductInputCell from "../Forms/InputCell";
 import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { ProductFormData } from "@/util/schemas/productSchema";
 import { InventoryDataItem } from "./InventoryGrid";
-import Image from "next/image";
-import { UseFormReturn } from "react-hook-form";
-import { FaPlus } from "react-icons/fa6";
-import { useRouter } from "next/navigation";
-import { useAppContext } from "@/contexts/appContext";
+import Image from "next/image"; 
+import { FaPlus } from "react-icons/fa6"; 
 import { Product } from "@/types/products";
 import { MediaLink } from "@/types/media";
+import { useRouting } from "@/hooks/useRouting";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type InventoryRowFormProps = {
   product: Product;
   inventoryDataLayout: InventoryDataItem[];
-  registerFormRef: (
-    serial: string,
-    form: UseFormReturn<ProductFormData>
-  ) => void;
 };
 const InventoryRowForm = ({
   product,
   inventoryDataLayout,
-  registerFormRef,
 }: InventoryRowFormProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { formRefs, screenClick, resetTimer, setLocalData } = useAppContext();
+  const { screenClick } = useRouting() 
   const { productsData, mediaLinks } = useContextQueries();
   const form = useProductForm();
-  const router = useRouter();
+  const { setLocalProductsData } = useCurrentDataStore()
   // registerFormRef(product.serial_number, form);
 
   let newProduct = false;
@@ -66,41 +60,41 @@ const InventoryRowForm = ({
 
   const handleProductClick = async () => {
     let dirtyRows = 0;
-    for (const [serial, form] of formRefs.current.entries()) {
-      if (Object.keys(form.formState.dirtyFields).length !== 0) {
-        dirtyRows += 1;
-      }
-    }
+    // for (const [serial, form] of formRefs.current.entries()) {
+    //   if (Object.keys(form.formState.dirtyFields).length !== 0) {
+    //     dirtyRows += 1;
+    //   }
+    // }
 
-    const existingProduct = productsData?.find(
-      (p) => p.serial_number === product.serial_number
-    );
-    if (existingProduct) {
-      await screenClick(
-        "edit-customer-product",
-        `/products/${existingProduct.serial_number}`
-      );
-    }
+    // const existingProduct = productsData?.find(
+    //   (p) => p.serial_number === product.serial_number
+    // );
+    // if (existingProduct) {
+    //   await screenClick(
+    //     "edit-customer-product",
+    //     `/products/${existingProduct.serial_number}`
+    //   );
+    // }
   };
 
   useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
-      // console.log(product, name, value[name as keyof typeof value]);
-      resetTimer(false);
+    //   // console.log(product, name, value[name as keyof typeof value]);
+    //   resetTimer(false);
 
-      setLocalData((prev) => {
-        const updated = [...prev];
-        const index = updated.findIndex(
-          (p) => p.serial_number === product.serial_number
-        );
-        if (index !== -1) {
-          updated[index] = {
-            ...updated[index],
-            ...value,
-          } as Product;
-        }
-        return updated;
-      });
+    //   setLocalProductsData((prev: Product[]) => {
+    //     const updated = [...prev];
+    //     const index = updated.findIndex(
+    //       (p) => p.serial_number === product.serial_number
+    //     );
+    //     if (index !== -1) {
+    //       updated[index] = {
+    //         ...updated[index],
+    //         ...value,
+    //       } as Product;
+    //     }
+    //     return updated;
+    //   });
     });
 
     return () => subscription.unsubscribe();
@@ -191,7 +185,7 @@ const InventoryRowForm = ({
         className={`h-[100%] ${inventoryDataLayout[2].className}`}
       />
 
-      <ProductInputCell
+      {/* <ProductInputCell
         name="price"
         inputMode="decimal"
         pattern="^\d+(\.\d{0,2})?$"
@@ -219,7 +213,7 @@ const InventoryRowForm = ({
         }}
         error={form.formState.errors.price?.message}
         className={`h-[100%] ${inventoryDataLayout[3].className}`}
-      />
+      /> */}
 
       <ProductInputCell
         name="make"
@@ -342,7 +336,7 @@ const InventoryRowForm = ({
         className={`h-[100%] ${inventoryDataLayout[8].className}`}
       />
 
-      <ProductInputCell
+      {/* <ProductInputCell
         name="repair_status"
         register={form.register}
         className={`h-[100%] ${inventoryDataLayout[9].className}`}
@@ -357,9 +351,9 @@ const InventoryRowForm = ({
           //   }
           // );
         }}
-      />
+      /> */}
 
-      <ProductInputCell
+      {/* <ProductInputCell
         name="sale_status"
         register={form.register}
         className={`h-[100%] ${inventoryDataLayout[10].className}`}
@@ -374,9 +368,9 @@ const InventoryRowForm = ({
           //   }
           // );
         }}
-      />
+      /> */}
 
-      <ProductInputCell
+      {/* <ProductInputCell
         name="date_entered"
         register={form.register}
         className={`h-[100%] ${inventoryDataLayout[11].className}`}
@@ -393,9 +387,9 @@ const InventoryRowForm = ({
         //     shouldDirty: true,
         //   });
         // }}
-      />
+      /> */}
 
-      <ProductInputCell
+      {/* <ProductInputCell
         name="date_complete"
         register={form.register}
         className={`h-[100%] ${inventoryDataLayout[12].className}`}
@@ -412,7 +406,7 @@ const InventoryRowForm = ({
         //     shouldDirty: true,
         //   });
         // }}
-      />
+      /> */}
 
       <ProductInputCell
         name="description"

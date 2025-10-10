@@ -1,0 +1,499 @@
+CREATE DATABASE `cms` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+— USERS
+CREATE TABLE IF NOT EXISTS users (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   user_id VARCHAR(45) UNIQUE NOT NULL,
+   email VARCHAR(255) NOT NULL UNIQUE,
+   password VARCHAR(200) DEFAULT NULL,
+   first_name VARCHAR(255) DEFAULT NULL,
+   last_name VARCHAR(255) DEFAULT NULL,
+   profile_img_src TEXT DEFAULT NULL,
+   theme ENUM('light', 'dark') NOT NULL DEFAULT 'dark',
+   auth_provider ENUM('google','facebook','discord','local') NOT NULL DEFAULT 'local',
+   created_at TIMESTAMP DEFAULT NOW(),
+   password_reset VARCHAR(6) NULL,
+   password_reset_timestamp TIMESTAMP NULL,
+  admin BOOLEAN NOT NULL DEFAULT 0
+) ENGINE=InnoDB AUTO_INCREMENT=502 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- PROJECTS
+CREATE TABLE IF NOT EXISTS projects (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   project_id CHAR(16) NOT NULL UNIQUE, 
+   name VARCHAR(255) NOT NULL,
+   short_name VARCHAR(255) DEFAULT NULL,
+   domain VARCHAR(255) DEFAULT NULL,
+   backend_domain VARCHAR(255) DEFAULT NULL,
+   brand VARCHAR(255) DEFAULT NULL,
+   logo TEXT NULL,
+   created_at TIMESTAMP DEFAULT NOW()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- PROJECT USERS
+CREATE TABLE IF NOT EXISTS project_users (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   email VARCHAR(255) NOT NULL, -- identifies invited user
+   project_idx BIGINT NOT NULL,
+   role ENUM('owner','editor','viewer','admin') NOT NULL DEFAULT 'editor',
+   invited_at TIMESTAMP DEFAULT NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   UNIQUE (project_idx, email) -- prevent duplicate invites for the same project
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE twilio_apps (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  project_idx BIGINT NOT NULL,
+  account_sid VARCHAR(64) NOT NULL,
+  auth_token VARCHAR(64) NOT NULL,
+  api_key VARCHAR(64) NOT NULL,
+  api_secret VARCHAR(64) NOT NULL,
+  twiml_app_sid VARCHAR(64) NOT NULL,
+  numbers JSON, 
+  connected_numbers JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+-- MODULE DEFINITIONS
+CREATE TABLE IF NOT EXISTS module_definitions (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   module_definition_id CHAR(16) NOT NULL UNIQUE, 
+   name VARCHAR(100) NOT NULL UNIQUE, 
+   identifier VARCHAR(100) DEFAULT NULL,
+   description TEXT DEFAULT NULL,
+   parent_module_id BIGINT DEFAULT NULL,
+   config_schema JSON DEFAULT (JSON_ARRAY()),
+   CONSTRAINT fk_modules_parent FOREIGN KEY (parent_module_id)
+   REFERENCES modules(id)
+   ON DELETE SET NULL;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- PROJECT MODULES
+CREATE TABLE IF NOT EXISTS project_modules (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   module_id CHAR(16) NOT NULL UNIQUE, 
+   module_definition_id BIGINT NOT NULL, 
+   project_idx BIGINT NOT NULL,
+   settings JSON DEFAULT NULL,
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (module_definition_id) REFERENCES module_definitions(id) ON DELETE CASCADE,
+   UNIQUE (project_idx, module_definition_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS project_integrations (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   integration_id CHAR(16) NOT NULL UNIQUE, 
+   project_idx BIGINT NOT NULL,
+   module_id BIGINT NOT NULL,         
+   integration_key TEXT NOT NULL,
+   integration_value TEXT DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (module_id) REFERENCES project_modules(id) ON DELETE CASCADE,
+   UNIQUE KEY uq_project_module (project_idx, module_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- MEDIA FOLDERS
+CREATE TABLE IF NOT EXISTS media_folders (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   folder_id CHAR(16) NOT NULL UNIQUE,
+   project_idx BIGINT NOT NULL,
+   parent_folder_id BIGINT DEFAULT NULL,
+   name VARCHAR(255) NOT NULL,
+   ordinal INT NOT NULL DEFAULT 0,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (parent_folder_id) REFERENCES media_folders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- MEDIA
+CREATE TABLE IF NOT EXISTS media (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   media_id CHAR(16) NOT NULL UNIQUE,
+   project_idx BIGINT NOT NULL,
+   folder_id BIGINT DEFAULT NULL,
+   public_id VARCHAR(255),
+   type ENUM('image','video','file') NOT NULL DEFAULT 'image',
+   url TEXT NOT NULL,
+   alt_text VARCHAR(255) DEFAULT NULL,
+   metadata JSON DEFAULT NULL,
+   media_usage ENUM('page','product','module') NOT NULL,
+   tags JSON DEFAULT (JSON_ARRAY()),
+   ordinal INT NOT NULL DEFAULT 0,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (folder_id) REFERENCES media_folders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+— MEDIA LINK
+CREATE TABLE media_link (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    entity_type ENUM('product','page','module') NOT NULL,
+    entity_id BIGINT NOT NULL,
+    media_id BIGINT NOT NULL,
+    ordinal INT NOT NULL DEFAULT 0,
+    UNIQUE (entity_type, entity_id, media_id),
+    FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE
+);
+
+-- PAGE DEFINITIONSCREATE TABLE IF NOT EXISTS page_definitions (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   page_definition_id CHAR(16) NOT NULL UNIQUE,
+   name VARCHAR(255) NOT NULL,  
+   identifier VARCHAR(255) NOT NULL,  
+   parent_page_definition_id BIGINT DEFAULT NULL,
+   allowed_sections JSON DEFAULT (JSON_ARRAY()), -- e.g. [hero_banner,pricing_table,footer]
+   config_schema JSON DEFAULT (JSON_OBJECT()),   -- layout-level options
+   CONSTRAINT fk_page_definitions_parent FOREIGN KEY (parent_page_definition_id)
+       REFERENCES page_definitions(id)
+       ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- PAGES
+CREATE TABLE IF NOT EXISTS project_pages (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   project_idx BIGINT NOT NULL,
+   page_id CHAR(16) NOT NULL UNIQUE,
+   parent_page_id BIGINT DEFAULT NULL,
+   definition_id BIGINT DEFAULT NULL,      
+   title VARCHAR(255) NOT NULL,
+   slug VARCHAR(255) NOT NULL,
+   order_index INT NOT NULL DEFAULT 0,
+   seo_title VARCHAR(255),
+   seo_description TEXT,
+   seo_keywords JSON DEFAULT (JSON_ARRAY()),
+   template VARCHAR(100) DEFAULT 'default',
+   published BOOLEAN DEFAULT TRUE,
+   published_at TIMESTAMP NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP NULL,
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (parent_page_id) REFERENCES project_pages(id) ON DELETE SET NULL,
+   FOREIGN KEY (definition_id) REFERENCES page_definitions(id) ON DELETE SET NULL,
+   CONSTRAINT uq_project_slug UNIQUE (project_idx, slug)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- SECTION DEFINITIONS 
+CREATE TABLE IF NOT EXISTS section_definitions (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   section_definition_id CHAR(16) NOT NULL UNIQUE,
+   name VARCHAR(255) NOT NULL,
+   identifier VARCHAR(255) NOT NULL,  
+   parent_section_definition_id BIGINT DEFAULT NULL,
+   allowed_elements JSON DEFAULT (JSON_ARRAY()),
+   config_schema JSON DEFAULT (JSON_OBJECT()),
+   CONSTRAINT fk_section_definitions_parent FOREIGN KEY (parent_section_definition_id)
+       REFERENCES section_definitions(id)
+       ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- SECTIONS
+CREATE TABLE IF NOT EXISTS project_sections (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   project_idx BIGINT NOT NULL,
+   section_id CHAR(16) NOT NULL UNIQUE,
+   parent_section_id BIGINT DEFAULT NULL,
+   project_page_id BIGINT NOT NULL, 
+   definition_id BIGINT DEFAULT NULL, 
+   name VARCHAR(255) NOT NULL, 
+   config JSON DEFAULT (JSON_OBJECT()),  
+   order_index INT NOT NULL DEFAULT 0,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (project_page_id) REFERENCES project_pages(id) ON DELETE CASCADE,
+   FOREIGN KEY (definition_id) REFERENCES section_definitions(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ELEMENT DEFINITIONS 
+CREATE TABLE IF NOT EXISTS element_definitions (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   element_definition_id CHAR(16) NOT NULL UNIQUE,
+   type VARCHAR(100) NOT NULL UNIQUE, -- e.g. "button"
+   name VARCHAR(255) NOT NULL,
+   config_schema JSON DEFAULT (JSON_OBJECT())
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ELEMENT INSTANCES
+CREATE TABLE IF NOT EXISTS elements (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   element_id CHAR(16) NOT NULL UNIQUE,
+   section_id BIGINT DEFAULT NULL,
+   parent_element_id BIGINT DEFAULT NULL,
+   definition_id BIGINT NOT NULL, 
+   content JSON DEFAULT (JSON_OBJECT()), -- user-provided content
+   order_index INT NOT NULL DEFAULT 0,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE,
+   FOREIGN KEY (definition_id) REFERENCES element_definitions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- THEME DECLARATIONS
+CREATE TABLE IF NOT EXISTS themes (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   name VARCHAR(255) NOT NULL UNIQUE,       -- e.g. "Default Dark", "Corporate Light"
+   description TEXT DEFAULT NULL,
+   config JSON NOT NULL,                    -- JSON for colors, fonts, spacing, etc.
+   created_at TIMESTAMP DEFAULT NOW()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- PROJECT ↔ THEME (one active theme per project)
+CREATE TABLE IF NOT EXISTS project_themes (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   project_id BIGINT NOT NULL,
+   theme_id BIGINT NOT NULL,
+   applied_at TIMESTAMP DEFAULT NOW(),
+   FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE,
+   UNIQUE (project_id) -- ensures only one active theme per project
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- PRODUCTS 
+CREATE TABLE IF NOT EXISTS products (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   serial_number VARCHAR(45) UNIQUE NOT NULL,
+   project_idx BIGINT NOT NULL,
+   customer_id BIGINT NULL,
+   highlight VARCHAR(45),   
+   name TEXT NOT NULL,
+   description TEXT,
+   note TEXT,
+   make VARCHAR(255),
+   model VARCHAR(255),
+   type VARCHAR(45),
+   length DECIMAL(6,2),
+   width DECIMAL(6,2),
+   height DECIMAL(6,2),
+   ordinal INT NOT NULL DEFAULT 0,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=502 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+status ENUM('work_required','waiting_parts','waiting_customer','complete','cancelled') NOT NULL DEFAULT,
+
+Sale
+Waiting work -> Waiting listing -> Listed -> waiting delivery -> delivered
+
+Refurbish
+Waiting work -> waiting delivery -> delivered
+
+Service
+Waiting Diagnosis -> Waiting work -> complete 
+
+
+
+
+Query: 
+DELIMITER //
+
+CREATE TRIGGER set_order_index_before_insert
+BEFORE INSERT ON project_pages
+FOR EACH ROW
+BEGIN
+  DECLARE max_order INT;
+  SELECT COALESCE(MAX(order_index), -1) + 1
+    INTO max_order
+    FROM project_pages
+   WHERE project_id = NEW.project_id;
+  SET NEW.order_index = max_order;
+END//
+
+DELIMITER ;Query 2: 
+DELIMITER //
+
+CREATE TRIGGER set_section_order_index_before_insert
+BEFORE INSERT ON sections
+FOR EACH ROW
+BEGIN
+  DECLARE max_order INT;
+  SELECT COALESCE(MAX(order_index), -1) + 1
+    INTO max_order
+    FROM sections
+   WHERE project_page_id = NEW.project_page_id;
+  SET NEW.order_index = max_order;
+END//
+
+DELIMITER ;
+
+
+
+
+CREATE TABLE IF NOT EXISTS customers (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   project_idx BIGINT NOT NULL,
+   customer_id CHAR(16) NOT NULL UNIQUE,
+   first_name VARCHAR(255) NOT NULL,
+   last_name VARCHAR(255) NOT NULL,
+   email VARCHAR(255),
+   phone VARCHAR(45),
+   address_line1 VARCHAR(255),
+   address_line2 VARCHAR(255),
+   city VARCHAR(100),
+   state VARCHAR(100),
+   zip VARCHAR(20),
+   notes TEXT DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+CREATE TABLE IF NOT EXISTS job_definitions (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   job_definition_id CHAR(16) NOT NULL UNIQUE,
+   project_idx BIGINT NOT NULL,
+   type VARCHAR(255) NOT NULL,             
+   description TEXT DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS jobs (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   job_id CHAR(16) NOT NULL UNIQUE,
+   project_idx BIGINT NOT NULL,
+   job_definition_id BIGINT NULL,   
+   product_id BIGINT NULL,
+   customer_id  BIGINT NULL,
+   valuation DECIMAL(10, 2) NULL,
+   status ENUM('waiting_diagnosis','waiting_work','waiting_parts','waiting_listing','listed','waiting_customer','waiting_delivery','complete','delivered','cancelled') NOT NULL DEFAULT 'waiting_work',
+   priority ENUM('low','medium','high','urgent') NOT NULL DEFAULT 'medium',
+   scheduled_start_date DATETIME DEFAULT NULL,
+   completed_date DATETIME DEFAULT NULL,
+   notes TEXT DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+   FOREIGN KEY (job_definition_id) REFERENCES job_definitions(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+TYPES => 'repair','replace','install','clean','inspect','remove' ‘build’ ‘other’
+UNUSED
+CREATE TABLE IF NOT EXISTS task_definitions (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   task_definition_id CHAR(16) NOT NULL UNIQUE,
+   project_idx BIGINT NOT NULL,
+   type VARCHAR(255) NOT NULL,             
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS tasks (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   task_id CHAR(16) NOT NULL UNIQUE,
+   project_idx BIGINT NOT NULL,
+   job_id BIGINT NULL,
+   status ENUM('waiting_work','waiting_parts','waiting_customer','complete','cancelled') NOT NULL DEFAULT 'waiting_work',
+   priority ENUM('low','medium','high','urgent') NOT NULL DEFAULT 'medium',
+   scheduled_start_date DATETIME DEFAULT NULL,
+   completed_date DATETIME DEFAULT NULL,
+   task TEXT DEFAULT NULL,
+   description TEXT DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS part_definitions (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   project_idx BIGINT NOT NULL,
+   name VARCHAR(255) NOT NULL,
+   part_number VARCHAR(100) DEFAULT NULL,
+   description TEXT DEFAULT NULL,
+   default_supplier VARCHAR(255) DEFAULT NULL,
+   backup_supplier VARCHAR(255) DEFAULT NULL,
+   cost DECIMAL(10,2) DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS job_parts (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   job_id BIGINT NOT NULL,
+   part_definition_id BIGINT NOT NULL,    
+   qty INT NOT NULL DEFAULT 1,
+   status ENUM('needed','ordered','shipped','received','installed','returned','cancelled') 
+          NOT NULL DEFAULT 'needed',
+   supplier_name VARCHAR(255) DEFAULT NULL,
+   supplier_contact VARCHAR(255) DEFAULT NULL,
+   order_number VARCHAR(100) DEFAULT NULL,
+   tracking_number VARCHAR(100) DEFAULT NULL,
+   cost DECIMAL(10,2) DEFAULT NULL,
+   expected_delivery_date DATE DEFAULT NULL,
+   actual_delivery_date DATE DEFAULT NULL,
+   notes TEXT DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+   FOREIGN KEY (part_definition_id) REFERENCES part_definitions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS employees (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   project_idx BIGINT NOT NULL, 
+   employee_id CHAR(16) NOT NULL UNIQUE,  
+   first_name VARCHAR(255) NOT NULL,
+   last_name VARCHAR(255) NOT NULL,
+   email VARCHAR(255) DEFAULT NULL,
+   phone VARCHAR(45) DEFAULT NULL,
+   address_line1 VARCHAR(255),
+   address_line2 VARCHAR(255),
+   city VARCHAR(100),
+   state VARCHAR(100),
+   zip VARCHAR(20),
+   position VARCHAR(255) DEFAULT NULL,     
+   department VARCHAR(255) DEFAULT NULL, 
+   hire_date DATETIME DEFAULT NULL,
+   termination_date DATETIME DEFAULT NULL,
+   notes TEXT DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   updated_at TIMESTAMP DEFAULT NOW() ON UPDATE NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE assignments (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+   project_idx BIGINT NOT NULL,
+   employee_id CHAR(16) NOT NULL,
+   task_id CHAR(16) DEFAULT NULL,
+   job_id CHAR(16) DEFAULT NULL,
+   created_at TIMESTAMP DEFAULT NOW(),
+   FOREIGN KEY (project_idx) REFERENCES projects(id) ON DELETE CASCADE,
+   FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE,
+   FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
+   FOREIGN KEY (job_id) REFERENCES jobs(job_id) ON DELETE CASCADE,
+   CONSTRAINT chk_only_one CHECK (
+     (task_id IS NOT NULL AND job_id IS NULL) OR
+     (task_id IS NULL AND job_id IS NOT NULL)
+   ),
+   UNIQUE KEY uq_employee_task (employee_id, project_idx, task_id),
+   UNIQUE KEY uq_employee_job (employee_id, project_idx, job_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

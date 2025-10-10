@@ -6,17 +6,17 @@ import { RiPhoneFill } from "react-icons/ri";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useProjectContext } from "@/contexts/projectContext";
+import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
 import { useContext, useEffect, useMemo, useState } from "react";
-import { AuthContext } from "@/contexts/authContext";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { AuthContext } from "@/contexts/authContext"; 
 import "./CustomerCalls.css";
 import { Customer } from "@/types/customers";
 import { normalizeUSNumber } from "@/util/functions/Calls";
-import { formatPhoneNumber } from "@/util/functions/Customers";
-import { useAppContext } from "@/contexts/appContext";
+import { formatPhoneNumber } from "@/util/functions/Customers"; 
 import { makeRequest } from "@/util/axios";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useWebSocketStore } from "@/store/webSocketStore";
+import { useRouting } from "@/hooks/useRouting";
 
 const CustomerCalls = () => {
   const { currentUser } = useContext(AuthContext);
@@ -25,16 +25,16 @@ const CustomerCalls = () => {
     setIncoming,
     connection,
     acceptCall,
-    hangupCall,
-    device,
+    hangupCall, 
     identity,
-    dialing,
-    rejectCall,
+    dialing, 
     startCall,
   } = useTwilioDevice();
   const { projectUsers, customers } = useContextQueries();
-  const { currentProjectId, setCurrentCustomerData } = useProjectContext();
-  const { screenClick } = useAppContext();
+  const { currentProjectId } = useCurrentDataStore();
+  const { setCurrentCustomerData } = useCurrentDataStore();
+
+  const { screenClick } = useRouting();
 
   const [incomingCall, setIncomingCall] = useState<any>(null);
   const [activeCall, setActiveCall] = useState<any>(null);
@@ -42,7 +42,7 @@ const CustomerCalls = () => {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-  const { ws, wsUrl, addMessageListener, send } = useProjectContext();
+  const { ws, wsUrl, addMessageListener, send } = useWebSocketStore();
 
   const handleReject = async () => {
     if (incoming) {

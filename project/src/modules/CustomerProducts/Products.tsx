@@ -2,8 +2,7 @@
 "use client";
 import React, { useEffect } from "react";
 import "react-datepicker/dist/react-datepicker.css";
-import { useContext } from "react";
-import { useAppContext } from "@/contexts/appContext";
+import { useContext } from "react"; 
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { AuthContext } from "@/contexts/authContext";
 import DraggableItems from "./DraggableItems";
@@ -12,11 +11,14 @@ import CustomerProductSkeleton from "../components/ProductCard/CustomerProductSk
 import ProductView from "./ProductView/ProductView";
 import InventoryGrid from "./Grid/InventoryGrid";
 import ModuleLeftBar from "../components/ModuleLeftBar";
+import { useUiStore } from "@/store/UIStore";
+import { useDataFilters } from "@/hooks/useDataFilters";
 
 const CustomerProducts = () => {
   const { currentUser } = useContext(AuthContext);
   const { productsData, isLoadingProductsData } = useContextQueries();
-  const { screen, filteredProducts } = useAppContext();
+  const { filteredProducts } = useDataFilters();
+  const { screen } = useUiStore()
   if (!currentUser) return null;
 
   return (

@@ -6,9 +6,9 @@ import PrivacySettings from "./UserAccess";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import SiteSettings from "./SiteSettings";
 import AccountSettings from "./AccountSettings";
-import { useProjectContext } from "@/contexts/projectContext";
 import ModuleSettings from "./ModuleSettings";
 import ProjectSettings from "./ProjectSettings";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type SettingsProps = {
   initialPage: SettingsPages | null;
@@ -19,7 +19,7 @@ type SettingsPages = "Site" | "Users" | "Account" | "Modules" | "Project"
 const Settings = ({ initialPage }: SettingsProps) => {
   const { currentUser } = useContext(AuthContext);
   const { projectsData } = useContextQueries();
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId } = useCurrentDataStore();
   const [selectedPage, setSelectedPage] = useState<SettingsPages>(
     initialPage === null ? "Site" : initialPage
   );

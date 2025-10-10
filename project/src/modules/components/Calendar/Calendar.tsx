@@ -9,27 +9,13 @@ import React, {
 } from "react";
 import { motion } from "framer-motion";
 import {
-  Box,
-  Check,
-  Activity,
   Calendar,
-  Clock,
-  Tag,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   ChevronRight,
   Minimize2,
   Maximize2,
-  User,
-  Plus,
-  Truck,
-  Package,
-  AlertCircle,
-  Edit,
-  Trash,
-  Clock11,
-  MapPin,
 } from "lucide-react";
 import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
@@ -40,7 +26,6 @@ import "./Calendar.css";
 import { JobDefinition } from "@/types/jobs";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { JobFormData } from "@/util/schemas/jobSchema";
-import { DelayType } from "@/hooks/useAutoSave";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 
 // ---------- ScheduleTimeline ----------

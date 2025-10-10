@@ -11,8 +11,8 @@ import {
 } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import { IoClose } from "react-icons/io5";
-import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { useAppContext } from "@/contexts/appContext";
+import { capitalizeFirstLetter } from "@/util/functions/Data"; 
+import { formatDropdownOption } from "@/util/functions/UI";
 
 const InputField = <T extends FieldValues>({
   inputType,
@@ -52,7 +52,6 @@ const InputField = <T extends FieldValues>({
   placeholder?: string;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { formatDropdownOption } = useAppContext();
 
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const isDatePickerOpenRef = useRef<boolean>(false);

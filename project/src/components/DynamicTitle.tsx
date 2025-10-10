@@ -1,13 +1,12 @@
 // project/src/components/DynamicTitle.tsx
 "use client";
-
 import { useEffect, useMemo } from "react";
-import { useProjectContext } from "@/contexts/projectContext";
 import { usePathname } from "next/navigation";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 export default function DynamicTitle() {
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId } = useCurrentDataStore();
   const { projectsData } = useContextQueries();
   const pathname = usePathname();
 

@@ -1,4 +1,4 @@
-// project/src/screens/Inventory/ProductsHeader.tsx
+// project/src/modules/CustomerProducts/ProductsHeader.tsx
 "use client";
 import React, { useContext } from "react";
 import { FiEdit } from "react-icons/fi";
@@ -7,11 +7,6 @@ import { BsWindow } from "react-icons/bs";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import { toast } from "react-toastify";
-import {
-  DataFilters,
-  productFilter,
-  useAppContext,
-} from "@/contexts/appContext";
 import { IoTrashSharp } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { usePathname } from "next/navigation";
@@ -19,29 +14,26 @@ import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
-import { Product } from "@/types/products";
-import { useProjectContext } from "@/contexts/projectContext";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/UIStore";
+import { useRouting } from "@/hooks/useRouting";
+import { useDataFilters } from "@/hooks/useDataFilters";
+import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { productFilter } from "@/types/filters";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const { currentUser } = useContext(AuthContext);
-  const {
-    setEditingLock,
-    editMode,
-    setEditMode,
-    dataFilters,
-    setDataFilters,
-    selectedProducts,
-    setSelectedProducts,
-    saveProducts,
-    localData,
-    handleRunModule,
-  } = useAppContext();
-  const { currentProjectId } = useProjectContext();
+  // const { handleRunModule } = use
+  const { saveProducts } = useProductFormSubmit();
+  const { productFilters, setProductFilters } = useCurrentDataStore();
+  const { editingProducts, setEditingProducts } = useUiStore();
+  const { currentProjectId, selectedProducts, setSelectedProducts } =
+    useCurrentDataStore();
   const { deleteProducts, hasProjectModule } = useContextQueries();
-  const { screen, setScreen, screenClick } = useAppContext();
+  const { screenClick } = useRouting();
+  const { setUpdatingLock, screen } = useUiStore();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
-  const pathname = usePathname();
 
   if (!currentProjectId) return null;
 
@@ -67,24 +59,24 @@ const ProductsHeader = ({ title }: { title: String }) => {
   };
 
   const wixSync = async () => {
-    setEditingLock(true);
+    setUpdatingLock(true);
     try {
-      await handleRunModule("products-wix-sync-cms-module");
+      // await handleRunModule("products-wix-sync-cms-module");
     } catch (e) {
       toast.error("Wix sync failed");
     } finally {
-      setEditingLock(false);
+      setUpdatingLock(false);
     }
   };
 
   const handleGoogleExport = async () => {
-    setEditingLock(true);
+    setUpdatingLock(true);
     try {
-      await handleRunModule("products-export-to-sheets-module");
+      // await handleRunModule("products-export-to-sheets-module");
     } catch (e) {
       toast.error("Export failed");
     } finally {
-      setEditingLock(false);
+      setUpdatingLock(false);
     }
   };
 
@@ -116,7 +108,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
       toast.error("No products selected for deletion");
       return;
     }
-    setEditingLock(true);
+    setUpdatingLock(true);
     try {
       await saveProducts();
       await deleteProducts(selectedProducts);
@@ -126,13 +118,13 @@ const ProductsHeader = ({ title }: { title: String }) => {
         `Failed to delete product${selectedProducts.length > 1 && "s"}`
       );
     } finally {
-      setEditingLock(false);
+      setUpdatingLock(false);
       setSelectedProducts([]);
     }
   };
 
   const handleAddRow = () => {
-    setEditMode(false);
+    setEditingProducts(false);
     if (screen !== "customer-products-table") {
       screenClick("add-customer-product", "/products");
     } else {
@@ -165,44 +157,43 @@ const ProductsHeader = ({ title }: { title: String }) => {
     newMake: string,
     newModel: string
   ) => {
-    const allOrdinals = localData.map((p) => p.ordinal);
-    const nextOrdinal =
-      allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
-
-    const newProduct: Product = {
-      serial_number: newSerial,
-      customer_id: null,
-      name: "",
-      highlight: null,
-      make: newMake,
-      model: newModel,
-      length: 0,
-      width: 0,
-      height: 0,
-      description: "",
-      note: "",
-      ordinal: nextOrdinal,
-    };
-    await saveProducts(newProduct);
+    // const allOrdinals = localProductsData.map((p) => p.ordinal);
+    // const nextOrdinal =
+    //   allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
+    // const newProduct: Product = {
+    //   serial_number: newSerial,
+    //   customer_id: null,
+    //   projext_idx
+    //   name: "",
+    //   make: newMake,
+    //   model: newModel,
+    //   length: 0,
+    //   width: 0,
+    //   height: 0,
+    //   description: "",
+    //   note: "",
+    //   ordinal: nextOrdinal,
+    // };
+    // await saveProducts(newProduct);
   };
 
   const handleEditClick = () => {
-    setDataFilters({ jobType: [], products: [] });
-    setEditMode((prev) => !prev);
+    // setDataFilters({ jobType: [], products: [] });
+    // setEditMode((prev) => !prev);
   };
 
   const handleFilterClick = async (filter: productFilter) => {
-    let active = [...dataFilters.products];
+    let active = [...productFilters.products];
 
     if (active.includes(filter)) {
       active = active.filter((f) => f !== filter);
     } else {
       active.push(filter);
     }
-    setDataFilters({ ...dataFilters, products: active });
+    setProductFilters({ ...productFilters, products: active });
     setSelectedProducts([]);
     if (screen === "customer-products") {
-      setEditMode(false);
+      setEditingProducts(false);
     }
     if (screen === "customer-products-table") {
       await saveProducts();
@@ -212,16 +203,16 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const handleJobFilterClick = async (
     filter: "Service" | "Refurbishment" | "Resell"
   ) => {
-    let active = [...dataFilters.jobType];
+    let active = [...productFilters.jobType];
     if (active.includes(filter)) {
       active = active.filter((f) => f !== filter);
     } else {
       active.push(filter);
     }
-    setDataFilters({ ...dataFilters, jobType: active });
+    setProductFilters({ ...productFilters, jobType: active });
     setSelectedProducts([]);
     if (screen === "customer-products") {
-      setEditMode(false);
+      setEditingProducts(false);
     }
     if (screen === "customer-products-table") {
       await saveProducts();
@@ -288,7 +279,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
               <div
                 onClick={() => handleFilterClick("Active")}
                 style={{
-                  backgroundColor: dataFilters.products.includes("Active")
+                  backgroundColor: productFilters.products.includes("Active")
                     ? appTheme[currentUser.theme].header_1_2
                     : "transparent",
                 }}
@@ -299,14 +290,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
               <div
                 className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
                 style={{
-                  opacity: dataFilters.products.length === 0 ? "0.1" : 0,
+                  opacity: productFilters.products.length === 0 ? "0.1" : 0,
                   backgroundColor: appTheme[currentUser.theme].text_1,
                 }}
               />
               <div
                 onClick={() => handleFilterClick("Complete")}
                 style={{
-                  backgroundColor: dataFilters.products.includes("Complete")
+                  backgroundColor: productFilters.products.includes("Complete")
                     ? appTheme[currentUser.theme].header_1_2
                     : "transparent",
                 }}
@@ -325,7 +316,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
               <div
                 onClick={() => handleJobFilterClick("Service")}
                 style={{
-                  backgroundColor: dataFilters.jobType.includes("Service")
+                  backgroundColor: productFilters.jobType.includes("Service")
                     ? appTheme[currentUser.theme].header_1_2
                     : "transparent",
                 }}
@@ -337,9 +328,9 @@ const ProductsHeader = ({ title }: { title: String }) => {
                 className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
                 style={{
                   opacity:
-                    (dataFilters.jobType.length === 1 &&
-                      dataFilters.jobType[0] === "Resell") ||
-                    dataFilters.jobType.length === 0
+                    (productFilters.jobType.length === 1 &&
+                      productFilters.jobType[0] === "Resell") ||
+                    productFilters.jobType.length === 0
                       ? "0.1"
                       : 0,
                   backgroundColor: appTheme[currentUser.theme].text_1,
@@ -348,7 +339,9 @@ const ProductsHeader = ({ title }: { title: String }) => {
               <div
                 onClick={() => handleJobFilterClick("Refurbishment")}
                 style={{
-                  backgroundColor: dataFilters.jobType.includes("Refurbishment")
+                  backgroundColor: productFilters.jobType.includes(
+                    "Refurbishment"
+                  )
                     ? appTheme[currentUser.theme].header_1_2
                     : "transparent",
                 }}
@@ -360,9 +353,9 @@ const ProductsHeader = ({ title }: { title: String }) => {
                 className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
                 style={{
                   opacity:
-                    (dataFilters.jobType.length === 1 &&
-                      dataFilters.jobType[0] === "Service") ||
-                    dataFilters.jobType.length === 0
+                    (productFilters.jobType.length === 1 &&
+                      productFilters.jobType[0] === "Service") ||
+                    productFilters.jobType.length === 0
                       ? "0.1"
                       : 0,
                   backgroundColor: appTheme[currentUser.theme].text_1,
@@ -371,7 +364,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
               <div
                 onClick={() => handleJobFilterClick("Resell")}
                 style={{
-                  backgroundColor: dataFilters.jobType.includes("Resell")
+                  backgroundColor: productFilters.jobType.includes("Resell")
                     ? appTheme[currentUser.theme].header_1_2
                     : "transparent",
                 }}
@@ -434,7 +427,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
             <div
               style={{
                 backgroundColor: appTheme[currentUser.theme].background_2,
-                border: editMode
+                border: editingProducts
                   ? `1px solid ${appTheme[currentUser.theme].text_1}`
                   : "none",
               }}

@@ -23,6 +23,7 @@ import { AuthContext } from "@/contexts/authContext";
 import { MediaLink } from "@/types/media";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 function SortableImage({
   id,
@@ -116,18 +117,15 @@ function SortableImage({
 }
 
 export default function ProductImages({
-  productImages,
-  setProductImages,
   setImageDisplayed,
   imageEditorOpen,
   singleRow,
 }: {
-  productImages: MediaLink[];
-  setProductImages: React.Dispatch<React.SetStateAction<MediaLink[]>>;
   setImageDisplayed: React.Dispatch<React.SetStateAction<string | null>>;
   imageEditorOpen: boolean;
   singleRow: boolean;
 }) {
+  const { currentProductImages, setCurrentProductImages } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
@@ -141,7 +139,7 @@ export default function ProductImages({
     })
   );
 
-  const items = productImages.map((img) => ({
+  const items = currentProductImages.map((img) => ({
     id: img.media_id.toString(),
     url: img.url,
   }));
@@ -150,28 +148,28 @@ export default function ProductImages({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = productImages.findIndex(
+    const oldIndex = currentProductImages.findIndex(
       (item) => item.media_id.toString() === active.id
     );
-    const newIndex = productImages.findIndex(
+    const newIndex = currentProductImages.findIndex(
       (item) => item.media_id.toString() === over.id
     );
 
-    const reordered = arrayMove(productImages, oldIndex, newIndex).map(
+    const reordered = arrayMove(currentProductImages, oldIndex, newIndex).map(
       (img, idx) => ({ ...img, ordinal: idx })
     );
 
-    setProductImages(reordered);
+    setCurrentProductImages(reordered);
   };
 
   const handleDeleteImage = (index: number) => {
-    setProductImages((prev) => {
-      const updated = prev.filter((_, i) => i !== index);
-      return updated.map((img, idx) => ({
-        ...img,
-        ordinal: idx,
-      }));
-    });
+    // setCurrentProductImages((prev: MediaLink[]) => {
+    //   const updated = prev.filter((_, i) => i !== index);
+    //   return updated.map((img, idx) => ({
+    //     ...img,
+    //     ordinal: idx,
+    //   }));
+    // });
   };
 
   if (!currentUser) return null;
@@ -186,7 +184,7 @@ export default function ProductImages({
         items={items.map((item) => item.id)}
         strategy={rectSortingStrategy}
       >
-        {productImages.length > 0 && (
+        {currentProductImages.length > 0 && (
           <div
             className={
               singleRow

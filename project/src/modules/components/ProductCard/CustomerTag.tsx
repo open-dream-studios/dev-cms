@@ -1,7 +1,4 @@
-import { useAppContext } from "@/contexts/appContext";
-import { AuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { AuthContext } from "@/contexts/authContext"; 
 import { useModal1Store } from "@/store/useModalStore";
 import { Customer } from "@/types/customers";
 import { appTheme } from "@/util/appTheme";
@@ -10,6 +7,9 @@ import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import CustomerSelection from "../Customers/CustomerSelection";
 import { Product } from "@/types/products";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/UIStore";
+import { useRouting } from "@/hooks/useRouting";
 
 const CustomerTag = ({
   product,
@@ -21,8 +21,9 @@ const CustomerTag = ({
   oneSize: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { setCurrentCustomerData } = useProjectContext();
-  const { screen, screenClick, productFormRef } = useAppContext();
+  const { setCurrentCustomerData } = useCurrentDataStore()
+  const { screenClick } = useRouting();
+  const { screen } = useUiStore()
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);

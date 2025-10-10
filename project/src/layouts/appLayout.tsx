@@ -14,7 +14,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { AuthContext, AuthContextProvider } from "@/contexts/authContext";
-import { useAppContext, AppContextProvider } from "@/contexts/appContext";
 import Navbar from "@/components/Navbar/Navbar";
 import LeftBar from "@/components/LeftBar/LeftBar";
 import { appTheme } from "@/util/appTheme";
@@ -34,11 +33,11 @@ import LandingPage from "@/screens/Landing/LandingPage/LandingPage";
 import AdminHome from "@/screens/AdminHome/AdminHome";
 import DynamicTitle from "@/components/DynamicTitle";
 import { Product } from "@/types/products";
-import {
-  ProjectContextProvider,
-  useProjectContext,
-} from "@/contexts/projectContext";
 import CustomerCalls from "@/modules/CustomerCallsModule/CustomerCalls";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useWebSocketManager } from "@/store/webSocketStore";
+import { useUiStore } from "@/store/UIStore";
+import { useRouting } from "@/hooks/useRouting";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -46,15 +45,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthContextProvider>
-        <ProjectContextProvider>
-          <QueryProvider>
-            <AppContextProvider>
-              <CustomToast />
-              <DynamicTitle />
-              <AppRoot>{children}</AppRoot>
-            </AppContextProvider>
-          </QueryProvider>
-        </ProjectContextProvider>
+        <QueryProvider>
+          <CustomToast />
+          <DynamicTitle />
+          <AppRoot>{children}</AppRoot>
+        </QueryProvider>
       </AuthContextProvider>
     </QueryClientProvider>
   );
@@ -113,22 +108,29 @@ const UnprotectedLayout = () => {
 };
 
 const ProtectedLayout = ({ children }: { children: ReactNode }) => {
-  const { editingLock, setSelectedProducts, setEditMode, setLocalData } =
-    useAppContext();
-  const { productsData } = useContextQueries();
+  const { updatingLock, setEditingProducts } = useUiStore();
+  const { projectsData, productsData } = useContextQueries();
   const pathName = usePathname();
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId, setCurrentProjectData, setSelectedProducts, setLocalProductsData } = useCurrentDataStore();
+  useWebSocketManager();
+  useRouting();
 
   useEffect(() => {
     setSelectedProducts([]);
-    setEditMode(false);
-    setLocalData(
+    setEditingProducts(false);
+    setLocalProductsData(
       productsData.sort(
         (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
       )
     );
   }, [setSelectedProducts, pathName]);
+
+  useEffect(() => {
+    if (projectsData.length === 1) {
+      setCurrentProjectData(projectsData[0]);
+    }
+  }, [projectsData]);
 
   // useEffect(() => {
   //   const handleResize = () => {
@@ -169,7 +171,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="w-[100vw] display-height">
-      {editingLock && (
+      {updatingLock && (
         <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
       )}
       <Modals landing={false} />

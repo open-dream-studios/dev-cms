@@ -2,19 +2,17 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Product } from "@/types/products";
-import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Customer } from "@/types/customers";
 import app_details from "../../../util/appDetails.json";
-import { MediaLink } from "@/types/media";
-import { useAppContext } from "@/contexts/appContext";
+import { MediaLink } from "@/types/media"; 
 import CustomerTag from "./CustomerTag";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import { Check, Activity, Plus, ChevronDown } from "lucide-react";
 import type { Job, JobDefinition, Task } from "@/types/jobs";
-import { FaPlus, FaWrench } from "react-icons/fa6";
+import { FaWrench } from "react-icons/fa6";
 import "../../components/Calendar/Calendar.css";
 import { FiEdit } from "react-icons/fi";
 import { useJobForm, useTaskForm } from "@/hooks/useJobForm";
@@ -30,8 +28,9 @@ import {
   PriorityBadge,
   StatusBadge,
   TaskStatusBadge,
-} from "../../CustomerProducts/ProductView/ProductJobCard/Badges";
-import { Employee, EmployeeAssignment } from "@/types/employees";
+} from "../../CustomerProducts/ProductView/ProductJobCard/Badges"; 
+import { useUiStore } from "@/store/UIStore";
+import { useRouting } from "@/hooks/useRouting";
 
 // ---------- TaskCard ----------
 const MiniTaskCard: React.FC<{
@@ -140,7 +139,8 @@ const CustomerProductFrame = ({
     jobs,
     jobDefinitions,
   } = useContextQueries();
-  const { screenClick, screen } = useAppContext();
+  const { screenClick } = useRouting();
+  const { screen } = useUiStore()
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 

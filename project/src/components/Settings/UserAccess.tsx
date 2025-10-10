@@ -12,11 +12,11 @@ import { useProjectUserForm } from "@/hooks/useProjectUserForm";
 import { ProjectUserFormData } from "@/util/schemas/projectUserSchema";
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
-import { useProjectContext } from "@/contexts/projectContext";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setCurrentProjectData } = useProjectContext();
+  const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
   const { upsertProjectUser, projectUsers, deleteProjectUser, projectsData } =
     useContextQueries();
 

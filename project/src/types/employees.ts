@@ -2,8 +2,9 @@
 export type Employee = {
   id?: number;
   employee_id: string | null;
-  first_name: string | null;
-  last_name: string | null;
+  project_idx: number;
+  first_name: string;
+  last_name: string;
   email: string | null;
   phone: string | null;
   address_line1: string | null;

@@ -1,6 +1,6 @@
-import { useAppContext } from "@/contexts/appContext";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { useUiStore } from "@/store/UIStore";
 import { useModal1Store } from "@/store/useModalStore";
 import { Customer } from "@/types/customers";
 import { Product } from "@/types/products";
@@ -11,30 +11,30 @@ import { IoTrashSharp } from "react-icons/io5";
 
 const CustomerSelection = ({ product }: { product: Product | null }) => {
   const { currentUser } = useContext(AuthContext);
-  const { customers, updateProducts, refetchProductsData } =
+  const { customers, upsertProducts, refetchProductsData } =
     useContextQueries();
-  const { productFormRef, screen } = useAppContext();
-
+  const { screen } = useUiStore()
+ 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   const handleSelectCustomer = async (customer: Customer) => {
-    if (productFormRef.current) {
-      productFormRef.current.setValue("customer_id", customer.id, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setModal1({ ...modal1, open: false });
-    }
+    // if (productFormRef.current) {
+    //   productFormRef.current.setValue("customer_id", customer.id, {
+    //     shouldDirty: true,
+    //     shouldValidate: true,
+    //   });
+    //   setModal1({ ...modal1, open: false });
+    // }
 
     if (screen === "customer-products") {
       console.log("updating...");
-      await updateProducts([
-        {
-          ...product,
-          customer_id: customer.id,
-        } as Product,
-      ]);
+      // await upsertProducts([
+      //   {
+      //     ...product,
+      //     customer_id: customer.id,
+      //   } as Product,
+      // ]);
 
       setModal1({
         ...modal1,
@@ -45,13 +45,13 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
   };
 
   const handleRemoveCustomer = () => {
-    if (productFormRef.current) {
-      productFormRef.current.setValue("customer_id", null, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setModal1({ ...modal1, open: false });
-    }
+    // if (productFormRef.current) {
+    //   productFormRef.current.setValue("customer_id", null, {
+    //     shouldDirty: true,
+    //     shouldValidate: true,
+    //   });
+    //   setModal1({ ...modal1, open: false });
+    // }
   };
 
   if (!currentUser || !product) return null;

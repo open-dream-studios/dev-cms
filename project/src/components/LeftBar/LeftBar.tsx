@@ -20,7 +20,6 @@ import appDetails from "../../util/appDetails.json";
 import { AuthContext } from "@/contexts/authContext";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
-import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { HiServer, HiViewBoards } from "react-icons/hi";
 import { FaImages } from "react-icons/fa";
@@ -28,10 +27,11 @@ import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
 import Divider from "@/lib/blocks/Divider";
 import { FaPollH } from "react-icons/fa";
 import HoverBox from "@/lib/blocks/HoverBox";
-import { IoPersonSharp } from "react-icons/io5";
-import { useAppContext } from "@/contexts/appContext";
+import { IoPersonSharp } from "react-icons/io5"; 
 import { Screen } from "@/types/screens";
 import { BsFillPersonVcardFill } from "react-icons/bs";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useRouting } from "@/hooks/useRouting";
 
 type BoxItem = {
   title: string;
@@ -66,9 +66,9 @@ const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
 
 const LeftBar = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId } = useCurrentDataStore();
   const { hasProjectModule, projectsData } = useContextQueries();
-  const { screenClick } = useAppContext();
+  const { screenClick } = useRouting();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarRef = useRef<HTMLDivElement>(null);

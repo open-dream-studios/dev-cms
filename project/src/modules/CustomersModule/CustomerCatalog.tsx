@@ -1,22 +1,13 @@
-// project/src/screens/PagesEditor/PagesEditor.tsx
-import { useState, useContext, useMemo, useEffect } from "react";
-import { AuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { FaPlus } from "react-icons/fa6";
+// project/src/modules/CustomersModule/CustomerCatalog.tsx
+import { useContext } from "react";
+import { AuthContext } from "@/contexts/authContext"; 
 import { appTheme } from "@/util/appTheme";
-import { SubmitHandler } from "react-hook-form";
-import Divider from "@/lib/blocks/Divider";
 import CustomerView from "./CustomerView";
 import { Customer } from "@/types/customers";
-import { useCustomerForm } from "@/hooks/useCustomerForm";
-import { CustomerFormData } from "@/util/schemas/customerSchema";
-import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore";
-import { ExposedCustomerForm } from "./CustomerView";
-import { useAppContext } from "@/contexts/appContext";
 import { formatPhone } from "@/util/functions/Customers";
 import ModuleLeftBar from "../components/ModuleLeftBar";
+import { useUiStore } from "@/store/UIStore";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 export const CustomerMiniCard = ({
   customer,
@@ -29,7 +20,7 @@ export const CustomerMiniCard = ({
   handleContextMenu: (e: any, customer: Customer) => void;
   handleCustomerClick: (customer: Customer) => void;
 }) => {
-  const { currentCustomer } = useProjectContext();
+  const { currentCustomer } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   if (!currentUser) return null;
 
@@ -40,7 +31,8 @@ export const CustomerMiniCard = ({
       onClick={() => handleCustomerClick(customer)}
       style={{
         backgroundColor:
-          currentCustomer && currentCustomer.customer_id === customer.customer_id
+          currentCustomer &&
+          currentCustomer.customer_id === customer.customer_id
             ? "rgba(255,255,255,0.057)"
             : "rgba(255,255,255,0.028)",
         color: appTheme[currentUser.theme].text_4,
@@ -81,8 +73,9 @@ export const CustomerMiniCard = ({
 
 const CustomerCatalog = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentCustomer, currentProjectId } = useProjectContext();
-  const { addingCustomer, setIsFormDirty, setCustomerForm } = useAppContext();
+  const { currentProjectId } = useCurrentDataStore();
+  const { currentCustomer } = useCurrentDataStore()
+  const { addingCustomer } = useUiStore();
 
   if (!currentUser || !currentProjectId) return null;
 
@@ -90,13 +83,7 @@ const CustomerCatalog = () => {
     <div className="flex w-full h-[100%]">
       <ModuleLeftBar />
       <div className="flex-1">
-        {(currentCustomer || addingCustomer) && (
-          <CustomerView
-            key={currentCustomer?.id ?? "new"}
-            onDirtyChange={setIsFormDirty}
-            exposeForm={setCustomerForm}
-          />
-        )}
+        {(currentCustomer || addingCustomer) && <CustomerView />}
       </div>
     </div>
   );

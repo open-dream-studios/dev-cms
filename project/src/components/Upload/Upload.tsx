@@ -1,10 +1,12 @@
 // project/src/components/Upload/Upload.tsx
 "use client";
-import { AuthContext } from "@/contexts/authContext";
-import { useAppContext } from "@/contexts/appContext";
+import { AuthContext } from "@/contexts/authContext"; 
 import { appTheme } from "@/util/appTheme";
-import React, { useContext, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useUiStore } from "@/store/UIStore";
+import { useMedia } from "@/hooks/useMedia";
 
 export type CloudinaryUpload = {
   metadata: {
@@ -26,19 +28,14 @@ interface UploadProps {
 type UploadModalProps = {
   onUploaded: (cloudinaryUploads: CloudinaryUpload[], files: File[]) => void;
   multiple?: boolean;
-  onClose: () => void;
 };
 
-function UploadModal({
-  onUploaded,
-  multiple = true,
-  onClose,
-}: UploadModalProps) {
+function UploadModal({ onUploaded, multiple = true }: UploadModalProps) {
   const { currentUser } = useContext(AuthContext);
-  const { handleFileProcessing, uploadPopup, setUploadPopup, uploadPopupRef } =
-    useAppContext();
-
-  if (!currentUser) return null;
+  const { handleFileProcessing } = useMedia();
+  const { uploadPopup, setUploadPopup } = useUiStore();
+  const uploadPopupRef = useRef<HTMLDivElement | null>(null);
+  useOutsideClick(uploadPopupRef, () => setUploadPopup(false));
 
   const handleFiles = async (files: File[]) => {
     const filtered = multiple ? files : files.slice(0, 1);
@@ -47,6 +44,8 @@ function UploadModal({
       onUploaded(multiple ? uploadedImages : [uploadedImages[0]], filtered);
     }
   };
+
+  if (!currentUser) return null;
 
   return (
     <>

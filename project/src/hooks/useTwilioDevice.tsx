@@ -1,10 +1,10 @@
 // project/src/hooks/useTwilioDevice.tsx
 import { useContext, useEffect, useRef, useState } from "react";
-import { Device } from "@twilio/voice-sdk";
-import { useProjectContext } from "@/contexts/projectContext";
+import { Device } from "@twilio/voice-sdk"; 
 import { makeRequest } from "@/util/axios";
-import { useWebSocket } from "@/hooks/useWebSocket";
 import { AuthContext } from "@/contexts/authContext";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useWebSocketStore } from "@/store/webSocketStore";
 
 export function useTwilioDevice() {
   const [device, setDevice] = useState<Device | null>(null);
@@ -12,7 +12,8 @@ export function useTwilioDevice() {
   const [incoming, setIncoming] = useState<any>(null);
   const [dialing, setDialing] = useState<any>(null);
   const [identity, setIdentity] = useState<string | null>(null);
-  const { currentProjectId, send, addMessageListener } = useProjectContext();
+  const { currentProjectId } = useCurrentDataStore()
+  const { send, addMessageListener } = useWebSocketStore();
   const { currentUser } = useContext(AuthContext);
 
   const deviceRef = useRef<Device | null>(null);

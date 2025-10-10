@@ -1,14 +1,14 @@
 // project/src/modules/CustomerProducts/Grid/InventoryGrid.tsx
 "use client";
 import ProductsHeader from "../ProductsHeader";
-import { useAppContext } from "@/contexts/appContext";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext } from "react";
 import DraggableItems from "../DraggableItems";
 import { Product } from "@/types/products";
-import { useProjectContext } from "@/contexts/projectContext";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useDataFilters } from "@/hooks/useDataFilters";
 
 export type InventoryDataItem = {
   title: string;
@@ -100,10 +100,11 @@ export const inventoryDataLayout: InventoryDataItem[] = [
 
 const InventoryGrid = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId } = useCurrentDataStore();
   const { productsData, hasProjectModule } = useContextQueries();
-  const { filteredProducts, selectedProducts, setSelectedProducts, localData } =
-    useAppContext();
+  const { localProductsData, selectedProducts, setSelectedProducts } =
+    useCurrentDataStore();
+  const { filteredProducts } = useDataFilters();
 
   const selectAllProducts = () => {
     if (productsData && filteredProducts(productsData).length > 0) {
@@ -173,9 +174,10 @@ const InventoryGrid = () => {
 
             <div className="absolute top-0 left-0 w-[100%] h-[calc(100%-40px)] mt-[40px]">
               <div className="w-[100%] h-[100%] overflow-y-scroll">
-                {localData && filteredProducts(localData).length > 0 && (
-                  <DraggableItems sheet={true} />
-                )}
+                {localProductsData &&
+                  filteredProducts(localProductsData).length > 0 && (
+                    <DraggableItems sheet={true} />
+                  )}
                 <div className="h-[60px] w-[100%]" />
               </div>
             </div>

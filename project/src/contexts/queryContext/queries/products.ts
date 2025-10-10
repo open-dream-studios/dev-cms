@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { Product } from "@/types/products";
 import { RefObject } from "react";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 export function useProducts(
   isLoggedIn: boolean,
@@ -10,6 +11,7 @@ export function useProducts(
   isOptimisticUpdate: RefObject<boolean>
 ) {
   const queryClient = useQueryClient();
+  const { setLocalProductsData } = useCurrentDataStore();
 
   const {
     data: productsData,
@@ -24,14 +26,16 @@ export function useProducts(
       });
       // console.log(res.data.products)
       const result = res.data.products || [];
-      return result.sort(
+      const sorted = result.sort(
         (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
       );
+      setLocalProductsData(sorted);
+      return sorted;
     },
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  const updateProductsMutation = useMutation({
+  const upsertProductsMutation = useMutation({
     mutationFn: async (products: Product[]) => {
       if (!currentProjectId) return [];
       const res = await makeRequest.post("/api/products/upsert", {
@@ -112,10 +116,10 @@ export function useProducts(
     },
   });
 
-  const updateProducts = async (
+  const upsertProducts = async (
     updatedProducts: Product[]
   ): Promise<number[]> => {
-    return await updateProductsMutation.mutateAsync(updatedProducts);
+    return await upsertProductsMutation.mutateAsync(updatedProducts);
   };
 
   const deleteProducts = async (serial_numbers: string[]) => {
@@ -126,7 +130,7 @@ export function useProducts(
     productsData,
     isLoadingProductsData,
     refetchProductsData,
-    updateProducts,
+    upsertProducts,
     deleteProducts,
   };
 }

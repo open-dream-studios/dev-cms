@@ -16,22 +16,25 @@ export function useEmployees(
     refetch: refetchEmployees,
   } = useQuery<Employee[]>({
     queryKey: ["employees", currentProjectId],
-    queryFn: async () => {
+    queryFn: async (): Promise<Employee[]> => {
       if (!currentProjectId) return [];
       const res = await makeRequest.post("/api/employees", {
         project_idx: currentProjectId,
       });
 
-      const employees: Employee[] = (res.data.employees || []).map(
-        (employee: Employee) => ({
-          ...employee,
-          hire_date: employee.hire_date
-            ? new Date(utcToProjectTimezone(employee.hire_date as string)!)
-            : null,
-        })
-      );
+      const employees: Employee[] = res.data.employees;
+      return employees.sort((a, b) => {
+        const firstNameCompare = a.first_name.localeCompare(
+          b.first_name,
+          undefined,
+          { sensitivity: "base" }
+        );
+        if (firstNameCompare !== 0) return firstNameCompare;
 
-      return employees;
+        return a.last_name.localeCompare(b.last_name, undefined, {
+          sensitivity: "base",
+        });
+      });
     },
     enabled: isLoggedIn && !!currentProjectId,
   });

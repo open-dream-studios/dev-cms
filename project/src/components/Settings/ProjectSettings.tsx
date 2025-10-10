@@ -1,7 +1,6 @@
 // project/src/components/Settings/Account.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useProjectSettingsForm } from "@/hooks/useProjectSettingsForm";
 import { Project } from "@/types/project";
@@ -10,13 +9,14 @@ import { ProjectSettingsFormData } from "@/util/schemas/projectSettingsSchema";
 import { useContext, useEffect, useMemo } from "react";
 import { FaPlus } from "react-icons/fa6";
 import UploadModal, { CloudinaryUpload } from "../Upload/Upload";
-import { useAppContext } from "@/contexts/appContext";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/UIStore";
 
 const ProjectSettings = () => {
-  const { currentProjectId } = useProjectContext();
+  const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const { upsertProject, projectsData } = useContextQueries();
-  const { setUploadPopup } = useAppContext();
+  const { setUploadPopup } = useUiStore()
 
   const currentProjectData = projectsData.find(
     (p) => p.id === currentProjectId
@@ -76,7 +76,6 @@ const ProjectSettings = () => {
     >
       <UploadModal
         multiple={false}
-        onClose={() => setUploadPopup(false)}
         onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
           await onLogoSubmit(
             uploadObjects.map((item: CloudinaryUpload) => item.url)

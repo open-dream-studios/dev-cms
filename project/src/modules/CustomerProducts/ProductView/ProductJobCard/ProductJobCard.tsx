@@ -38,11 +38,11 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import AddEmployeeList from "../AddEmployeeList";
 import { Employee, EmployeeAssignment } from "@/types/employees";
-import { useAppContext } from "@/contexts/appContext";
-import { useProjectContext } from "@/contexts/projectContext";
 import { Customer } from "@/types/customers";
 import CircularProgress from "./CircularProgress";
 import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useRouting } from "@/hooks/useRouting";
 
 // ---------- TaskCard ----------
 const TaskCard: React.FC<{
@@ -72,8 +72,8 @@ const TaskCard: React.FC<{
     employees,
     deleteEmployeeAssignment,
   } = useContextQueries();
-  const { screenClick } = useAppContext();
-  const { setCurrentEmployeeData } = useProjectContext();
+  const { screenClick } = useRouting();
+  const { setCurrentEmployeeData } = useCurrentDataStore();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -527,8 +527,8 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     deleteEmployeeAssignment,
     customers,
   } = useContextQueries();
-  const { screenClick } = useAppContext();
-  const { setCurrentEmployeeData } = useProjectContext();
+  const { screenClick } = useRouting();
+  const { setCurrentEmployeeData } = useCurrentDataStore();
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 

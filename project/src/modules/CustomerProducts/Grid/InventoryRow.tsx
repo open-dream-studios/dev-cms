@@ -1,9 +1,8 @@
-// project/src/screens/Inventory/InventoryRow.tsx
+// project/src/modules/CustomerProducts/Grid/InventoryRow.tsx
 import { appTheme } from "@/util/appTheme";
 import { inventoryDataLayout } from "./InventoryGrid";
 import InventoryRowForm from "./InventoryRowForm";
 import { RiDraggable } from "react-icons/ri";
-import { useAppContext } from "@/contexts/appContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useEffect } from "react";
@@ -11,6 +10,9 @@ import { FaCheck } from "react-icons/fa6";
 import { ProductFormData } from "@/util/schemas/productSchema";
 import { useForm } from "react-hook-form";
 import { Product } from "@/types/products";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/UIStore";
+import { useDataFilters } from "@/hooks/useDataFilters";
 
 const InventoryRow = ({
   index,
@@ -21,15 +23,10 @@ const InventoryRow = ({
 }) => {
   const { currentUser } = useContext(AuthContext);
 
-  const {
-    filteredProducts,
-    editMode,
-    selectedProducts,
-    setSelectedProducts,
-    formRefs,
-    localData,
-  } = useAppContext();
   const { productsData } = useContextQueries();
+  const { filteredProducts } = useDataFilters();
+  const { localProductsData, selectedProducts, setSelectedProducts } = useCurrentDataStore();
+  const { editingProducts } = useUiStore();
 
   const form = useForm<ProductFormData>({
     // defaultValues: product,
@@ -49,7 +46,7 @@ const InventoryRow = ({
         borderLeft: `0.5px solid ${appTheme[currentUser.theme].background_3}`,
         borderRight: `0.5px solid ${appTheme[currentUser.theme].background_3}`,
         borderBottom:
-          index === filteredProducts(localData).length - 1
+          index === filteredProducts(localProductsData).length - 1
             ? `1px solid ${appTheme[currentUser.theme].background_3}`
             : `0.5px solid ${appTheme[currentUser.theme].background_3}`,
       }}
@@ -57,14 +54,14 @@ const InventoryRow = ({
     >
       <div
         className={`${
-          editMode && "hover:brightness-75 dim"
+          editingProducts && "hover:brightness-75 dim"
         } w-[48px] min-w-[48px] h-[100%] items-center justify-center flex`}
         style={{
-          cursor: editMode ? "pointer" : "auto",
+          cursor: editingProducts ? "pointer" : "auto",
           borderRight: `1px solid ${appTheme[currentUser.theme].background_3}`,
         }}
       >
-        {editMode ? (
+        {editingProducts ? (
           <RiDraggable className="opacity-[0.5]" size={23}></RiDraggable>
         ) : (
           <>
@@ -112,9 +109,6 @@ const InventoryRow = ({
       <InventoryRowForm
         product={product}
         inventoryDataLayout={inventoryDataLayout}
-        registerFormRef={(serial, formInstance) => {
-          formRefs.current.set(serial, formInstance);
-        }}
       />
     </div>
   );

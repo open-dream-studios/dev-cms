@@ -1,18 +1,17 @@
+// project/src/modules/CustomerProducts/ProductView/AddEmployeeList.tsx
 import { Job, Task } from "@/types/jobs";
 import React from "react";
-
-// project/src/modules/CustomerProducts/ProductView/ProductJobs.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
 import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
 import { Employee } from "@/types/employees";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useProjectContext();
+  const { currentProject } = useCurrentDataStore();
   const { addEmployeeAssignment, employees } = useContextQueries();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);

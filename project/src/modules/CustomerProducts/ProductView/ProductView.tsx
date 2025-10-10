@@ -3,7 +3,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AuthContext } from "../../../contexts/authContext";
 import React from "react";
-import { useAppContext } from "@/contexts/appContext";
 import { appTheme } from "@/util/appTheme";
 import "react-datepicker/dist/react-datepicker.css";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
@@ -13,18 +12,13 @@ import {
   FaChevronLeft,
   FaChevronUp,
   FaPlus,
-  FaWrench,
 } from "react-icons/fa6";
 import UploadModal, {
   CloudinaryUpload,
 } from "../../../components/Upload/Upload";
-import {
-  defaultProductValues,
-  ProductFormData,
-} from "@/util/schemas/productSchema";
-import { useProductForm } from "@/hooks/useProductForm";
+import { ProductFormData } from "@/util/schemas/productSchema";
+import { useProductForm } from "@/hooks/forms/useProductForm";
 import ProductInputField from "../Forms/InputField";
-import { useProjectContext } from "@/contexts/projectContext";
 import { MediaLink } from "@/types/media";
 import { usePathname } from "next/navigation";
 import { Customer } from "@/types/customers";
@@ -43,6 +37,10 @@ import ProductJobs from "./ProductJobs";
 import ProductJobCard from "./ProductJobCard/ProductJobCard";
 import { Product } from "@/types/products";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/UIStore";
+import { useRouting } from "@/hooks/useRouting";
+import { useFormInstanceStore } from "@/store/formInstanceStore";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const sample = {
@@ -57,33 +55,26 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     eta: "Sep 26",
     owner: "Sabrina",
   };
-
   const { currentUser } = useContext(AuthContext);
-  const {
-    setUploadPopup,
-    productFormRef,
-    handleProductFormSubmit,
-    goToPrev,
-    screen,
-    screenClick,
-    productImages,
-    setProductImages,
-    originalImagesRef,
-    formRefs,
-    screenHistoryRef,
-    // designateProductStatusOptions,
-    // designateProductStatusColor,
-  } = useAppContext();
+  const { history } = useRouting();
   const {
     productsData,
-    addMedia,
     refetchMedia,
     mediaLinks,
     customers,
     jobs,
     jobDefinitions,
   } = useContextQueries();
-  const { currentProjectId } = useProjectContext();
+  const { screen, setUploadPopup } = useUiStore();
+  const { getDirtyForms } = useFormInstanceStore();
+  const {
+    currentProjectId,
+    currentProductImages,
+    setCurrentProductImages,
+    originalProductImages,
+    setOriginalProductImages,
+  } = useCurrentDataStore();
+  const { screenClick } = useRouting();
   const pathname = usePathname();
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
@@ -117,13 +108,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     return (
       customers.find((customer: Customer) => customer.id === customerId) || null
     );
-  }, [
-    productsData,
-    customers,
-    serialNumber,
-    customerId,
-    productFormRef.current,
-  ]);
+  }, [productsData, customers, serialNumber, customerId]);
 
   const newProduct = useMemo(() => {
     return screen === "add-customer-product";
@@ -134,11 +119,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     return jobs.filter((job: Job) => job.product_id === matchedProduct.id);
   }, [jobs, matchedProduct]);
 
-  useEffect(() => {
-    if (productFormRef) {
-      productFormRef.current = form;
-    }
-  }, [form, productFormRef]);
+  // useEffect(() => {
+  //   if (productFormRef) {
+  //     productFormRef.current = form;
+  //   }
+  // }, [form, productFormRef]);
 
   useEffect(() => {
     if (
@@ -146,10 +131,10 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       screen === "add-customer-product" &&
       !serialNumber
     ) {
-      setProductImages([]);
+      setCurrentProductImages([]);
       setImageDisplayed(null);
       setImageView(null);
-      originalImagesRef.current = [];
+      setOriginalProductImages([]);
     }
   }, [serialNumber, screen, pathname]);
 
@@ -157,8 +142,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     if (
       serialNumber &&
       screen !== "edit-customer-product" &&
-      screenHistoryRef.current &&
-      screenHistoryRef.current.length <= 1
+      history &&
+      history.length <= 1
     ) {
       screenClick("edit-customer-product", `/products/${serialNumber}`);
     }
@@ -202,7 +187,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       );
 
       const originalImages = () => {
-        const tempImages = productImages.filter((img) => img.isTemp);
+        // const tempImages = currentProductImages.filter((img) => img.isTemp);
+        const tempImages = currentProductImages;
         const merged = [...initialImages, ...tempImages];
 
         // Deduplicate by media_id (or URL if no media_id)
@@ -215,8 +201,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         });
       };
       const newProductImages = originalImages();
-      setProductImages(newProductImages);
-      originalImagesRef.current = newProductImages;
+      setCurrentProductImages(newProductImages);
+      setOriginalProductImages(newProductImages);
       if (newProductImages.length >= 1) {
         setImageDisplayed(newProductImages[0].url);
       }
@@ -232,35 +218,36 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   };
 
   const imagesChanged =
-    JSON.stringify(productImages) !== JSON.stringify(originalImagesRef.current);
+    JSON.stringify(currentProductImages) !==
+    JSON.stringify(originalProductImages);
 
   const onFormSubmitButton = async (data: ProductFormData) => {
-    const success = await handleProductFormSubmit(data);
-    if (screen === "add-customer-product" && success && data.serial_number) {
-      flushSync(() => {
-        if (productFormRef.current) {
-          productFormRef.current.reset(defaultProductValues);
-        }
-      });
-      await screenClick(
-        "edit-customer-product",
-        `/products/${data.serial_number}`
-      );
-    }
+    // const success = await handleProductFormSubmit(data);
+    // if (screen === "add-customer-product" && success && data.serial_number) {
+    //   flushSync(() => {
+    //     if (productFormRef.current) {
+    //       productFormRef.current.reset(defaultProductValues);
+    //     }
+    //   });
+    //   await screenClick(
+    //     "edit-customer-product",
+    //     `/products/${data.serial_number}`
+    //   );
+    // }
   };
 
   const handleCancelFormChanges = () => {
-    if (imagesChanged && originalImagesRef.current) {
-      setProductImages(originalImagesRef.current);
-    }
-    if (
-      initialFormState.current &&
-      productFormRef.current &&
-      productFormRef.current.formState.dirtyFields &&
-      Object.keys(productFormRef.current.formState.dirtyFields).length > 0
-    ) {
-      form.reset(initialFormState.current);
-    }
+    // if (imagesChanged && originalImagesRef.current) {
+    //   setProductImages(originalImagesRef.current);
+    // }
+    // if (
+    //   initialFormState.current &&
+    //   productFormRef.current &&
+    //   productFormRef.current.formState.dirtyFields &&
+    //   Object.keys(productFormRef.current.formState.dirtyFields).length > 0
+    // ) {
+    //   form.reset(initialFormState.current);
+    // }
   };
 
   const handleAddJobClick = () => {
@@ -300,15 +287,14 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   return (
     <div className="w-[100%] h-[100%] overflow-scroll hide-scrollbar">
       <UploadModal
-        onClose={() => setUploadPopup(false)}
         multiple={true}
         onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
           if (!currentProjectId) return;
-            //  const folderImages = media.filter(
-            //           (m: Media) => m.folder_id === activeFolder.id
-            //         );
+          //  const folderImages = media.filter(
+          //           (m: Media) => m.folder_id === activeFolder.id
+          //         );
           // const media_items = uploadObjects.map((upload: CloudinaryUpload) => {
-            
+
           //             return {
           //                   media_id: null,
           //                   project_idx: currentProjectId,
@@ -499,7 +485,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   : ""
               } `}
             >
-              {productImages.length >= 1 ? (
+              {currentProductImages.length >= 1 ? (
                 <div
                   onClick={() => {
                     setImageView(imageDisplayed);
@@ -510,7 +496,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   className="cursor-pointer hover:brightness-[86%] dim w-[100%] aspect-[1/1] rounded-[10px]"
                 >
                   <RenderedImage
-                    url={imageDisplayed ? imageDisplayed : productImages[0].url}
+                    url={
+                      imageDisplayed
+                        ? imageDisplayed
+                        : currentProductImages[0].url
+                    }
                   />
                 </div>
               ) : (
@@ -549,9 +539,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   className="w-[100%] h-[100%] overflow-x-auto flex flex-row"
                 >
                   <ProductImages
-                    productImages={productImages}
                     imageEditorOpen={imageEditorOpen}
-                    setProductImages={setProductImages}
                     setImageDisplayed={setImageDisplayed}
                     singleRow={true}
                   />
@@ -601,9 +589,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   </div>
                 </div>
                 <ProductImages
-                  productImages={productImages}
                   imageEditorOpen={imageEditorOpen}
-                  setProductImages={setProductImages}
                   setImageDisplayed={setImageDisplayed}
                   singleRow={false}
                 />
@@ -976,10 +962,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 </button>
               )}
 
-              {((productFormRef.current &&
-                productFormRef.current.formState.dirtyFields &&
-                Object.keys(productFormRef.current.formState.dirtyFields)
-                  .length > 0) ||
+              {((getDirtyForms("product") &&
+                getDirtyForms("product").length > 0) ||
                 imagesChanged) && (
                 <div
                   onClick={handleCancelFormChanges}

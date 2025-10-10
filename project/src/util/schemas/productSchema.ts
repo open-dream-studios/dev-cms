@@ -1,19 +1,19 @@
 // project/src/util/schemas/productSchema.ts
 import { z } from "zod";
+import { Product } from "@/types/products";
 
 export const ProductSchema = z.object({
   serial_number: z
     .string()
-    .min(14, "14 Characters Required")
+    .min(10, "10 Characters Required")
     .transform((val) => val.toUpperCase())
     .refine((val) => /^[A-Z0-9]+$/.test(val), {
       message: "Only uppercase letters and numbers allowed",
-    })
-    .nullable(),
+    }),
   name: z.string().min(1, "Name is required"),
   customer_id: z.number().optional().nullable(),
-  make: z.string().nullable(),
-  model: z.string().nullable(),
+  make: z.string().optional().nullable(),
+  model: z.string().optional().nullable(),
   length: z
     .number()
     .min(0, "Must be a positive number")
@@ -44,15 +44,17 @@ export const ProductSchema = z.object({
 
 export type ProductFormData = z.infer<typeof ProductSchema>;
 
-export const defaultProductValues: ProductFormData = {
-  serial_number: "",
-  name: "",
-  customer_id: undefined,
-  make: null,
-  model: null,
-  length: 0,
-  width: 0,
-  height: 0,
-  description: null,
-  note: null,
-};
+export function productToForm(product?: Product | null): ProductFormData {
+  return {
+    serial_number: product?.serial_number ?? "",
+    name: product?.name ?? "",
+    customer_id: product?.customer_id ?? null,
+    make: product?.make ?? null,
+    model: product?.model ?? null,
+    length: product?.length ?? null,
+    width: product?.width ?? null,
+    height: product?.height ?? null,
+    description: product?.description ?? null,
+    note: product?.note ?? null,
+  };
+}

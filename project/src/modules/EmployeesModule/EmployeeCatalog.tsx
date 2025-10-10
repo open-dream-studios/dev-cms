@@ -1,13 +1,13 @@
-// project/src/screens/PagesEditor/PagesEditor.tsx
-import { useContext, useEffect } from "react";
+// project/src/modules/EmployeesModule/EmployeeCatalog.tsx
+import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
 import { appTheme } from "@/util/appTheme";
-import EmployeeView from "./EmployeeView";
-import { useAppContext } from "@/contexts/appContext";
+import EmployeeView from "./EmployeeView"; 
 import { formatPhone } from "@/util/functions/Customers";
 import ModuleLeftBar from "../components/ModuleLeftBar";
 import { Employee } from "@/types/employees";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/UIStore";
 
 export const EmployeeMiniCard = ({
   employee,
@@ -20,7 +20,7 @@ export const EmployeeMiniCard = ({
   handleContextMenu: (e: any, employee: Employee) => void;
   handleEmployeeClick: (employee: Employee) => void;
 }) => {
-  const { currentEmployee } = useProjectContext();
+  const { currentEmployee } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   if (!currentUser) return null;
 
@@ -74,8 +74,8 @@ export const EmployeeMiniCard = ({
 
 const EmployeeCatalog = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentEmployee, currentProjectId } = useProjectContext();
-  const { addingEmployee } = useAppContext();
+  const { currentEmployee, currentProjectId } = useCurrentDataStore();
+  const { addingEmployee } = useUiStore();
 
   if (!currentUser || !currentProjectId) return null;
 
@@ -84,7 +84,7 @@ const EmployeeCatalog = () => {
       <ModuleLeftBar />
       <div className="flex-1">
         {(currentEmployee || addingEmployee) && (
-          <EmployeeView key={currentEmployee?.id ?? "new"} />
+          <EmployeeView />
         )}
       </div>
     </div>

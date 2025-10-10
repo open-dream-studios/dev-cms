@@ -1,15 +1,15 @@
 // project/src/app/page.tsx
 "use client";
 import React from "react";
-import Dashboard from "@/screens/Dashboard/Dashboard";
-import MediaManager from "@/screens/MediaManager/MediaManager";
-import PagesEditor from "@/screens/PagesEditor/PagesEditor";
+import Dashboard from "@/modules/DashboardModule/Dashboard";
+import MediaManager from "@/modules/MediaModule/MediaManager";
+import PagesEditor from "@/modules/PagesModule/PagesEditor";
 import CustomerCatalog from "@/modules/CustomersModule/CustomerCatalog";
-import { useAppContext } from "@/contexts/appContext";
 import EmployeeCatalog from "@/modules/EmployeesModule/EmployeeCatalog";
+import { useUiStore } from "@/store/UIStore";
 
 const HomePage = () => {
-  const { screen } = useAppContext();
+  const { screen } = useUiStore();
   return (
     <div className="relative w-[100%] h-[100%]">
       {screen === "dashboard" && <Dashboard />}

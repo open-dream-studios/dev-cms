@@ -9,9 +9,9 @@ import MultiStepModalInput, { StepConfig } from "@/modals/Modal2MultiStepInput";
 import { useModal2Store } from "@/store/useModalStore";
 import { IoCloseOutline } from "react-icons/io5";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useQueryClient } from "@tanstack/react-query";
-import { useProjectContext } from "@/contexts/projectContext";
+import { useQueryClient } from "@tanstack/react-query"; 
 import { FiEdit } from "react-icons/fi";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 const ProjectItem = ({
   project,
@@ -21,7 +21,7 @@ const ProjectItem = ({
   editProjectsMode: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { setCurrentProjectData } = useProjectContext();
+  const { setCurrentProjectData } = useCurrentDataStore();
   const { deleteProject } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);

@@ -2,8 +2,8 @@
 export type Product = {
   id?: number;
   serial_number: string | null;
+  project_idx: number;
   customer_id: number | null;
-  highlight: string | null;
   name: string | null;
   description: string | null;
   make: string | null;

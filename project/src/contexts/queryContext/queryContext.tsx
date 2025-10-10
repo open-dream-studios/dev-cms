@@ -10,17 +10,9 @@ import React, {
 import { QueryObserverResult, useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "../authContext";
 import {
-  Integration,
-  ModuleDefinition,
-  Project,
-  ProjectModule,
-  ProjectUser,
-} from "@/types/project";
-import { Product } from "@/types/products";
-import { useProjectContext } from "../projectContext";
-import { Media, MediaFolder, MediaLink } from "@/types/media";
-import { useMediaLinks } from "./queries/mediaLinks";
-import {
+  useMediaLinks,
+  useCustomers,
+  useJobDefinitions,
   useProjectModules,
   useProjects,
   useProducts,
@@ -31,6 +23,11 @@ import {
   useMedia,
   usePageDefinitions,
   useProjectPages,
+  useSections,
+  useSectionDefinitions,
+  useJobs,
+  useTasks,
+  useEmployees,
 } from "./queries";
 import {
   PageDefinition,
@@ -38,16 +35,19 @@ import {
   Section,
   SectionDefinition,
 } from "@/types/pages";
-import { useSectionDefinitions } from "./queries/sectionDefinitions";
-import { useSections } from "./queries/sections";
-import { useCustomers } from "./queries/customers";
 import { Customer } from "@/types/customers";
 import { Job, JobDefinition, Task } from "@/types/jobs";
-import { useJobDefinitions } from "./queries/jobDefinitions";
-import { useJobs } from "./queries/jobs";
-import { useTasks } from "./queries/tasks";
-import { useEmployees } from "./queries/employees";
 import { Employee, EmployeeAssignment } from "@/types/employees";
+import { Media, MediaFolder, MediaLink } from "@/types/media";
+import {
+  Integration,
+  ModuleDefinition,
+  Project,
+  ProjectModule,
+  ProjectUser,
+} from "@/types/project";
+import { Product } from "@/types/products";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 export type QueryContextType = {
   isOptimisticUpdate: RefObject<boolean>;
@@ -56,7 +56,7 @@ export type QueryContextType = {
   productsData: Product[];
   isLoadingProductsData: boolean;
   refetchProductsData: () => Promise<QueryObserverResult<Product[], Error>>;
-  updateProducts: (updatedProducts: Product[]) => Promise<number[]>;
+  upsertProducts: (updatedProducts: Product[]) => Promise<number[]>;
   deleteProducts: (serial_numbers: string[]) => void;
 
   // ---- Projects ----
@@ -223,7 +223,7 @@ const QueryContext = createContext<QueryContextType | undefined>(undefined);
 export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { currentProjectId, currentPageId } = useProjectContext();
+  const { currentProjectId, currentPageId } = useCurrentDataStore();
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const isLoggedIn = useMemo(
@@ -243,7 +243,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     productsData,
     isLoadingProductsData,
     refetchProductsData,
-    updateProducts,
+    upsertProducts,
     deleteProducts,
   } = useProducts(isLoggedIn, currentProjectId, isOptimisticUpdate);
   const {
@@ -370,7 +370,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         productsData: productsData ?? [],
         isLoadingProductsData,
         refetchProductsData,
-        updateProducts,
+        upsertProducts,
         deleteProducts,
         projectsData: projectsData ?? [],
         isLoadingProjects,
