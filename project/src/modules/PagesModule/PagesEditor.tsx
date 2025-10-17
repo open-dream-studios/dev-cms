@@ -1,4 +1,5 @@
 // project/src/modules/PagesModule/PagesEditor.tsx
+"use client";
 import { useState, useContext, useMemo, useEffect } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
