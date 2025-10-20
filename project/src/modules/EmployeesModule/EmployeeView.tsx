@@ -1,4 +1,5 @@
 // project/src/modules/EmployeesModule/EmployeeView.tsx
+"use client";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   User,
@@ -13,13 +14,11 @@ import {
 import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { getInnerCardStyle } from "@/styles/themeStyles";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import {
   EmployeeFormData,
   employeeToForm,
 } from "@/util/schemas/employeeSchema";
-import { Employee } from "@/types/employees";
 import {
   fetchPlaceDetails,
   fetchPredictions,
@@ -29,7 +28,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { Controller } from "react-hook-form";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import {
   useEmployeeForm,
   useEmployeeFormSubmit,
@@ -39,7 +38,6 @@ import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 const EmployeeCard: React.FC = () => {
   const { currentUser } = useContext(AuthContext);
-
   const { currentEmployee, currentProjectId } = useCurrentDataStore();
   const { addingEmployee } = useUiStore();
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();

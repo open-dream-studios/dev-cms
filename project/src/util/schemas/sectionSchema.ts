@@ -1,37 +1,29 @@
 // project/src/util/schemas/sectionSchema.ts
 import * as z from "zod";
+import { Section } from "@/types/pages";
 
-export const ProjectSectionsSchema = z.object({
+export const SectionSchema = z.object({
+  parent_section_id: z.number().nullable().optional(),
+  project_page_id: z.number().nullable().optional(),
+  // definition_id: z.number().nullable().optional(),
   definition_id: z.preprocess(
-    (val) => (val === "" ? null : Number(val)),
+    (val) => (val === "" || val == null ? null : Number(val)),
     z.number().nullable().optional()
   ),
-  name: z.string().min(1, { message: "Section name is required" }),
-  config: z
-    .preprocess((val) => {
-      if (typeof val === "string" && val.trim() === "") return {};
-      if (typeof val === "string") {
-        try {
-          return JSON.parse(val);
-        } catch {
-          return {};
-        }
-      }
-      return val ?? {};
-    }, z.record(z.string(), z.any()).optional())
-    .default({}),
-  order_index: z.preprocess(
-    (val) => (val === "" || val === undefined ? undefined : Number(val)),
-    z.number().optional()
-  ),
-  parent_section_id: z.preprocess(
-    (val) => (val === "" ? null : Number(val)),
-    z.number().nullable().optional()
-  ),
-  project_page_id: z.preprocess(
-    (val) => (val === "" ? null : Number(val)),
-    z.number().nullable().optional()
-  ),
+  name: z.string().nullable().optional(),
+  config: z.record(z.string(), z.any()),
+  order_index: z.number().nullable().optional(),
 });
 
-export type ProjectSectionsFormData = z.infer<typeof ProjectSectionsSchema>;
+export type SectionFormData = z.infer<typeof SectionSchema>;
+
+export function sectionToForm(section?: Section | null): SectionFormData {
+  return {
+    parent_section_id: section?.parent_section_id ?? null,
+    project_page_id: section?.project_page_id ?? null,
+    definition_id: section?.definition_id ?? null,
+    name: section?.name ?? "",
+    config: section?.config ?? {},
+    order_index: section?.order_index ?? null,
+  };
+}

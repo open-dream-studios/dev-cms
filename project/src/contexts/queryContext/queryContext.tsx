@@ -48,8 +48,10 @@ import {
 } from "@/types/project";
 import { Product } from "@/types/products";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useTheme } from "./queries/theme";
 
 export type QueryContextType = {
+  handleThemeChange: () => void;
   isOptimisticUpdate: RefObject<boolean>;
 
   // ---- Products ----
@@ -144,7 +146,7 @@ export type QueryContextType = {
   projectPages: ProjectPage[];
   isLoadingProjectPages: boolean;
   refetchProjectPages: () => Promise<any>;
-  upsertProjectPage: (data: ProjectPage) => Promise<void>;
+  upsertProjectPage: (page: ProjectPage) => Promise<string>;
   deleteProjectPage: (page_id: string) => Promise<void>;
   reorderProjectPages: (data: {
     project_idx: number;
@@ -162,7 +164,7 @@ export type QueryContextType = {
   projectSections: Section[];
   isLoadingSections: boolean;
   refetchSections: () => Promise<any>;
-  upsertSection: (data: Section) => Promise<void>;
+  upsertSection: (data: Section) => Promise<string>;
   deleteSection: (section_id: string) => Promise<void>;
   reorderSections: (data: {
     project_idx: number;
@@ -224,7 +226,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { currentProjectId, currentPageId } = useCurrentDataStore();
-  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const isLoggedIn = useMemo(
     () => !!currentUser?.user_id,
@@ -232,6 +233,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const isOptimisticUpdate = useRef(false);
 
+  const { handleThemeChange } = useTheme(currentUser);
   const {
     projectsData,
     isLoadingProjects,
@@ -311,8 +313,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     projectPages,
     isLoadingProjectPages,
     refetchProjectPages,
-    upsertProjectPageMutation,
-    deleteProjectPageMutation,
+    upsertProjectPage,
+    deleteProjectPage,
     reorderProjectPagesMutation,
   } = useProjectPages(isLoggedIn, currentProjectId);
   const {
@@ -366,6 +368,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <QueryContext.Provider
       value={{
+        handleThemeChange,
         isOptimisticUpdate,
         productsData: productsData ?? [],
         isLoadingProductsData,
@@ -425,10 +428,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         projectPages,
         isLoadingProjectPages,
         refetchProjectPages,
-        upsertProjectPage: (data: ProjectPage) =>
-          upsertProjectPageMutation.mutateAsync(data),
-        deleteProjectPage: (page_id: string) =>
-          deleteProjectPageMutation.mutateAsync(page_id),
+        upsertProjectPage,
+        deleteProjectPage,
         reorderProjectPages: (data: {
           project_idx: number;
           parent_page_id: number | null;

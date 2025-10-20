@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { AuthContext } from "@/contexts/authContext";
 import ProductView from "@/modules/CustomerProducts/ProductView/ProductView";
 import ModuleLeftBar from "@/modules/components/ModuleLeftBar"; 
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 
 const Product = () => {
   const { currentUser } = useContext(AuthContext);

@@ -10,7 +10,7 @@ import { useContext, useEffect, useMemo } from "react";
 import { FaPlus } from "react-icons/fa6";
 import UploadModal, { CloudinaryUpload } from "../Upload/Upload";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 
 const ProjectSettings = () => {
   const { currentProjectId } = useCurrentDataStore();

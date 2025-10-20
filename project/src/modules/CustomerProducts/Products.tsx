@@ -11,7 +11,7 @@ import CustomerProductSkeleton from "../components/ProductCard/CustomerProductSk
 import ProductView from "./ProductView/ProductView";
 import InventoryGrid from "./Grid/InventoryGrid";
 import ModuleLeftBar from "../components/ModuleLeftBar";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
 
 const CustomerProducts = () => {

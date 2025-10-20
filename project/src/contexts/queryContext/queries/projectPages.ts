@@ -27,10 +27,11 @@ export function useProjectPages(
 
   const upsertProjectPageMutation = useMutation({
     mutationFn: async (data: ProjectPage) => {
-      await makeRequest.post("/api/pages/upsert", {
-        project_idx: currentProjectId,
+      const res = await makeRequest.post("/api/pages/upsert", {
         ...data,
+        project_idx: currentProjectId,
       });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -107,12 +108,21 @@ export function useProjectPages(
     },
   });
 
+  const upsertProjectPage = async (page: ProjectPage) => {
+    const res = await upsertProjectPageMutation.mutateAsync(page);
+    return res.page_id;
+  };
+
+  const deleteProjectPage = async (page_id: string) => {
+    await deleteProjectPageMutation.mutateAsync(page_id);
+  };
+
   return {
     projectPages,
     isLoadingProjectPages,
     refetchProjectPages,
-    upsertProjectPageMutation,
-    deleteProjectPageMutation,
+    upsertProjectPage,
+    deleteProjectPage,
     reorderProjectPagesMutation,
   };
 }

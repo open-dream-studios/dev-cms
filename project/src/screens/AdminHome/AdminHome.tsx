@@ -117,7 +117,7 @@ const AdminHome = () => {
       {
         name: "domain",
         placeholder: "Enter Domain (optional)",
-        validate: () => true, // always valid (optional field)
+        validate: () => true, 
       },
     ];
 

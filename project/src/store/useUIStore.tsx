@@ -1,4 +1,5 @@
 // src/store/UIStore.ts
+import { ProjectPage, Section } from "@/types/pages";
 import { Product } from "@/types/products";
 import { Modal, Screen, UIState } from "@/types/screens";
 import { create } from "zustand";
@@ -20,17 +21,36 @@ interface UiState {
   uploadPopup: boolean;
   setUploadPopup: (val: boolean) => void;
 
+  // Products
   addingProduct: boolean;
   setAddingProduct: (val: boolean) => void;
 
   editingProducts: boolean;
   setEditingProducts: (val: boolean) => void;
 
+  // Customers
   addingCustomer: boolean;
   setAddingCustomer: (val: boolean) => void;
 
+  // Employees
   addingEmployee: boolean;
   setAddingEmployee: (val: boolean) => void;
+
+  // Pages
+  addingPage: boolean;
+  setAddingPage: (val: boolean) => void;
+
+  editingPage: ProjectPage | null;
+  setEditingPage: (val: ProjectPage | null) => void;
+
+  addingSection: boolean;
+  setAddingSection: (val: boolean) => void;
+
+  editingSection: Section | null;
+  setEditingSection: (val: Section | null) => void;
+
+  siteWindowKey: number;
+  setSiteWindowKey: (val: number | ((prev: number) => number)) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -50,15 +70,37 @@ export const useUiStore = create<UiState>((set) => ({
   uploadPopup: false,
   setUploadPopup: (val) => set({ uploadPopup: val }),
 
+  // Products
   addingProduct: false,
   setAddingProduct: (val) => set({ addingProduct: val }),
 
   editingProducts: false,
   setEditingProducts: (val) => set({ editingProducts: val }),
 
+  // Customers
   addingCustomer: false,
   setAddingCustomer: (val) => set({ addingCustomer: val }),
 
+  // Employees
   addingEmployee: false,
   setAddingEmployee: (val) => set({ addingEmployee: val }),
+
+  // Pages
+  addingPage: false,
+  setAddingPage: (val) => set({ addingPage: val }),
+
+  editingPage: null,
+  setEditingPage: (val) => set({ editingPage: val }),
+
+  addingSection: false,
+  setAddingSection: (val) => set({ addingSection: val }),
+
+  editingSection: null,
+  setEditingSection: (val) => set({ editingSection: val }),
+
+  siteWindowKey: 0,
+  setSiteWindowKey: (val) =>
+    set((state) => ({
+      siteWindowKey: typeof val === "function" ? val(state.siteWindowKey) : val,
+    })),
 }));

@@ -19,13 +19,13 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
-import { ContextInput, ContextInputType } from "./PagesEditor"; 
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { ContextInput, ContextInputType } from "./PagesEditor";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/useUIStore";
 
 interface SectionsSidebarProps {
   filteredActiveSections: Section[];
-  setEditingSection: React.Dispatch<React.SetStateAction<Section | null>>;
   handleContextMenu: (
     e: React.MouseEvent,
     input: ContextInput,
@@ -35,7 +35,6 @@ interface SectionsSidebarProps {
 
 interface SortableSectionItemProps {
   section: Section;
-  setEditingSection: React.Dispatch<React.SetStateAction<Section | null>>;
   handleContextMenu: (
     e: React.MouseEvent,
     input: ContextInput,
@@ -45,11 +44,10 @@ interface SortableSectionItemProps {
 
 const SortableSectionItem = ({
   section,
-  setEditingSection,
   handleContextMenu,
 }: SortableSectionItemProps) => {
   const { currentUser } = useContext(AuthContext);
-
+  const { setEditingSection } = useUiStore();
   const {
     attributes,
     listeners,
@@ -108,10 +106,10 @@ const SortableSectionItem = ({
 const SectionsSidebar = ({
   filteredActiveSections,
   handleContextMenu,
-  setEditingSection,
 }: SectionsSidebarProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, currentPage, currentSection } = useCurrentDataStore();
+  const { currentProjectId, currentPage, currentSection } =
+    useCurrentDataStore();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -123,7 +121,7 @@ const SectionsSidebar = ({
   useEffect(() => {
     setLocalSections(filteredActiveSections);
   }, [filteredActiveSections]);
- 
+
   const { reorderSections } = useContextQueries();
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -169,7 +167,6 @@ const SectionsSidebar = ({
             <SortableSectionItem
               key={section.id}
               section={section}
-              setEditingSection={setEditingSection}
               handleContextMenu={handleContextMenu}
             />
           ))}

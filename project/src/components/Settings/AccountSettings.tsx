@@ -3,57 +3,19 @@
 import { AuthContext } from "@/contexts/authContext";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
-import { appTheme, ThemeType } from "@/util/appTheme";
-import { makeRequest } from "@/util/axios";
+import { appTheme } from "@/util/appTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { User } from "firebase/auth";
 import { useContext } from "react";
 import { IoMoonOutline } from "react-icons/io5";
 import { LuSun } from "react-icons/lu";
 import UserImage from "../blocks/UserImage";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 const AccountSettings = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
-  const queryClient = useQueryClient();
+  const { handleThemeChange } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
-
-  const toggleThemeMutation = useMutation<
-    void,
-    Error,
-    ThemeType,
-    { previousUser: User | null }
-  >({
-    mutationFn: async (newTheme) => {
-      await makeRequest.put("/api/auth/update-current-user", { theme: newTheme });
-    },
-    onMutate: (newTheme) => {
-      queryClient.cancelQueries({ queryKey: ["currentUser"] });
-      const previousUser =
-        queryClient.getQueryData<User | null>(["currentUser"]) ?? null;
-
-      // Optimistically update UI
-      queryClient.setQueryData(["currentUser"], (oldData: User | null) =>
-        oldData ? { ...oldData, theme: newTheme } : oldData
-      );
-      return { previousUser };
-    },
-    onError: (_, __, context) => {
-      if (context?.previousUser) {
-        queryClient.setQueryData(["currentUser"], context.previousUser);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-    },
-  });
-
-  const handleThemeChange = () => {
-    if (!currentUser) return null;
-    const newTheme = currentUser.theme === "light" ? "dark" : "light";
-    toggleThemeMutation.mutate(newTheme);
-  };
 
   const handleSignOut = () => {
     if (!currentUser) return null;

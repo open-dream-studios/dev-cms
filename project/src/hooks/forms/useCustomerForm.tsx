@@ -10,7 +10,7 @@ import { Customer } from "@/types/customers";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 
 export function useCustomerForm(customer?: Customer | null) {
   return useForm<CustomerFormData>({

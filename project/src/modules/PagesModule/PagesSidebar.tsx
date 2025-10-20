@@ -19,9 +19,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { ContextInput, ContextInputType } from "./PagesEditor";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/useUIStore";
 
 interface PagesSidebarProps {
   filteredActivePages: ProjectPage[];
@@ -30,12 +31,10 @@ interface PagesSidebarProps {
     input: ContextInput,
     type: ContextInputType
   ) => void;
-  setEditingPage: React.Dispatch<React.SetStateAction<ProjectPage | null>>;
 }
 
 interface SortablePageItemProps {
   page: ProjectPage;
-  setEditingPage: React.Dispatch<React.SetStateAction<ProjectPage | null>>;
   handleContextMenu: (
     e: React.MouseEvent,
     input: ContextInput,
@@ -45,11 +44,11 @@ interface SortablePageItemProps {
 
 const SortablePageItem = ({
   page,
-  setEditingPage,
   handleContextMenu,
 }: SortablePageItemProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentPage, setCurrentPageData } = useCurrentDataStore();
+  const { setCurrentPageData } = useCurrentDataStore();
+  const { setEditingPage } = useUiStore();
   const {
     attributes,
     listeners,
@@ -111,10 +110,10 @@ const SortablePageItem = ({
 const PagesSidebar = ({
   filteredActivePages,
   handleContextMenu,
-  setEditingPage,
 }: PagesSidebarProps) => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentPage } = useCurrentDataStore();
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -161,7 +160,6 @@ const PagesSidebar = ({
             <SortablePageItem
               key={page.id}
               page={page}
-              setEditingPage={setEditingPage}
               handleContextMenu={handleContextMenu}
             />
           ))}

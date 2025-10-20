@@ -1,13 +1,6 @@
 // project/src/layouts/appLayout.tsx
 "use client";
-import {
-  ReactNode,
-  RefObject,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { ReactNode, useContext, useEffect, useRef, useState } from "react";
 import {
   QueryClient,
   QueryClientProvider,
@@ -16,10 +9,7 @@ import {
 import { AuthContext, AuthContextProvider } from "@/contexts/authContext";
 import Navbar from "@/components/Navbar/Navbar";
 import LeftBar from "@/components/LeftBar/LeftBar";
-import { appTheme } from "@/util/appTheme";
-import { io, Socket } from "socket.io-client";
 import Modals from "@/modals/Modals";
-import appDetails from "@/util/appDetails.json";
 import { usePathname, useRouter } from "next/navigation";
 import LandingNav from "@/screens/Landing/LandingNav/LandingNav";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
@@ -28,16 +18,16 @@ import {
   useContextQueries,
 } from "@/contexts/queryContext/queryContext";
 import CustomToast from "@/components/CustomToast";
-import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import LandingPage from "@/screens/Landing/LandingPage/LandingPage";
 import AdminHome from "@/screens/AdminHome/AdminHome";
 import DynamicTitle from "@/components/DynamicTitle";
-import { Product } from "@/types/products";
 import CustomerCalls from "@/modules/CustomerCallsModule/CustomerCalls";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useWebSocketManager } from "@/store/webSocketStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
+import { useTesting } from "@/hooks/useTesting";
+import { PageLayout } from "./pageLayout";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -108,66 +98,22 @@ const UnprotectedLayout = () => {
 };
 
 const ProtectedLayout = ({ children }: { children: ReactNode }) => {
-  const { updatingLock, setEditingProducts } = useUiStore();
-  const { projectsData, productsData } = useContextQueries();
-  const pathName = usePathname();
+  const { updatingLock } = useUiStore();
+  const { projectsData } = useContextQueries();
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setCurrentProjectData, setSelectedProducts, setLocalProductsData } = useCurrentDataStore();
+  const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
   useWebSocketManager();
   useRouting();
+  // useTesting();
 
-  useEffect(() => {
-    setSelectedProducts([]);
-    setEditingProducts(false);
-    setLocalProductsData(
-      productsData.sort(
-        (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
-      )
-    );
-  }, [setSelectedProducts, pathName]);
-
+  // AUTO SELECT PROJECT
   useEffect(() => {
     if (projectsData.length === 1) {
       setCurrentProjectData(projectsData[0]);
     }
   }, [projectsData]);
 
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     console.log(window.innerWidth, "px");
-  //   };
-  //   handleResize();
-
-  //   window.addEventListener("resize", handleResize);
-  //   return () => {
-  //     window.removeEventListener("resize", handleResize);
-  //   };
-  // }, []);
-
   if (!currentUser) return;
-
-  if (!currentProjectId) {
-    return (
-      <div className="w-[100vw] display-height">
-        <Modals landing={false} />
-        <Navbar />
-        <div
-          style={
-            {
-              "--nav-height": `${appDetails.nav_height}px`,
-              backgroundColor: appTheme[currentUser.theme].background_1,
-              color: appTheme[currentUser.theme].text_1,
-            } as React.CSSProperties
-          }
-          className={`absolute left-0  top-[var(--nav-height)] w-[100vw] flex h-[calc(100%-var(--nav-height))]`}
-        >
-          <div className="relative w-[100%] h-[100%]">
-            <AdminHome />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-[100vw] display-height">
@@ -176,45 +122,16 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
       )}
       <Modals landing={false} />
       <Navbar />
-      <LeftBar />
-      <PageLayout>{children}</PageLayout>
-    </div>
-  );
-};
-
-const PageLayout = ({ children }: { children: ReactNode }) => {
-  const { currentUser } = useContext(AuthContext);
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
-
-  const pageLayoutRef = useRef<HTMLDivElement>(null);
-  const setPageLayoutRef = usePageLayoutRefStore(
-    (state) => state.setPageLayoutRef
-  );
-
-  useEffect(() => {
-    setPageLayoutRef(pageLayoutRef as RefObject<HTMLDivElement>);
-  }, [setPageLayoutRef, pageLayoutRef]);
-
-  if (!currentUser) return null;
-
-  return (
-    <div
-      ref={pageLayoutRef}
-      style={
-        {
-          "--nav-height": `${appDetails.nav_height}px`,
-          "--left-bar-width": appDetails.left_bar_width,
-          backgroundColor: appTheme[currentUser.theme].background_1,
-          color: appTheme[currentUser.theme].text_1,
-        } as React.CSSProperties
-      }
-      className={`absolute left-0 ${
-        leftBarOpen && "lg:left-[calc(var(--left-bar-width))]"
-      } top-[var(--nav-height)] w-[100vw] ${
-        leftBarOpen && "lg:w-[calc(100vw-(var(--left-bar-width)))]"
-      } flex h-[calc(100%-var(--nav-height))]`}
-    >
-      <div className="relative w-[100%] h-[100%]">{children}</div>
+      {currentProjectId ? (
+        <>
+          <LeftBar />
+          <PageLayout leftbar={true}>{children}</PageLayout>
+        </>
+      ) : (
+        <PageLayout leftbar={false}>
+          <AdminHome />
+        </PageLayout>
+      )}
     </div>
   );
 };

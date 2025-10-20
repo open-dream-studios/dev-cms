@@ -20,7 +20,7 @@ import { LuBlocks } from "react-icons/lu";
 import UserImage from "../blocks/UserImage";
 import AdminController from "@/screens/AdminHome/AdminControllers/AdminController";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 
 const Navbar = () => {

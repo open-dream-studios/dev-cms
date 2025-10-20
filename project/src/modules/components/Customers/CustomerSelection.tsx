@@ -1,6 +1,6 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useModal1Store } from "@/store/useModalStore";
 import { Customer } from "@/types/customers";
 import { Product } from "@/types/products";

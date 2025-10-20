@@ -10,7 +10,6 @@ export function useSections(
 ) {
   const queryClient = useQueryClient();
 
-  // Fetch sections for a page
   const {
     data: projectSections = [],
     isLoading: isLoadingSections,
@@ -27,13 +26,13 @@ export function useSections(
     enabled: isLoggedIn && !!currentProjectId && !!currentPageId,
   });
 
-  // Add or update a section
   const upsertSectionMutation = useMutation({
     mutationFn: async (data: Section) => {
-      await makeRequest.post("/api/sections/upsert", {
-        project_idx: currentProjectId,
+      const res = await makeRequest.post("/api/sections/upsert", {
         ...data,
+        project_idx: currentProjectId,
       });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -42,7 +41,6 @@ export function useSections(
     },
   });
 
-  // Delete section
   const deleteSectionMutation = useMutation({
     mutationFn: async (section_id: string) => {
       await makeRequest.post("/api/sections/delete", {
@@ -57,7 +55,6 @@ export function useSections(
     },
   });
 
-  // Reorder sections
   const reorderSectionsMutation = useMutation({
     mutationFn: async (data: {
       project_idx: number;
@@ -109,13 +106,21 @@ export function useSections(
     },
   });
 
+  const upsertSection = async (section: Section) => {
+    const res = await upsertSectionMutation.mutateAsync(section);
+    return res.section_id;
+  };
+
+  const deleteSection = async (section_id: string) => {
+    await deleteSectionMutation.mutateAsync(section_id);
+  };
+
   return {
     projectSections,
     isLoadingSections,
     refetchSections,
-    upsertSection: (data: Section) => upsertSectionMutation.mutateAsync(data),
-    deleteSection: (section_id: string) =>
-      deleteSectionMutation.mutateAsync(section_id),
+    upsertSection,
+    deleteSection,
     reorderSections: (data: {
       project_idx: number;
       project_page_id: number;

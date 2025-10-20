@@ -71,7 +71,7 @@ export const upsertSectionFunction = async (project_idx, reqBody) => {
       project_page_id,
       definition_id,
       name,
-      config,
+      JSON.stringify(config || {}),
       order_index,
     ];
 
@@ -137,7 +137,9 @@ export const deleteSectionFunction = async (project_idx, section_id) => {
         WHERE project_idx = ? 
           AND project_page_id = ?
           AND ${
-            parent_section_id ? "parent_section_id = ?" : "parent_section_id IS NULL"
+            parent_section_id
+              ? "parent_section_id = ?"
+              : "parent_section_id IS NULL"
           }
         ORDER BY order_index
       ) AS ordered
@@ -146,7 +148,11 @@ export const deleteSectionFunction = async (project_idx, section_id) => {
     `;
 
     if (parent_section_id) {
-      await connection.query(reindexQuery, [project_idx, project_page_id, parent_section_id]);
+      await connection.query(reindexQuery, [
+        project_idx,
+        project_page_id,
+        parent_section_id,
+      ]);
     } else {
       await connection.query(reindexQuery, [project_idx, project_page_id]);
     }

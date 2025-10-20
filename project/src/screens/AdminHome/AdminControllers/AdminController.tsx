@@ -1,22 +1,20 @@
-// project/src/screens/AdminHome/AdminControl/AdminControl.tsx
-import { AuthContext } from '@/contexts/authContext'
-import { appTheme } from '@/util/appTheme'
-import React, { useContext, useState } from 'react'
-import EditModules from './EditModules'
-import Divider from '@/lib/blocks/Divider'
-import EditPageDefinitions from './EditPageDefinitions'
-import EditSectionDefinitions from './EditSectionDefinitions'
+// project/src/screens/AdminHome/AdminControllers/AdminController.tsx
+"use client";
+import { AuthContext } from "@/contexts/authContext";
+import { appTheme } from "@/util/appTheme";
+import React, { useContext, useState } from "react";
+import EditModules from "./EditModules";
+import Divider from "@/lib/blocks/Divider";
+import EditPageDefinitions from "./EditPageDefinitions";
+import EditSectionDefinitions from "./EditSectionDefinitions";
 
-export type Control = "modules" | "pages" | "sections"
+export type Control = "modules" | "pages" | "sections";
 
 const AdminController = () => {
-  const { currentUser } = useContext(AuthContext)
-  if (!currentUser) return null
+  const { currentUser } = useContext(AuthContext);
+  if (!currentUser) return null;
 
-  const [controlActive, setControlActive] = useState<Control>("modules")
-  const handleControlClick = (control: Control) => {
-    setControlActive(control)
-  }
+  const [controlActive, setControlActive] = useState<Control>("modules");
 
   return (
     <div className="w-[100%] flex flex-col gap-[8px] px-[50px] py-[33px] h-[100%] overflow-y-scroll">
@@ -43,7 +41,7 @@ const AdminController = () => {
             Modules
           </div>
           <div
-            onClick={() => handleControlClick("pages")}
+            onClick={() => setControlActive("pages")}
             style={{
               backgroundColor:
                 controlActive === "pages"
@@ -54,8 +52,8 @@ const AdminController = () => {
           >
             Pages
           </div>
-                  <div
-            onClick={() => handleControlClick("sections")}
+          <div
+            onClick={() => setControlActive("sections")}
             style={{
               backgroundColor:
                 controlActive === "sections"
@@ -76,9 +74,8 @@ const AdminController = () => {
         {controlActive === "pages" && <EditPageDefinitions />}
         {controlActive === "sections" && <EditSectionDefinitions />}
       </div>
-
     </div>
-  )
-}
+  );
+};
 
-export default AdminController
+export default AdminController;

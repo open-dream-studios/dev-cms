@@ -6,7 +6,7 @@ import CustomerView from "./CustomerView";
 import { Customer } from "@/types/customers";
 import { formatPhone } from "@/util/functions/Customers";
 import ModuleLeftBar from "../components/ModuleLeftBar";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 
 export const CustomerMiniCard = ({

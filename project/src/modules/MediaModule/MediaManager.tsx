@@ -9,7 +9,7 @@ import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
 import { Media, MediaFolder } from "@/types/media";
 import { collectParentIds } from "@/util/functions/Tree";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 
 const MediaManager = () => {
   const { currentProjectId } = useCurrentDataStore();

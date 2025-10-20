@@ -10,7 +10,7 @@ import { Employee } from "@/types/employees";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 
 export function useEmployeeForm(employee?: Employee | null) {
   return useForm<EmployeeFormData>({

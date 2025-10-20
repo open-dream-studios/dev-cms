@@ -1,6 +1,6 @@
 // project/src/hooks/useMedia.tsx
 import { CloudinaryUpload } from "@/components/Upload/Upload";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { getCurrentTimestamp } from "@/util/functions/Data";
 import axios from "axios";
 

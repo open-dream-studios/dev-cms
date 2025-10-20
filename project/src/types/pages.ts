@@ -12,16 +12,17 @@ export type PageDefinition = {
 export type ProjectPage = {
   id?: number;
   page_id: string | null;
-  definition_id: number;
-  parent_page_id?: number | null;
-  title: string;
-  slug: string;
-  order_index: number;
+  project_idx: number;
+  definition_id: number | null;
+  parent_page_id: number | null;
+  title: string | null;
+  slug: string | null;
+  order_index: number | null;
   seo_title?: string | null;
   seo_description?: string | null;
-  seo_keywords?: string[];
-  template: string;
-  published: boolean;
+  seo_keywords?: string[] | null;
+  template: string | null;
+  published: boolean | null;
   published_at?: string | null;
   updated_at?: string;
   created_at?: string;
@@ -40,12 +41,13 @@ export type SectionDefinition = {
 export type Section = {
   id?: number;
   section_id: string | null;
-  parent_section_id?: number | null;
-  project_page_id: number;
-  definition_id: number;
-  name: string;
+  project_idx: number;
+  parent_section_id: number | null;
+  project_page_id: number | null;
+  definition_id: number | null;
+  name: string | null;
   config: Record<string, any>;
-  order_index: number;
+  order_index: number | null;
   created_at?: string;
   updated_at?: string;
 };

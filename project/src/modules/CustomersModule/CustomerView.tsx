@@ -22,7 +22,7 @@ import {
   useCustomerFormSubmit,
 } from "@/hooks/forms/useCustomerForm";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 

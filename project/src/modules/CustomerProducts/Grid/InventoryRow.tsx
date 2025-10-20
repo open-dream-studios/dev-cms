@@ -11,7 +11,7 @@ import { ProductFormData } from "@/util/schemas/productSchema";
 import { useForm } from "react-hook-form";
 import { Product } from "@/types/products";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
 
 const InventoryRow = ({

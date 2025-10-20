@@ -38,7 +38,7 @@ import ProductJobCard from "./ProductJobCard/ProductJobCard";
 import { Product } from "@/types/products";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 

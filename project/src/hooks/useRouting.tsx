@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { usePathname, useRouter } from "next/navigation";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { Screen } from "@/types/screens";
 import { useModal2Store } from "@/store/useModalStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
@@ -44,8 +44,9 @@ export function useRouting() {
   const pathname = usePathname();
   const router = useRouter();
   const { history, setHistory, push } = useScreenHistoryStore();
-  const { screen, setScreen, setAddingCustomer } = useUiStore();
-  const { setCurrentSectionData, setCurrentPageData } = useCurrentDataStore();
+  const { screen, setScreen, setAddingCustomer, setEditingProducts } = useUiStore();
+  const { setCurrentSectionData, setCurrentPageData, setSelectedProducts } = useCurrentDataStore();
+
 
   const { getForm } = useFormInstanceStore();
   const customerForm = getForm("customer");
@@ -103,6 +104,8 @@ export function useRouting() {
         });
       }
     }
+    setSelectedProducts([]);
+    setEditingProducts(false);
   }, [pathname]);
 
   const promptSave = async (onNoSave: () => void, onContinue: () => void) => {

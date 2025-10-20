@@ -29,7 +29,7 @@ import {
   StatusBadge,
   TaskStatusBadge,
 } from "../../CustomerProducts/ProductView/ProductJobCard/Badges"; 
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 
 // ---------- TaskCard ----------

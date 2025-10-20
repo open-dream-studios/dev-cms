@@ -5,7 +5,7 @@ import { appTheme } from "@/util/appTheme";
 import React, { useContext, useRef, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useMedia } from "@/hooks/useMedia";
 
 export type CloudinaryUpload = {

@@ -21,16 +21,16 @@ export const getSections = async (req, res) => {
 
 export const upsertSection = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  const { title, slug } = req.body;
-  if (!project_idx) {
+  const { definition_id } = req.body;
+  if (!project_idx || !definition_id) {
     return res
       .status(400)
-      .json({ success: false, message: "Missing project_idx" });
+      .json({ success: false, message: "Missing required fields" });
   }
-  if (!title || !slug) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-  const { section_id, success } = await upsertSectionFunction(project_idx, req.body);
+  const { section_id, success } = await upsertSectionFunction(
+    project_idx,
+    req.body
+  );
   return res.status(success ? 200 : 500).json({ success, section_id });
 };
 
@@ -76,14 +76,19 @@ export const getSectionDefinitions = async (req, res) => {
 };
 
 export const upsertSectionDefinition = async (req, res) => {
-  const { section_definition_id, success } = await upsertSectionDefinitionFunction(req.body);
-  return res.status(success ? 200 : 500).json({ success, section_definition_id });
+  const { section_definition_id, success } =
+    await upsertSectionDefinitionFunction(req.body);
+  return res
+    .status(success ? 200 : 500)
+    .json({ success, section_definition_id });
 };
 
 export const deleteSectionDefinition = async (req, res) => {
   const { section_definition_id } = req.body;
   if (!section_definition_id) {
-    return res.status(400).json({ success: false, message: "Missing required fields" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing required fields" });
   }
   const success = await deleteSectionDefinitionFunction(section_definition_id);
   return res.status(success ? 200 : 500).json({ success });

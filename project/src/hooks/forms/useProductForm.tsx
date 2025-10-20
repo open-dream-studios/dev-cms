@@ -10,7 +10,7 @@ import { Product } from "@/types/products";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { getNextOrdinal } from "@/util/functions/Data";
 import { toast } from "react-toastify";
 import { useAutoSave } from "../useAutoSave";

@@ -21,13 +21,13 @@ export const getPages = async (req, res) => {
 
 export const upsertPage = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  const { title, slug } = req.body;
+  const { title, slug, definition_id } = req.body;
   if (!project_idx) {
     return res
       .status(400)
       .json({ success: false, message: "Missing project_idx" });
   }
-  if (!title || !slug) {
+  if (!title || !slug || !definition_id) {
     return res.status(400).json({ message: "Missing required fields" });
   }
   const { page_id, success } = await upsertPageFunction(project_idx, req.body);
@@ -76,14 +76,18 @@ export const getPageDefinitions = async (req, res) => {
 };
 
 export const upsertPageDefinition = async (req, res) => {
-  const { page_definition_id, success } = await upsertPageDefinitionFunction(req.body);
+  const { page_definition_id, success } = await upsertPageDefinitionFunction(
+    req.body
+  );
   return res.status(success ? 200 : 500).json({ success, page_definition_id });
 };
 
 export const deletePageDefinition = async (req, res) => {
   const { page_definition_id } = req.body;
   if (!page_definition_id) {
-    return res.status(400).json({ success: false, message: "Missing required fields" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing required fields" });
   }
   const success = await deletePageDefinitionFunction(page_definition_id);
   return res.status(success ? 200 : 500).json({ success });

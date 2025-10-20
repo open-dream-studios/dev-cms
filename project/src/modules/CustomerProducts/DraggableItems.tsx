@@ -31,7 +31,7 @@ import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@/types/products";
 import InventoryRow from "./Grid/InventoryRow";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useProductForm, useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { useCurrentDataStore } from "@/store/currentDataStore";

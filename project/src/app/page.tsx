@@ -6,7 +6,7 @@ import MediaManager from "@/modules/MediaModule/MediaManager";
 import PagesEditor from "@/modules/PagesModule/PagesEditor";
 import CustomerCatalog from "@/modules/CustomersModule/CustomerCatalog";
 import EmployeeCatalog from "@/modules/EmployeesModule/EmployeeCatalog";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 
 const HomePage = () => {
   const { screen } = useUiStore();

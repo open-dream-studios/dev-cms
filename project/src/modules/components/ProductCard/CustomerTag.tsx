@@ -8,7 +8,7 @@ import { FaPlus } from "react-icons/fa6";
 import CustomerSelection from "../Customers/CustomerSelection";
 import { Product } from "@/types/products";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 
 const CustomerTag = ({

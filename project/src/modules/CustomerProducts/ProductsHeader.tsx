@@ -15,7 +15,7 @@ import { useModal2Store } from "@/store/useModalStore";
 import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";

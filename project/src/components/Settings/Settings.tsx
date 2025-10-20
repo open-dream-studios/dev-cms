@@ -19,15 +19,11 @@ type SettingsPages = "Site" | "Users" | "Account" | "Modules" | "Project"
 const Settings = ({ initialPage }: SettingsProps) => {
   const { currentUser } = useContext(AuthContext);
   const { projectsData } = useContextQueries();
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProject } = useCurrentDataStore();
   const [selectedPage, setSelectedPage] = useState<SettingsPages>(
     initialPage === null ? "Site" : initialPage
   );
 
-  const currentProject = useMemo(
-    () => projectsData.find((p) => p.id === currentProjectId) ?? null,
-    [projectsData, currentProjectId]
-  );
   if (!currentUser) return null;
 
   const settingsPages: SettingsPages[] =

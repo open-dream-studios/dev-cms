@@ -18,7 +18,7 @@ type IntegrationConfig = Record<string, string>;
 
 const ModuleSettings = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProject, currentProjectId } = useCurrentDataStore();
   const {
     projectModules,
     deleteProjectModule,
@@ -27,14 +27,7 @@ const ModuleSettings = () => {
     integrations,
     upsertIntegration,
     deleteIntegration,
-    projectsData,
   } = useContextQueries();
-
-  const currentProject = useMemo(() => {
-    return projectsData.find((p) => p.id === currentProjectId) ?? null;
-  }, [projectsData, currentProjectId]);
-
-  if (!currentUser || !currentProject) return null;
 
   const [addingModules, setAddingModules] = useState(false);
   const [checkedModuleDefinitions, setCheckedModuleDefinitions] = useState<
@@ -195,6 +188,8 @@ const ModuleSettings = () => {
       await deleteIntegration(integration_id);
     }
   };
+
+  if (!currentUser || !currentProject) return null;
 
   const editKeyInputRef = useRef<HTMLInputElement>(null);
 

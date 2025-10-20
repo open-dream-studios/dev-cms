@@ -7,7 +7,7 @@ import { formatPhone } from "@/util/functions/Customers";
 import ModuleLeftBar from "../components/ModuleLeftBar";
 import { Employee } from "@/types/employees";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 
 export const EmployeeMiniCard = ({
   employee,

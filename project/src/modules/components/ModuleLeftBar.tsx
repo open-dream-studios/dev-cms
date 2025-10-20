@@ -17,7 +17,7 @@ import { Employee } from "@/types/employees";
 import { EmployeeMiniCard } from "../EmployeesModule/EmployeeCatalog";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
 import { customerToForm } from "@/util/schemas/customerSchema";
-import { useUiStore } from "@/store/UIStore";
+import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
 import { useCurrentDataStore } from "@/store/currentDataStore";
