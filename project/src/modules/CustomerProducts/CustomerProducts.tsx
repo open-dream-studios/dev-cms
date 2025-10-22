@@ -1,8 +1,8 @@
 // project/src/modules/CustomerProducts/Products.tsx
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import "react-datepicker/dist/react-datepicker.css";
-import { useContext } from "react"; 
+import { useContext } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { AuthContext } from "@/contexts/authContext";
 import DraggableItems from "./DraggableItems";
@@ -18,21 +18,22 @@ const CustomerProducts = () => {
   const { currentUser } = useContext(AuthContext);
   const { productsData, isLoadingProductsData } = useContextQueries();
   const { filteredProducts } = useDataFilters();
-  const { screen } = useUiStore()
+  const { inventoryView, addingProduct } = useUiStore();
   if (!currentUser) return null;
 
   return (
     <>
-      {screen === "customer-products-table" ? (
-        <InventoryGrid />
-      ) : (
+      {addingProduct ? (
         <div className="w-[100%] h-[100%] flex flex-row overflow-auto">
-          {(screen === "edit-customer-product" ||
-            screen === "add-customer-product") && <ModuleLeftBar />}
-          {screen === "add-customer-product" ? (
-            <div className="flex justify-center flex-1">
-              <ProductView />
-            </div>
+          <ModuleLeftBar />
+          <div className="flex justify-center flex-1">
+            <ProductView />
+          </div>
+        </div>
+      ) : (
+        <>
+          {inventoryView === true ? (
+            <InventoryGrid />
           ) : (
             <div className="w-[100%] h-[100%] relative">
               <div className="z-[800] absolute top-0 left-0 h-[60px] w-[100%]">
@@ -43,27 +44,29 @@ const CustomerProducts = () => {
                   <div className="w-[100%] h-[100%] overflow-y-scroll overflow-x-hidden px-[30px]">
                     {productsData &&
                       filteredProducts(productsData).length > 0 && (
-                        <DraggableItems sheet={false} />
+                        <DraggableItems sheet={false} resetTimer={()=>{}}/>
                       )}
                     <div className="h-[60px] w-[100%]" />
                   </div>
-                ) : isLoadingProductsData ? (
-                  <div className="relative px-[30px] pt-[8px] grid grid-cols-1 sm:grid-cols-2 min-[1570px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px]">
-                    {Array.from({ length: 6 }, (_, index) => {
-                      return (
-                        <div key={index}>
-                          <CustomerProductSkeleton />
-                        </div>
-                      );
-                    })}
-                  </div>
                 ) : (
-                  <></>
+                  <>
+                    {isLoadingProductsData && (
+                      <div className="relative px-[30px] pt-[8px] grid grid-cols-1 sm:grid-cols-2 min-[1570px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px]">
+                        {Array.from({ length: 6 }, (_, index) => {
+                          return (
+                            <div key={index}>
+                              <CustomerProductSkeleton />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
           )}
-        </div>
+        </>
       )}
     </>
   );

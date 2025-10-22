@@ -24,7 +24,7 @@ import { verticalListSortingStrategy } from "@dnd-kit/sortable";
 import {
   restrictToVerticalAxis,
   restrictToParentElement,
-} from "@dnd-kit/modifiers"; 
+} from "@dnd-kit/modifiers";
 import { toast } from "react-toastify";
 import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
 import { appTheme } from "@/util/appTheme";
@@ -32,16 +32,21 @@ import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@/types/products";
 import InventoryRow from "./Grid/InventoryRow";
 import { useUiStore } from "@/store/useUIStore";
-import { useProductForm, useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { 
+  useProductFormSubmit,
+} from "@/hooks/forms/useProductForm";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { DelayType } from "@/hooks/useAutoSave";
 
 function SortableItem({
+  resetTimer,
   id,
   product,
   index,
   sheet,
 }: {
+  resetTimer: (delay: DelayType) => void;
   id: string;
   product: Product;
   index: number;
@@ -49,9 +54,9 @@ function SortableItem({
 }) {
   const { currentUser } = useContext(AuthContext);
   const { editingProducts } = useUiStore();
-  const { saveProducts } = useProductFormSubmit()
+  const { saveProducts } = useProductFormSubmit();
   const { deleteProducts } = useContextQueries();
-  const { screen }  = useUiStore()
+  const { inventoryView } = useUiStore();
 
   const {
     attributes,
@@ -70,7 +75,7 @@ function SortableItem({
   };
 
   const handleDeleteProduct = async (item: Product) => {
-    if (!item.serial_number) return
+    if (!item.serial_number) return;
     try {
       await saveProducts();
       await deleteProducts([item.serial_number]);
@@ -97,7 +102,7 @@ function SortableItem({
           />
         )}
 
-        {editingProducts && screen !== "customer-products-table" && (
+        {editingProducts && !inventoryView && (
           <div
             style={{
               border: `1px solid ${appTheme[currentUser.theme].text_4}`,
@@ -112,7 +117,7 @@ function SortableItem({
 
         <div className="dim cursor-pointer hover:brightness-[86%] h-[100%]">
           {sheet ? (
-            <InventoryRow index={index} product={product} />
+            <InventoryRow index={index} product={product} resetTimer={resetTimer}/>
           ) : (
             <div
               key={product.serial_number}
@@ -127,16 +132,22 @@ function SortableItem({
   );
 }
 
-const DraggableItems = ({ sheet }: { sheet: boolean }) => {
+const DraggableItems = ({
+  sheet,
+  resetTimer,
+}: {
+  sheet: boolean;
+  resetTimer: (delay: DelayType) => void;
+}) => {
   const { currentUser } = useContext(AuthContext);
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor),
     useSensor(PointerSensor)
   );
-  const { localProductsData, setLocalProductsData } = useCurrentDataStore()
-  const { saveProducts } = useProductFormSubmit()
-  const { filteredProducts } = useDataFilters()
+  const { localProductsData, setLocalProductsData } = useCurrentDataStore();
+  const { saveProducts } = useProductFormSubmit();
+  const { filteredProducts } = useDataFilters();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -190,6 +201,7 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
                 product={product}
                 index={index}
                 sheet={sheet}
+                resetTimer={resetTimer}
               />
             ))}
           </div>
@@ -217,6 +229,7 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
               product={product}
               index={index}
               sheet={sheet}
+              resetTimer={resetTimer}
             />
           ))}
         </div>

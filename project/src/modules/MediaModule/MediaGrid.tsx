@@ -47,12 +47,18 @@ function SortableMediaItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: media.media_id!, disabled, animateLayoutChanges: () => false });
-
+  } = useSortable({
+    id: media.media_id!,
+    disabled,
+    animateLayoutChanges: () => false,
+  });
   const { currentUser } = useContext(AuthContext);
   const { deleteMedia, mediaFolders } = useContextQueries();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (disabled) {
@@ -126,8 +132,8 @@ function SortableMediaItem({
       {editMode && (
         <div
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1,
-            border: "0.5px solid " + appTheme[currentUser.theme].text_3,
+            backgroundColor: t.background_1,
+            border: "0.5px solid " + t.text_3,
           }}
           className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
           onClick={async (e: any) => {
@@ -137,7 +143,7 @@ function SortableMediaItem({
             }
           }}
         >
-          <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
+          <IoCloseOutline color={t.text_2} />
         </div>
       )}
       {media.type === "image" ? (
@@ -194,6 +200,9 @@ export default function MediaGrid({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
 
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   useEffect(() => {
     setLocalMedia(
       [...media].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
@@ -220,7 +229,7 @@ export default function MediaGrid({
         <div
           className="fixed z-[990] top-0 left-0 w-[100%] h-[100%] flex items-center justify-center"
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1,
+            backgroundColor: t.background_1,
           }}
           onClick={() => setMediaSelected(null)}
         >

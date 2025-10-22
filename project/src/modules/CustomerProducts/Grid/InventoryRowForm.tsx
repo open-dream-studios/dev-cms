@@ -1,104 +1,81 @@
 // project/src/modules/CustomerProducts/Grid/InventoryRowForm.tsx
 "use client";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useProductForm } from "@/hooks/forms/useProductForm";
+import {
+  useProductForm,
+  useProductFormSubmit,
+} from "@/hooks/forms/useProductForm";
 import { appTheme } from "@/util/appTheme";
 import ProductInputCell from "../Forms/InputCell";
 import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { ProductFormData } from "@/util/schemas/productSchema";
+import { productToForm } from "@/util/schemas/productSchema";
 import { InventoryDataItem } from "./InventoryGrid";
-import Image from "next/image"; 
-import { FaPlus } from "react-icons/fa6"; 
+import Image from "next/image";
+import { FaPlus } from "react-icons/fa6";
 import { Product } from "@/types/products";
 import { MediaLink } from "@/types/media";
 import { useRouting } from "@/hooks/useRouting";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { DelayType } from "@/hooks/useAutoSave";
 
 type InventoryRowFormProps = {
+  resetTimer: (delay: DelayType) => void;
   product: Product;
   inventoryDataLayout: InventoryDataItem[];
 };
 const InventoryRowForm = ({
+  resetTimer,
   product,
   inventoryDataLayout,
 }: InventoryRowFormProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { screenClick } = useRouting() 
+  const { screenClick } = useRouting();
   const { productsData, mediaLinks } = useContextQueries();
-  const form = useProductForm();
-  const { setLocalProductsData } = useCurrentDataStore()
-  // registerFormRef(product.serial_number, form);
 
-  let newProduct = false;
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
-  // const dateComplete = form.watch("date_complete");
+  const formKey = `product-${product.serial_number}`;
+  const { registerForm, unregisterForm } = useFormInstanceStore();
+  const productForm = useProductForm();
+  const { register } = productForm;
 
   useEffect(() => {
-    if (!newProduct && product.serial_number) {
+    registerForm(formKey, productForm);
+    return () => unregisterForm(formKey);
+  }, [formKey, productForm, registerForm, unregisterForm]);
+
+  useEffect(() => {
+    const subscription = productForm.watch(() => {
+      const dirty = Object.keys(productForm.formState.dirtyFields).length > 0;
+      if (dirty) {
+        resetTimer("slow");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [productForm, resetTimer]);
+
+  useEffect(() => {
+    if (product.serial_number) {
       const matchingProduct = productsData.find(
         (item) => item.serial_number === product.serial_number
       );
-      if (!matchingProduct) return;
-      if (!matchingProduct || !matchingProduct.serial_number) return;
-      const formDefaults: Partial<ProductFormData> = {
-        ...matchingProduct,
-        serial_number: matchingProduct.serial_number ?? "",
-        customer_id: matchingProduct.customer_id ?? undefined,
-        name: matchingProduct.name ?? "",
-        make: matchingProduct.make ?? null,
-        model: matchingProduct.model ?? null,
-        description: matchingProduct.description ?? null,
-        note: matchingProduct.note ?? null,
-        length: matchingProduct.length ? Number(matchingProduct.length) : 0,
-        width: matchingProduct.width ? Number(matchingProduct.width) : 0,
-        height: matchingProduct.height ? Number(matchingProduct.height) : 0,
-      };
-      form.reset(formDefaults);
+      productForm.reset(productToForm(matchingProduct));
     }
-  }, [newProduct, product.serial_number, form.reset, productsData]);
+  }, [product.serial_number, productForm, productsData]);
 
   const handleProductClick = async () => {
-    let dirtyRows = 0;
-    // for (const [serial, form] of formRefs.current.entries()) {
-    //   if (Object.keys(form.formState.dirtyFields).length !== 0) {
-    //     dirtyRows += 1;
-    //   }
-    // }
-
-    // const existingProduct = productsData?.find(
-    //   (p) => p.serial_number === product.serial_number
-    // );
-    // if (existingProduct) {
-    //   await screenClick(
-    //     "edit-customer-product",
-    //     `/products/${existingProduct.serial_number}`
-    //   );
-    // }
+    const existingProduct = productsData?.find(
+      (p) => p.serial_number === product.serial_number
+    );
+    if (existingProduct) {
+      await screenClick(
+        "edit-customer-product",
+        `/products/${existingProduct.serial_number}`
+      );
+    }
   };
-
-  useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-    //   // console.log(product, name, value[name as keyof typeof value]);
-    //   resetTimer(false);
-
-    //   setLocalProductsData((prev: Product[]) => {
-    //     const updated = [...prev];
-    //     const index = updated.findIndex(
-    //       (p) => p.serial_number === product.serial_number
-    //     );
-    //     if (index !== -1) {
-    //       updated[index] = {
-    //         ...updated[index],
-    //         ...value,
-    //       } as Product;
-    //     }
-    //     return updated;
-    //   });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form, product.serial_number]);
 
   const itemImage = useMemo(() => {
     const mediaLinksFound = mediaLinks.filter(
@@ -117,9 +94,7 @@ const InventoryRowForm = ({
     >
       <div
         style={{
-          borderRight: `0.5px solid ${
-            appTheme[currentUser.theme].background_3
-          }`,
+          borderRight: `0.5px solid ${t.background_3}`,
         }}
         className={`pl-[10.5px] h-[100%] flex items-center ${inventoryDataLayout[0].className}`}
       >
@@ -151,11 +126,11 @@ const InventoryRowForm = ({
             ) : (
               <div
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].header_1_1,
+                  backgroundColor: t.header_1_1,
                 }}
                 className="w-[100%] h-[100%] rounded-[5px] flex items-center justify-center pb-[2px] pr-[2px]"
               >
-                <FaPlus color={appTheme[currentUser.theme].text_1} size={20} />
+                <FaPlus color={t.text_1} size={20} />
               </div>
             )}
           </div>
@@ -166,9 +141,7 @@ const InventoryRowForm = ({
         onClick={handleProductClick}
         className={`cursor-pointer dim hover:brightness-75 flex items-center h-[100%] w-[100%] pl-[7px] pr-[6px] py-[4px] text-[12px] ${inventoryDataLayout[1].className}`}
         style={{
-          borderRight: `0.5px solid ${
-            appTheme[currentUser.theme].background_3
-          }`,
+          borderRight: `0.5px solid ${t.background_3}`,
         }}
       >
         <div className="w-[100%] overflow-hidden">{product.serial_number}</div>
@@ -176,11 +149,13 @@ const InventoryRowForm = ({
 
       <ProductInputCell
         name="name"
-        register={form.register}
-        error={form.formState.errors.name?.message}
+        register={register}
+        error={productForm.formState.errors.name?.message}
         inputType="input"
         onInput={(e) => {
-          form.setValue("name", e.currentTarget.value, { shouldDirty: true });
+          productForm.setValue("name", e.currentTarget.value, {
+            shouldDirty: true,
+          });
         }}
         className={`h-[100%] ${inventoryDataLayout[2].className}`}
       />
@@ -217,23 +192,27 @@ const InventoryRowForm = ({
 
       <ProductInputCell
         name="make"
-        register={form.register}
-        error={form.formState.errors.make?.message}
-        className={`h-[100%] ${inventoryDataLayout[4].className}`}
+        register={register}
+        error={productForm.formState.errors.make?.message}
+        className={`h-[100%] ${inventoryDataLayout[3].className}`}
         inputType={"input"}
         onInput={(e) => {
-          form.setValue("make", e.currentTarget.value, { shouldDirty: true });
+          productForm.setValue("make", e.currentTarget.value, {
+            shouldDirty: true,
+          });
         }}
       />
 
       <ProductInputCell
         name="model"
-        register={form.register}
-        error={form.formState.errors.model?.message}
-        className={`h-[100%] ${inventoryDataLayout[5].className}`}
+        register={register}
+        error={productForm.formState.errors.model?.message}
+        className={`h-[100%] ${inventoryDataLayout[4].className}`}
         inputType={"input"}
         onInput={(e) => {
-          form.setValue("model", e.currentTarget.value, { shouldDirty: true });
+          productForm.setValue("model", e.currentTarget.value, {
+            shouldDirty: true,
+          });
         }}
       />
 
@@ -259,15 +238,15 @@ const InventoryRowForm = ({
           //   shouldValidate: true,
           // });
         }}
-        register={form.register}
+        register={register}
         registerOptions={{
           required: "Length is required",
           validate: (value) =>
             /^\d+(\.\d{1,2})?$/.test(String(value)) || "Max 2 decimal places",
           setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
         }}
-        error={form.formState.errors.length?.message}
-        className={`h-[100%] ${inventoryDataLayout[6].className}`}
+        error={productForm.formState.errors.length?.message}
+        className={`h-[100%] ${inventoryDataLayout[5].className}`}
       />
 
       <ProductInputCell
@@ -292,15 +271,15 @@ const InventoryRowForm = ({
           //   shouldValidate: true,
           // });
         }}
-        register={form.register}
+        register={register}
         registerOptions={{
           required: "Width is required",
           validate: (value) =>
             /^\d+(\.\d{1,2})?$/.test(String(value)) || "Max 2 decimal places",
           setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
         }}
-        error={form.formState.errors.width?.message}
-        className={`h-[100%] ${inventoryDataLayout[7].className}`}
+        error={productForm.formState.errors.width?.message}
+        className={`h-[100%] ${inventoryDataLayout[6].className}`}
       />
 
       <ProductInputCell
@@ -325,15 +304,15 @@ const InventoryRowForm = ({
           //   shouldValidate: true,
           // });
         }}
-        register={form.register}
+        register={register}
         registerOptions={{
           required: "Width is required",
           validate: (value) =>
             /^\d+(\.\d{1,2})?$/.test(String(value)) || "Max 2 decimal places",
           setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
         }}
-        error={form.formState.errors.width?.message}
-        className={`h-[100%] ${inventoryDataLayout[8].className}`}
+        error={productForm.formState.errors.width?.message}
+        className={`h-[100%] ${inventoryDataLayout[7].className}`}
       />
 
       {/* <ProductInputCell
@@ -372,7 +351,7 @@ const InventoryRowForm = ({
 
       {/* <ProductInputCell
         name="date_entered"
-        register={form.register}
+        register={register}
         className={`h-[100%] ${inventoryDataLayout[11].className}`}
         inputType={"date"}
         // selected={dateComplete ?? undefined}
@@ -391,7 +370,7 @@ const InventoryRowForm = ({
 
       {/* <ProductInputCell
         name="date_complete"
-        register={form.register}
+        register={register}
         className={`h-[100%] ${inventoryDataLayout[12].className}`}
         inputType={"date"}
         // selected={dateComplete ?? undefined}
@@ -410,13 +389,13 @@ const InventoryRowForm = ({
 
       <ProductInputCell
         name="description"
-        register={form.register}
-        error={form.formState.errors.description?.message}
+        register={register}
+        error={productForm.formState.errors.description?.message}
         inputType={"textarea"}
         rows={1}
-        className={`h-[100%] ${inventoryDataLayout[13].className}`}
+        className={`h-[100%] ${inventoryDataLayout[8].className}`}
         onType={(newValue: string) => {
-          form.setValue("description", newValue, {
+          productForm.setValue("description", newValue, {
             shouldDirty: true,
           });
         }}
@@ -424,13 +403,13 @@ const InventoryRowForm = ({
 
       <ProductInputCell
         name="note"
-        register={form.register}
-        error={form.formState.errors.note?.message}
+        register={register}
+        error={productForm.formState.errors.note?.message}
         inputType={"textarea"}
         rows={1}
-        className={`h-[100%] ${inventoryDataLayout[14].className}`}
+        className={`h-[100%] ${inventoryDataLayout[9].className}`}
         onType={(newValue: string) => {
-          form.setValue("note", newValue, {
+          productForm.setValue("note", newValue, {
             shouldDirty: true,
           });
         }}

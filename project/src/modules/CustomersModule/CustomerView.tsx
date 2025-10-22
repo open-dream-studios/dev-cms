@@ -29,14 +29,12 @@ import { useOutsideClick } from "@/hooks/useOutsideClick";
 export const CustomerView = () => {
   const { currentUser } = useContext(AuthContext);
   const { productsData } = useContextQueries();
-
   const { currentCustomer, currentProjectId } = useCurrentDataStore();
   const { addingCustomer } = useUiStore();
   const { onCustomerFormSubmit } = useCustomerFormSubmit();
   const customerForm = useCustomerForm(currentCustomer);
   const { registerForm, unregisterForm } = useFormInstanceStore();
   const { handleSubmit, formState } = customerForm;
-  const { isDirty, isValid } = formState;
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
@@ -154,8 +152,8 @@ export const CustomerView = () => {
             <div
               className="flex items-center justify-center rounded-full border font-semibold text-xl w-[60px] h-[60px]"
               style={{
-                borderColor: appTheme[currentUser.theme].text_4,
-                color: appTheme[currentUser.theme].text_4,
+                borderColor: t.text_4,
+                color: t.text_4,
               }}
             >
               {currentCustomer ? (
@@ -173,7 +171,7 @@ export const CustomerView = () => {
             <div className="flex flex-col">
               <div
                 style={{
-                  color: appTheme[currentUser.theme].text_2,
+                  color: t.text_2,
                 }}
                 className="flex flex-row items-center font-bold text-[19px] "
               >
@@ -237,8 +235,8 @@ export const CustomerView = () => {
                 style={{
                   color:
                     currentUser.theme === "light"
-                      ? appTheme[currentUser.theme].text_3
-                      : appTheme[currentUser.theme].text_4,
+                      ? t.text_3
+                      : t.text_4,
                 }}
                 {...customerForm.register("email", {
                   required: "Email is required",
@@ -297,7 +295,7 @@ export const CustomerView = () => {
 
           <div
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
+              backgroundColor: t.background_2,
             }}
             className="rounded-[8px] w-[50%] h-[100%] px-[9px]"
           >
@@ -333,7 +331,7 @@ export const CustomerView = () => {
               <div
                 ref={popupRef}
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2_2,
+                  backgroundColor: t.background_2_2,
                 }}
                 className="z-[900] absolute w-[100%] py-[10px] px-[15px] flex flex-col gap-[2px] h-[auto] left-0 top-[33px] rounded-[11px]"
               >
@@ -351,7 +349,7 @@ export const CustomerView = () => {
                             className="w-[100%] h-[1.5px] rounded-[1px] opacity-[0.3]"
                             style={{
                               backgroundColor:
-                                appTheme[currentUser.theme].text_4,
+                                t.text_4,
                             }}
                           ></div>
                         )}
@@ -394,12 +392,12 @@ export const CustomerView = () => {
           <button
             type="submit"
             className={`${
-              isDirty && isValid ? "flex" : "opacity-0 pointer-events-none"
+              customerForm.formState.isDirty && customerForm.formState.isValid ? "flex" : "opacity-0 pointer-events-none"
             } cursor-pointer hover:brightness-90 dim flex flex-row items-center gap-[7px] mt-[9px] self-start px-4 py-2 rounded-full font-semibold shadow-sm text-sm`}
             style={{
               backgroundColor:
-                appTheme[currentUser.theme].background_2_selected,
-              color: appTheme[currentUser.theme].text_3,
+                t.background_2_selected,
+              color: t.text_3,
             }}
           >
             <CheckCircle2 size={20} />{" "}
@@ -444,14 +442,14 @@ export const CustomerView = () => {
         select:-webkit-autofill:hover,
         select:-webkit-autofill:focus,
         select:-webkit-autofill:active {
-          -webkit-text-fill-color: ${appTheme[currentUser.theme]
+          -webkit-text-fill-color: ${t
             .text_4} !important;
           -webkit-box-shadow: 0 0 0px 1000px
-            ${appTheme[currentUser.theme].background_2} inset !important;
-          box-shadow: 0 0 0px 1000px ${appTheme[currentUser.theme].background_2}
+            ${t.background_2} inset !important;
+          box-shadow: 0 0 0px 1000px ${t.background_2}
             inset !important;
           transition: background-color 5000s ease-in-out 0s !important;
-          caret-color: ${appTheme[currentUser.theme].text_4} !important;
+          caret-color: ${t.text_4} !important;
         }
       `}</style>
     </div>

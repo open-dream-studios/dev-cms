@@ -27,7 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import { appTheme } from "@/util/appTheme";
-import { AuthContext } from "@/contexts/authContext"; 
+import { AuthContext } from "@/contexts/authContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 
 // -- Helper: fake data -----------------------------------------------------
@@ -118,6 +118,9 @@ function formatCurrency(n: any) {
 
 function MetricCard({ title, value, delta, icon }: any) {
   const { currentUser } = useContext(AuthContext);
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   if (!currentUser) return null;
   return (
     <motion.div
@@ -133,7 +136,7 @@ function MetricCard({ title, value, delta, icon }: any) {
           <div
             className="p-3 rounded-xl"
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_3,
+              backgroundColor: t.background_3,
             }}
           >
             {icon}
@@ -143,7 +146,7 @@ function MetricCard({ title, value, delta, icon }: any) {
               <div
                 className="text-sm"
                 style={{
-                  color: appTheme[currentUser.theme].text_1,
+                  color: t.text_1,
                 }}
               >
                 {title}
@@ -159,7 +162,7 @@ function MetricCard({ title, value, delta, icon }: any) {
             <div
               className="text-2xl font-semibold mt-1"
               style={{
-                color: appTheme[currentUser.theme].text_1,
+                color: t.text_1,
               }}
             >
               {value}
@@ -200,6 +203,9 @@ const Dashboard = () => {
   const { currentProject } = useCurrentDataStore();
   const [range, setRange] = useState("30d");
 
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const totalRevenue = useMemo(
     () => salesData.reduce((s, r) => s + r.revenue, 0),
     []
@@ -218,7 +224,7 @@ const Dashboard = () => {
 
   return (
     <div
-      style={{ backgroundColor: appTheme[currentUser.theme].background_1 }}
+      style={{ backgroundColor: t.background_1 }}
       className="min-h-screen text-slate-100 px-6 pt-6 pb-8 font-sans"
     >
       <div className="w-[100%] grid grid-cols-12 gap-6">
@@ -227,7 +233,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3">
               <h1
                 style={{
-                  color: appTheme[currentUser.theme].text_1,
+                  color: t.text_1,
                 }}
                 className="text-2xl font-bold tracking-tight"
               >
@@ -239,36 +245,32 @@ const Dashboard = () => {
               <div
                 className="relative rounded-lg"
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2,
+                  backgroundColor: t.background_2,
                 }}
               >
                 <input
                   style={{
-                    color: appTheme[currentUser.theme].text_1,
-                    ["--placeholder-color" as any]:
-                      appTheme[currentUser.theme].text_1,
+                    color: t.text_1,
+                    ["--placeholder-color" as any]: t.text_1,
                   }}
                   placeholder="Search operations..."
                   className="themed-placeholder px-3 py-2 text-sm w-72 overflow-hidden outline-none border-none"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-80">
-                  <Search
-                    color={appTheme[currentUser.theme].text_1}
-                    size={14}
-                  />
+                  <Search color={t.text_1} size={14} />
                 </div>
               </div>
               <div
                 className="group w-[auto] rounded-lg px-[15px]"
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2,
+                  backgroundColor: t.background_2,
                 }}
               >
                 <select
                   value={range}
                   onChange={(e) => setRange(e.target.value)}
                   style={{
-                    color: appTheme[currentUser.theme].text_1,
+                    color: t.text_1,
                   }}
                   className="group-hover:brightness-75 dim cursor-pointer min-w-[100px] py-2 rounded-lg text-sm border-none outline-none"
                 >
@@ -280,14 +282,11 @@ const Dashboard = () => {
               </div>
               <button
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2,
+                  backgroundColor: t.background_2,
                 }}
                 className="cursor-pointer hover:brightness-90 dim px-3 py-2 rounded-lg"
               >
-                <RefreshCw
-                  color={appTheme[currentUser.theme].text_1}
-                  size={16}
-                />
+                <RefreshCw color={t.text_1} size={16} />
               </button>
               <button className="cursor-pointer hover:brightness-75 dim px-3 py-2 rounded-lg bg-gradient-to-r from-[#06b6d4] to-[#7c3aed] text-white font-semibold">
                 Deploy AI
@@ -337,7 +336,7 @@ const Dashboard = () => {
                   <div
                     className="text-sm"
                     style={{
-                      color: appTheme[currentUser.theme].text_1,
+                      color: t.text_1,
                     }}
                   >
                     Revenue Timeline
@@ -345,7 +344,7 @@ const Dashboard = () => {
                   <div
                     className="text-lg font-semibold"
                     style={{
-                      color: appTheme[currentUser.theme].text_1,
+                      color: t.text_1,
                     }}
                   >
                     Monthly revenue & order volume
@@ -362,10 +361,7 @@ const Dashboard = () => {
                     data={salesData}
                     margin={{ top: 10, right: 24, left: -12, bottom: 0 }}
                   >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={appTheme[currentUser.theme].text_4}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke={t.text_4} />
                     <XAxis dataKey="month" stroke="#9ca3af" />
                     <YAxis stroke="#9ca3af" />
                     <Tooltip contentStyle={{ background: "#0b1220" }} />
@@ -389,11 +385,15 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-3 gap-4 mt-4">
-                <div className={`${currentUser.theme === "dark" ? "bg-white/3" : "bg-black/3"} p-3 rounded-xl`}>
+                <div
+                  className={`${
+                    currentUser.theme === "dark" ? "bg-white/3" : "bg-black/3"
+                  } p-3 rounded-xl`}
+                >
                   <div
                     className="text-xs"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     Best Day (30d)
@@ -401,7 +401,7 @@ const Dashboard = () => {
                   <div
                     className="font-semibold text-lg"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     July 22 • $12,400
@@ -409,18 +409,22 @@ const Dashboard = () => {
                   <div
                     className="mt-2 text-xs"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     Orders: 142 • Conv 6.2%
                   </div>
                 </div>
 
-                <div className={`${currentUser.theme === "dark" ? "bg-white/3" : "bg-black/3"} p-3 rounded-xl`}>
+                <div
+                  className={`${
+                    currentUser.theme === "dark" ? "bg-white/3" : "bg-black/3"
+                  } p-3 rounded-xl`}
+                >
                   <div
                     className="text-xs"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     Top Product
@@ -428,7 +432,7 @@ const Dashboard = () => {
                   <div
                     className="font-semibold text-lg"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     NeuroWidget Pro
@@ -436,18 +440,22 @@ const Dashboard = () => {
                   <div
                     className="mt-2 text-xs"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     Revenue: $37,800 • Sold: 420
                   </div>
                 </div>
 
-              <div className={`${currentUser.theme === "dark" ? "bg-white/3" : "bg-black/3"} p-3 rounded-xl`}>
+                <div
+                  className={`${
+                    currentUser.theme === "dark" ? "bg-white/3" : "bg-black/3"
+                  } p-3 rounded-xl`}
+                >
                   <div
                     className="text-xs "
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     Latency
@@ -455,7 +463,7 @@ const Dashboard = () => {
                   <div
                     className="font-semibold text-lg"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     45 ms
@@ -463,7 +471,7 @@ const Dashboard = () => {
                   <div
                     className="mt-2 text-xs"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     Server load nominal
@@ -506,26 +514,26 @@ const Dashboard = () => {
                 </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-2 text-sm ">
-                  {trafficSources.map((t, i) => (
-                    <div key={t.name} className="flex items-center gap-2">
+                  {trafficSources.map((source, i) => (
+                    <div key={source.name} className="flex items-center gap-2">
                       <div
                         style={{ background: COLORS[i] }}
                         className="w-3 h-3 rounded-sm"
                       />
                       <div
                         style={{
-                          color: appTheme[currentUser.theme].text_2,
+                          color: t.text_2,
                         }}
                       >
-                        {t.name}
+                        {source.name}
                       </div>
                       <div
                         style={{
-                          color: appTheme[currentUser.theme].text_2,
+                          color: t.text_2,
                         }}
                         className="ml-auto font-semibold "
                       >
-                        {t.value}%
+                        {source.value}%
                       </div>
                     </div>
                   ))}
@@ -562,12 +570,12 @@ const Dashboard = () => {
                 } h-[122px] rounded-2xl p-4  flex items-center gap-3`}
               >
                 <div className="p-2 rounded-lg bg-white/5">
-                  <Zap color={appTheme[currentUser.theme].text_2} />
+                  <Zap color={t.text_2} />
                 </div>
                 <div>
                   <div
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                     className="text-xs"
                   >
@@ -575,7 +583,7 @@ const Dashboard = () => {
                   </div>
                   <div
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                     className="font-semibold"
                   >
@@ -599,14 +607,14 @@ const Dashboard = () => {
                   <div
                     className="text-sm"
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                   >
                     Top Products
                   </div>
                   <div
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                     className="text-lg font-semibold"
                   >
@@ -615,7 +623,7 @@ const Dashboard = () => {
                 </div>
                 <div
                   style={{
-                    color: appTheme[currentUser.theme].text_2,
+                    color: t.text_2,
                   }}
                   className="text-xs"
                 >
@@ -627,7 +635,7 @@ const Dashboard = () => {
                 <table className="w-full text-sm">
                   <thead
                     style={{
-                      color: appTheme[currentUser.theme].text_2,
+                      color: t.text_2,
                     }}
                     className={`${
                       currentUser.theme === "dark"
@@ -637,7 +645,7 @@ const Dashboard = () => {
                   >
                     <tr
                       style={{
-                        color: appTheme[currentUser.theme].text_2,
+                        color: t.text_2,
                       }}
                     >
                       <th className="py-2">Product</th>
@@ -651,7 +659,7 @@ const Dashboard = () => {
                     {productRows.map((r) => (
                       <tr
                         style={{
-                          color: appTheme[currentUser.theme].text_2,
+                          color: t.text_2,
                         }}
                         key={r.id}
                         className={`${
@@ -664,7 +672,7 @@ const Dashboard = () => {
                           <div className="font-semibold">{r.name}</div>
                           <div
                             style={{
-                              color: appTheme[currentUser.theme].text_2,
+                              color: t.text_2,
                             }}
                             className="text-xs "
                           >
@@ -712,7 +720,7 @@ const Dashboard = () => {
             >
               <div
                 style={{
-                  color: appTheme[currentUser.theme].text_2,
+                  color: t.text_2,
                 }}
                 className="flex items-center justify-between mb-3"
               >
@@ -732,34 +740,36 @@ const Dashboard = () => {
               </div>
 
               <div className="space-y-3">
-                {timeline.map((t, idx) => (
+                {timeline.map((timelineItem, idx) => (
                   <div
                     key={idx}
                     className="cursor-pointer hover:brightness-75 dim p-3 rounded-xl bg-white/3"
                   >
                     <div
                       style={{
-                        color: appTheme[currentUser.theme].text_2,
+                        color: t.text_2,
                       }}
                       className="flex items-center justify-between"
                     >
-                      <div className="text-sm font-semibold">{t.title}</div>
+                      <div className="text-sm font-semibold">
+                        {timelineItem.title}
+                      </div>
                       <div
                         style={{
-                          color: appTheme[currentUser.theme].text_2,
+                          color: t.text_2,
                         }}
                         className="text-xs"
                       >
-                        {t.time}
+                        {timelineItem.time}
                       </div>
                     </div>
                     <div
                       style={{
-                        color: appTheme[currentUser.theme].text_2,
+                        color: t.text_2,
                       }}
                       className="text-xs mt-1"
                     >
-                      {t.content}
+                      {timelineItem.content}
                     </div>
                   </div>
                 ))}

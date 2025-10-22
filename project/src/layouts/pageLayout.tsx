@@ -17,6 +17,9 @@ export const PageLayout = ({
   const { currentUser } = useContext(AuthContext);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const pageLayoutRef = useRef<HTMLDivElement>(null);
   const setPageLayoutRef = usePageLayoutRefStore(
     (state) => state.setPageLayoutRef
@@ -36,8 +39,8 @@ export const PageLayout = ({
           {
             "--nav-height": `${appDetails.nav_height}px`,
             "--left-bar-width": appDetails.left_bar_width,
-            backgroundColor: appTheme[currentUser.theme].background_1,
-            color: appTheme[currentUser.theme].text_1,
+            backgroundColor: t.background_1,
+            color: t.text_1,
           } as React.CSSProperties
         }
         className={`absolute left-0 ${
@@ -55,8 +58,8 @@ export const PageLayout = ({
       style={
         {
           "--nav-height": `${appDetails.nav_height}px`,
-          backgroundColor: appTheme[currentUser.theme].background_1,
-          color: appTheme[currentUser.theme].text_1,
+          backgroundColor: t.background_1,
+          color: t.text_1,
         } as React.CSSProperties
       }
       className={`absolute left-0  top-[var(--nav-height)] w-[100vw] flex h-[calc(100%-var(--nav-height))]`}

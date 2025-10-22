@@ -14,10 +14,17 @@ import {
   ChevronDown,
   GripVertical,
 } from "lucide-react";
-import { MouseEventHandler, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import {
+  MouseEventHandler,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { MediaFolder } from "@/types/media";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 
@@ -48,6 +55,9 @@ export default function FolderItem({
   const { renameMediaFolder } = useContextQueries();
   const [tempName, setTempName] = useState<string>(folder.name);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   useEffect(() => {
     if (renamingFolder === folder.id) {
@@ -106,7 +116,7 @@ export default function FolderItem({
 
   const [hovered, setHovered] = useState(false);
 
-    if (!currentUser) return null;
+  if (!currentUser) return null;
 
   return (
     <div
@@ -124,14 +134,14 @@ export default function FolderItem({
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={(e) => onContextMenu(e, folder.id)}
-         animate={{
-        backgroundColor: hovered
-          ? appTheme[currentUser.theme].background_2
-          : activeFolder && activeFolder.id === folder.id
-            ? appTheme[currentUser.theme].background_2
-            : appTheme[currentUser.theme].background_1,
-      }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+        animate={{
+          backgroundColor: hovered
+            ? t.background_2
+            : activeFolder && activeFolder.id === folder.id
+            ? t.background_2
+            : t.background_1,
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <span className="cursor-grab active:cursor-grabbing" {...listeners}>
           <GripVertical size={14} className="text-gray-400" />

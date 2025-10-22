@@ -44,7 +44,9 @@ export function useCustomers(
         ...data,
         project_idx: currentProjectId,
       });
-      return res.data.customer_id;
+      const id = res.data.id;
+      const customer_id = res.data.customer_id;
+      return { id, customer_id };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -68,8 +70,7 @@ export function useCustomers(
   });
 
   const upsertCustomer = async (data: Customer) => {
-    const customer_id = await upsertCustomerMutation.mutateAsync(data);
-    return customer_id;
+    return await upsertCustomerMutation.mutateAsync(data);
   };
 
   const deleteCustomer = async (customer_id: string) => {

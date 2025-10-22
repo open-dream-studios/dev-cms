@@ -16,8 +16,11 @@ import {
 import UploadModal, {
   CloudinaryUpload,
 } from "../../../components/Upload/Upload";
-import { ProductFormData } from "@/util/schemas/productSchema";
-import { useProductForm } from "@/hooks/forms/useProductForm";
+import { ProductFormData, productToForm } from "@/util/schemas/productSchema";
+import {
+  useProductForm,
+  useProductFormSubmit,
+} from "@/hooks/forms/useProductForm";
 import ProductInputField from "../Forms/InputField";
 import { MediaLink } from "@/types/media";
 import { usePathname } from "next/navigation";
@@ -30,8 +33,6 @@ import CustomerSelection from "@/modules/components/Customers/CustomerSelection"
 import { IoImagesOutline } from "react-icons/io5";
 import { IoImageOutline } from "react-icons/io5";
 import { Job, JobDefinition } from "@/types/jobs";
-import { flushSync } from "react-dom";
-import { Box } from "lucide-react";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import ProductJobs from "./ProductJobs";
 import ProductJobCard from "./ProductJobCard/ProductJobCard";
@@ -41,20 +42,9 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useWatch } from "react-hook-form";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
-  const sample = {
-    id: "P-001",
-    name: "NeuroWidget Pro",
-    sku: "P-001",
-    icon: <Box size={18} />,
-    progress: 52,
-    sold: 420,
-    revenue: 37800,
-    conv: "4.6%",
-    eta: "Sep 26",
-    owner: "Sabrina",
-  };
   const { currentUser } = useContext(AuthContext);
   const { history } = useRouting();
   const {
@@ -65,16 +55,18 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     jobs,
     jobDefinitions,
   } = useContextQueries();
-  const { screen, setUploadPopup } = useUiStore();
-  const { getDirtyForms } = useFormInstanceStore();
+  const { screen, setUploadPopup, addingProduct, setAddingProduct } =
+    useUiStore();
   const {
     currentProjectId,
+    currentProduct,
+    setCurrentProductData,
     currentProductImages,
     setCurrentProductImages,
     originalProductImages,
     setOriginalProductImages,
   } = useCurrentDataStore();
-  const { screenClick } = useRouting();
+  const { screenClick, screenClickAction } = useRouting();
   const pathname = usePathname();
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
@@ -86,15 +78,39 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const [descriptionEditorOpen, setDescriptionEditorOpen] =
     useState<boolean>(false);
   const [noteEditorOpen, setNoteEditorOpen] = useState<boolean>(false);
+
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
-  const form = useProductForm();
-  const customerId = form.watch("customer_id");
-  const description = form.watch("description");
+  const { onProductFormSubmit } = useProductFormSubmit();
+  const productForm = useProductForm(currentProduct);
+  const { registerForm, unregisterForm } = useFormInstanceStore();
+  const { handleSubmit, formState } = productForm;
+
+  useEffect(() => {
+    const formKey = "product";
+    registerForm(formKey, productForm);
+    return () => unregisterForm(formKey);
+  }, [productForm, registerForm, unregisterForm]);
+
+  // const serialInputRef = useRef<HTMLInputElement | null>(null);
+  // useEffect(() => {
+  //   if (addingProduct) {
+  //     serialInputRef.current?.focus();
+  //   }
+  // }, [addingProduct]);
+
+  const customerId = useWatch({
+    control: productForm.control,
+    name: "customer_id",
+  });
+  const description = useWatch({
+    control: productForm.control,
+    name: "description",
+  });
 
   const initialFormState = useRef<Partial<ProductFormData> | null>(null);
 
@@ -110,27 +126,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     );
   }, [productsData, customers, serialNumber, customerId]);
 
-  const newProduct = useMemo(() => {
-    return screen === "add-customer-product";
-  }, [screen]);
-
   const productJobs = useMemo(() => {
     if (!matchedProduct || !matchedProduct.id) return [];
     return jobs.filter((job: Job) => job.product_id === matchedProduct.id);
   }, [jobs, matchedProduct]);
 
-  // useEffect(() => {
-  //   if (productFormRef) {
-  //     productFormRef.current = form;
-  //   }
-  // }, [form, productFormRef]);
-
   useEffect(() => {
-    if (
-      pathname === "/products" &&
-      screen === "add-customer-product" &&
-      !serialNumber
-    ) {
+    if (pathname === "/products" && addingProduct && !serialNumber) {
       setCurrentProductImages([]);
       setImageDisplayed(null);
       setImageView(null);
@@ -143,14 +145,14 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       serialNumber &&
       screen !== "edit-customer-product" &&
       history &&
-      history.length <= 1
+      history.length === 0
     ) {
       screenClick("edit-customer-product", `/products/${serialNumber}`);
     }
-  }, [serialNumber, screen]);
+  }, [serialNumber, screen, history]);
 
   useEffect(() => {
-    if (!newProduct && serialNumber && productsData?.length) {
+    if (!addingProduct && serialNumber && productsData?.length) {
       const matchedProduct = productsData.find(
         (product: Product) => product.serial_number === serialNumber
       );
@@ -175,79 +177,62 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         height: matchedProduct.height ? Number(matchedProduct.height) : 0,
       };
       initialFormState.current = formDefaults;
-      form.reset(formDefaults);
+      productForm.reset(productToForm(matchedProduct));
     }
-  }, [newProduct, serialNumber, productsData, form.reset]);
+  }, [addingProduct, serialNumber, productsData, productForm.reset]);
 
   useEffect(() => {
-    if (matchedProduct) {
-      const initialImages = mediaLinks.filter(
-        (link: MediaLink) =>
-          link.entity_id === matchedProduct.id && link.entity_type === "product"
-      );
+    if (!matchedProduct) return;
 
-      const originalImages = () => {
-        // const tempImages = currentProductImages.filter((img) => img.isTemp);
-        const tempImages = currentProductImages;
-        const merged = [...initialImages, ...tempImages];
+    const initialImages = mediaLinks.filter(
+      (link: MediaLink) =>
+        link.entity_id === matchedProduct.id && link.entity_type === "product"
+    );
 
-        // Deduplicate by media_id (or URL if no media_id)
-        const seen = new Set<string>();
-        return merged.filter((img) => {
-          const key = img.media_id ? `media-${img.media_id}` : `url-${img.url}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-      };
-      const newProductImages = originalImages();
-      setCurrentProductImages(newProductImages);
-      setOriginalProductImages(newProductImages);
-      if (newProductImages.length >= 1) {
-        setImageDisplayed(newProductImages[0].url);
+    const merged = [...initialImages, ...currentProductImages];
+    const seen = new Set<string>();
+    const deduped = merged.filter((img) => {
+      const key = img.media_id ? `media-${img.media_id}` : `url-${img.url}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const same =
+      JSON.stringify(deduped) === JSON.stringify(currentProductImages);
+
+    if (!same) {
+      setCurrentProductImages(deduped);
+      setOriginalProductImages(deduped);
+      if (deduped.length >= 1) {
+        setImageDisplayed(deduped[0].url);
       }
     }
   }, [mediaLinks, matchedProduct]);
 
   const handleBackButton = async () => {
     await screenClick("customer-products", "/products");
+    setCurrentProductData(null);
+    setAddingProduct(false);
   };
 
   const handleProductsClick = async () => {
     await screenClick("customer-products", "/products");
+    setCurrentProductData(null);
+    setAddingProduct(false);
   };
 
   const imagesChanged =
     JSON.stringify(currentProductImages) !==
     JSON.stringify(originalProductImages);
 
-  const onFormSubmitButton = async (data: ProductFormData) => {
-    // const success = await handleProductFormSubmit(data);
-    // if (screen === "add-customer-product" && success && data.serial_number) {
-    //   flushSync(() => {
-    //     if (productFormRef.current) {
-    //       productFormRef.current.reset(defaultProductValues);
-    //     }
-    //   });
-    //   await screenClick(
-    //     "edit-customer-product",
-    //     `/products/${data.serial_number}`
-    //   );
-    // }
-  };
-
   const handleCancelFormChanges = () => {
-    // if (imagesChanged && originalImagesRef.current) {
-    //   setProductImages(originalImagesRef.current);
-    // }
-    // if (
-    //   initialFormState.current &&
-    //   productFormRef.current &&
-    //   productFormRef.current.formState.dirtyFields &&
-    //   Object.keys(productFormRef.current.formState.dirtyFields).length > 0
-    // ) {
-    //   form.reset(initialFormState.current);
-    // }
+    if (imagesChanged && originalProductImages) {
+      setCurrentProductImages(originalProductImages);
+    }
+    if (initialFormState.current && productForm && productForm.formState.isDirty) {
+      productForm.reset(initialFormState.current);
+    }
   };
 
   const handleAddJobClick = () => {
@@ -269,9 +254,17 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     });
   };
 
+  const handleFormSubmit = async (data: ProductFormData) => {
+    await onProductFormSubmit(data);
+    await screenClickAction(
+      "edit-customer-product",
+      `/products/${data.serial_number}`
+    );
+  };
+
   if (!currentUser) return null;
 
-  if (!newProduct && serialNumber && productsData?.length) {
+  if (!addingProduct && serialNumber && productsData?.length) {
     const productExists = productsData.some(
       (p) => p.serial_number === serialNumber
     );
@@ -447,7 +440,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             />
           </div>
 
-          {newProduct ? (
+          {addingProduct ? (
             <h1 className="text-3xl font-[500] mb-[24px]">Add Product</h1>
           ) : (
             <div
@@ -473,7 +466,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         </div>
 
         <form
-          onSubmit={form.handleSubmit(onFormSubmitButton)}
+          onSubmit={handleSubmit(handleFormSubmit)}
           className="mb-[2px] flex flex-col w-[100%] rounded-[15px] px-[35px] py-[30px]"
           style={getCardStyle(theme, t)}
         >
@@ -599,8 +592,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 <ProductInputField
                   label="Name"
                   name="name"
-                  register={form.register}
-                  error={form.formState.errors.name?.message}
+                  register={productForm.register}
+                  error={productForm.formState.errors.name?.message}
                   disabled={false}
                   className="ml-[3px] mt-[-3px] w-[100%] font-bold text-[25px]"
                   inputType={"input"}
@@ -624,11 +617,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                       <ProductInputField
                         label="Serial Number"
                         name="serial_number"
-                        register={form.register}
-                        error={form.formState.errors.serial_number?.message}
-                        disabled={!newProduct}
+                        register={productForm.register}
+                        error={
+                          productForm.formState.errors.serial_number?.message
+                        }
+                        disabled={!addingProduct}
                         className="text-[15px] font-[500] w-max mb-[1px] opacity-[0.5]"
-                        inputType={"input"}
+                        inputType="input"
                         onInput={(e) => {
                           e.currentTarget.value = e.currentTarget.value
                             .toUpperCase()
@@ -670,7 +665,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                         </div>
                       ) : (
                         <textarea
-                          {...form.register("description")}
+                          {...productForm.register("description")}
                           className="w-[calc(100%-40px)] text-[15px] opacity-[0.5] outline-none border-none resize-none input rounded-[7px] px-[12px] py-[9px]"
                           placeholder="Description..."
                         />
@@ -701,8 +696,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                           <ProductInputField
                             label="Make"
                             name="make"
-                            register={form.register}
-                            error={form.formState.errors.make?.message}
+                            register={productForm.register}
+                            error={productForm.formState.errors.make?.message}
                             className="text-[15px] font-[500] opacity-[0.5] w-[100%] truncate"
                             inputType={"input"}
                           />
@@ -722,8 +717,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                           <ProductInputField
                             label="Model"
                             name="model"
-                            register={form.register}
-                            error={form.formState.errors.model?.message}
+                            register={productForm.register}
+                            error={productForm.formState.errors.model?.message}
                             className="text-[15px] font-[500] opacity-[0.5]"
                             inputType={"input"}
                           />
@@ -763,16 +758,20 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                                 }
                                 e.currentTarget.value = value;
                               }}
-                              register={form.register}
+                              register={productForm.register}
                               registerOptions={{
                                 required: "Length is required",
                                 validate: (value) =>
                                   /^\d+(\.\d{1,2})?$/.test(String(value)) ||
                                   "Max 2 decimal places",
-                                setValueAs: (v) =>
-                                  v === "" ? undefined : parseFloat(v),
+                                setValueAs: (v) => {
+                                  const num = parseFloat(v);
+                                  return isNaN(num) ? undefined : num;
+                                },
                               }}
-                              error={form.formState.errors.length?.message}
+                              error={
+                                productForm.formState.errors.length?.message
+                              }
                               className="text-[15px] font-[500] opacity-[0.5]"
                             />
                           </div>
@@ -807,16 +806,20 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                                 }
                                 e.currentTarget.value = value;
                               }}
-                              register={form.register}
+                              register={productForm.register}
                               registerOptions={{
                                 required: "Width is required",
                                 validate: (value) =>
                                   /^\d+(\.\d{1,2})?$/.test(String(value)) ||
                                   "Max 2 decimal places",
-                                setValueAs: (v) =>
-                                  v === "" ? undefined : parseFloat(v),
+                                setValueAs: (v) => {
+                                  const num = parseFloat(v);
+                                  return isNaN(num) ? undefined : num;
+                                },
                               }}
-                              error={form.formState.errors.width?.message}
+                              error={
+                                productForm.formState.errors.width?.message
+                              }
                               className="text-[15px] font-[500] opacity-[0.5]"
                             />
                           </div>
@@ -851,16 +854,20 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                                 }
                                 e.currentTarget.value = value;
                               }}
-                              register={form.register}
+                              register={productForm.register}
                               registerOptions={{
                                 required: "Height is required",
                                 validate: (value) =>
                                   /^\d+(\.\d{1,2})?$/.test(String(value)) ||
                                   "Max 2 decimal places",
-                                setValueAs: (v) =>
-                                  v === "" ? undefined : parseFloat(v),
+                                setValueAs: (v) => {
+                                  const num = parseFloat(v);
+                                  return isNaN(num) ? undefined : num;
+                                },
                               }}
-                              error={form.formState.errors.height?.message}
+                              error={
+                                productForm.formState.errors.height?.message
+                              }
                               className="text-[15px] font-[500] opacity-[0.5]"
                             />
                           </div>
@@ -868,19 +875,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                       </div>
 
                       <div className="flex flex-row">
-                        {matchedCustomer ? (
-                          <CustomerTag
-                            productCustomer={matchedCustomer}
-                            oneSize={true}
-                            product={matchedProduct ?? null}
-                          />
-                        ) : (
-                          <CustomerTag
-                            productCustomer={null}
-                            oneSize={true}
-                            product={matchedProduct ?? null}
-                          />
-                        )}
+                        <CustomerTag
+                          productCustomer={matchedCustomer}
+                          oneSize={true}
+                          product={matchedProduct ?? null}
+                        />
 
                         {matchedCustomer && (
                           <div
@@ -932,7 +931,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
               }}
             >
               <textarea
-                {...form.register("note")}
+                {...productForm.register("note")}
                 className="w-[calc(100%-45px)] h-[100%] text-[15px] opacity-[0.5] outline-none border-none resize-none input rounded-[7px] px-[15px] py-[8px]"
                 placeholder="Notes..."
               />
@@ -950,7 +949,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             </div>
 
             <div className="flex flex-row gap-[16px]">
-              {(form.formState.isDirty || imagesChanged) && (
+              {(productForm.formState.isDirty || imagesChanged) && (
                 <button
                   type="submit"
                   className="mt-[12px] cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold"
@@ -962,9 +961,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 </button>
               )}
 
-              {((getDirtyForms("product") &&
-                getDirtyForms("product").length > 0) ||
-                imagesChanged) && (
+              {(productForm.formState.isDirty || imagesChanged) && (
                 <div
                   onClick={handleCancelFormChanges}
                   className="mt-[12px] cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold flex items-center justify-center"

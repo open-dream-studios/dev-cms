@@ -9,6 +9,8 @@ import DraggableItems from "../DraggableItems";
 import { Product } from "@/types/products";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 
 export type InventoryDataItem = {
   title: string;
@@ -32,11 +34,11 @@ export const inventoryDataLayout: InventoryDataItem[] = [
     titlePaddingLeft: "2px",
     className: "min-w-[100px] flex-grow basis-0",
   },
-  {
-    title: "Price ($)",
-    titlePaddingLeft: "3px",
-    className: "w-[90px] [@media(min-width:550px)]:w-[70px]",
-  },
+  // {
+  //   title: "Price ($)",
+  //   titlePaddingLeft: "3px",
+  //   className: "w-[90px] [@media(min-width:550px)]:w-[70px]",
+  // },
   {
     title: "Make",
     titlePaddingLeft: "6px",
@@ -64,26 +66,26 @@ export const inventoryDataLayout: InventoryDataItem[] = [
     titlePaddingLeft: "3px",
     className: "hidden [@media(min-width:1150px)]:flex w-[58px]",
   },
-  {
-    title: "Repairs",
-    titlePaddingLeft: "4px",
-    className: "hidden [@media(min-width:550px)]:flex w-[100px]",
-  },
-  {
-    title: "Sale",
-    titlePaddingLeft: "4px",
-    className: "hidden [@media(min-width:550px)]:flex w-[100px]",
-  },
-  {
-    title: "Entered",
-    titlePaddingLeft: "2px",
-    className: "hidden [@media(min-width:1380px)]:flex w-[85px]",
-  },
-  {
-    title: "Sold",
-    titlePaddingLeft: "3px",
-    className: "hidden [@media(min-width:1380px)]:flex w-[85px]",
-  },
+  // {
+  //   title: "Repairs",
+  //   titlePaddingLeft: "4px",
+  //   className: "hidden [@media(min-width:550px)]:flex w-[100px]",
+  // },
+  // {
+  //   title: "Sale",
+  //   titlePaddingLeft: "4px",
+  //   className: "hidden [@media(min-width:550px)]:flex w-[100px]",
+  // },
+  // {
+  //   title: "Entered",
+  //   titlePaddingLeft: "2px",
+  //   className: "hidden [@media(min-width:1380px)]:flex w-[85px]",
+  // },
+  // {
+  //   title: "Sold",
+  //   titlePaddingLeft: "3px",
+  //   className: "hidden [@media(min-width:1380px)]:flex w-[85px]",
+  // },
   {
     title: "Description",
     titlePaddingLeft: "0px",
@@ -105,6 +107,16 @@ const InventoryGrid = () => {
   const { localProductsData, selectedProducts, setSelectedProducts } =
     useCurrentDataStore();
   const { filteredProducts } = useDataFilters();
+  const { saveProducts } = useProductFormSubmit();
+
+  const { resetTimer } = useAutoSave({
+    onSave: async () => {
+      await saveProducts();
+    },
+  });
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const selectAllProducts = () => {
     if (productsData && filteredProducts(productsData).length > 0) {
@@ -135,23 +147,21 @@ const InventoryGrid = () => {
           <div className="mt-[75px] h-[calc(100%-75px)] w-[100%] min-h-[101px] relative rounded-t-[13px]">
             <div
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_2,
+                backgroundColor: t.background_2,
               }}
               className="absolute top-0 left-0 h-[40px] w-[100%] flex flex-row items-center rounded-t-[13px]"
             >
               <div className="w-[48px] h-[100%] items-center justify-center flex">
                 <div
                   style={{
-                    border: `1px solid ${
-                      appTheme[currentUser.theme].background_4
-                    }`,
+                    border: `1px solid ${t.background_4}`,
                   }}
                   onClick={selectAllProducts}
                   className="cursor-pointer dim w-[17px] h-[17px] rounded-[4px] flex items-center justify-center"
                 >
                   <div
                     style={{
-                      backgroundColor: appTheme[currentUser.theme].background_4,
+                      backgroundColor: t.background_4,
                     }}
                     className="w-[8px] h-[1px]"
                   ></div>
@@ -176,7 +186,7 @@ const InventoryGrid = () => {
               <div className="w-[100%] h-[100%] overflow-y-scroll">
                 {localProductsData &&
                   filteredProducts(localProductsData).length > 0 && (
-                    <DraggableItems sheet={true} />
+                    <DraggableItems sheet={true} resetTimer={resetTimer} />
                   )}
                 <div className="h-[60px] w-[100%]" />
               </div>

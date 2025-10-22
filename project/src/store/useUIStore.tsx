@@ -22,6 +22,9 @@ interface UiState {
   setUploadPopup: (val: boolean) => void;
 
   // Products
+  inventoryView: boolean;
+  setInventoryView: (val: boolean) => void;
+
   addingProduct: boolean;
   setAddingProduct: (val: boolean) => void;
 
@@ -71,6 +74,9 @@ export const useUiStore = create<UiState>((set) => ({
   setUploadPopup: (val) => set({ uploadPopup: val }),
 
   // Products
+  inventoryView: false,
+  setInventoryView: (val) => set({ inventoryView: val }),
+
   addingProduct: false,
   setAddingProduct: (val) => set({ addingProduct: val }),
 

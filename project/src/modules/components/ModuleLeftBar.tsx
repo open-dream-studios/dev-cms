@@ -23,6 +23,8 @@ import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useEmployeeFormSubmit } from "@/hooks/forms/useEmployeeForm";
 import { useRouting } from "@/hooks/useRouting";
+import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { productToForm } from "@/util/schemas/productSchema";
 
 const ModuleLeftBar = () => {
   const { setCurrentEmployeeData, setCurrentCustomerData } =
@@ -36,7 +38,7 @@ const ModuleLeftBar = () => {
     deleteEmployee,
     employees,
   } = useContextQueries();
-  const { localProductsData } = useCurrentDataStore();
+  const { localProductsData, setCurrentProductData } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const pathname = usePathname();
   const { getForm } = useFormInstanceStore();
@@ -47,15 +49,21 @@ const ModuleLeftBar = () => {
     setAddingCustomer,
     addingEmployee,
     setAddingEmployee,
+    addingProduct,
+    setAddingProduct,
   } = useUiStore();
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
+  const productForm = getForm("product");
+  const { onProductFormSubmit } = useProductFormSubmit();
+
   const customerForm = getForm("customer");
   const { onCustomerFormSubmit } = useCustomerFormSubmit();
 
   const employeeForm = getForm("employee");
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const handleDeleteCustomer = async () => {
     if (!contextMenu || !contextMenu.input) return;
@@ -116,112 +124,56 @@ const ModuleLeftBar = () => {
 
   const handleCloseContextMenu = () => setContextMenu(null);
 
-  const handleAddCustomerClick = async () => {
+  const handleCustomerClick = async (customer: Customer | null) => {
     if (customerForm && customerForm.formState.isDirty) {
       await customerForm.handleSubmit(onCustomerFormSubmit)();
     }
-    setCurrentCustomerData(null);
-    setAddingCustomer(true);
-    if (customerForm) {
+    setCurrentCustomerData(customer);
+    setAddingCustomer(!customer);
+    if (customerForm && !customer) {
       customerForm.reset(customerToForm(null));
     }
   };
 
-  const handleAddEmployeeClick = async () => {
+  const handleEmployeeClick = async (employee: Employee | null) => {
     if (employeeForm && employeeForm.formState.isDirty) {
       await employeeForm.handleSubmit(onEmployeeFormSubmit)();
     }
-    setCurrentEmployeeData(null);
-    setAddingEmployee(true);
-    if (employeeForm) {
+    setCurrentEmployeeData(employee);
+    setAddingEmployee(!employee);
+    if (employeeForm && !employee) {
       employeeForm.reset(employeeToForm(null));
     }
   };
 
-  const handleCustomerClick = (customer: Customer) => {
-    const customerForm = getForm("customer");
-    if (customerForm && customerForm.formState.isDirty) {
-      setModal2({
-        ...modal2,
-        open: !modal2.open,
-        showClose: false,
-        offClickClose: true,
-        width: "w-[300px]",
-        maxWidth: "max-w-[400px]",
-        aspectRatio: "aspect-[5/2]",
-        borderRadius: "rounded-[12px] md:rounded-[15px]",
-        content: (
-          <Modal2Continue
-            text={`Save customer info?`}
-            onContinue={async () => {
-              await customerForm.handleSubmit(onCustomerFormSubmit)();
-              setCurrentCustomerData(customer);
-              setAddingCustomer(false);
-            }}
-            onNoSave={() => {
-              setCurrentCustomerData(customer);
-              setAddingCustomer(false);
-            }}
-            threeOptions={true}
-          />
-        ),
-      });
-    } else {
-      setCurrentCustomerData(customer);
-      setAddingCustomer(false);
+  const handleProductClick = async (product: Product | null) => {
+    if (productForm && productForm.formState.isDirty) {
+      await productForm.handleSubmit(onProductFormSubmit)();
     }
-  };
-
-  const handleEmployeeClick = (employee: Employee) => {
-    const employeeForm = getForm("employee");
-    if (employeeForm && employeeForm.formState.isDirty) {
-      setModal2({
-        ...modal2,
-        open: !modal2.open,
-        showClose: false,
-        offClickClose: true,
-        width: "w-[300px]",
-        maxWidth: "max-w-[400px]",
-        aspectRatio: "aspect-[5/2]",
-        borderRadius: "rounded-[12px] md:rounded-[15px]",
-        content: (
-          <Modal2Continue
-            text={`Save employee info?`}
-            onContinue={async () => {
-              await employeeForm.handleSubmit(onEmployeeFormSubmit)();
-              setCurrentEmployeeData(employee);
-              setAddingEmployee(false);
-            }}
-            onNoSave={() => {
-              setCurrentEmployeeData(employee);
-              setAddingEmployee(false);
-            }}
-            threeOptions={true}
-          />
-        ),
-      });
+    if (product) {
+      await screenClick(
+        "edit-customer-product",
+        `/products/${product.serial_number}`
+      );
     } else {
-      setCurrentEmployeeData(employee);
-      setAddingEmployee(false);
+      await screenClick("customer-products", `/products`);
     }
-  };
-
-  const handleProductClick = async (product: Product) => {
-    await screenClick(
-      "edit-customer-product",
-      `/products/${product.serial_number}`
-    );
+    setCurrentProductData(product);
+    setAddingProduct(!product);
+    if (productForm && !product) {
+      productForm.reset(productToForm(null));
+    }
   };
 
   const handlePlusClick = async () => {
     if (screen === "customers") {
-      handleAddCustomerClick();
+      handleCustomerClick(null);
     }
     if (screen === "edit-customer-product") {
-      screenClick("add-customer-product", "/products");
+      handleProductClick(null);
     }
     if (screen === "employees") {
-      handleAddEmployeeClick();
+      handleEmployeeClick(null);
     }
   };
 
@@ -239,10 +191,15 @@ const ModuleLeftBar = () => {
   return (
     <div
       className={`${
-        screen === "customer-products" ? "hidden xl:flex" : "flex"
+        screen === "edit-customer-product" ||
+        screen === "customers" ||
+        screen === "employees" ||
+        addingProduct
+          ? "hidden md:flex"
+          : "hidden"
       } w-[240px] min-w-[240px] h-[100%] flex-col px-[15px] overflow-hidden`}
       style={{
-        borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2}`,
+        borderRight: `0.5px solid ${t.background_2}`,
       }}
     >
       {contextMenu && screen === "customers" && (
@@ -251,8 +208,8 @@ const ModuleLeftBar = () => {
           style={{
             top: contextMenu.y,
             left: contextMenu.x,
-            backgroundColor: appTheme[currentUser.theme].background_1_2,
-            border: "1px solid" + appTheme[currentUser.theme].background_3,
+            backgroundColor: t.background_1_2,
+            border: "1px solid" + t.background_3,
           }}
           onContextMenu={handleCloseContextMenu}
         >
@@ -270,8 +227,8 @@ const ModuleLeftBar = () => {
           style={{
             top: contextMenu.y,
             left: contextMenu.x,
-            backgroundColor: appTheme[currentUser.theme].background_1_2,
-            border: "1px solid" + appTheme[currentUser.theme].background_3,
+            backgroundColor: t.background_1_2,
+            border: "1px solid" + t.background_3,
           }}
           onContextMenu={handleCloseContextMenu}
         >
@@ -290,23 +247,21 @@ const ModuleLeftBar = () => {
             {screen === "customers" && "Customers"}
             {screen === "employees" && "Employees"}
             {(screen === "edit-customer-product" ||
-              screen === "add-customer-product") &&
+              screen === "customer-products") &&
               "Products"}
           </p>
         </div>
-        {!addingCustomer &&
-          !addingEmployee &&
-          screen !== "add-customer-product" && (
-            <div
-              onClick={handlePlusClick}
-              className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
-              style={{
-                backgroundColor: appTheme[currentUser.theme].background_1_2,
-              }}
-            >
-              <FaPlus size={12} />
-            </div>
-          )}
+        {!addingCustomer && !addingEmployee && !addingProduct && (
+          <div
+            onClick={handlePlusClick}
+            className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+            style={{
+              backgroundColor: t.background_1_2,
+            }}
+          >
+            <FaPlus size={12} />
+          </div>
+        )}
       </div>
 
       <Divider />
@@ -340,8 +295,7 @@ const ModuleLeftBar = () => {
           })}
         </>
       )}
-      {(screen === "edit-customer-product" ||
-        screen === "add-customer-product") && (
+      {(screen === "edit-customer-product" || addingProduct) && (
         <div className="flex w-[100%] h-[100%] overflow-y-auto flex-col gap-[8.25px]">
           {isLoadingProductsData ? (
             <>
@@ -350,15 +304,13 @@ const ModuleLeftBar = () => {
                   <div key={index}>
                     <Skeleton
                       style={{
-                        backgroundColor:
-                          appTheme[currentUser.theme].background_2,
+                        backgroundColor: t.background_2,
                       }}
                       className="w-[100%] h-[58px] rounded-[9px] flex flex-row gap-[10px] py-[9px] px-[12px]"
                     >
                       <div
                         style={{
-                          backgroundColor:
-                            appTheme[currentUser.theme].background_3,
+                          backgroundColor: t.background_3,
                         }}
                         className="aspect-[1/1] rounded-[6px] h-[100%] "
                       ></div>
@@ -392,8 +344,8 @@ const ModuleLeftBar = () => {
                     style={{
                       backgroundColor:
                         currentProductId === product.serial_number
-                          ? appTheme[currentUser.theme].background_3_2
-                          : appTheme[currentUser.theme].background_3,
+                          ? t.background_3_2
+                          : t.background_3,
                     }}
                     className="select-none min-w-[40px] w-[40px] h-[40px] min-h-[40px] rounded-[6px] overflow-hidden"
                   >

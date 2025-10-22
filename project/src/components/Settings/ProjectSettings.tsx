@@ -2,7 +2,7 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useProjectSettingsForm } from "@/hooks/useProjectSettingsForm";
+import { useProjectSettingsForm } from "@/hooks/forms/useProjectSettingsForm";
 import { Project } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
 import { ProjectSettingsFormData } from "@/util/schemas/projectSettingsSchema";
@@ -16,7 +16,10 @@ const ProjectSettings = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const { upsertProject, projectsData } = useContextQueries();
-  const { setUploadPopup } = useUiStore()
+  const { setUploadPopup } = useUiStore();
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const currentProjectData = projectsData.find(
     (p) => p.id === currentProjectId
@@ -64,8 +67,6 @@ const ProjectSettings = () => {
     await onSubmit(data);
   };
 
-  const isDirty = form.formState.isDirty;
-
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit, (err) => {
@@ -85,7 +86,7 @@ const ProjectSettings = () => {
       <div
         style={{
           ["--custom-input-text-color" as any]:
-            appTheme[currentUser.theme].text_3,
+            t.text_3,
         }}
         className="ml-[1px] flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]"
       >
@@ -103,7 +104,7 @@ const ProjectSettings = () => {
             <div
               onClick={() => setUploadPopup(true)}
               className="h-[100%] aspect-[1/1] rounded-[15px] overflow-hidden cursor-pointer relative group"
-              // style={{ borderColor: appTheme[currentUser.theme].text_4 }}
+              // style={{ borderColor: t.text_4 }}
             >
               <img
                 className="h-[100%] w-[100%] object-cover transition duration-400 group-hover:brightness-50"
@@ -111,7 +112,7 @@ const ProjectSettings = () => {
               />
 
               <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-400 group-hover:opacity-100">
-                <FaPlus size={25} color={appTheme[currentUser.theme].text_2} />
+                <FaPlus size={25} color={t.text_2} />
               </div>
             </div>
           ) : (
@@ -119,10 +120,10 @@ const ProjectSettings = () => {
               onClick={() => setUploadPopup(true)}
               className="hover:brightness-75 dim cursor-pointer h-[100%] aspect-[1/1] rounded-[15px] flex items-center justify-center"
               style={{
-                border: "0.5px solid " + appTheme[currentUser.theme].text_3,
+                border: "0.5px solid " + t.text_3,
               }}
             >
-              <FaPlus size={25} color={appTheme[currentUser.theme].text_3} />
+              <FaPlus size={25} color={t.text_3} />
             </div>
           )}
         </div>
@@ -130,9 +131,9 @@ const ProjectSettings = () => {
         <div className="flex flex-col gap-[10px] w-[100%]">
           <div
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
+              backgroundColor: t.background_2,
               ["--custom-input-text-color" as any]:
-                appTheme[currentUser.theme].text_3,
+                t.text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
@@ -146,9 +147,9 @@ const ProjectSettings = () => {
 
           <div
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
+              backgroundColor: t.background_2,
               ["--custom-input-text-color" as any]:
-                appTheme[currentUser.theme].text_3,
+                t.text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
@@ -162,9 +163,9 @@ const ProjectSettings = () => {
 
           <div
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
+              backgroundColor: t.background_2,
               ["--custom-input-text-color" as any]:
-                appTheme[currentUser.theme].text_3,
+                t.text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
@@ -179,9 +180,9 @@ const ProjectSettings = () => {
 
           <div
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
+              backgroundColor: t.background_2,
               ["--custom-input-text-color" as any]:
-                appTheme[currentUser.theme].text_3,
+                t.text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
@@ -193,15 +194,15 @@ const ProjectSettings = () => {
             />
           </div>
 
-          {isDirty && (
+          {form.formState.isDirty && (
             <div className="w-[100%] justify-end flex gap-[9px] flex-row">
               <button
                 type="submit"
                 className="cursor-pointer hover:brightness-90 dim px-[15px] h-[32px] rounded-full text-sm dim"
                 style={{
                   backgroundColor:
-                    appTheme[currentUser.theme].background_2_selected,
-                  color: appTheme[currentUser.theme].text_4,
+                    t.background_2_selected,
+                  color: t.text_4,
                 }}
               >
                 Save
@@ -211,8 +212,8 @@ const ProjectSettings = () => {
                 className="items-center flex justify-center cursor-pointer hover:brightness-90 dim px-[15px] h-[32px] rounded-full text-sm dim"
                 style={{
                   backgroundColor:
-                    appTheme[currentUser.theme].background_2_selected,
-                  color: appTheme[currentUser.theme].text_4,
+                    t.background_2_selected,
+                  color: t.text_4,
                 }}
               >
                 Cancel

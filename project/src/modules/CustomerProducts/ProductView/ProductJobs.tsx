@@ -1,5 +1,5 @@
 // project/src/modules/CustomerProducts/ProductView/ProductJobs.tsx
-import { AuthContext } from "@/contexts/authContext"; 
+import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Modal2MultiStepModalInput, {
   StepConfig,
@@ -19,13 +19,16 @@ interface ProductJobsProps {
 
 const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useCurrentDataStore()
+  const { currentProject } = useCurrentDataStore();
   const {
     upsertJobDefinition,
     jobDefinitions,
     deleteJobDefinition,
     upsertJob,
   } = useContextQueries();
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -138,8 +141,8 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
           style={{
             top: contextMenu.y,
             left: contextMenu.x,
-            backgroundColor: appTheme[currentUser.theme].background_3_2,
-            border: `1px solid ${appTheme[currentUser.theme].background_4}`,
+            backgroundColor: t.background_3_2,
+            border: `1px solid ${t.background_4}`,
           }}
         >
           <button
@@ -148,7 +151,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
               handleCloseContextMenu();
             }}
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_3_2,
+              backgroundColor: t.background_3_2,
             }}
             className="w-full text-left px-3 py-2 text-sm cursor-pointer hover:brightness-75 dim"
           >
@@ -160,15 +163,17 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
         <div className="text-[25px] md:text-[31px] font-[600]">
           {currentProject.short_name} Jobs
         </div>
-        {currentUser.admin === 1 && <div
-          style={{
-            backgroundColor: appTheme[currentUser.theme].background_3,
-          }}
-          onClick={handleAddJobDefinition}
-          className="w-[40px] h-[40px] rounded-full cursor-pointer hover:brightness-75 dim flex items-center justify-center"
-        >
-          <FaPlus className="w-[20px] h-[20px] opacity-60" />
-        </div>}
+        {currentUser.admin === 1 && (
+          <div
+            style={{
+              backgroundColor: t.background_3,
+            }}
+            onClick={handleAddJobDefinition}
+            className="w-[40px] h-[40px] rounded-full cursor-pointer hover:brightness-75 dim flex items-center justify-center"
+          >
+            <FaPlus className="w-[20px] h-[20px] opacity-60" />
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-[10px] pr-[25px] flex-1 overflow-auto pb-[30px]">
         {jobDefinitions.map((definition: JobDefinition, index: number) => {
@@ -179,7 +184,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
                 handleContextMenu(e, definition.job_definition_id)
               }
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_3,
+                backgroundColor: t.background_3,
               }}
               onClick={() => handleSelectJob(definition)}
               className="cursor-pointer hover:brightness-[86%] dim px-[18px] py-[5px] w-[100%] min-h-[60px] rounded-[12px] flex flex-row items-center"

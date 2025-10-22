@@ -1,6 +1,6 @@
 // project/src/modules/CustomersModule/CustomerCatalog.tsx
 import { useContext } from "react";
-import { AuthContext } from "@/contexts/authContext"; 
+import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import CustomerView from "./CustomerView";
 import { Customer } from "@/types/customers";
@@ -22,6 +22,10 @@ export const CustomerMiniCard = ({
 }) => {
   const { currentCustomer } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   if (!currentUser) return null;
 
   return (
@@ -35,7 +39,7 @@ export const CustomerMiniCard = ({
           currentCustomer.customer_id === customer.customer_id
             ? "rgba(255,255,255,0.057)"
             : "rgba(255,255,255,0.028)",
-        color: appTheme[currentUser.theme].text_4,
+        color: t.text_4,
       }}
       className="mb-[9.5px] w-full h-[70px] pl-[14px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 
              hover:brightness-[85%] transition cursor-pointer shadow-sm"
@@ -43,8 +47,8 @@ export const CustomerMiniCard = ({
       <div
         className="flex items-center justify-center rounded-full border font-semibold text-[13px] min-w-[33px] min-h-[33px]"
         style={{
-          borderColor: appTheme[currentUser.theme].text_4,
-          color: appTheme[currentUser.theme].text_4,
+          borderColor: t.text_4,
+          color: t.text_4,
         }}
       >
         {`${customer.first_name?.[0] ?? ""}${
@@ -55,7 +59,7 @@ export const CustomerMiniCard = ({
       <div className="flex flex-col items-start justify-start overflow-hidden h-[58px] mt-[1px]">
         <p
           className="w-[100%] font-bold text-[16px] leading-[19px] truncate"
-          style={{ color: appTheme[currentUser.theme].text_4 }}
+          style={{ color: t.text_4 }}
         >
           {customer.first_name} {customer.last_name}
         </p>
@@ -74,7 +78,7 @@ export const CustomerMiniCard = ({
 const CustomerCatalog = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
-  const { currentCustomer } = useCurrentDataStore()
+  const { currentCustomer } = useCurrentDataStore();
   const { addingCustomer } = useUiStore();
 
   if (!currentUser || !currentProjectId) return null;

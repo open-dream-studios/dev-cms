@@ -3,7 +3,7 @@
 import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useModulesForm } from "@/hooks/useModulesForm";
+import { useModulesForm } from "@/hooks/forms/useModulesForm";
 import { ModuleFormData } from "@/util/schemas/moduleSchema";
 import { appTheme } from "@/util/appTheme";
 import {
@@ -27,6 +27,9 @@ const EditModules = () => {
     deleteModuleDefinition,
     isLoadingModuleDefinitions,
   } = useContextQueries();
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -186,7 +189,7 @@ const EditModules = () => {
           >
             <FaChevronLeft
               size={22}
-              color={appTheme[currentUser.theme].text_3}
+              color={t.text_3}
             />
           </div>
         )}
@@ -199,7 +202,7 @@ const EditModules = () => {
               type="submit"
               style={{
                 backgroundColor:
-                  appTheme[currentUser.theme].background_2_selected,
+                  t.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px]  py-[6px] rounded-full"
             >
@@ -209,7 +212,7 @@ const EditModules = () => {
               onClick={handleCancelForm}
               style={{
                 backgroundColor:
-                  appTheme[currentUser.theme].background_2_selected,
+                  t.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
             >
@@ -221,11 +224,11 @@ const EditModules = () => {
             onClick={handleShowForm}
             style={{
               backgroundColor:
-                appTheme[currentUser.theme].background_2_selected,
+                t.background_2_selected,
             }}
             className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
-            <FaPlus size={15} color={appTheme[currentUser.theme].text_4} />
+            <FaPlus size={15} color={t.text_4} />
           </button>
         )}
       </div>
@@ -233,7 +236,7 @@ const EditModules = () => {
       {showForm && (
         <div
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1_2,
+            backgroundColor: t.background_1_2,
           }}
           className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
         >
@@ -246,7 +249,7 @@ const EditModules = () => {
               />
             </p>
             <p
-              style={{ color: appTheme[currentUser.theme].text_4 }}
+              style={{ color: t.text_4 }}
               className="text-sm"
             >
               <input
@@ -257,7 +260,7 @@ const EditModules = () => {
             </p>
 
             <p
-              style={{ color: appTheme[currentUser.theme].text_4 }}
+              style={{ color: t.text_4 }}
               className="text-sm"
             >
               <input
@@ -280,8 +283,8 @@ const EditModules = () => {
                       className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
                       style={{
                         backgroundColor:
-                          appTheme[currentUser.theme].background_2_selected,
-                        color: appTheme[currentUser.theme].text_4,
+                          t.background_2_selected,
+                        color: t.text_4,
                       }}
                     >
                       {key}
@@ -307,7 +310,7 @@ const EditModules = () => {
                   type="button"
                   onClick={handleAddKey}
                   style={{
-                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                    backgroundColor: t.background_2_2,
                   }}
                   className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm "
                 >
@@ -328,7 +331,7 @@ const EditModules = () => {
               <div
                 key={moduleDefinitions.id}
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_1_2,
+                  backgroundColor: t.background_1_2,
                 }}
                 className={`${
                   selectedModule === null &&
@@ -341,7 +344,7 @@ const EditModules = () => {
                     {moduleDefinitions.name}
                   </p>
                   <p
-                    style={{ color: appTheme[currentUser.theme].text_4 }}
+                    style={{ color: t.text_4 }}
                     className="text-sm truncate"
                   >
                     {moduleDefinitions.identifier} |{" "}
@@ -357,13 +360,13 @@ const EditModules = () => {
                       }
                       style={{
                         backgroundColor:
-                          appTheme[currentUser.theme].background_2_selected,
+                          t.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
                       <FiEdit
                         size={18}
-                        color={appTheme[currentUser.theme].text_4}
+                        color={t.text_4}
                       />
                     </div>
 
@@ -373,13 +376,13 @@ const EditModules = () => {
                       }
                       style={{
                         backgroundColor:
-                          appTheme[currentUser.theme].background_2_selected,
+                          t.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
                       <FaTrash
                         size={15}
-                        color={appTheme[currentUser.theme].text_4}
+                        color={t.text_4}
                       />
                     </div>
                   </div>

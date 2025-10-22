@@ -22,9 +22,13 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
   steps,
   onComplete,
 }) => {
+  const { currentUser } = useContext(AuthContext);
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
-  const { currentUser } = useContext(AuthContext);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -77,7 +81,7 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
   return (
     <div className="pt-[2px] w-full h-full flex items-center justify-center flex-col gap-[10px]">
       <div
-        style={{ color: appTheme[currentUser.theme].text_1 }}
+        style={{ color: t.text_1 }}
         className="relative w-[250px]"
       >
         <input
@@ -100,8 +104,8 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
             }
           }}
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_2_2,
-            color: appTheme[currentUser.theme].text_1,
+            backgroundColor: t.background_2_2,
+            color: t.text_1,
           }}
           className="rounded-[7px] w-full px-[11px] py-[5px]"
         />
@@ -116,8 +120,8 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: appTheme[currentUser.theme].text_1,
-            backgroundColor: appTheme[currentUser.theme].background_2_2,
+            color: t.text_1,
+            backgroundColor: t.background_2_2,
           }}
           onClick={() => setModal2({ ...modal2, open: false })}
         >
@@ -127,8 +131,8 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: appTheme[currentUser.theme].background_1_2,
-            backgroundColor: appTheme[currentUser.theme].text_3,
+            color: t.background_1_2,
+            backgroundColor: t.text_3,
           }}
           onClick={handleContinue}
         >

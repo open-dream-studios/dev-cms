@@ -1,6 +1,6 @@
 // project/src/app/(app)/products/page.tsx
 "use client";
-import CustomerProducts from "@/modules/CustomerProducts/Products";
+import CustomerProducts from "@/modules/CustomerProducts/CustomerProducts";
 import React from "react";
 
 const CustomerProductsPage = () => {

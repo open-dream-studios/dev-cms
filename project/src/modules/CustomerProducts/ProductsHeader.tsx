@@ -9,7 +9,6 @@ import { appTheme } from "@/util/appTheme";
 import { toast } from "react-toastify";
 import { IoTrashSharp } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { usePathname } from "next/navigation";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { FaPlus } from "react-icons/fa6";
@@ -20,18 +19,36 @@ import { useRouting } from "@/hooks/useRouting";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productFilter } from "@/types/filters";
+import { Product } from "@/types/products";
+import { productToForm } from "@/util/schemas/productSchema";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const { currentUser } = useContext(AuthContext);
   // const { handleRunModule } = use
   const { saveProducts } = useProductFormSubmit();
   const { productFilters, setProductFilters } = useCurrentDataStore();
-  const { editingProducts, setEditingProducts } = useUiStore();
-  const { currentProjectId, selectedProducts, setSelectedProducts } =
-    useCurrentDataStore();
+  const {
+    editingProducts,
+    setEditingProducts,
+    setUpdatingLock,
+    screen,
+    setAddingProduct,
+    inventoryView,
+    setInventoryView,
+  } = useUiStore();
+  const {
+    currentProjectId,
+    selectedProducts,
+    setSelectedProducts,
+    localProductsData,
+  } = useCurrentDataStore();
   const { deleteProducts, hasProjectModule } = useContextQueries();
   const { screenClick } = useRouting();
-  const { setUpdatingLock, screen } = useUiStore();
+  const { onProductFormSubmit } = useProductFormSubmit(); 
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
@@ -125,10 +142,10 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
   const handleAddRow = () => {
     setEditingProducts(false);
-    if (screen !== "customer-products-table") {
-      screenClick("add-customer-product", "/products");
+    if (!inventoryView) {
+      screenClick("customer-products", "/products");
+      setAddingProduct(true);
     } else {
-      if (!currentUser) return null;
       setModal2({
         ...modal2,
         open: !modal2.open,
@@ -157,29 +174,29 @@ const ProductsHeader = ({ title }: { title: String }) => {
     newMake: string,
     newModel: string
   ) => {
-    // const allOrdinals = localProductsData.map((p) => p.ordinal);
-    // const nextOrdinal =
-    //   allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
-    // const newProduct: Product = {
-    //   serial_number: newSerial,
-    //   customer_id: null,
-    //   projext_idx
-    //   name: "",
-    //   make: newMake,
-    //   model: newModel,
-    //   length: 0,
-    //   width: 0,
-    //   height: 0,
-    //   description: "",
-    //   note: "",
-    //   ordinal: nextOrdinal,
-    // };
-    // await saveProducts(newProduct);
+    const allOrdinals = localProductsData.map((p) => p.ordinal);
+    const nextOrdinal =
+      allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
+    const newProduct: Product = {
+      serial_number: newSerial,
+      customer_id: null,
+      project_idx: currentProjectId,
+      name: "",
+      make: newMake,
+      model: newModel,
+      length: 0,
+      width: 0,
+      height: 0,
+      description: "",
+      note: "",
+      ordinal: nextOrdinal,
+    };
+    await onProductFormSubmit(productToForm(newProduct));
   };
 
   const handleEditClick = () => {
-    // setDataFilters({ jobType: [], products: [] });
-    // setEditMode((prev) => !prev);
+    setProductFilters({ jobType: [], products: [] });
+    setEditingProducts(!editingProducts);
   };
 
   const handleFilterClick = async (filter: productFilter) => {
@@ -192,11 +209,10 @@ const ProductsHeader = ({ title }: { title: String }) => {
     }
     setProductFilters({ ...productFilters, products: active });
     setSelectedProducts([]);
-    if (screen === "customer-products") {
-      setEditingProducts(false);
-    }
-    if (screen === "customer-products-table") {
+    if (inventoryView) {
       await saveProducts();
+    } else {
+      setEditingProducts(false);
     }
   };
 
@@ -211,19 +227,10 @@ const ProductsHeader = ({ title }: { title: String }) => {
     }
     setProductFilters({ ...productFilters, jobType: active });
     setSelectedProducts([]);
-    if (screen === "customer-products") {
-      setEditingProducts(false);
-    }
-    if (screen === "customer-products-table") {
+    if (inventoryView) {
       await saveProducts();
-    }
-  };
-
-  const handleViewClick = (view: string) => {
-    if (view === "Products") {
-      screenClick("customer-products", "/products");
-    } else if (view === "Table") {
-      screenClick("customer-products-table", "/products");
+    } else {
+      setEditingProducts(false);
     }
   };
 
@@ -234,35 +241,27 @@ const ProductsHeader = ({ title }: { title: String }) => {
       {hasProjectModule("customer-products-module") && (
         <div className="flex flex-row items-center sm:justify-between justify-end h-[100%] mb-[17px] pt-[20px] px-[20px]">
           <div className="hidden sm:flex flex-row gap-[19px] items-center">
-            {/* <h1 onClick={()=>{setScreen("customer-products-table")}}className="hidden md:flex mt-[-5px] text-2xl font-[600]">
-              {title}
-            </h1> */}
-
             <div
               style={{
-                backgroundColor: appTheme[currentUser.theme].header_1_1,
+                backgroundColor: t.header_1_1,
               }}
               className="flex w-[160px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
             >
               <div
-                onClick={() => handleViewClick("Products")}
+                onClick={() => setInventoryView(false)}
                 style={{
-                  backgroundColor:
-                    screen === "customer-products"
-                      ? appTheme[currentUser.theme].header_1_2
-                      : "transparent",
+                  backgroundColor: !inventoryView
+                    ? t.header_1_2
+                    : "transparent",
                 }}
                 className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
               >
                 List
               </div>
               <div
-                onClick={() => handleViewClick("Table")}
+                onClick={() => setInventoryView(true)}
                 style={{
-                  backgroundColor:
-                    screen === "customer-products-table"
-                      ? appTheme[currentUser.theme].header_1_2
-                      : "transparent",
+                  backgroundColor: inventoryView ? t.header_1_2 : "transparent",
                 }}
                 className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
               >
@@ -272,7 +271,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
             <div
               style={{
-                backgroundColor: appTheme[currentUser.theme].header_1_1,
+                backgroundColor: t.header_1_1,
               }}
               className="flex w-[180px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
             >
@@ -280,7 +279,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
                 onClick={() => handleFilterClick("Active")}
                 style={{
                   backgroundColor: productFilters.products.includes("Active")
-                    ? appTheme[currentUser.theme].header_1_2
+                    ? t.header_1_2
                     : "transparent",
                 }}
                 className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -291,14 +290,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
                 className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
                 style={{
                   opacity: productFilters.products.length === 0 ? "0.1" : 0,
-                  backgroundColor: appTheme[currentUser.theme].text_1,
+                  backgroundColor: t.text_1,
                 }}
               />
               <div
                 onClick={() => handleFilterClick("Complete")}
                 style={{
                   backgroundColor: productFilters.products.includes("Complete")
-                    ? appTheme[currentUser.theme].header_1_2
+                    ? t.header_1_2
                     : "transparent",
                 }}
                 className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -309,7 +308,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
             <div
               style={{
-                backgroundColor: appTheme[currentUser.theme].header_1_1,
+                backgroundColor: t.header_1_1,
               }}
               className="flex w-[322px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
             >
@@ -317,7 +316,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
                 onClick={() => handleJobFilterClick("Service")}
                 style={{
                   backgroundColor: productFilters.jobType.includes("Service")
-                    ? appTheme[currentUser.theme].header_1_2
+                    ? t.header_1_2
                     : "transparent",
                 }}
                 className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -333,7 +332,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
                     productFilters.jobType.length === 0
                       ? "0.1"
                       : 0,
-                  backgroundColor: appTheme[currentUser.theme].text_1,
+                  backgroundColor: t.text_1,
                 }}
               />
               <div
@@ -342,7 +341,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
                   backgroundColor: productFilters.jobType.includes(
                     "Refurbishment"
                   )
-                    ? appTheme[currentUser.theme].header_1_2
+                    ? t.header_1_2
                     : "transparent",
                 }}
                 className="select-none cursor-pointer w-[124px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -358,14 +357,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
                     productFilters.jobType.length === 0
                       ? "0.1"
                       : 0,
-                  backgroundColor: appTheme[currentUser.theme].text_1,
+                  backgroundColor: t.text_1,
                 }}
               />
               <div
                 onClick={() => handleJobFilterClick("Resell")}
                 style={{
                   backgroundColor: productFilters.jobType.includes("Resell")
-                    ? appTheme[currentUser.theme].header_1_2
+                    ? t.header_1_2
                     : "transparent",
                 }}
                 className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -379,98 +378,89 @@ const ProductsHeader = ({ title }: { title: String }) => {
             {hasProjectModule("products-export-to-sheets-module") && (
               <div
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2,
+                  backgroundColor: t.background_2,
                 }}
                 className="dim hover:brightness-75 rounded-[25px] w-[33px] [@media(min-width:460px)]:w-[150px] h-[33px] flex flex-row justify-center items-center gap-[6px] text-[13px] font-[600] cursor-pointer"
                 onClick={handleGoogleExport}
               >
                 <p
                   style={{
-                    color: appTheme[currentUser.theme].text_1,
+                    color: t.text_1,
                   }}
                   className="hidden [@media(min-width:460px)]:block"
                 >
                   Export Sheet
                 </p>
 
-                <PiExport
-                  color={appTheme[currentUser.theme].text_1}
-                  size={18}
-                />
+                <PiExport color={t.text_1} size={18} />
               </div>
             )}
 
             {hasProjectModule("products-wix-sync-cms-module") && (
               <div
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2,
+                  backgroundColor: t.background_2,
                 }}
                 className="dim hover:brightness-75 rounded-[25px] w-[33px] [@media(min-width:460px)]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[13px] font-[600] cursor-pointer"
                 onClick={handleWixSync}
               >
                 <p
                   style={{
-                    color: appTheme[currentUser.theme].text_1,
+                    color: t.text_1,
                   }}
                   className="hidden [@media(min-width:460px)]:block"
                 >
                   Sync Wix
                 </p>
 
-                <BsWindow
-                  color={appTheme[currentUser.theme].text_1}
-                  size={17}
-                />
+                <BsWindow color={t.text_1} size={17} />
               </div>
             )}
 
             <div
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_2,
-                border: editingProducts
-                  ? `1px solid ${appTheme[currentUser.theme].text_1}`
-                  : "none",
+                backgroundColor: t.background_2,
+                border: editingProducts ? `1px solid ${t.text_1}` : "none",
               }}
               className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
               onClick={handleEditClick}
             >
               <FiEdit
                 size={17}
-                color={appTheme[currentUser.theme].text_1}
+                color={t.text_1}
                 className="flex items-center justify-center"
               />
             </div>
 
             <div
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_2,
+                backgroundColor: t.background_2,
               }}
               className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
               onClick={handleAddRow}
             >
               <FaPlus
                 size={17}
-                color={appTheme[currentUser.theme].text_1}
+                color={t.text_1}
                 className="flex items-center justify-center"
               />
             </div>
 
-            {selectedProducts.length > 0 &&
-              screen === "customer-products-table" && (
-                <div
-                  style={{
-                    backgroundColor: appTheme[currentUser.theme].background_2,
-                  }}
-                  className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
-                  onClick={handleConfirmDelete}
-                >
-                  <IoTrashSharp
-                    size={18}
-                    color={appTheme[currentUser.theme].text_1}
-                    className="flex items-center justify-center"
-                  />
-                </div>
-              )}
+            {selectedProducts.length > 0 && inventoryView && (
+              <div
+                style={{
+                  backgroundColor: t.background_2,
+                }}
+                className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
+                onClick={handleConfirmDelete}
+              >
+                <IoTrashSharp
+                  size={18}
+                  color={t.text_1}
+                  className="flex items-center justify-center"
+                />
+              </div>
+            )}
           </div>
         </div>
       )}

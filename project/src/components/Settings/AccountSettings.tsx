@@ -17,6 +17,9 @@ const AccountSettings = () => {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const handleSignOut = () => {
     if (!currentUser) return null;
     setModal2({
@@ -56,8 +59,8 @@ const AccountSettings = () => {
 
       <div
         style={{
-          border: `1px solid ${appTheme[currentUser.theme].table_bg_2}`,
-          backgroundColor: appTheme[currentUser.theme].background_2,
+          border: `1px solid ${t.table_bg_2}`,
+          backgroundColor: t.background_2,
         }}
         className="flex flex-row items-center gap-[12.2px] py-[12.2px] rounded-[10px] px-[14px]"
       >
@@ -68,7 +71,7 @@ const AccountSettings = () => {
         <div className="flex flex-col items-center">
           <p
             className="font-[400] text-[17px] mt-[-1px] opacity-[0.7]"
-            style={{ color: appTheme[currentUser.theme].text_3 }}
+            style={{ color: t.text_3 }}
           >
             {currentUser.email}
           </p>
@@ -81,8 +84,8 @@ const AccountSettings = () => {
           className="dim select-none cursor-pointer w-[100%] sm:w-[50%] hover:brightness-75 h-[40px] flex items-center justify-center font-[600]"
           style={{
             borderRadius: "6px",
-            backgroundColor: appTheme[currentUser.theme].background_2,
-            color: appTheme[currentUser.theme].text_2,
+            backgroundColor: t.background_2,
+            color: t.text_2,
           }}
         >
           Sign out
@@ -96,9 +99,9 @@ const AccountSettings = () => {
             className="gap-[12px] w-full h-full group-hover:border-0 group-hover:bg-[var(--hover-bg)] rounded-[10px] flex justify-center items-center px-[15px] truncate font-[500] text-[16px]"
             style={
               {
-                border: "0.5px solid " + appTheme[currentUser.theme].text_4,
+                border: "0.5px solid " + t.text_4,
                 transition: "background-color 0.2s ease-in-out",
-                "--hover-bg": appTheme[currentUser.theme].background_2,
+                "--hover-bg": t.background_2,
               } as React.CSSProperties
             }
           >
@@ -107,19 +110,19 @@ const AccountSettings = () => {
                 size={20}
                 title="Light Mode"
                 className=""
-                color={appTheme[currentUser.theme].text_3}
+                color={t.text_3}
               />
             ) : (
               <IoMoonOutline
                 size={20}
                 title="Dark Mode"
                 className=""
-                color={appTheme[currentUser.theme].text_3}
+                color={t.text_3}
               />
             )}
             <p
               style={{
-                color: appTheme[currentUser.theme].text_2,
+                color: t.text_2,
               }}
             >
               {capitalizeFirstLetter(

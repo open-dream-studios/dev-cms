@@ -1,4 +1,4 @@
-import { AuthContext } from "@/contexts/authContext"; 
+import { AuthContext } from "@/contexts/authContext";
 import { useModal1Store } from "@/store/useModalStore";
 import { Customer } from "@/types/customers";
 import { appTheme } from "@/util/appTheme";
@@ -21,15 +21,17 @@ const CustomerTag = ({
   oneSize: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { setCurrentCustomerData } = useCurrentDataStore()
+  const { setCurrentCustomerData } = useCurrentDataStore();
   const { screenClick } = useRouting();
-  const { screen } = useUiStore()
+  const { screen } = useUiStore();
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   const handleAddCustomerClick = () => {
-    if (!product) return;
     setModal1({
       ...modal1,
       open: !modal1.open,
@@ -49,12 +51,12 @@ const CustomerTag = ({
     return (
       <div
         style={{
-          backgroundColor: appTheme[currentUser.theme].background_2,
+          backgroundColor: t.background_2,
         }}
         className={`${
           oneSize
             ? "max-w-[260px] gap-[9px] px-[10.5px] py-[5.9px]"
-            : "gap-[4%] px-[calc(7px+0.1vw)] py-[1.5%]"
+            : "gap-[8px] px-[calc(7px+0.1vw)] py-[1.5%]"
         } w-[100%] cursor-pointer dim ${
           screen === "customers" ? "pointer-events-none" : "hover:brightness-90"
         } items-center flex flex-row rounded-full`}
@@ -71,8 +73,8 @@ const CustomerTag = ({
               : "min-w-[calc(22px+0.6vw)] min-h-[calc(22px+0.6vw)] aspect-[1/1] text-[calc(8px+0.2vw)]"
           } flex items-center justify-center rounded-full border font-semibold`}
           style={{
-            borderColor: appTheme[currentUser.theme].text_3,
-            color: appTheme[currentUser.theme].text_3,
+            borderColor: t.text_3,
+            color: t.text_3,
           }}
         >
           {`${productCustomer.first_name?.[0] ?? ""}${
@@ -95,7 +97,7 @@ const CustomerTag = ({
           </div>
           <div
             style={{
-              color: appTheme[currentUser.theme].text_4,
+              color: t.text_4,
             }}
             className={`${
               oneSize
@@ -118,12 +120,12 @@ const CustomerTag = ({
     return (
       <div
         style={{
-          backgroundColor: appTheme[currentUser.theme].background_2,
+          backgroundColor: t.background_2,
         }}
         className={`${
           oneSize
             ? "max-w-[220px] gap-[9px] px-[12px] py-[10px]"
-            : "gap-[4%] px-[2.8%] py-[1.5%]"
+            : "gap-[7px] px-[calc(0.24vw+5px)] py-[calc(0.2vw+3px)]"
         }
        w-[100%] cursor-pointer dim hover:brightness-90 items-center flex flex-row rounded-full`}
         onClick={(e) => {
@@ -132,15 +134,17 @@ const CustomerTag = ({
         }}
       >
         <div
-          className={`${
-            oneSize ? "w-[24px] h-[24px]" : "w-[8%] aspect-[1/1]"
+          className={`aspect-[1/1] ${
+            oneSize
+              ? "w-[24px] h-[24px]"
+              : "w-[22px] min-w-[22px] lg:w-[24px] lg:min-w-[24px]"
           } opacity-[0.8] flex items-center justify-center rounded-full border font-semibold`}
           style={{
-            borderColor: appTheme[currentUser.theme].text_3,
-            color: appTheme[currentUser.theme].text_3,
+            borderColor: t.text_3,
+            color: t.text_3,
           }}
         >
-          <FaPlus />
+          <FaPlus className="w-[calc(27%+5px)]" />
         </div>
         <div className="w-[100%] flex flex-1 ml-[2px] flex-col gap-[1px] h-[100%] justify-center">
           <div className="opacity-[0.69] truncate text-[16px] leading-[17px] font-[600]">

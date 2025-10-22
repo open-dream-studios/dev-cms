@@ -88,8 +88,21 @@ export const upsertCustomerFunction = async (project_idx, reqBody) => {
 
     const [result] = await db.promise().query(query, values);
 
+    // Get final insert ID
+    let id = result.insertId;
+    if (!id && customer_id) {
+      const [rows] = await db
+        .promise()
+        .query(
+          "SELECT id FROM customers WHERE customer_id = ? AND project_idx = ?",
+          [finalCustomerId, project_idx]
+        );
+      id = rows[0]?.id;
+    }
+
     return {
       success: true,
+      id,
       customer_id: finalCustomerId,
     };
   } catch (err) {

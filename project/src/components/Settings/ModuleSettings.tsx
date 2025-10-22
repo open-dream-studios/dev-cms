@@ -7,7 +7,7 @@ import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FaCheck, FaPlus, FaRegCircleCheck, FaTrash } from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
-import { useIntegrationForm } from "@/hooks/useIntegrationForm";
+import { useIntegrationForm } from "@/hooks/forms/useIntegrationForm";
 import { IntegrationFormData } from "@/util/schemas/integrationSchema";
 import { MdChevronLeft } from "react-icons/md";
 import { HiLockClosed } from "react-icons/hi2";
@@ -28,6 +28,9 @@ const ModuleSettings = () => {
     upsertIntegration,
     deleteIntegration,
   } = useContextQueries();
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const [addingModules, setAddingModules] = useState(false);
   const [checkedModuleDefinitions, setCheckedModuleDefinitions] = useState<
@@ -204,12 +207,12 @@ const ModuleSettings = () => {
             onClick={handleBackClick}
             className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_1_2,
+              backgroundColor: t.background_1_2,
             }}
           >
             <MdChevronLeft
               size={29}
-              color={appTheme[currentUser.theme].text_2}
+              color={t.text_2}
               className="ml-[-2px] mt-[-1px] opacity-[80%]"
             />
           </div>
@@ -229,8 +232,8 @@ const ModuleSettings = () => {
                   type="submit"
                   className="dim cursor-pointer text-[15px] h-[36px] rounded-full flex items-center gap-[9px] px-[15px]"
                   style={{
-                    backgroundColor: appTheme[currentUser.theme].background_1_2,
-                    color: appTheme[currentUser.theme].text_3,
+                    backgroundColor: t.background_1_2,
+                    color: t.text_3,
                   }}
                 >
                   Save <FaRegCircleCheck size={16} />
@@ -239,8 +242,8 @@ const ModuleSettings = () => {
                   onClick={() => setShowAddKeyInput(false)}
                   className="dim cursor-pointer text-[14.5px] h-[36px] rounded-full flex items-center gap-[6px] px-[15px]"
                   style={{
-                    backgroundColor: appTheme[currentUser.theme].background_1_2,
-                    color: appTheme[currentUser.theme].text_3,
+                    backgroundColor: t.background_1_2,
+                    color: t.text_3,
                   }}
                 >
                   Cancel <IoClose size={19} />
@@ -251,7 +254,7 @@ const ModuleSettings = () => {
                 onClick={() => setShowAddKeyInput(true)}
                 className="dim cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_1_2,
+                  backgroundColor: t.background_1_2,
                 }}
               >
                 <FaPlus size={14} />
@@ -262,7 +265,7 @@ const ModuleSettings = () => {
               onClick={() => setAddingModules(true)}
               className="dim cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_1_2,
+                backgroundColor: t.background_1_2,
               }}
             >
               <FaPlus size={14} />
@@ -312,7 +315,7 @@ const ModuleSettings = () => {
         <div
           className="w-[90%] max-h-[305px] overflow-y-scroll rounded-[8px]"
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1_2,
+            backgroundColor: t.background_1_2,
           }}
         >
           {filteredActiveModules.map(
@@ -325,7 +328,7 @@ const ModuleSettings = () => {
                   {index !== 0 && (
                     <div
                       style={{
-                        backgroundColor: appTheme[currentUser.theme].text_4,
+                        backgroundColor: t.text_4,
                       }}
                       className="w-[100%] h-[1px] opacity-50"
                     />
@@ -335,7 +338,7 @@ const ModuleSettings = () => {
                     className={`group ${
                       selectedParentModule === null && "cursor-pointer"
                     } w-[100%] h-[50px] flex justify-between items-center px-[20px]`}
-                    style={{ color: appTheme[currentUser.theme].text_4 }}
+                    style={{ color: t.text_4 }}
                   >
                     <p
                       className={`truncate ${
@@ -351,12 +354,12 @@ const ModuleSettings = () => {
                         className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim cursor-pointer"
                         style={{
                           backgroundColor:
-                            appTheme[currentUser.theme].background_2_selected,
+                            t.background_2_selected,
                         }}
                       >
                         <HiLockClosed
                           size={15}
-                          color={appTheme[currentUser.theme].text_4}
+                          color={t.text_4}
                         />
                       </div>
                       <div
@@ -366,12 +369,12 @@ const ModuleSettings = () => {
                         className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim cursor-pointer"
                         style={{
                           backgroundColor:
-                            appTheme[currentUser.theme].background_2_selected,
+                            t.background_2_selected,
                         }}
                       >
                         <FaTrash
                           size={14}
-                          color={appTheme[currentUser.theme].text_4}
+                          color={t.text_4}
                         />
                       </div>
                     </div>
@@ -385,14 +388,14 @@ const ModuleSettings = () => {
         <div
           className="w-[90%] max-h-[305px] overflow-y-scroll rounded-[8px]"
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1_2,
+            backgroundColor: t.background_1_2,
           }}
         >
           {showAddKeyInput && (
             <div
               className="w-[100%]"
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_2_2,
+                backgroundColor: t.background_2_2,
               }}
             >
               <div className="flex gap-[10px] px-[20px] h-[50px] items-center">
@@ -438,8 +441,8 @@ const ModuleSettings = () => {
                         className="cursor-pointer hover:brightness-90 dim px-[12px] h-[32px] rounded-full text-sm dim"
                         style={{
                           backgroundColor:
-                            appTheme[currentUser.theme].background_2_selected,
-                          color: appTheme[currentUser.theme].text_4,
+                            t.background_2_selected,
+                          color: t.text_4,
                         }}
                       >
                         Save
@@ -449,8 +452,8 @@ const ModuleSettings = () => {
                         className="cursor-pointer hover:brightness-90 dim px-[12px] h-[32px] rounded-full text-sm dim"
                         style={{
                           backgroundColor:
-                            appTheme[currentUser.theme].background_2_selected,
-                          color: appTheme[currentUser.theme].text_4,
+                            t.background_2_selected,
+                          color: t.text_4,
                         }}
                       >
                         Cancel
@@ -480,13 +483,13 @@ const ModuleSettings = () => {
                               className="flex items-center justify-center w-[32px] h-[32px] rounded-full dim cursor-pointer"
                               style={{
                                 backgroundColor:
-                                  appTheme[currentUser.theme]
+                                  t
                                     .background_2_selected,
                               }}
                             >
                               <FiEdit
                                 size={16}
-                                color={appTheme[currentUser.theme].text_4}
+                                color={t.text_4}
                               />
                             </div>
                             <div
@@ -496,13 +499,13 @@ const ModuleSettings = () => {
                               className="flex items-center justify-center w-[32px] h-[32px] rounded-full dim cursor-pointer"
                               style={{
                                 backgroundColor:
-                                  appTheme[currentUser.theme]
+                                  t
                                     .background_2_selected,
                               }}
                             >
                               <FaTrash
                                 size={14}
-                                color={appTheme[currentUser.theme].text_4}
+                                color={t.text_4}
                               />
                             </div>
                           </div>

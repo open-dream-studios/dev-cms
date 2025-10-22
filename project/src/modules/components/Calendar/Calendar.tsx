@@ -524,22 +524,44 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     return `${sundayStart.toLocaleDateString()} – ${saturday.toLocaleDateString()}`;
   }, [weekCenteredIndex, indexToDate]);
 
+  // useEffect(() => {
+  //   if (!scrollerRef.current) return;
+
+  //   let prevWidth = scrollerRef.current.clientWidth;
+
+  //   const observer = new ResizeObserver(() => {
+  //     const currentWidth = scrollerRef.current?.clientWidth;
+  //     if (currentWidth && currentWidth !== prevWidth) {
+  //       prevWidth = currentWidth;
+  //       goToWeek();
+  //     }
+  //   });
+
+  //   observer.observe(scrollerRef.current);
+  //   return () => observer.disconnect();
+  // }, [goToWeek]);
+
   useEffect(() => {
-    if (!scrollerRef.current) return;
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
 
-    let prevWidth = scrollerRef.current.clientWidth;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          // Wait one frame so layout is finalized
+          requestAnimationFrame(() => {
+            if (scheduled_start_date) goToWeek();
+            else goToCurrentWeek();
+          });
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-    const observer = new ResizeObserver(() => {
-      const currentWidth = scrollerRef.current?.clientWidth;
-      if (currentWidth && currentWidth !== prevWidth) {
-        prevWidth = currentWidth;
-        goToWeek();
-      }
-    });
-
-    observer.observe(scrollerRef.current);
+    observer.observe(scroller);
     return () => observer.disconnect();
-  }, [goToWeek]);
+  }, [scheduled_start_date, goToWeek, goToCurrentWeek]);
 
   return (
     <motion.div

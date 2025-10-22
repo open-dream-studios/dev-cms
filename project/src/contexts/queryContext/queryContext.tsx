@@ -177,7 +177,10 @@ export type QueryContextType = {
   customers: Customer[];
   isLoadingCustomers: boolean;
   refetchCustomers: () => Promise<any>;
-  upsertCustomer: (data: Customer) => Promise<string>;
+  upsertCustomer: (data: Customer) => Promise<{
+    id: number;
+    customer_id: string;
+  }>;
   deleteCustomer: (customer_id: string) => Promise<void>;
 
   // ---- Job Definitions ----

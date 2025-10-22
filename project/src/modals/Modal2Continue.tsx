@@ -2,7 +2,7 @@
 import { useContext, useEffect } from "react";
 import { appTheme } from "../util/appTheme";
 import { AuthContext } from "../contexts/authContext";
-import { useModal2Store } from "../store/useModalStore"; 
+import { useModal2Store } from "../store/useModalStore";
 import { usePathname } from "next/navigation";
 
 type Modal2ContinueProps = {
@@ -18,6 +18,11 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
   onContinue,
   onNoSave,
 }) => {
+  const { currentUser } = useContext(AuthContext);
+  
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
@@ -55,12 +60,11 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
     }
   };
 
-  const { currentUser } = useContext(AuthContext);
   if (!currentUser) return null;
   return (
     <div className="pt-[10px] w-full h-full flex items-center justify-center flex-col gap-[15px]">
       <div
-        style={{ color: appTheme[currentUser.theme].text_1 }}
+        style={{ color: t.text_1 }}
         className="text-center"
       >
         {text}
@@ -70,8 +74,8 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
           className="select-none dim hover:brightness-90 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
             width: threeOptions ? "50%" : "33%",
-            color: appTheme[currentUser.theme].text_1,
-            backgroundColor: appTheme[currentUser.theme].background_2_2,
+            color: t.text_1,
+            backgroundColor: t.background_2_2,
           }}
           onClick={handleCancel}
         >
@@ -81,8 +85,8 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
           <div
             className="w-[33%] select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
             style={{
-              color: appTheme[currentUser.theme].text_1,
-              backgroundColor: appTheme[currentUser.theme].background_2_2,
+              color: t.text_1,
+              backgroundColor: t.background_2_2,
             }}
             onClick={handleNoSave}
           >
@@ -93,8 +97,8 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
           className="w-[50%] select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
             width: threeOptions ? "50%" : "33%",
-            color: appTheme[currentUser.theme].background_1_2,
-            backgroundColor: appTheme[currentUser.theme].text_3,
+            color: t.background_1_2,
+            backgroundColor: t.text_3,
           }}
           onClick={handleContinue}
         >

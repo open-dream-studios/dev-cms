@@ -44,7 +44,6 @@ const EmployeeCard: React.FC = () => {
   const employeeForm = useEmployeeForm(currentEmployee);
   const { registerForm, unregisterForm } = useFormInstanceStore();
   const { handleSubmit, formState } = employeeForm;
-  const { isDirty, isValid } = formState;
   const leftBarOpen = useLeftBarOpenStore((s: any) => s.leftBarOpen);
 
   const theme = currentUser?.theme ?? "dark";
@@ -644,7 +643,7 @@ const EmployeeCard: React.FC = () => {
             </div>
 
             <div className="mt-[25px] flex items-center gap-3 mb-[25px]">
-              {isDirty && isValid && (
+              {employeeForm.formState.isDirty && employeeForm.formState.isValid && (
                 <button
                   type="submit"
                   className={`hover:brightness-[74%] dim cursor-pointer transition inline-flex items-center gap-2 pl-[32px] pr-[39px] py-[10px] rounded-[10px] font-medium`}
@@ -658,7 +657,7 @@ const EmployeeCard: React.FC = () => {
                 </button>
               )}
 
-              {isDirty && (
+              {employeeForm.formState.isDirty && (
                 <button
                   type="button"
                   className={`hover:brightness-[88%] dim cursor-pointer transition inline-flex items-center gap-2 pl-[32px] pr-[39px] py-[10px] rounded-[10px] font-medium`}
@@ -696,14 +695,14 @@ const EmployeeCard: React.FC = () => {
         select:-webkit-autofill:hover,
         select:-webkit-autofill:focus,
         select:-webkit-autofill:active {
-          -webkit-text-fill-color: ${appTheme[currentUser.theme]
+          -webkit-text-fill-color: ${t
             .text_4} !important;
           -webkit-box-shadow: 0 0 0px 1000px
-            ${appTheme[currentUser.theme].background_2} inset !important;
-          box-shadow: 0 0 0px 1000px ${appTheme[currentUser.theme].background_2}
+            ${t.background_2} inset !important;
+          box-shadow: 0 0 0px 1000px ${t.background_2}
             inset !important;
           transition: background-color 5000s ease-in-out 0s !important;
-          caret-color: ${appTheme[currentUser.theme].text_4} !important;
+          caret-color: ${t.text_4} !important;
         }
       `}</style>
     </form>

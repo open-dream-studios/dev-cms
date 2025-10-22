@@ -31,6 +31,9 @@ const EditSectionDefinitions = () => {
     isLoadingSectionDefinitions,
   } = useContextQueries();
 
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
@@ -208,7 +211,7 @@ const EditSectionDefinitions = () => {
           >
             <FaChevronLeft
               size={22}
-              color={appTheme[currentUser.theme].text_3}
+              color={t.text_3}
             />
           </div>
         )}
@@ -222,7 +225,7 @@ const EditSectionDefinitions = () => {
               type="submit"
               style={{
                 backgroundColor:
-                  appTheme[currentUser.theme].background_2_selected,
+                  t.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px] py-[6px] rounded-full"
             >
@@ -233,7 +236,7 @@ const EditSectionDefinitions = () => {
               onClick={resetForm}
               style={{
                 backgroundColor:
-                  appTheme[currentUser.theme].background_2_selected,
+                  t.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
             >
@@ -246,11 +249,11 @@ const EditSectionDefinitions = () => {
             onClick={handleShowForm}
             style={{
               backgroundColor:
-                appTheme[currentUser.theme].background_2_selected,
+                t.background_2_selected,
             }}
             className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
-            <FaPlus size={16} color={appTheme[currentUser.theme].text_4} />
+            <FaPlus size={16} color={t.text_4} />
           </button>
         )}
       </div>
@@ -258,7 +261,7 @@ const EditSectionDefinitions = () => {
       {showForm && (
         <div
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1_2,
+            backgroundColor: t.background_1_2,
           }}
           className="flex flex-col gap-4 justify-between items-center rounded-[10px] px-[20px] py-[14px]"
         >
@@ -289,8 +292,8 @@ const EditSectionDefinitions = () => {
                       className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
                       style={{
                         backgroundColor:
-                          appTheme[currentUser.theme].background_2_selected,
-                        color: appTheme[currentUser.theme].text_4,
+                          t.background_2_selected,
+                        color: t.text_4,
                       }}
                     >
                       {s}
@@ -316,7 +319,7 @@ const EditSectionDefinitions = () => {
                   type="button"
                   onClick={handleAddElement}
                   style={{
-                    backgroundColor: appTheme[currentUser.theme].background_2_2,
+                    backgroundColor: t.background_2_2,
                   }}
                   className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm"
                 >
@@ -348,7 +351,7 @@ const EditSectionDefinitions = () => {
               <div
                 key={section.id}
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_1_2,
+                  backgroundColor: t.background_1_2,
                 }}
                 className={`${
                   selectedSection === null &&
@@ -359,7 +362,7 @@ const EditSectionDefinitions = () => {
                 <div className="w-[calc(100%-90px)] truncate">
                   <p className="font-semibold truncate">{section.name}</p>
                   <p
-                    style={{ color: appTheme[currentUser.theme].text_4 }}
+                    style={{ color: t.text_4 }}
                     className="text-sm truncate"
                   >
                     {section.identifier}
@@ -371,13 +374,13 @@ const EditSectionDefinitions = () => {
                       onClick={(e) => handleEditClick(e, section)}
                       style={{
                         backgroundColor:
-                          appTheme[currentUser.theme].background_2_selected,
+                          t.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
                       <FiEdit
                         size={18}
-                        color={appTheme[currentUser.theme].text_4}
+                        color={t.text_4}
                       />
                     </div>
                     <div
@@ -387,13 +390,13 @@ const EditSectionDefinitions = () => {
                       }}
                       style={{
                         backgroundColor:
-                          appTheme[currentUser.theme].background_2_selected,
+                          t.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
                       <FaTrash
                         size={15}
-                        color={appTheme[currentUser.theme].text_4}
+                        color={t.text_4}
                       />
                     </div>
                   </div>

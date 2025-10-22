@@ -17,6 +17,10 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const { currentUser } = useContext(AuthContext);
   const { productsData } = useContextQueries();
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [inputValues, setInputValues] = useState({
@@ -38,7 +42,7 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
   const handleContinue = () => {
     const trimmed = input.trim();
     if (step === "serial") {
-      if (trimmed.length < 14) {
+      if (trimmed.length < 10) {
         setError(true);
         inputRef.current?.focus();
         return;
@@ -94,7 +98,7 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
   return (
     <div className="pt-[2px] w-full h-full flex items-center justify-center flex-col gap-[10px]">
       <div
-        style={{ color: appTheme[currentUser.theme].text_1 }}
+        style={{ color: t.text_1 }}
         className="relative w-[250px]"
       >
         <input
@@ -110,14 +114,14 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
             }
           }}
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_2_2,
-            color: appTheme[currentUser.theme].text_1,
+            backgroundColor: t.background_2_2,
+            color: t.text_1,
           }}
           className="rounded-[7px] w-full px-[11px] py-[5px]"
         />
         {error && step === "serial" && (
           <div className="absolute top-[7px] right-[16px] text-red-500 text-[14px]">
-            14 CHARS
+            10 CHARS
           </div>
         )}
       </div>
@@ -126,8 +130,8 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: appTheme[currentUser.theme].text_1,
-            backgroundColor: appTheme[currentUser.theme].background_2_2,
+            color: t.text_1,
+            backgroundColor: t.background_2_2,
           }}
           onClick={() => setModal2({ ...modal2, open: false })}
         >
@@ -137,8 +141,8 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: appTheme[currentUser.theme].background_1_2,
-            backgroundColor: appTheme[currentUser.theme].text_3,
+            color: t.background_1_2,
+            backgroundColor: t.text_3,
           }}
           onClick={handleContinue}
         >

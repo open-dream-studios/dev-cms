@@ -10,7 +10,7 @@ import {
 import { useModal1Store } from "../../store/useModalStore";
 import appDetails from "../../util/appDetails.json";
 import { removeWhiteSpace } from "../../util/functions/Data";
-import { usePageLayoutRefStore } from "@/store/usePageLayoutStore"; 
+import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import "./Navbar.css";
 import { IoMdSettings } from "react-icons/io";
 import Settings from "../Settings/Settings";
@@ -27,7 +27,7 @@ const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
   const { screenClick } = useRouting();
-  const { updatingLock } = useUiStore()
+  const { updatingLock } = useUiStore();
   const { projectsData } = useContextQueries();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -37,6 +37,9 @@ const Navbar = () => {
   );
   const leftBarRef = useLeftBarRefStore((state) => state.leftBarRef);
   const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
@@ -124,9 +127,9 @@ const Navbar = () => {
           "--nav-height": `${appDetails.nav_height}px`,
           "--left-bar-width": removeWhiteSpace(appDetails.left_bar_width),
           "--nav-ml": appDetails.left_bar_width,
-          backgroundColor: appTheme[currentUser.theme].background_1,
+          backgroundColor: t.background_1,
           borderBottom: `0.5px solid ${
-            appTheme[currentUser.theme].background_2
+            t.background_2
           }`,
         } as React.CSSProperties
       }
@@ -145,7 +148,7 @@ const Navbar = () => {
             className={`w-[30px] dim cursor-pointer ${
               leftBarOpen && "lg:hidden"
             } ${!currentProject && "hidden"} hover:brightness-75 mx-[3px]`}
-            color={appTheme[currentUser.theme].text_1}
+            color={t.text_1}
             fontSize={29}
           />
           <div
@@ -171,7 +174,7 @@ const Navbar = () => {
             <div
               className="hidden [@media(min-width:450px)]:block select-none text-[23px] font-[700] ml-[10px]"
               style={{
-                color: appTheme[currentUser.theme].text_1,
+                color: t.text_1,
               }}
             >
               <p className="hidden sm:block">
@@ -207,13 +210,13 @@ const Navbar = () => {
               onClick={handleEditModulesClick}
               className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_2,
+                backgroundColor: t.background_2,
               }}
             >
               <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
                 <LuBlocks
                   size={20}
-                  color={appTheme[currentUser.theme].text_3}
+                  color={t.text_3}
                   className="opacity-[60%]"
                 />
               </div>
@@ -226,13 +229,13 @@ const Navbar = () => {
                 onClick={handleClearProject}
                 className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
                 style={{
-                  backgroundColor: appTheme[currentUser.theme].background_2,
+                  backgroundColor: t.background_2,
                 }}
               >
                 <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
                   <AiFillAppstore
                     size={24}
-                    color={appTheme[currentUser.theme].text_3}
+                    color={t.text_3}
                     className="opacity-[60%]"
                   />
                 </div>
@@ -244,19 +247,19 @@ const Navbar = () => {
               onClick={handleSettingsClick}
               className="opacity-[92%] dim cursor-pointer flex flex-row w-fit max-w-[250px] px-[15px] h-[42px] hover:brightness-75 rounded-[4.5px]"
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_2,
+                backgroundColor: t.background_2,
               }}
             >
               <div className="flex items-center justify-center gap-[8px] mt-[-0.2px] flex-row h-[100%] overflow-hidden pr-[4px]">
                 <IoMdSettings
                   size={19}
-                  color={appTheme[currentUser.theme].text_1}
+                  color={t.text_1}
                   className="opacity-[60%]"
                 />
                 <div
                   className="truncate text-[14.5px] leading-[17px] font-[500] opacity-[87%]"
                   style={{
-                    color: appTheme[currentUser.theme].text_1,
+                    color: t.text_1,
                   }}
                 >
                   Settings
@@ -269,7 +272,7 @@ const Navbar = () => {
             onClick={handleProfileClick}
             className="dim cursor-pointer flex flex-row w-fit max-w-[250px] pr-[10px] h-[42px] hover:brightness-75 rounded-[4.5px]"
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_2,
+              backgroundColor: t.background_2,
             }}
           >
             <div className="ml-[3px] mr-[5px] aspect-[1/1] h-[100%] p-[6px]">
@@ -279,7 +282,7 @@ const Navbar = () => {
               <div
                 className="truncate text-[14px] leading-[17px] font-[500]"
                 style={{
-                  color: appTheme[currentUser.theme].text_1,
+                  color: t.text_1,
                 }}
               >
                 {currentUser.first_name} {currentUser.last_name}
@@ -287,7 +290,7 @@ const Navbar = () => {
               <div
                 className="truncate text-[12px] leading-[15px] font-[200]"
                 style={{
-                  color: appTheme[currentUser.theme].text_2,
+                  color: t.text_2,
                 }}
               >
                 {currentUser.email}

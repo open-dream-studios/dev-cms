@@ -36,7 +36,9 @@ export const useFormInstanceStore = create<FormInstanceStore>((set, get) => ({
       .filter(([key, form]) => {
         if (!form) return false;
         const matchesPrefix = prefix ? key.startsWith(prefix) : true;
-        return matchesPrefix && form.formState.isDirty;
+        const dirtyFields = form.formState?.dirtyFields ?? {};
+        const isDirtyNow = Object.keys(dirtyFields).length > 0;
+        return matchesPrefix && isDirtyNow;
       })
       .map(([key, form]) => ({ key, data: form!.getValues() }));
   },

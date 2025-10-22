@@ -46,12 +46,13 @@ export function useCustomerFormSubmit() {
       notes: data.notes ?? null,
     };
 
-    const newCustomerId = await upsertCustomer(newCustomer);
+    const { id, customer_id } = await upsertCustomer(newCustomer);
 
-    if (newCustomerId) {
+    if (customer_id && id) {
       setCurrentCustomerData({
         ...newCustomer,
-        customer_id: newCustomerId,
+        id,
+        customer_id,
       });
       setAddingCustomer(false);
     }

@@ -12,9 +12,7 @@ export type Screen =
   | "settings"
   | "customers"
   | "customer-products"
-  | "add-customer-product"
-  | "edit-customer-product"
-  | "customer-products-table"
+  | "edit-customer-product" 
   | "tasks"
   | "employees";
 

@@ -13,9 +13,9 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { getNextOrdinal } from "@/util/functions/Data";
 import { toast } from "react-toastify";
-import { useAutoSave } from "../useAutoSave";
 import { MediaLink } from "@/types/media";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/formInstanceStore"; 
+import { useAutoSaveStore } from "@/store/useAutoSaveStore";
 
 export function useProductForm(product?: Product | null) {
   return useForm<ProductFormData>({
@@ -30,14 +30,18 @@ export function useProductFormSubmit() {
     upsertProducts,
     productsData,
     upsertMediaLinks,
-    refetchMediaLinks,
     deleteMediaLinks,
     mediaLinks,
   } = useContextQueries();
   const { setAddingProduct, setUpdatingLock, addingProduct } = useUiStore();
-  const { currentProductImages, currentProjectId, originalProductImages } =
-    useCurrentDataStore();
+  const {
+    localProductsDataRef,
+    currentProductImages,
+    currentProjectId,
+    originalProductImages,
+  } = useCurrentDataStore();
   const { getDirtyForms, resetForms } = useFormInstanceStore();
+  const { cancelTimer } = useAutoSaveStore();
 
   const imagesChanged =
     JSON.stringify(currentProductImages) !==
@@ -68,7 +72,7 @@ export function useProductFormSubmit() {
     const upsertProduct: Product = {
       serial_number: data.serial_number,
       project_idx: currentProjectId,
-      name: data.name,
+      name: data.name ?? null,
       customer_id: data.customer_id ?? null,
       make: data.make ?? null,
       model: data.model ?? null,
@@ -80,7 +84,10 @@ export function useProductFormSubmit() {
       note: data.note ?? null,
     };
 
+    console.log(upsertProduct);
+
     const productIds = await upsertProducts([upsertProduct]);
+
     resetForms("product");
     setAddingProduct(false);
 
@@ -103,7 +110,6 @@ export function useProductFormSubmit() {
         await deleteMediaLinks(removedIds);
       }
 
-      // Update links
       const updatedImages = currentProductImages.map((img) => ({
         ...img,
         entity_id: productIds[0],
@@ -112,17 +118,43 @@ export function useProductFormSubmit() {
     }
   };
 
+  const getProductsToUpdate = (): Product[] => {
+    const dirtyForms = getDirtyForms("product-");
+    const localProducts = localProductsDataRef.current;
+    const originalOrdinals = new Map(
+      productsData.map((p) => [p.serial_number, p.ordinal])
+    );
+
+    const reorderedProducts = localProducts.filter((p) => {
+      const originalOrdinal = originalOrdinals.get(p.serial_number);
+      return originalOrdinal !== undefined && originalOrdinal !== p.ordinal;
+    });
+    const dirtyProducts = dirtyForms.map(({ data }) => {
+      const product = localProducts.find(
+        (p) => p.serial_number === data.serial_number
+      );
+      return { ...product, ...data } as Product;
+    });
+
+    const merged = [...reorderedProducts, ...dirtyProducts];
+    const deduped = Object.values(
+      merged.reduce((acc, product) => {
+        const key = product.serial_number as string;
+        acc[key] = product;
+        return acc;
+      }, {} as Record<string | number, Product>)
+    );
+    return deduped;
+  };
+
   const saveProducts = async () => {
-    const dirtyProducts = getDirtyForms("product-");
-    console.log("saveProducts", dirtyProducts)
-    if (dirtyProducts.length === 0) return;
-    const updatedProducts = dirtyProducts.map(({ data }) => ({
-      ...data,
-    }));
+    const productsToUpdate = getProductsToUpdate();
+    if (productsToUpdate.length === 0) return;
+    console.log(productsToUpdate);
     cancelTimer();
     try {
       setUpdatingLock(true);
-      await upsertProducts(updatedProducts);
+      await upsertProducts(productsToUpdate);
       resetForms("product-");
     } catch (err) {
       toast.error("Failed to update products");
@@ -130,12 +162,6 @@ export function useProductFormSubmit() {
       setUpdatingLock(false);
     }
   };
-
-  const { resetTimer, cancelTimer } = useAutoSave({
-    onSave: async () => {
-      await saveProducts();
-    },
-  });
 
   return { onProductFormSubmit, saveProducts };
 }

@@ -83,6 +83,9 @@ const LeftBar = () => {
   const windowLargeRef = useRef<boolean>(window.innerWidth > 1024);
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
 
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+  
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
   }, [projectsData, currentProjectId]);
@@ -211,7 +214,7 @@ const LeftBar = () => {
       <div className="w-[100%] flex flex-row-reverse justify-end items-center mb-[11px]">
         {withClose && (
           <LuPanelLeftClose
-            style={{ color: appTheme[currentUser.theme].text_4 }}
+            style={{ color: t.text_4 }}
             className="hidden lg:block dim cursor-pointer brightness-75 hover:brightness-50 w-[24px] h-[24px] mr-[-8px] ml-[10px]"
             onClick={closeLeftBar}
           />
@@ -239,7 +242,7 @@ const LeftBar = () => {
       icon: (
         <HiServer
           size={15}
-          color={appTheme[currentUser.theme].text_3}
+          color={t.text_3}
           className="w-[17px] h-[17px] brightness-75"
         />
       ),
@@ -299,9 +302,7 @@ const LeftBar = () => {
       title: "Inventory",
       icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
       pages: [
-        "customer-products" as Screen,
-        "customer-products-table" as Screen,
-        "add-customer-product" as Screen,
+        "customer-products" as Screen, 
         "edit-customer-product" as Screen,
       ],
       onClick: () => handleTabClick("customer-products"),
@@ -366,9 +367,9 @@ const LeftBar = () => {
         <div
           ref={leftBarRef}
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1,
+            backgroundColor: t.background_1,
             borderRight: `0.5px solid ${
-              appTheme[currentUser.theme].background_2
+              t.background_2
             }`,
           }}
           className={`z-[951] pointer-events-auto ${
@@ -378,7 +379,7 @@ const LeftBar = () => {
         >
           <div
             style={{
-              color: appTheme[currentUser.theme].text_1,
+              color: t.text_1,
             }}
             className="relative w-[100%] h-[100%] px-[20px] pt-[8.8px] items-start flex flex-col"
           >
@@ -399,7 +400,7 @@ const LeftBar = () => {
               <p
                 className="select-none text-[23px] font-[700] ml-[8px] mt-[1px]"
                 style={{
-                  color: appTheme[currentUser.theme].text_1,
+                  color: t.text_1,
                 }}
               >
                 {currentProject ? currentProject.short_name : "CMS"}
@@ -421,8 +422,8 @@ const LeftBar = () => {
             className="dim select-none cursor-pointer w-[80%] hover:brightness-75 h-[40px] absolute bottom-[20px] flex items-center justify-center font-[600]"
             style={{
               borderRadius: "6px",
-              backgroundColor: appTheme[currentUser.theme].background_2,
-              color: appTheme[currentUser.theme].text_2,
+              backgroundColor: t.background_2,
+              color: t.text_2,
             }}
           >
             Sign out

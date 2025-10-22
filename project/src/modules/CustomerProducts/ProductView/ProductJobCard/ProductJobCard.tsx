@@ -13,13 +13,7 @@ import {
 import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
-import type {
-  Job,
-  JobDefinition,
-  Task,
-  JobStatusOption,
-  TaskStatusOption,
-} from "@/types/jobs";
+import type { Job, JobDefinition, Task } from "@/types/jobs";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus, FaWrench } from "react-icons/fa6";
 import ScheduleTimeline from "@/modules/components/Calendar/Calendar";
@@ -74,8 +68,10 @@ const TaskCard: React.FC<{
   } = useContextQueries();
   const { screenClick } = useRouting();
   const { setCurrentEmployeeData } = useCurrentDataStore();
+
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
+
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -141,7 +137,6 @@ const TaskCard: React.FC<{
   const [editAssignment, setEditAssignment] = useState<boolean>(false);
 
   const handleAddAssignmentClick = () => {
-    if (!productJob) return;
     setModal1({
       ...modal1,
       open: !modal1.open,

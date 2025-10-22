@@ -12,6 +12,10 @@ export type Control = "modules" | "pages" | "sections";
 
 const AdminController = () => {
   const { currentUser } = useContext(AuthContext);
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+  
   if (!currentUser) return null;
 
   const [controlActive, setControlActive] = useState<Control>("modules");
@@ -24,7 +28,7 @@ const AdminController = () => {
         </h1>
         <div
           style={{
-            backgroundColor: appTheme[currentUser.theme].header_1_1,
+            backgroundColor: t.header_1_1,
           }}
           className="flex w-[290px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
         >
@@ -33,7 +37,7 @@ const AdminController = () => {
             style={{
               backgroundColor:
                 controlActive === "modules"
-                  ? appTheme[currentUser.theme].header_1_2
+                  ? t.header_1_2
                   : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -45,7 +49,7 @@ const AdminController = () => {
             style={{
               backgroundColor:
                 controlActive === "pages"
-                  ? appTheme[currentUser.theme].header_1_2
+                  ? t.header_1_2
                   : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -57,7 +61,7 @@ const AdminController = () => {
             style={{
               backgroundColor:
                 controlActive === "sections"
-                  ? appTheme[currentUser.theme].header_1_2
+                  ? t.header_1_2
                   : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"

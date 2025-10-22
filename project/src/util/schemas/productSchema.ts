@@ -10,7 +10,7 @@ export const ProductSchema = z.object({
     .refine((val) => /^[A-Z0-9]+$/.test(val), {
       message: "Only uppercase letters and numbers allowed",
     }),
-  name: z.string().min(1, "Name is required"),
+  name: z.string().optional().nullable(),
   customer_id: z.number().optional().nullable(),
   make: z.string().optional().nullable(),
   model: z.string().optional().nullable(),

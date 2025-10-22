@@ -4,11 +4,9 @@ import { create } from "zustand";
 import { usePathname, useRouter } from "next/navigation";
 import { useUiStore } from "@/store/useUIStore";
 import { Screen } from "@/types/screens";
-import { useModal2Store } from "@/store/useModalStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useCustomerFormSubmit } from "./forms/useCustomerForm";
 import { useEmployeeFormSubmit } from "./forms/useEmployeeForm";
-import Modal2Continue from "@/modals/Modal2Continue";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useProductFormSubmit } from "./forms/useProductForm";
 
@@ -44,19 +42,25 @@ export function useRouting() {
   const pathname = usePathname();
   const router = useRouter();
   const { history, setHistory, push } = useScreenHistoryStore();
-  const { screen, setScreen, setAddingCustomer, setEditingProducts } = useUiStore();
-  const { setCurrentSectionData, setCurrentPageData, setSelectedProducts } = useCurrentDataStore();
-
+  const { screen, setScreen, setAddingCustomer, setEditingProducts } =
+    useUiStore();
+  const {
+    setCurrentSectionData,
+    setCurrentPageData,
+    setSelectedProducts,
+    setCurrentProductData,
+    setCurrentCustomerData,
+    setCurrentEmployeeData,
+  } = useCurrentDataStore();
 
   const { getForm } = useFormInstanceStore();
+  const productForm = getForm("product");
   const customerForm = getForm("customer");
   const employeeForm = getForm("employee");
+  const { onProductFormSubmit } = useProductFormSubmit();
   const { onCustomerFormSubmit } = useCustomerFormSubmit();
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
   const { saveProducts } = useProductFormSubmit();
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const goToPrev = async () => {
     if (history.length >= 2) {
@@ -66,12 +70,7 @@ export function useRouting() {
   };
 
   const screenRoute = (newScreen: Screen) => {
-    if (
-      newScreen === "products" ||
-      newScreen === "products-table" ||
-      newScreen === "customer-products-table" ||
-      newScreen === "customer-products"
-    ) {
+    if (newScreen === "customer-products") {
       return "/products";
     }
     return "/";
@@ -87,8 +86,7 @@ export function useRouting() {
       if (
         dividedPath.length === 1 &&
         dividedPath[0] === "products" &&
-        screen !== "customer-products" &&
-        screen !== "customer-products-table"
+        screen !== "customer-products"
       ) {
         adjustScreen = "customer-products";
       }
@@ -108,29 +106,28 @@ export function useRouting() {
     setEditingProducts(false);
   }, [pathname]);
 
-  const promptSave = async (onNoSave: () => void, onContinue: () => void) => {
-    setModal2({
-      ...modal2,
-      open: !modal2.open,
-      showClose: false,
-      offClickClose: true,
-      width: "w-[300px]",
-      maxWidth: "max-w-[400px]",
-      aspectRatio: "aspect-[5/2]",
-      borderRadius: "rounded-[12px] md:rounded-[15px]",
-      content: (
-        <Modal2Continue
-          text={`Save products before continuing?`}
-          onContinue={onContinue}
-          threeOptions={true}
-          onNoSave={onNoSave}
-        />
-      ),
-    });
+  const screenClickAction = async (
+    newScreen: Screen,
+    newPage: string | null
+  ) => {
+    if (!newScreen) return;
+    updateHistory(newScreen, newPage);
+    if (newPage === "/products") {
+      setCurrentProductData(null);
+    }
+    setCurrentSectionData(null);
+    setCurrentPageData(null);
+    setAddingCustomer(false);
+
+    if (!newPage) {
+      router.push(screenRoute(newScreen));
+    } else if (newPage !== pathname) {
+      router.push(newPage);
+    }
+    setScreen(newScreen);
   };
 
-  const screenClick = async (newScreen: Screen, newPage: string | null) => {
-    if (!newScreen) return;
+  const updateHistory = (newScreen: Screen, newPage: string | null) => {
     if (history.length === 0) {
       history.push({ screen: newScreen, page: newPage });
     } else if (
@@ -142,61 +139,41 @@ export function useRouting() {
       setHistory(history.slice(-1));
       history.push({ screen: newScreen, page: newPage });
     }
+  };
 
-    setCurrentSectionData(null);
-    setCurrentPageData(null);
-    setAddingCustomer(false);
+  const screenClick = async (newScreen: Screen, newPage: string | null) => {
+    if (!newScreen) return;
 
-    if (customerForm && customerForm.formState.isDirty) {
+    const isProductDirty =
+      productForm &&
+      Object.keys(productForm.formState.dirtyFields ?? {}).length > 0;
+    const isCustomerDirty =
+      customerForm &&
+      Object.keys(customerForm.formState.dirtyFields ?? {}).length > 0;
+    const isEmployeeDirty =
+      employeeForm &&
+      Object.keys(employeeForm.formState.dirtyFields ?? {}).length > 0;
+
+    if (isProductDirty) {
+      await productForm.handleSubmit(onProductFormSubmit)();
+    }
+    if (isCustomerDirty) {
       await customerForm.handleSubmit(onCustomerFormSubmit)();
     }
-
-    if (employeeForm && employeeForm.formState.isDirty) {
+    if (isEmployeeDirty) {
       await employeeForm.handleSubmit(onEmployeeFormSubmit)();
     }
 
-    // const onContinue = async () => {
-    //   await saveProducts();
-    //   await onComplete();
-    // };
-
-    // const onComplete = async () => {
-    //   if (!newPage) {
-    //     router.push(screenRoute(newScreen));
-    //   } else if (newPage !== pathname) {
-    //     router.push(newPage);
-    //   }
-    //   setScreen(newScreen);
-    // };
-
     await saveProducts();
-    if (!newPage) {
-      router.push(screenRoute(newScreen));
-    } else if (newPage !== pathname) {
-      router.push(newPage);
-    }
-    setScreen(newScreen);
-
-    // if (checkForUnsavedChanges()) {
-    //   if (
-    //     screen === "add-customer-product" ||
-    //     screen === "edit-customer-product"
-    //   ) {
-    //     if (screen === "add-customer-product") {
-    //       await promptSave(onComplete, onContinue);
-    //     } else {
-    //       await onContinue();
-    //     }
-    //   } else if (screen === "customer-products-table") {
-    //     await saveProducts();
-    //     await onComplete();
-    //   } else {
-    //     await onComplete();
-    //   }
-    // } else {
-    //   await onComplete();
-    // }
+    await screenClickAction(newScreen, newPage);
   };
 
-  return { goToPrev, push, history, screenClick, screenRoute };
+  return {
+    goToPrev,
+    push,
+    history,
+    screenClick,
+    screenClickAction,
+    screenRoute,
+  };
 }

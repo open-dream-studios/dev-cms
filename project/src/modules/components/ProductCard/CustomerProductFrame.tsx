@@ -31,6 +31,7 @@ import {
 } from "../../CustomerProducts/ProductView/ProductJobCard/Badges"; 
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 // ---------- TaskCard ----------
 const MiniTaskCard: React.FC<{
@@ -130,6 +131,7 @@ const CustomerProductFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
+  const { setCurrentProductData } = useCurrentDataStore()
   const {
     tasks,
     upsertJob,
@@ -149,6 +151,7 @@ const CustomerProductFrame = ({
       "edit-customer-product",
       `/products/${product.serial_number}`
     );
+    setCurrentProductData(product)
   };
 
   const productCustomer = useMemo(() => {

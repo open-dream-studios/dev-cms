@@ -14,7 +14,7 @@ type SettingsProps = {
   initialPage: SettingsPages | null;
 };
 
-type SettingsPages = "Site" | "Users" | "Account" | "Modules" | "Project" 
+type SettingsPages = "Site" | "Users" | "Account" | "Modules" | "Project";
 
 const Settings = ({ initialPage }: SettingsProps) => {
   const { currentUser } = useContext(AuthContext);
@@ -23,6 +23,9 @@ const Settings = ({ initialPage }: SettingsProps) => {
   const [selectedPage, setSelectedPage] = useState<SettingsPages>(
     initialPage === null ? "Site" : initialPage
   );
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
 
   if (!currentUser) return null;
 
@@ -42,7 +45,7 @@ const Settings = ({ initialPage }: SettingsProps) => {
       <div className=" hidden sm:block pl-[30px] select-none w-[25%] min-w-[200px] h-full py-[30px]">
         <div
           className="font-[600] text-[25px] leading-[18px] h-[35px]"
-          style={{ color: appTheme[currentUser.theme].text_1 }}
+          style={{ color: t.text_1 }}
         >
           Settings
         </div>
@@ -57,8 +60,8 @@ const Settings = ({ initialPage }: SettingsProps) => {
                   className="cursor-pointer w-full h-[40px] rounded-[10px] transition-colors duration-200 group"
                   style={{
                     backgroundColor: isSelected
-                      ? appTheme[currentUser.theme].background_2_selected
-                      : appTheme[currentUser.theme].background_2_dim,
+                      ? t.background_2_selected
+                      : t.background_2_dim,
                   }}
                 >
                   <div
@@ -67,7 +70,7 @@ const Settings = ({ initialPage }: SettingsProps) => {
                       {
                         transition: "background-color 0.2s ease-in-out",
                         "--hover-bg":
-                          appTheme[currentUser.theme].background_2_2,
+                          t.background_2_2,
                       } as React.CSSProperties
                     }
                   >
@@ -89,8 +92,8 @@ const Settings = ({ initialPage }: SettingsProps) => {
                     className="cursor-pointer w-full h-[40px] rounded-[10px] transition-colors duration-200 group"
                     style={{
                       backgroundColor: isSelected
-                        ? appTheme[currentUser.theme].background_2_selected
-                        : appTheme[currentUser.theme].background_2_dim,
+                        ? t.background_2_selected
+                        : t.background_2_dim,
                     }}
                   >
                     <div
@@ -99,7 +102,7 @@ const Settings = ({ initialPage }: SettingsProps) => {
                         {
                           transition: "background-color 0.2s ease-in-out",
                           "--hover-bg":
-                            appTheme[currentUser.theme].background_2_2,
+                            t.background_2_2,
                         } as React.CSSProperties
                       }
                     >

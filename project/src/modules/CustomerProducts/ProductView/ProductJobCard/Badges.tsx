@@ -11,6 +11,7 @@ import "../../../components/Calendar/Calendar.css";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { UseFormReturn, Path, useWatch } from "react-hook-form";
 import { Check, Dot } from "lucide-react";
+import { useUiStore } from "@/store/useUIStore";
 
 // ---------- StatusBadge ----------
 export const StatusBadge: React.FC<{
@@ -44,7 +45,7 @@ export const StatusBadge: React.FC<{
       className={`${
         oneSize
           ? "pl-[12px] pr-[14px] gap-2"
-          : "pl-[7%] pr-[calc(20px+0.3vw)] gap-[5%]"
+          : "pl-[calc(0.3vw+7px)] pr-[calc(0.2vw+15px)] gap-[5%]"
       } cursor-pointer hover:brightness-75 dim inline-flex items-center rounded-full font-semibold`}
       style={{ background: `${info.color}20`, color: info.color }}
     >
@@ -200,6 +201,7 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
   callSubmitForm: () => void;
   oneSize: boolean;
 }) => {
+  const { screen } = useUiStore();
   const { currentUser } = React.useContext(AuthContext);
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
@@ -216,8 +218,8 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
     <div
       onClick={(e) => e.stopPropagation()}
       className={`${
-        oneSize ? "pl-[12px] pr-[14px] gap-2" : "pr-[6%] pl-[7%] gap-[5%]"
-      } cursor-pointer hover:brightness-75 dim inline-flex items-center rounded-full font-semibold`}
+        oneSize ? "hover:brightness-90 pr-[14px] gap-2" : "pl-[calc(0.3vw+7px)] pr-[calc(0.2vw+15px)] gap-[5%] hover:brightness-[83%]"
+      } cursor-pointer dim inline-flex items-center rounded-full font-semibold`}
       style={{
         background:
           status === "complete" ||
@@ -254,9 +256,9 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
               ? "brightness(140%)"
               : "none",
         }}
-        className={`${
-          oneSize ? "py-2 text-sm" : "py-[6%] text-[calc(10px+0.2vw)]"
-        } brightness-[140%] pl-[24px] pr-[5px] rounded-full ml-[-26px] cursor-pointer outline-none border-none`}
+        className={`w-[100%] ${
+          oneSize ? "pl-[14px] min-w-[95px] py-2 text-sm" : "py-[6%] text-[calc(10px+0.2vw)]"
+        } brightness-[140%] pr-[5px] rounded-full cursor-pointer outline-none border-none`}
       >
         <option value="low">Low</option>
         <option value="medium">Medium</option>

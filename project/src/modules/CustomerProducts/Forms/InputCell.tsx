@@ -40,7 +40,9 @@ const InputCell = <T extends FieldValues>({
   disabled?: boolean;
   className?: string;
   rows?: number;
-  onInput?: React.InputHTMLAttributes<HTMLInputElement | HTMLSelectElement>["onInput"];
+  onInput?: React.InputHTMLAttributes<
+    HTMLInputElement | HTMLSelectElement
+  >["onInput"];
   options?: string[];
   selected?: Date | undefined;
   onChange?: (date: Date | null) => void;
@@ -48,6 +50,10 @@ const InputCell = <T extends FieldValues>({
   onType?: (newValue: string) => void;
 }) => {
   const { currentUser } = useContext(AuthContext);
+
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   if (!currentUser) return null;
 
   return (
@@ -56,7 +62,7 @@ const InputCell = <T extends FieldValues>({
       style={{
         position: "relative",
         ["--custom-input-text-color" as any]:
-          appTheme[currentUser.theme].text_1,
+          t.text_1,
       }}
     >
       {inputType === "input" ? (
@@ -72,7 +78,7 @@ const InputCell = <T extends FieldValues>({
           } pl-[7px] pr-[6px] py-[4px] text-[12px]`}
           style={{
             borderRight: `0.5px solid ${
-              appTheme[currentUser.theme].background_3
+              t.background_3
             }`,
           }}
         />
@@ -89,7 +95,7 @@ const InputCell = <T extends FieldValues>({
           }}
           style={{
             borderRight: `0.5px solid ${
-              appTheme[currentUser.theme].background_3
+              t.background_3
             }`,
           }}
         />
@@ -98,7 +104,7 @@ const InputCell = <T extends FieldValues>({
           {...register(name)}
           style={{
             borderRight: `0.5px solid ${
-              appTheme[currentUser.theme].background_3
+              t.background_3
             }`,
           }}
           className="custom-select input w-[100%] h-[100%] px-[6px] py-[4px] text-[12px]"
@@ -115,7 +121,7 @@ const InputCell = <T extends FieldValues>({
         <div
           style={{
             borderRight: `0.5px solid ${
-              appTheme[currentUser.theme].background_3
+              t.background_3
             }`,
           }}
         >
@@ -132,7 +138,7 @@ const InputCell = <T extends FieldValues>({
 
       {error && (
         <div
-          style={{ backgroundColor: appTheme[currentUser.theme].background_3 }}
+          style={{ backgroundColor: t.background_3 }}
           className="z-[800] flex items-center text-left px-[10px] absolute left-[calc(100%-7px)] top-[5px] rounded-[10px] min-h-[50px] whitespace-nowrap w-auto"
         >
           <p className="text-red-500 text-[13px] whitespace-nowrap">{error}</p>

@@ -23,7 +23,7 @@ import {
   Plus,
   ChevronRight,
   ChevronDown,
-} from "lucide-react"; 
+} from "lucide-react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { buildFolderTree, MediaFolderNode } from "@/util/functions/Tree";
 import FolderItem from "./FolderItem";
@@ -67,6 +67,8 @@ export default function MediaFoldersSidebar({
   openFolders,
   setOpenFolders,
 }: MediaFoldersSidebarProps) {
+  const queryClient = useQueryClient();
+  const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
   const {
     mediaFolders,
@@ -75,8 +77,9 @@ export default function MediaFoldersSidebar({
     deleteMediaFolder,
   } = useContextQueries();
 
-  const queryClient = useQueryClient();
-  const { currentUser } = useContext(AuthContext)
+  const theme = currentUser?.theme ?? "dark";
+  const t = appTheme[theme];
+
   const sensors = useSensors(useSensor(PointerSensor));
   const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
   useEffect(() => {
@@ -258,13 +261,15 @@ export default function MediaFoldersSidebar({
 
   const [activeId, setActiveId] = useState<number | null>(null);
 
-  if (!currentUser) return null
+  if (!currentUser) return null;
 
   return (
-    <div className="w-60 h-[100%] flex flex-col px-[15px]" style={{
-      borderRight: `0.5px solid ${appTheme[currentUser.theme].background_2
-        }`
-    }}>
+    <div
+      className="w-60 h-[100%] flex flex-col px-[15px]"
+      style={{
+        borderRight: `0.5px solid ${t.background_2}`,
+      }}
+    >
       {contextMenu && (
         <div
           className="fixed z-50 bg-white border shadow-lg rounded-md py-1 w-40 animate-fade-in"
@@ -291,23 +296,23 @@ export default function MediaFoldersSidebar({
 
       <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
         <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
-
-          <p onClick={() => setActiveFolder(null)} className="cursor-pointer hover:opacity-[75%] transition-all duration-300 ease-in-out w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
+          <p
+            onClick={() => setActiveFolder(null)}
+            className="cursor-pointer hover:opacity-[75%] transition-all duration-300 ease-in-out w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]"
+          >
             Media
           </p>
-
         </div>
 
         <div
           onClick={handleAddFolder}
           className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
           style={{
-            backgroundColor: appTheme[currentUser.theme].background_1_2,
+            backgroundColor: t.background_1_2,
           }}
         >
           <FaPlus size={12} />
         </div>
-
       </div>
 
       <Divider />
@@ -348,19 +353,23 @@ export default function MediaFoldersSidebar({
           <DragOverlay>
             {activeId
               ? (() => {
-                const activeNode = findNode(folderTree, activeId);
-                if (!activeNode) return null;
+                  const activeNode = findNode(folderTree, activeId);
+                  if (!activeNode) return null;
 
-                return (
-                  <div 
-                    style={{backgroundColor: appTheme[currentUser.theme].background_2}}
-                    className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]">
-                    <GripVertical size={14} className="text-gray-400" />
-                    {renderFolderIcons(activeNode)}
-                    <span className="truncate">{activeNode.name}</span>
-                  </div>
-                );
-              })()
+                  return (
+                    <div
+                      style={{
+                        backgroundColor:
+                          t.background_2,
+                      }}
+                      className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]"
+                    >
+                      <GripVertical size={14} className="text-gray-400" />
+                      {renderFolderIcons(activeNode)}
+                      <span className="truncate">{activeNode.name}</span>
+                    </div>
+                  );
+                })()
               : null}
           </DragOverlay>
         </DndContext>

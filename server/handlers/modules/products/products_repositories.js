@@ -63,8 +63,7 @@ export const upsertProductsFunction = async (project_idx, products) => {
     `;
 
     const values = products.flatMap((p, i) => [
-      // Generate serial if missing or invalid
-      !p.serial_number || p.serial_number.length < 14
+      !p.serial_number
         ? generateSerial(p.length, p.width, p.make, existingRows.length + i)
         : p.serial_number,
       project_idx,

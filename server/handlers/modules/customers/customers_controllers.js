@@ -20,11 +20,11 @@ export const upsertCustomer = async (req, res) => {
   if (!project_idx) {
     return res.status(400).json({ success: false, message: "Missing project_idx" });
   }
-  const { customer_id, success } = await upsertCustomerFunction(
+  const { customer_id, id, success } = await upsertCustomerFunction(
     project_idx,
     req.body
   );
-  return res.status(success ? 200 : 500).json({ success, customer_id });
+  return res.status(success ? 200 : 500).json({ success, customer_id, id });
 };
 
 export const deleteCustomer = async (req, res) => {

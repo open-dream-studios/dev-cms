@@ -23,7 +23,9 @@ interface CurrentDataState {
   setCurrentProductImages: (currentProductImages: MediaLink[]) => void;
 
   localProductsData: Product[];
-  setLocalProductsData: (val: Product[]) => void;
+  localProductsDataRef: { current: Product[] }; 
+  setLocalProductsData: (products: Product[]) => void;  
+
 
   selectedProducts: string[];
   setSelectedProducts: (selectedProducts: string[]) => void;
@@ -47,6 +49,8 @@ interface CurrentDataState {
   productFilters: DataFilters;
   setProductFilters: (productFilters: DataFilters) => void;
 }
+
+const localProductsDataRef = { current: [] as Product[] };
 
 export const useCurrentDataStore = create<CurrentDataState>((set) => ({
   currentProject: null,
@@ -79,10 +83,11 @@ export const useCurrentDataStore = create<CurrentDataState>((set) => ({
     }),
 
   localProductsData: [],
-  setLocalProductsData: (products: Product[]) =>
-    set({
-      localProductsData: products,
-    }),
+  localProductsDataRef,
+  setLocalProductsData: (products: Product[]) => {
+    localProductsDataRef.current = products;  
+    set({ localProductsData: products }); 
+  },
 
   selectedProducts: [],
   setSelectedProducts: (products: string[]) =>
