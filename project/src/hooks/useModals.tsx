@@ -1,9 +1,9 @@
-// project/src/hooks/useModules.tsx
+// project/src/hooks/useModals.tsx
 "use client";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 
-export function useModules() {
+export function useModals() {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 

@@ -22,6 +22,7 @@ import AdminController from "@/screens/AdminHome/AdminControllers/AdminControlle
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
+import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -29,6 +30,7 @@ const Navbar = () => {
   const { screenClick } = useRouting();
   const { updatingLock } = useUiStore();
   const { projectsData } = useContextQueries();
+  const { saveProducts } = useProductFormSubmit()
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -95,7 +97,8 @@ const Navbar = () => {
     });
   };
 
-  const handleClearProject = () => {
+  const handleClearProject = async () => {
+    await saveProducts();
     setModal1({ ...modal1, open: false });
     setCurrentProjectData(null);
   };

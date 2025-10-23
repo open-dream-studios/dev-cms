@@ -1,6 +1,7 @@
 // project/src/types/products.ts
 export type Product = {
   id?: number;
+  product_id: string | null;
   serial_number: string | null;
   project_idx: number;
   customer_id: number | null;

@@ -14,7 +14,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { getNextOrdinal } from "@/util/functions/Data";
 import { toast } from "react-toastify";
 import { MediaLink } from "@/types/media";
-import { useFormInstanceStore } from "@/store/formInstanceStore"; 
+import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useAutoSaveStore } from "@/store/useAutoSaveStore";
 
 export function useProductForm(product?: Product | null) {
@@ -32,6 +32,7 @@ export function useProductFormSubmit() {
     upsertMediaLinks,
     deleteMediaLinks,
     mediaLinks,
+    refetchProductsData
   } = useContextQueries();
   const { setAddingProduct, setUpdatingLock, addingProduct } = useUiStore();
   const {
@@ -71,6 +72,7 @@ export function useProductFormSubmit() {
 
     const upsertProduct: Product = {
       serial_number: data.serial_number,
+      product_id: existing?.product_id ?? null,
       project_idx: currentProjectId,
       name: data.name ?? null,
       customer_id: data.customer_id ?? null,
@@ -150,12 +152,13 @@ export function useProductFormSubmit() {
   const saveProducts = async () => {
     const productsToUpdate = getProductsToUpdate();
     if (productsToUpdate.length === 0) return;
+    setUpdatingLock(true);
     console.log(productsToUpdate);
     cancelTimer();
     try {
-      setUpdatingLock(true);
       await upsertProducts(productsToUpdate);
       resetForms("product-");
+      await refetchProductsData();
     } catch (err) {
       toast.error("Failed to update products");
     } finally {

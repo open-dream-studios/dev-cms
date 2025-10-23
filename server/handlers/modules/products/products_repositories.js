@@ -37,16 +37,57 @@ export const upsertProductsFunction = async (project_idx, products) => {
         ? Math.max(...existingRows.map((r) => r.ordinal ?? 0)) + 1
         : 0;
 
-    // Step 2: Build insert/upsert query
+    // Step 2: Prepare values & product_ids
+    const product_ids = [];
+
+    const values = products.flatMap((p, i) => {
+      // Generate or reuse product_id
+      const finalProductId =
+        p.product_id && p.product_id.trim() !== ""
+          ? p.product_id
+          : "P-" +
+            Array.from({ length: 10 }, () =>
+              Math.floor(Math.random() * 10)
+            ).join("");
+
+      product_ids.push(finalProductId);
+
+      // Generate or reuse serial number
+      const serialNumber =
+        p.serial_number && p.serial_number.trim() !== ""
+          ? p.serial_number
+          : generateSerial(p.length, p.width, p.make, existingRows.length + i);
+
+      return [
+        finalProductId,
+        serialNumber,
+        project_idx,
+        p.name,
+        p.customer_id ?? null,
+        p.highlight ?? null,
+        p.make ?? null,
+        p.model ?? null,
+        p.type ?? "TSA",
+        p.length ?? null,
+        p.width ?? null,
+        p.height ?? null,
+        typeof p.ordinal === "number" ? p.ordinal : nextOrdinal + i,
+        p.description ?? null,
+        p.note ?? "",
+      ];
+    });
+
+    // Step 3: Build upsert query
     const q = `
       INSERT INTO products (
-        serial_number, project_idx, name, customer_id, highlight,
+        product_id, serial_number, project_idx, name, customer_id, highlight,
         make, model, type, length, width, height, ordinal, description, note
       )
       VALUES ${products
-        .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .join(", ")}
       ON DUPLICATE KEY UPDATE
+        serial_number = VALUES(serial_number),
         name = VALUES(name),
         customer_id = VALUES(customer_id),
         highlight = VALUES(highlight),
@@ -62,44 +103,37 @@ export const upsertProductsFunction = async (project_idx, products) => {
         updated_at = NOW()
     `;
 
-    const values = products.flatMap((p, i) => [
-      !p.serial_number
-        ? generateSerial(p.length, p.width, p.make, existingRows.length + i)
-        : p.serial_number,
-      project_idx,
-      p.name,
-      p.customer_id ?? null,
-      p.highlight ?? null,
-      p.make ?? null,
-      p.model ?? null,
-      p.type ?? "TSA",
-      p.length ?? null,
-      p.width ?? null,
-      p.height ?? null,
-      typeof p.ordinal === "number" ? p.ordinal : nextOrdinal + i,
-      p.description ?? null,
-      p.note ?? "",
-    ]);
-
-    // Step 3: Run upsert
+    // Step 4: Run upsert
     await db.promise().query(q, values);
-
-    // Step 4: Collect serials you just inserted/updated
-    const serials = products.map((p, i) =>
-      !p.serial_number || p.serial_number.length < 14
-        ? generateSerial(p.length, p.width, p.make, existingRows.length + i)
-        : p.serial_number
-    );
 
     // Step 5: Fetch IDs of affected products
     const [updatedRows] = await db
       .promise()
       .query(
-        `SELECT id, serial_number FROM products WHERE project_idx = ? AND serial_number IN (?)`,
-        [project_idx, serials]
+        `SELECT id, serial_number FROM products WHERE project_idx = ? AND product_id IN (?)`,
+        [project_idx, product_ids]
       );
 
     const updatedIds = updatedRows.map((r) => r.id);
+
+    // Step 6: Verify & resequence ordinals
+    try {
+      await db.promise().query(`SET @rownum := -1`);
+      const resequenceQuery = `
+        UPDATE products
+        JOIN (
+          SELECT id, (@rownum := @rownum + 1) AS new_ordinal
+          FROM products
+          WHERE project_idx = ?
+          ORDER BY ordinal ASC, created_at ASC, id ASC
+        ) AS ordered
+        ON products.id = ordered.id
+        SET products.ordinal = ordered.new_ordinal
+      `;
+      await db.promise().query(resequenceQuery, [project_idx]);
+    } catch (verifyErr) {
+      console.error("⚠️ Ordinal resequence failed:", verifyErr);
+    }
 
     return {
       success: true,

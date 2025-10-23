@@ -74,7 +74,7 @@ export function useProducts(
 
   type DeleteContext = {
     previousData: any[] | undefined;
-    queryKey: string[];
+    queryKey: readonly [string, number | null];
   };
 
   const deleteProductsMutation = useMutation<
@@ -91,7 +91,7 @@ export function useProducts(
       });
     },
     onMutate: async (serial_numbers: string[]) => {
-      const queryKey = ["products"];
+      const queryKey = ["products", currentProjectId] as const;
       await queryClient.cancelQueries({ queryKey });
 
       const previousData = queryClient.getQueryData<any[]>(queryKey);

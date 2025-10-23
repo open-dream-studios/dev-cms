@@ -21,6 +21,7 @@ import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productFilter } from "@/types/filters";
 import { Product } from "@/types/products";
 import { productToForm } from "@/util/schemas/productSchema";
+import { useModals } from "@/hooks/useModals";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const { currentUser } = useContext(AuthContext);
@@ -31,7 +32,6 @@ const ProductsHeader = ({ title }: { title: String }) => {
     editingProducts,
     setEditingProducts,
     setUpdatingLock,
-    screen,
     setAddingProduct,
     inventoryView,
     setInventoryView,
@@ -42,9 +42,10 @@ const ProductsHeader = ({ title }: { title: String }) => {
     setSelectedProducts,
     localProductsData,
   } = useCurrentDataStore();
+  const { promptContinue } = useModals();
   const { deleteProducts, hasProjectModule } = useContextQueries();
   const { screenClick } = useRouting();
-  const { onProductFormSubmit } = useProductFormSubmit(); 
+  const { onProductFormSubmit } = useProductFormSubmit();
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
@@ -55,24 +56,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
   if (!currentProjectId) return null;
 
   const handleWixSync = async () => {
-    if (!currentUser) return null;
-    setModal2({
-      ...modal2,
-      open: !modal2.open,
-      showClose: false,
-      offClickClose: true,
-      width: "w-[300px]",
-      maxWidth: "max-w-[400px]",
-      aspectRatio: "aspect-[5/2]",
-      borderRadius: "rounded-[12px] md:rounded-[15px]",
-      content: (
-        <Modal2Continue
-          text={`Sync data to Wix website?`}
-          onContinue={wixSync}
-          threeOptions={false}
-        />
-      ),
-    });
+    await promptContinue(`Sync data to Wix website?`, false, () => {}, wixSync);
   };
 
   const wixSync = async () => {
@@ -97,27 +81,15 @@ const ProductsHeader = ({ title }: { title: String }) => {
     }
   };
 
-  const handleConfirmDelete = () => {
-    if (!currentUser) return null;
-    setModal2({
-      ...modal2,
-      open: !modal2.open,
-      showClose: false,
-      offClickClose: true,
-      width: "w-[300px]",
-      maxWidth: "max-w-[400px]",
-      aspectRatio: "aspect-[5/2]",
-      borderRadius: "rounded-[12px] md:rounded-[15px]",
-      content: (
-        <Modal2Continue
-          text={`Delete ${selectedProducts.length} product${
-            selectedProducts.length > 1 ? "s" : ""
-          } from inventory?`}
-          onContinue={handleDeleteSelected}
-          threeOptions={false}
-        />
-      ),
-    });
+  const handleConfirmDelete = async () => {
+    await promptContinue(
+      `Delete ${selectedProducts.length} product${
+        selectedProducts.length > 1 ? "s" : ""
+      } from inventory?`,
+      false,
+      () => {},
+      handleDeleteSelected
+    );
   };
 
   const handleDeleteSelected = async () => {
@@ -179,6 +151,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
       allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
     const newProduct: Product = {
       serial_number: newSerial,
+      product_id: null,
       customer_id: null,
       project_idx: currentProjectId,
       name: "",
@@ -234,6 +207,13 @@ const ProductsHeader = ({ title }: { title: String }) => {
     }
   };
 
+  const handleViewClick = async (tableView: boolean) => {
+    if (inventoryView) {
+      await saveProducts();
+    }
+    setInventoryView(tableView);
+  };
+
   if (!currentUser) return null;
 
   return (
@@ -248,7 +228,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
               className="flex w-[160px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
             >
               <div
-                onClick={() => setInventoryView(false)}
+                onClick={() => handleViewClick(false)}
                 style={{
                   backgroundColor: !inventoryView
                     ? t.header_1_2
@@ -259,7 +239,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
                 List
               </div>
               <div
-                onClick={() => setInventoryView(true)}
+                onClick={() => handleViewClick(true)}
                 style={{
                   backgroundColor: inventoryView ? t.header_1_2 : "transparent",
                 }}

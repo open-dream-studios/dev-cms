@@ -88,7 +88,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { onProductFormSubmit } = useProductFormSubmit();
   const productForm = useProductForm(currentProduct);
   const { registerForm, unregisterForm } = useFormInstanceStore();
-  const { handleSubmit, formState } = productForm;
+  const { handleSubmit } = productForm;
 
   useEffect(() => {
     const formKey = "product";

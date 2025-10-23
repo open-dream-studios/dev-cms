@@ -32,9 +32,7 @@ import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@/types/products";
 import InventoryRow from "./Grid/InventoryRow";
 import { useUiStore } from "@/store/useUIStore";
-import { 
-  useProductFormSubmit,
-} from "@/hooks/forms/useProductForm";
+import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { DelayType } from "@/hooks/useAutoSave";
@@ -117,7 +115,11 @@ function SortableItem({
 
         <div className="dim cursor-pointer hover:brightness-[86%] h-[100%]">
           {sheet ? (
-            <InventoryRow index={index} product={product} resetTimer={resetTimer}/>
+            <InventoryRow
+              index={index}
+              product={product}
+              resetTimer={resetTimer}
+            />
           ) : (
             <div
               key={product.serial_number}
@@ -150,7 +152,10 @@ const DraggableItems = ({
   const { filteredProducts } = useDataFilters();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  const savingRef = useRef(false);
   const handleDragEnd = async (event: DragEndEvent) => {
+    if (savingRef.current) return;
+    savingRef.current = true;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -168,12 +173,9 @@ const DraggableItems = ({
       })
     );
 
-    const sorted = reordered.sort(
-      (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
-    );
-
-    setLocalProductsData(sorted);
+    setLocalProductsData(reordered);
     await saveProducts();
+    savingRef.current = false;
   };
 
   if (!currentUser) return null;
