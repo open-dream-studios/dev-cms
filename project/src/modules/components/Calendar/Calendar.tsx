@@ -541,15 +541,23 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   //   return () => observer.disconnect();
   // }, [goToWeek]);
 
+
+
+
+
+
+  /// COMMENTED THIS OUT
+  const movedToCorrectWeek = useRef<boolean>(false)
   useEffect(() => {
     const scroller = scrollerRef.current;
-    if (!scroller) return;
+    if (!scroller || movedToCorrectWeek.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           observer.disconnect();
           // Wait one frame so layout is finalized
+          movedToCorrectWeek.current = true
           requestAnimationFrame(() => {
             if (scheduled_start_date) goToWeek();
             else goToCurrentWeek();

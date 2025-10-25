@@ -152,10 +152,7 @@ const DraggableItems = ({
   const { filteredProducts } = useDataFilters();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const savingRef = useRef(false);
   const handleDragEnd = async (event: DragEndEvent) => {
-    if (savingRef.current) return;
-    savingRef.current = true;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -175,7 +172,6 @@ const DraggableItems = ({
 
     setLocalProductsData(reordered);
     await saveProducts();
-    savingRef.current = false;
   };
 
   if (!currentUser) return null;

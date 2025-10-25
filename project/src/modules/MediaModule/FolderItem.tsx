@@ -15,8 +15,6 @@ import {
   GripVertical,
 } from "lucide-react";
 import {
-  MouseEventHandler,
-  ReactNode,
   useContext,
   useEffect,
   useRef,
