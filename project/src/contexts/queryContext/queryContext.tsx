@@ -106,13 +106,13 @@ export type QueryContextType = {
   isLoadingMediaFolders: boolean;
   refetchMedia: () => void;
   refetchMediaFolders: () => void;
-  addMedia: (data: Media[]) => Promise<Media[]>;
+  upsertMedia: (data: Media[]) => Promise<Media[]>;
   deleteMedia: (media_id: string) => Promise<void>;
   reorderMedia: (data: {
     folder_id: number | null;
     orderedIds: number[];
   }) => Promise<void>;
-  addMediaFolder: (data: {
+  upsertMediaFolder: (data: {
     project_idx: number;
     parent_id?: number | null;
     name: string;
@@ -132,7 +132,7 @@ export type QueryContextType = {
   isLoadingMediaLinks: boolean;
   refetchMediaLinks: () => void;
   upsertMediaLinks: (items: MediaLink[]) => Promise<void>;
-  deleteMediaLinks: (ids: number[]) => Promise<void>;
+  deleteMediaLinks: (mediaLinks: MediaLink[]) => Promise<void>;
   reorderMediaLinks: (orderedIds: number[]) => Promise<void>;
 
   // ---- Page Definitions ----
@@ -284,7 +284,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     media,
     isLoadingMedia,
     refetchMedia,
-    addMedia,
+    upsertMedia,
     deleteMedia,
     reorderMedia,
   } = useMedia(isLoggedIn, currentProjectId);
@@ -300,7 +300,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     mediaFolders,
     isLoadingMediaFolders,
     refetchMediaFolders,
-    addMediaFolder,
+    upsertMediaFolder,
     deleteMediaFolder,
     renameMediaFolder,
     reorderMediaFolders,
@@ -410,7 +410,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         isLoadingMediaFolders,
         refetchMedia,
         refetchMediaFolders,
-        addMedia,
+        upsertMedia,
         deleteMedia,
         reorderMedia,
         mediaLinks,
@@ -419,7 +419,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         upsertMediaLinks,
         deleteMediaLinks,
         reorderMediaLinks,
-        addMediaFolder,
+        upsertMediaFolder,
         deleteMediaFolder,
         reorderMediaFolders,
         renameMediaFolder,

@@ -1,5 +1,6 @@
 // src/store/currentDataStore.ts
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import { Customer } from "@/types/customers";
 import { Employee } from "@/types/employees";
 import { ProjectPage, Section } from "@/types/pages";
@@ -26,7 +27,6 @@ interface CurrentDataState {
   localProductsDataRef: { current: Product[] }; 
   setLocalProductsData: (products: Product[]) => void;  
 
-
   selectedProducts: string[];
   setSelectedProducts: (selectedProducts: string[]) => void;
 
@@ -52,87 +52,81 @@ interface CurrentDataState {
 
 const localProductsDataRef = { current: [] as Product[] };
 
-export const useCurrentDataStore = create<CurrentDataState>((set) => ({
-  currentProject: null,
-  currentProjectId: null,
-  setCurrentProjectData: (project) =>
-    set({
-      currentProject: project,
-      currentProjectId: project && project.id ? project.id : null,
-    }),
+// 🔹 wrap with devtools and give it a name
+export const useCurrentDataStore = create<CurrentDataState>()(
+  devtools(
+    (set) => ({
+      currentProject: null,
+      currentProjectId: null,
+      setCurrentProjectData: (project) =>
+        set({
+          currentProject: project,
+          currentProjectId: project?.id ?? null,
+        }),
 
-  currentProduct: null,
-  currentProductSerial: null,
-  setCurrentProductData: (product) =>
-    set({
-      currentProduct: product,
-      currentProductSerial:
-        product && product.serial_number ? product.serial_number : null,
-    }),
+      currentProduct: null,
+      currentProductSerial: null,
+      setCurrentProductData: (product) =>
+        set({
+          currentProduct: product,
+          currentProductSerial: product?.serial_number ?? null,
+        }),
 
-  originalProductImages: [],
-  setOriginalProductImages: (images: MediaLink[]) =>
-    set({
-      originalProductImages: images,
-    }),
+      originalProductImages: [],
+      setOriginalProductImages: (images: MediaLink[]) =>
+        set({ originalProductImages: images }),
 
-  currentProductImages: [],
-  setCurrentProductImages: (images: MediaLink[]) =>
-    set({
-      currentProductImages: images,
-    }),
+      currentProductImages: [],
+      setCurrentProductImages: (images: MediaLink[]) =>
+        set({ currentProductImages: images }),
 
-  localProductsData: [],
-  localProductsDataRef,
-  setLocalProductsData: (products: Product[]) => {
-    localProductsDataRef.current = products;  
-    set({ localProductsData: products }); 
-  },
+      localProductsData: [],
+      localProductsDataRef,
+      setLocalProductsData: (products: Product[]) => {
+        localProductsDataRef.current = products;
+        set({ localProductsData: products });
+      },
 
-  selectedProducts: [],
-  setSelectedProducts: (products: string[]) =>
-    set({
-      selectedProducts: products,
-    }),
+      selectedProducts: [],
+      setSelectedProducts: (products: string[]) =>
+        set({ selectedProducts: products }),
 
-  currentCustomer: null,
-  currentCustomerId: null,
-  setCurrentCustomerData: (customer) =>
-    set({
-      currentCustomer: customer,
-      currentCustomerId: customer && customer.id ? customer.id : null,
-    }),
+      currentCustomer: null,
+      currentCustomerId: null,
+      setCurrentCustomerData: (customer) =>
+        set({
+          currentCustomer: customer,
+          currentCustomerId: customer?.id ?? null,
+        }),
 
-  currentEmployee: null,
-  currentEmployeeId: null,
-  setCurrentEmployeeData: (employee) =>
-    set({
-      currentEmployee: employee,
-      currentEmployeeId: employee && employee.id ? employee.id : null,
-    }),
+      currentEmployee: null,
+      currentEmployeeId: null,
+      setCurrentEmployeeData: (employee) =>
+        set({
+          currentEmployee: employee,
+          currentEmployeeId: employee?.id ?? null,
+        }),
 
-  currentPage: null,
-  currentPageId: null,
-  setCurrentPageData: (page) =>
-    set({
-      currentPage: page,
-      currentPageId: page && page.id ? page.id : null,
-    }),
+      currentPage: null,
+      currentPageId: null,
+      setCurrentPageData: (page) =>
+        set({
+          currentPage: page,
+          currentPageId: page?.id ?? null,
+        }),
 
-  currentSection: null,
-  currentSectionId: null,
-  setCurrentSectionData: (section) =>
-    set({
-      currentSection: section,
-      currentSectionId: section && section.id ? section.id : null,
-    }),
+      currentSection: null,
+      currentSectionId: null,
+      setCurrentSectionData: (section) =>
+        set({
+          currentSection: section,
+          currentSectionId: section?.id ?? null,
+        }),
 
-  productFilters: {
-    products: [],
-    jobType: [],
-  },
-  setProductFilters: (filters: DataFilters) =>
-    set({
-      productFilters: filters,
+      productFilters: { products: [], jobType: [] },
+      setProductFilters: (filters: DataFilters) =>
+        set({ productFilters: filters }),
     }),
-}));
+    { name: "CurrentDataStore" }  
+  )
+);

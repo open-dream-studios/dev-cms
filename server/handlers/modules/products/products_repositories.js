@@ -114,7 +114,7 @@ export const upsertProductsFunction = async (project_idx, products) => {
         [project_idx, product_ids]
       );
 
-    const updatedIds = updatedRows.map((r) => r.id);
+    const productIds = updatedRows.map((r) => r.id);
 
     // Step 6: Verify & resequence ordinals
     try {
@@ -137,13 +137,13 @@ export const upsertProductsFunction = async (project_idx, products) => {
 
     return {
       success: true,
-      updatedIds,
+      productIds,
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertProductsFunction:", err);
     return {
       success: false,
-      updatedIds: [],
+      productIds: [],
     };
   }
 };

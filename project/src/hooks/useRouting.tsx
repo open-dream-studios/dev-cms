@@ -115,10 +115,10 @@ export function useRouting() {
     if (newPage === "/products") {
       setCurrentProductData(null);
     }
-    if (newScreen === "customers") {
+    if (newScreen === "customers" && screen === "customers") {
       setCurrentCustomerData(null);
     }
-    if (newScreen === "employees") {
+    if (newScreen === "employees" && screen === "employees") {
       setCurrentEmployeeData(null);
     }
     setCurrentSectionData(null);

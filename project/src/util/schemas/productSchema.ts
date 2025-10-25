@@ -14,7 +14,31 @@ export const ProductSchema = z.object({
   customer_id: z.number().optional().nullable(),
   make: z.string().optional().nullable(),
   model: z.string().optional().nullable(),
-  length: z
+  // length: z
+  //   .number()
+  //   .min(0, "Must be a positive number")
+  //   .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
+  //     message: "Max 2 decimal places",
+  //   })
+  //   .optional()
+  //   .nullable(),
+  // width: z
+  //   .number()
+  //   .min(0, "Must be a positive number")
+  //   .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
+  //     message: "Max 2 decimal places",
+  //   })
+  //   .optional()
+  //   .nullable(),
+  // height: z
+  //   .number()
+  //   .min(0, "Must be a positive number")
+  //   .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
+  //     message: "Max 2 decimal places",
+  //   })
+  //   .optional()
+  //   .nullable(),
+  length: z.coerce
     .number()
     .min(0, "Must be a positive number")
     .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
@@ -22,7 +46,8 @@ export const ProductSchema = z.object({
     })
     .optional()
     .nullable(),
-  width: z
+
+  width: z.coerce
     .number()
     .min(0, "Must be a positive number")
     .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {
@@ -30,7 +55,8 @@ export const ProductSchema = z.object({
     })
     .optional()
     .nullable(),
-  height: z
+
+  height: z.coerce
     .number()
     .min(0, "Must be a positive number")
     .refine((val) => /^\d+(\.\d{1,2})?$/.test(String(val)), {

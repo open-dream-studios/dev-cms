@@ -17,7 +17,7 @@ export function useMediaLinks(
     queryKey: ["mediaLinks", currentProjectId],
     queryFn: async () => {
       if (!currentProjectId) return [];
-      const res = await makeRequest.get("/api/media/media-links/", {
+      const res = await makeRequest.get("/api/media/media-links", {
         params: { project_idx: currentProjectId },
       });
       return res.data.mediaLinks || [];
@@ -40,14 +40,16 @@ export function useMediaLinks(
   });
 
   const upsertMediaLinks = async (items: MediaLink[]) => {
-    if (!currentProjectId) throw new Error("Missing project ID");
     await upsertMediaLinksMutation.mutateAsync(items);
   };
 
   // ✅ Bulk delete
   const deleteMediaLinksMutation = useMutation({
-    mutationFn: async (ids: number[]) => {
-      await makeRequest.post("/api/media/media-links/delete", { ids, project_idx: currentProjectId });
+    mutationFn: async (mediaLinks: MediaLink[]) => {
+      await makeRequest.post("/api/media/media-links/delete", {
+        mediaLinks,
+        project_idx: currentProjectId,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -56,8 +58,8 @@ export function useMediaLinks(
     },
   });
 
-  const deleteMediaLinks = async (ids: number[]) => {
-    await deleteMediaLinksMutation.mutateAsync(ids);
+  const deleteMediaLinks = async (mediaLinks: MediaLink[]) => {
+    await deleteMediaLinksMutation.mutateAsync(mediaLinks);
   };
 
   // ✅ Reorder
@@ -79,7 +81,7 @@ export function useMediaLinks(
           currentProjectId,
         ]) || [];
       const reordered = prevData.map((m) => {
-        if (!m.id) return m;  
+        if (!m.id) return m;
         const idx = orderedIds.indexOf(m.id);
         return idx === -1 || m.ordinal === idx ? m : { ...m, ordinal: idx };
       });

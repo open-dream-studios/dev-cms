@@ -18,8 +18,117 @@ export const getMediaFunction = async (project_idx) => {
   }
 };
 
+// export const upsertMediaFunction = async (project_idx, items) => {
+//   try {
+//     const upsert_folder_id = items[0].folder_id;
+//     const getMaxQ = `
+//       SELECT COALESCE(MAX(ordinal), -1) AS maxOrdinal
+//       FROM media
+//       WHERE project_idx = ? AND (folder_id <=> ?)
+//     `;
+
+//     const values = [project_idx, upsert_folder_id];
+//     const [rows] = await db.promise().query(getMaxQ, values);
+
+//     if (rows.length === 0) {
+//       throw Error("No max ordinal could be identified");
+//     }
+
+//     let nextOrdinal = rows[0].maxOrdinal + 1;
+//     console.log(nextOrdinal);
+
+//     for (const [index, item] of items.entries()) {
+//       try {
+//         const {
+//           media_id,
+//           folder_id,
+//           public_id,
+//           type,
+//           url,
+//           alt_text,
+//           metadata,
+//           media_usage,
+//           tags,
+//           ordinal,
+//         } = item;
+//         if (!url || !type || !media_usage || !public_id) {
+//           throw Error(`Missing required fields for insert index ${index}`);
+//         }
+
+//         let insertOrdinal = ordinal;
+//         if (!media_id) {
+//           insertOrdinal = nextOrdinal;
+//           nextOrdinal += 1;
+//         }
+
+//         const finalMediaId =
+//           media_id && media_id.trim() !== ""
+//             ? media_id
+//             : "MEDIA-" +
+//               Array.from({ length: 10 }, () =>
+//                 Math.floor(Math.random() * 10)
+//               ).join("");
+
+//         const query = `
+//           INSERT INTO media (
+//             media_id,
+//             project_idx,
+//             folder_id,
+//             public_id,
+//             type,
+//             url,
+//             alt_text,
+//             metadata,
+//             media_usage,
+//             tags,
+//             ordinal
+//           )
+//           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+//           ON DUPLICATE KEY UPDATE
+//             folder_id = VALUES(folder_id),
+//             public_id = VALUES(public_id),
+//             type = VALUES(type),
+//             url = VALUES(url),
+//             alt_text = VALUES(alt_text),
+//             metadata = VALUES(metadata),
+//             media_usage = VALUES(media_usage),
+//             tags = VALUES(tags),
+//             ordinal = VALUES(ordinal),
+//             updated_at = NOW()
+//         `;
+
+//         const values = [
+//           finalMediaId,
+//           project_idx,
+//           folder_id,
+//           public_id,
+//           type,
+//           url,
+//           alt_text,
+//           metadata ? JSON.stringify(metadata) : null,
+//           media_usage,
+//           tags ? JSON.stringify(tags) : null,
+//           insertOrdinal,
+//         ];
+
+//         const [result] = await db.promise().query(query, values);
+//       } catch (err) {
+//         console.err(err);
+//       }
+//     }
+//     return true;
+//   } catch (err) {
+//     console.err(err);
+//     return false;
+//   }
+// };
+
 export const upsertMediaFunction = async (project_idx, items) => {
   try {
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new Error("No media items provided");
+    }
+
     const upsert_folder_id = items[0].folder_id;
     const getMaxQ = `
       SELECT COALESCE(MAX(ordinal), -1) AS maxOrdinal
@@ -27,15 +136,16 @@ export const upsertMediaFunction = async (project_idx, items) => {
       WHERE project_idx = ? AND (folder_id <=> ?)
     `;
 
-    const values = [project_idx, upsert_folder_id];
-    const [rows] = await db.promise().query(getMaxQ, values);
+    const [rows] = await db
+      .promise()
+      .query(getMaxQ, [project_idx, upsert_folder_id]);
 
-    if (rows.length === 0) {
-      throw Error("No max ordinal could be identified");
+    if (!rows || rows.length === 0) {
+      throw new Error("No max ordinal could be identified");
     }
 
     let nextOrdinal = rows[0].maxOrdinal + 1;
-    console.log(nextOrdinal);
+    const processedIds = []; // collect media_id strings
 
     for (const [index, item] of items.entries()) {
       try {
@@ -51,8 +161,9 @@ export const upsertMediaFunction = async (project_idx, items) => {
           tags,
           ordinal,
         } = item;
+
         if (!url || !type || !media_usage || !public_id) {
-          throw Error(`Missing required fields for insert index ${index}`);
+          throw new Error(`Missing required fields for insert index ${index}`);
         }
 
         let insertOrdinal = ordinal;
@@ -111,15 +222,30 @@ export const upsertMediaFunction = async (project_idx, items) => {
           insertOrdinal,
         ];
 
-        const [result] = await db.promise().query(query, values);
+        await db.promise().query(query, values);
+
+        processedIds.push(finalMediaId);
       } catch (err) {
-        console.err(err);
+        console.error("Upsert error for media item:", err);
       }
     }
-    return true;
+
+    // Retrieve the full media objects (including auto-increment id)
+    let media = [];
+    if (processedIds.length > 0) {
+      const [resultRows] = await db
+        .promise()
+        .query(
+          `SELECT * FROM media WHERE project_idx = ? AND media_id IN (?)`,
+          [project_idx, processedIds]
+        );
+      media = resultRows;
+    }
+
+    return { success: true, media };
   } catch (err) {
-    console.err(err);
-    return false;
+    console.error("upsertMediaFunction error:", err);
+    return { success: false, media: [] };
   }
 };
 
@@ -416,7 +542,7 @@ export const reorderMediaFoldersFunction = async (project_idx, reqBody) => {
 // ---------- MEDIA LINK FUNCTIONS ----------
 export const getMediaLinksFunction = async (project_idx) => {
   const q = `
-    SELECT ml.id, ml.entity_type, ml.entity_id, ml.media_id, m.url 
+    SELECT ml.id, ml.entity_type, ml.ordinal, ml.entity_id, ml.media_id, m.url 
     FROM media_link ml
     JOIN media m ON ml.media_id = m.id
     WHERE m.project_idx = ?
@@ -431,22 +557,70 @@ export const getMediaLinksFunction = async (project_idx) => {
   }
 };
 
-export const upsertMediaLinksFunction = (project_idx, mediaLinks) => {
-  return false
-}
+export const upsertMediaLinksFunction = async (project_idx, mediaLinks) => {
+  if (!Array.isArray(mediaLinks) || mediaLinks.length === 0) {
+    return { success: false, message: "No mediaLinks provided" };
+  }
+
+  try {
+    const inserts = mediaLinks.map((i) => [
+      i.entity_type,
+      i.entity_id,
+      i.media_id,
+      i.ordinal ?? 0,
+    ]);
+
+    const query = `
+      INSERT INTO media_link (entity_type, entity_id, media_id, ordinal)
+      VALUES ?
+      ON DUPLICATE KEY UPDATE
+        ordinal = VALUES(ordinal)
+    `;
+
+    await db.promise().query(query, [inserts]);
+
+    return { success: true };
+  } catch (err) {
+    console.error("❌ Function Error -> upsertMediaLinksFunction:", err);
+    return { success: false, message: err.message };
+  }
+};
 
 export const deleteMediaLinksFunction = async (project_idx, mediaLinks) => {
-  const q =
-    "DELETE FROM media_link WHERE media_id = ? AND entity_id = ? AND entity_type = ?";
-  for (link in mediaLinks) {
-    try {
-      await db
-        .promise()
-        .query(q, [link.media_id, link.entity_id, link.entity_type]);
-    } catch (err) {
-      console.error("❌ Function Error -> deleteTaskFunction: ", err);
-    }
-    return true;
+  if (!Array.isArray(mediaLinks) || mediaLinks.length === 0) {
+    throw new Error("No mediaLinks provided for deletion");
+  }
+
+  const connection = await db.promise().getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const conditions = mediaLinks
+      .map(() => "(entity_type = ? AND entity_id = ? AND media_id = ?)")
+      .join(" OR ");
+
+    const deleteQuery = `
+      DELETE FROM media_link
+      WHERE ${conditions}
+    `;
+
+    const values = mediaLinks.flatMap((link) => [
+      link.entity_type,
+      link.entity_id,
+      link.media_id,
+    ]);
+
+    const [result] = await connection.query(deleteQuery, values);
+
+    await connection.commit();
+    connection.release();
+
+    return result.affectedRows > 0;
+  } catch (err) {
+    await connection.rollback();
+    connection.release();
+    console.error("❌ Function Error -> deleteMediaLinksFunction:", err);
+    return false;
   }
 };
 

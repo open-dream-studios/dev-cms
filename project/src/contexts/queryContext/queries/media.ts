@@ -22,13 +22,13 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  const addMediaMutation = useMutation<
+  const upsertMediaMutation = useMutation<
     Media[],
     Error,
     { project_idx: number; items: Media[] }
   >({
     mutationFn: async (data) => {
-      const res = await makeRequest.post("/api/media/add", data);
+      const res = await makeRequest.post("/api/media/upsert", data);
       return Array.isArray(res.data.media) ? res.data.media : [];
     },
     onSuccess: () => {
@@ -36,9 +36,9 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     },
   });
 
-  const addMedia = async (items: Media[]): Promise<Media[]> => {
+  const upsertMedia = async (items: Media[]): Promise<Media[]> => {
     if (!currentProjectId) throw new Error("Project ID is missing");
-    return await addMediaMutation.mutateAsync({
+    return await upsertMediaMutation.mutateAsync({
       project_idx: currentProjectId,
       items,
     });
@@ -79,9 +79,10 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
       const prevMedia =
         queryClient.getQueryData<Media[]>(["media", currentProjectId]) || [];
       const reordered = prevMedia.map((m) => {
+        if (!m.id) return null;
         const idx = variables.orderedIds.indexOf(m.id);
-        if (idx === -1 || m.ordinal === idx) return m; // keep old ref
-        return { ...m, ordinal: idx }; // only new object if ordinal changed
+        if (idx === -1 || m.ordinal === idx) return m;
+        return { ...m, ordinal: idx };
       });
       queryClient.setQueryData(["media", currentProjectId], reordered);
       return { prevMedia };
@@ -98,7 +99,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
       queryClient.setQueryData<Media[]>(["media", currentProjectId], (old) => {
         if (!old) return old;
         return old.map((m) => {
-          const idx = variables.orderedIds.indexOf(m.id);
+          const idx = m.id ? variables.orderedIds.indexOf(m.id) : -1;
           return idx === -1 || m.ordinal === idx ? m : { ...m, ordinal: idx };
         });
       });
@@ -114,7 +115,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     media,
     isLoadingMedia,
     refetchMedia,
-    addMedia,
+    upsertMedia,
     deleteMedia,
     reorderMedia,
   };

@@ -1,3 +1,5 @@
+// project/src/store/useLeftBarOpenStore.tsx
+"use client";
 import { RefObject } from "react";
 import { create } from "zustand";
 
@@ -6,7 +8,6 @@ export const useLeftBarOpenStore = create((set) => ({
   setLeftBarOpen: (newLeftBarOpen: boolean) =>
     set({ leftBarOpen: newLeftBarOpen }),
 }));
-
 
 export interface LeftBarRefStore {
   leftBarRef: RefObject<HTMLDivElement> | null;

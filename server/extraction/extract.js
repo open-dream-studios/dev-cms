@@ -14,7 +14,6 @@ import fs from "fs/promises";
 import { compressAndUploadFiles } from "../controllers/images.js";
 import "../env.js";
 import { db } from "../connection/connect.js";
-import { addMediaDB } from "../functions/media.js";
 import { upsertMediaLinksService } from "../controllers/mediaLinks.js";
 
 const extractRow = async (sheet, row, index) => {
@@ -75,19 +74,21 @@ const extractRow = async (sheet, row, index) => {
       media_usage: "product",
     }));
 
+    // THIS WAS IN 
+
     // Insert media
-    const rows = await addMediaDB(25, media_items);
+    // const rows = await addMediaDB(25, media_items);
 
-    // --- Step 3: Create media links ---
-    const mediaLinks = rows.map((row, i) => ({
-      entity_type: "product",
-      entity_id: productIds[0],  // ✅ product id we just inserted
-      media_id: row.id,          // ✅ media id
-      ordinal: row.ordinal ?? i,
-    }));
+    // // --- Step 3: Create media links ---
+    // const mediaLinks = rows.map((row, i) => ({
+    //   entity_type: "product",
+    //   entity_id: productIds[0],  // ✅ product id we just inserted
+    //   media_id: row.id,          // ✅ media id
+    //   ordinal: row.ordinal ?? i,
+    // }));
 
-    await upsertMediaLinksService(mediaLinks);
-    console.log("Media links upserted");
+    // await upsertMediaLinksService(mediaLinks);
+    // console.log("Media links upserted");
   }
 
   clearDownloadsFolder();

@@ -125,7 +125,8 @@ export default function ProductImages({
   imageEditorOpen: boolean;
   singleRow: boolean;
 }) {
-  const { currentProductImages, setCurrentProductImages } = useCurrentDataStore();
+  const { currentProductImages, setCurrentProductImages } =
+    useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
@@ -163,13 +164,12 @@ export default function ProductImages({
   };
 
   const handleDeleteImage = (index: number) => {
-    // setCurrentProductImages((prev: MediaLink[]) => {
-    //   const updated = prev.filter((_, i) => i !== index);
-    //   return updated.map((img, idx) => ({
-    //     ...img,
-    //     ordinal: idx,
-    //   }));
-    // });
+    const filtered = currentProductImages.filter((_, i) => i !== index);
+    const newProductImages = filtered.map((img, idx) => ({
+      ...img,
+      ordinal: idx,
+    }));
+    setCurrentProductImages(newProductImages);
   };
 
   if (!currentUser) return null;

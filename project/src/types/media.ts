@@ -8,16 +8,16 @@ export type MediaFolder = {
   parent_folder_id: number | null;
   name: string;
   ordinal: number;
-  created_at?: string; 
-  updated_at?: string;  
+  created_at?: string;
+  updated_at?: string;
 };
 
-export type UpsertMediaFolder = Omit<MediaFolder, "id">
+export type UpsertMediaFolder = Omit<MediaFolder, "id">;
 
 export type MediaUsage = "page" | "product" | "module";
 
 export type Media = {
-  id: number;
+  id?: number;
   project_idx: number;
   media_id: string | null;
   folder_id: number | null;
@@ -28,20 +28,18 @@ export type Media = {
   metadata?: Record<string, any> | null;
   media_usage: MediaUsage;
   tags: string[] | null;
-  ordinal: number;
+  ordinal: number | null;
   created_at?: string;
   updated_at?: string;
 };
 
-export type UpsertMedia = Omit<Media, "id">
+// export type UpsertMedia = Omit<Media, "id">
 
 export type MediaLink = {
-  id: number; 
+  id?: number;
   url: string;
-  entity_type: MediaUsage,
-  entity_id: number; 
-  media_id: number; 
-  ordinal: number;
+  entity_type: MediaUsage;
+  entity_id: number | null;
+  media_id: number;
+  ordinal: number | null;
 };
-
-export type UpsertMediaLink = Omit<MediaLink, "id" | "url">

@@ -62,6 +62,7 @@ const CustomerTag = ({
         } items-center flex flex-row rounded-full`}
         onClick={async (e) => {
           e.stopPropagation();
+          console.log(productCustomer)
           setCurrentCustomerData(productCustomer);
           await screenClick("customers", "/");
         }}

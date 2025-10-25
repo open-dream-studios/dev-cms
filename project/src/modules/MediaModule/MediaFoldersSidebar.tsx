@@ -72,7 +72,7 @@ export default function MediaFoldersSidebar({
   const { currentProjectId } = useCurrentDataStore();
   const {
     mediaFolders,
-    addMediaFolder,
+    upsertMediaFolder,
     reorderMediaFolders,
     deleteMediaFolder,
   } = useContextQueries();
@@ -213,7 +213,7 @@ export default function MediaFoldersSidebar({
         <Modal2MultiStepModalInput
           steps={steps}
           onComplete={async (values) => {
-            const newId = await addMediaFolder({
+            const newId = await upsertMediaFolder({
               project_idx: currentProjectId,
               parent_id: activeFolder ? activeFolder.id : null,
               name: values.name,

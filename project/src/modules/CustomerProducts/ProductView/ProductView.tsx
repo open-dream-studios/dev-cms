@@ -22,7 +22,7 @@ import {
   useProductFormSubmit,
 } from "@/hooks/forms/useProductForm";
 import ProductInputField from "../Forms/InputField";
-import { MediaLink } from "@/types/media";
+import { Media, MediaFolder, MediaLink } from "@/types/media";
 import { usePathname } from "next/navigation";
 import { Customer } from "@/types/customers";
 import CustomerTag from "@/modules/components/ProductCard/CustomerTag";
@@ -43,18 +43,14 @@ import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useWatch } from "react-hook-form";
+import { useMedia } from "@/hooks/useMedia";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
   const { history } = useRouting();
-  const {
-    productsData,
-    refetchMedia,
-    mediaLinks,
-    customers,
-    jobs,
-    jobDefinitions,
-  } = useContextQueries();
+  const { productsData, mediaLinks, customers, jobs, jobDefinitions } =
+    useContextQueries();
+  const { uploadProductImages } = useMedia();
   const { screen, setUploadPopup, addingProduct, setAddingProduct } =
     useUiStore();
   const {
@@ -97,11 +93,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }, [productForm, registerForm, unregisterForm]);
 
   // const serialInputRef = useRef<HTMLInputElement | null>(null);
-  // useEffect(() => {
-  //   if (addingProduct) {
-  //     serialInputRef.current?.focus();
-  //   }
-  // }, [addingProduct]);
+  useEffect(() => {
+    if (addingProduct) {
+      // serialInputRef.current?.focus();
+      setCurrentProductImages([])
+      setOriginalProductImages([])
+    }
+  }, [addingProduct]);
 
   const customerId = useWatch({
     control: productForm.control,
@@ -130,15 +128,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     if (!matchedProduct || !matchedProduct.id) return [];
     return jobs.filter((job: Job) => job.product_id === matchedProduct.id);
   }, [jobs, matchedProduct]);
-
-  useEffect(() => {
-    if (pathname === "/products" && addingProduct && !serialNumber) {
-      setCurrentProductImages([]);
-      setImageDisplayed(null);
-      setImageView(null);
-      setOriginalProductImages([]);
-    }
-  }, [serialNumber, screen, pathname]);
 
   useEffect(() => {
     if (
@@ -181,34 +170,53 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [addingProduct, serialNumber, productsData, productForm.reset]);
 
+  const productsDataRef = useRef(productsData);
   useEffect(() => {
-    if (!matchedProduct) return;
+    productsDataRef.current = productsData;
+  }, [productsData]);
 
-    const initialImages = mediaLinks.filter(
-      (link: MediaLink) =>
-        link.entity_id === matchedProduct.id && link.entity_type === "product"
+  const originalProductImagesRef = useRef(originalProductImages);
+  useEffect(() => {
+    originalProductImagesRef.current = originalProductImages;
+  }, [originalProductImages]);
+
+  const currentProductImagesRef = useRef(currentProductImages);
+  useEffect(() => {
+    currentProductImagesRef.current = currentProductImages;
+  }, [currentProductImages]);
+
+  useEffect(() => {
+    if (!mediaLinks) return;
+
+    const currentProducts = productsDataRef.current;
+    const currentProductItem = currentProducts.find(
+      (product: Product) => product.serial_number === serialNumber
     );
 
-    const merged = [...initialImages, ...currentProductImages];
-    const seen = new Set<string>();
-    const deduped = merged.filter((img) => {
-      const key = img.media_id ? `media-${img.media_id}` : `url-${img.url}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    if (!currentProductItem) return;
 
-    const same =
-      JSON.stringify(deduped) === JSON.stringify(currentProductImages);
+    const loadedLinks = mediaLinks.filter(
+      (link: MediaLink) =>
+        link.entity_id === currentProductItem.id &&
+        link.entity_type === "product"
+    );
 
-    if (!same) {
-      setCurrentProductImages(deduped);
-      setOriginalProductImages(deduped);
-      if (deduped.length >= 1) {
-        setImageDisplayed(deduped[0].url);
-      }
+    const current = currentProductImagesRef.current;
+    const original = originalProductImagesRef.current;
+
+    const currentChanged =
+      JSON.stringify(loadedLinks) !== JSON.stringify(current);
+    const originalChanged =
+      JSON.stringify(loadedLinks) !== JSON.stringify(original);
+
+    if (currentChanged) {
+      setCurrentProductImages(loadedLinks);
     }
-  }, [mediaLinks, matchedProduct]);
+
+    if (originalChanged) {
+      setOriginalProductImages(loadedLinks);
+    }
+  }, [serialNumber, mediaLinks]);
 
   const handleBackButton = async () => {
     await screenClick("customer-products", "/products");
@@ -230,7 +238,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     if (imagesChanged && originalProductImages) {
       setCurrentProductImages(originalProductImages);
     }
-    if (initialFormState.current && productForm && productForm.formState.isDirty) {
+    if (
+      initialFormState.current &&
+      productForm &&
+      productForm.formState.isDirty
+    ) {
       productForm.reset(initialFormState.current);
     }
   };
@@ -281,48 +293,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     <div className="w-[100%] h-[100%] overflow-scroll hide-scrollbar">
       <UploadModal
         multiple={true}
-        onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
-          if (!currentProjectId) return;
-          //  const folderImages = media.filter(
-          //           (m: Media) => m.folder_id === activeFolder.id
-          //         );
-          // const media_items = uploadObjects.map((upload: CloudinaryUpload) => {
-
-          //             return {
-          //                   media_id: null,
-          //                   project_idx: currentProjectId,
-          //                   public_id: upload.public_id,
-          //                   url: upload.url,
-          //                   type: "image",
-          //                   folder_id: null,
-          //                   media_usage: "module",
-          //                   tags: null,
-          //                   ordinal: folderImages.length + index + 1,
-          //                 } as Media;
-
-          //   return {
-          //     project_idx: currentProjectId,
-          //     public_id: upload.public_id,
-          //     url: upload.url,
-          //     type: "image",
-          //     folder_id: null,
-          //     media_usage: "product",
-          //   } as Media;
-          // });
-          // const mediaObjects = await addMedia(media_items);
-          // setProductImages((prev) => {
-          //   const startIndex = prev.length;
-          //   const newImages: TempMediaLink[] = mediaObjects.map((m, index) => ({
-          //     entity_type: "product",
-          //     entity_id: null,
-          //     media_id: m.id,
-          //     url: m.url,
-          //     ordinal: startIndex + index,
-          //     isTemp: true,
-          //   }));
-          //   return [...prev, ...newImages];
-          // });
-          refetchMedia();
+        onUploaded={(uploadObjects: CloudinaryUpload[]) => {
+          uploadProductImages(uploadObjects, serialNumber ?? null);
         }}
       />
       {imageView && (

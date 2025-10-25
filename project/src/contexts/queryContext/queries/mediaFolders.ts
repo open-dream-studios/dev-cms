@@ -25,13 +25,13 @@ export function useMediaFolders(
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  const addMediaFolderMutation = useMutation({
+  const upsertMediaFolderMutation = useMutation({
     mutationFn: async (data: {
       project_idx: number;
       parent_id?: number | null;
       name: string;
     }) => {
-      const res = await makeRequest.post("/api/media/folders/add", data);
+      const res = await makeRequest.post("/api/media/folders/upsert", data);
       return res.data.id as number;
     },
     onSuccess: () => {
@@ -40,11 +40,11 @@ export function useMediaFolders(
       });
     },
   });
-  const addMediaFolder = async (data: {
+  const upsertMediaFolder = async (data: {
     project_idx: number;
     parent_id?: number | null;
     name: string;
-  }) => addMediaFolderMutation.mutateAsync(data);
+  }) => upsertMediaFolderMutation.mutateAsync(data);
 
   const deleteMediaFolderMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -159,5 +159,5 @@ export function useMediaFolders(
   const renameMediaFolder = async (data: { folder_id: number; name: string }) =>
     renameMediaFolderMutation.mutateAsync(data);
 
-  return { mediaFolders, isLoadingMediaFolders, refetchMediaFolders, addMediaFolder, deleteMediaFolder, renameMediaFolder, reorderMediaFolders }
+  return { mediaFolders, isLoadingMediaFolders, refetchMediaFolders, upsertMediaFolder, deleteMediaFolder, renameMediaFolder, reorderMediaFolders }
 }

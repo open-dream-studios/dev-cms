@@ -16,10 +16,11 @@ import { toast } from "react-toastify";
 import { MediaLink } from "@/types/media";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useAutoSaveStore } from "@/store/useAutoSaveStore";
+import { useMedia } from "../useMedia";
 
 export function useProductForm(product?: Product | null) {
   return useForm<ProductFormData>({
-    resolver: zodResolver(ProductSchema),
+    resolver: zodResolver(ProductSchema) as any,
     defaultValues: productToForm(product),
     mode: "onChange",
   });
@@ -32,7 +33,7 @@ export function useProductFormSubmit() {
     upsertMediaLinks,
     deleteMediaLinks,
     mediaLinks,
-    refetchProductsData
+    refetchProductsData,
   } = useContextQueries();
   const { setAddingProduct, setUpdatingLock, addingProduct } = useUiStore();
   const {
@@ -43,6 +44,7 @@ export function useProductFormSubmit() {
   } = useCurrentDataStore();
   const { getDirtyForms, resetForms } = useFormInstanceStore();
   const { cancelTimer } = useAutoSaveStore();
+  const { saveCurrentProductImages } = useMedia();
 
   const imagesChanged =
     JSON.stringify(currentProductImages) !==
@@ -56,67 +58,45 @@ export function useProductFormSubmit() {
   const onProductFormSubmit: SubmitHandler<ProductFormData> = async (data) => {
     if (!currentProjectId) return;
 
-    if (!data.serial_number || data.serial_number.length < 10) {
-      toast.error("Serial # is not at least 10 characters");
-      return;
-    }
-
-    const existing = productsData.find(
-      (item) => item.serial_number === data.serial_number
-    );
-
-    if (addingProduct && existing) {
-      toast.error("Serial # is already used on another product");
-      return;
-    }
-
-    const upsertProduct: Product = {
-      serial_number: data.serial_number,
-      product_id: existing?.product_id ?? null,
-      project_idx: currentProjectId,
-      name: data.name ?? null,
-      customer_id: data.customer_id ?? null,
-      make: data.make ?? null,
-      model: data.model ?? null,
-      length: data.length ?? 0,
-      width: data.width ?? 0,
-      height: data.height ?? 0,
-      ordinal: existing?.ordinal ?? getNextOrdinal(productsData),
-      description: data.description ?? null,
-      note: data.note ?? null,
-    };
-
-    console.log(upsertProduct);
-
-    const productIds = await upsertProducts([upsertProduct]);
-
-    resetForms("product");
-    setAddingProduct(false);
-
-    if (productIds && productIds.length > 0 && imagesChanged) {
-      // Handle deletion of stored media links
-      const originalStoredLinkIds = mediaLinks
-        .filter(
-          (link: MediaLink) =>
-            link.entity_id === productIds[0] && link.entity_type === "product"
-        )
-        .map((item) => item.id as number);
-
-      const finalStoredLinkIds = currentProductImages.map((item) => item.id);
-
-      const removedIds = originalStoredLinkIds.filter(
-        (id) => !finalStoredLinkIds.includes(id)
-      );
-
-      if (removedIds.length > 0) {
-        await deleteMediaLinks(removedIds);
+    try {
+      if (!data.serial_number || data.serial_number.length < 10) {
+        toast.error("Serial # is not at least 10 characters");
+        return;
       }
 
-      const updatedImages = currentProductImages.map((img) => ({
-        ...img,
-        entity_id: productIds[0],
-      }));
-      await upsertMediaLinks(updatedImages);
+      const existing = productsData.find(
+        (item) => item.serial_number === data.serial_number
+      );
+
+      if (addingProduct && existing) {
+        toast.error("Serial # is already used on another product");
+        return;
+      }
+
+      const upsertProduct: Product = {
+        serial_number: data.serial_number,
+        product_id: existing?.product_id ?? null,
+        project_idx: currentProjectId,
+        name: data.name ?? null,
+        customer_id: data.customer_id ?? null,
+        make: data.make ?? null,
+        model: data.model ?? null,
+        length: data.length ?? 0,
+        width: data.width ?? 0,
+        height: data.height ?? 0,
+        ordinal: existing?.ordinal ?? getNextOrdinal(productsData),
+        description: data.description ?? null,
+        note: data.note ?? null,
+      };
+
+      const productIds = await upsertProducts([upsertProduct]);
+      resetForms("product");
+      setAddingProduct(false);
+      if (productIds && productIds.length) {
+        await saveCurrentProductImages(productIds[0]);
+      }
+    } catch (error) {
+      // console.error(error);
     }
   };
 
@@ -153,7 +133,6 @@ export function useProductFormSubmit() {
     const productsToUpdate = getProductsToUpdate();
     if (productsToUpdate.length === 0) return;
     setUpdatingLock(true);
-    console.log(productsToUpdate);
     cancelTimer();
     try {
       await upsertProducts(productsToUpdate);

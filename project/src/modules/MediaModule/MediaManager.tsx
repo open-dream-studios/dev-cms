@@ -15,7 +15,7 @@ const MediaManager = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const { setUploadPopup } = useUiStore();
-  const { media, addMedia, refetchMedia, mediaFolders } =
+  const { media, upsertMedia, refetchMedia, mediaFolders } =
     useContextQueries();
 
   const [activeFolder, setActiveFolder] = useState<MediaFolder | null>(null);
@@ -70,7 +70,7 @@ const MediaManager = () => {
               } as Media;
             }
           );
-          await addMedia(upload_items);
+          await upsertMedia(upload_items);
           refetchMedia();
         }}
       />

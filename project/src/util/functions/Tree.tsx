@@ -8,7 +8,7 @@ export function buildFolderTree(
   parentId: number | null = null
 ): MediaFolderNode[] {
   return folders
-    .filter((f) => f.parent_id === parentId)
+    .filter((f) => f.parent_folder_id === parentId)
     .sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
     .map((f) => ({
       ...f,
@@ -23,9 +23,9 @@ export function buildFolderTree(
     const parents: number[] = [];
     let current = folder;
 
-    while (current.parent_id !== null) {
-      parents.push(current.parent_id);
-      const next = allFolders.find((f) => f.id === current.parent_id);
+    while (current.parent_folder_id !== null) {
+      parents.push(current.parent_folder_id);
+      const next = allFolders.find((f) => f.id === current.parent_folder_id);
       if (!next) break;
       current = next;
     }

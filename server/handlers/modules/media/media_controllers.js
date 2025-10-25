@@ -11,7 +11,7 @@ import {
   getMediaLinksFunction,
   upsertMediaLinksFunction,
   deleteMediaLinksFunction,
-  reorderMediaLinksFunction
+  reorderMediaLinksFunction,
 } from "./media_repositories.js";
 import sharp from "sharp";
 import fs from "fs/promises";
@@ -34,8 +34,8 @@ export const upsertMedia = async (req, res) => {
   if (!project_idx || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "Missing required fields" });
   }
-  const success = await upsertMediaFunction(project_idx, items);
-  return res.status(200).json({ success });
+  const { success, media } = await upsertMediaFunction(project_idx, items);
+  return res.status(200).json({ success, media });
 };
 
 export const deleteMedia = async (req, res) => {
@@ -134,44 +134,19 @@ export const upsertMediaLinks = async (req, res) => {
   if (!project_idx || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "Missing required fields" });
   }
-  const success = await upsertMediaLinksFunction(project_idx, req.body);
+  const success = await upsertMediaLinksFunction(project_idx, items);
   return res.status(success ? 200 : 500).json({ success });
-};
-
-export const upsertMediaLinksService = (items) => {
-  return new Promise((resolve, reject) => {
-    if (!Array.isArray(items) || items.length === 0) {
-      return reject(new Error("No items provided"));
-    }
-
-    const inserts = items.map((i) => [
-      i.entity_type,
-      i.entity_id,
-      i.media_id,
-      i.ordinal ?? 0,
-    ]);
-
-    const q = `
-      INSERT INTO media_link (entity_type, entity_id, media_id, ordinal)
-      VALUES ?
-      ON DUPLICATE KEY UPDATE
-        ordinal = VALUES(ordinal),
-        updated_at = NOW()
-    `;
-
-    db.query(q, [inserts], (err) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve();
-    });
-  });
 };
 
 export const deleteMediaLinks = async (req, res) => {
   const { mediaLinks } = req.body;
   const project_idx = req.user?.project_idx;
-  if (!project_idx || !mediaLinks || !Array.isArray(mediaLinks) || mediaLinks.length === 0) {
+  if (
+    !project_idx ||
+    !mediaLinks ||
+    !Array.isArray(mediaLinks) ||
+    mediaLinks.length === 0
+  ) {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
   const success = await deleteMediaLinksFunction(project_idx, mediaLinks);
@@ -200,7 +175,9 @@ export const uploadImages = async (req, res) => {
     return res.status(400).json({ message: "No files uploaded." });
   }
 
-  const uploadedFiles = await compressAndUploadFiles(req.files.map(f => f.path));
+  const uploadedFiles = await compressAndUploadFiles(
+    req.files.map((f) => f.path)
+  );
 
   if (uploadedFiles) {
     return res.status(200).json({ files: uploadedFiles });
@@ -233,7 +210,10 @@ export const compressAndUploadFiles = async (filePaths) => {
 
         // compress to webp if not already
         if (ext !== "webp") {
-          const baseName = path.basename(originalPath, path.extname(originalPath));
+          const baseName = path.basename(
+            originalPath,
+            path.extname(originalPath)
+          );
           const compressedPath = path.join(
             path.dirname(originalPath),
             `${baseName}-compressed.webp`

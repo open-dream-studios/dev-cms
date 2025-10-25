@@ -80,7 +80,7 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   return currentUser ? (
     <ProtectedLayout>
       {children}
-      <CustomerCalls />
+      {/* <CustomerCalls /> */}
     </ProtectedLayout>
   ) : (
     <UnprotectedLayout />
