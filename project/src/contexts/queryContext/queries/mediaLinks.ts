@@ -43,7 +43,6 @@ export function useMediaLinks(
     await upsertMediaLinksMutation.mutateAsync(items);
   };
 
-  // ✅ Bulk delete
   const deleteMediaLinksMutation = useMutation({
     mutationFn: async (mediaLinks: MediaLink[]) => {
       await makeRequest.post("/api/media/media-links/delete", {
@@ -62,53 +61,11 @@ export function useMediaLinks(
     await deleteMediaLinksMutation.mutateAsync(mediaLinks);
   };
 
-  // ✅ Reorder
-  const reorderMediaLinksMutation = useMutation({
-    mutationFn: async (orderedIds: number[]) => {
-      await makeRequest.post("/api/media/media-links/reorder", {
-        project_idx: currentProjectId,
-        orderedIds,
-      });
-    },
-    onMutate: async (orderedIds) => {
-      await queryClient.cancelQueries({
-        queryKey: ["mediaLinks", currentProjectId],
-      });
-
-      const prevData =
-        queryClient.getQueryData<MediaLink[]>([
-          "mediaLinks",
-          currentProjectId,
-        ]) || [];
-      const reordered = prevData.map((m) => {
-        if (!m.id) return m;
-        const idx = orderedIds.indexOf(m.id);
-        return idx === -1 || m.ordinal === idx ? m : { ...m, ordinal: idx };
-      });
-
-      queryClient.setQueryData(["mediaLinks", currentProjectId], reordered);
-      return { prevData };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prevData) {
-        queryClient.setQueryData(
-          ["mediaLinks", currentProjectId],
-          ctx.prevData
-        );
-      }
-    },
-  });
-
-  const reorderMediaLinks = async (orderedIds: number[]) => {
-    await reorderMediaLinksMutation.mutateAsync(orderedIds);
-  };
-
   return {
     mediaLinks,
     isLoadingMediaLinks,
     refetchMediaLinks,
     upsertMediaLinks,
     deleteMediaLinks,
-    reorderMediaLinks,
   };
 }

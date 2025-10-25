@@ -4,9 +4,11 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { Media, MediaLink } from "@/types/media";
+import { ProjectPage } from "@/types/pages";
 import { Product } from "@/types/products";
 import { getCurrentTimestamp } from "@/util/functions/Data";
 import axios from "axios";
+import { PopupDisplayItem, useModals } from "./useModals";
 
 export type FileImage = {
   name: string;
@@ -18,18 +20,15 @@ export function useMedia() {
   const {
     productsData,
     upsertMedia,
-    refetchMedia,
+    deleteMedia,
     mediaLinks,
     upsertMediaLinks,
     deleteMediaLinks,
-    refetchMediaLinks,
+    projectPages,
   } = useContextQueries();
-  const {
-    currentProjectId,
-    currentProductImages,
-    setCurrentProductImages,
-    originalProductImages,
-  } = useCurrentDataStore();
+  const { currentProjectId, currentProductImages, setCurrentProductImages } =
+    useCurrentDataStore();
+  const { promptContinue } = useModals();
 
   const handleSend = async (files: FileImage[]) => {
     const formData = new FormData();
@@ -97,13 +96,8 @@ export function useMedia() {
           (product: Product) => product.serial_number === serialNumber
         )
       : null;
-    const existingProductMediaLinks = matchedProduct
-      ? mediaLinks.filter(
-          (m: MediaLink) =>
-            m.entity_type === "product" && m.entity_id === matchedProduct.id
-        )
-      : [];
-    const newMediaInsert = uploadObjects.map((upload: CloudinaryUpload) => {
+
+    const newMediaInserts = uploadObjects.map((upload: CloudinaryUpload) => {
       return {
         media_id: null,
         project_idx: currentProjectId,
@@ -117,8 +111,7 @@ export function useMedia() {
       } as Media;
     });
 
-    const newMedia = await upsertMedia(newMediaInsert);
-    refetchMedia();
+    const newMedia = await upsertMedia(newMediaInserts);
 
     const newProductImages: MediaLink[] = newMedia
       .filter((m): m is Media & { id: number } => m.id != null)
@@ -176,37 +169,65 @@ export function useMedia() {
     }
   };
 
-  // if (productIds && productIds.length && imagesChanged) {
-  //   await saveCurrentProductImages(productIds[0])
-  //   // Handle deletion of stored media links
-  //   const originalStoredLinkIds = mediaLinks
-  //     .filter(
-  //       (link: MediaLink) =>
-  //         link.entity_id === productIds[0] && link.entity_type === "product"
-  //     )
-  //     .map((item) => item.id as number);
+  const handleDeleteMedia = async (media_id: number) => {
+    const mediaUsage = mediaLinks.filter(
+      (mediaLink: MediaLink) => mediaLink.media_id === media_id
+    );
+    if (!mediaUsage.length) {
+      await deleteMedia(media_id);
+    } else {
+      const usageItems: PopupDisplayItem[] = [];
+      const usageMediaLinkItems: MediaLink[] = [];
+      for (let usage of mediaUsage) {
+        if (usage.entity_id) {
+          if (usage.entity_type === "product") {
+            const matchedProduct = productsData.find(
+              (product: Product) => product.id === usage.entity_id
+            );
+            if (matchedProduct && matchedProduct.serial_number) {
+              usageItems.push({
+                id: usage.entity_id,
+                type: usage.entity_type,
+                title: matchedProduct.serial_number,
+              });
+              usageMediaLinkItems.push(usage);
+            }
+          } else if (usage.entity_type === "page") {
+            const matchedPage = projectPages.find(
+              (page: ProjectPage) => page.id === usage.entity_id
+            );
+            if (matchedPage && matchedPage.title) {
+              usageItems.push({
+                id: usage.entity_id,
+                type: usage.entity_type,
+                title: matchedPage.title,
+              });
+              usageMediaLinkItems.push(usage);
+            }
+          }
+        }
+      }
 
-  //   const finalStoredLinkIds = currentProductImages.map((item) => item.id);
+      const onContinue = async () => {
+        await deleteMedia(media_id);
+        await deleteMediaLinks(usageMediaLinkItems);
+      };
 
-  //   const removedIds = originalStoredLinkIds.filter(
-  //     (id) => !finalStoredLinkIds.includes(id)
-  //   );
-
-  //   if (removedIds.length > 0) {
-  //     await deleteMediaLinks(removedIds);
-  //   }
-
-  //   const updatedImages = currentProductImages.map((img) => ({
-  //     ...img,
-  //     entity_id: productIds[0],
-  //   }));
-  //   await upsertMediaLinks(updatedImages);
-  // }
+      promptContinue(
+        "Permanently delete media?",
+        false,
+        () => {},
+        onContinue,
+        usageItems
+      );
+    }
+  };
 
   return {
     uploadProductImages,
     saveCurrentProductImages,
     handleSend,
     handleFileProcessing,
+    handleDeleteMedia,
   };
 }

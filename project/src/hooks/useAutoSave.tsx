@@ -1,4 +1,6 @@
 // project/src/hooks/useAutoSave.tsx
+import Modal2Continue from "@/modals/Modal2Continue";
+import { useModal2Store } from "@/store/useModalStore";
 import { useRef, useCallback, useEffect } from "react";
 
 export type DelayType = "fast" | "slow" | number;
@@ -61,62 +63,3 @@ export function useAutoSave({
 
   return { startTimer, resetTimer, cancelTimer };
 }
-
-
-// // project/src/hooks/useAutoSave.tsx
-// import { useAutoSaveStore } from "@/store/useAutoSaveStore";
-// import { useCallback, useEffect } from "react";
-
-// export type DelayType = "fast" | "slow" | number;
-
-// export type UseAutoSaveOptions = {
-//   onSave: () => Promise<void> | void;
-//   fastDelay?: number;
-//   slowDelay?: number;
-// };
-
-// export function useAutoSave({
-//   onSave,
-//   fastDelay = 200,
-//   slowDelay = 2000,
-// }: UseAutoSaveOptions) {
-//   const { timerRef, setTimerRef, cancelTimer } = useAutoSaveStore();
-
-//   const getDelay = (delay: DelayType) => {
-//     if (typeof delay === "number") return delay;
-//     if (delay === "fast") return fastDelay;
-//     return slowDelay;
-//   };
-
-//   const startTimer = useCallback(
-//     (delay: DelayType) => {
-//       if (timerRef) clearTimeout(timerRef);
-
-//       const newTimer = setTimeout(async () => {
-//         await onSave();
-//       }, getDelay(delay));
-
-//       setTimerRef(newTimer);
-//     },
-//     [onSave, fastDelay, slowDelay, timerRef, setTimerRef]
-//   );
-
-//   const resetTimer = useCallback(
-//     (delay: DelayType) => {
-//       if (timerRef) clearTimeout(timerRef);
-//       startTimer(delay);
-//     },
-//     [startTimer, timerRef]
-//   );
-
-//   useEffect(() => {
-//     return () => {
-//       if (timerRef) {
-//         clearTimeout(timerRef);
-//         Promise.resolve().then(() => onSave());
-//       }
-//     };
-//   }, []);
-
-//   return { startTimer, resetTimer, cancelTimer };
-// }

@@ -2,12 +2,12 @@
 export type FileType = "image" | "video" | "file";
 
 export type MediaFolder = {
-  id: number;
+  id?: number;
   folder_id: string | null;
   project_idx: number;
   parent_folder_id: number | null;
   name: string;
-  ordinal: number;
+  ordinal: number | null;
   created_at?: string;
   updated_at?: string;
 };

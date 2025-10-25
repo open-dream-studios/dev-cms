@@ -3,15 +3,12 @@ import {
   getMediaFunction,
   upsertMediaFunction,
   deleteMediaFunction,
-  reorderMediaFunction,
   deleteMediaFolderFunction,
   getMediaFoldersFunction,
-  upsertMediaFolderFunction,
-  reorderMediaFoldersFunction,
+  upsertMediaFoldersFunction,
   getMediaLinksFunction,
   upsertMediaLinksFunction,
   deleteMediaLinksFunction,
-  reorderMediaLinksFunction,
 } from "./media_repositories.js";
 import sharp from "sharp";
 import fs from "fs/promises";
@@ -39,30 +36,13 @@ export const upsertMedia = async (req, res) => {
 };
 
 export const deleteMedia = async (req, res) => {
-  const { media_id } = req.body;
+  const { id } = req.body;
   const project_idx = req.user?.project_idx;
 
-  if (!project_idx || !media_id) {
+  if (!project_idx || !id) {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
-  const success = await deleteMediaFunction(project_idx, media_id);
-  return res.status(success ? 200 : 500).json({ success });
-};
-
-export const reorderMedia = async (req, res) => {
-  const { folder_id, orderedIds } = req.body;
-  const project_idx = req.user?.project_idx;
-
-  if (
-    !project_idx ||
-    !folder_id ||
-    !orderedIds ||
-    !Array.isArray(orderedIds) ||
-    orderedIds.length === 0
-  ) {
-    return res.status(400).json({ success: false, message: "Missing fields" });
-  }
-  const success = await reorderMediaFunction(project_idx, req.body);
+  const success = await deleteMediaFunction(project_idx, id);
   return res.status(success ? 200 : 500).json({ success });
 };
 
@@ -76,45 +56,36 @@ export const getMediaFolders = async (req, res) => {
   return res.json({ mediaFolders });
 };
 
-export const upsertMediaFolder = async (req, res) => {
-  const { name } = req.body;
+export const upsertMediaFolders = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx || !name) {
+  const { folders } = req.body;
+
+  if (!project_idx || !Array.isArray(folders) || folders.length === 0) {
     return res
       .status(400)
-      .json({ success: false, message: "Missing project_idx" });
+      .json({ success: false, message: "Missing project_idx or folders" });
   }
-  const { folder_id, success } = await upsertMediaFolderFunction(
-    project_idx,
-    req.body
-  );
-  return res.status(success ? 200 : 500).json({ success, folder_id });
+
+  try {
+    const { success, folderIds } = await upsertMediaFoldersFunction(
+      project_idx,
+      folders
+    );
+    return res.status(success ? 200 : 500).json({ success, folderIds });
+  } catch (err) {
+    console.error("❌ Controller Error -> upsertMediaFolders:", err);
+    return res.status(500).json({ success: false, message: "Upsert failed" });
+  }
 };
 
 export const deleteMediaFolder = async (req, res) => {
-  const { folder_id } = req.body;
+  const { id } = req.body;
   const project_idx = req.user?.project_idx;
 
-  if (!project_idx || !folder_id) {
+  if (!project_idx || !id) {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
-  const success = await deleteMediaFolderFunction(project_idx, folder_id);
-  return res.status(success ? 200 : 500).json({ success });
-};
-
-export const reorderMediaFolders = async (req, res) => {
-  const { parent_id, orderedIds } = req.body;
-  const project_idx = req.user?.project_idx;
-  if (
-    !project_idx ||
-    !parent_id ||
-    !orderedIds ||
-    !Array.isArray(orderedIds) ||
-    orderedIds.length === 0
-  ) {
-    return res.status(400).json({ success: false, message: "Missing fields" });
-  }
-  const success = await reorderMediaFoldersFunction(project_idx, req.body);
+  const success = await deleteMediaFolderFunction(project_idx, id);
   return res.status(success ? 200 : 500).json({ success });
 };
 
@@ -150,22 +121,6 @@ export const deleteMediaLinks = async (req, res) => {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
   const success = await deleteMediaLinksFunction(project_idx, mediaLinks);
-  return res.status(success ? 200 : 500).json({ success });
-};
-
-export const reorderMediaLinks = async (req, res) => {
-  const { folder_id, orderedIds } = req.body;
-  const project_idx = req.user?.project_idx;
-  if (
-    !project_idx ||
-    !folder_id ||
-    !orderedIds ||
-    !Array.isArray(orderedIds) ||
-    orderedIds.length === 0
-  ) {
-    return res.status(400).json({ success: false, message: "Missing fields" });
-  }
-  const success = await reorderMediaLinksFunction(project_idx, req.body);
   return res.status(success ? 200 : 500).json({ success });
 };
 

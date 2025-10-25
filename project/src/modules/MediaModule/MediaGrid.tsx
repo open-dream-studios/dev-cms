@@ -16,10 +16,11 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Media, MediaFolder } from "@/types/media";
 import { appTheme } from "@/util/appTheme";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { useMedia } from "@/hooks/useMedia";
 
 type SortableMediaItemProps = {
   media: Media;
@@ -53,7 +54,8 @@ function SortableMediaItem({
     animateLayoutChanges: () => false,
   });
   const { currentUser } = useContext(AuthContext);
-  const { deleteMedia, mediaFolders } = useContextQueries();
+  const { mediaFolders } = useContextQueries();
+  const { handleDeleteMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -135,11 +137,11 @@ function SortableMediaItem({
             backgroundColor: t.background_1,
             border: "0.5px solid " + t.text_3,
           }}
-          className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+          className="absolute top-[-8px] right-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
           onClick={async (e: any) => {
             e.stopPropagation();
-            if (media.media_id) {
-              await deleteMedia(media.media_id);
+            if (media.id) {
+              await handleDeleteMedia(media.id);
             }
           }}
         >
@@ -168,10 +170,9 @@ function SortableMediaItem({
 }
 
 type MediaGridProps = {
-  media: Media[];
+  filteredMedia: Media[];
   view: "grid" | "list";
   projectId: number;
-  onReorder: (newOrder: Media[]) => void;
   activeFolder: MediaFolder | null;
   setActiveFolder: React.Dispatch<React.SetStateAction<MediaFolder | null>>;
   editMode: boolean;
@@ -179,9 +180,8 @@ type MediaGridProps = {
 };
 
 export default function MediaGrid({
-  media,
+  filteredMedia,
   view,
-  onReorder,
   activeFolder,
   setActiveFolder,
   editMode,
@@ -195,6 +195,7 @@ export default function MediaGrid({
     })
   );
   const { currentUser } = useContext(AuthContext);
+  const { upsertMedia } = useContextQueries();
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [mediaSelected, setMediaSelected] = useState<Media | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -203,22 +204,52 @@ export default function MediaGrid({
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
+  const originalMediaRef = useRef<Media[]>([]);
   useEffect(() => {
-    setLocalMedia(
-      [...media].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+    const sortedMedia = [...filteredMedia].sort(
+      (a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
     );
-  }, [media]);
+    setLocalMedia(sortedMedia);
+    originalMediaRef.current = sortedMedia;
+  }, [filteredMedia]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = localMedia.findIndex((i) => i.id === active.id);
-    const newIndex = localMedia.findIndex((i) => i.id === over.id);
+    const folderId = activeFolder ? activeFolder.id : null;
 
-    const newOrder = arrayMove(localMedia, oldIndex, newIndex);
-    setLocalMedia(newOrder);
-    onReorder(newOrder);
+    const siblings = folderId
+      ? localMedia.filter((m) => m.folder_id === folderId)
+      : localMedia.filter((m) => m.folder_id === null);
+
+    const oldIndex = siblings.findIndex((m) => m.media_id === active.id);
+    const newIndex = siblings.findIndex((m) => m.media_id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newSiblingsOrder = arrayMove(siblings, oldIndex, newIndex);
+
+    setLocalMedia((prev) => {
+      const newState = prev.map((item) => {
+        const idx = newSiblingsOrder.findIndex(
+          (m) => m.media_id === item.media_id
+        );
+        return idx > -1 ? { ...item, ordinal: idx } : item;
+      });
+      return newState.sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0));
+    });
+
+    const updatedMedia = newSiblingsOrder
+      .map((m, idx) => ({ ...m, ordinal: idx }))
+      .filter((m) => {
+        const original = originalMediaRef.current.find(
+          (om) => om.media_id === m.media_id
+        );
+        return original && original.ordinal !== m.ordinal;
+      });
+    if (updatedMedia.length > 0) {
+      await upsertMedia(updatedMedia);
+    }
   };
 
   if (!currentUser) return null;
@@ -339,9 +370,9 @@ export default function MediaGrid({
           >
             {localMedia.map((m) => (
               <SortableMediaItem
-                key={m.id}
+                key={m.media_id}
                 media={m}
-                disabled={activeFolder === null}
+                disabled={false}
                 editMode={editMode}
                 setMediaSelected={setMediaSelected}
                 activeFolder={activeFolder}

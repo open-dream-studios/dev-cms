@@ -1,6 +1,6 @@
 // project/src/modules/MediaModule/MediaManager.tsx
-import { useState, useContext } from "react";
-import { AuthContext } from "@/contexts/authContext"; 
+import { useState, useContext, useMemo } from "react";
+import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MediaFoldersSidebar from "./MediaFoldersSidebar";
 import MediaGrid from "./MediaGrid";
@@ -34,27 +34,20 @@ const MediaManager = () => {
 
   if (!currentUser || !currentProjectId) return null;
 
-  const filteredMedia: Media[] = activeFolder
-    ? media.filter((m: Media) => m.folder_id === activeFolder.id)
-    : media;
-
-  const handleReorder = (newOrder: Media[]) => {
-    if (!activeFolder || !activeFolder.id) return;
-    // reorderMedia({
-    //   folder_id: activeFolder.id,
-    //   orderedIds: newOrder.map((m) => m.id),
-    // });
-  };
+  const filteredMedia: Media[] = useMemo(() => {
+    return activeFolder
+      ? media.filter((m: Media) => m.folder_id === activeFolder.id)
+      : media.filter((m: Media) => m.folder_id === null);
+  }, [media, activeFolder]);
 
   return (
     <div className="flex w-full h-[100%]">
       <UploadModal
         multiple
         onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
-          if (!activeFolder) return;
-          const folderImages = media.filter(
-            (m: Media) => m.folder_id === activeFolder.id
-          );
+          const folderImages = activeFolder
+            ? media.filter((m: Media) => m.folder_id === activeFolder.id)
+            : [];
           const upload_items = uploadObjects.map(
             (upload: CloudinaryUpload, index: number) => {
               return {
@@ -63,10 +56,10 @@ const MediaManager = () => {
                 public_id: upload.public_id,
                 url: upload.url,
                 type: "image",
-                folder_id: activeFolder.id,
+                folder_id: activeFolder ? activeFolder.id : null,
                 media_usage: "module",
                 tags: null,
-                ordinal: folderImages.length + index + 1,
+                ordinal: folderImages.length + index,
               } as Media;
             }
           );
@@ -93,10 +86,9 @@ const MediaManager = () => {
         />
 
         <MediaGrid
-          media={filteredMedia}
+          filteredMedia={filteredMedia}
           view={view}
           projectId={currentProjectId}
-          onReorder={handleReorder}
           activeFolder={activeFolder}
           setActiveFolder={setActiveFolder}
           editMode={editMode}

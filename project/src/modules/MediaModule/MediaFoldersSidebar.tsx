@@ -1,7 +1,7 @@
 // project/src/modules/MediaModule/MediaFoldersSidebar.tsx
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -20,7 +20,6 @@ import {
   Folder,
   FolderOpen,
   GripVertical,
-  Plus,
   ChevronRight,
   ChevronDown,
 } from "lucide-react";
@@ -37,7 +36,6 @@ import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { FaPlus } from "react-icons/fa6";
 import Divider from "@/lib/blocks/Divider";
-import { MdChevronLeft } from "react-icons/md";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type MediaFoldersSidebarProps = {
@@ -70,12 +68,8 @@ export default function MediaFoldersSidebar({
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
-  const {
-    mediaFolders,
-    upsertMediaFolder,
-    reorderMediaFolders,
-    deleteMediaFolder,
-  } = useContextQueries();
+  const { mediaFolders, upsertMediaFolders, deleteMediaFolder } =
+    useContextQueries();
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
@@ -121,7 +115,7 @@ export default function MediaFoldersSidebar({
   const handleCloseContextMenu = () => setContextMenu(null);
 
   const handleDeleteFolder = async () => {
-    if (contextMenu?.folderId) {
+    if (contextMenu?.folderId) { 
       await deleteMediaFolder(contextMenu.folderId);
       setContextMenu(null);
       if (activeFolder && activeFolder.id === contextMenu.folderId) {
@@ -161,12 +155,24 @@ export default function MediaFoldersSidebar({
     return null;
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const originalFoldersRef = useRef<MediaFolder[]>([]);
+  useEffect(() => {
+    if (mediaFolders) {
+      originalFoldersRef.current = mediaFolders;
+      setLocalFolders(
+        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+      );
+    }
+  }, [mediaFolders]);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
+    // Find the parent group for this move
     const parentId = findParentId(active.id as number, folderTree);
 
+    // Identify the siblings in that parent scope
     const siblings: MediaFolder[] = parentId
       ? localFolders.filter((f) => f.parent_folder_id === parentId)
       : localFolders.filter((f) => f.parent_folder_id === null);
@@ -175,8 +181,10 @@ export default function MediaFoldersSidebar({
     const newIndex = siblings.findIndex((f) => f.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
+    // Compute the new sibling order
     const newSiblingsOrder = arrayMove(siblings, oldIndex, newIndex);
 
+    // Update local state optimistically
     setLocalFolders((prev) =>
       prev.map((folder) => {
         const idx = newSiblingsOrder.findIndex((f) => f.id === folder.id);
@@ -184,10 +192,20 @@ export default function MediaFoldersSidebar({
       })
     );
 
-    reorderMediaFolders({
-      parent_id: parentId,
-      orderedIds: newSiblingsOrder.map((f) => f.id),
-    });
+    // Prepare array of folders for upsert (only those whose ordinal changed)
+    const updatedFolders = newSiblingsOrder
+      .map((f, idx) => ({ ...f, ordinal: idx })) // set new ordinal
+      .filter((f) => {
+        const original = originalFoldersRef.current.find(
+          (of) => of.id === f.id
+        );
+        return original && original.ordinal !== f.ordinal;
+      });
+
+    if (updatedFolders.length > 0) {
+      // Call unified upsert endpoint with only changed folders
+      await upsertMediaFolders(updatedFolders);
+    }
   };
 
   const handleAddFolder = async () => {
@@ -213,14 +231,19 @@ export default function MediaFoldersSidebar({
         <Modal2MultiStepModalInput
           steps={steps}
           onComplete={async (values) => {
-            const newId = await upsertMediaFolder({
-              project_idx: currentProjectId,
-              parent_id: activeFolder ? activeFolder.id : null,
-              name: values.name,
-            });
-            if (newId) {
-              if (activeFolder) {
-                setOpenFolders((prev) => new Set(prev).add(activeFolder.id));
+            const newIds = await upsertMediaFolders([
+              {
+                folder_id: null,
+                project_idx: currentProjectId,
+                parent_folder_id: activeFolder ? activeFolder.id : null,
+                name: values.name,
+                ordinal: null,
+              } as MediaFolder,
+            ]);
+            if (newIds && newIds.length) {
+              const newId = newIds[0];
+              if (activeFolder && activeFolder.id) {
+                setOpenFolders((prev) => new Set(prev).add(activeFolder.id!));
               }
               const folderFound = mediaFolders.find(
                 (mediaFolder: MediaFolder) => mediaFolder.id === newId
@@ -236,6 +259,7 @@ export default function MediaFoldersSidebar({
   };
 
   const renderFolderIcons = (folder: MediaFolderNode) => {
+    if (!folder.id) return;
     const isOpen = openFolders.has(folder.id);
 
     return (
@@ -331,7 +355,7 @@ export default function MediaFoldersSidebar({
           onDragCancel={() => setActiveId(null)}
         >
           <SortableContext
-            items={folderTree.map((f) => f.id)}
+            items={folderTree.map((f) => f.id!)}
             strategy={verticalListSortingStrategy}
           >
             {folderTree.map((folder) => (
@@ -359,8 +383,7 @@ export default function MediaFoldersSidebar({
                   return (
                     <div
                       style={{
-                        backgroundColor:
-                          t.background_2,
+                        backgroundColor: t.background_2,
                       }}
                       className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]"
                     >

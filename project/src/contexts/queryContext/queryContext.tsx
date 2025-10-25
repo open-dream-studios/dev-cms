@@ -101,31 +101,16 @@ export type QueryContextType = {
 
   // ---- Media ----
   media: Media[];
-  mediaFolders: MediaFolder[];
   isLoadingMedia: boolean;
-  isLoadingMediaFolders: boolean;
   refetchMedia: () => void;
-  refetchMediaFolders: () => void;
   upsertMedia: (data: Media[]) => Promise<Media[]>;
-  deleteMedia: (media_id: string) => Promise<void>;
-  reorderMedia: (data: {
-    folder_id: number | null;
-    orderedIds: number[];
-  }) => Promise<void>;
-  upsertMediaFolder: (data: {
-    project_idx: number;
-    parent_id?: number | null;
-    name: string;
-  }) => Promise<number>;
+  deleteMedia: (id: number) => Promise<void>;
+
+  mediaFolders: MediaFolder[];
+  isLoadingMediaFolders: boolean;
+  refetchMediaFolders: () => void;
+  upsertMediaFolders: (data: MediaFolder[]) => Promise<number[]>;
   deleteMediaFolder: (id: number) => Promise<void>;
-  reorderMediaFolders: (data: {
-    parent_id: number | null;
-    orderedIds: number[];
-  }) => Promise<void>;
-  renameMediaFolder: (data: {
-    folder_id: number;
-    name: string;
-  }) => Promise<void>;
 
   // ---- Media Links ----
   mediaLinks: MediaLink[];
@@ -133,7 +118,6 @@ export type QueryContextType = {
   refetchMediaLinks: () => void;
   upsertMediaLinks: (items: MediaLink[]) => Promise<void>;
   deleteMediaLinks: (mediaLinks: MediaLink[]) => Promise<void>;
-  reorderMediaLinks: (orderedIds: number[]) => Promise<void>;
 
   // ---- Page Definitions ----
   pageDefinitions: PageDefinition[];
@@ -280,30 +264,21 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     upsertModuleDefinition,
     deleteModuleDefinition,
   } = useModuleDefinitions(isLoggedIn, currentProjectId);
-  const {
-    media,
-    isLoadingMedia,
-    refetchMedia,
-    upsertMedia,
-    deleteMedia,
-    reorderMedia,
-  } = useMedia(isLoggedIn, currentProjectId);
+  const { media, isLoadingMedia, refetchMedia, upsertMedia, deleteMedia } =
+    useMedia(isLoggedIn, currentProjectId);
   const {
     mediaLinks,
     isLoadingMediaLinks,
     refetchMediaLinks,
     upsertMediaLinks,
     deleteMediaLinks,
-    reorderMediaLinks,
   } = useMediaLinks(isLoggedIn, currentProjectId);
   const {
     mediaFolders,
     isLoadingMediaFolders,
     refetchMediaFolders,
-    upsertMediaFolder,
+    upsertMediaFolders,
     deleteMediaFolder,
-    renameMediaFolder,
-    reorderMediaFolders,
   } = useMediaFolders(isLoggedIn, currentProjectId);
   const {
     pageDefinitions,
@@ -412,17 +387,13 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchMediaFolders,
         upsertMedia,
         deleteMedia,
-        reorderMedia,
         mediaLinks,
         isLoadingMediaLinks,
         refetchMediaLinks,
         upsertMediaLinks,
         deleteMediaLinks,
-        reorderMediaLinks,
-        upsertMediaFolder,
+        upsertMediaFolders,
         deleteMediaFolder,
-        reorderMediaFolders,
-        renameMediaFolder,
         pageDefinitions,
         isLoadingPageDefinitions,
         refetchPageDefinitions,

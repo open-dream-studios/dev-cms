@@ -5,15 +5,12 @@ import {
   getMedia,
   upsertMedia,
   deleteMedia,
-  reorderMedia,
   getMediaFolders,
-  upsertMediaFolder,
-  deleteMediaFolder,
-  reorderMediaFolders,
+  upsertMediaFolders,
+  deleteMediaFolder, 
   getMediaLinks,
   upsertMediaLinks,
-  deleteMediaLinks,
-  reorderMediaLinks,
+  deleteMediaLinks, 
 } from "./media_controllers.js";
 import { authenticateUser } from "../../../connection/middlewares.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
@@ -35,12 +32,6 @@ router.post(
   checkProjectPermission(2),
   deleteMedia
 );
-router.post(
-  "/reorder",
-  authenticateUser,
-  checkProjectPermission(2),
-  reorderMedia
-);
 
 // ---- MEDIA FOLDERS ----
 router.get(
@@ -53,19 +44,13 @@ router.post(
   "/folders/upsert",
   authenticateUser,
   checkProjectPermission(2),
-  upsertMediaFolder
+  upsertMediaFolders
 );
 router.post(
   "/folders/delete",
   authenticateUser,
   checkProjectPermission(2),
   deleteMediaFolder
-);
-router.post(
-  "/folders/reorder",
-  authenticateUser,
-  checkProjectPermission(2),
-  reorderMediaFolders
 );
 
 // ---- MEDIA LINKS ----
@@ -86,12 +71,6 @@ router.post(
   authenticateUser,
   checkProjectPermission(2),
   deleteMediaLinks
-);
-router.post(
-  "/media-links/reorder",
-  authenticateUser,
-  checkProjectPermission(2),
-  reorderMediaLinks
 );
 
 // ---- IMAGES ----

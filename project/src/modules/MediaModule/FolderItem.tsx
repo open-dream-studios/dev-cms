@@ -27,6 +27,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
@@ -52,12 +53,15 @@ export default function FolderItem({
   setRenamingFolder,
 }: FolderItemProps) {
   const { currentUser } = useContext(AuthContext);
-  const { renameMediaFolder } = useContextQueries();
+  const { upsertMediaFolders } = useContextQueries();
+  const { currentProjectId } = useCurrentDataStore();
   const [tempName, setTempName] = useState<string>(folder.name);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
+
+  if (!folder || !folder.id) return;
 
   useEffect(() => {
     if (renamingFolder === folder.id) {
@@ -72,8 +76,17 @@ export default function FolderItem({
   }, [renamingFolder, folder.id, folder.name]);
 
   const handleRename = async () => {
-    if (tempName.trim() && tempName !== folder.name) {
-      await renameMediaFolder({ folder_id: folder.id, name: tempName.trim() });
+    if (!currentProjectId) return;
+    if (tempName.trim() && tempName !== folder.name && folder.id) {
+      await upsertMediaFolders([
+        {
+          folder_id: folder.folder_id,
+          project_idx: currentProjectId,
+          parent_folder_id: folder.parent_folder_id,
+          name: tempName.trim(),
+          ordinal: folder.ordinal,
+        } as MediaFolder,
+      ]);
     }
     setRenamingFolder(null);
   };
@@ -103,7 +116,7 @@ export default function FolderItem({
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
     clickTimeout.current = setTimeout(() => {
       setActiveFolder(folder);
-      if (folder.children && folder.children.length > 0) {
+      if (folder.children && folder.children.length > 0 && folder.id) {
         toggleFolderOpen(folder.id);
       }
     }, 200);
@@ -111,7 +124,9 @@ export default function FolderItem({
 
   const handleDoubleClick = () => {
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
-    setRenamingFolder(folder.id);
+    if (folder.id) {
+      setRenamingFolder(folder.id);
+    }
   };
 
   const [hovered, setHovered] = useState(false);
@@ -133,7 +148,11 @@ export default function FolderItem({
         className={`flex items-center gap-2 px-2 py-1 cursor-pointer rounded`}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
-        onContextMenu={(e) => onContextMenu(e, folder.id)}
+        onContextMenu={(e) => {
+          if (folder.id) {
+            onContextMenu(e, folder.id);
+          }
+        }}
         animate={{
           backgroundColor: hovered
             ? t.background_2
@@ -181,7 +200,7 @@ export default function FolderItem({
       {isOpen && folder.children && folder.children.length > 0 && (
         <div className="ml-2">
           <SortableContext
-            items={folder.children.map((c) => c.id)}
+            items={folder.children.map((c) => c.id!)}
             strategy={verticalListSortingStrategy}
           >
             {folder.children.map((child) => (

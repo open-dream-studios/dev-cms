@@ -22,33 +22,71 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  const upsertMediaMutation = useMutation<
-    Media[],
-    Error,
-    { project_idx: number; items: Media[] }
-  >({
-    mutationFn: async (data) => {
-      const res = await makeRequest.post("/api/media/upsert", data);
+  const upsertMediaMutation = useMutation({
+    mutationFn: async (items: Media[]) => {
+      const res = await makeRequest.post("/api/media/upsert", {
+        project_idx: currentProjectId,
+        items,
+      });
       return Array.isArray(res.data.media) ? res.data.media : [];
     },
-    onSuccess: () => {
+
+    // 1. Optimistic update
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({
+        queryKey: ["media", currentProjectId],
+      });
+
+      const previousMedia = queryClient.getQueryData<Media[]>([
+        "media",
+        currentProjectId,
+      ]);
+
+      // Optimistically update the cache immediately
+      queryClient.setQueryData<Media[]>(
+        ["media", currentProjectId],
+        (old = []) => {
+          const updated = old.map((item) => {
+            const idx = data.findIndex(
+              (i) => i.media_id === item.media_id
+            );
+            return idx > -1
+              ? { ...item, ordinal: data[idx].ordinal }
+              : item;
+          });
+          return updated.sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0));
+        }
+      );
+
+      return { previousMedia };
+    },
+
+    // 2. If error, roll back
+    onError: (_err, _new, context) => {
+      if (context?.previousMedia) {
+        queryClient.setQueryData(
+          ["media", currentProjectId],
+          context.previousMedia
+        );
+      }
+    },
+
+    // 3. After success, refetch to confirm
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
     },
   });
 
   const upsertMedia = async (items: Media[]): Promise<Media[]> => {
     if (!currentProjectId) throw new Error("Project ID is missing");
-    return await upsertMediaMutation.mutateAsync({
-      project_idx: currentProjectId,
-      items,
-    });
+    return await upsertMediaMutation.mutateAsync(items);
   };
 
   const deleteMediaMutation = useMutation({
-    mutationFn: async (media_id: string) => {
+    mutationFn: async (id: number) => {
       await makeRequest.post("/api/media/delete", {
         project_idx: currentProjectId,
-        media_id,
+        id,
       });
     },
     onSuccess: () => {
@@ -56,60 +94,9 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     },
   });
 
-  const deleteMedia = async (media_id: string) => {
-    deleteMediaMutation.mutateAsync(media_id);
+  const deleteMedia = async (id: number) => {
+    deleteMediaMutation.mutateAsync(id);
   };
-
-  const reorderMediaMutation = useMutation({
-    mutationFn: async (data: {
-      folder_id: number | null;
-      orderedIds: number[];
-    }) => {
-      await makeRequest.post("/api/media/reorder", {
-        project_idx: currentProjectId,
-        folder_id: data.folder_id,
-        orderedIds: data.orderedIds,
-      });
-    },
-    onMutate: async (variables) => {
-      await queryClient.cancelQueries({
-        queryKey: ["media", currentProjectId],
-      });
-
-      const prevMedia =
-        queryClient.getQueryData<Media[]>(["media", currentProjectId]) || [];
-      const reordered = prevMedia.map((m) => {
-        if (!m.id) return null;
-        const idx = variables.orderedIds.indexOf(m.id);
-        if (idx === -1 || m.ordinal === idx) return m;
-        return { ...m, ordinal: idx };
-      });
-      queryClient.setQueryData(["media", currentProjectId], reordered);
-      return { prevMedia };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.prevMedia) {
-        queryClient.setQueryData(
-          ["media", currentProjectId],
-          context.prevMedia
-        );
-      }
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.setQueryData<Media[]>(["media", currentProjectId], (old) => {
-        if (!old) return old;
-        return old.map((m) => {
-          const idx = m.id ? variables.orderedIds.indexOf(m.id) : -1;
-          return idx === -1 || m.ordinal === idx ? m : { ...m, ordinal: idx };
-        });
-      });
-    },
-  });
-
-  const reorderMedia = async (data: {
-    folder_id: number | null;
-    orderedIds: number[];
-  }) => reorderMediaMutation.mutateAsync(data);
 
   return {
     media,
@@ -117,6 +104,5 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     refetchMedia,
     upsertMedia,
     deleteMedia,
-    reorderMedia,
   };
 }
