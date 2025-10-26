@@ -21,6 +21,7 @@ import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useDnDStore } from "@/store/useDnDStore";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
@@ -92,8 +93,7 @@ export default function FolderItem({
     transition,
     isDragging,
   } = useSortable({
-    // id: folder.id,
-    id: `folder-${folder.id}`,
+    id: folder.id,
   });
 
   const isOpen = openFolders.has(folder.id);
@@ -122,6 +122,8 @@ export default function FolderItem({
       setRenamingFolder(folder.id);
     }
   };
+  const hoveredFolder = useDnDStore((state) => state.hoveredFolder);
+  const isDraggedOver = hoveredFolder === String(folder.id);
 
   const [hovered, setHovered] = useState(false);
 
@@ -134,8 +136,7 @@ export default function FolderItem({
         ...style,
         opacity: isDragging ? 0 : 1,
       }}
-      onMouseEnter={()=>{console.log("handle entered")}}
-      onMouseLeave={()=>{console.log("handle left")}}
+      data-folder-id={folder.id}
       {...attributes}
     >
       <motion.div
@@ -150,11 +151,12 @@ export default function FolderItem({
           }
         }}
         animate={{
-          backgroundColor: hovered
-            ? t.background_2
-            : activeFolder && activeFolder.id === folder.id
-            ? t.background_2
-            : t.background_1,
+          backgroundColor:
+            hovered || isDraggedOver
+              ? t.background_2
+              : activeFolder && activeFolder.id === folder.id
+              ? t.background_2
+              : t.background_1,
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
@@ -196,8 +198,7 @@ export default function FolderItem({
       {isOpen && folder.children && folder.children.length > 0 && (
         <div className="ml-2">
           <SortableContext
-            // items={folder.children.map((c) => c.id!)}
-            items={folder.children.map((c) => `folder-${c.id}`)}
+            items={folder.children.map((c) => c.id!)}
             strategy={verticalListSortingStrategy}
           >
             {folder.children.map((child) => (

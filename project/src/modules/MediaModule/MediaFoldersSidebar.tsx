@@ -1,9 +1,10 @@
 // project/src/modules/MediaModule/MediaFoldersSidebar.tsx
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   DndContext,
+  DragEndEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -36,14 +37,14 @@ import { AuthContext } from "@/contexts/authContext";
 import { FaPlus } from "react-icons/fa6";
 import Divider from "@/lib/blocks/Divider";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { motion } from "framer-motion";
+import { useDnDStore } from "@/store/useDnDStore";
 
 type MediaFoldersSidebarProps = {
   activeFolder: MediaFolder | null;
   setActiveFolder: (mediaFolder: MediaFolder | null) => void;
   openFolders: Set<number>;
   setOpenFolders: React.Dispatch<React.SetStateAction<Set<number>>>;
-  folderTree: MediaFolderNode[];
-  activeId: string | null;
 };
 
 function findNode(
@@ -65,8 +66,6 @@ export default function MediaFoldersSidebar({
   setActiveFolder,
   openFolders,
   setOpenFolders,
-  folderTree,
-  activeId,
 }: MediaFoldersSidebarProps) {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
@@ -76,6 +75,18 @@ export default function MediaFoldersSidebar({
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
+
+  const sensors = useSensors(useSensor(PointerSensor));
+  const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
+  useEffect(() => {
+    if (mediaFolders) {
+      setLocalFolders(
+        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+      );
+    }
+  }, [mediaFolders]);
+
+  const folderTree: MediaFolderNode[] = buildFolderTree(localFolders);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -129,6 +140,67 @@ export default function MediaFoldersSidebar({
       }
       return next;
     });
+  };
+
+  const findParentId = (
+    id: number,
+    nodes: MediaFolderNode[],
+    parentId: number | null = null
+  ): number | null => {
+    for (const n of nodes) {
+      if (n.id === id) return parentId;
+      if (n.children && n.children.length) {
+        const childResult = findParentId(id, n.children, n.id);
+        if (childResult !== null) return childResult;
+      }
+    }
+    return null;
+  };
+
+  const originalFoldersRef = useRef<MediaFolder[]>([]);
+  useEffect(() => {
+    if (mediaFolders) {
+      originalFoldersRef.current = mediaFolders;
+      setLocalFolders(
+        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+      );
+    }
+  }, [mediaFolders]);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const parentId = findParentId(active.id as number, folderTree);
+    const siblings: MediaFolder[] = parentId
+      ? localFolders.filter((f) => f.parent_folder_id === parentId)
+      : localFolders.filter((f) => f.parent_folder_id === null);
+
+    const oldIndex = siblings.findIndex((f) => f.id === active.id);
+    const newIndex = siblings.findIndex((f) => f.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newSiblingsOrder = arrayMove(siblings, oldIndex, newIndex);
+
+    setLocalFolders((prev) =>
+      prev.map((folder) => {
+        const idx = newSiblingsOrder.findIndex((f) => f.id === folder.id);
+        return idx > -1 ? { ...folder, ordinal: idx } : folder;
+      })
+    );
+
+    const updatedFolders = newSiblingsOrder
+      .map((f, idx) => ({ ...f, ordinal: idx }))
+      .filter((f) => {
+        const original = originalFoldersRef.current.find(
+          (of) => of.id === f.id
+        );
+        return original && original.ordinal !== f.ordinal;
+      });
+
+    if (updatedFolders.length > 0) {
+      await upsertMediaFolders(updatedFolders);
+    }
   };
 
   const handleAddFolder = async () => {
@@ -206,11 +278,54 @@ export default function MediaFoldersSidebar({
     );
   };
 
+  const [activeId, setActiveId] = useState<number | null>(null);
+
+  const hoveredFolder = useDnDStore((state) => state.hoveredFolder);
+  const isDraggedOver = hoveredFolder === "-1";
+
+  useEffect(() => {
+    function handleMove(e: MouseEvent) {
+      const folders =
+        document.querySelectorAll<HTMLElement>("[data-folder-id]");
+      let hovered: string | null = null;
+
+      folders.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          hovered = el.dataset.folderId ?? null;
+        }
+      });
+
+      const topBar = document.querySelector<HTMLElement>("[data-folders-top]");
+      if (topBar) {
+        const rect = topBar.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          hovered = "-1";
+        }
+      }
+
+      useDnDStore.getState().setHoveredFolder(hovered);
+    }
+
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, []);
+
   if (!currentUser) return null;
 
   return (
     <div
-      className="w-60 h-[100%] flex flex-col px-[15px]"
+      className="w-60 h-[100%] flex flex-col"
       style={{
         borderRight: `0.5px solid ${t.background_2}`,
       }}
@@ -239,7 +354,16 @@ export default function MediaFoldersSidebar({
         </div>
       )}
 
-      <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
+      <motion.div
+        data-folders-top={-1}
+        className={
+          "px-[15px] bg-red-400 flex flex-row items-center justify-between pt-[12px] pb-[6px]"
+        }
+        animate={{
+          backgroundColor: isDraggedOver ? t.background_2 : t.background_1,
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
         <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
           <p
             onClick={() => setActiveFolder(null)}
@@ -258,12 +382,12 @@ export default function MediaFoldersSidebar({
         >
           <FaPlus size={12} />
         </div>
-      </div>
+      </motion.div>
 
       <Divider />
 
-      <div className="flex-1 overflow-y-auto">
-        {/* <DndContext
+      <div className="px-[15px] flex-1 overflow-y-auto">
+        <DndContext
           sensors={sensors}
           collisionDetection={rectIntersection}
           onDragStart={(event) => {
@@ -274,52 +398,49 @@ export default function MediaFoldersSidebar({
             handleDragEnd(event);
           }}
           onDragCancel={() => setActiveId(null)}
-        > */}
-        <SortableContext
-          items={folderTree.map((f) => `folder-${f.id}`)}
-          strategy={verticalListSortingStrategy}
         >
-          {folderTree.map((folder) => (
-            <FolderItem
-              key={folder.id}
-              folder={folder}
-              depth={0}
-              activeFolder={activeFolder}
-              setActiveFolder={setActiveFolder}
-              openFolders={openFolders}
-              toggleFolderOpen={toggleFolderOpen}
-              onContextMenu={handleContextMenu}
-              renamingFolder={renamingFolder}
-              setRenamingFolder={setRenamingFolder}
-            />
-          ))}
-        </SortableContext>
+          <SortableContext
+            items={folderTree.map((f) => f.id!)}
+            strategy={verticalListSortingStrategy}
+          >
+            {folderTree.map((folder) => (
+              <FolderItem
+                key={folder.id}
+                folder={folder}
+                depth={0}
+                activeFolder={activeFolder}
+                setActiveFolder={setActiveFolder}
+                openFolders={openFolders}
+                toggleFolderOpen={toggleFolderOpen}
+                onContextMenu={handleContextMenu}
+                renamingFolder={renamingFolder}
+                setRenamingFolder={setRenamingFolder}
+              />
+            ))}
+          </SortableContext>
 
-        <DragOverlay>
-          {activeId
-            ? (() => {
-                // const activeNode = findNode(folderTree, activeId);
-                const idStr = String(activeId);
-                const numericId = Number(idStr.replace("folder-", ""));
-                const activeNode = findNode(folderTree, numericId);
-                if (!activeNode) return null;
+          <DragOverlay>
+            {activeId
+              ? (() => {
+                  const activeNode = findNode(folderTree, activeId);
+                  if (!activeNode) return null;
 
-                return (
-                  <div
-                    style={{
-                      backgroundColor: t.background_2,
-                    }}
-                    className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]"
-                  >
-                    <GripVertical size={14} className="text-gray-400" />
-                    {renderFolderIcons(activeNode)}
-                    <span className="truncate">{activeNode.name}</span>
-                  </div>
-                );
-              })()
-            : null}
-        </DragOverlay>
-        {/* </DndContext> */}
+                  return (
+                    <div
+                      style={{
+                        backgroundColor: t.background_2,
+                      }}
+                      className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]"
+                    >
+                      <GripVertical size={14} className="text-gray-400" />
+                      {renderFolderIcons(activeNode)}
+                      <span className="truncate">{activeNode.name}</span>
+                    </div>
+                  );
+                })()
+              : null}
+          </DragOverlay>
+        </DndContext>
       </div>
     </div>
   );
