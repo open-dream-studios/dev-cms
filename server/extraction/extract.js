@@ -13,8 +13,7 @@ import path from "path";
 import fs from "fs/promises";
 import { compressAndUploadFiles } from "../controllers/images.js";
 import "../env.js";
-import { db } from "../connection/connect.js";
-import { upsertMediaLinksService } from "../controllers/mediaLinks.js";
+import { db } from "../connection/connect.js"; 
 
 const extractRow = async (sheet, row, index) => {
   console.log("EXTRACTING ROW " + index, row[7]);

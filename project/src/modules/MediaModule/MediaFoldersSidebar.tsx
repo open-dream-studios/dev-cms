@@ -357,7 +357,7 @@ export default function MediaFoldersSidebar({
       <motion.div
         data-folders-top={-1}
         className={
-          "px-[15px] bg-red-400 flex flex-row items-center justify-between pt-[12px] pb-[6px]"
+          "px-[15px] bg-red-400 flex flex-row items-center justify-between pt-[12px] pb-[6px] h-[61px]"
         }
         animate={{
           backgroundColor: isDraggedOver ? t.background_2 : t.background_1,
@@ -384,7 +384,9 @@ export default function MediaFoldersSidebar({
         </div>
       </motion.div>
 
+      <div className="w-[100%] px-[15px] mt-[-1px]">
       <Divider />
+      </div>
 
       <div className="px-[15px] flex-1 overflow-y-auto">
         <DndContext
