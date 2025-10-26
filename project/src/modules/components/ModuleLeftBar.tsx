@@ -7,8 +7,6 @@ import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { CustomerMiniCard } from "../CustomersModule/CustomerCatalog";
-import { useModal2Store } from "@/store/useModalStore";
-import Modal2Continue from "@/modals/Modal2Continue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MediaLink } from "@/types/media";
 import { Product } from "@/types/products";

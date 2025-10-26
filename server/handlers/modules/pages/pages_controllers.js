@@ -8,6 +8,7 @@ import {
   upsertPageDefinitionFunction,
   upsertPageFunction,
 } from "./pages_repositories.js";
+import { db } from "../../../connection/connect.js"
 
 // ---------- PAGE CONTROLLERS ----------
 export const getPages = async (req, res) => {
