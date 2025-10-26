@@ -28,7 +28,6 @@ import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 
 dotenv.config();
 
-const isProduction = process.env.NODE_ENV === "production";
 const app = express();
 const PORT = process.env.PORT || 8080;
 
@@ -48,8 +47,6 @@ const server = useLocalHTTPS
         return http.createServer(app);
       }
     })()
-  : isProduction
-  ? https.createServer(app)
   : http.createServer(app);
 
 // App
