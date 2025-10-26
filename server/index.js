@@ -10,7 +10,7 @@ import fs from "fs";
 import cookieParser from "cookie-parser";
 import authRoutes from "./handlers/auth/auth_routes.js";
 import productRoutes from "./handlers/modules/products/products_routes.js";
-import projectRoutes from "./handlers/projects/projects_routes.js"
+import projectRoutes from "./handlers/projects/projects_routes.js";
 import integrationRoutes from "./handlers/integrations/integrations_routes.js";
 import moduleRoutes from "./handlers/modules/modules/modules_routes.js";
 import projectMediaRoutes from "./handlers/modules/media/media_routes.js";
@@ -28,12 +28,12 @@ import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 
 dotenv.config();
 
-// const isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV === "production";
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const useHTTPS = false;
-const server = useHTTPS
+const useLocalHTTPS = false;
+const server = useLocalHTTPS
   ? (() => {
       try {
         return https.createServer(
@@ -48,6 +48,8 @@ const server = useHTTPS
         return http.createServer(app);
       }
     })()
+  : isProduction
+  ? https.createServer(app)
   : http.createServer(app);
 
 // App
@@ -92,7 +94,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/voice", callRoutes);
-app.use("/api/address", addressRoutes)
+app.use("/api/address", addressRoutes);
 
 // WebSocket
 const wss = new WebSocketServer({ server });
