@@ -132,7 +132,6 @@ const extractRow = async (sheet, row, index) => {
 
 //   await upsertMediaLinksService(mediaLinks);
 //   console.log("media links upserted");
-
 //   console.log("done");
 
 //   const tub = {
