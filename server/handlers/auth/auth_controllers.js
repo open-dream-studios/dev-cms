@@ -465,7 +465,6 @@ export const passwordReset = async (req, res) => {
 };
 
 export const getCurrentUser = (req, res) => {
-  console.log("trying")
   const token = req.cookies.accessToken;
   if (!token) return res.json(null);
 
