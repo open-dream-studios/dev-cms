@@ -18,7 +18,7 @@ export function useModals() {
     threeOptions: boolean,
     onNoSave: () => void,
     onContinue: () => void,
-    displayItems: PopupDisplayItem[]
+    displayItems?: PopupDisplayItem[]
   ) => {
     setModal2({
       ...modal2,

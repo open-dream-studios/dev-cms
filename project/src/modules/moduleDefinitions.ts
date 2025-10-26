@@ -44,17 +44,17 @@ export const moduleDefinitions: Record<string, ModuleDefinition> = {
       "googleSheetUrl",
     ],
     run: async (ctx) => {
-      const { currentProject } = ctx;
-      const identifier = "products-export-to-sheets-module";
-      const integration = checkIntegrations(identifier, ctx, true);
-      if (!integration) return;
+      // const { currentProject } = ctx;
+      // const identifier = "products-export-to-sheets-module";
+      // const integration = checkIntegrations(identifier, ctx, true);
+      // if (!integration) return;
 
-      const googleSheetUrl = integration.config.googleSheetUrl;
-      await moduleRequest(identifier, {
-        project_idx: currentProject.id,
-      });
-      toast.success("Exported to Google Sheets");
-      window.open(googleSheetUrl, "_blank");
+      // const googleSheetUrl = integration.config.googleSheetUrl;
+      // await moduleRequest(identifier, {
+      //   project_idx: currentProject.id,
+      // });
+      // toast.success("Exported to Google Sheets");
+      // window.open(googleSheetUrl, "_blank");
     },
   },
 

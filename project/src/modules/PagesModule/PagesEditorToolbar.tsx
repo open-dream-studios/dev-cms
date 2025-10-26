@@ -30,7 +30,7 @@ const PagesEditorToolbar = () =>
     const { currentProject, currentPage } = useCurrentDataStore();
 
     const handleLinkClick = () => {
-      if (!currentProject) return;
+      if (!currentProject || !currentProject.domain) return;
       const slug = currentPage ? currentPage.slug : "";
       window.open(domainToUrl(currentProject.domain + slug));
     };

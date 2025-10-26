@@ -21,30 +21,31 @@ export const checkIntegrations = (
   const projectModule = projectModules.find((m) => m.identifier === identifier);
   if (!projectModule) return null;
 
-  const integration = integrations.find(
-    (i) => i.module_id === projectModule.module_id
-  );
-  if (!integration) {
-    toast.error("Keys not found");
-    return null;
-  }
+  // const integration = integrations.find(
+  //   (i) => i.module_id === projectModule.module_id
+  // );
+  // if (!integration) {
+  //   toast.error("Keys not found");
+  //   return null;
+  // }
 
-  const module = modules.find((i) => i.identifier === identifier);
-  if (!module) {
-    toast.error("Module not found");
-    return null;
-  }
+  // const module = modules.find((i) => i.identifier === identifier);
+  // if (!module) {
+  //   toast.error("Module not found");
+  //   return null;
+  // }
 
-  const requiredKeys = module.config_schema || [];
-  const integrationConfig = integration?.config || {};
+  // const requiredKeys = module.config_schema || [];
+  // const integrationConfig = integration?.config || {};
 
-  const missingKeys = requiredKeys.filter((key) => !(key in integrationConfig));
+  // const missingKeys = requiredKeys.filter((key) => !(key in integrationConfig));
 
-  if (missingKeys.length > 0 && allKeysRequired) {
-    toast.error(`Missing configuration: ${missingKeys.join(", ")}`);
-    return null;
-  }
-  return integration;
+  // if (missingKeys.length > 0 && allKeysRequired) {
+  //   toast.error(`Missing configuration: ${missingKeys.join(", ")}`);
+  //   return null;
+  // }
+  // return integration;
+  return null
 };
 
 export const moduleRequest = async (identifier: string, args: Record<string, any>) => {
