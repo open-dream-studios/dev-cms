@@ -206,7 +206,24 @@ export const upsertMediaFunction = async (project_idx, items) => {
 
       // Ensure ordinal exists, otherwise fetch next available
       let ordinal = m.ordinal;
-      if (ordinal == null) {
+
+      // Try to find the existing media row
+      let existingRow = null;
+      if (m.media_id) {
+        const [existing] = await db
+          .promise()
+          .query(
+            `SELECT folder_id, ordinal FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1`,
+            [m.media_id, project_idx]
+          );
+        existingRow = existing[0] ?? null;
+      }
+
+      // If no ordinal yet OR folder_id changed, get a fresh one
+      if (
+        ordinal == null ||
+        (existingRow && existingRow.folder_id !== (m.folder_id ?? null))
+      ) {
         ordinal = await getNextOrdinal(
           project_idx,
           "media",
