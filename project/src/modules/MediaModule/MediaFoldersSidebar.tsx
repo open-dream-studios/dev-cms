@@ -1,10 +1,9 @@
 // project/src/modules/MediaModule/MediaFoldersSidebar.tsx
 "use client";
 
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   DndContext,
-  DragEndEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -43,6 +42,8 @@ type MediaFoldersSidebarProps = {
   setActiveFolder: (mediaFolder: MediaFolder | null) => void;
   openFolders: Set<number>;
   setOpenFolders: React.Dispatch<React.SetStateAction<Set<number>>>;
+  folderTree: MediaFolderNode[];
+  activeId: string | null;
 };
 
 function findNode(
@@ -64,6 +65,8 @@ export default function MediaFoldersSidebar({
   setActiveFolder,
   openFolders,
   setOpenFolders,
+  folderTree,
+  activeId,
 }: MediaFoldersSidebarProps) {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
@@ -73,18 +76,6 @@ export default function MediaFoldersSidebar({
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
-
-  const sensors = useSensors(useSensor(PointerSensor));
-  const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
-  useEffect(() => {
-    if (mediaFolders) {
-      setLocalFolders(
-        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
-      );
-    }
-  }, [mediaFolders]);
-
-  const folderTree: MediaFolderNode[] = buildFolderTree(localFolders);
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -115,7 +106,7 @@ export default function MediaFoldersSidebar({
   const handleCloseContextMenu = () => setContextMenu(null);
 
   const handleDeleteFolder = async () => {
-    if (contextMenu?.folderId) { 
+    if (contextMenu?.folderId) {
       await deleteMediaFolder(contextMenu.folderId);
       setContextMenu(null);
       if (activeFolder && activeFolder.id === contextMenu.folderId) {
@@ -138,74 +129,6 @@ export default function MediaFoldersSidebar({
       }
       return next;
     });
-  };
-
-  const findParentId = (
-    id: number,
-    nodes: MediaFolderNode[],
-    parentId: number | null = null
-  ): number | null => {
-    for (const n of nodes) {
-      if (n.id === id) return parentId;
-      if (n.children && n.children.length) {
-        const childResult = findParentId(id, n.children, n.id);
-        if (childResult !== null) return childResult;
-      }
-    }
-    return null;
-  };
-
-  const originalFoldersRef = useRef<MediaFolder[]>([]);
-  useEffect(() => {
-    if (mediaFolders) {
-      originalFoldersRef.current = mediaFolders;
-      setLocalFolders(
-        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
-      );
-    }
-  }, [mediaFolders]);
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    // Find the parent group for this move
-    const parentId = findParentId(active.id as number, folderTree);
-
-    // Identify the siblings in that parent scope
-    const siblings: MediaFolder[] = parentId
-      ? localFolders.filter((f) => f.parent_folder_id === parentId)
-      : localFolders.filter((f) => f.parent_folder_id === null);
-
-    const oldIndex = siblings.findIndex((f) => f.id === active.id);
-    const newIndex = siblings.findIndex((f) => f.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    // Compute the new sibling order
-    const newSiblingsOrder = arrayMove(siblings, oldIndex, newIndex);
-
-    // Update local state optimistically
-    setLocalFolders((prev) =>
-      prev.map((folder) => {
-        const idx = newSiblingsOrder.findIndex((f) => f.id === folder.id);
-        return idx > -1 ? { ...folder, ordinal: idx } : folder;
-      })
-    );
-
-    // Prepare array of folders for upsert (only those whose ordinal changed)
-    const updatedFolders = newSiblingsOrder
-      .map((f, idx) => ({ ...f, ordinal: idx })) // set new ordinal
-      .filter((f) => {
-        const original = originalFoldersRef.current.find(
-          (of) => of.id === f.id
-        );
-        return original && original.ordinal !== f.ordinal;
-      });
-
-    if (updatedFolders.length > 0) {
-      // Call unified upsert endpoint with only changed folders
-      await upsertMediaFolders(updatedFolders);
-    }
   };
 
   const handleAddFolder = async () => {
@@ -283,8 +206,6 @@ export default function MediaFoldersSidebar({
     );
   };
 
-  const [activeId, setActiveId] = useState<number | null>(null);
-
   if (!currentUser) return null;
 
   return (
@@ -342,7 +263,7 @@ export default function MediaFoldersSidebar({
       <Divider />
 
       <div className="flex-1 overflow-y-auto">
-        <DndContext
+        {/* <DndContext
           sensors={sensors}
           collisionDetection={rectIntersection}
           onDragStart={(event) => {
@@ -353,49 +274,52 @@ export default function MediaFoldersSidebar({
             handleDragEnd(event);
           }}
           onDragCancel={() => setActiveId(null)}
+        > */}
+        <SortableContext
+          items={folderTree.map((f) => `folder-${f.id}`)}
+          strategy={verticalListSortingStrategy}
         >
-          <SortableContext
-            items={folderTree.map((f) => f.id!)}
-            strategy={verticalListSortingStrategy}
-          >
-            {folderTree.map((folder) => (
-              <FolderItem
-                key={folder.id}
-                folder={folder}
-                depth={0}
-                activeFolder={activeFolder}
-                setActiveFolder={setActiveFolder}
-                openFolders={openFolders}
-                toggleFolderOpen={toggleFolderOpen}
-                onContextMenu={handleContextMenu}
-                renamingFolder={renamingFolder}
-                setRenamingFolder={setRenamingFolder}
-              />
-            ))}
-          </SortableContext>
+          {folderTree.map((folder) => (
+            <FolderItem
+              key={folder.id}
+              folder={folder}
+              depth={0}
+              activeFolder={activeFolder}
+              setActiveFolder={setActiveFolder}
+              openFolders={openFolders}
+              toggleFolderOpen={toggleFolderOpen}
+              onContextMenu={handleContextMenu}
+              renamingFolder={renamingFolder}
+              setRenamingFolder={setRenamingFolder}
+            />
+          ))}
+        </SortableContext>
 
-          <DragOverlay>
-            {activeId
-              ? (() => {
-                  const activeNode = findNode(folderTree, activeId);
-                  if (!activeNode) return null;
+        <DragOverlay>
+          {activeId
+            ? (() => {
+                // const activeNode = findNode(folderTree, activeId);
+                const idStr = String(activeId);
+                const numericId = Number(idStr.replace("folder-", ""));
+                const activeNode = findNode(folderTree, numericId);
+                if (!activeNode) return null;
 
-                  return (
-                    <div
-                      style={{
-                        backgroundColor: t.background_2,
-                      }}
-                      className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]"
-                    >
-                      <GripVertical size={14} className="text-gray-400" />
-                      {renderFolderIcons(activeNode)}
-                      <span className="truncate">{activeNode.name}</span>
-                    </div>
-                  );
-                })()
-              : null}
-          </DragOverlay>
-        </DndContext>
+                return (
+                  <div
+                    style={{
+                      backgroundColor: t.background_2,
+                    }}
+                    className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]"
+                  >
+                    <GripVertical size={14} className="text-gray-400" />
+                    {renderFolderIcons(activeNode)}
+                    <span className="truncate">{activeNode.name}</span>
+                  </div>
+                );
+              })()
+            : null}
+        </DragOverlay>
+        {/* </DndContext> */}
       </div>
     </div>
   );

@@ -524,29 +524,6 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     return `${sundayStart.toLocaleDateString()} – ${saturday.toLocaleDateString()}`;
   }, [weekCenteredIndex, indexToDate]);
 
-  // useEffect(() => {
-  //   if (!scrollerRef.current) return;
-
-  //   let prevWidth = scrollerRef.current.clientWidth;
-
-  //   const observer = new ResizeObserver(() => {
-  //     const currentWidth = scrollerRef.current?.clientWidth;
-  //     if (currentWidth && currentWidth !== prevWidth) {
-  //       prevWidth = currentWidth;
-  //       goToWeek();
-  //     }
-  //   });
-
-  //   observer.observe(scrollerRef.current);
-  //   return () => observer.disconnect();
-  // }, [goToWeek]);
-
-
-
-
-
-
-  /// COMMENTED THIS OUT
   const movedToCorrectWeek = useRef<boolean>(false)
   useEffect(() => {
     const scroller = scrollerRef.current;

@@ -1,22 +1,13 @@
 // project/src/modules/MediaModule/MediaGrid.tsx
 import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
   SortableContext,
   useSortable,
-  arrayMove,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Media, MediaFolder } from "@/types/media";
 import { appTheme } from "@/util/appTheme";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
@@ -49,7 +40,8 @@ function SortableMediaItem({
     transition,
     isDragging,
   } = useSortable({
-    id: media.media_id!,
+    // id: media.media_id!,
+    id: `media-${media.media_id}`,
     disabled,
     animateLayoutChanges: () => false,
   });
@@ -170,87 +162,30 @@ function SortableMediaItem({
 }
 
 type MediaGridProps = {
-  filteredMedia: Media[];
   view: "grid" | "list";
   projectId: number;
   activeFolder: MediaFolder | null;
   setActiveFolder: React.Dispatch<React.SetStateAction<MediaFolder | null>>;
   editMode: boolean;
   openAllParents: (folder: MediaFolder) => void;
+  localMedia: Media[];
 };
 
 export default function MediaGrid({
-  filteredMedia,
   view,
   activeFolder,
   setActiveFolder,
   editMode,
   openAllParents,
+  localMedia,
 }: MediaGridProps) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    })
-  );
   const { currentUser } = useContext(AuthContext);
-  const { upsertMedia } = useContextQueries();
-  const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [mediaSelected, setMediaSelected] = useState<Media | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
-
-  const originalMediaRef = useRef<Media[]>([]);
-  useEffect(() => {
-    const sortedMedia = [...filteredMedia].sort(
-      (a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
-    );
-    setLocalMedia(sortedMedia);
-    originalMediaRef.current = sortedMedia;
-  }, [filteredMedia]);
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const folderId = activeFolder ? activeFolder.id : null;
-
-    const siblings = folderId
-      ? localMedia.filter((m) => m.folder_id === folderId)
-      : localMedia.filter((m) => m.folder_id === null);
-
-    const oldIndex = siblings.findIndex((m) => m.media_id === active.id);
-    const newIndex = siblings.findIndex((m) => m.media_id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const newSiblingsOrder = arrayMove(siblings, oldIndex, newIndex);
-
-    setLocalMedia((prev) => {
-      const newState = prev.map((item) => {
-        const idx = newSiblingsOrder.findIndex(
-          (m) => m.media_id === item.media_id
-        );
-        return idx > -1 ? { ...item, ordinal: idx } : item;
-      });
-      return newState.sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0));
-    });
-
-    const updatedMedia = newSiblingsOrder
-      .map((m, idx) => ({ ...m, ordinal: idx }))
-      .filter((m) => {
-        const original = originalMediaRef.current.find(
-          (om) => om.media_id === m.media_id
-        );
-        return original && original.ordinal !== m.ordinal;
-      });
-    if (updatedMedia.length > 0) {
-      await upsertMedia(updatedMedia);
-    }
-  };
 
   if (!currentUser) return null;
 
@@ -352,37 +287,32 @@ export default function MediaGrid({
           )}
         </div>
       )}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+      <SortableContext
+        // items={localMedia.map((m: Media) => m.media_id!)}
+        items={localMedia.map((m: Media) => `media-${m.media_id!}`)}
+        strategy={rectSortingStrategy}
       >
-        <SortableContext
-          items={localMedia.map((m: Media) => m.media_id!)}
-          strategy={rectSortingStrategy}
+        <div
+          className={`p-4 grid gap-4 ${
+            view === "grid"
+              ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+              : "grid-cols-1"
+          }`}
         >
-          <div
-            className={`p-4 grid gap-4 ${
-              view === "grid"
-                ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                : "grid-cols-1"
-            }`}
-          >
-            {localMedia.map((m) => (
-              <SortableMediaItem
-                key={m.media_id}
-                media={m}
-                disabled={false}
-                editMode={editMode}
-                setMediaSelected={setMediaSelected}
-                activeFolder={activeFolder}
-                setActiveFolder={setActiveFolder}
-                openAllParents={openAllParents}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+          {localMedia.map((m) => (
+            <SortableMediaItem
+              key={m.media_id}
+              media={m}
+              disabled={false}
+              editMode={editMode}
+              setMediaSelected={setMediaSelected}
+              activeFolder={activeFolder}
+              setActiveFolder={setActiveFolder}
+              openAllParents={openAllParents}
+            />
+          ))}
+        </div>
+      </SortableContext>
     </div>
   );
 }

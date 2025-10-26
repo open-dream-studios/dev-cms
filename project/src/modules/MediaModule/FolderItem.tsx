@@ -14,12 +14,7 @@ import {
   ChevronDown,
   GripVertical,
 } from "lucide-react";
-import {
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { MediaFolder } from "@/types/media";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { motion } from "framer-motion";
@@ -97,7 +92,8 @@ export default function FolderItem({
     transition,
     isDragging,
   } = useSortable({
-    id: folder.id,
+    // id: folder.id,
+    id: `folder-${folder.id}`,
   });
 
   const isOpen = openFolders.has(folder.id);
@@ -138,6 +134,8 @@ export default function FolderItem({
         ...style,
         opacity: isDragging ? 0 : 1,
       }}
+      onMouseEnter={()=>{console.log("handle entered")}}
+      onMouseLeave={()=>{console.log("handle left")}}
       {...attributes}
     >
       <motion.div
@@ -198,7 +196,8 @@ export default function FolderItem({
       {isOpen && folder.children && folder.children.length > 0 && (
         <div className="ml-2">
           <SortableContext
-            items={folder.children.map((c) => c.id!)}
+            // items={folder.children.map((c) => c.id!)}
+            items={folder.children.map((c) => `folder-${c.id}`)}
             strategy={verticalListSortingStrategy}
           >
             {folder.children.map((child) => (
