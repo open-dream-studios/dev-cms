@@ -212,8 +212,6 @@ export const login = async (req, res) => {
     });
   }
 
-  // const permission =
-
   const q = "SELECT * FROM users WHERE email = ?";
 
   db.query(q, [email], (err, data) => {
