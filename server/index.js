@@ -108,7 +108,7 @@ db.getConnection((err, connection) => {
     console.error("Database connection failed: ", err);
     return;
   }
-  console.log("Connected to MySQL Database");
+  console.log("API connected to MySQL Database");
   connection.release();
 });
 
