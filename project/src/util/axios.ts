@@ -2,6 +2,6 @@
 import axios from "axios";
 
 export const makeRequest = axios.create({
-  baseURL: "",
+  baseURL: "https://tsa-inventory-production.up.railway.app",
   withCredentials: true, 
 });

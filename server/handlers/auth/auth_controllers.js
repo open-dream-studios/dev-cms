@@ -204,6 +204,7 @@ export const register = async (req, res) => {
 // Login Function
 export const login = async (req, res) => {
   const { email } = req.body;
+  console.log("logging in", email)
   const validEmails = await getValidEmails();
   if (!validEmails.includes(email)) {
     return res.status(403).json({
@@ -466,6 +467,7 @@ export const passwordReset = async (req, res) => {
 };
 
 export const getCurrentUser = (req, res) => {
+  console.log("trying")
   const token = req.cookies.accessToken;
   if (!token) return res.json(null);
 
