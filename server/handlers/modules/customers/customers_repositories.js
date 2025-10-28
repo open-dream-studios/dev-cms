@@ -8,13 +8,8 @@ export const getCustomersFunction = async (project_idx) => {
     WHERE project_idx = ?
     ORDER BY created_at ASC
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-    return rows;
-  } catch (err) {
-    console.error("❌ Function Error -> getCustomersFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  return rows;
 };
 
 export const upsertCustomerFunction = async (

@@ -112,6 +112,19 @@ db.getConnection((err, connection) => {
   connection.release();
 });
 
+// Error handler -> 
+process.on("uncaughtException", (err) => {
+  console.error("🔥 Uncaught Exception:", err);
+  // Optionally alert/notify here
+  // Then decide:
+  // process.exit(1);  // <-- hard restart (recommended for real production), once docker is being used
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("🔥 Unhandled Rejection:", reason);
+  // process.exit(1);
+});
+
 server.listen(PORT, () => {
   console.log("API is running on port " + PORT);
 });

@@ -7,22 +7,23 @@ import {
 } from "./customers_controllers.js";
 import { authenticateUser } from "../../../util/auth.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
+import { errorHandler, transactionHandler } from "../../../util/handlerWrappers.js";
 
 const router = express.Router();
 
-// ---- EMPLOYEES ----
+// ---- CUSTOMERS ----
 router.post(
   "/",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getCustomers
+  errorHandler(getCustomers)
 );
 
 router.post(
   "/upsert",
   authenticateUser,
   checkProjectPermission(2), // editor+
-  upsertCustomer
+  transactionHandler(upsertCustomer)
 );
 
 router.post(
