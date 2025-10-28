@@ -100,19 +100,12 @@ export const upsertCustomerFunction = async (
   return { success: true, id, customer_id: finalCustomerId };
 };
 
-export const deleteCustomerFunction = async (project_idx, customer_id) => {
-  const connection = await db.promise().getConnection();
+export const deleteCustomerFunction = async (
+  connection,
+  project_idx,
+  customer_id
+) => {
   const q = `DELETE FROM customers WHERE customer_id = ? AND project_idx = ?`;
-  try {
-    await connection.beginTransaction();
-    await connection.query(q, [customer_id, project_idx]);
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error("❌ Function Error -> deleteCustomerFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+  await connection.query(q, [customer_id, project_idx]);
+  return { success: true };
 };

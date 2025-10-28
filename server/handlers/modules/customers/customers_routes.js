@@ -30,7 +30,7 @@ router.post(
   "/delete",
   authenticateUser,
   checkProjectPermission(2), // editor+
-  deleteCustomer
+  transactionHandler(deleteCustomer)
 );
 
 export default router;
