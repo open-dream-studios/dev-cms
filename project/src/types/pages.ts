@@ -17,7 +17,7 @@ export type ProjectPage = {
   parent_page_id: number | null;
   title: string | null;
   slug: string | null;
-  order_index: number | null;
+  ordinal: number | null;
   seo_title?: string | null;
   seo_description?: string | null;
   seo_keywords?: string[] | null;
@@ -47,7 +47,7 @@ export type Section = {
   definition_id: number | null;
   name: string | null;
   config: Record<string, any>;
-  order_index: number | null;
+  ordinal: number | null;
   created_at?: string;
   updated_at?: string;
 };

@@ -91,12 +91,12 @@ export default function MediaFoldersSidebar({
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-  const [renamingFolder, setRenamingFolder] = useState<number | null>(null);
+  const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
-    folderId: number | null;
+    folderId: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function MediaFoldersSidebar({
     return () => window.removeEventListener("click", handler);
   }, []);
 
-  const handleContextMenu = (e: React.MouseEvent, folderId: number) => {
+  const handleContextMenu = (e: React.MouseEvent, folderId: string) => {
     e.preventDefault();
     setContextMenu({
       x: e.clientX,
@@ -120,7 +120,7 @@ export default function MediaFoldersSidebar({
     if (contextMenu?.folderId) {
       await deleteMediaFolder(contextMenu.folderId);
       setContextMenu(null);
-      if (activeFolder && activeFolder.id === contextMenu.folderId) {
+      if (activeFolder && activeFolder.folder_id === contextMenu.folderId) {
         setActiveFolder(null);
       }
       queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });

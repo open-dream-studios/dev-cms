@@ -55,7 +55,7 @@ const MediaToolbar = ({
         </CustomButton>
 
         <p className="text-[24px] font-[700] mt-[-2px] px-[10.5px]">
-          {activeFolder ? activeFolder.name : "All Media"}
+          {activeFolder ? activeFolder.name : "No Folder"}
         </p>
       </div>
       <div className="flex gap-2">

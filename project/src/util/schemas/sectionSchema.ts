@@ -12,7 +12,7 @@ export const SectionSchema = z.object({
   ),
   name: z.string().nullable().optional(),
   config: z.record(z.string(), z.any()),
-  order_index: z.number().nullable().optional(),
+  ordinal: z.number().nullable().optional(),
 });
 
 export type SectionFormData = z.infer<typeof SectionSchema>;
@@ -24,6 +24,6 @@ export function sectionToForm(section?: Section | null): SectionFormData {
     definition_id: section?.definition_id ?? null,
     name: section?.name ?? "",
     config: section?.config ?? {},
-    order_index: section?.order_index ?? null,
+    ordinal: section?.ordinal ?? null,
   };
 }

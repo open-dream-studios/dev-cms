@@ -25,6 +25,7 @@ import employeeRoutes from "./handlers/modules/employees/employees_routes.js";
 import { WebSocketServer } from "ws";
 import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio.js";
 import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
+import { errorMiddleware } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
 
@@ -98,6 +99,8 @@ const wss = new WebSocketServer({ server });
 app.set("wss", wss);
 initCallState(wss);
 handleTwilioStream(wss);
+
+app.use(errorMiddleware);
 
 // Database
 db.getConnection((err, connection) => {

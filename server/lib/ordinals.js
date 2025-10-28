@@ -1,74 +1,222 @@
 // server/lib/ordinals.js
-import { db } from "../connection/connect.js";
 
-export const getNextOrdinal = async (project_idx, tableName, key1, value1) => {
+export const getNextOrdinal = async (connection, table, layer) => {
+  if (!table || typeof layer !== "object" || !Object.keys(layer).length) {
+    throw new Error("Invalid arguments for getNextOrdinal");
+  }
+
+  const layerCols = Object.keys(layer);
+  const layerValues = Object.values(layer);
+
+  const whereParts = layerCols.map((col) => `${col} <=> ?`).join(" AND ");
+  const whereParams = [...layerValues];
+
   const getMaxQ = `
     SELECT COALESCE(MAX(ordinal), -1) AS maxOrdinal
-    FROM ${tableName}
-    WHERE project_idx = ? AND (${key1} <=> ?)
+    FROM ${table}
+    WHERE ${whereParts}
   `;
-  const values = [project_idx, value1];
-  const [rows] = await db.promise().query(getMaxQ, values);
+
+  const [rows] = await connection.query(getMaxQ, whereParams);
   if (rows.length === 0) {
-    throw Error("No max ordinal could be identified");
+    throw new Error("No max ordinal could be identified");
   }
+
   return rows[0].maxOrdinal + 1;
 };
 
-/**
- * Reindex ordinals for all siblings in a given table and grouping scope.
- * Starts at 0 and increments by 1 based on current order.
- *
- * Example usage:
- *   await reindexOrdinals("media_folders", { project_idx: 25, parent_folder_id: null });
- *
- * @param {string} table - The table name
- * @param {object} group - Key/value pairs for grouping (e.g. { project_idx: 1, parent_folder_id: 42 })
- * @param {string} ordinalCol - The column name used for ordering (default "ordinal")
- */
-export const reindexOrdinals = async (table, group, ordinalCol = "ordinal") => {
-  if (!table || typeof group !== "object" || !Object.keys(group).length) {
+export const reindexOrdinals = async (connection, table, layer) => {
+  if (!table || typeof layer !== "object" || !Object.keys(layer).length) {
     throw new Error("Invalid arguments for reindexOrdinals");
   }
 
-  const groupCols = Object.keys(group);
-  const groupValues = Object.values(group);
+  const layerCols = Object.keys(layer);
+  const layerValues = Object.values(layer);
 
-  // Build WHERE clause that handles NULL correctly
-  const whereParts = groupCols
-    .map((col) => `${col} <=> ?`)
-    .join(" AND ");
-  const whereParams = [...groupValues];
+  const whereParts = layerCols.map((col) => `${col} <=> ?`).join(" AND ");
+  const whereParams = [...layerValues];
 
-  const connection = await db.promise().getConnection();
-  try {
-    await connection.beginTransaction();
+  await connection.query("SET @rownum := -1");
 
-    // Use MySQL variable to renumber rows efficiently
-    // Start from -1 so the first row becomes 0
-    await connection.query("SET @rownum := -1");
+  const ordinalCol = "ordinal";
+  const updateQ = `
+    UPDATE ${table}
+    JOIN (
+      SELECT id, (@rownum := @rownum + 1) AS new_ordinal
+      FROM ${table}
+      WHERE ${whereParts}
+      ORDER BY ${ordinalCol}, id
+    ) AS ordered
+    ON ${table}.id = ordered.id
+    SET ${table}.${ordinalCol} = ordered.new_ordinal
+  `;
 
-    const updateQ = `
-      UPDATE ${table}
-      JOIN (
-        SELECT id, (@rownum := @rownum + 1) AS new_ordinal
-        FROM ${table}
-        WHERE ${whereParts}
-        ORDER BY ${ordinalCol}, id
-      ) AS ordered
-      ON ${table}.id = ordered.id
-      SET ${table}.${ordinalCol} = ordered.new_ordinal
-    `;
-    await connection.query(updateQ, whereParams);
+  await connection.query(updateQ, whereParams);
 
-    await connection.commit();
-    connection.release();
+  return { success: true };
+};
 
-    return { success: true };
-  } catch (err) {
-    await connection.rollback();
-    connection.release();
-    console.error("❌ reindexOrdinals error:", err);
-    return { success: false, error: err.message || err };
+export const reorderOrdinals = async (
+  connection,
+  table,
+  layer,
+  orderedIds,
+  idKey
+) => {
+  if (!idKey || !Array.isArray(orderedIds) || !orderedIds.length) {
+    return { success: false, affectedRows: 0 };
   }
+
+  const layerCols = Object.keys(layer);
+  const layerValues = Object.values(layer);
+
+  if (!layerCols.length) {
+    throw new Error("Invalid layer for reorderOrdinals");
+  }
+
+  const whereParts = layerCols.map((col) => `${col} <=> ?`).join(" AND ");
+  const whereParams = [...layerValues];
+
+  const placeholders = orderedIds.map(() => "?").join(",");
+  const [countRows] = await connection.query(
+    `SELECT COUNT(*) AS cnt 
+     FROM ${table} 
+     WHERE ${whereParts} 
+       AND ${idKey} IN (${placeholders})`,
+    [...whereParams, ...orderedIds]
+  );
+
+  if (countRows[0].cnt !== orderedIds.length) {
+    throw new Error("Invalid IDs passed to reorderOrdinals");
+  }
+
+  const caseStatements = orderedIds
+    .map((id, idx) => `WHEN ${connection.escape(id)} THEN ${idx}`)
+    .join(" ");
+
+  const ordinalCol = "ordinal";
+  const updateSql = `
+    UPDATE ${table}
+    SET ${ordinalCol} = CASE ${idKey}
+      ${caseStatements}
+    END
+    WHERE ${whereParts} 
+      AND ${idKey} IN (${placeholders});
+  `;
+
+  const [result] = await connection.query(updateSql, [
+    ...whereParams,
+    ...orderedIds,
+  ]);
+
+  return {
+    success: true,
+    affectedRows: result.affectedRows || 0,
+  };
+};
+
+export const deleteAndReindex = async (
+  connection,
+  table,
+  idKey,
+  idValue,
+  layer_identifiers
+) => {
+  const [rows] = await connection.query(
+    `SELECT *
+     FROM ${table}
+     WHERE ${idKey} = ?
+     FOR UPDATE`,
+    [idValue]
+  );
+
+  if (!rows.length) {
+    throw new Error("Item not found for deletion");
+  }
+
+  const layer = {};
+  for (let identifier_key of layer_identifiers) {
+    const identifier_value = rows[0][identifier_key] ?? null;
+    layer[identifier_key] = identifier_value;
+  }
+
+  const [deleteResult] = await connection.query(
+    `DELETE FROM ${table}
+     WHERE ${idKey} = ?
+     LIMIT 1`,
+    [idValue]
+  );
+
+  if (deleteResult.affectedRows === 0) {
+    throw new Error("Delete failed");
+  }
+
+  const reindexResult = await reindexOrdinals(connection, table, layer);
+
+  if (!reindexResult.success) {
+    throw new Error("Reindex failed");
+  }
+
+  return { success: true, deleted: true };
+};
+
+export const bulkDeleteAndReindex = async (
+  connection,
+  table,
+  idKey,
+  idValues,
+  layer_identifiers
+) => {
+  if (!Array.isArray(idValues) || idValues.length === 0) {
+    throw new Error("No IDs provided for bulk deletion");
+  }
+
+  const placeholders = idValues.map(() => "?").join(",");
+  const [rows] = await connection.query(
+    `SELECT * 
+     FROM ${table}
+     WHERE ${idKey} IN (${placeholders})
+     FOR UPDATE`,
+    idValues
+  );
+
+  if (rows.length !== idValues.length) {
+    throw new Error(
+      "Some items could not be found or locked for deletion — aborting."
+    );
+  }
+
+  const layer = {};
+  for (const identifier_key of layer_identifiers) {
+    const distinctValues = [
+      ...new Set(rows.map((r) => r[identifier_key] ?? null)),
+    ];
+    if (distinctValues.length > 1) {
+      throw new Error(
+        `Bulk deletion failed: rows span multiple layers (conflicting ${identifier_key}).`
+      );
+    }
+    layer[identifier_key] = distinctValues[0];
+  }
+
+  const [deleteResult] = await connection.query(
+    `DELETE FROM ${table}
+     WHERE ${idKey} IN (${placeholders})`,
+    idValues
+  );
+
+  if (deleteResult.affectedRows === 0) {
+    throw new Error("Bulk delete failed — no rows affected");
+  }
+
+  const reindexResult = await reindexOrdinals(connection, table, layer);
+  if (!reindexResult.success) {
+    throw new Error("Reindex failed");
+  }
+
+  return {
+    success: true,
+    deletedCount: deleteResult.affectedRows,
+    layer,
+  };
 };

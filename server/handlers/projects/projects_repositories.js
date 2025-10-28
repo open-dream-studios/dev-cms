@@ -33,10 +33,12 @@ export const getProjectsFunction = async (userEmail) => {
 };
 
 export const upsertProjectFunction = async (reqBody) => {
+  const connection = await db.promise().getConnection();
   const { project_id, name, short_name, domain, backend_domain, brand, logo } =
     reqBody;
 
   try {
+    await connection.beginTransaction();
     const finalProjectId =
       project_id && project_id.trim() !== ""
         ? project_id
@@ -66,22 +68,29 @@ export const upsertProjectFunction = async (reqBody) => {
       logo || null,
     ];
 
-    const [rows] = await db.promise().query(query, values);
+    const [rows] = await connection.query(query, values);
 
     if (!project_id && rows.insertId) {
-      await upsertProjectUserFunction({
-        email: adminEmail,
-        project_idx: rows.insertId,
-        role: "admin",
-      });
+      await upsertProjectUserFunction(
+        {
+          email: adminEmail,
+          project_idx: rows.insertId,
+          role: "admin",
+        },
+        connection
+      );
     }
 
+    await connection.commit();
+    connection.release();
     return {
       success: true,
       project_id: finalProjectId,
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertProjectFunction: ", err);
+    await connection.commit();
+    connection.rollback();
     return {
       success: false,
       project_id: null,
@@ -90,12 +99,18 @@ export const upsertProjectFunction = async (reqBody) => {
 };
 
 export const deleteProjectFunction = async (project_id) => {
+  const connection = await db.promise().getConnection();
   const q = `DELETE FROM projects WHERE project_id = ?`;
   try {
-    await db.promise().query(q, [project_id]);
+    await connection.beginTransaction();
+    await connection.query(q, [project_id]);
+    await connection.commit();
+    connection.release();
     return true;
   } catch (err) {
     console.error("❌ Function Error -> deleteProjectFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return false;
   }
 };
@@ -117,41 +132,56 @@ export const getAllUserRolesFunction = async () => {
   }
 };
 
-export const upsertProjectUserFunction = async (reqBody) => {
+export const upsertProjectUserFunction = async (
+  reqBody,
+  existingConnection = null
+) => {
+  const localConn = existingConnection || (await db.promise().getConnection());
+  const shouldHandleTx = !existingConnection;
+
   const { email, project_idx, role } = reqBody;
 
   try {
-    const query = `
-      INSERT INTO project_users (
-        email, project_idx, role
-      )
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        role = VALUES(role)
-    `;
+    if (shouldHandleTx) await localConn.beginTransaction();
 
+    const query = `
+      INSERT INTO project_users (email, project_idx, role)
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE role = VALUES(role)
+    `;
     const values = [email, project_idx, role || "viewer"];
 
-    await db.promise().query(query, values);
+    await localConn.query(query, values);
 
-    return {
-      success: true,
-    };
+    if (shouldHandleTx) {
+      await localConn.commit();
+      localConn.release();
+    }
+
+    return { success: true };
   } catch (err) {
-    console.error("❌ Function Error -> upsertProjectUserFunction: ", err);
-    return {
-      success: false,
-    };
+    console.error("❌ Function Error -> upsertProjectUserFunction:", err);
+    if (shouldHandleTx) {
+      await localConn.rollback();
+      localConn.release();
+    }
+    return { success: false };
   }
 };
 
 export const deleteProjectUserFunction = async (email, project_idx) => {
+  const connection = await db.promise().getConnection();
   const q = `DELETE FROM project_users WHERE email = ? AND project_idx = ?`;
   try {
-    await db.promise().query(q, [email, project_idx]);
+    await connection.beginTransaction();
+    await connection.query(q, [email, project_idx]);
+    await connection.commit();
+    connection.release();
     return true;
   } catch (err) {
     console.error("❌ Function Error -> deleteProjectUserFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return false;
   }
 };

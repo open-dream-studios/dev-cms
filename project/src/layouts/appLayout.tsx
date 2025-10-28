@@ -102,7 +102,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   const { projectsData } = useContextQueries();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
-  useWebSocketManager();
+  // useWebSocketManager();
   useRouting();
   // useTesting();
 

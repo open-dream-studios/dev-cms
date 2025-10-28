@@ -136,11 +136,10 @@ const PagesSidebar = ({
       const newOrder = arrayMove(localPages, oldIndex, newIndex);
       setLocalPages(newOrder);
 
-      await reorderProjectPages({
-        project_idx: currentProjectId,
-        parent_page_id: currentPage?.id ?? null,
-        orderedIds: newOrder.map((p) => p.page_id!),
-      });
+      await reorderProjectPages(
+        currentPage?.id ?? null,
+        newOrder.map((p) => p.page_id!)
+      );
     }
   };
 
@@ -158,7 +157,7 @@ const PagesSidebar = ({
         <div className="h-[100%] overflow-y-scroll flex flex-col gap-[9px]">
           {localPages.map((page: ProjectPage) => (
             <SortablePageItem
-              key={page.id}
+              key={page.page_id}
               page={page}
               handleContextMenu={handleContextMenu}
             />

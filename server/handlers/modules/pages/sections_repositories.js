@@ -7,7 +7,7 @@ export const getSectionsFunction = async (project_idx) => {
     SELECT *
     FROM project_sections ps
     WHERE ps.project_idx = ?
-    ORDER BY ps.order_index ASC
+    ORDER BY ps.ordinal ASC
   `;
   try {
     const [rows] = await db.promise().query(q, [project_idx]);
@@ -31,7 +31,7 @@ export const upsertSectionFunction = async (project_idx, reqBody) => {
     definition_id,
     name,
     config,
-    order_index,
+    ordinal,
   } = reqBody;
 
   try {
@@ -52,7 +52,7 @@ export const upsertSectionFunction = async (project_idx, reqBody) => {
         definition_id,
         name,
         config,
-        order_index
+        ordinal
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
@@ -60,7 +60,7 @@ export const upsertSectionFunction = async (project_idx, reqBody) => {
         definition_id = VALUES(definition_id),
         name = VALUES(name),
         config = VALUES(config),
-        order_index = VALUES(order_index),
+        ordinal = VALUES(ordinal),
         updated_at = NOW()
     `;
 
@@ -72,7 +72,7 @@ export const upsertSectionFunction = async (project_idx, reqBody) => {
       definition_id,
       name,
       JSON.stringify(config || {}),
-      order_index,
+      ordinal,
     ];
 
     const [result] = await db.promise().query(query, values);
@@ -141,10 +141,10 @@ export const deleteSectionFunction = async (project_idx, section_id) => {
               ? "parent_section_id = ?"
               : "parent_section_id IS NULL"
           }
-        ORDER BY order_index
+        ORDER BY ordinal
       ) AS ordered
       ON project_sections.id = ordered.id
-      SET project_sections.order_index = ordered.new_order
+      SET project_sections.ordinal = ordered.new_order
     `;
 
     if (parent_section_id) {
@@ -182,7 +182,7 @@ export const reorderSectionsFunction = async (
 
     const query = `
       UPDATE project_sections
-      SET order_index = CASE section_id
+      SET ordinal = CASE section_id
         ${caseStatements}
       END
       WHERE project_idx = ?

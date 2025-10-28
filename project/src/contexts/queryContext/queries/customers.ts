@@ -44,14 +44,18 @@ export function useCustomers(
         ...data,
         project_idx: currentProjectId,
       });
-      const id = res.data.id;
-      const customer_id = res.data.customer_id;
-      return { id, customer_id };
+      return {
+        id: res.data.id,
+        customer_id: res.data.customer_id,
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["customers", currentProjectId],
       });
+    },
+    onError: (error) => {
+      console.error("❌ Upsert customer failed:", error);
     },
   });
 

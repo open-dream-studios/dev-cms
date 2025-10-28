@@ -43,7 +43,7 @@ export const deletePage = async (req, res) => {
       .status(400)
       .json({ success: false, message: "Missing required fields" });
   }
-  const success = await deletePageFunction(project_idx, page_id);
+  const { success } = await deletePageFunction(project_idx, page_id);
   return res.status(success ? 200 : 500).json({ success });
 };
 
@@ -140,17 +140,17 @@ export const getPageData = (req, res) => {
       const page = pages[0];
 
       const sectionQuery = `
-  SELECT psec.id,
-         psec.definition_id,
-         psec.name,
-         psec.config,
-         psec.order_index,
-         sd.identifier
-  FROM project_sections psec
-  LEFT JOIN section_definitions sd ON psec.definition_id = sd.id
-  WHERE psec.project_page_id = ?
-  ORDER BY psec.order_index ASC
-`;
+        SELECT psec.id,
+              psec.definition_id,
+              psec.name,
+              psec.config,
+              psec.ordinal,
+              sd.identifier
+        FROM project_sections psec
+        LEFT JOIN section_definitions sd ON psec.definition_id = sd.id
+        WHERE psec.project_page_id = ?
+        ORDER BY psec.ordinal ASC
+      `;
 
       db.query(sectionQuery, [page.id], (err, sections) => {
         if (err) {
@@ -163,7 +163,7 @@ export const getPageData = (req, res) => {
           id: s.id,
           identifier: s.identifier,
           name: s.name,
-          order_index: s.order_index,
+          ordinal: s.ordinal,
           config:
             typeof s.config === "string"
               ? JSON.parse(s.config)

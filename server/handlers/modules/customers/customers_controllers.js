@@ -1,4 +1,5 @@
 // server/handlers/modules/customers/customers_controller.js
+import { withTransaction } from "../../../util/withTransactions.js";
 import {
   getCustomersFunction,
   upsertCustomerFunction,
@@ -15,17 +16,17 @@ export const getCustomers = async (req, res) => {
   return res.json({ customers });
 };
 
-export const upsertCustomer = async (req, res) => {
+export const upsertCustomer = withTransaction(async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ success: false, message: "Missing project_idx" });
-  }
-  const { customer_id, id, success } = await upsertCustomerFunction(
+  if (!project_idx) throw new Error("Missing project_idx");
+
+  const result = await upsertCustomerFunction(
+    connection,
     project_idx,
     req.body
   );
-  return res.status(success ? 200 : 500).json({ success, customer_id, id });
-};
+  return result;
+});
 
 export const deleteCustomer = async (req, res) => {
   const { customer_id } = req.body;

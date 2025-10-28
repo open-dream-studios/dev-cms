@@ -1,6 +1,11 @@
 // server/handlers/modules/media/media_repositories.js
 import { db } from "../../../connection/connect.js";
-import { getNextOrdinal, reindexOrdinals } from "../../../lib/ordinals.js";
+import {
+  bulkDeleteAndReindex,
+  deleteAndReindex,
+  getNextOrdinal,
+  reindexOrdinals,
+} from "../../../lib/ordinals.js";
 import { deleteFromCloudinary } from "../../../functions/cloudinary.js";
 
 // ---------- MEDIA FOLDER FUNCTIONS ----------
@@ -24,8 +29,11 @@ export const upsertMediaFoldersFunction = async (project_idx, folders) => {
   if (!Array.isArray(folders) || folders.length === 0) {
     throw new Error("No folders provided");
   }
+  const connection = await db.promise().getConnection();
 
   try {
+    await connection.beginTransaction();
+
     // Step 1: Format updated folders
     const values = [];
     const folderIds = [];
@@ -44,12 +52,10 @@ export const upsertMediaFoldersFunction = async (project_idx, folders) => {
 
       let ordinal = f.ordinal;
       if (ordinal == null) {
-        ordinal = await getNextOrdinal(
+        ordinal = await getNextOrdinal(connection, "media_folders", {
           project_idx,
-          "media_folders",
-          "parent_folder_id",
-          f.parent_folder_id ?? null
-        );
+          parent_folder_id: f.parent_folder_id ?? null,
+        });
       }
 
       values.push(
@@ -77,18 +83,21 @@ export const upsertMediaFoldersFunction = async (project_idx, folders) => {
         ordinal = VALUES(ordinal),
         updated_at = NOW()
     `;
-    await db.promise().query(query, values);
+    await connection.query(query, values);
 
     // Step 3: Reindex ordinals per parent_folder_id
     const parentIds = Array.from(
       new Set(folders.map((f) => f.parent_folder_id ?? null))
     );
     for (const parentId of parentIds) {
-      await reindexOrdinals("media_folders", {
+      await reindexOrdinals(connection, "media_folders", {
         project_idx,
         parent_folder_id: parentId,
       });
     }
+
+    await connection.commit();
+    connection.release();
 
     return {
       success: true,
@@ -96,6 +105,8 @@ export const upsertMediaFoldersFunction = async (project_idx, folders) => {
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertMediaFoldersFunction:", err);
+    await connection.rollback();
+    connection.release();
     return {
       success: false,
       folderIds: [],
@@ -103,21 +114,18 @@ export const upsertMediaFoldersFunction = async (project_idx, folders) => {
   }
 };
 
-export const deleteMediaFolderFunction = async (project_idx, id) => {
+export const deleteMediaFolderFunction = async (project_idx, folder_id) => {
   const connection = await db.promise().getConnection();
   try {
     await connection.beginTransaction();
 
-    // 1. Find the folder and its parent
-    const [[folder]] = await connection.query(
-      `SELECT parent_folder_id FROM media_folders WHERE project_idx = ? AND id = ?`,
-      [project_idx, id]
-    );
-    if (!folder) throw new Error("Folder not found");
-
-    const { parent_folder_id } = folder;
-
-    // // 2. Get all media in this folder + subfolders (recursive)
+    // Recursively delete from cloudinary
+    // const [[folder]] = await connection.query(
+    //   `SELECT parent_folder_id FROM media_folders WHERE project_idx = ? AND folder_id = ?`,
+    //   [project_idx, folder_id]
+    // );
+    // if (!folder) throw new Error("Folder not found");
+    // const { parent_folder_id } = folder;
     // const recursiveQuery = `
     //   WITH RECURSIVE subfolders AS (
     //     SELECT id FROM media_folders WHERE folder_id = ?
@@ -130,34 +138,27 @@ export const deleteMediaFolderFunction = async (project_idx, id) => {
     //   FROM media m
     //   WHERE m.folder_id IN (SELECT id FROM subfolders) AND m.project_idx = ?
     // `;
-
     // const [mediaResults] = await connection.query(recursiveQuery, [
-    //   id,
+    //   folder_id,
     //   project_idx,
     // ]);
-
-    // // 3. Delete from Cloudinary if media exist
     // if (mediaResults.length > 0) {
     //   await deleteFromCloudinary(mediaResults);
     // }
 
     // 4. Delete the folder itself (CASCADE handles children + media)
-    const [deleteResult] = await connection.query(
-      `DELETE FROM media_folders WHERE project_idx = ? AND id = ?`,
-      [project_idx, id]
+    const result = await deleteAndReindex(
+      connection,
+      "media_folders",
+      "folder_id",
+      folder_id,
+      ["project_idx", "parent_folder_id"]
     );
-    if (deleteResult.affectedRows === 0) throw new Error("No folder deleted");
 
     await connection.commit();
     connection.release();
 
-    // 5. Reindex siblings (same parent, or root-level if parent_folder_id IS NULL)
-    await reindexOrdinals("media_folders", {
-      project_idx,
-      parent_folder_id,
-    });
-
-    return { success: true, deleted: deleteResult.affectedRows };
+    return result;
   } catch (err) {
     await connection.rollback();
     connection.release();
@@ -187,8 +188,11 @@ export const upsertMediaFunction = async (project_idx, items) => {
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error("No media items provided");
   }
+  const connection = await db.promise().getConnection();
 
   try {
+    await connection.beginTransaction();
+
     // Step 1: Format updated media
     const values = [];
 
@@ -210,12 +214,10 @@ export const upsertMediaFunction = async (project_idx, items) => {
       // Try to find the existing media row
       let existingRow = null;
       if (m.media_id) {
-        const [existing] = await db
-          .promise()
-          .query(
-            `SELECT folder_id, ordinal FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1`,
-            [m.media_id, project_idx]
-          );
+        const [existing] = await connection.query(
+          `SELECT folder_id, ordinal FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1`,
+          [m.media_id, project_idx]
+        );
         existingRow = existing[0] ?? null;
       }
 
@@ -224,12 +226,10 @@ export const upsertMediaFunction = async (project_idx, items) => {
         ordinal == null ||
         (existingRow && existingRow.folder_id !== (m.folder_id ?? null))
       ) {
-        ordinal = await getNextOrdinal(
+        ordinal = await getNextOrdinal(connection, "media", {
           project_idx,
-          "media",
-          "folder_id",
-          m.folder_id ?? null
-        );
+          folder_id: m.folder_id ?? null,
+        });
       }
 
       // Push SQL values for bulk upsert
@@ -284,7 +284,7 @@ export const upsertMediaFunction = async (project_idx, items) => {
         updated_at = NOW()
     `;
 
-    await db.promise().query(query, values);
+    await connection.query(query, values);
 
     // Step 3: Reindex ordinals per folder_id group
     const folderIds = Array.from(
@@ -292,7 +292,7 @@ export const upsertMediaFunction = async (project_idx, items) => {
     );
 
     for (const folderId of folderIds) {
-      await reindexOrdinals("media", {
+      await reindexOrdinals(connection, "media", {
         project_idx,
         folder_id: folderId,
       });
@@ -300,12 +300,13 @@ export const upsertMediaFunction = async (project_idx, items) => {
 
     // Step 4: Return the processed data
     const mediaIds = items.map((m) => m.media_id);
-    const [rows] = await db
-      .promise()
-      .query(
-        `SELECT id, media_id, url FROM media WHERE media_id IN (?) AND project_idx = ?`,
-        [mediaIds, project_idx]
-      );
+    const [rows] = await connection.query(
+      `SELECT id, media_id, url FROM media WHERE media_id IN (?) AND project_idx = ?`,
+      [mediaIds, project_idx]
+    );
+
+    await connection.commit();
+    connection.release();
 
     return {
       success: true,
@@ -313,6 +314,8 @@ export const upsertMediaFunction = async (project_idx, items) => {
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertMediaFunction:", err);
+    await connection.rollback();
+    connection.release();
     return {
       success: false,
       media: [],
@@ -320,17 +323,18 @@ export const upsertMediaFunction = async (project_idx, items) => {
   }
 };
 
-export const deleteMediaFunction = async (project_idx, id) => {
+export const deleteMediaFunction = async (project_idx, media_id) => {
   const connection = await db.promise().getConnection();
   try {
     await connection.beginTransaction();
-    // 1). Get public_id, type, and folder_id for cloudinary + reindexing
+
+    // Delete from Cloudinary
     const [rows] = await connection.query(
-      `SELECT public_id, type, folder_id 
+      `SELECT public_id, type 
        FROM media 
-       WHERE id = ? AND project_idx = ? 
+       WHERE media_id = ? AND project_idx = ? 
        LIMIT 1`,
-      [id, project_idx]
+      [media_id, project_idx]
     );
 
     if (rows.length === 0) {
@@ -339,24 +343,21 @@ export const deleteMediaFunction = async (project_idx, id) => {
       return { success: false, message: "Media not found" };
     }
 
-    const { public_id, type, folder_id } = rows[0];
+    const { public_id, type } = rows[0];
     await deleteFromCloudinary([{ public_id, type }]);
 
-    const [deleteResult] = await connection.query(
-      `DELETE FROM media WHERE project_idx = ? AND id = ?`,
-      [project_idx, id]
+    const result = await deleteAndReindex(
+      connection,
+      "media",
+      "media_id",
+      media_id,
+      ["project_idx", "folder_id"]
     );
-    if (deleteResult.affectedRows === 0) throw new Error("No media deleted");
 
     await connection.commit();
     connection.release();
 
-    await reindexOrdinals("media", {
-      project_idx,
-      folder_id,
-    });
-
-    return { success: true, deleted: deleteResult.affectedRows };
+    return result;
   } catch (err) {
     await connection.rollback();
     connection.release();
@@ -387,8 +388,10 @@ export const upsertMediaLinksFunction = async (project_idx, mediaLinks) => {
   if (!Array.isArray(mediaLinks) || mediaLinks.length === 0) {
     return { success: false, message: "No mediaLinks provided" };
   }
+  const connection = await db.promise().getConnection();
 
   try {
+    await connection.beginTransaction();
     const inserts = mediaLinks.map((i) => [
       i.entity_type,
       i.entity_id,
@@ -403,10 +406,15 @@ export const upsertMediaLinksFunction = async (project_idx, mediaLinks) => {
         ordinal = VALUES(ordinal)
     `;
 
-    await db.promise().query(query, [inserts]);
+    await connection.query(query, [inserts]);
+
+    await connection.commit();
+    connection.release();
 
     return { success: true };
   } catch (err) {
+    await connection.rollback();
+    connection.release();
     console.error("❌ Function Error -> upsertMediaLinksFunction:", err);
     return { success: false, message: err.message };
   }
@@ -418,34 +426,27 @@ export const deleteMediaLinksFunction = async (project_idx, mediaLinks) => {
   }
 
   const connection = await db.promise().getConnection();
+
   try {
     await connection.beginTransaction();
 
-    const conditions = mediaLinks
-      .map(() => "(entity_type = ? AND entity_id = ? AND media_id = ?)")
-      .join(" OR ");
-
-    const deleteQuery = `
-      DELETE FROM media_link
-      WHERE ${conditions}
-    `;
-
-    const values = mediaLinks.flatMap((link) => [
-      link.entity_type,
-      link.entity_id,
-      link.media_id,
-    ]);
-
-    const [result] = await connection.query(deleteQuery, values);
+    const mediaIds = mediaLinks.map((m) => m.media_id);
+    const result = await bulkDeleteAndReindex(
+      connection,
+      "media_link",
+      "media_id",
+      mediaIds,
+      ["entity_type", "entity_id"]
+    );
 
     await connection.commit();
     connection.release();
 
-    return result.affectedRows > 0;
+    return result;
   } catch (err) {
     await connection.rollback();
     connection.release();
-    console.error("❌ Function Error -> deleteMediaLinksFunction:", err);
-    return false;
+    console.error("❌ bulk deleteMediaLinksFunction error:", err);
+    return { success: false, error: err.message };
   }
 };

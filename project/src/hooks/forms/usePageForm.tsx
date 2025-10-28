@@ -41,23 +41,14 @@ export function usePageFormSubmit() {
   const onPageFormSubmit: SubmitHandler<ProjectPageFormData> = async (data) => {
     if (!currentProjectId || !data.definition_id) return;
 
-    const filteredActivePages =
-      currentPage === null
-        ? projectPages.filter((p: ProjectPage) => p.parent_page_id === null)
-        : projectPages.filter((p) => p.parent_page_id === currentPage.id);
-
     const newPage: ProjectPage = {
       project_idx: currentProjectId,
-      page_id: currentPage?.page_id ?? null,
+      page_id: editingPage?.page_id ?? null,
       parent_page_id: data?.parent_page_id ?? null,
       definition_id: data?.definition_id ?? null,
       title: data?.title ?? null,
       slug: data?.slug ?? null,
-      order_index: addingPage
-        ? filteredActivePages.length
-        : editingPage
-        ? editingPage.order_index
-        : null,
+      ordinal: null,
       seo_title: data?.seo_title ?? null,
       seo_description: data?.seo_description ?? null,
       seo_keywords: data?.seo_keywords ?? null,
@@ -124,10 +115,10 @@ export function useSectionFormSubmit() {
       definition_id: data?.definition_id ?? null,
       name: data?.name ?? null,
       config: data?.config ?? {},
-      order_index: addingSection
+      ordinal: addingSection
         ? filteredActiveSections.length
         : editingSection
-        ? editingSection.order_index
+        ? editingSection.ordinal
         : null,
     };
 

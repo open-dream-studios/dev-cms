@@ -45,16 +45,18 @@ export function useCustomerFormSubmit() {
       zip: data.zip ?? null,
       notes: data.notes ?? null,
     };
-
-    const { id, customer_id } = await upsertCustomer(newCustomer);
-
-    if (customer_id && id) {
-      setCurrentCustomerData({
-        ...newCustomer,
-        id,
-        customer_id,
-      });
-      setAddingCustomer(false);
+    try {
+      const { id, customer_id } = await upsertCustomer(newCustomer);
+      if (customer_id && id) {
+        setCurrentCustomerData({
+          ...newCustomer,
+          id,
+          customer_id,
+        });
+        setAddingCustomer(false);
+      }
+    } catch (err) {
+      console.error("❌ Customer upsert failed in form:", err);
     }
   };
 

@@ -36,13 +36,13 @@ export const upsertMedia = async (req, res) => {
 };
 
 export const deleteMedia = async (req, res) => {
-  const { id } = req.body;
+  const { media_id } = req.body;
   const project_idx = req.user?.project_idx;
 
-  if (!project_idx || !id) {
+  if (!project_idx || !media_id) {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
-  const success = await deleteMediaFunction(project_idx, id);
+  const success = await deleteMediaFunction(project_idx, media_id);
   return res.status(success ? 200 : 500).json({ success });
 };
 
@@ -79,13 +79,13 @@ export const upsertMediaFolders = async (req, res) => {
 };
 
 export const deleteMediaFolder = async (req, res) => {
-  const { id } = req.body;
+  const { folder_id } = req.body;
   const project_idx = req.user?.project_idx;
 
-  if (!project_idx || !id) {
+  if (!project_idx || !folder_id) {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
-  const success = await deleteMediaFolderFunction(project_idx, id);
+  const { success } = await deleteMediaFolderFunction(project_idx, folder_id);
   return res.status(success ? 200 : 500).json({ success });
 };
 
@@ -120,7 +120,7 @@ export const deleteMediaLinks = async (req, res) => {
   ) {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
-  const success = await deleteMediaLinksFunction(project_idx, mediaLinks);
+  const { success } = await deleteMediaLinksFunction(project_idx, mediaLinks);
   return res.status(success ? 200 : 500).json({ success });
 };
 

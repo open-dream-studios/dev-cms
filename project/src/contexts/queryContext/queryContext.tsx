@@ -104,13 +104,13 @@ export type QueryContextType = {
   isLoadingMedia: boolean;
   refetchMedia: () => void;
   upsertMedia: (data: Media[]) => Promise<Media[]>;
-  deleteMedia: (id: number) => Promise<void>;
+  deleteMedia: (media_id: string) => Promise<void>;
 
   mediaFolders: MediaFolder[];
   isLoadingMediaFolders: boolean;
   refetchMediaFolders: () => void;
   upsertMediaFolders: (data: MediaFolder[]) => Promise<number[]>;
-  deleteMediaFolder: (id: number) => Promise<void>;
+  deleteMediaFolder: (folder_id: string) => Promise<void>;
 
   // ---- Media Links ----
   mediaLinks: MediaLink[];
@@ -132,11 +132,10 @@ export type QueryContextType = {
   refetchProjectPages: () => Promise<any>;
   upsertProjectPage: (page: ProjectPage) => Promise<string>;
   deleteProjectPage: (page_id: string) => Promise<void>;
-  reorderProjectPages: (data: {
-    project_idx: number;
-    parent_page_id: number | null;
-    orderedIds: string[];
-  }) => void;
+  reorderProjectPages: (
+    parent_page_id: number | null,
+    orderedIds: string[]
+  ) => Promise<void>;
 
   // ---- SECTIONS ----
   sectionDefinitions: SectionDefinition[];
@@ -293,7 +292,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     refetchProjectPages,
     upsertProjectPage,
     deleteProjectPage,
-    reorderProjectPagesMutation,
+    reorderProjectPages,
   } = useProjectPages(isLoggedIn, currentProjectId);
   const {
     sectionDefinitions,
@@ -404,11 +403,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchProjectPages,
         upsertProjectPage,
         deleteProjectPage,
-        reorderProjectPages: (data: {
-          project_idx: number;
-          parent_page_id: number | null;
-          orderedIds: string[];
-        }) => reorderProjectPagesMutation.mutateAsync(data),
+        reorderProjectPages,
         sectionDefinitions,
         isLoadingSectionDefinitions,
         refetchSectionDefinitions,

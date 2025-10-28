@@ -169,9 +169,9 @@ export function useMedia() {
     }
   };
 
-  const handleDeleteMedia = async (media_id: number) => {
+  const handleDeleteMedia = async (id: number, media_id: string) => {
     const mediaUsage = mediaLinks.filter(
-      (mediaLink: MediaLink) => mediaLink.media_id === media_id
+      (mediaLink: MediaLink) => mediaLink.media_id === id
     );
     if (!mediaUsage.length) {
       await deleteMedia(media_id);

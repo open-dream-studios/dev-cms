@@ -56,41 +56,22 @@ export function useProjectPages(
 
   const reorderProjectPagesMutation = useMutation({
     mutationFn: async (data: {
-      project_idx: number;
       parent_page_id: number | null;
       orderedIds: string[];
     }) => {
-      await makeRequest.post("/api/pages/reorder", data);
+      await makeRequest.post("/api/pages/reorder", {
+        project_idx: currentProjectId,
+        ...data,
+      });
     },
     onMutate: async (data) => {
-      // optimistic update
       await queryClient.cancelQueries({
         queryKey: ["projectPages", currentProjectId],
       });
-
       const previousPages = queryClient.getQueryData<ProjectPage[]>([
         "projectPages",
         currentProjectId,
       ]);
-
-      // if (previousPages) {
-      //   const reordered = previousPages
-      //     .filter((p) => p.parent_page_id === data.parent_page_id)
-      //     .map((p) => p.id);
-
-      //   // overwrite locally
-      //   queryClient.setQueryData<ProjectPage[]>(
-      //     ["projectPages", currentProjectId],
-      //     (old) => {
-      //       if (!old) return old;
-      //       const map = new Map(old.map((p) => [p.id, p]));
-      //       return data.orderedIds
-      //         .map((id) => map.get(id)!)
-      //         .concat(old.filter((p) => !data.orderedIds.includes(p.id)));
-      //     }
-      //   );
-      // }
-
       return { previousPages };
     },
     onError: (err, _, ctx) => {
@@ -104,6 +85,7 @@ export function useProjectPages(
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: ["projectPages", currentProjectId],
+        refetchType: "inactive",
       });
     },
   });
@@ -117,12 +99,22 @@ export function useProjectPages(
     await deleteProjectPageMutation.mutateAsync(page_id);
   };
 
+  const reorderProjectPages = async (
+    parent_page_id: number | null,
+    orderedIds: string[]
+  ) => {
+    await reorderProjectPagesMutation.mutateAsync({
+      parent_page_id,
+      orderedIds,
+    });
+  };
+
   return {
     projectPages,
     isLoadingProjectPages,
     refetchProjectPages,
     upsertProjectPage,
     deleteProjectPage,
-    reorderProjectPagesMutation,
+    reorderProjectPages,
   };
 }

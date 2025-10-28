@@ -30,9 +30,9 @@ type FolderItemProps = {
   setActiveFolder: (mediaFolder: MediaFolder | null) => void;
   openFolders: Set<number>;
   toggleFolderOpen: (id: number) => void;
-  onContextMenu: (e: React.MouseEvent, folderId: number) => void;
-  renamingFolder: number | null;
-  setRenamingFolder: (id: number | null) => void;
+  onContextMenu: (e: React.MouseEvent, folderId: string) => void;
+  renamingFolder: string | null;
+  setRenamingFolder: (folder_id: string | null) => void;
 };
 
 export default function FolderItem({
@@ -58,7 +58,7 @@ export default function FolderItem({
   if (!folder || !folder.id) return;
 
   useEffect(() => {
-    if (renamingFolder === folder.id) {
+    if (renamingFolder === folder.folder_id) {
       setTempName(folder.name);
       setTimeout(() => {
         if (inputRef.current) {
@@ -118,8 +118,8 @@ export default function FolderItem({
 
   const handleDoubleClick = () => {
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
-    if (folder.id) {
-      setRenamingFolder(folder.id);
+    if (folder.folder_id) {
+      setRenamingFolder(folder.folder_id);
     }
   };
   const hoveredFolder = useDnDStore((state) => state.hoveredFolder);
@@ -146,8 +146,8 @@ export default function FolderItem({
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={(e) => {
-          if (folder.id) {
-            onContextMenu(e, folder.id);
+          if (folder.folder_id) {
+            onContextMenu(e, folder.folder_id);
           }
         }}
         animate={{
@@ -180,7 +180,7 @@ export default function FolderItem({
           <Folder size={16} className="w-[24px]" />
         )}
 
-        {renamingFolder === folder.id ? (
+        {renamingFolder === folder.folder_id ? (
           <input
             ref={inputRef}
             value={tempName}

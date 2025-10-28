@@ -18,6 +18,7 @@ export const getTasksFunction = async (project_idx) => {
 };
 
 export const upsertTaskFunction = async (project_idx, reqBody) => {
+  const connection = await db.promise().getConnection();
   const {
     task_id,
     job_id,
@@ -30,6 +31,7 @@ export const upsertTaskFunction = async (project_idx, reqBody) => {
   } = reqBody;
 
   try {
+    await connection.beginTransaction();
     const finalTaskId =
       task_id && task_id.trim() !== ""
         ? task_id
@@ -67,14 +69,17 @@ export const upsertTaskFunction = async (project_idx, reqBody) => {
       description || null,
     ];
 
-    const [result] = await db.promise().query(query, values);
-
+    const [result] = await connection.query(query, values);
+    await connection.commit();
+    connection.release();
     return {
       success: true,
       task_id: finalTaskId,
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertTaskFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return {
       success: false,
       task_id: null,
@@ -83,12 +88,18 @@ export const upsertTaskFunction = async (project_idx, reqBody) => {
 };
 
 export const deleteTaskFunction = async (project_idx, task_id) => {
+  const connection = await db.promise().getConnection();
   const q = `DELETE FROM tasks WHERE task_id = ? AND project_idx = ?`;
   try {
+    await connection.beginTransaction();
     await db.promise().query(q, [task_id, project_idx]);
+    await connection.commit();
+    connection.release();
     return true;
   } catch (err) {
     console.error("❌ Function Error -> deleteTaskFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return false;
   }
 };

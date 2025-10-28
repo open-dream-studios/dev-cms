@@ -44,10 +44,10 @@ export function useMediaFolders(
     upsertMediaFoldersMutation.mutateAsync(data);
 
   const deleteMediaFolderMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (folder_id: string) => {
       await makeRequest.post("/api/media/folders/delete", {
         project_idx: currentProjectId,
-        id,
+        folder_id,
       });
     },
     onSuccess: () => {
@@ -56,8 +56,8 @@ export function useMediaFolders(
       });
     },
   });
-  const deleteMediaFolder = async (id: number) =>
-    deleteMediaFolderMutation.mutateAsync(id);
+  const deleteMediaFolder = async (folder_id: string) =>
+    deleteMediaFolderMutation.mutateAsync(folder_id);
 
   return {
     mediaFolders,

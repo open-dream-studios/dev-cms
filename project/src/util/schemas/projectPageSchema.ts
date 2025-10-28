@@ -15,7 +15,7 @@ export const ProjectPageSchema = z.object({
       const normalized = val.toLowerCase();
       return normalized.startsWith("/") ? normalized : `/${normalized}`;
     }),
-  order_index: z.number().nullable().optional(),
+  ordinal: z.number().nullable().optional(),
   seo_title: z.string().nullable().optional(),
   seo_description: z.string().nullable().optional(),
   seo_keywords: z.array(z.string()).nullable().optional(),
@@ -31,7 +31,7 @@ export function pageToForm(page?: ProjectPage | null): ProjectPageFormData {
     definition_id: page?.definition_id ?? null,
     title: page?.title ?? "",
     slug: page?.slug ?? "",
-    order_index: page?.order_index ?? null,
+    ordinal: page?.ordinal ?? null,
     seo_title: page?.seo_title ?? null,
     seo_description: page?.seo_description ?? null,
     seo_keywords: page?.seo_keywords ?? null,

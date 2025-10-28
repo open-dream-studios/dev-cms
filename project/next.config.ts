@@ -35,8 +35,9 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://dev-cms-production.up.railway.app/api/:path*",
-        // "http://localhost:8080/api/:path*",
+        destination:
+          // "https://dev-cms-production.up.railway.app/api/:path*",
+          "http://localhost:8080/api/:path*",
       },
     ];
   },

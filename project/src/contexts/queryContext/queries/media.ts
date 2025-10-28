@@ -83,10 +83,10 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   };
 
   const deleteMediaMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (media_id: string) => {
       await makeRequest.post("/api/media/delete", {
         project_idx: currentProjectId,
-        id,
+        media_id,
       });
     },
     onSuccess: () => {
@@ -94,8 +94,8 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     },
   });
 
-  const deleteMedia = async (id: number) => {
-    deleteMediaMutation.mutateAsync(id);
+  const deleteMedia = async (media_id: string) => {
+    deleteMediaMutation.mutateAsync(media_id);
   };
 
   return {

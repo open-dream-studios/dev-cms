@@ -55,7 +55,6 @@ function SortableMediaItem({
     animateLayoutChanges: () => false,
   });
   const { currentUser } = useContext(AuthContext);
-  const { mediaFolders } = useContextQueries();
   const { handleDeleteMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
@@ -104,17 +103,17 @@ function SortableMediaItem({
   };
 
   const handleMediaClick = (e: any) => {
-    if (!activeFolder) {
-      const folderFound = mediaFolders.find(
-        (mediaFolder: MediaFolder) => mediaFolder.id === media.folder_id
-      );
-      if (folderFound) {
-        openAllParents(folderFound);
-        setActiveFolder(folderFound);
-      }
-    } else {
-      setMediaSelected(media);
-    }
+    // if (!activeFolder) {
+    //   const folderFound = mediaFolders.find(
+    //     (mediaFolder: MediaFolder) => mediaFolder.id === media.folder_id
+    //   );
+    //   if (folderFound) {
+    //     openAllParents(folderFound);
+    //     setActiveFolder(folderFound);
+    //   }
+    // } else {
+    setMediaSelected(media);
+    // }
   };
 
   if (!currentUser) return null;
@@ -141,8 +140,8 @@ function SortableMediaItem({
           className="absolute top-[-8px] right-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
           onClick={async (e: any) => {
             e.stopPropagation();
-            if (media.id) {
-              await handleDeleteMedia(media.id);
+            if (media.id && media.media_id) {
+              await handleDeleteMedia(media.id, media.media_id);
             }
           }}
         >
@@ -277,7 +276,7 @@ export default function MediaGrid({
 
   return (
     <div className="w-[100%] h-[100%] relative">
-      {mediaSelected && activeFolder && (
+      {mediaSelected && (
         <div
           className="fixed z-[990] top-0 left-0 w-[100%] h-[100%] flex items-center justify-center"
           style={{

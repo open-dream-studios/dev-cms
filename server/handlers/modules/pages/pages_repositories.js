@@ -1,5 +1,10 @@
 // server/handlers/modules/pages/pages_repositories.js
 import { db } from "../../../connection/connect.js";
+import {
+  deleteAndReindex,
+  getNextOrdinal,
+  reorderOrdinals,
+} from "../../../lib/ordinals.js";
 
 // ---------- PAGE FUNCTIONS ----------
 export const getPagesFunction = async (project_idx) => {
@@ -7,7 +12,7 @@ export const getPagesFunction = async (project_idx) => {
     SELECT *
     FROM project_pages pp
     WHERE pp.project_idx = ?
-    ORDER BY pp.order_index ASC
+    ORDER BY pp.ordinal ASC
   `;
   try {
     const [rows] = await db.promise().query(q, [project_idx]);
@@ -28,12 +33,12 @@ export const getPagesFunction = async (project_idx) => {
 };
 
 export const upsertPageFunction = async (project_idx, reqBody) => {
+  const connection = await db.promise().getConnection();
   const {
     page_id,
     definition_id,
     title,
     slug,
-    order_index,
     seo_title,
     seo_description,
     seo_keywords,
@@ -43,6 +48,15 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
   } = reqBody;
 
   try {
+    await connection.beginTransaction();
+    let finalOrdinal = 0;
+    if (!page_id) {
+      finalOrdinal = await getNextOrdinal(connection, "project_pages", {
+        project_idx,
+        parent_page_id,
+      });
+      if (finalOrdinal == null) return { success: false, page_id: null };
+    }
     const finalPageId =
       page_id && page_id.trim() !== ""
         ? page_id
@@ -58,7 +72,7 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
         definition_id,
         title,
         slug,
-        order_index,
+        ordinal,
         seo_title,
         seo_description,
         seo_keywords,
@@ -71,7 +85,6 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
         definition_id = VALUES(definition_id),
         title = VALUES(title),
         slug = VALUES(slug),
-        order_index = VALUES(order_index),
         seo_title = VALUES(seo_title),
         seo_description = VALUES(seo_description),
         seo_keywords = VALUES(seo_keywords),
@@ -87,7 +100,7 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
       definition_id,
       title,
       slug,
-      order_index,
+      finalOrdinal,
       seo_title,
       seo_description,
       JSON.stringify(seo_keywords || []),
@@ -96,7 +109,10 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
       parent_page_id,
     ];
 
-    const [result] = await db.promise().query(query, values);
+    const [result] = await connection.query(query, values);
+
+    await connection.commit();
+    connection.release();
 
     return {
       success: true,
@@ -104,6 +120,8 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertPageFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return {
       success: false,
       page_id: null,
@@ -115,69 +133,23 @@ export const deletePageFunction = async (project_idx, page_id) => {
   const connection = await db.promise().getConnection();
   try {
     await connection.beginTransaction();
-
-    // 1. Lookup parent_page_id for the page being deleted
-    const [rows] = await connection.query(
-      `SELECT parent_page_id 
-       FROM project_pages 
-       WHERE page_id = ? AND project_idx = ? 
-       LIMIT 1`,
-      [page_id, project_idx]
+    
+    const result = await deleteAndReindex(
+      connection,
+      "project_pages",
+      "page_id",
+      page_id,
+      ["project_idx", "parent_page_id"]
     );
 
-    if (rows.length === 0) {
-      await connection.rollback();
-      connection.release();
-      return { success: false, message: "Page not found" };
-    }
-
-    const parent_page_id = rows[0].parent_page_id;
-
-    // 2. Delete the page
-    const [deleteResult] = await connection.query(
-      `DELETE FROM project_pages WHERE page_id = ? AND project_idx = ? LIMIT 1`,
-      [page_id, project_idx]
-    );
-
-    if (deleteResult.affectedRows === 0) {
-      await connection.rollback();
-      connection.release();
-      return { success: false, message: "No page deleted" };
-    }
-
-    // 3. Reindex order_index for siblings (same parent, or root if null)
-    await connection.query(`SET @rownum := -1`);
-
-    const reindexQuery = `
-      UPDATE project_pages
-      JOIN (
-        SELECT id, (@rownum := @rownum + 1) AS new_order
-        FROM project_pages
-        WHERE project_idx = ? AND ${
-          parent_page_id ? "parent_page_id = ?" : "parent_page_id IS NULL"
-        }
-        ORDER BY order_index
-      ) AS ordered
-      ON project_pages.id = ordered.id
-      SET project_pages.order_index = ordered.new_order
-    `;
-
-    if (parent_page_id) {
-      await connection.query(reindexQuery, [project_idx, parent_page_id]);
-    } else {
-      await connection.query(reindexQuery, [project_idx]);
-    }
-
-    // 4. Commit
     await connection.commit();
     connection.release();
-
-    return { success: true, deleted: 1 };
+    return result;
   } catch (err) {
     await connection.rollback();
     connection.release();
-    console.error("❌ Function Error -> deletePageFunction:", err);
-    return { success: false, error: "Delete transaction failed" };
+    console.error("❌ deletePageFunction error:", err);
+    return { success: false, deleted: false, error: err.message };
   }
 };
 
@@ -186,35 +158,31 @@ export const reorderPagesFunction = async (
   parent_page_id,
   orderedPageIds
 ) => {
+  const connection = await db.promise().getConnection();
   try {
-    const caseStatements = orderedPageIds
-      .map((id, idx) => `WHEN ${db.escape(id)} THEN ${idx}`)
-      .join(" ");
+    await connection.beginTransaction();
 
-    const query = `
-      UPDATE project_pages
-      SET order_index = CASE page_id
-        ${caseStatements}
-      END
-      WHERE project_idx = ?
-      AND (parent_page_id <=> ?)
-      AND page_id IN (${orderedPageIds.map(() => "?").join(", ")});
-    `;
-
-    const values = [project_idx, parent_page_id, ...orderedPageIds];
-
-    const [result] = await db.promise().query(query, values);
-
-    return {
-      success: true,
-      affectedRows: result.affectedRows || 0,
+    const layer = {
+      project_idx,
+      parent_page_id: parent_page_id ?? null,
     };
+    const result = await reorderOrdinals(
+      connection,
+      "project_pages",
+      layer,
+      orderedPageIds,
+      "page_id"
+    );
+
+    await connection.commit();
+    connection.release();
+
+    return result;
   } catch (err) {
-    console.error("❌ Function Error -> reorderPagesFunction:", err);
-    return {
-      success: false,
-      affectedRows: 0,
-    };
+    await connection.rollback();
+    connection.release();
+    console.error("❌ reorderPagesFunction error:", err);
+    return { success: false, affectedRows: 0, error: err.message };
   }
 };
 
@@ -244,6 +212,7 @@ export const getPageDefinitionsFunction = async () => {
 };
 
 export const upsertPageDefinitionFunction = async (reqBody) => {
+  const connection = await db.promise().getConnection();
   const {
     page_definition_id,
     identifier,
@@ -254,6 +223,7 @@ export const upsertPageDefinitionFunction = async (reqBody) => {
   } = reqBody;
 
   try {
+    await connection.beginTransaction();
     const finalPageDefinitionId =
       page_definition_id && page_definition_id.trim() !== ""
         ? page_definition_id
@@ -289,14 +259,18 @@ export const upsertPageDefinitionFunction = async (reqBody) => {
       JSON.stringify(config_schema || {}),
     ];
 
-    const [result] = await db.promise().query(query, values);
+    const [result] = await connection.query(query, values);
 
+    await connection.commit();
+    connection.release();
     return {
       success: true,
       page_definition_id: finalPageDefinitionId,
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertPageDefinitionFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return {
       success: false,
       page_definition_id: null,
@@ -305,12 +279,20 @@ export const upsertPageDefinitionFunction = async (reqBody) => {
 };
 
 export const deletePageDefinitionFunction = async (page_definition_id) => {
-  const q = `DELETE FROM page_definitions WHERE page_definition_id = ?`;
+  const connection = await db.promise().getConnection();
   try {
-    await db.promise().query(q, [page_definition_id]);
+    await connection.beginTransaction();
+
+    const q = `DELETE FROM page_definitions WHERE page_definition_id = ?`;
+    await connection.query(q, [page_definition_id]);
+
+    await connection.commit();
+    connection.release();
     return true;
   } catch (err) {
     console.error("❌ Function Error -> deletePageDefinitionFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return false;
   }
 };
@@ -361,12 +343,12 @@ export const getPageDataFunction = (reqBody) => {
           psec.definition_id,
           psec.name,
           psec.config,
-          psec.order_index,
+          psec.ordinal,
           sd.identifier
         FROM project_sections psec
         LEFT JOIN section_definitions sd ON psec.definition_id = sd.id
         WHERE psec.project_page_id = ?
-        ORDER BY psec.order_index ASC
+        ORDER BY psec.ordinal ASC
 `;
 
       db.query(sectionQuery, [page.id], (err, sections) => {
@@ -380,7 +362,7 @@ export const getPageDataFunction = (reqBody) => {
           id: s.id,
           identifier: s.identifier,
           name: s.name,
-          order_index: s.order_index,
+          ordinal: s.ordinal,
           config:
             typeof s.config === "string"
               ? JSON.parse(s.config)

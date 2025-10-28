@@ -38,9 +38,11 @@ export const getModulesFunction = async (project_idx) => {
 };
 
 export const upsertModuleFunction = async (project_idx, reqBody) => {
+  const connection = await db.promise().getConnection();
   const { module_id, module_definition_id, settings } = reqBody;
 
   try {
+    await connection.beginTransaction();
     const finalModuleId =
       module_id && module_id.trim() !== ""
         ? module_id
@@ -63,14 +65,18 @@ export const upsertModuleFunction = async (project_idx, reqBody) => {
       JSON.stringify(settings || []),
     ];
 
-    const [result] = await db.promise().query(query, values);
+    const [result] = await connection.query(query, values);
 
+    await connection.commit();
+    connection.release();
     return {
       success: true,
       module_id: finalModuleId,
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertModuleFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return {
       success: false,
       module_id: null,
@@ -78,13 +84,22 @@ export const upsertModuleFunction = async (project_idx, reqBody) => {
   }
 };
 
-export const deleteModuleFunction = async (project_idx, module_definition_id) => {
+export const deleteModuleFunction = async (
+  project_idx,
+  module_definition_id
+) => {
+  const connection = await db.promise().getConnection();
   const q = `DELETE FROM project_modules WHERE project_idx = ? AND module_definition_id = ?`;
   try {
-    await db.promise().query(q, [project_idx, module_definition_id]);
+    await connection.beginTransaction();
+    await connection.query(q, [project_idx, module_definition_id]);
+    await connection.commit();
+    connection.release();
     return true;
   } catch (err) {
     console.error("❌ Function Error -> deleteModuleFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return false;
   }
 };
@@ -105,7 +120,10 @@ export const runModuleFunction = async (project_idx, module_id) => {
   }
 };
 
-export const getModuleConfigFunction = async (project_idx, module_definition_id) => {
+export const getModuleConfigFunction = async (
+  project_idx,
+  module_definition_id
+) => {
   // const q = `
   //     SELECT config_schema
   //     FROM module_definitions pm
@@ -141,6 +159,7 @@ export const getModuleDefinitionsFunction = async () => {
 };
 
 export const upsertModuleDefinitionFunction = async (reqBody) => {
+  const connection = await db.promise().getConnection();
   const {
     module_definition_id,
     name,
@@ -151,6 +170,7 @@ export const upsertModuleDefinitionFunction = async (reqBody) => {
   } = reqBody;
 
   try {
+    await connection.beginTransaction();
     const finalModulDefinitioneId =
       module_definition_id && module_definition_id.trim() !== ""
         ? module_definition_id
@@ -181,14 +201,18 @@ export const upsertModuleDefinitionFunction = async (reqBody) => {
       JSON.stringify(config_schema || []),
     ];
 
-    const [result] = await db.promise().query(query, values);
+    const [result] = await connection.query(query, values);
 
+    await connection.commit();
+    connection.release();
     return {
       success: true,
       module_definition_id: finalModulDefinitioneId,
     };
   } catch (err) {
     console.error("❌ Function Error -> upsertModuleDefinitionFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return {
       success: false,
       module_definition_id: null,
@@ -197,12 +221,18 @@ export const upsertModuleDefinitionFunction = async (reqBody) => {
 };
 
 export const deleteModuleDefinitionFunction = async (module_definition_id) => {
+  const connection = await db.promise().getConnection();
   const q = `DELETE FROM module_definitions WHERE module_definition_id = ?`;
   try {
-    await db.promise().query(q, [module_definition_id]);
+    await connection.beginTransaction();
+    await connection.query(q, [module_definition_id]);
+    await connection.commit();
+    connection.release();
     return true;
   } catch (err) {
     console.error("❌ Function Error -> deleteModuleDefinitionFunction: ", err);
+    await connection.rollback();
+    connection.release();
     return false;
   }
 };
