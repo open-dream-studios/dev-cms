@@ -1,14 +1,19 @@
 // project/src/modules/runFrontendModule.ts
 import { moduleDefinitions } from "@/modules/moduleDefinitions";
-import { Integration, ModuleDefinition, Project, ProjectModule } from "@/types/project";
+import { Product } from "@/types/products";
+import {
+  Integration,
+  ModuleDefinition,
+  Project,
+  ProjectModule,
+} from "@/types/project";
 import { makeRequest } from "@/util/axios";
 import { toast } from "react-toastify";
 
 export type RunModuleContext = {
-  modules: ModuleDefinition[];
+  moduleDefinitions: ModuleDefinition[];
   projectModules: ProjectModule[];
   integrations: Integration[];
-  localData?: any;
   currentProject: Project;
 };
 
@@ -17,49 +22,58 @@ export const checkIntegrations = (
   ctx: RunModuleContext,
   allKeysRequired: boolean
 ) => {
-  const { modules, projectModules, integrations } = ctx;
+  const { moduleDefinitions, projectModules, integrations } = ctx;
   const projectModule = projectModules.find((m) => m.identifier === identifier);
   if (!projectModule) return null;
 
-  // const integration = integrations.find(
-  //   (i) => i.module_id === projectModule.module_id
-  // );
-  // if (!integration) {
-  //   toast.error("Keys not found");
-  //   return null;
-  // }
+  const projectModuleIntegrations = integrations.filter(
+    (i) => i.module_id === projectModule.id
+  );
 
-  // const module = modules.find((i) => i.identifier === identifier);
-  // if (!module) {
-  //   toast.error("Module not found");
-  //   return null;
-  // }
+  const moduleDefinition = moduleDefinitions.find(
+    (i) => i.identifier === identifier
+  );
+  if (!moduleDefinition) {
+    toast.error("Module not found");
+    return null;
+  }
+  const requiredKeys = moduleDefinition.config_schema || [];
 
-  // const requiredKeys = module.config_schema || [];
-  // const integrationConfig = integration?.config || {};
+  if (
+    (!projectModuleIntegrations || !projectModuleIntegrations.length) &&
+    requiredKeys.length
+  ) {
+    toast.error("Module keys not found");
+    return null;
+  }
 
-  // const missingKeys = requiredKeys.filter((key) => !(key in integrationConfig));
+  const existingKeys = projectModuleIntegrations.map((i) => i.integration_key);
+  const missingKeys = requiredKeys.filter((key) => !existingKeys.includes(key));
 
-  // if (missingKeys.length > 0 && allKeysRequired) {
-  //   toast.error(`Missing configuration: ${missingKeys.join(", ")}`);
-  //   return null;
-  // }
-  // return integration;
-  return null
+  if (missingKeys.length && allKeysRequired) {
+    toast.error(`Missing configuration: ${missingKeys.join(", ")}`);
+    return null;
+  }
+  return projectModuleIntegrations;
 };
 
-export const moduleRequest = async (identifier: string, args: Record<string, any>) => {
+export const moduleRequest = async (
+  identifier: string,
+  args: Record<string, any>,
+) => {
   const res = await makeRequest.post(`/api/modules/run/${identifier}`, args);
-  return res.data; 
+  return res.data;
 };
 
-export const runFrontendModule = async (identifier: string, ctx: {
-  modules: ModuleDefinition[];
-  projectModules: ProjectModule[];
-  integrations: Integration[];
-  localData?: any;
-  currentProject: Project;
-}) => {
+export const runFrontendModule = async (
+  identifier: string,
+  ctx: {
+    moduleDefinitions: ModuleDefinition[];
+    projectModules: ProjectModule[];
+    integrations: Integration[];
+    currentProject: Project;
+  }
+) => {
   const mod = moduleDefinitions[identifier];
   if (!mod) {
     toast.error("Module not found on frontend");

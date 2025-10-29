@@ -61,7 +61,7 @@ router.post(
   "/run/:identifier",
   authenticateUser,
   checkProjectPermission(3), // owner
-  errorHandler(runModule)
+  transactionHandler(runModule)
 );
 
 export default router;

@@ -37,8 +37,9 @@ const ModuleSettings = () => {
     number[]
   >([]);
 
-  const [selectedParentModule, setSelectedParentModule] =
-    useState<ProjectModule | null>(null);
+  const [selectedModule, setSelectedModule] = useState<ProjectModule | null>(
+    null
+  );
   const [editingModule, setEditingModule] = useState<ProjectModule | null>(
     null
   );
@@ -103,8 +104,8 @@ const ModuleSettings = () => {
   };
 
   const handleProjectModuleClick = (projectModule: ProjectModule) => {
-    if (!editingModule && selectedParentModule === null) {
-      setSelectedParentModule(projectModule);
+    if (!editingModule) {
+      setSelectedModule(projectModule);
     }
   };
 
@@ -117,33 +118,39 @@ const ModuleSettings = () => {
   };
 
   const handleBackClick = () => {
+    setEditingKey(null);
     if (editingModule) {
       setEditingModule(null);
       setIntegrationConfig({});
       setShowAddKeyInput(false);
       form.reset();
-    } else if (selectedParentModule) {
-      setSelectedParentModule(null);
+    } else if (selectedModule) {
+      const foundParentModule = projectModules.find(
+        (mod: ProjectModule) => mod.module_definition_id === selectedModule.parent_module_id
+      );
+      if (foundParentModule) {
+        setSelectedModule(foundParentModule);
+      } else {
+        setSelectedModule(null);
+      }
     }
   };
 
   const filteredActiveModules = useMemo(() => {
-    return selectedParentModule === null
+    return selectedModule === null
       ? projectModules.filter((pm) => pm.parent_module_id === null)
       : projectModules.filter(
-          (pm) =>
-            pm.parent_module_id === selectedParentModule.module_definition_id
+          (pm) => pm.parent_module_id === selectedModule.module_definition_id
         );
-  }, [projectModules, selectedParentModule]);
+  }, [projectModules, selectedModule]);
 
   const filteredSelectableModules = useMemo(() => {
-    return selectedParentModule === null
+    return selectedModule === null
       ? moduleDefinitions.filter((pm) => pm.parent_module_id === null)
       : moduleDefinitions.filter(
-          (pm) =>
-            pm.parent_module_id === selectedParentModule.module_definition_id
+          (pm) => pm.parent_module_id === selectedModule.module_definition_id
         );
-  }, [moduleDefinitions, selectedParentModule]);
+  }, [moduleDefinitions, selectedModule]);
 
   useEffect(() => {
     if (!editingModule || !currentProject) return;
@@ -185,7 +192,7 @@ const ModuleSettings = () => {
       return;
     }
     await upsertIntegration({
-      integration_id: null,
+      integration_id: editingKey ? editingKey : null,
       project_idx: currentProjectId,
       module_id: editingModule.id,
       integration_key: key,
@@ -211,7 +218,7 @@ const ModuleSettings = () => {
       className="ml-[5px] md:ml-[8px] w-full h-full flex flex-col pt-[50px]"
     >
       <div className="ml-[1px] flex flex-row gap-[13.5px] items-center mb-[12px] w-[90%]">
-        {(selectedParentModule || editingModule) && (
+        {(selectedModule || editingModule) && (
           <div
             onClick={handleBackClick}
             className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
@@ -229,8 +236,8 @@ const ModuleSettings = () => {
         <p className="font-[600] h-[40px] truncate text-[29px] leading-[33px]">
           {editingModule
             ? editingModule.name
-            : selectedParentModule
-            ? selectedParentModule.name
+            : selectedModule
+            ? selectedModule.name
             : "Modules"}
         </p>
         <div className="relative flex-1 flex">
@@ -344,16 +351,12 @@ const ModuleSettings = () => {
                   )}
                   <div
                     onClick={() => handleProjectModuleClick(projectModule)}
-                    className={`group ${
-                      selectedParentModule === null && "cursor-pointer"
-                    } w-[100%] h-[50px] flex justify-between items-center px-[20px]`}
+                    className={`group cursor-pointer w-[100%] h-[50px] flex justify-between items-center px-[20px]`}
                     style={{ color: t.text_4 }}
                   >
                     <p
-                      className={`truncate ${
-                        selectedParentModule === null &&
-                        "group-hover:brightness-75"
-                      } w-[calc(100%-85px)]`}
+                      className={`truncate group-hover:brightness-75 dim
+                       w-[calc(100%-85px)]`}
                     >
                       {projectModule.name}
                     </p>
@@ -419,7 +422,7 @@ const ModuleSettings = () => {
             .map((i: Integration, index: number) => {
               return (
                 <div key={index}>
-                  {editingKey === i.integration_key ? (
+                  {editingKey === i.integration_id ? (
                     <div
                       key={i.integration_key}
                       className="w-full flex px-[20px] h-[50px] items-center gap-[10px]"
@@ -460,7 +463,7 @@ const ModuleSettings = () => {
                     </div>
                   ) : (
                     <>
-                      <div key={i.integration_key} className="w-full relative">
+                      <div key={i.integration_id} className="w-full relative">
                         <div className="flex justify-between items-center px-[20px] h-[50px] text-[14.5px]">
                           <p className="w-[40%] pr-[5px] truncate opacity-[50%]">
                             {i.integration_key}
@@ -471,7 +474,7 @@ const ModuleSettings = () => {
                           <div className="absolute right-[12px] top-[9px] flex gap-[10px]">
                             <div
                               onClick={() => {
-                                setEditingKey(i.integration_key);
+                                setEditingKey(i.integration_id);
                                 setTempValue("");
                                 setTimeout(() => {
                                   if (editKeyInputRef.current) {

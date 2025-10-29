@@ -21,20 +21,19 @@ export const definitionTree = {
     "global-media-module": null,
   },
   "customers-module": {
-    "customer-products-module": null,
+    "customer-products-module": {
+      "customer-products-wix-sync-module": null,
+      "customer-products-google-sheets-module": null,
+    },
   },
   "employees-module": {
     "tasks-module": null,
   },
-  "products-module": {
-    "products-wix-sync-cms-module": null,
-    "products-export-to-sheets-module": null,
-  },
 };
 
 export const moduleDefinitions: Record<string, ModuleDefinition> = {
-  "products-export-to-sheets-module": {
-    identifier: "products-export-to-sheets-module",
+  "customer-products-google-sheets-module": {
+    identifier: "customer-products-google-sheets-module",
     label: "Export to Google Sheets",
     description: "Send products to linked Google Sheet",
     expectedSchema: [
@@ -44,35 +43,39 @@ export const moduleDefinitions: Record<string, ModuleDefinition> = {
       "googleSheetUrl",
     ],
     run: async (ctx) => {
-      // const { currentProject } = ctx;
-      // const identifier = "products-export-to-sheets-module";
-      // const integration = checkIntegrations(identifier, ctx, true);
-      // if (!integration) return;
-
-      // const googleSheetUrl = integration.config.googleSheetUrl;
-      // await moduleRequest(identifier, {
-      //   project_idx: currentProject.id,
-      // });
-      // toast.success("Exported to Google Sheets");
-      // window.open(googleSheetUrl, "_blank");
+      const { currentProject } = ctx;
+      const identifier = "customer-products-google-sheets-module";
+      const integrations = checkIntegrations(identifier, ctx, true);
+      if (integrations === null) return;
+      const googleSheetUrl = await moduleRequest(identifier, {
+        project_idx: currentProject.id,
+      });
+      if (googleSheetUrl) {
+        toast.success("Exported to Google Sheets");
+        window.open(
+          `https://docs.google.com/spreadsheets/d/${googleSheetUrl}`,
+          "_blank"
+        );
+      }
     },
   },
 
-  "products-wix-sync-cms-module": {
-    identifier: "products-wix-sync-cms-module",
+  "customer-products-wix-sync-module": {
+    identifier: "customer-products-wix-sync-module",
     label: "Sync Products to Wix",
     description: "Push local products to Wix Store",
     expectedSchema: [],
     run: async (ctx) => {
       const { currentProject } = ctx;
-      const identifier = "products-wix-sync-cms-module";
+      const identifier = "customer-products-wix-sync-module";
       const integration = checkIntegrations(identifier, ctx, true);
       if (!integration) return;
-
-      await moduleRequest(identifier, {
+      const success = await moduleRequest(identifier, {
         project_idx: currentProject.id,
       });
-      toast.success("Synced products to Wix");
+      if (success) {
+        toast.success("Synced products to Wix");
+      }
     },
   },
 };

@@ -128,9 +128,7 @@ const EditModules = () => {
   };
 
   const handleModuleClick = (moduleDefinition: ModuleDefinition) => {
-    if (selectedModule === null) {
-      setSelectedModule(moduleDefinition);
-    }
+    setSelectedModule(moduleDefinition);
   };
 
   const handleEditModuleClick = (
@@ -158,7 +156,19 @@ const EditModules = () => {
 
   const handleBackClick = () => {
     setShowForm(false);
-    setSelectedModule(null);
+    if (selectedModule) {
+      const foundParentModule = moduleDefinitions.find(
+        (definition: ModuleDefinition) =>
+          definition.id === selectedModule.parent_module_id
+      );
+      if (foundParentModule) {
+        setSelectedModule(foundParentModule);
+      } else {
+        setSelectedModule(null);
+      }
+    } else {
+      setSelectedModule(null);
+    }
     form.reset({
       name: "",
       description: "",
@@ -187,10 +197,7 @@ const EditModules = () => {
             onClick={handleBackClick}
             className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[33px] rounded-full w-[33px] opacity-[30%]"
           >
-            <FaChevronLeft
-              size={22}
-              color={t.text_3}
-            />
+            <FaChevronLeft size={22} color={t.text_3} />
           </div>
         )}
         <h2 className="text-[24px] ml-[2px] font-bold mt-[-5px] mr-[14px]">
@@ -201,8 +208,7 @@ const EditModules = () => {
             <button
               type="submit"
               style={{
-                backgroundColor:
-                  t.background_2_selected,
+                backgroundColor: t.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px]  py-[6px] rounded-full"
             >
@@ -211,8 +217,7 @@ const EditModules = () => {
             <button
               onClick={handleCancelForm}
               style={{
-                backgroundColor:
-                  t.background_2_selected,
+                backgroundColor: t.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
             >
@@ -223,8 +228,7 @@ const EditModules = () => {
           <button
             onClick={handleShowForm}
             style={{
-              backgroundColor:
-                t.background_2_selected,
+              backgroundColor: t.background_2_selected,
             }}
             className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
@@ -248,10 +252,7 @@ const EditModules = () => {
                 className="input outline-none rounded px-2 py-1 w-[100%] text-[17px]"
               />
             </p>
-            <p
-              style={{ color: t.text_4 }}
-              className="text-sm"
-            >
+            <p style={{ color: t.text_4 }} className="text-sm">
               <input
                 {...form.register("description")}
                 placeholder="Description..."
@@ -259,10 +260,7 @@ const EditModules = () => {
               />
             </p>
 
-            <p
-              style={{ color: t.text_4 }}
-              className="text-sm"
-            >
+            <p style={{ color: t.text_4 }} className="text-sm">
               <input
                 {...form.register("identifier")}
                 placeholder="Identifier..."
@@ -282,8 +280,7 @@ const EditModules = () => {
                       key={key}
                       className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
                       style={{
-                        backgroundColor:
-                          t.background_2_selected,
+                        backgroundColor: t.background_2_selected,
                         color: t.text_4,
                       }}
                     >
@@ -333,20 +330,15 @@ const EditModules = () => {
                 style={{
                   backgroundColor: t.background_1_2,
                 }}
-                className={`${
-                  selectedModule === null &&
-                  "hover:brightness-[88%] dim cursor-pointer"
-                } flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
+                className={`hover:brightness-[88%] dim cursor-pointer
+                 flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
                 onClick={() => handleModuleClick(moduleDefinitions)}
               >
                 <div className="w-[calc(100%-90px)] truncate">
                   <p className="font-semibold truncate">
                     {moduleDefinitions.name}
                   </p>
-                  <p
-                    style={{ color: t.text_4 }}
-                    className="text-sm truncate"
-                  >
+                  <p style={{ color: t.text_4 }} className="text-sm truncate">
                     {moduleDefinitions.identifier} |{" "}
                     {moduleDefinitions.description}
                   </p>
@@ -359,15 +351,11 @@ const EditModules = () => {
                         handleEditModuleClick(e, moduleDefinitions)
                       }
                       style={{
-                        backgroundColor:
-                          t.background_2_selected,
+                        backgroundColor: t.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FiEdit
-                        size={18}
-                        color={t.text_4}
-                      />
+                      <FiEdit size={18} color={t.text_4} />
                     </div>
 
                     <div
@@ -375,15 +363,11 @@ const EditModules = () => {
                         handleDeleteModuleClick(e, moduleDefinitions)
                       }
                       style={{
-                        backgroundColor:
-                          t.background_2_selected,
+                        backgroundColor: t.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FaTrash
-                        size={15}
-                        color={t.text_4}
-                      />
+                      <FaTrash size={15} color={t.text_4} />
                     </div>
                   </div>
                 )}

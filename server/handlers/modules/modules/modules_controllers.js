@@ -20,7 +20,8 @@ export const getModules = async (req, res) => {
 export const upsertModule = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
   const { module_definition_id } = req.body;
-  if (!project_idx || !module_definition_id) throw new Error("Missing required fields");
+  if (!project_idx || !module_definition_id)
+    throw new Error("Missing required fields");
   return await upsertModuleFunction(connection, project_idx, req.body);
 };
 
@@ -32,11 +33,11 @@ export const deleteModule = async (req, res, connection) => {
 };
 
 // ---------- RUN MODULE CONTROLLER ----------
-export const runModule = async (req, res) => {
-  const project_idx = req.user?.project_idx;
-  const { module_id } = req.body;
-  if (!project_idx || !module_id) throw new Error("Missing required fields");
-  return await runModuleFunction(project_idx, module_id);
+export const runModule = async (req, res, connection) => {
+  const { project_idx } = req.body;
+  const { identifier } = req.params;
+  if (!project_idx || !identifier) throw new Error("Missing required fields");
+  return await runModuleFunction(connection, project_idx, identifier);
 };
 
 // ---------- MODULE DEFINITION CONTROLLERS ----------

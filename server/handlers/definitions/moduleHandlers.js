@@ -1,61 +1,48 @@
 // server/handlers/definitions/moduleHandlers.js
 import { formatSQLDate } from "../../functions/data.js";
-import { getProductsFunction } from "../../handlers/modules/products/products_repositories.js"
+import { getProductsFunction } from "../../handlers/modules/products/products_repositories.js";
 import { updateGoogleSheet } from "./moduleHelpers/google.js";
-import { db } from "../../connection/connect.js"
-import { decrypt } from "../../util/crypto.js";
-
-export const getConfigKeys = (moduleConfig) => {
-  return new Promise((resolve, reject) => {
-    const moduleQ = `
-      SELECT pi.config 
-      FROM project_integrations pi
-      JOIN modules m ON pi.module_id = m.id
-      WHERE pi.project_idx = ? AND m.identifier = ?
-      LIMIT 1
-    `;
-    db.query(
-      moduleQ,
-      [moduleConfig.project_idx, moduleConfig.identifier],
-      (err, rows) => {
-        if (err) return reject(err);
-        if (!rows.length) return resolve(null);
-
-        let configRow = rows[0].config;
-        try {
-          if (typeof configRow === "string") configRow = JSON.parse(configRow);
-        } catch (err) {
-          console.error("Config JSON parse failed:", err);
-          return resolve(null);
-        }
-
-        const decryptedConfig = {};
-        for (const [key, value] of Object.entries(configRow)) {
-          try {
-            decryptedConfig[key] = decrypt(value) || value;
-          } catch {
-            decryptedConfig[key] = value;
-          }
-        }
-        resolve(decryptedConfig);
-      }
-    );
-  });
-};
+import { getDecryptedIntegrationsFunction } from "../integrations/integrations_repositories.js";
+import axios from "axios";
+import { getMediaLinksFunction } from "../modules/media/media_repositories.js";
+import {
+  getJobDefinitionsFunction,
+  getJobsFunction,
+} from "../modules/jobs/jobs_repositories.js";
 
 export const handlers = {
-  "products-export-to-sheets-module": async (moduleConfig) => {
-    const project_idx = moduleConfig.project_idx;
+  "customer-products-google-sheets-module": async (
+    connection,
+    project_idx,
+    identifier,
+    module,
+    moduleConfig
+  ) => {
     try {
-      const configKeys = await getConfigKeys(moduleConfig);
-      const { spreadsheetId, sheetName, serviceAccountJson } = configKeys;
+      const configKeys = await getDecryptedIntegrationsFunction(
+        project_idx,
+        module.id
+      );
+
+      let spreadsheetId = configKeys.find(
+        (key) => key.integration_key === "sheetId"
+      );
+      let sheetName = configKeys.find(
+        (key) => key.integration_key === "sheetName"
+      );
+      let serviceAccountJson = configKeys.find(
+        (key) => key.integration_key === "serviceAccountJson"
+      );
       if (!spreadsheetId || !sheetName || !serviceAccountJson) {
-        throw new Error("Missing Sheets credentials");
+        throw new Error("Missing credentials");
       }
+      spreadsheetId = spreadsheetId.integration_value;
+      sheetName = sheetName.integration_value;
+      serviceAccountJson = serviceAccountJson.integration_value;
 
-      const sortedProducts = await getProductsFunction(project_idx);
+      const products = await getProductsFunction(project_idx);
 
-      const rows = sortedProducts.map((row, index) => [
+      const rows = products.map((row, index) => [
         index + 1,
         row.serial_number,
         row.name,
@@ -63,18 +50,18 @@ export const handlers = {
         row.note || "",
         row.make || "",
         row.model || "",
-        row.price || "",
+        // row.price || "",
         row.type || "",
-        formatSQLDate(row.date_complete),
-        row.product_status,
+        // formatSQLDate(row.date_complete),
+        // row.product_status,
         row.length || "",
         row.width || "",
         row.height || "",
-        Array.isArray(row.images)
-          ? row.images.join(" ")
-          : typeof row.images === "string"
-          ? JSON.parse(row.images || "[]").join(" ")
-          : "",
+        // Array.isArray(row.images)
+        //   ? row.images.join(" ")
+        //   : typeof row.images === "string"
+        //   ? JSON.parse(row.images || "[]").join(" ")
+        //   : "",
       ]);
 
       const header = [
@@ -85,14 +72,14 @@ export const handlers = {
         "Note",
         "Make",
         "Model",
-        "Price ($)",
+        // "Price ($)",
         "Type",
-        "Date Complete",
-        "Product Status",
+        // "Date Complete",
+        // "Product Status",
         "Length (in)",
         "Width (in)",
         "Height (in)",
-        "Images",
+        // "Images",
       ];
 
       const success = await updateGoogleSheet(
@@ -102,47 +89,115 @@ export const handlers = {
         sheetName,
         serviceAccountJson
       );
-      return success;
+      console.log(spreadsheetId);
+      return spreadsheetId;
     } catch (err) {
       console.error(err);
       return false;
     }
   },
 
-  "products-wix-sync-cms-module": async (moduleConfig) => {
-    const project_idx = moduleConfig.project_idx;
+  "customer-products-wix-sync-module": async (
+    connection,
+    project_idx,
+    identifier,
+    module,
+    moduleConfig
+  ) => {
     try {
-      const configKeys = await getConfigKeys(moduleConfig);
-      const { WIX_GENERATED_SECRET, WIX_BACKEND_URL } = configKeys;
+      const configKeys = await getDecryptedIntegrationsFunction(
+        project_idx,
+        module.id
+      );
+
+      let WIX_GENERATED_SECRET = configKeys.find(
+        (key) => key.integration_key === "WIX_GENERATED_SECRET"
+      );
+      let WIX_BACKEND_URL = configKeys.find(
+        (key) => key.integration_key === "WIX_BACKEND_URL"
+      );
       if (!WIX_GENERATED_SECRET || !WIX_BACKEND_URL) {
-        throw new Error("Missing WIX credentials");
+        throw new Error("Missing credentials");
       }
+      WIX_GENERATED_SECRET = WIX_GENERATED_SECRET.integration_value;
+      WIX_BACKEND_URL = WIX_BACKEND_URL.integration_value;
 
       const sortedProducts = await getProductsFunction(project_idx);
-      const corrected_data = sortedProducts.reverse().map((item) => ({
-        serialNumber: item.serial_number,
-        sold: item.product_status === "delivered",
-        name: item.name,
-        description_fld: item.description || "",
-        make: item.make || "",
-        model: item.model || "",
-        price: parseFloat(item.price) || 0,
-        length: parseFloat(item.length) || 0,
-        width: parseFloat(item.width) || 0,
-        images:
-          item.images?.filter((url) => !/\.(mp4|mov)$/i.test(url)).join(" ") ||
-          "",
-      }));
+      const mediaLinks = await getMediaLinksFunction(project_idx);
+      const productJobs = await getJobsFunction(project_idx);
+      const jobDefinitions = await getJobDefinitionsFunction(project_idx);
+
+      const corrected_data = sortedProducts
+        .reverse()
+        .map((item) => {
+          // Images
+          const mediaLinksFound = mediaLinks.filter(
+            (link) =>
+              link.entity_type === "product" && link.entity_id === item.id
+          );
+          const productImages =
+            "" +
+            mediaLinksFound
+              .map((link) => `${link.url}`)
+              .filter((url) => !/\.(mp4|mov)$/i.test(url))
+              .join(" ");
+
+          // Filter by resell on most recent job
+          const productJobsFound = productJobs.filter(
+            (job) => job.product_id === item.id
+          );
+          if (!productJobsFound) return null;
+
+          const mostRecentJob = productJobsFound[0];
+          if (!mostRecentJob || !mostRecentJob.job_definition_id) return null;
+
+          const jobDefinition = jobDefinitions.find(
+            (job) => job.id === mostRecentJob.job_definition_id
+          );
+
+          if (
+            !jobDefinition ||
+            jobDefinition.type !== "Resell" ||
+            mostRecentJob.valuation === undefined ||
+            mostRecentJob.valuation === null
+          )
+            return null;
+
+          const listedItem =
+            mostRecentJob.status === "listed" ||
+            mostRecentJob.status === "waiting_delivery" ||
+            mostRecentJob.status === "delivered";
+
+          const soldItem =
+            mostRecentJob.status === "waiting_delivery" ||
+            mostRecentJob.status === "delivered";
+
+          if (!listedItem) return null
+
+          return {
+            serialNumber: item.serial_number,
+            sold: soldItem, 
+            name: item.name,
+            description_fld: item.description || "",
+            make: item.make || "",
+            model: item.model || "",
+            price: parseFloat(mostRecentJob.valuation),
+            length: parseFloat(item.length) || 0,
+            width: parseFloat(item.width) || 0,
+            images: productImages,
+          };
+        })
+        .filter(Boolean);
 
       try {
-        // await axios.post(WIX_BACKEND_URL, corrected_data, {
-        //   headers: {
-        //     Authorization: `Bearer ${WIX_GENERATED_SECRET}`,
-        //     "Content-Type": "application/json",
-        //   },
-        //   timeout: 10000,
-        //   validateStatus: (status) => status < 500,
-        // });
+        await axios.post(WIX_BACKEND_URL, corrected_data, {
+          headers: {
+            Authorization: `Bearer ${WIX_GENERATED_SECRET}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+          validateStatus: (status) => status < 500,
+        });
         return true;
       } catch (err) {
         console.error(

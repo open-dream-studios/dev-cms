@@ -22,12 +22,20 @@ import { productFilter } from "@/types/filters";
 import { Product } from "@/types/products";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useModals } from "@/hooks/useModals";
+import { runFrontendModule } from "../runFrontendModule";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const { currentUser } = useContext(AuthContext);
-  // const { handleRunModule } = use
   const { saveProducts } = useProductFormSubmit();
-  const { productFilters, setProductFilters } = useCurrentDataStore();
+  const {
+    productFilters,
+    setProductFilters,
+    currentProject,
+    currentProjectId,
+    selectedProducts,
+    setSelectedProducts,
+    localProductsData,
+  } = useCurrentDataStore();
   const {
     editingProducts,
     setEditingProducts,
@@ -36,14 +44,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
     inventoryView,
     setInventoryView,
   } = useUiStore();
-  const {
-    currentProjectId,
-    selectedProducts,
-    setSelectedProducts,
-    localProductsData,
-  } = useCurrentDataStore();
   const { promptContinue } = useModals();
-  const { deleteProducts, hasProjectModule } = useContextQueries();
+  const {
+    deleteProducts,
+    hasProjectModule,
+    moduleDefinitions,
+    projectModules,
+    integrations,
+  } = useContextQueries();
   const { screenClick } = useRouting();
   const { onProductFormSubmit } = useProductFormSubmit();
 
@@ -62,7 +70,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const wixSync = async () => {
     setUpdatingLock(true);
     try {
-      // await handleRunModule("products-wix-sync-cms-module");
+      if (currentProject) {
+        await runFrontendModule("customer-products-wix-sync-module", {
+          moduleDefinitions,
+          projectModules,
+          integrations,
+          currentProject,
+        });
+      }
     } catch (e) {
       toast.error("Wix sync failed");
     } finally {
@@ -73,7 +88,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const handleGoogleExport = async () => {
     setUpdatingLock(true);
     try {
-      // await handleRunModule("products-export-to-sheets-module");
+      if (currentProject) {
+        await runFrontendModule("customer-products-google-sheets-module", {
+          moduleDefinitions,
+          projectModules,
+          integrations,
+          currentProject,
+        });
+      }
     } catch (e) {
       toast.error("Export failed");
     } finally {
@@ -355,7 +377,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
           </div>
 
           <div className="flex flex-row gap-[11px]">
-            {hasProjectModule("products-export-to-sheets-module") && (
+            {hasProjectModule("customer-products-module") && (
               <div
                 style={{
                   backgroundColor: t.background_2,
@@ -376,7 +398,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
               </div>
             )}
 
-            {hasProjectModule("products-wix-sync-cms-module") && (
+            {hasProjectModule("customer-products-module") && (
               <div
                 style={{
                   backgroundColor: t.background_2,

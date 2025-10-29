@@ -80,33 +80,37 @@ export const deleteModuleFunction = async (
 };
 
 // ---------- RUN MODULE FUNCTION ----------
-export const runModuleFunction = async (project_idx, module_id) => {
-  const moduleConfig = await getModuleConfigFunction(project_idx, module_id);
+export const runModuleFunction = async (
+  connection,
+  project_idx,
+  identifier
+) => {
+  const moduleConfig = await getModuleConfigFunction(
+    connection,
+    identifier
+  );
   if (!moduleConfig) throw new Error("Module not found");
-  console.log(moduleConfig);
-  // const handler = handlers[identifier];
-  // if (!handler) throw new Error("No handler registered");
-  // const success = await handler(moduleConfig);
-  // return success;
+
+  const projectModules = await getModulesFunction(project_idx)
+  if (!projectModules || !projectModules.length) throw new Error("Module not found");
+  const module = projectModules.find((mod) => mod.identifier === identifier)
+  if (!module) throw new Error("Module id not found");
+  const handler = handlers[identifier];
+  if (!handler) throw new Error("No handler registered");
+
+  const googleSheetId = await handler(connection, project_idx, identifier, module, moduleConfig);
+  return googleSheetId;
 };
 
-export const getModuleConfigFunction = async (
-  project_idx,
-  module_definition_id
-) => {
-  // const q = `
-  //     SELECT config_schema
-  //     FROM module_definitions pm
-  //     WHERE project_idx = ? AND module_definition_id = ?
-  //     LIMIT 1
-  //   `;
-  // try {
-  //   const [rows] = await db.promise().query(q, [project_idx, module_definition_id]);
-  //   return rows;
-  // } catch (err) {
-  //   console.error("❌ Function Error -> getModuleConfig: ", err);
-  //   return null;
-  // }
+export const getModuleConfigFunction = async (connection, identifier) => {
+  const q = `
+      SELECT config_schema
+      FROM module_definitions pm
+      WHERE identifier = ?
+      LIMIT 1
+    `;
+  const [rows] = await connection.query(q, [identifier]);
+  return rows;
 };
 
 // ---------- MODULE DEFINITION FUNCTIONS ----------

@@ -31,6 +31,7 @@ const ModuleLeftBar = () => {
   const {
     customers,
     deleteCustomer,
+    refetchProductsData,
     isLoadingProductsData,
     mediaLinks,
     deleteEmployee,
@@ -73,6 +74,7 @@ const ModuleLeftBar = () => {
       }
       setCurrentCustomerData(null);
       setAddingCustomer(true);
+      refetchProductsData()
     }
   };
 

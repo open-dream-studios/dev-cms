@@ -1,6 +1,6 @@
 // server/handlers/integrations/integrations_repositories.js
 import { db } from "../../connection/connect.js";
-import { encrypt } from "../../util/crypto.js";
+import { decrypt, encrypt } from "../../util/crypto.js";
 import { getModulesFunction } from "../modules/modules/modules_repositories.js";
 
 // ---------- INTEGRATION FUNCTIONS ----------
@@ -8,6 +8,22 @@ export const getIntegrationsFunction = async (project_idx) => {
   const q = `SELECT id, integration_id, project_idx, module_id, integration_key FROM project_integrations WHERE project_idx = ? ORDER BY created_at DESC`;
   const [rows] = await db.promise().query(q, [project_idx]);
   return rows;
+};
+
+export const getDecryptedIntegrationsFunction = async (project_idx, module_id) => {
+  const q = `
+    SELECT id, integration_id, project_idx, module_id, integration_key, integration_value
+    FROM project_integrations
+    WHERE project_idx = ? AND module_id = ?
+    ORDER BY created_at DESC
+  `;
+  const [rows] = await db.promise().query(q, [project_idx, module_id]);
+  return rows.map((row) => ({
+    ...row,
+    integration_value: row.integration_value
+      ? decrypt(row.integration_value)
+      : null,
+  }));
 };
 
 export const upsertIntegrationFunction = async (
@@ -19,15 +35,15 @@ export const upsertIntegrationFunction = async (
     reqBody;
 
   const projectModules = await getModulesFunction(project_idx);
-  if (projectModules.length === 0) {
-    throw Error("No module config found");
+  if (!projectModules || !projectModules.length) {
+    throw Error("No modules found");
   }
   const matched_pm = projectModules.find((pm) => pm.id === module_id);
   if (
     !matched_pm ||
     !matched_pm.config_schema ||
     !Array.isArray(matched_pm.config_schema) ||
-    matched_pm.config_schema.length === 0
+    !matched_pm.config_schema.length
   ) {
     throw Error("No module config found");
   }
