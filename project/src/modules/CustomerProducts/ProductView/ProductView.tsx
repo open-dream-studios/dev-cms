@@ -96,8 +96,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   useEffect(() => {
     if (addingProduct) {
       // serialInputRef.current?.focus();
-      setCurrentProductImages([])
-      setOriginalProductImages([])
+      setCurrentProductImages([]);
+      setOriginalProductImages([]);
     }
   }, [addingProduct]);
 
@@ -218,6 +218,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [serialNumber, mediaLinks]);
 
+  useEffect(() => {
+    if (
+      currentProductImages &&
+      currentProductImages.length &&
+      currentProductImages[0].url
+    ) {
+      setImageDisplayed(currentProductImages[0].url);
+    }
+  }, [currentProductImages]);
+
   const handleBackButton = async () => {
     await screenClick("customer-products", "/products");
     setCurrentProductData(null);
@@ -295,6 +305,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         multiple={true}
         onUploaded={(uploadObjects: CloudinaryUpload[]) => {
           uploadProductImages(uploadObjects, serialNumber ?? null);
+          setImageEditorOpen(true)
         }}
       />
       {imageView && (
@@ -460,13 +471,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   }}
                   className="cursor-pointer hover:brightness-[86%] dim w-[100%] aspect-[1/1] rounded-[10px]"
                 >
-                  <RenderedImage
-                    url={
-                      imageDisplayed
-                        ? imageDisplayed
-                        : currentProductImages[0].url
-                    }
-                  />
+                  {imageDisplayed && <RenderedImage url={imageDisplayed} />}
                 </div>
               ) : (
                 <div

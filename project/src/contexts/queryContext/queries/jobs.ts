@@ -48,6 +48,9 @@ export function useJobs(isLoggedIn: boolean, currentProjectId: number | null) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs", currentProjectId] });
     },
+    onError: (error) => {
+      console.error("❌ Upsert job failed:", error);
+    },
   });
 
   const deleteJobMutation = useMutation({
@@ -59,6 +62,9 @@ export function useJobs(isLoggedIn: boolean, currentProjectId: number | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs", currentProjectId] });
+    },
+    onError: (error) => {
+      console.error("❌ Delete job failed:", error);
     },
   });
 

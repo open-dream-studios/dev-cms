@@ -13,6 +13,10 @@ import {
 import { authenticateUser } from "../../../util/auth.js";
 import { requireAdmin } from "../../../util/roles.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
+import {
+  errorHandler,
+  transactionHandler,
+} from "../../../util/handlerWrappers.js";
 
 const router = express.Router();
 
@@ -21,46 +25,50 @@ router.post(
   "/get",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getPages
+  errorHandler(getPages)
 );
 
 router.post(
   "/upsert",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  upsertPage
+  transactionHandler(upsertPage)
 );
 
 router.post(
   "/delete",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  deletePage
+  transactionHandler(deletePage)
 );
 
 router.post(
   "/reorder",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  reorderPages
+  transactionHandler(reorderPages)
 );
 
 // ---- PAGE DEFINITIONS ----
-router.post("/page-definitions/get-all", authenticateUser, getPageDefinitions);
+router.post(
+  "/page-definitions/get-all",
+  authenticateUser,
+  errorHandler(getPageDefinitions)
+);
 router.post(
   "/page-definitions/upsert",
   authenticateUser,
   requireAdmin,
-  upsertPageDefinition
+  transactionHandler(upsertPageDefinition)
 );
 router.post(
   "/page-definitions/delete",
   authenticateUser,
   requireAdmin,
-  deletePageDefinition
+  transactionHandler(deletePageDefinition)
 );
 
 // ---- PAGES DATA EXPORT ----
-router.post("/get-data", getPageData);
+router.post("/get-data", errorHandler(getPageData));
 
 export default router;

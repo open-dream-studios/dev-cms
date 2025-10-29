@@ -94,7 +94,6 @@ export const upsertCustomerFunction = async (
     );
     id = rows[0]?.id;
   }
-
   if (!id) throw new Error("No ID provided from result");
 
   return { success: true, id, customer_id: finalCustomerId };

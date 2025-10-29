@@ -12,66 +12,45 @@ import {
 // ---------- MODULE CONTROLLERS ----------
 export const getModules = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const modules = await getModulesFunction(project_idx);
-  return res.json({ modules });
+  return { success: true, modules };
 };
 
-export const upsertModule = async (req, res) => {
+export const upsertModule = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
   const { module_definition_id } = req.body;
-  if (!project_idx || !module_definition_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const { success } = await upsertModuleFunction(project_idx, req.body);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !module_definition_id) throw new Error("Missing required fields");
+  return await upsertModuleFunction(connection, project_idx, req.body);
 };
 
-export const deleteModule = async (req, res) => {
-  const { module_definition_id } = req.body;
+export const deleteModule = async (req, res, connection) => {
+  const { module_id } = req.body;
   const project_idx = req.user?.project_idx;
-  if (!project_idx || !module_definition_id) {
-    return res.status(400).json({ success: false, message: "Missing required fields" });
-  }
-  const success = await deleteModuleFunction(project_idx, module_definition_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !module_id) throw new Error("Missing required fields");
+  return await deleteModuleFunction(connection, project_idx, module_id);
 };
 
 // ---------- RUN MODULE CONTROLLER ----------
 export const runModule = async (req, res) => {
   const project_idx = req.user?.project_idx;
   const { module_id } = req.body;
-  if (!project_idx || !module_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const { success } = await runModuleFunction(project_idx, module_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !module_id) throw new Error("Missing required fields");
+  return await runModuleFunction(project_idx, module_id);
 };
 
 // ---------- MODULE DEFINITION CONTROLLERS ----------
 export const getModuleDefinitions = async (req, res) => {
   const moduleDefinitions = await getModuleDefinitionsFunction();
-  return res.json({ moduleDefinitions });
+  return { success: true, moduleDefinitions };
 };
 
-export const upsertModuleDefinition = async (req, res) => {
-  const { success } = await upsertModuleDefinitionFunction(req.body);
-  return res.status(success ? 200 : 500).json({ success });
+export const upsertModuleDefinition = async (req, res, connection) => {
+  return await upsertModuleDefinitionFunction(connection, req.body);
 };
 
-export const deleteModuleDefinition = async (req, res) => {
+export const deleteModuleDefinition = async (req, res, connection) => {
   const { module_definition_id } = req.body;
-  if (!module_definition_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required ields" });
-  }
-  const success = await deleteModuleDefinitionFunction(module_definition_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!module_definition_id) throw new Error("Missing required fields");
+  return await deleteModuleDefinitionFunction(connection, module_definition_id);
 };

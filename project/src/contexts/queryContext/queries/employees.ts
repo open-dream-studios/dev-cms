@@ -52,6 +52,9 @@ export function useEmployees(
         queryKey: ["employees", currentProjectId],
       });
     },
+    onError: (error) => {
+      console.error("❌ Upsert employee failed:", error);
+    },
   });
 
   const upsertEmployee = async (employee: Employee): Promise<string> => {
@@ -71,6 +74,9 @@ export function useEmployees(
       queryClient.invalidateQueries({
         queryKey: ["employees", currentProjectId],
       });
+    },
+    onError: (error) => {
+      console.error("❌ Delete customer failed:", error);
     },
   });
 
@@ -111,6 +117,9 @@ export function useEmployees(
         queryKey: ["employeeAssignments", currentProjectId],
       });
     },
+    onError: (error) => {
+      console.error("❌ Add employee assignment failed:", error);
+    },
   });
 
   const deleteEmployeeAssignmentMutation = useMutation({
@@ -125,6 +134,9 @@ export function useEmployees(
       queryClient.invalidateQueries({
         queryKey: ["employeeAssignments", currentProjectId],
       });
+    },
+    onError: (error) => {
+      console.error("❌ Delete employee assignment failed:", error);
     },
   });
 

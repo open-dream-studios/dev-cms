@@ -8,17 +8,11 @@ export const getTasksFunction = async (project_idx) => {
     WHERE project_idx = ?
     ORDER BY created_at ASC
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-    return rows;
-  } catch (err) {
-    console.error("❌ Function Error -> getTasksFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  return rows;
 };
 
-export const upsertTaskFunction = async (project_idx, reqBody) => {
-  const connection = await db.promise().getConnection();
+export const upsertTaskFunction = async (connection, project_idx, reqBody) => {
   const {
     task_id,
     job_id,
@@ -30,17 +24,15 @@ export const upsertTaskFunction = async (project_idx, reqBody) => {
     description,
   } = reqBody;
 
-  try {
-    await connection.beginTransaction();
-    const finalTaskId =
-      task_id && task_id.trim() !== ""
-        ? task_id
-        : "T-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  const finalTaskId =
+    task_id && task_id.trim() !== ""
+      ? task_id
+      : "T-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
+  const query = `
       INSERT INTO tasks (
         task_id, project_idx, job_id, status, priority, 
         scheduled_start_date, completed_date, task, description
@@ -57,49 +49,28 @@ export const upsertTaskFunction = async (project_idx, reqBody) => {
         updated_at = NOW()
     `;
 
-    const values = [
-      finalTaskId,
-      project_idx,
-      job_id,
-      status || "work_required",
-      priority || "medium",
-      scheduled_start_date || null,
-      completed_date || null,
-      task || null,
-      description || null,
-    ];
+  const values = [
+    finalTaskId,
+    project_idx,
+    job_id,
+    status || "work_required",
+    priority || "medium",
+    scheduled_start_date || null,
+    completed_date || null,
+    task || null,
+    description || null,
+  ];
 
-    const [result] = await connection.query(query, values);
-    await connection.commit();
-    connection.release();
-    return {
-      success: true,
-      task_id: finalTaskId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertTaskFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      success: false,
-      task_id: null,
-    };
-  }
+  const [result] = await connection.query(query, values);
+
+  return {
+    success: true,
+    task_id: finalTaskId,
+  };
 };
 
-export const deleteTaskFunction = async (project_idx, task_id) => {
-  const connection = await db.promise().getConnection();
+export const deleteTaskFunction = async (connection, project_idx, task_id) => {
   const q = `DELETE FROM tasks WHERE task_id = ? AND project_idx = ?`;
-  try {
-    await connection.beginTransaction();
-    await db.promise().query(q, [task_id, project_idx]);
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error("❌ Function Error -> deleteTaskFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+  await connection.query(q, [task_id, project_idx]);
+  return { success: true };
 };

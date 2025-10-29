@@ -40,9 +40,9 @@ export function useProjectModules(
   });
 
   const deleteProjectModuleMutation = useMutation({
-    mutationFn: async (module_definition_id: number) => {
+    mutationFn: async (module_id: string) => {
       await makeRequest.post("/api/modules/delete", {
-        module_definition_id,
+        module_id,
         project_idx: currentProjectId,
       });
     },
@@ -61,8 +61,8 @@ export function useProjectModules(
     await upsertProjectModuleMutation.mutateAsync(projectModule);
   };
 
-  const deleteProjectModule = async (module_definition_id: number) => {
-    await deleteProjectModuleMutation.mutateAsync(module_definition_id);
+  const deleteProjectModule = async (module_id: string) => {
+    await deleteProjectModuleMutation.mutateAsync(module_id);
   };
 
   return {

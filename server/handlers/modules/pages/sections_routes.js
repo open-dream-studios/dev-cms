@@ -12,57 +12,58 @@ import {
 import { authenticateUser } from "../../../util/auth.js";
 import { requireAdmin } from "../../../util/roles.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
+import { errorHandler, transactionHandler } from "../../../util/handlerWrappers.js";
 
 const router = express.Router();
 
 // ---- SECTIONS ----
 router.post(
+  "/get",
+  authenticateUser,
+  checkProjectPermission(1),
+  errorHandler(getSections)
+);
+
+router.post(
   "/upsert",
   authenticateUser,
   checkProjectPermission(3),
-  upsertSection
+  transactionHandler(upsertSection)
 );
 
 router.post(
   "/delete",
   authenticateUser,
   checkProjectPermission(3),
-  deleteSection
-);
-
-router.post(
-  "/get",
-  authenticateUser,
-  checkProjectPermission(1),
-  getSections
+  transactionHandler(deleteSection)
 );
 
 router.post(
   "/reorder",
   authenticateUser,
   checkProjectPermission(3),
-  reorderSections
+  transactionHandler(reorderSections)
 );
 
 // ---- SECTION DEFINITIONS ----
 router.post(
   "/section-definitions/get-all",
   authenticateUser,
-  getSectionDefinitions
+  errorHandler(getSectionDefinitions)
 );
 
 router.post(
   "/section-definitions/upsert",
   authenticateUser,
   requireAdmin,
-  upsertSectionDefinition
+  transactionHandler(upsertSectionDefinition)
 );
 
 router.post(
   "/section-definitions/delete",
   authenticateUser,
   requireAdmin,
-  deleteSectionDefinition
+  transactionHandler(deleteSectionDefinition)
 );
 
 export default router;

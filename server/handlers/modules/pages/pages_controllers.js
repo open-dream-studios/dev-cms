@@ -13,85 +13,58 @@ import { db } from "../../../connection/connect.js";
 // ---------- PAGE CONTROLLERS ----------
 export const getPages = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const pages = await getPagesFunction(project_idx);
-  return res.json({ pages });
+  return { success: true, pages };
 };
 
-export const upsertPage = async (req, res) => {
+export const upsertPage = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
   const { title, slug, definition_id } = req.body;
-  if (!project_idx) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing project_idx" });
+  if (!project_idx || !title || !slug || !definition_id) {
+    throw new Error("Missing required fields");
   }
-  if (!title || !slug || !definition_id) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-  const { page_id, success } = await upsertPageFunction(project_idx, req.body);
-  return res.status(success ? 200 : 500).json({ success, page_id });
+  return await upsertPageFunction(connection, project_idx, req.body);
 };
 
-export const deletePage = async (req, res) => {
+export const deletePage = async (req, res, connection) => {
   const { page_id } = req.body;
   const project_idx = req.user?.project_idx;
-  if (!project_idx || !page_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const { success } = await deletePageFunction(project_idx, page_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !page_id) throw new Error("Missing required fields");
+  return await deletePageFunction(connection, project_idx, page_id);
 };
 
-export const reorderPages = async (req, res) => {
-  try {
-    const { parent_page_id, orderedIds } = req.body;
-    const project_idx = req.user?.project_idx;
-    if (!project_idx || !Array.isArray(orderedIds)) {
-      return res.status(400).json({ message: "Missing fields" });
-    }
-
-    const result = await reorderPagesFunction(
-      project_idx,
-      parent_page_id || null,
-      orderedIds
-    );
-
-    return res
-      .status(200)
-      .json({ success: true, updated: result.affectedRows });
-  } catch (err) {
-    console.error("Error reordering project pages:", err);
-    return res.status(500).json({ message: "DB error" });
+export const reorderPages = async (req, res, connection) => {
+  const { parent_page_id, orderedIds } = req.body;
+  const project_idx = req.user?.project_idx;
+  if (!project_idx || !Array.isArray(orderedIds)) {
+    throw new Error("Missing required fields");
   }
+  const result = await reorderPagesFunction(
+    connection,
+    project_idx,
+    parent_page_id || null,
+    orderedIds
+  );
+  return { success: true, updated: result.affectedRows };
 };
 
 // ---------- PAGE DEFINITION CONTROLLERS ----------
 export const getPageDefinitions = async (req, res) => {
   const pageDefinitions = await getPageDefinitionsFunction();
-  return res.json({ pageDefinitions });
+  return { success: true, pageDefinitions };
 };
 
-export const upsertPageDefinition = async (req, res) => {
-  const { page_definition_id, success } = await upsertPageDefinitionFunction(
-    req.body
-  );
-  return res.status(success ? 200 : 500).json({ success, page_definition_id });
+export const upsertPageDefinition = async (req, res, connection) => {
+  return await upsertPageDefinitionFunction(connection, req.body);
 };
 
-export const deletePageDefinition = async (req, res) => {
+export const deletePageDefinition = async (req, res, connection) => {
   const { page_definition_id } = req.body;
   if (!page_definition_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
+    throw new Error("Missing required fields");
   }
-  const success = await deletePageDefinitionFunction(page_definition_id);
-  return res.status(success ? 200 : 500).json({ success });
+  return deletePageDefinitionFunction(connection, page_definition_id);
 };
 
 // ---------- PAGE DATA EXPORT ----------
@@ -108,7 +81,7 @@ export const getPageData = (req, res) => {
     LIMIT 1
   `;
 
-  db.query(projectQuery, [domain], (err, idx) => {
+  db.promise().query(projectQuery, [domain], (err, idx) => {
     if (err) {
       console.error("❌ Fetch project error:", err);
       return res.status(500).json({ message: "Server error" });
@@ -122,10 +95,10 @@ export const getPageData = (req, res) => {
 
     const pageQuery = `
     SELECT id, title, slug
-    FROM project_pages
-    WHERE project_idx = ? AND slug = ?
-    LIMIT 1
-  `;
+      FROM project_pages
+      WHERE project_idx = ? AND slug = ?
+      LIMIT 1
+    `;
 
     db.query(pageQuery, [project_idx, slug], (err, pages) => {
       if (err) {

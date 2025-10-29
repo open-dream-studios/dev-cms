@@ -10,6 +10,7 @@ import {
 } from "./jobs_controllers.js";
 import { authenticateUser } from "../../../util/auth.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
+import { errorHandler, transactionHandler } from "../../../util/handlerWrappers.js";
 
 const router = express.Router();
 
@@ -18,21 +19,21 @@ router.post(
   "/",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getJobs
+  errorHandler(getJobs)
 );
 
 router.post(
   "/upsert",
   authenticateUser,
   checkProjectPermission(2), // editor+
-  upsertJob
+  transactionHandler(upsertJob)
 );
 
 router.post(
   "/delete",
   authenticateUser,
   checkProjectPermission(2), // editor+
-  deleteJob
+  transactionHandler(deleteJob)
 );
 
 // ---- JOB DEFINITIONS ----
@@ -40,21 +41,21 @@ router.post(
   "/get-definitions",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getJobDefinitions
+  errorHandler(getJobDefinitions)
 );
 
 router.post(
   "/upsert-definition",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  upsertJobDefinition
+  transactionHandler(upsertJobDefinition)
 );
 
 router.post(
   "/delete-definition",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  deleteJobDefinition
+  transactionHandler(deleteJobDefinition)
 );
 
 export default router;

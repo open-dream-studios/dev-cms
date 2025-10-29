@@ -144,7 +144,6 @@ export function useMedia() {
         linksToDelete.push(originalLink);
       }
     }
-    console.log("DEL", linksToDelete);
     if (linksToDelete.length) {
       await deleteMediaLinks(linksToDelete);
     }
@@ -163,7 +162,6 @@ export function useMedia() {
         });
       }
     }
-    console.log("UPSERT", linksToUpdate);
     if (linksToUpdate.length) {
       await upsertMediaLinks(linksToUpdate);
     }

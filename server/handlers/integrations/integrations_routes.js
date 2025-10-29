@@ -8,6 +8,10 @@ import {
 import { authenticateUser } from "../../connection/middlewares.js";
 import { checkProjectPermission } from "../../util/permissions.js";
 import { requireAdmin } from "../../util/roles.js";
+import {
+  errorHandler,
+  transactionHandler,
+} from "../../util/handlerWrappers.js";
 
 const router = express.Router();
 
@@ -16,21 +20,21 @@ router.get(
   "/",
   authenticateUser,
   checkProjectPermission(1), // owner+
-  getIntegrations
+  errorHandler(getIntegrations)
 );
 
 router.post(
   "/upsert",
   authenticateUser,
   requireAdmin, // admin
-  upsertIntegration
+  transactionHandler(upsertIntegration)
 );
 
 router.post(
   "/delete",
   authenticateUser,
   requireAdmin, // admin
-  deleteIntegration
+  transactionHandler(deleteIntegration)
 );
 
 export default router;

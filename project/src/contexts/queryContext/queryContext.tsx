@@ -7,7 +7,7 @@ import React, {
   useRef,
   RefObject,
 } from "react";
-import { QueryObserverResult, useQueryClient } from "@tanstack/react-query";
+import { QueryObserverResult } from "@tanstack/react-query";
 import { AuthContext } from "../authContext";
 import {
   useMediaLinks,
@@ -82,7 +82,7 @@ export type QueryContextType = {
     QueryObserverResult<ProjectModule[], Error>
   >;
   upsertProjectModule: (data: ProjectModule) => Promise<void>;
-  deleteProjectModule: (module_definition_id: number) => Promise<void>;
+  deleteProjectModule: (module_id: string) => Promise<void>;
   hasProjectModule: (identifier: string) => boolean;
 
   // ---- Integrations ----

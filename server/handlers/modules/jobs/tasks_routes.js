@@ -7,6 +7,7 @@ import {
 } from "./tasks_controllers.js";
 import { authenticateUser } from "../../../util/auth.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
+import { errorHandler, transactionHandler } from "../../../util/handlerWrappers.js";
 
 const router = express.Router();
 
@@ -15,21 +16,21 @@ router.post(
   "/",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getTasks
+  errorHandler(getTasks)
 );
 
 router.post(
   "/upsert",
   authenticateUser,
   checkProjectPermission(2), // editor+
-  upsertTask
+  transactionHandler(upsertTask)
 );
 
 router.post(
   "/delete",
   authenticateUser,
   checkProjectPermission(2), // editor+
-  deleteTask
+  transactionHandler(deleteTask)
 );
 
 export default router;

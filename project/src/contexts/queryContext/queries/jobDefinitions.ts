@@ -39,6 +39,9 @@ export function useJobDefinitions(
         queryKey: ["jobDefinitions", currentProjectId],
       });
     },
+    onError: (error) => {
+      console.error("❌ Upsert job definition failed:", error);
+    },
   });
 
   const deleteJobDefinitionMutation = useMutation({
@@ -53,6 +56,9 @@ export function useJobDefinitions(
       queryClient.invalidateQueries({
         queryKey: ["jobDefinitions", currentProjectId],
       });
+    },
+    onError: (error) => {
+      console.error("❌ Delete job definition failed:", error);
     },
   });
 

@@ -10,17 +10,11 @@ export const getJobsFunction = async (project_idx) => {
     WHERE project_idx = ?
     ORDER BY created_at DESC
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-    return rows;
-  } catch (err) {
-    console.error("❌ Function Error -> getJobsFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  return rows;
 };
 
-export const upsertJobFunction = async (project_idx, reqBody) => {
-  const connection = await db.promise().getConnection();
+export const upsertJobFunction = async (connection, project_idx, reqBody) => {
   const {
     job_id,
     job_definition_id,
@@ -34,17 +28,15 @@ export const upsertJobFunction = async (project_idx, reqBody) => {
     notes,
   } = reqBody;
 
-  try {
-    await connection.beginTransaction();
-    const finalJobId =
-      job_id && job_id.trim() !== ""
-        ? job_id
-        : "J-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  const finalJobId =
+    job_id && job_id.trim() !== ""
+      ? job_id
+      : "J-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
+  const query = `
       INSERT INTO jobs (
         job_id, project_idx, job_definition_id, product_id, customer_id,
         valuation, status, priority, scheduled_start_date, completed_date, notes
@@ -63,56 +55,34 @@ export const upsertJobFunction = async (project_idx, reqBody) => {
         updated_at = NOW()
     `;
 
-    const projectTimezone = "America/New_York";
+  const projectTimezone = "America/New_York";
 
-    const values = [
-      finalJobId,
-      project_idx,
-      job_definition_id,
-      product_id,
-      customer_id,
-      valuation,
-      status || "work_required",
-      priority || "medium",
-      storeStringAsUTC(scheduled_start_date, projectTimezone),
-      storeStringAsUTC(completed_date, projectTimezone),
-      notes || null,
-    ];
+  const values = [
+    finalJobId,
+    project_idx,
+    job_definition_id,
+    product_id,
+    customer_id,
+    valuation,
+    status || "work_required",
+    priority || "medium",
+    storeStringAsUTC(scheduled_start_date, projectTimezone),
+    storeStringAsUTC(completed_date, projectTimezone),
+    notes || null,
+  ];
 
-    const [result] = await connection.query(query, values);
+  const [result] = await connection.query(query, values);
 
-    await connection.commit();
-    connection.release();
-    return {
-      success: true,
-      job_id: finalJobId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertJobFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      success: false,
-      job_id: null,
-    };
-  }
+  return {
+    success: true,
+    job_id: finalJobId,
+  };
 };
 
-export const deleteJobFunction = async (project_idx, job_id) => {
-  const connection = await db.promise().getConnection();
+export const deleteJobFunction = async (connection, project_idx, job_id) => {
   const q = `DELETE FROM jobs WHERE job_id = ? AND project_idx = ?`;
-  try {
-    await connection.beginTransaction();
-    await connection.query(q, [job_id, project_idx]);
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error("❌ Function Error -> deleteJobFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+  await connection.query(q, [job_id, project_idx]);
+  return { success: true };
 };
 
 // ---------- JOB DEFINITION FUNCTIONS ----------
@@ -122,27 +92,23 @@ export const getJobDefinitionsFunction = async (project_idx) => {
     WHERE project_idx = ?
     ORDER BY created_at ASC
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-    return rows;
-  } catch (err) {
-    console.error("❌ Function Error -> getJobDefinitionsFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  return rows;
 };
 
-export const upsertJobDefinitionFunction = async (project_idx, reqBody) => {
-  const connection = await db.promise().getConnection();
+export const upsertJobDefinitionFunction = async (
+  connection,
+  project_idx,
+  reqBody
+) => {
   const { job_definition_id, type, description } = reqBody;
 
-  try {
-    await connection.beginTransaction();
-    const finalDefinitionId =
-      job_definition_id && job_definition_id.trim() !== ""
-        ? job_definition_id
-        : crypto.randomBytes(8).toString("hex");
+  const finalDefinitionId =
+    job_definition_id && job_definition_id.trim() !== ""
+      ? job_definition_id
+      : crypto.randomBytes(8).toString("hex");
 
-    const query = `
+  const query = `
       INSERT INTO job_definitions (job_definition_id, project_idx, type, description)
       VALUES (?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
@@ -151,42 +117,22 @@ export const upsertJobDefinitionFunction = async (project_idx, reqBody) => {
         updated_at = NOW()
     `;
 
-    const values = [finalDefinitionId, project_idx, type, description || null];
+  const values = [finalDefinitionId, project_idx, type, description || null];
 
-    const [result] = await connection.query(query, values);
-    await connection.commit();
-    connection.release();
-    return {
-      success: true,
-      definition_id: finalDefinitionId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertJobFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      success: false,
-      definition_id: null,
-    };
-  }
+  const [result] = await connection.query(query, values);
+
+  return {
+    success: true,
+    definition_id: finalDefinitionId,
+  };
 };
 
 export const deleteJobDefinitionFunction = async (
+  connection,
   project_idx,
   job_definition_id
 ) => {
-  const connection = await db.promise().getConnection();
   const q = `DELETE FROM job_definitions WHERE job_definition_id = ? AND project_idx = ?`;
-  try {
-    await connection.beginTransaction();
-    await connection.query(q, [job_definition_id, project_idx]);
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error("❌ Function Error -> deleteJobDefinitionFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+  await connection.query(q, [job_definition_id, project_idx]);
+  return { success: true };
 };

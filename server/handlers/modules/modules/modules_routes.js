@@ -12,6 +12,7 @@ import {
 import { authenticateUser } from "../../../util/auth.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
 import { requireAdmin } from "../../../util/roles.js";
+import { errorHandler, transactionHandler } from "../../../util/handlerWrappers.js";
 
 const router = express.Router();
 
@@ -20,47 +21,47 @@ router.post(
   "/",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getModules
+  errorHandler(getModules)
 );
 
 router.post(
   "/upsert",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  upsertModule
+  transactionHandler(upsertModule)
 );
 
 router.post(
   "/delete",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  deleteModule
+  transactionHandler(deleteModule)
 );
 
 // ---- MODULE DEFINITIONS ----
 router.post(
   "/definitions",
   authenticateUser,
-  getModuleDefinitions
+  errorHandler(getModuleDefinitions)
 );
 router.post(
   "/definitions/upsert",
   authenticateUser,
   requireAdmin, // admin
-  upsertModuleDefinition
+  transactionHandler(upsertModuleDefinition)
 );
 router.post(
   "/definitions/delete",
   authenticateUser,
   requireAdmin, // admin
-  deleteModuleDefinition
+  transactionHandler(deleteModuleDefinition)
 );
 
 router.post(
   "/run/:identifier",
   authenticateUser,
   checkProjectPermission(3), // owner
-  runModule
+  errorHandler(runModule)
 );
 
 export default router;

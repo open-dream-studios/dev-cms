@@ -14,26 +14,18 @@ export const getPagesFunction = async (project_idx) => {
     WHERE pp.project_idx = ?
     ORDER BY pp.ordinal ASC
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-
-    const pages = rows.map((r) => ({
-      ...r,
-      seo_keywords:
-        typeof r.seo_keywords === "string"
-          ? JSON.parse(r.seo_keywords)
-          : r.seo_keywords || [],
-    }));
-
-    return pages;
-  } catch (err) {
-    console.error("❌ Function Error -> getPagesFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  const pages = rows.map((r) => ({
+    ...r,
+    seo_keywords:
+      typeof r.seo_keywords === "string"
+        ? JSON.parse(r.seo_keywords)
+        : r.seo_keywords || [],
+  }));
+  return pages;
 };
 
-export const upsertPageFunction = async (project_idx, reqBody) => {
-  const connection = await db.promise().getConnection();
+export const upsertPageFunction = async (connection, project_idx, reqBody) => {
   const {
     page_id,
     definition_id,
@@ -47,25 +39,23 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
     parent_page_id,
   } = reqBody;
 
-  try {
-    await connection.beginTransaction();
-    let finalOrdinal = 0;
-    if (!page_id) {
-      finalOrdinal = await getNextOrdinal(connection, "project_pages", {
-        project_idx,
-        parent_page_id,
-      });
-      if (finalOrdinal == null) return { success: false, page_id: null };
-    }
-    const finalPageId =
-      page_id && page_id.trim() !== ""
-        ? page_id
-        : "P-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  let finalOrdinal = 0;
+  if (!page_id) {
+    finalOrdinal = await getNextOrdinal(connection, "project_pages", {
+      project_idx,
+      parent_page_id,
+    });
+    if (finalOrdinal == null) return { success: false, page_id: null };
+  }
+  const finalPageId =
+    page_id && page_id.trim() !== ""
+      ? page_id
+      : "P-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
+  const query = `
       INSERT INTO project_pages (
         page_id,
         project_idx,
@@ -94,125 +84,80 @@ export const upsertPageFunction = async (project_idx, reqBody) => {
         updated_at = NOW()
     `;
 
-    const values = [
-      finalPageId,
-      project_idx,
-      definition_id,
-      title,
-      slug,
-      finalOrdinal,
-      seo_title,
-      seo_description,
-      JSON.stringify(seo_keywords || []),
-      template,
-      published,
-      parent_page_id,
-    ];
+  const values = [
+    finalPageId,
+    project_idx,
+    definition_id,
+    title,
+    slug,
+    finalOrdinal,
+    seo_title,
+    seo_description,
+    JSON.stringify(seo_keywords || []),
+    template,
+    published,
+    parent_page_id,
+  ];
 
-    const [result] = await connection.query(query, values);
+  const [result] = await connection.query(query, values);
 
-    await connection.commit();
-    connection.release();
-
-    return {
-      success: true,
-      page_id: finalPageId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertPageFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      success: false,
-      page_id: null,
-    };
-  }
+  return {
+    success: true,
+    page_id: finalPageId,
+  };
 };
 
-export const deletePageFunction = async (project_idx, page_id) => {
-  const connection = await db.promise().getConnection();
-  try {
-    await connection.beginTransaction();
-    
-    const result = await deleteAndReindex(
-      connection,
-      "project_pages",
-      "page_id",
-      page_id,
-      ["project_idx", "parent_page_id"]
-    );
-
-    await connection.commit();
-    connection.release();
-    return result;
-  } catch (err) {
-    await connection.rollback();
-    connection.release();
-    console.error("❌ deletePageFunction error:", err);
-    return { success: false, deleted: false, error: err.message };
-  }
+export const deletePageFunction = async (connection, project_idx, page_id) => {
+  const result = await deleteAndReindex(
+    connection,
+    "project_pages",
+    "page_id",
+    page_id,
+    ["project_idx", "parent_page_id"]
+  );
+  return result;
 };
 
 export const reorderPagesFunction = async (
+  connection,
   project_idx,
   parent_page_id,
   orderedPageIds
 ) => {
-  const connection = await db.promise().getConnection();
-  try {
-    await connection.beginTransaction();
+  const layer = {
+    project_idx,
+    parent_page_id: parent_page_id ?? null,
+  };
+  const result = await reorderOrdinals(
+    connection,
+    "project_pages",
+    layer,
+    orderedPageIds,
+    "page_id"
+  );
 
-    const layer = {
-      project_idx,
-      parent_page_id: parent_page_id ?? null,
-    };
-    const result = await reorderOrdinals(
-      connection,
-      "project_pages",
-      layer,
-      orderedPageIds,
-      "page_id"
-    );
-
-    await connection.commit();
-    connection.release();
-
-    return result;
-  } catch (err) {
-    await connection.rollback();
-    connection.release();
-    console.error("❌ reorderPagesFunction error:", err);
-    return { success: false, affectedRows: 0, error: err.message };
-  }
+  return result;
 };
 
 // ---------- PAGE DEFINITION FUNCTIONS ----------
 export const getPageDefinitionsFunction = async () => {
   const q = `SELECT * FROM page_definitions`;
-  try {
-    const [rows] = await db.promise().query(q, []);
-
-    const pageDefinitions = rows.map((r) => ({
-      ...r,
-      allowed_sections:
-        typeof r.allowed_sections === "string"
-          ? JSON.parse(r.allowed_sections)
-          : r.allowed_sections || [],
-      config_schema:
-        typeof r.config_schema === "string"
-          ? JSON.parse(r.config_schema)
-          : r.config_schema || {},
-    }));
-
-    return pageDefinitions;
-  } catch (err) {
-    console.error("❌ Function Error -> getPageDefinitionsFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, []);
+  const pageDefinitions = rows.map((r) => ({
+    ...r,
+    allowed_sections:
+      typeof r.allowed_sections === "string"
+        ? JSON.parse(r.allowed_sections)
+        : r.allowed_sections || [],
+    config_schema:
+      typeof r.config_schema === "string"
+        ? JSON.parse(r.config_schema)
+        : r.config_schema || {},
+  }));
+  return pageDefinitions;
 };
 
-export const upsertPageDefinitionFunction = async (reqBody) => {
-  const connection = await db.promise().getConnection();
+export const upsertPageDefinitionFunction = async (connection, reqBody) => {
   const {
     page_definition_id,
     identifier,
@@ -222,91 +167,66 @@ export const upsertPageDefinitionFunction = async (reqBody) => {
     config_schema,
   } = reqBody;
 
-  try {
-    await connection.beginTransaction();
-    const finalPageDefinitionId =
-      page_definition_id && page_definition_id.trim() !== ""
-        ? page_definition_id
-        : "PD-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  const finalPageDefinitionId =
+    page_definition_id && page_definition_id.trim() !== ""
+      ? page_definition_id
+      : "PD-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
-      INSERT INTO page_definitions (
-        page_definition_id,
-        identifier,
-        name,
-        parent_page_definition_id,
-        allowed_sections,
-        config_schema
-      )
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        identifier = VALUES(identifier),
-        name = VALUES(name),
-        parent_page_definition_id = VALUES(parent_page_definition_id),
-        allowed_sections = VALUES(allowed_sections),
-        config_schema = VALUES(config_schema)
-    `;
-
-    const values = [
-      finalPageDefinitionId,
+  const query = `
+    INSERT INTO page_definitions (
+      page_definition_id,
       identifier,
       name,
       parent_page_definition_id,
-      JSON.stringify(allowed_sections || []),
-      JSON.stringify(config_schema || {}),
-    ];
+      allowed_sections,
+      config_schema
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      identifier = VALUES(identifier),
+      name = VALUES(name),
+      parent_page_definition_id = VALUES(parent_page_definition_id),
+      allowed_sections = VALUES(allowed_sections),
+      config_schema = VALUES(config_schema)
+  `;
 
-    const [result] = await connection.query(query, values);
+  const values = [
+    finalPageDefinitionId,
+    identifier,
+    name,
+    parent_page_definition_id,
+    JSON.stringify(allowed_sections || []),
+    JSON.stringify(config_schema || {}),
+  ];
 
-    await connection.commit();
-    connection.release();
-    return {
-      success: true,
-      page_definition_id: finalPageDefinitionId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertPageDefinitionFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      success: false,
-      page_definition_id: null,
-    };
-  }
+  const [result] = await connection.query(query, values);
+
+  return {
+    success: true,
+    page_definition_id: finalPageDefinitionId,
+  };
 };
 
-export const deletePageDefinitionFunction = async (page_definition_id) => {
-  const connection = await db.promise().getConnection();
-  try {
-    await connection.beginTransaction();
-
-    const q = `DELETE FROM page_definitions WHERE page_definition_id = ?`;
-    await connection.query(q, [page_definition_id]);
-
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error("❌ Function Error -> deletePageDefinitionFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+export const deletePageDefinitionFunction = async (
+  connection,
+  page_definition_id
+) => {
+  const q = `DELETE FROM page_definitions WHERE page_definition_id = ?`;
+  await connection.query(q, [page_definition_id]);
+  return { success: true };
 };
 
 // ---------- PAGE DATA EXPORT FUNCTION ----------
 export const getPageDataFunction = (reqBody) => {
   const { domain, slug } = reqBody;
-
   const projectQuery = `
     SELECT id from projects
     WHERE domain = ?
     LIMIT 1
   `;
-
   db.query(projectQuery, [domain], (err, idx) => {
     if (err) {
       console.error("❌ Fetch project error:", err);

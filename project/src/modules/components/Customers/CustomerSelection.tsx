@@ -43,7 +43,6 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
       });
       setModal1({ ...modal1, open: false });
     } else if (product && customer.id) {
-      console.log(product, customer.id);
       await upsertProducts([
         {
           ...product,

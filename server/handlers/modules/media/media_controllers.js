@@ -18,98 +18,66 @@ import cloudinary from "../../../services/cloudinary.js";
 // ---------- MEDIA CONTROLLERS ----------
 export const getMedia = async (req, res) => {
   const { project_idx } = req.query;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const media = await getMediaFunction(project_idx);
-  return res.json({ media });
+  return { success: true, media };
 };
 
-export const upsertMedia = async (req, res) => {
+export const upsertMedia = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
   const { items } = req.body;
-  if (!project_idx || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-  const { success, media } = await upsertMediaFunction(project_idx, items);
-  return res.status(200).json({ success, media });
+  if (!project_idx || !Array.isArray(items) || items.length === 0)
+    throw new Error("Invalid request");
+  return await upsertMediaFunction(connection, project_idx, items);
 };
 
-export const deleteMedia = async (req, res) => {
+export const deleteMedia = async (req, res, connection) => {
   const { media_id } = req.body;
   const project_idx = req.user?.project_idx;
-
-  if (!project_idx || !media_id) {
-    return res.status(400).json({ success: false, message: "Missing fields" });
-  }
-  const success = await deleteMediaFunction(project_idx, media_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !media_id) throw new Error("Missing required fields");
+  return await deleteMediaFunction(connection, project_idx, media_id);
 };
 
 // ---------- MEDIA FOLDER CONTROLLERS ----------
 export const getMediaFolders = async (req, res) => {
   const { project_idx } = req.query;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const mediaFolders = await getMediaFoldersFunction(project_idx);
-  return res.json({ mediaFolders });
+  return { success: true, mediaFolders };
 };
 
-export const upsertMediaFolders = async (req, res) => {
+export const upsertMediaFolders = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
   const { folders } = req.body;
-
-  if (!project_idx || !Array.isArray(folders) || folders.length === 0) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing project_idx or folders" });
-  }
-
-  try {
-    const { success, folderIds } = await upsertMediaFoldersFunction(
-      project_idx,
-      folders
-    );
-    return res.status(success ? 200 : 500).json({ success, folderIds });
-  } catch (err) {
-    console.error("❌ Controller Error -> upsertMediaFolders:", err);
-    return res.status(500).json({ success: false, message: "Upsert failed" });
-  }
+  if (!project_idx || !Array.isArray(folders) || folders.length === 0)
+    throw new Error("Invalid request");
+  return await upsertMediaFoldersFunction(connection, project_idx, folders);
 };
 
-export const deleteMediaFolder = async (req, res) => {
+export const deleteMediaFolder = async (req, res, connection) => {
   const { folder_id } = req.body;
   const project_idx = req.user?.project_idx;
-
-  if (!project_idx || !folder_id) {
-    return res.status(400).json({ success: false, message: "Missing fields" });
-  }
-  const { success } = await deleteMediaFolderFunction(project_idx, folder_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !folder_id) throw new Error("Missing required fields");
+  return await deleteMediaFolderFunction(connection, project_idx, folder_id);
 };
 
 // ---------- MEDIA LINK CONTROLLERS ----------
 export const getMediaLinks = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const mediaLinks = await getMediaLinksFunction(project_idx);
-  return res.json({ mediaLinks });
+  return { success: true, mediaLinks };
 };
 
-export const upsertMediaLinks = async (req, res) => {
+export const upsertMediaLinks = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
   const { items } = req.body;
-  if (!project_idx || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-  const success = await upsertMediaLinksFunction(project_idx, items);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !Array.isArray(items) || items.length === 0)
+    throw new Error("Invalid request");
+  return await upsertMediaLinksFunction(connection, project_idx, items);
 };
 
-export const deleteMediaLinks = async (req, res) => {
+export const deleteMediaLinks = async (req, res, connection) => {
   const { mediaLinks } = req.body;
   const project_idx = req.user?.project_idx;
   if (
@@ -117,29 +85,20 @@ export const deleteMediaLinks = async (req, res) => {
     !mediaLinks ||
     !Array.isArray(mediaLinks) ||
     mediaLinks.length === 0
-  ) {
-    return res.status(400).json({ success: false, message: "Missing fields" });
-  }
-  const { success } = await deleteMediaLinksFunction(project_idx, mediaLinks);
-  return res.status(success ? 200 : 500).json({ success });
+  )
+    throw new Error("Invalid request");
+  return await deleteMediaLinksFunction(connection, project_idx, mediaLinks);
 };
 
 // ---------- IMAGE UPLOAD CONTROLLERS ----------
 export const uploadImages = async (req, res) => {
   if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ message: "No files uploaded." });
+    throw new Error("No files uploaded");
   }
-
   const uploadedFiles = await compressAndUploadFiles(
     req.files.map((f) => f.path)
   );
-
-  if (uploadedFiles) {
-    return res.status(200).json({ files: uploadedFiles });
-    // example: [ { url, metadata: { width, height, extension, size, duration } } ]
-  } else {
-    return res.status(500).json({ files: [] });
-  }
+  return { success: true, files: uploadedFiles };
 };
 
 export const compressAndUploadFiles = async (filePaths) => {
@@ -244,6 +203,6 @@ export const compressAndUploadFiles = async (filePaths) => {
     return uploads;
   } catch (error) {
     console.error("File upload error:", error);
-    return false;
+    return [];
   }
 };

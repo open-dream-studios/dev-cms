@@ -22,10 +22,13 @@ export function useEmployeeForm(employee?: Employee | null) {
 
 export function useEmployeeFormSubmit() {
   const { upsertEmployee } = useContextQueries();
-  const { setAddingEmployee } = useUiStore()
-  const { currentProjectId, currentEmployee, setCurrentEmployeeData } = useCurrentDataStore();
+  const { setAddingEmployee } = useUiStore();
+  const { currentProjectId, currentEmployee, setCurrentEmployeeData } =
+    useCurrentDataStore();
 
-  const onEmployeeFormSubmit: SubmitHandler<EmployeeFormData> = async (data) => {
+  const onEmployeeFormSubmit: SubmitHandler<EmployeeFormData> = async (
+    data
+  ) => {
     if (!currentProjectId) return;
 
     const newEmployee: Employee = {
@@ -47,14 +50,17 @@ export function useEmployeeFormSubmit() {
       notes: data.notes ?? null,
     };
 
-    const newEmployeeId = await upsertEmployee(newEmployee);
-
-    if (newEmployeeId) {
-      setCurrentEmployeeData({
-        ...newEmployee,
-        employee_id: newEmployeeId,
-      });
-      setAddingEmployee(false)
+    try {
+      const newEmployeeId = await upsertEmployee(newEmployee);
+      if (newEmployeeId) {
+        setCurrentEmployeeData({
+          ...newEmployee,
+          employee_id: newEmployeeId,
+        });
+        setAddingEmployee(false);
+      }
+    } catch (err) {
+      console.error("❌ Employee upsert failed in form:", err);
     }
   };
 

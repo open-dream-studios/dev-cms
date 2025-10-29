@@ -8,17 +8,15 @@ export const getEmployeesFunction = async (project_idx) => {
     WHERE project_idx = ?
     ORDER BY created_at ASC
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-    return rows;
-  } catch (err) {
-    console.error("❌ Function Error -> getEmployeesFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  return rows;
 };
 
-export const upsertEmployeeFunction = async (project_idx, reqBody) => {
-  const connection = await db.promise().getConnection();
+export const upsertEmployeeFunction = async (
+  connection,
+  project_idx,
+  reqBody
+) => {
   const {
     employee_id,
     first_name,
@@ -37,17 +35,15 @@ export const upsertEmployeeFunction = async (project_idx, reqBody) => {
     notes,
   } = reqBody;
 
-  try {
-    await connection.beginTransaction();
-    const finalEmployeeId =
-      employee_id && employee_id.trim() !== ""
-        ? employee_id
-        : "E-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  const finalEmployeeId =
+    employee_id && employee_id.trim() !== ""
+      ? employee_id
+      : "E-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
+  const query = `
       INSERT INTO employees (
         employee_id,
         project_idx,
@@ -85,128 +81,89 @@ export const upsertEmployeeFunction = async (project_idx, reqBody) => {
         updated_at = NOW()
     `;
 
-    const values = [
-      finalEmployeeId,
-      project_idx,
-      first_name,
-      last_name,
-      email,
-      phone,
-      address_line1,
-      address_line2,
-      city,
-      state,
-      zip,
-      position,
-      department,
-      hire_date,
-      termination_date,
-      notes,
-    ];
+  const values = [
+    finalEmployeeId,
+    project_idx,
+    first_name,
+    last_name,
+    email,
+    phone,
+    address_line1,
+    address_line2,
+    city,
+    state,
+    zip,
+    position,
+    department,
+    hire_date,
+    termination_date,
+    notes,
+  ];
 
-    const [result] = await connection.query(query, values);
-    await connection.commit();
-    connection.release();
-    return {
-      success: true,
-      employee_id: finalEmployeeId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertEmployeeFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      success: false,
-      employee_id: null,
-    };
+  const [result] = await connection.query(query, values);
+
+  let id = result.insertId;
+  if (!id && employee_id) {
+    const [rows] = await connection.query(
+      "SELECT id FROM employees WHERE employee_id = ? AND project_idx = ?",
+      [finalEmployeeId, project_idx]
+    );
+    id = rows[0]?.id;
   }
+  if (!id) throw new Error("No ID provided from result");
+
+  return { success: true, id, employee_id: finalEmployeeId };
 };
 
-export const deleteEmployeeFunction = async (project_idx, employee_id) => {
-  const connection = await db.promise().getConnection();
+export const deleteEmployeeFunction = async (
+  connection,
+  project_idx,
+  employee_id
+) => {
   const q = `DELETE FROM employees WHERE employee_id = ? AND project_idx = ?`;
-  try {
-    await connection.beginTransaction();
-    await connection.query(q, [employee_id, project_idx]);
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error("❌ Function Error -> deleteEmployeeFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+  await connection.query(q, [employee_id, project_idx]);
+  return { success: true };
 };
 
-// ---------- EMPLOYEE ASSIGNMENT FUNCTIONS (tasks + jobs) ----------
+// ---------- EMPLOYEE ASSIGNMENT FUNCTIONS ----------
 export const getEmployeeAssignmentsFunction = async (project_idx) => {
   const q = `
     SELECT * FROM assignments
     WHERE project_idx = ?
     ORDER BY created_at ASC
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-    return rows;
-  } catch (err) {
-    console.error("❌ Function Error -> getEmployeeAssignmentsFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  return rows;
 };
 
-export const addEmployeeAssignmentFunction = async (project_idx, reqBody) => {
-  const connection = await db.promise().getConnection();
+export const addEmployeeAssignmentFunction = async (
+  connection,
+  project_idx,
+  reqBody
+) => {
   const { employee_id, task_id, job_id } = reqBody;
   const query = `
     INSERT INTO assignments (project_idx, employee_id, task_id, job_id)
     VALUES (?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE project_idx = VALUES(project_idx)
   `;
-
-  try {
-    await connection.beginTransaction();
-    const values = [project_idx, employee_id, task_id || null, job_id || null];
-    const [result] = await connection.query(query, values);
-    await connection.commit();
-    connection.release();
-    return {
-      assignment_id: result.insertId || null,
-      success: true,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertEmployeeFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      assignment_id: null,
-      success: false,
-    };
-  }
+  const values = [project_idx, employee_id, task_id || null, job_id || null];
+  const [result] = await connection.query(query, values);
+  return {
+    success: true,
+    assignment_id: result.insertId || null,
+  };
 };
 
 export const deleteEmployeeAssignmentFunction = async (
+  connection,
   project_idx,
   assignment_id
 ) => {
-  const connection = await db.promise().getConnection();
   const q = `
     DELETE FROM assignments
     WHERE id = ? AND project_idx = ?
   `;
-  try {
-    await connection.beginTransaction();
-    await connection.query(q, [assignment_id, project_idx]);
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error(
-      "❌ Function Error -> deleteEmployeeAssignmentFunction: ",
-      err
-    );
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+  await connection.query(q, [assignment_id, project_idx]);
+  return { success: true };
 };

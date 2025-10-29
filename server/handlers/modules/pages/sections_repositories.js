@@ -1,5 +1,6 @@
 // server/handlers/modules/pages/sections_repositories.js
 import { db } from "../../../connection/connect.js";
+import { deleteAndReindex, reorderOrdinals } from "../../../lib/ordinals.js";
 
 // ---------- SECTION FUNCTIONS ----------
 export const getSectionsFunction = async (project_idx) => {
@@ -9,21 +10,20 @@ export const getSectionsFunction = async (project_idx) => {
     WHERE ps.project_idx = ?
     ORDER BY ps.ordinal ASC
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-    const sections = rows.map((r) => ({
-      ...r,
-      config:
-        typeof r.config === "string" ? JSON.parse(r.config) : r.config || {},
-    }));
-    return sections;
-  } catch (err) {
-    console.error("❌ Function Error -> getSectionsFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  const sections = rows.map((r) => ({
+    ...r,
+    config:
+      typeof r.config === "string" ? JSON.parse(r.config) : r.config || {},
+  }));
+  return sections;
 };
 
-export const upsertSectionFunction = async (project_idx, reqBody) => {
+export const upsertSectionFunction = async (
+  connection,
+  project_idx,
+  reqBody
+) => {
   const {
     section_id,
     parent_section_id,
@@ -34,16 +34,15 @@ export const upsertSectionFunction = async (project_idx, reqBody) => {
     ordinal,
   } = reqBody;
 
-  try {
-    const finalSectionId =
-      section_id && section_id.trim() !== ""
-        ? section_id
-        : "PS-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  const finalSectionId =
+    section_id && section_id.trim() !== ""
+      ? section_id
+      : "PS-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
+  const query = `
       INSERT INTO project_sections (
         section_id,
         project_idx,
@@ -64,175 +63,80 @@ export const upsertSectionFunction = async (project_idx, reqBody) => {
         updated_at = NOW()
     `;
 
-    const values = [
-      finalSectionId,
-      project_idx,
-      parent_section_id,
-      project_page_id,
-      definition_id,
-      name,
-      JSON.stringify(config || {}),
-      ordinal,
-    ];
+  const values = [
+    finalSectionId,
+    project_idx,
+    parent_section_id,
+    project_page_id,
+    definition_id,
+    name,
+    JSON.stringify(config || {}),
+    ordinal,
+  ];
 
-    const [result] = await db.promise().query(query, values);
+  const [result] = await connection.query(query, values);
 
-    return {
-      success: true,
-      section_id: finalSectionId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertSectionFunction: ", err);
-    return {
-      success: false,
-      section_id: null,
-    };
-  }
+  return {
+    success: true,
+    section_id: finalSectionId,
+  };
 };
 
-export const deleteSectionFunction = async (project_idx, section_id) => {
-  const connection = await db.promise().getConnection();
-  try {
-    await connection.beginTransaction();
-
-    // 1. Look up the section
-    const [rows] = await connection.query(
-      `SELECT parent_section_id, project_page_id
-       FROM project_sections
-       WHERE section_id = ? AND project_idx = ?
-       LIMIT 1`,
-      [section_id, project_idx]
-    );
-
-    if (rows.length === 0) {
-      await connection.rollback();
-      connection.release();
-      return { success: false, message: "Section not found" };
-    }
-
-    const { parent_section_id, project_page_id } = rows[0];
-
-    // 2. Delete the section
-    const [deleteResult] = await connection.query(
-      `DELETE FROM project_sections 
-       WHERE section_id = ? AND project_idx = ? 
-       LIMIT 1`,
-      [section_id, project_idx]
-    );
-
-    if (deleteResult.affectedRows === 0) {
-      await connection.rollback();
-      connection.release();
-      return { success: false, message: "No section deleted" };
-    }
-
-    // 3. Reindex siblings (same page + same parent_section_id, or NULL for root)
-    await connection.query(`SET @rownum := -1`);
-
-    const reindexQuery = `
-      UPDATE project_sections
-      JOIN (
-        SELECT id, (@rownum := @rownum + 1) AS new_order
-        FROM project_sections
-        WHERE project_idx = ? 
-          AND project_page_id = ?
-          AND ${
-            parent_section_id
-              ? "parent_section_id = ?"
-              : "parent_section_id IS NULL"
-          }
-        ORDER BY ordinal
-      ) AS ordered
-      ON project_sections.id = ordered.id
-      SET project_sections.ordinal = ordered.new_order
-    `;
-
-    if (parent_section_id) {
-      await connection.query(reindexQuery, [
-        project_idx,
-        project_page_id,
-        parent_section_id,
-      ]);
-    } else {
-      await connection.query(reindexQuery, [project_idx, project_page_id]);
-    }
-
-    // 4. Commit
-    await connection.commit();
-    connection.release();
-
-    return { success: true, deleted: 1 };
-  } catch (err) {
-    await connection.rollback();
-    connection.release();
-    console.error("❌ Function Error -> deleteSectionFunction:", err);
-    return { success: false, error: "Delete transaction failed" };
-  }
+export const deleteSectionFunction = async (
+  connection,
+  project_idx,
+  section_id
+) => {
+  const result = await deleteAndReindex(
+    connection,
+    "project_sections",
+    "section_id",
+    section_id,
+    ["project_idx", "parent_section_id"]
+  );
+  return result;
 };
 
 export const reorderSectionsFunction = async (
+  connection,
   project_idx,
   parent_section_id,
   orderedSectionIds
 ) => {
-  try {
-    const caseStatements = orderedPageIds
-      .map((id, idx) => `WHEN ${db.escape(id)} THEN ${idx}`)
-      .join(" ");
-
-    const query = `
-      UPDATE project_sections
-      SET ordinal = CASE section_id
-        ${caseStatements}
-      END
-      WHERE project_idx = ?
-      AND (parent_section_id <=> ?)
-      AND section_id IN (${orderedPageIds.map(() => "?").join(", ")});
-    `;
-
-    const values = [project_idx, parent_section_id, ...orderedSectionIds];
-
-    const [result] = await db.promise().query(query, values);
-
-    return {
-      success: true,
-      affectedRows: result.affectedRows || 0,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> reorderSectionsFunction:", err);
-    return {
-      success: false,
-      affectedRows: 0,
-    };
-  }
+  const layer = {
+    project_idx,
+    parent_section_id: parent_section_id ?? null,
+  };
+  const result = await reorderOrdinals(
+    connection,
+    "project_sections",
+    layer,
+    orderedSectionIds,
+    "section_id"
+  );
+  return result;
 };
 
 // ---------- SECTION DEFINITION FUNCTIONS ----------
 export const getSectionDefinitionsFunction = async () => {
   const q = `SELECT * FROM section_definitions`;
-  try {
-    const [rows] = await db.promise().query(q, []);
+  const [rows] = await db.promise().query(q, []);
 
-    const sectionDefinitions = rows.map((r) => ({
-      ...r,
-      allowed_elements:
-        typeof r.allowed_elements === "string"
-          ? JSON.parse(r.allowed_elements)
-          : r.allowed_elements || [],
-      config_schema:
-        typeof r.config_schema === "string"
-          ? JSON.parse(r.config_schema)
-          : r.config_schema || {},
-    }));
-
-    return sectionDefinitions;
-  } catch (err) {
-    console.error("❌ Function Error -> getSectionDefinitionsFunction: ", err);
-    return [];
-  }
+  const sectionDefinitions = rows.map((r) => ({
+    ...r,
+    allowed_elements:
+      typeof r.allowed_elements === "string"
+        ? JSON.parse(r.allowed_elements)
+        : r.allowed_elements || [],
+    config_schema:
+      typeof r.config_schema === "string"
+        ? JSON.parse(r.config_schema)
+        : r.config_schema || {},
+  }));
+  return sectionDefinitions;
 };
 
-export const upsertSectionDefinitionFunction = async (reqBody) => {
+export const upsertSectionDefinitionFunction = async (connection, reqBody) => {
   const {
     section_definition_id,
     name,
@@ -242,16 +146,15 @@ export const upsertSectionDefinitionFunction = async (reqBody) => {
     config_schema,
   } = reqBody;
 
-  try {
-    const finalSectionDefinitionId =
-      section_definition_id && section_definition_id.trim() !== ""
-        ? section_definition_id
-        : "PSD-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  const finalSectionDefinitionId =
+    section_definition_id && section_definition_id.trim() !== ""
+      ? section_definition_id
+      : "PSD-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
+  const query = `
       INSERT INTO section_definitions (
         section_definition_id,
         name,
@@ -269,45 +172,28 @@ export const upsertSectionDefinitionFunction = async (reqBody) => {
         config_schema = VALUES(config_schema)
     `;
 
-    const values = [
-      finalSectionDefinitionId,
-      name,
-      identifier,
-      parent_section_definition_id,
-      JSON.stringify(allowed_elements || []),
-      JSON.stringify(config_schema || {}),
-    ];
+  const values = [
+    finalSectionDefinitionId,
+    name,
+    identifier,
+    parent_section_definition_id,
+    JSON.stringify(allowed_elements || []),
+    JSON.stringify(config_schema || {}),
+  ];
 
-    const [result] = await db.promise().query(query, values);
+  const [result] = await connection.query(query, values);
 
-    return {
-      success: true,
-      section_definition_id: finalSectionDefinitionId,
-    };
-  } catch (err) {
-    console.error(
-      "❌ Function Error -> upsertSectionDefinitionFunction: ",
-      err
-    );
-    return {
-      success: false,
-      section_definition_id: null,
-    };
-  }
+  return {
+    success: true,
+    section_definition_id: finalSectionDefinitionId,
+  };
 };
 
 export const deleteSectionDefinitionFunction = async (
+  connection,
   section_definition_id
 ) => {
   const q = `DELETE FROM section_definitions WHERE section_definition_id = ?`;
-  try {
-    await db.promise().query(q, [section_definition_id]);
-    return true;
-  } catch (err) {
-    console.error(
-      "❌ Function Error -> deleteSectionDefinitionFunction: ",
-      err
-    );
-    return false;
-  }
+  await connection.query(q, [section_definition_id]);
+  return { success: true };
 };

@@ -21,103 +21,73 @@ export const getModulesFunction = async (project_idx) => {
     JOIN module_definitions m ON pm.module_definition_id = m.id
     WHERE pm.project_idx = ?
   `;
-  try {
-    const [rows] = await db.promise().query(q, [project_idx]);
-    const modules = rows.map((r) => ({
-      ...r,
-      settings:
-        typeof r.settings === "string"
-          ? JSON.parse(r.settings)
-          : r.settings || {},
-    }));
-    return modules;
-  } catch (err) {
-    console.error("❌ Function Error -> getModulesFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, [project_idx]);
+  const modules = rows.map((r) => ({
+    ...r,
+    settings:
+      typeof r.settings === "string"
+        ? JSON.parse(r.settings)
+        : r.settings || {},
+  }));
+  return modules;
 };
 
-export const upsertModuleFunction = async (project_idx, reqBody) => {
-  const connection = await db.promise().getConnection();
+export const upsertModuleFunction = async (
+  connection,
+  project_idx,
+  reqBody
+) => {
   const { module_id, module_definition_id, settings } = reqBody;
 
-  try {
-    await connection.beginTransaction();
-    const finalModuleId =
-      module_id && module_id.trim() !== ""
-        ? module_id
-        : "M-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  const finalModuleId =
+    module_id && module_id.trim() !== ""
+      ? module_id
+      : "M-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
+  const query = `
       INSERT IGNORE INTO project_modules (
         module_id, module_definition_id, project_idx, settings
       )
       VALUES (?, ?, ?, ?)
     `;
 
-    const values = [
-      finalModuleId,
-      module_definition_id,
-      project_idx,
-      JSON.stringify(settings || []),
-    ];
+  const values = [
+    finalModuleId,
+    module_definition_id,
+    project_idx,
+    JSON.stringify(settings || []),
+  ];
 
-    const [result] = await connection.query(query, values);
+  const [result] = await connection.query(query, values);
 
-    await connection.commit();
-    connection.release();
-    return {
-      success: true,
-      module_id: finalModuleId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertModuleFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      success: false,
-      module_id: null,
-    };
-  }
+  return {
+    success: true,
+    module_id: finalModuleId,
+  };
 };
 
 export const deleteModuleFunction = async (
+  connection,
   project_idx,
-  module_definition_id
+  module_id
 ) => {
-  const connection = await db.promise().getConnection();
-  const q = `DELETE FROM project_modules WHERE project_idx = ? AND module_definition_id = ?`;
-  try {
-    await connection.beginTransaction();
-    await connection.query(q, [project_idx, module_definition_id]);
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error("❌ Function Error -> deleteModuleFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+  const q = `DELETE FROM project_modules WHERE project_idx = ? AND module_id = ?`;
+  await connection.query(q, [project_idx, module_id]);
+  return { success: true };
 };
 
 // ---------- RUN MODULE FUNCTION ----------
 export const runModuleFunction = async (project_idx, module_id) => {
-  try {
-    const moduleConfig = await getModuleConfigFunction(project_idx, module_id);
-    if (!moduleConfig) throw new Error("Module not found");
-    console.log(moduleConfig);
-    // const handler = handlers[identifier];
-    // if (!handler) throw new Error("No handler registered");
-    // const success = await handler(moduleConfig);
-    // return success;
-  } catch (err) {
-    console.error("❌ Function Error -> runModuleFunction: ", err);
-    return false;
-  }
+  const moduleConfig = await getModuleConfigFunction(project_idx, module_id);
+  if (!moduleConfig) throw new Error("Module not found");
+  console.log(moduleConfig);
+  // const handler = handlers[identifier];
+  // if (!handler) throw new Error("No handler registered");
+  // const success = await handler(moduleConfig);
+  // return success;
 };
 
 export const getModuleConfigFunction = async (
@@ -142,24 +112,18 @@ export const getModuleConfigFunction = async (
 // ---------- MODULE DEFINITION FUNCTIONS ----------
 export const getModuleDefinitionsFunction = async () => {
   const q = `SELECT * FROM module_definitions`;
-  try {
-    const [rows] = await db.promise().query(q, []);
-    const moduleDefinitions = rows.map((r) => ({
-      ...r,
-      config_schema:
-        typeof r.config_schema === "string"
-          ? JSON.parse(r.config_schema)
-          : r.config_schema || [],
-    }));
-    return moduleDefinitions;
-  } catch (err) {
-    console.error("❌ Function Error -> getModulesDefinitionsFunction: ", err);
-    return [];
-  }
+  const [rows] = await db.promise().query(q, []);
+  const moduleDefinitions = rows.map((r) => ({
+    ...r,
+    config_schema:
+      typeof r.config_schema === "string"
+        ? JSON.parse(r.config_schema)
+        : r.config_schema || [],
+  }));
+  return moduleDefinitions;
 };
 
-export const upsertModuleDefinitionFunction = async (reqBody) => {
-  const connection = await db.promise().getConnection();
+export const upsertModuleDefinitionFunction = async (connection, reqBody) => {
   const {
     module_definition_id,
     name,
@@ -169,17 +133,15 @@ export const upsertModuleDefinitionFunction = async (reqBody) => {
     config_schema,
   } = reqBody;
 
-  try {
-    await connection.beginTransaction();
-    const finalModulDefinitioneId =
-      module_definition_id && module_definition_id.trim() !== ""
-        ? module_definition_id
-        : "MD-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+  const finalModulDefinitioneId =
+    module_definition_id && module_definition_id.trim() !== ""
+      ? module_definition_id
+      : "MD-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
-    const query = `
+  const query = `
       INSERT INTO module_definitions (
         module_definition_id, name, identifier, description, parent_module_id, config_schema
       )
@@ -192,47 +154,28 @@ export const upsertModuleDefinitionFunction = async (reqBody) => {
         config_schema = VALUES(config_schema)
     `;
 
-    const values = [
-      finalModulDefinitioneId,
-      name,
-      identifier,
-      description,
-      parent_module_id,
-      JSON.stringify(config_schema || []),
-    ];
+  const values = [
+    finalModulDefinitioneId,
+    name,
+    identifier,
+    description,
+    parent_module_id,
+    JSON.stringify(config_schema || []),
+  ];
 
-    const [result] = await connection.query(query, values);
+  const [result] = await connection.query(query, values);
 
-    await connection.commit();
-    connection.release();
-    return {
-      success: true,
-      module_definition_id: finalModulDefinitioneId,
-    };
-  } catch (err) {
-    console.error("❌ Function Error -> upsertModuleDefinitionFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return {
-      success: false,
-      module_definition_id: null,
-    };
-  }
+  return {
+    success: true,
+    module_definition_id: finalModulDefinitioneId,
+  };
 };
 
-export const deleteModuleDefinitionFunction = async (module_definition_id) => {
-  const connection = await db.promise().getConnection();
+export const deleteModuleDefinitionFunction = async (
+  connection,
+  module_definition_id
+) => {
   const q = `DELETE FROM module_definitions WHERE module_definition_id = ?`;
-  try {
-    await connection.beginTransaction();
-    await connection.query(q, [module_definition_id]);
-    await connection.commit();
-    connection.release();
-    return true;
-  } catch (err) {
-    console.error("❌ Function Error -> deleteModuleDefinitionFunction: ", err);
-    await connection.rollback();
-    connection.release();
-    return false;
-  }
+  await connection.query(q, [module_definition_id]);
+  return { success: true };
 };

@@ -42,11 +42,10 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", currentProjectId] });
     },
+    onError: (error) => {
+      console.error("❌ Upsert task failed:", error);
+    },
   });
-
-  const upsertTask = async (task: Task) => {
-    return await upsertTaskMutation.mutateAsync(task);
-  };
 
   const deleteTaskMutation = useMutation({
     mutationFn: async (task_id: string) => {
@@ -58,7 +57,14 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", currentProjectId] });
     },
+    onError: (error) => {
+      console.error("❌ Delete task failed:", error);
+    },
   });
+
+  const upsertTask = async (task: Task) => {
+    return await upsertTaskMutation.mutateAsync(task);
+  };
 
   const deleteTask = async (task_id: string) => {
     await deleteTaskMutation.mutateAsync(task_id);

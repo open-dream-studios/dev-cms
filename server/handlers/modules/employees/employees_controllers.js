@@ -11,75 +11,45 @@ import {
 // ---------- EMPLOYEE CONTROLLERS ----------
 export const getEmployees = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const employees = await getEmployeesFunction(project_idx);
-  return res.json({ employees });
+  return { success: true, employees };
 };
 
-export const upsertEmployee = async (req, res) => {
+export const upsertEmployee = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ success: false, message: "Missing project_idx" });
-  }
-  const { employee_id, success } = await upsertEmployeeFunction(
-    project_idx,
-    req.body
-  );
-  return res.status(success ? 200 : 500).json({ success, employee_id });
+  if (!project_idx) throw new Error("Missing project_idx");
+  return await upsertEmployeeFunction(connection, project_idx, req.body);
 };
 
-export const deleteEmployee = async (req, res) => {
+export const deleteEmployee = async (req, res, connection) => {
   const { employee_id } = req.body;
   const project_idx = req.user?.project_idx;
-  if (!project_idx || !employee_id) {
-    return res.status(400).json({ success: false, message: "Missing fields" });
-  }
-  const success = await deleteEmployeeFunction(project_idx, employee_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !employee_id) throw new Error("Missing required fields");
+  return await deleteEmployeeFunction(connection, project_idx, employee_id);
 };
 
-// ---------- EMPLOYEE ASSIGNMENT CONTROLLERS (tasks + jobs) ----------
+// ---------- EMPLOYEE ASSIGNMENT CONTROLLERS ----------
 export const getEmployeeAssignments = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const employeeAssignments = await getEmployeeAssignmentsFunction(project_idx);
-  return res.json({ employeeAssignments });
+  return { success: true, employeeAssignments };
 };
 
-export const addEmployeeAssignment = async (req, res) => {
-  const { employee_id, task_id, job_id } = req.body;
+export const addEmployeeAssignment = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
-
-  if (!project_idx) {
-    return res.status(400).json({ success: false, message: "Missing project_idx" });
-  }
-
+  const { employee_id, task_id, job_id } = req.body;
+  if (!project_idx) throw new Error("Missing project_idx");
   if (!employee_id || (!task_id && !job_id) || (task_id && job_id)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Must provide either task_id or job_id (not both)" });
+    throw new Error("Invalid Request");
   }
-
-  const { assignment_id, success } = await addEmployeeAssignmentFunction(
-    project_idx,
-    req.body
-  );
-  return res.status(success ? 200 : 500).json({ success, assignment_id });
+  return await addEmployeeAssignmentFunction(connection, project_idx, req.body);
 };
 
-export const deleteEmployeeAssignment = async (req, res) => {
+export const deleteEmployeeAssignment = async (req, res, connection) => {
   const { assignment_id } = req.body;
   const project_idx = req.user?.project_idx;
-  if (!project_idx || !assignment_id) {
-    return res.status(400).json({ message: "Missing fields" });
-  }
-  const success = await deleteEmployeeAssignmentFunction(
-    project_idx,
-    assignment_id
-  );
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !assignment_id) throw new Error("Missing required fields");
+  return await deleteEmployeeAssignmentFunction(connection, project_idx, assignment_id);
 };

@@ -6,7 +6,7 @@ import { useProjectSettingsForm } from "@/hooks/forms/useProjectSettingsForm";
 import { Project } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
 import { ProjectSettingsFormData } from "@/util/schemas/projectSettingsSchema";
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect } from "react";
 import { FaPlus } from "react-icons/fa6";
 import UploadModal, { CloudinaryUpload } from "../Upload/Upload";
 import { useCurrentDataStore } from "@/store/currentDataStore";
@@ -69,10 +69,7 @@ const ProjectSettings = () => {
 
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit, (err) => {
-        console.log("Validation failed:", err);
-      })}
-      // onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(onSubmit)}
       className="relative ml-[5px] md:ml-[8px] w-[calc(100%-43px)] sm:w-[calc(100%-80px)] h-full flex flex-col pt-[50px]"
     >
       <UploadModal

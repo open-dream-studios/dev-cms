@@ -22,6 +22,6 @@ export const upsertCustomer = async (req, res, connection) => {
 export const deleteCustomer = async (req, res, connection) => {
   const { customer_id } = req.body;
   const project_idx = req.user?.project_idx;
-  if (!project_idx || !customer_id) throw new Error("Missing fields");
+  if (!project_idx || !customer_id) throw new Error("Missing required fields");
   return await deleteCustomerFunction(connection, project_idx, customer_id);
 };

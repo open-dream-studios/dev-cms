@@ -203,6 +203,20 @@ export default function MediaFoldersSidebar({
     }
   };
 
+  const newlyAddedFolderRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (newlyAddedFolderRef.current) {
+      const folderFound = mediaFolders.find(
+        (mediaFolder: MediaFolder) =>
+          mediaFolder.folder_id === newlyAddedFolderRef.current
+      );
+      if (folderFound) {
+        setActiveFolder(folderFound);
+      }
+      newlyAddedFolderRef.current = null;
+    }
+  }, [mediaFolders]);
+
   const handleAddFolder = async () => {
     if (!currentProjectId) return;
     const steps: StepConfig[] = [
@@ -236,16 +250,10 @@ export default function MediaFoldersSidebar({
               } as MediaFolder,
             ]);
             if (newIds && newIds.length) {
-              const newId = newIds[0];
               if (activeFolder && activeFolder.id) {
                 setOpenFolders((prev) => new Set(prev).add(activeFolder.id!));
               }
-              const folderFound = mediaFolders.find(
-                (mediaFolder: MediaFolder) => mediaFolder.id === newId
-              );
-              if (folderFound) {
-                setActiveFolder(folderFound);
-              }
+              newlyAddedFolderRef.current = newIds[0];
             }
           }}
         />
@@ -385,7 +393,7 @@ export default function MediaFoldersSidebar({
       </motion.div>
 
       <div className="w-[100%] px-[15px] mt-[-1px]">
-      <Divider />
+        <Divider />
       </div>
 
       <div className="px-[15px] flex-1 overflow-y-auto">

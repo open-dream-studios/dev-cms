@@ -8,27 +8,26 @@ import {
 // ---------- INTEGRATION CONTROLLERS ----------
 export const getIntegrations = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const integrations = await getIntegrationsFunction(project_idx);
-  return res.json({ integrations });
+  return { success: true, integrations };
 };
 
-export const upsertIntegration = async (req, res) => {
-  const { project_idx, module_id, integration_key, integration_value } = req.body;
-  if (!project_idx || !module_id || !integration_key || !integration_value) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-  const { success } = await upsertIntegrationFunction(project_idx, req.body);
-  return res.status(success ? 200 : 500).json({ success });
+export const upsertIntegration = async (req, res, connection) => {
+  const { project_idx, module_id, integration_key, integration_value } =
+    req.body;
+  if (!project_idx || !module_id || !integration_key || !integration_value)
+    throw new Error("Missing required fields");
+  return await upsertIntegrationFunction(connection, project_idx, req.body);
 };
 
-export const deleteIntegration = async (req, res) => {
+export const deleteIntegration = async (req, res, connection) => {
   const { integration_id, project_idx } = req.body;
-  if (!project_idx || !integration_id) {
-    return res.status(400).json({ success: false, message: "Missing fields" });
-  }
-  const success = await deleteIntegrationFunction(project_idx, integration_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !integration_id)
+    throw new Error("Missing required fields");
+  return await deleteIntegrationFunction(
+    connection,
+    project_idx,
+    integration_id
+  );
 };

@@ -11,59 +11,37 @@ import {
 // ---------- PROJECT CONTROLLERS ----------
 export const getProjects = async (req, res) => {
   const userEmail = req.user.email;
-  if (!userEmail) {
-    return res.status(400).json({ message: "Missing user email" });
-  }
+  if (!userEmail) throw new Error("Missing user email");
   const projects = await getProjectsFunction(userEmail);
-  return res.json({ projects });
+  return { success: true, projects };
 };
 
-export const upsertProject = async (req, res) => {
+export const upsertProject = async (req, res, connection) => {
   const { name } = req.body;
-  if (!name) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const { project_id, success } = await upsertProjectFunction(req.body);
-  return res.status(success ? 200 : 500).json({ success, project_id });
+  if (!name) throw new Error("Missing required fields");
+  return await upsertProjectFunction(connection, req.body);
 };
 
-export const deleteProject = async (req, res) => {
+export const deleteProject = async (req, res, connection) => {
   const { project_id } = req.body;
-  if (!project_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const success = await deleteProjectFunction(project_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_id) throw new Error("Missing required fields");
+  return await deleteProjectFunction(connection, project_id);
 };
 
 // ---------- PROJECT USER CONTROLLERS ----------
 export const getAllUserRoles = async (req, res) => {
   const projectUsers = await getAllUserRolesFunction();
-  return res.json({ projectUsers });
+  return { success: true, projectUsers };
 };
 
-export const upsertProjectUser = async (req, res) => {
+export const upsertProjectUser = async (req, res, connection) => {
   const { email, project_idx } = req.body;
-  if (!email || !project_idx) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const { success } = await upsertProjectUserFunction(
-    req.body
-  );
-  return res.status(success ? 200 : 500).json({ success });
+  if (!email || !project_idx) throw new Error("Missing required fields");
+  return await upsertProjectUserFunction(connection, req.body);
 };
 
-export const deleteProjectUser = async (req, res) => {
+export const deleteProjectUser = async (req, res, connection) => {
   const { email, project_idx } = req.body;
-  if (!email || !project_idx) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-  const success = await deleteProjectUserFunction(email, project_idx);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!email || !project_idx) throw new Error("Missing required fields");
+  return await deleteProjectUserFunction(connection, email, project_idx);
 };

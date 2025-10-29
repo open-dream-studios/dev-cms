@@ -70,7 +70,14 @@ const ModuleSettings = () => {
     if (!moduleDefinition.id || !currentProjectId) return;
     toggleModule(moduleDefinition.id);
     if (checkedModuleDefinitions.includes(moduleDefinition.id)) {
-      deleteProjectModule(moduleDefinition.id);
+      const matchedModule = projectModules.find(
+        (mod: ProjectModule) =>
+          mod.project_idx === currentProjectId &&
+          mod.module_definition_id === moduleDefinition.id
+      );
+      if (matchedModule && matchedModule.module_id) {
+        deleteProjectModule(matchedModule.module_id);
+      }
     } else {
       upsertProjectModule({
         module_id: null,
@@ -82,7 +89,9 @@ const ModuleSettings = () => {
   };
 
   const handleDeleteProjectModule = async (projectModule: ProjectModule) => {
-    deleteProjectModule(projectModule.module_definition_id);
+    if (projectModule.module_id) {
+      deleteProjectModule(projectModule.module_id);
+    }
   };
 
   const handleDeleteProjectModuleClick = async (
@@ -353,14 +362,10 @@ const ModuleSettings = () => {
                         onClick={(e) => handleEditModuleClick(e, projectModule)}
                         className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim cursor-pointer"
                         style={{
-                          backgroundColor:
-                            t.background_2_selected,
+                          backgroundColor: t.background_2_selected,
                         }}
                       >
-                        <HiLockClosed
-                          size={15}
-                          color={t.text_4}
-                        />
+                        <HiLockClosed size={15} color={t.text_4} />
                       </div>
                       <div
                         onClick={(e) =>
@@ -368,14 +373,10 @@ const ModuleSettings = () => {
                         }
                         className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim cursor-pointer"
                         style={{
-                          backgroundColor:
-                            t.background_2_selected,
+                          backgroundColor: t.background_2_selected,
                         }}
                       >
-                        <FaTrash
-                          size={14}
-                          color={t.text_4}
-                        />
+                        <FaTrash size={14} color={t.text_4} />
                       </div>
                     </div>
                   </div>
@@ -440,8 +441,7 @@ const ModuleSettings = () => {
                         }}
                         className="cursor-pointer hover:brightness-90 dim px-[12px] h-[32px] rounded-full text-sm dim"
                         style={{
-                          backgroundColor:
-                            t.background_2_selected,
+                          backgroundColor: t.background_2_selected,
                           color: t.text_4,
                         }}
                       >
@@ -451,8 +451,7 @@ const ModuleSettings = () => {
                         onClick={() => setEditingKey(null)}
                         className="cursor-pointer hover:brightness-90 dim px-[12px] h-[32px] rounded-full text-sm dim"
                         style={{
-                          backgroundColor:
-                            t.background_2_selected,
+                          backgroundColor: t.background_2_selected,
                           color: t.text_4,
                         }}
                       >
@@ -482,15 +481,10 @@ const ModuleSettings = () => {
                               }}
                               className="flex items-center justify-center w-[32px] h-[32px] rounded-full dim cursor-pointer"
                               style={{
-                                backgroundColor:
-                                  t
-                                    .background_2_selected,
+                                backgroundColor: t.background_2_selected,
                               }}
                             >
-                              <FiEdit
-                                size={16}
-                                color={t.text_4}
-                              />
+                              <FiEdit size={16} color={t.text_4} />
                             </div>
                             <div
                               onClick={() =>
@@ -498,15 +492,10 @@ const ModuleSettings = () => {
                               }
                               className="flex items-center justify-center w-[32px] h-[32px] rounded-full dim cursor-pointer"
                               style={{
-                                backgroundColor:
-                                  t
-                                    .background_2_selected,
+                                backgroundColor: t.background_2_selected,
                               }}
                             >
-                              <FaTrash
-                                size={14}
-                                color={t.text_4}
-                              />
+                              <FaTrash size={14} color={t.text_4} />
                             </div>
                           </div>
                         </div>

@@ -169,7 +169,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
 
   const handleEditClick = () => {
     setProductFilters({ jobType: [], products: [] });
-    setEditingProducts(!editingProducts);
+    requestAnimationFrame(() => setEditingProducts(!editingProducts));
   };
 
   const handleFilterClick = async (filter: productFilter) => {

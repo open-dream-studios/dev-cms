@@ -41,30 +41,29 @@ const PagesEditorToolbar = () =>
       //   domain: currentProject.domain,
       //   slug: currentPage ? currentPage.slug : "/",
       // });
-      try {
-        console.log("getting data");
-        const domain = "tannyspaacquisitions.com";
-        const slug = "/";
+      // try {
+      //   const domain = "tannyspaacquisitions.com";
+      //   const slug = "/";
 
-        const apiUrl =
-          "https://dev-cms-production.up.railway.app/api/pages/get-data";
-        const res = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ domain, slug }),
-        });
+      //   const apiUrl =
+      //     "https://dev-cms-production.up.railway.app/api/pages/get-data";
+      //   const res = await fetch(apiUrl, {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({ domain, slug }),
+      //   });
 
-        if (!res.ok) {
-          throw new Error("API request failed");
-        }
+      //   if (!res.ok) {
+      //     throw new Error("API request failed");
+      //   }
 
-        const result = await res.json();
-        console.log(result);
-      } catch (err) {
-        console.error("❌ Error fetching page data:", err);
-      }
+      //   const result = await res.json();
+      //   console.log(result);
+      // } catch (err) {
+      //   console.error("❌ Error fetching page data:", err);
+      // }
       // console.log(data);
     };
 
@@ -102,10 +101,6 @@ const PagesEditorToolbar = () =>
           </p> */}
         </div>
         <div className="flex gap-2">
-          <CustomButton onClick={handleGetDataClick} variant="outline">
-            <Link2 size={16} />
-          </CustomButton>
-
           <CustomButton onClick={handleLinkClick} variant="outline">
             <Link2 size={16} />
           </CustomButton>

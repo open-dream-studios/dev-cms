@@ -59,7 +59,7 @@ const MediaManager = () => {
                 folder_id: activeFolder ? activeFolder.id : null,
                 media_usage: "module",
                 tags: null,
-                ordinal: folderImages.length + index,
+                ordinal: null
               } as Media;
             }
           );

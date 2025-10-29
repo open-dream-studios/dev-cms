@@ -12,84 +12,55 @@ import {
 // ---------- SECTION CONTROLLERS ----------
 export const getSections = async (req, res) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) {
-    return res.status(400).json({ message: "Missing project_idx" });
-  }
+  if (!project_idx) throw new Error("Missing project_idx");
   const sections = await getSectionsFunction(project_idx);
-  return res.json({ sections });
+  return { success: true, sections };
 };
 
-export const upsertSection = async (req, res) => {
+export const upsertSection = async (req, res, connection) => {
   const project_idx = req.user?.project_idx;
   const { definition_id } = req.body;
-  if (!project_idx || !definition_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const { section_id, success } = await upsertSectionFunction(
-    project_idx,
-    req.body
-  );
-  return res.status(success ? 200 : 500).json({ success, section_id });
+  if (!project_idx || !definition_id)
+    throw new Error("Missing required fields");
+  return await upsertSectionFunction(connection, project_idx, req.body);
 };
 
-export const deleteSection = async (req, res) => {
+export const deleteSection = async (req, res, connection) => {
   const { section_id } = req.body;
   const project_idx = req.user?.project_idx;
-  if (!project_idx || !section_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const success = await deleteSectionFunction(project_idx, section_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!project_idx || !section_id) throw new Error("Missing required fields");
+  return await deleteSectionFunction(connection, project_idx, section_id);
 };
 
-export const reorderSections = async (req, res) => {
-  try {
-    const { parent_section_id, orderedIds } = req.body;
-    const project_idx = req.user?.project_idx;
-    if (!project_idx || !Array.isArray(orderedIds)) {
-      return res.status(400).json({ message: "Missing fields" });
-    }
-
-    const result = await reorderSectionsFunction(
-      project_idx,
-      parent_section_id || null,
-      orderedIds
-    );
-
-    return res
-      .status(200)
-      .json({ success: true, updated: result.affectedRows });
-  } catch (err) {
-    console.error("Error reordering project sections:", err);
-    return res.status(500).json({ message: "DB error" });
-  }
+export const reorderSections = async (req, res, connection) => {
+  const { parent_section_id, orderedIds } = req.body;
+  const project_idx = req.user?.project_idx;
+  if (!project_idx || !Array.isArray(orderedIds))
+    throw new Error("Missing required fields");
+  const result = await reorderSectionsFunction(
+    connection,
+    project_idx,
+    parent_section_id || null,
+    orderedIds
+  );
+  return { success: true, updated: result.affectedRows };
 };
 
 // ---------- SECTION DEFINITION CONTROLLERS ----------
 export const getSectionDefinitions = async (req, res) => {
   const sectionDefinitions = await getSectionDefinitionsFunction();
-  return res.json({ sectionDefinitions });
+  return { sectionDefinitions };
 };
 
-export const upsertSectionDefinition = async (req, res) => {
-  const { section_definition_id, success } =
-    await upsertSectionDefinitionFunction(req.body);
-  return res
-    .status(success ? 200 : 500)
-    .json({ success, section_definition_id });
+export const upsertSectionDefinition = async (req, res, connection) => {
+  return await upsertSectionDefinitionFunction(connection, req.body);
 };
 
-export const deleteSectionDefinition = async (req, res) => {
+export const deleteSectionDefinition = async (req, res, connection) => {
   const { section_definition_id } = req.body;
-  if (!section_definition_id) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
-  }
-  const success = await deleteSectionDefinitionFunction(section_definition_id);
-  return res.status(success ? 200 : 500).json({ success });
+  if (!section_definition_id) throw new Error("Missing required fields");
+  return await deleteSectionDefinitionFunction(
+    connection,
+    section_definition_id
+  );
 };

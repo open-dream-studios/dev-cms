@@ -10,6 +10,7 @@ import {
 } from "./employees_controllers.js";
 import { authenticateUser } from "../../../util/auth.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
+import { errorHandler, transactionHandler } from "../../../util/handlerWrappers.js";
 
 const router = express.Router();
 
@@ -18,42 +19,43 @@ router.post(
   "/",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getEmployees
+  errorHandler(getEmployees)
 );
 
 router.post(
   "/upsert",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  upsertEmployee
+  transactionHandler(upsertEmployee)
 );
 
 router.post(
   "/delete",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  deleteEmployee
+  transactionHandler(deleteEmployee)
 );
 
+// ---- EMPLOYEE ASSIGNMENTS ----
 router.post(
   "/assignments/get",
   authenticateUser,
   checkProjectPermission(1), // viewer+
-  getEmployeeAssignments
+  errorHandler(getEmployeeAssignments)
 );
 
 router.post(
   "/assignments/add",
   authenticateUser,
   checkProjectPermission(2), // editor+
-  addEmployeeAssignment
+  transactionHandler(addEmployeeAssignment)
 );
 
 router.post(
   "/assignments/delete",
   authenticateUser,
   checkProjectPermission(2), // editor+
-  deleteEmployeeAssignment
+  transactionHandler(deleteEmployeeAssignment)
 );
 
 export default router;

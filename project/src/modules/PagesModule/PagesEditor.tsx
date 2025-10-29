@@ -46,6 +46,7 @@ const ProjectPagesEditor = () => {
     pageDefinitions,
     sectionDefinitions,
     projectSections,
+    deleteSection,
   } = useContextQueries();
   const {
     editingPage,
@@ -121,14 +122,13 @@ const ProjectPagesEditor = () => {
   };
 
   const handleDeleteSection = async () => {
-    if (
-      !currentProjectId ||
-      !contextMenu ||
-      contextMenu.type !== "section" ||
-      !contextMenu.input
-    )
-      return;
-    // await deleteSection(contextMenu.input.section_id);
+    if (!currentProjectId || !contextMenu || !contextMenu.input) return;
+    if (contextMenu.type === "section") {
+      const section = contextMenu.input as Section;
+      if (section.section_id) {
+        await deleteSection(section.section_id);
+      }
+    }
   };
 
   const [contextMenu, setContextMenu] = useState<{

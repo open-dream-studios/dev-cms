@@ -11,31 +11,41 @@ import {
 import { authenticateUser } from "../../util/auth.js";
 import { checkProjectPermission } from "../../util/permissions.js";
 import { requireAdmin } from "../../util/roles.js";
+import {
+  errorHandler,
+  transactionHandler,
+} from "../../util/handlerWrappers.js";
 
 const router = express.Router();
 
 // ---- PROJECTS ----
-router.get("/", authenticateUser, getProjects);
-router.post("/upsert", authenticateUser, requireAdmin, upsertProject);
-router.post("/delete", authenticateUser, requireAdmin, deleteProject);
+router.get("/", authenticateUser, errorHandler(getProjects));
+router.post(
+  "/upsert",
+  authenticateUser,
+  requireAdmin,
+  transactionHandler(upsertProject)
+);
+router.post(
+  "/delete",
+  authenticateUser,
+  requireAdmin,
+  transactionHandler(deleteProject)
+);
 
 // ---- PROJECT USERS ----
-router.get(
-  "/project-users",
-  authenticateUser,
-  getAllUserRoles
-);
+router.get("/project-users", authenticateUser, errorHandler(getAllUserRoles));
 router.post(
   "/upsert-project-user",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  upsertProjectUser
+  transactionHandler(upsertProjectUser)
 );
 router.post(
   "/delete-project-user",
   authenticateUser,
   checkProjectPermission(3), // owner+
-  deleteProjectUser
+  transactionHandler(deleteProjectUser)
 );
 
 export default router;

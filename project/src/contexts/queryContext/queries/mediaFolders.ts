@@ -31,7 +31,7 @@ export function useMediaFolders(
         folders: data,
         project_idx: currentProjectId,
       });
-      return res.data.ids as number[];
+      return res.data.folderIds as number[];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
