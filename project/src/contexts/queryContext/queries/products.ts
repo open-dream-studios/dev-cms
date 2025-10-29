@@ -83,24 +83,21 @@ export function useProducts(
     string[],
     DeleteContext
   >({
-    mutationFn: async (serial_numbers: string[]) => {
+    mutationFn: async (product_ids: string[]) => {
       if (!currentProjectId) return;
       await makeRequest.post("/api/products/delete", {
         project_idx: currentProjectId,
-        serial_numbers,
+        product_ids,
       });
     },
-    onMutate: async (serial_numbers: string[]) => {
+    onMutate: async (product_ids: string[]) => {
       const queryKey = ["products", currentProjectId] as const;
       await queryClient.cancelQueries({ queryKey });
-
       const previousData = queryClient.getQueryData<any[]>(queryKey);
       if (!previousData) return { previousData, queryKey };
-
       const newData = previousData.filter(
-        (product) => !serial_numbers.includes(product.serial_number)
+        (product) => !product_ids.includes(product.product_id)
       );
-
       queryClient.setQueryData(queryKey, newData);
       return { previousData, queryKey };
     },

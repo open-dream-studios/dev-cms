@@ -73,11 +73,10 @@ function SortableItem({
   };
 
   const handleDeleteProduct = async (item: Product) => {
-    if (!item.serial_number) return;
+    if (!item.product_id) return;
     try {
       await saveProducts();
-      await deleteProducts([item.serial_number]);
-      // toast.success("Deleted product");
+      await deleteProducts([item.product_id]);
     } catch (error) {
       toast.error("Failed to delete product");
     }

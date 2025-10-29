@@ -102,8 +102,10 @@ export function useRouting() {
         });
       }
     }
-    setSelectedProducts([]);
-    setEditingProducts(false);
+    if (!pathname.includes("/products")) {
+      setSelectedProducts([]);
+      setEditingProducts(false);
+    }
   }, [pathname]);
 
   const screenClickAction = async (

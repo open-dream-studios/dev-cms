@@ -62,37 +62,33 @@ const InventoryRow = ({
           <RiDraggable className="opacity-[0.5]" size={23}></RiDraggable>
         ) : (
           <>
-            {productsData?.some(
-              (p) => p.serial_number === product.serial_number
-            ) && (
+            {productsData?.some((p) => p.product_id === product.product_id) && (
               <div
                 onClick={() => {
-                  if (!product.serial_number) return;
-                  if (selectedProducts.includes(product.serial_number)) {
+                  if (!product.product_id) return;
+                  if (selectedProducts.includes(product.product_id)) {
                     setSelectedProducts(
-                      selectedProducts.filter(
-                        (sn) => sn !== product.serial_number
-                      )
+                      selectedProducts.filter((sn) => sn !== product.product_id)
                     );
                   } else {
                     setSelectedProducts([
                       ...selectedProducts,
-                      product.serial_number,
+                      product.product_id,
                     ]);
                   }
                 }}
                 style={{
                   border: `1px solid ${t.background_3}`,
                   backgroundColor:
-                    product.serial_number &&
-                    selectedProducts.includes(product.serial_number)
+                    product.product_id &&
+                    selectedProducts.includes(product.product_id)
                       ? t.app_color_1
                       : "transparent",
                 }}
                 className="cursor-pointer dim w-[17px] h-[17px] rounded-[4px] flex items-center justify-center"
               >
-                {product.serial_number &&
-                  selectedProducts.includes(product.serial_number) && (
+                {product.product_id &&
+                  selectedProducts.includes(product.product_id) && (
                     <FaCheck color={"white"} size={11} />
                   )}
               </div>

@@ -23,14 +23,14 @@ export const upsertProducts = async (req, res, connection) => {
 };
 
 export const deleteProducts = async (req, res, connection) => {
-  const { serial_numbers } = req.body;
+  const { product_ids } = req.body;
   const project_idx = req.user?.project_idx;
   if (
     !project_idx ||
-    !serial_numbers ||
-    !Array.isArray(serial_numbers) ||
-    serial_numbers.length === 0
+    !product_ids ||
+    !Array.isArray(product_ids) ||
+    !product_ids.length
   )
     throw new Error("Missing required fields");
-  return await deleteProductsFunction(connection, project_idx, serial_numbers);
+  return await deleteProductsFunction(connection, project_idx, product_ids);
 };

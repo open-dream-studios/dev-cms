@@ -28,6 +28,12 @@ export const upsertMediaFoldersFunction = async (
   if (!Array.isArray(folders) || folders.length === 0) {
     throw new Error("No folders provided");
   }
+
+  let nextOrdinal = await getNextOrdinal(connection, "media_folders", {
+    project_idx,
+    parent_folder_id: folders[0].parent_folder_id,
+  });
+
   const values = [];
   const folderIds = [];
   for (let i = 0; i < folders.length; i++) {
@@ -40,22 +46,20 @@ export const upsertMediaFoldersFunction = async (
             ""
           );
     folderIds.push(finalFolderId);
-    let ordinal = f.ordinal;
-    if (ordinal == null) {
-      ordinal = await getNextOrdinal(connection, "media_folders", {
-        project_idx,
-        parent_folder_id: f.parent_folder_id ?? null,
-      });
+    let finalOrdinal = f.ordinal;
+    if (f.ordinal === null) {
+      finalOrdinal = nextOrdinal;
+      nextOrdinal += 1;
     }
     values.push(
       finalFolderId,
       project_idx,
       f.parent_folder_id ?? null,
       f.name ?? "",
-      ordinal
+      finalOrdinal
     );
     f.folder_id = finalFolderId;
-    f.ordinal = ordinal;
+    f.ordinal = finalOrdinal;
   }
 
   const placeholders = folders.map(() => `(?, ?, ?, ?, ?)`).join(", ");
@@ -155,14 +159,14 @@ export const upsertMediaFunction = async (connection, project_idx, items) => {
   });
   for (let i = 0; i < items.length; i++) {
     const m = items[i];
-    const finalMediaId = 
+    const finalMediaId =
       m.media_id && m.media_id.trim() !== ""
         ? m.media_id
         : "MEDIA-" +
           Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
             ""
           );
-    let ordinal = m.ordinal;
+    let finalOrdinal = m.ordinal;
     let existingRow = null;
     if (m.media_id) {
       const [existing] = await connection.query(
@@ -171,12 +175,8 @@ export const upsertMediaFunction = async (connection, project_idx, items) => {
       );
       existingRow = existing[0] ?? null;
     }
-
-    if (
-      ordinal == null ||
-      (existingRow && existingRow.folder_id !== (m.folder_id ?? null))
-    ) {
-      ordinal = nextOrdinal;
+    if (m.ordinal === null || (existingRow && existingRow.folder_id !== (m.folder_id ?? null))) {
+      finalOrdinal = nextOrdinal;
       nextOrdinal += 1;
     }
 
@@ -191,11 +191,11 @@ export const upsertMediaFunction = async (connection, project_idx, items) => {
       m.metadata ? JSON.stringify(m.metadata) : null,
       m.media_usage ?? "",
       m.tags ? JSON.stringify(m.tags) : null,
-      ordinal
+      finalOrdinal
     );
 
     m.media_id = finalMediaId;
-    m.ordinal = ordinal;
+    m.ordinal = finalOrdinal;
   }
 
   const placeholders = items
@@ -257,7 +257,6 @@ export const deleteMediaFunction = async (
   project_idx,
   media_id
 ) => {
-  // Delete from Cloudinary
   const [rows] = await connection.query(
     `SELECT public_id, type 
        FROM media 
@@ -265,11 +264,9 @@ export const deleteMediaFunction = async (
        LIMIT 1`,
     [media_id, project_idx]
   );
-
   if (rows.length === 0) {
     return { success: false, message: "Media not found" };
   }
-
   const { public_id, type } = rows[0];
   await deleteFromCloudinary([{ public_id, type }]);
 
@@ -280,7 +277,6 @@ export const deleteMediaFunction = async (
     media_id,
     ["project_idx", "folder_id"]
   );
-
   return result;
 };
 

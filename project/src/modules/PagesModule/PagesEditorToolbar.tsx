@@ -3,6 +3,7 @@ import { AuthContext } from "@/contexts/authContext";
 import CustomButton from "@/lib/blocks/CustomButton";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { appTheme } from "@/util/appTheme";
+import { makeRequest } from "@/util/axios";
 import { domainToUrl } from "@/util/functions/Pages";
 import { Link2 } from "lucide-react";
 import { useContext } from "react";
@@ -37,34 +38,11 @@ const PagesEditorToolbar = () =>
 
     const handleGetDataClick = async () => {
       if (!currentProject) return;
-      // const data = await makeRequest.post("/api/pages/get-data", {
-      //   domain: currentProject.domain,
-      //   slug: currentPage ? currentPage.slug : "/",
-      // });
-      // try {
-      //   const domain = "tannyspaacquisitions.com";
-      //   const slug = "/";
-
-      //   const apiUrl =
-      //     "https://dev-cms-production.up.railway.app/api/pages/get-data";
-      //   const res = await fetch(apiUrl, {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({ domain, slug }),
-      //   });
-
-      //   if (!res.ok) {
-      //     throw new Error("API request failed");
-      //   }
-
-      //   const result = await res.json();
-      //   console.log(result);
-      // } catch (err) {
-      //   console.error("❌ Error fetching page data:", err);
-      // }
-      // console.log(data);
+      const res = await makeRequest.post("/api/pages/get-data", {
+        domain: currentProject.domain,
+        slug: currentPage ? currentPage.slug : "/",
+      });
+      console.log(res.data);
     };
 
     if (!currentUser) return null;
@@ -101,6 +79,10 @@ const PagesEditorToolbar = () =>
           </p> */}
         </div>
         <div className="flex gap-2">
+          <CustomButton onClick={handleGetDataClick} variant="outline">
+            <Link2 size={16} />
+          </CustomButton>
+
           <CustomButton onClick={handleLinkClick} variant="outline">
             <Link2 size={16} />
           </CustomButton>

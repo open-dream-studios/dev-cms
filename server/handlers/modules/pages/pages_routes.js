@@ -69,6 +69,6 @@ router.post(
 );
 
 // ---- PAGES DATA EXPORT ----
-router.post("/get-data", errorHandler(getPageData));
+router.post("/get-data", transactionHandler(getPageData));
 
 export default router;

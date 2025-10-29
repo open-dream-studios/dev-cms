@@ -8,7 +8,7 @@ export const getProductsFunction = async (project_idx) => {
   const q = `
     SELECT * FROM products
     WHERE project_idx = ?
-    ORDER BY ordinal DESC
+    ORDER BY ordinal ASC
   `;
   const [rows] = await db.promise().query(q, [project_idx]);
   return rows;
@@ -45,7 +45,7 @@ export const upsertProductsFunction = async (
         : generateSerial(p.length, p.width, p.make, existingRows.length + i);
 
     let finalOrdinal = p.ordinal;
-    if (!p.ordinal) {
+    if (p.ordinal === null) {
       finalOrdinal = nextOrdinal;
       nextOrdinal += 1;
     }
@@ -115,17 +115,17 @@ export const upsertProductsFunction = async (
 export const deleteProductsFunction = async (
   connection,
   project_idx,
-  serial_numbers
+  product_ids
 ) => {
   const deleteQuery = `
       DELETE FROM products 
-      WHERE project_idx = ? AND serial_number IN (${serial_numbers
+      WHERE project_idx = ? AND product_id IN (${product_ids
         .map(() => "?")
         .join(",")})
     `;
   const [deleteResult] = await connection.query(deleteQuery, [
     project_idx,
-    ...serial_numbers,
+    ...product_ids,
   ]);
 
   if (deleteResult.affectedRows === 0) {
@@ -139,6 +139,5 @@ export const deleteProductsFunction = async (
   return {
     success: true,
     deleted: deleteResult.affectedRows,
-    reindexed: reindexResult.affectedRows,
   };
 };

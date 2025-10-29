@@ -22,7 +22,7 @@ export function useModals() {
   ) => {
     setModal2({
       ...modal2,
-      open: !modal2.open,
+      open: true,
       showClose: false,
       offClickClose: true,
       width: "w-[320px]",

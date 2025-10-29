@@ -7,21 +7,14 @@ export const getNextOrdinal = async (connection, table, layer) => {
 
   const layerCols = Object.keys(layer);
   const layerValues = Object.values(layer);
-
   const whereParts = layerCols.map((col) => `${col} <=> ?`).join(" AND ");
-  const whereParams = [...layerValues];
 
-  const getMaxQ = `
+  const query = `
     SELECT COALESCE(MAX(ordinal), -1) AS maxOrdinal
     FROM ${table}
     WHERE ${whereParts}
   `;
-
-  const [rows] = await connection.query(getMaxQ, whereParams);
-  if (rows.length === 0) {
-    throw new Error("No max ordinal could be identified");
-  }
-
+  const [rows] = await connection.query(query, layerValues);
   return rows[0].maxOrdinal + 1;
 };
 

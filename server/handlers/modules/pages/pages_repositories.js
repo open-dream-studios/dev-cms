@@ -220,83 +220,61 @@ export const deletePageDefinitionFunction = async (
 };
 
 // ---------- PAGE DATA EXPORT FUNCTION ----------
-export const getPageDataFunction = (reqBody) => {
+export const getPageDataFunction = async (connection, reqBody) => {
   const { domain, slug } = reqBody;
   const projectQuery = `
     SELECT id from projects
     WHERE domain = ?
     LIMIT 1
   `;
-  db.query(projectQuery, [domain], (err, idx) => {
-    if (err) {
-      console.error("❌ Fetch project error:", err);
-      return res.status(500).json({ message: "Server error" });
-    }
 
-    if (!idx || idx.length === 0) {
-      return res.status(404).json({ error: "Project not found" });
-    }
+  const [rows] = await connection.query(projectQuery, [domain]);
+  if (!rows || !rows.length) {
+    throw new Error("No project found");
+  }
+  const project_idx = rows[0].id;
+  const pageQuery = `
+    SELECT id, title, slug
+    FROM project_pages
+    WHERE project_idx = ? AND slug = ?
+    LIMIT 1
+  `;
 
-    const project_idx = idx[0].id;
-
-    const pageQuery = `
-      SELECT id, title, slug
-      FROM project_pages
-      WHERE project_idx = ? AND slug = ?
-      LIMIT 1
+  const [pageRows] = await connection.query(pageQuery, [project_idx, slug]);
+  if (!pageRows || !pageRows.length) {
+    throw new Error("No page found");
+  }
+  const projectPage = pageRows[0];
+  const sectionsQuery = `
+    SELECT psec.id,
+      psec.definition_id,
+      psec.name,
+      psec.config,
+      psec.ordinal,
+      sd.identifier
+    FROM project_sections psec
+    LEFT JOIN section_definitions sd ON psec.definition_id = sd.id
+    WHERE psec.project_page_id = ?
+    ORDER BY psec.ordinal ASC
     `;
+  const [sectionRows] = await connection.query(sectionsQuery, [projectPage.id]);
 
-    db.query(pageQuery, [project_idx, slug], (err, pages) => {
-      if (err) {
-        console.error("❌ Fetch page error:", err);
-        return res.status(500).json({ message: "Server error" });
-      }
+  if (!Array.isArray(sectionRows)) {
+    throw new Error("Invalid section rows");
+  }
 
-      if (!pages || pages.length === 0) {
-        return res.status(404).json({ error: "Page not found" });
-      }
+  const formattedSections = sectionRows.map((s) => ({
+    id: s.id,
+    identifier: s.identifier,
+    name: s.name,
+    ordinal: s.ordinal,
+    config:
+      typeof s.config === "string" ? JSON.parse(s.config) : s.config || {},
+  }));
 
-      const page = pages[0];
-
-      const sectionQuery = `
-        SELECT psec.id,
-          psec.definition_id,
-          psec.name,
-          psec.config,
-          psec.ordinal,
-          sd.identifier
-        FROM project_sections psec
-        LEFT JOIN section_definitions sd ON psec.definition_id = sd.id
-        WHERE psec.project_page_id = ?
-        ORDER BY psec.ordinal ASC
-`;
-
-      db.query(sectionQuery, [page.id], (err, sections) => {
-        if (err) {
-          console.error("❌ Fetch sections error:", err);
-          return res.status(500).json({ message: "Server error" });
-        }
-
-        // 3. Format the sections
-        const formattedSections = sections.map((s) => ({
-          id: s.id,
-          identifier: s.identifier,
-          name: s.name,
-          ordinal: s.ordinal,
-          config:
-            typeof s.config === "string"
-              ? JSON.parse(s.config)
-              : s.config || {},
-        }));
-
-        const response = {
-          title: page.title,
-          slug: page.slug,
-          sections: formattedSections,
-        };
-
-        return res.json(response);
-      });
-    });
-  });
+  return {
+    title: projectPage.title,
+    slug: projectPage.slug,
+    sections: formattedSections,
+  };
 };
