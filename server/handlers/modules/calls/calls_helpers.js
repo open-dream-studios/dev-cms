@@ -102,37 +102,37 @@ export function decodeMuLawBuffer(muLawBuffer) {
 // }
 
 export async function flushStreamBuffer(sid) {
-  const s = callBuffers[sid];
-  if (!s || !s.chunks.length) return;
+  // const s = callBuffers[sid];
+  // if (!s || !s.chunks.length) return;
 
-  const pcmData = Buffer.concat(s.chunks);
-  s.chunks = [];
+  // const pcmData = Buffer.concat(s.chunks);
+  // s.chunks = [];
 
-  if (pcmData.length < 3200) return; // skip tiny blips
+  // if (pcmData.length < 3200) return; // skip tiny blips
 
-  fs.mkdirSync(recordingsDir, { recursive: true });
+  // fs.mkdirSync(recordingsDir, { recursive: true });
 
-  const filePath = path.join(recordingsDir, `${sid}-${Date.now()}.wav`);
-  const writer = new wav.FileWriter(filePath, {
-    sampleRate: 8000,
-    channels: 1,
-    bitDepth: 16,
-  });
+  // const filePath = path.join(recordingsDir, `${sid}-${Date.now()}.wav`);
+  // const writer = new wav.FileWriter(filePath, {
+  //   sampleRate: 8000,
+  //   channels: 1,
+  //   bitDepth: 16,
+  // });
 
-  writer.write(pcmData);
-  writer.end();
+  // writer.write(pcmData);
+  // writer.end();
 
-  writer.on("finish", async () => {
-    try {
-      const resp = await openai.audio.transcriptions.create({
-        file: fs.createReadStream(filePath),
-        model: "whisper-1",
-      });
-      console.log("📝 Transcript:", resp.text);
-    } catch (err) {
-      console.error("❌ Transcription failed:", err.message);
-    } finally {
-      fs.unlink(filePath, () => {});
-    }
-  });
+  // writer.on("finish", async () => {
+  //   try {
+  //     const resp = await openai.audio.transcriptions.create({
+  //       file: fs.createReadStream(filePath),
+  //       model: "whisper-1",
+  //     });
+  //     console.log("📝 Transcript:", resp.text);
+  //   } catch (err) {
+  //     console.error("❌ Transcription failed:", err.message);
+  //   } finally {
+  //     fs.unlink(filePath, () => {});
+  //   }
+  // });
 }

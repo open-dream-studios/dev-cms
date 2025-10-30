@@ -100,67 +100,80 @@ export const handleIncomingCall = async (req, res) => {
     const stream = vr.start().stream({
       url: `wss://${process.env.BASE_URL}/twilio-stream`,
     });
-    stream.parameter({ name: "projectId", value: String(projectId) });
-    stream.parameter({ name: "from", value: from || "" });
-    stream.parameter({ name: "to", value: to || "" });
-
-    // Build Dial — we want to ring both web clients and configured project phone numbers.
-    // Dial options: answerOnBridge ensures call is bridged only after second leg answers.
-    const twilioActionUrl = `${process.env.HTTPS_BASE_URL}/api/voice/call-status?projectId=${projectId}`;
     const dial = vr.dial({
       timeout: 30,
       answerOnBridge: true,
       record: "record-from-answer",
-      action: twilioActionUrl, // parent leg action (when parent ends)
+      statusCallback: `${process.env.BASE_URL}/api/voice/call-status?projectId=${projectId}`,
+      statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
+      statusCallbackMethod: "POST",
     });
 
+    stream.parameter({ name: "projectId", value: String(projectId) });
+    stream.parameter({ name: "from", value: from || "" });
+    stream.parameter({ name: "to", value: to || "" });
+
+    const clientIdentities = getClientsForProject(projectId); 
+    clientIdentities.forEach((id) => dial.client(id));
+
+    // Build Dial — we want to ring both web clients and configured project phone numbers.
+    // Dial options: answerOnBridge ensures call is bridged only after second leg answers.
+
+    // const twilioActionUrl = `${process.env.HTTPS_BASE_URL}/api/voice/call-status?projectId=${projectId}`;
+    // const dial = vr.dial({
+    //   timeout: 30,
+    //   answerOnBridge: true,
+    //   record: "record-from-answer",
+    //   action: twilioActionUrl, // parent leg action (when parent ends)
+    // });
+
     // 1) Dial web clients (Twilio client identities)
-    const clientIdentities = getClientsForProject(projectId);
-    if (clientIdentities && clientIdentities.length > 0) {
-      clientIdentities.forEach((identity) => {
-        dial.client(
-          {
-            statusCallback: twilioActionUrl,
-            statusCallbackEvent: [
-              "initiated",
-              "ringing",
-              "answered",
-              "completed",
-            ],
-            statusCallbackMethod: "POST",
-          },
-          identity
-        );
-      });
-      console.log("📞 Dialing web clients:", clientIdentities);
-    } else {
-      console.log(`⚠️ No connected web clients for project ${projectId}`);
-    }
+    // const clientIdentities = getClientsForProject(projectId);
+    // if (clientIdentities && clientIdentities.length > 0) {
+    //   clientIdentities.forEach((identity) => {
+    //     dial.client(
+    //       {
+    //         statusCallback: twilioActionUrl,
+    //         statusCallbackEvent: [
+    //           "initiated",
+    //           "ringing",
+    //           "answered",
+    //           "completed",
+    //         ],
+    //         statusCallbackMethod: "POST",
+    //       },
+    //       identity
+    //     );
+    //   });
+    //   console.log("📞 Dialing web clients:", clientIdentities);
+    // } else {
+    //   console.log(`⚠️ No connected web clients for project ${projectId}`);
+    // }
 
     // 2) Dial project phone numbers (if any are configured in DB)
-    const project = await getTwilioKeys(Number(projectId));
-    if (project && project.numbers && project.numbers.length > 0) {
-      const { connectedNumbers } = project;
-      console.log(connectedNumbers);
-      if (Array.isArray(connectedNumbers) && connectedNumbers.length > 0) {
-        connectedNumbers.forEach((num) => {
-          console.log("📞 Dialing project number:", num);
-          // dial.number(
-          //   {
-          //     statusCallback: twilioActionUrl,
-          //     statusCallbackEvent: [
-          //       "initiated",
-          //       "ringing",
-          //       "answered",
-          //       "completed",
-          //     ],
-          //     statusCallbackMethod: "POST",
-          //   },
-          //   num
-          // );
-        });
-      }
-    }
+    // const project = await getTwilioKeys(Number(projectId));
+    // if (project && project.numbers && project.numbers.length > 0) {
+    //   const { connectedNumbers } = project;
+    //   console.log(connectedNumbers);
+    //   if (Array.isArray(connectedNumbers) && connectedNumbers.length > 0) {
+    //     connectedNumbers.forEach((num) => {
+    //       console.log("📞 Dialing project number:", num);
+    //       // dial.number(
+    //       //   {
+    //       //     statusCallback: twilioActionUrl,
+    //       //     statusCallbackEvent: [
+    //       //       "initiated",
+    //       //       "ringing",
+    //       //       "answered",
+    //       //       "completed",
+    //       //     ],
+    //       //     statusCallbackMethod: "POST",
+    //       //   },
+    //       //   num
+    //       // );
+    //     });
+    //   }
+    // }
 
     res.type("text/xml").send(vr.toString());
   } catch (err) {

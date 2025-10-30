@@ -80,7 +80,7 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   return currentUser ? (
     <ProtectedLayout>
       {children}
-      {/* <CustomerCalls /> */}
+      <CustomerCalls />
     </ProtectedLayout>
   ) : (
     <UnprotectedLayout />
@@ -102,7 +102,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   const { projectsData } = useContextQueries();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
-  // useWebSocketManager();
+  useWebSocketManager();
   useRouting();
   // useTesting();
 

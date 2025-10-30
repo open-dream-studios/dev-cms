@@ -89,7 +89,6 @@ export const handlers = {
         sheetName,
         serviceAccountJson
       );
-      console.log(spreadsheetId);
       return spreadsheetId;
     } catch (err) {
       console.error(err);
