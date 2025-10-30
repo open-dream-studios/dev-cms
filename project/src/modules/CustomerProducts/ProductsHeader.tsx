@@ -1,9 +1,9 @@
 // project/src/modules/CustomerProducts/ProductsHeader.tsx
 "use client";
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { FiEdit } from "react-icons/fi";
 import { PiExport } from "react-icons/pi";
-import { BsWindow } from "react-icons/bs";
+import { BsFilter, BsWindow } from "react-icons/bs";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import { toast } from "react-toastify";
@@ -23,6 +23,8 @@ import { Product } from "@/types/products";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useModals } from "@/hooks/useModals";
 import { runFrontendModule } from "../runFrontendModule";
+import { getCardStyle } from "@/styles/themeStyles";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 const ProductsHeader = ({ title }: { title: String }) => {
   const { currentUser } = useContext(AuthContext);
@@ -86,6 +88,15 @@ const ProductsHeader = ({ title }: { title: String }) => {
   };
 
   const handleGoogleExport = async () => {
+    await promptContinue(
+      `Export data to google sheets?`,
+      false,
+      () => {},
+      googleExport
+    );
+  };
+
+  const googleExport = async () => {
     setUpdatingLock(true);
     try {
       if (currentProject) {
@@ -123,7 +134,6 @@ const ProductsHeader = ({ title }: { title: String }) => {
     try {
       await saveProducts();
       await deleteProducts(selectedProducts);
-      // toast.success("Deleted successfully");
     } catch (e) {
       toast.error(
         `Failed to delete product${selectedProducts.length > 1 && "s"}`
@@ -236,13 +246,152 @@ const ProductsHeader = ({ title }: { title: String }) => {
     setInventoryView(tableView);
   };
 
+  const [showFilterPopup, setShowFilterPopup] = useState<boolean>(false);
+  const showFilterPopupRef = useRef<boolean>(false);
+  const filterPopupRef = useRef<HTMLDivElement | null>(null);
+  const handleFilterButtonClick = () => {
+    setShowFilterPopup(true);
+    showFilterPopupRef.current = true;
+  };
+  useOutsideClick(filterPopupRef, () => {
+    if (showFilterPopup) {
+      setShowFilterPopup(false);
+      showFilterPopupRef.current = false;
+    }
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (showFilterPopupRef.current) {
+        setShowFilterPopup(false);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   if (!currentUser) return null;
+
+  const FilterSelections = ({ popup }: { popup: boolean }) => {
+    return (
+      <div
+        className={`flex ${
+          popup ? "flex-col gap-[6px]" : "flex-row gap-[13px]"
+        }`}
+      >
+        <div
+          style={{
+            backgroundColor: t.header_1_1,
+          }}
+          className="flex w-[184px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
+        >
+          <div
+            onClick={() => handleFilterClick("Active")}
+            style={{
+              backgroundColor: productFilters.products.includes("Active")
+                ? t.header_1_2
+                : "transparent",
+            }}
+            className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+          >
+            Active
+          </div>
+          <div
+            className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
+            style={{
+              opacity: productFilters.products.length === 0 ? "0.1" : 0,
+              backgroundColor: t.text_1,
+            }}
+          />
+          <div
+            onClick={() => handleFilterClick("Complete")}
+            style={{
+              backgroundColor: productFilters.products.includes("Complete")
+                ? t.header_1_2
+                : "transparent",
+            }}
+            className="select-none cursor-pointer w-[88px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+          >
+            Complete
+          </div>
+        </div>
+
+        <div
+          style={{
+            backgroundColor: t.header_1_1,
+          }}
+          className="flex w-[330px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
+        >
+          <div
+            onClick={() => handleJobFilterClick("Service")}
+            style={{
+              backgroundColor: productFilters.jobType.includes("Service")
+                ? t.header_1_2
+                : "transparent",
+            }}
+            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+          >
+            Service
+          </div>
+          <div
+            className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
+            style={{
+              opacity:
+                (productFilters.jobType.length === 1 &&
+                  productFilters.jobType[0] === "Resell") ||
+                productFilters.jobType.length === 0
+                  ? "0.1"
+                  : 0,
+              backgroundColor: t.text_1,
+            }}
+          />
+          <div
+            onClick={() => handleJobFilterClick("Refurbishment")}
+            style={{
+              backgroundColor: productFilters.jobType.includes("Refurbishment")
+                ? t.header_1_2
+                : "transparent",
+            }}
+            className="select-none cursor-pointer w-[124px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+          >
+            Refurbishment
+          </div>
+          <div
+            className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
+            style={{
+              opacity:
+                (productFilters.jobType.length === 1 &&
+                  productFilters.jobType[0] === "Service") ||
+                productFilters.jobType.length === 0
+                  ? "0.1"
+                  : 0,
+              backgroundColor: t.text_1,
+            }}
+          />
+          <div
+            onClick={() => handleJobFilterClick("Resell")}
+            style={{
+              backgroundColor: productFilters.jobType.includes("Resell")
+                ? t.header_1_2
+                : "transparent",
+            }}
+            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+          >
+            Resell
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="relative">
       {hasProjectModule("customer-products-module") && (
-        <div className="flex flex-row items-center sm:justify-between justify-end h-[100%] mb-[17px] pt-[20px] px-[20px]">
-          <div className="hidden sm:flex flex-row gap-[19px] items-center">
+        <div className="flex flex-row items-center min-[400px]:justify-between justify-end h-[100%] mb-[17px] pt-[20px] px-[20px]">
+          <div className="hidden min-[400px]:flex flex-row gap-[13px] items-center">
             <div
               style={{
                 backgroundColor: t.header_1_1,
@@ -271,125 +420,51 @@ const ProductsHeader = ({ title }: { title: String }) => {
               </div>
             </div>
 
-            <div
-              style={{
-                backgroundColor: t.header_1_1,
-              }}
-              className="flex w-[180px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
-            >
-              <div
-                onClick={() => handleFilterClick("Active")}
-                style={{
-                  backgroundColor: productFilters.products.includes("Active")
-                    ? t.header_1_2
-                    : "transparent",
-                }}
-                className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-              >
-                Active
-              </div>
-              <div
-                className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
-                style={{
-                  opacity: productFilters.products.length === 0 ? "0.1" : 0,
-                  backgroundColor: t.text_1,
-                }}
-              />
-              <div
-                onClick={() => handleFilterClick("Complete")}
-                style={{
-                  backgroundColor: productFilters.products.includes("Complete")
-                    ? t.header_1_2
-                    : "transparent",
-                }}
-                className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-              >
-                Complete
-              </div>
+            <div className="hidden min-[1380px]:flex">
+              <FilterSelections popup={false} />
             </div>
 
-            <div
-              style={{
-                backgroundColor: t.header_1_1,
-              }}
-              className="flex w-[322px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
-            >
+            <div className="relative">
               <div
-                onClick={() => handleJobFilterClick("Service")}
+                onClick={handleFilterButtonClick}
                 style={{
-                  backgroundColor: productFilters.jobType.includes("Service")
-                    ? t.header_1_2
-                    : "transparent",
+                  backgroundColor: t.header_1_1,
+                  border:
+                    productFilters.products.length ||
+                    productFilters.jobType.length
+                      ? `1px solid ${t.text_1}`
+                      : "none",
                 }}
-                className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+                className="flex min-[1380px]:hidden w-[30px] h-[30px] rounded-full justify-center items-center pt-[1px] cursor-pointer hover:brightness-90 dim ml-[-3px] min-[1380px]:ml-0"
               >
-                Service
+                <BsFilter size={18} />
               </div>
-              <div
-                className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
-                style={{
-                  opacity:
-                    (productFilters.jobType.length === 1 &&
-                      productFilters.jobType[0] === "Resell") ||
-                    productFilters.jobType.length === 0
-                      ? "0.1"
-                      : 0,
-                  backgroundColor: t.text_1,
-                }}
-              />
-              <div
-                onClick={() => handleJobFilterClick("Refurbishment")}
-                style={{
-                  backgroundColor: productFilters.jobType.includes(
-                    "Refurbishment"
-                  )
-                    ? t.header_1_2
-                    : "transparent",
-                }}
-                className="select-none cursor-pointer w-[124px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-              >
-                Refurbishment
-              </div>
-              <div
-                className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
-                style={{
-                  opacity:
-                    (productFilters.jobType.length === 1 &&
-                      productFilters.jobType[0] === "Service") ||
-                    productFilters.jobType.length === 0
-                      ? "0.1"
-                      : 0,
-                  backgroundColor: t.text_1,
-                }}
-              />
-              <div
-                onClick={() => handleJobFilterClick("Resell")}
-                style={{
-                  backgroundColor: productFilters.jobType.includes("Resell")
-                    ? t.header_1_2
-                    : "transparent",
-                }}
-                className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-              >
-                Resell
-              </div>
+              {showFilterPopup && (
+                <div
+                  ref={filterPopupRef}
+                  style={getCardStyle(theme, t)}
+                  className="absolute bottom-[-92px] left-[-140px] min-[600px]:left-[-25px] h-[86px] justify-center items-start rounded-[10px] px-[6px] flex flex-col"
+                >
+                  <FilterSelections popup={true} />
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex flex-row gap-[11px]">
+          <div className="flex flex-row gap-[12px] min-[700px]:gap-[10px]">
             {hasProjectModule("customer-products-module") && (
               <div
                 style={{
                   backgroundColor: t.background_2,
                 }}
-                className="dim hover:brightness-75 rounded-[25px] w-[33px] [@media(min-width:460px)]:w-[150px] h-[33px] flex flex-row justify-center items-center gap-[6px] text-[13px] font-[600] cursor-pointer"
+                className="dim hover:brightness-75 rounded-[25px] w-[33px] min-[700px]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[6px] text-[13px] font-[600] cursor-pointer"
                 onClick={handleGoogleExport}
               >
                 <p
                   style={{
                     color: t.text_1,
                   }}
-                  className="hidden [@media(min-width:460px)]:block"
+                  className="hidden min-[700px]:flex"
                 >
                   Export Sheet
                 </p>
@@ -403,14 +478,14 @@ const ProductsHeader = ({ title }: { title: String }) => {
                 style={{
                   backgroundColor: t.background_2,
                 }}
-                className="dim hover:brightness-75 rounded-[25px] w-[33px] [@media(min-width:460px)]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[13px] font-[600] cursor-pointer"
+                className="dim hover:brightness-75 rounded-[25px] w-[33px] min-[700px]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[13px] font-[600] cursor-pointer"
                 onClick={handleWixSync}
               >
                 <p
                   style={{
                     color: t.text_1,
                   }}
-                  className="hidden [@media(min-width:460px)]:block"
+                  className="hidden min-[700px]:flex"
                 >
                   Sync Wix
                 </p>
