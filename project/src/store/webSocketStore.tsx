@@ -10,7 +10,11 @@ type WebSocketState = {
   ready: boolean;
   send: (data: any) => void;
   addMessageListener: (cb: (ev: MessageEvent) => void) => () => void;
-  setWsData: (ws: WebSocket | null, wsUrl: string | null, ready: boolean) => void;
+  setWsData: (
+    ws: WebSocket | null,
+    wsUrl: string | null,
+    ready: boolean
+  ) => void;
 };
 
 export const useWebSocketStore = create<WebSocketState>((set) => ({
