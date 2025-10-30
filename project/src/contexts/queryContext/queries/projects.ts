@@ -25,7 +25,7 @@ export function useProjects(
   const upsertProjectMutation = useMutation({
     mutationFn: async (project: Project) => {
       const res = await makeRequest.post("/api/projects/upsert", project);
-      return res.data;
+      return res.data.project
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

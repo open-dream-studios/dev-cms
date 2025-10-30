@@ -1,75 +1,67 @@
 // project/src/components/Settings/Account.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useProjectSettingsForm } from "@/hooks/forms/useProjectSettingsForm";
-import { Project } from "@/types/project";
+import {
+  useProjectSettingsForm,
+  useProjectSettingsFormSubmit,
+} from "@/hooks/forms/useProjectSettingsForm";
 import { appTheme } from "@/util/appTheme";
-import { ProjectSettingsFormData } from "@/util/schemas/projectSettingsSchema";
+import { projectSettingsToForm } from "@/util/schemas/projectSettingsSchema";
 import { useContext, useEffect } from "react";
 import { FaPlus } from "react-icons/fa6";
 import UploadModal, { CloudinaryUpload } from "../Upload/Upload";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
+import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { Project } from "@/types/project";
+import { getCardStyle } from "@/styles/themeStyles";
 
 const ProjectSettings = () => {
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProject } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-  const { upsertProject, projectsData } = useContextQueries();
   const { setUploadPopup } = useUiStore();
+  const { onProjectSettingsFormSubmit } = useProjectSettingsFormSubmit();
+  const projectSettingsForm = useProjectSettingsForm(currentProject);
+  const { registerForm, unregisterForm } = useFormInstanceStore();
+  const { projectsData, refetchProjects } = useContextQueries();
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
-  const currentProjectData = projectsData.find(
-    (p) => p.id === currentProjectId
-  );
-
-  if (!currentUser || !currentProjectData) return null;
-
-  const form = useProjectSettingsForm({
-    name: currentProjectData.name,
-    short_name: currentProjectData.short_name ?? undefined,
-    domain: currentProjectData.domain ?? undefined,
-    logo: currentProjectData.logo ?? undefined,
-    backend_domain: currentProjectData.backend_domain ?? undefined,
-    brand: currentProjectData.brand ?? undefined,
-  });
+  if (!currentUser || !currentProject) return null;
 
   useEffect(() => {
-    form.reset({
-      name: currentProjectData.name,
-      short_name: currentProjectData.short_name ?? undefined,
-      domain: currentProjectData.domain ?? undefined,
-      logo: currentProjectData.logo ?? undefined,
-      backend_domain: currentProjectData.backend_domain ?? undefined,
-      brand: currentProjectData.brand ?? undefined,
-    });
-  }, [currentProjectData, form]);
+    const formKey = "projectSettings";
+    registerForm(formKey, projectSettingsForm);
+    return () => unregisterForm(formKey);
+  }, [projectSettingsForm, registerForm, unregisterForm]);
 
-  const onSubmit = async (data: ProjectSettingsFormData) => {
-    await upsertProject({
-      project_id: currentProjectData.project_id,
-      name: data.name,
-      short_name: data.short_name,
-      domain: data.domain,
-      backend_domain: data.backend_domain,
-      brand: data.brand,
-      logo: data.logo,
-    } as Project);
-    form.reset(data);
-  };
+  useEffect(() => {
+    const foundProject = projectsData.find(
+      (project: Project) => project.id === currentProject.id
+    );
+    if (foundProject) {
+      projectSettingsForm.reset(projectSettingsToForm(foundProject), {
+        keepValues: false,
+      });
+    } else {
+      projectSettingsForm.reset(projectSettingsToForm(null), {
+        keepValues: false,
+      });
+    }
+  }, [projectsData, projectSettingsForm]);
 
   const onLogoSubmit = async (urls: string[]) => {
     if (!urls || urls.length === 0) return;
-    form.setValue("logo", urls[0], { shouldDirty: true });
-    const data = form.getValues();
-    await onSubmit(data);
+    projectSettingsForm.setValue("logo", urls[0], { shouldDirty: true });
+    const data = projectSettingsForm.getValues();
+    await onProjectSettingsFormSubmit(data);
   };
 
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={projectSettingsForm.handleSubmit(onProjectSettingsFormSubmit)}
       className="relative ml-[5px] md:ml-[8px] w-[calc(100%-43px)] sm:w-[calc(100%-80px)] h-full flex flex-col pt-[50px]"
     >
       <UploadModal
@@ -82,13 +74,12 @@ const ProjectSettings = () => {
       />
       <div
         style={{
-          ["--custom-input-text-color" as any]:
-            t.text_3,
+          ["--custom-input-text-color" as any]: t.text_3,
         }}
         className="ml-[1px] flex flex-row gap-[13.5px] items-center lg:mb-[18px] mb-[14px]"
       >
         <input
-          {...form.register("brand")}
+          {...projectSettingsForm.register("brand")}
           placeholder="Brand..."
           className="input font-[600] h-[40px] text-[29px] leading-[33px] md:text-[32px] md:leading-[35px] mt-[-1px] w-[100%] outline-none"
           style={{ color: "var(--custom-input-text-color)" }}
@@ -96,16 +87,15 @@ const ProjectSettings = () => {
       </div>
 
       <div className="w-[100%] min-h-[86px] flex flex-row gap-[20px]">
-        <div className="aspect-[1/1] h-[100%] max-h-[86px] flex items-center justify-center">
-          {currentProjectData.logo !== null ? (
+        <div style={getCardStyle(theme, t)} className="rounded-[15px] aspect-[1/1] h-[100%] max-h-[86px] flex items-center justify-center">
+          {currentProject.logo !== null ? (
             <div
               onClick={() => setUploadPopup(true)}
-              className="h-[100%] aspect-[1/1] rounded-[15px] overflow-hidden cursor-pointer relative group"
-              // style={{ borderColor: t.text_4 }}
+              className="hover:brightness-75 dim h-[100%] aspect-[1/1] rounded-[15px] overflow-hidden cursor-pointer relative group"
             >
               <img
-                className="h-[100%] w-[100%] object-cover transition duration-400 group-hover:brightness-50"
-                src={currentProjectData.logo}
+                className="h-[100%] w-[100%] object-cover"
+                src={currentProject.logo}
               />
 
               <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-400 group-hover:opacity-100">
@@ -129,13 +119,12 @@ const ProjectSettings = () => {
           <div
             style={{
               backgroundColor: t.background_2,
-              ["--custom-input-text-color" as any]:
-                t.text_3,
+              ["--custom-input-text-color" as any]: t.text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
             <input
-              {...form.register("name")}
+              {...projectSettingsForm.register("name")}
               placeholder="Project Name..."
               className="input font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
               style={{ color: "var(--custom-input-text-color)" }}
@@ -145,13 +134,12 @@ const ProjectSettings = () => {
           <div
             style={{
               backgroundColor: t.background_2,
-              ["--custom-input-text-color" as any]:
-                t.text_3,
+              ["--custom-input-text-color" as any]: t.text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
             <input
-              {...form.register("domain")}
+              {...projectSettingsForm.register("domain")}
               placeholder="Domain..."
               className="input font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
               style={{ color: "var(--custom-input-text-color)" }}
@@ -161,13 +149,12 @@ const ProjectSettings = () => {
           <div
             style={{
               backgroundColor: t.background_2,
-              ["--custom-input-text-color" as any]:
-                t.text_3,
+              ["--custom-input-text-color" as any]: t.text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
             <input
-              {...form.register("backend_domain")}
+              {...projectSettingsForm.register("backend_domain")}
               placeholder="Backend Domain..."
               type="text"
               className="font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
@@ -178,38 +165,35 @@ const ProjectSettings = () => {
           <div
             style={{
               backgroundColor: t.background_2,
-              ["--custom-input-text-color" as any]:
-                t.text_3,
+              ["--custom-input-text-color" as any]: t.text_3,
             }}
             className="py-[12px] px-[19px] rounded-[10px]"
           >
             <input
-              {...form.register("short_name")}
+              {...projectSettingsForm.register("short_name")}
               placeholder="Abbreviation..."
               className="input font-[400] text-[17px] mt-[-1px] w-[100%] outline-none"
               style={{ color: "var(--custom-input-text-color)" }}
             />
           </div>
 
-          {form.formState.isDirty && (
+          {projectSettingsForm.formState.isDirty && (
             <div className="w-[100%] justify-end flex gap-[9px] flex-row">
               <button
                 type="submit"
                 className="cursor-pointer hover:brightness-90 dim px-[15px] h-[32px] rounded-full text-sm dim"
                 style={{
-                  backgroundColor:
-                    t.background_2_selected,
+                  backgroundColor: t.background_2_selected,
                   color: t.text_4,
                 }}
               >
                 Save
               </button>
               <div
-                onClick={() => form.reset()}
+                onClick={() => projectSettingsForm.reset()}
                 className="items-center flex justify-center cursor-pointer hover:brightness-90 dim px-[15px] h-[32px] rounded-full text-sm dim"
                 style={{
-                  backgroundColor:
-                    t.background_2_selected,
+                  backgroundColor: t.background_2_selected,
                   color: t.text_4,
                 }}
               >

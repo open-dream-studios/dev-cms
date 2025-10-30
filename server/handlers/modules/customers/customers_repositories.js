@@ -85,17 +85,8 @@ export const upsertCustomerFunction = async (
   ];
 
   const [result] = await connection.query(query, values);
-
   let id = result.insertId;
-  if (!id && customer_id) {
-    const [rows] = await connection.query(
-      "SELECT id FROM customers WHERE customer_id = ? AND project_idx = ?",
-      [finalCustomerId, project_idx]
-    );
-    id = rows[0]?.id;
-  }
   if (!id) throw new Error("No ID provided from result");
-
   return { success: true, id, customer_id: finalCustomerId };
 };
 

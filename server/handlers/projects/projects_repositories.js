@@ -65,9 +65,15 @@ export const upsertProjectFunction = async (connection, reqBody) => {
     });
   }
 
+  const [rows2] = await connection.query(
+    "SELECT * FROM projects WHERE project_id = ?",
+    [finalProjectId]
+  );
+  if (!rows2.length) throw new Error("No project found after upsert");
+
   return {
     success: true,
-    project_id: finalProjectId,
+    project: rows2[0],
   };
 };
 
@@ -101,7 +107,11 @@ export const upsertProjectUserFunction = async (connection, reqBody) => {
   return { success: true };
 };
 
-export const deleteProjectUserFunction = async (connection, email, project_idx) => {
+export const deleteProjectUserFunction = async (
+  connection,
+  email,
+  project_idx
+) => {
   const q = `DELETE FROM project_users WHERE email = ? AND project_idx = ?`;
   await connection.query(q, [email, project_idx]);
   return { success: true };

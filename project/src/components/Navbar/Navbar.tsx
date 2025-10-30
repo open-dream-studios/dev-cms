@@ -171,7 +171,7 @@ const Navbar = () => {
                   : !leftBarOpen
                   ? "hidden"
                   : "hidden lg:block"
-              }  select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
+              }  select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover rounded-[5px]`}
             />
 
             <div
