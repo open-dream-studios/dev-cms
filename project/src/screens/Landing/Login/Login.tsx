@@ -187,6 +187,7 @@ const Login = () => {
           const response = await makeRequest.post("/api/auth/send-code", {
             email: forgotPasswordEmail.trim().toLowerCase(),
           });
+          console.log(response)
           const responseData = response.data;
           if (responseData.success) {
             setForgotPasswordPage(1);

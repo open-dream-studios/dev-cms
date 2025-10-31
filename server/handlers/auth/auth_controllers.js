@@ -57,6 +57,7 @@ export const logout = async (req, res, connection) => {
 };
 
 export const sendCode = async (req, res, connection) => {
+  console.log("SEND CODE CONTROLLER")
   const { email } = req.body;
   if (!email) return { success: "false", message: "Missing required fields" };
   return await sendCodeFunction(connection, req.body);

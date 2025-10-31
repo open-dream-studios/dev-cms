@@ -229,6 +229,7 @@ export const loginFunction = async (connection, reqBody) => {
 };
 
 export const sendCodeFunction = async (connection, reqBody) => {
+  console.log("SEND CODE REPO")
   const { email } = reqBody;
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -237,6 +238,7 @@ export const sendCodeFunction = async (connection, reqBody) => {
       pass: process.env.NODE_MAILER_PASSKEY,
     },
   });
+  console.log("SENT EMAIL")
   const resetCode = Math.floor(100000 + Math.random() * 900000);
 
   const user = await getUserFunction(connection, email);
