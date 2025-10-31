@@ -1,6 +1,5 @@
 // project/src/modules/runFrontendModule.ts
 import { moduleDefinitions } from "@/modules/moduleDefinitions";
-import { Product } from "@/types/products";
 import {
   Integration,
   ModuleDefinition,
@@ -15,6 +14,7 @@ export type RunModuleContext = {
   projectModules: ProjectModule[];
   integrations: Integration[];
   currentProject: Project;
+  body?: any;
 };
 
 export const checkIntegrations = (
@@ -59,30 +59,26 @@ export const checkIntegrations = (
 
 export const moduleRequest = async (
   identifier: string,
-  args: Record<string, any>,
+  args: Record<string, any>
 ) => {
   const res = await makeRequest.post(`/api/modules/run/${identifier}`, args);
   return res.data;
 };
 
-export const runFrontendModule = async (
+export const runFrontendModule = async <T = any>(
   identifier: string,
-  ctx: {
-    moduleDefinitions: ModuleDefinition[];
-    projectModules: ProjectModule[];
-    integrations: Integration[];
-    currentProject: Project;
-  }
-) => {
+  ctx: RunModuleContext
+): Promise<T | null> => {
   const mod = moduleDefinitions[identifier];
   if (!mod) {
     toast.error("Module not found on frontend");
-    return;
+    return null;
   }
   try {
-    await mod.run(ctx);
+    return await mod.run(ctx);
   } catch (e) {
     console.error(e);
     toast.error("Module failed");
+    return null;
   }
 };

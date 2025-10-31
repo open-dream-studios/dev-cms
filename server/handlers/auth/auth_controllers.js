@@ -3,209 +3,31 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { db } from "../../connection/connect.js";
-import { generateId } from "../../functions/data.js";
 import dotenv from "dotenv";
-import admin from "../../connection/firebaseAdmin.js";
+import {
+  createUniqueUserId,
+  getValidEmails,
+  googleAuthFunction,
+  registerFunction
+} from "./auth_repositories.js";
 dotenv.config();
 
-const checkUserIdUnique = (userId) => {
-  return new Promise((resolve, reject) => {
-    db.query("SELECT * FROM users WHERE user_id = ?", [userId], (err, data) => {
-      if (err) {
-        console.error(err);
-        return reject(err);
-      }
-      resolve(data.length === 0);
-    });
-  });
-};
-
-const createUniqueUserId = async () => {
-  let userId;
-  let isUnique = false;
-  try {
-    while (!isUnique) {
-      userId = generateId(15);
-      isUnique = await checkUserIdUnique(userId);
-    }
-    return userId;
-  } catch (error) {
-    console.error("Error creating unique user ID:", error);
-    return res.status(500).json("Error creating unique user ID");
-  }
-};
-
-const getValidEmails = async () => {
-  return new Promise((resolve) => {
-    const q = "SELECT email FROM project_users";
-    db.query(q, (err, results) => {
-      if (err) {
-        console.error("Database error:", err);
-        return resolve([]);
-      }
-      const emails = results.map((row) => row.email);
-      resolve(emails);
-    });
-  });
-};
-
-// Google sign in
-export const googleAuth = async (req, res) => {
+export const googleAuth = async (req, res, connection) => {
   const { idToken } = req.body;
-
-  let decodedToken;
-  try {
-    decodedToken = await admin.auth().verifyIdToken(idToken);
-  } catch (error) {
-    console.error("Invalid Google ID token:", error);
-    return res.status(403).json({ message: "Invalid or expired Google token" });
-  }
-
-  const { email, name = "", picture = "", uid } = decodedToken;
-
-  const validEmails = await getValidEmails();
-  if (!validEmails.includes(email)) {
-    return res.status(403).json({
-      message: "Unauthorized gmail, please ask host for permission",
-    });
-  }
-
-  const q = "SELECT * FROM users WHERE email = ?";
-  db.query(q, [email], (err, data) => {
-    if (err) {
-      console.error("Google auth error:", err);
-      return res.status(500).json({ message: "Database error", error: err });
-    }
-
-    let [first_name, ...rest] = name.split(" ");
-    let last_name = rest.join(" ") || null;
-
-    if (data.length) {
-      // If user exists, generate token and log them in
-      const token = jwt.sign(
-        { id: data[0].user_id, email: data[0].email, admin: data[0].admin },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-      // return res.status(200).json({ accessToken: token });
-      res.cookie("accessToken", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-      return res.status(200).json({ message: "Google login successful" });
-    }
-
-    createUniqueUserId()
-      .then((newUserId) => {
-        const insertQuery =
-          "INSERT INTO users (`user_id`,`email`,`first_name`,`last_name`,`profile_img_src`,`auth_provider`) VALUE (?)";
-        const values = [
-          newUserId,
-          email,
-          first_name,
-          last_name,
-          picture,
-          "google",
-        ];
-
-        db.query(insertQuery, [values], (err, result) => {
-          if (err) {
-            console.error("Google auth error:", err);
-            return res
-              .status(500)
-              .json({ message: "Error inserting new user", error: err });
-          }
-          const token = jwt.sign(
-            { id: newUserId, email, admin: 0 },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-          );
-          res.cookie("accessToken", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-            path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          });
-          return res
-            .status(200)
-            .json({ message: "Google registration successful" });
-        });
-      })
-      .catch((error) => {
-        console.error("Google auth error:", error);
-        return res.status(500).json(error);
-      });
-  });
+  if (!idToken) throw new Error("No idToken provided");
+  return await googleAuthFunction(connection, idToken);
 };
 
-export const register = async (req, res) => {
-  const validEmails = await getValidEmails();
-  if (!validEmails.includes(req.body.email)) {
-    return res.status(403).json({
-      message: "Unauthorized gmail, please ask host for permission",
-    });
-  }
-
-  const q = "SELECT * FROM users WHERE email = ?";
-
-  db.query(q, [req.body.email], (err, data) => {
-    if (err) {
-      console.error("Registration error:", err);
-      return res.status(500).json(err);
-    }
-    if (data.length)
-      return res.status(409).json({ error: "User already exists!" });
-
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(req.body.password, salt);
-
-    createUniqueUserId()
-      .then((newUserId) => {
-        const q1 =
-          "INSERT INTO users (`user_id`,`email`,`password`,`first_name`,`last_name`,`profile_img_src`) VALUE (?)";
-        const values1 = [
-          newUserId,
-          req.body.email,
-          hashedPassword,
-          req.body.first_name,
-          req.body.last_name,
-          req.body.profile_img_src,
-        ];
-
-        db.query(q1, [values1], (err, data) => {
-          if (err) {
-            console.error("Registration error:", err);
-            return res.status(500).json(err);
-          }
-          const token = jwt.sign({ id: newUserId, email: req.body.email, admin: 0}, process.env.JWT_SECRET, {
-            expiresIn: "7d",
-          });
-          res.cookie("accessToken", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-            path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          });
-          return res.status(200).json({ message: "Registration successful" });
-        });
-      })
-      .catch((error) => {
-        console.error("Google auth error:", error);
-        return res.status(500).json(error);
-      });
-  });
+export const register = async (req, res, connection) => {
+  const { email, password, first_name, last_name } = req.body;
+  if (!email || !password || !first_name || !last_name)
+    throw new Error("Missing required fields");
+  return await registerFunction(connection, req.body);
 };
 
-// Login Function
-export const login = async (req, res) => {
+export const login = async (req, res, connection) => {
   const { email } = req.body;
-  console.log("logging in", email)
-  const validEmails = await getValidEmails();
+  const validEmails = await getValidEmails(connection);
   if (!validEmails.includes(email)) {
     return res.status(403).json({
       message: "Unauthorized gmail, please ask host for permission",
@@ -251,9 +73,13 @@ export const login = async (req, res) => {
 
     // Otherwise, login was successful
     // Establish a secret key for the user
-    const token = jwt.sign({ id: data[0].user_id, email: data[0].email, admin: data[0].admin }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign(
+      { id: data[0].user_id, email: data[0].email, admin: data[0].admin },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
 
     res.cookie("accessToken", token, {
       httpOnly: true,
@@ -266,18 +92,27 @@ export const login = async (req, res) => {
   });
 };
 
-export const logout = (req, res) => {
+export const logout = async (req, res, connection) => {
   const token = req.cookies.accessToken;
-  if (!token) return res.status(401).json("Not authenticated!");
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-  });
-  return res.status(200).json({ message: "Logout successful" });
+  if (!token) throw new Error("Not authenticated!");
+  return {
+    message: "Logout successful",
+    cookies: [
+      {
+        name: "accessToken",
+        value: "",
+        options: {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+          expires: new Date(0),
+        },
+      },
+    ],
+  };
 };
 
-export const sendCode = async (req, res) => {
+export const sendCode = async (req, res, connection) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -347,7 +182,7 @@ export const sendCode = async (req, res) => {
   }
 };
 
-export const checkCode = async (req, res) => {
+export const checkCode = async (req, res, connection) => {
   const { code, email } = req.body;
   try {
     const q = "SELECT * FROM users WHERE email = ?";
@@ -415,7 +250,7 @@ export const checkCode = async (req, res) => {
   }
 };
 
-export const passwordReset = async (req, res) => {
+export const passwordReset = async (req, res, connection) => {
   const { email, password, accessToken } = req.body;
   if (!accessToken) return res.status(401).json("Not authenticated!");
 
@@ -464,56 +299,48 @@ export const passwordReset = async (req, res) => {
   }
 };
 
-export const getCurrentUser = (req, res) => {
+export const getCurrentUser = async (req, res, connection) => {
   const token = req.cookies.accessToken;
-  if (!token) return res.json(null);
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, userInfo) => {
-    if (err) return res.status(403).json("Token is invalid!");
-
-    const q = "SELECT * FROM users WHERE user_id = ?";
-
-    db.query(q, [userInfo.id], (err, data) => {
-      if (err) return res.status(500).json(err);
-      if (data.length === 0) return res.json(null);
-      const {
-        password,
-        password_reset,
-        password_reset_timestamp,
-        ...user
-      } = data[0];
-      return res.json(user);
+  if (!token) return null;
+  const userInfo = await new Promise((resolve, reject) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) reject(err);
+      else resolve(decoded);
     });
   });
+  const q = "SELECT * FROM users WHERE user_id = ?";
+  const [rows] = await connection.query(q, [userInfo.id]);
+  if (!rows.length) return null;
+  const { password, password_reset, password_reset_timestamp, ...user } =
+    rows[0];
+  return user;
 };
 
-export const updateCurrentUser = (req, res) => {
+export const updateCurrentUser = async (req, res, connection) => {
   const token = req.cookies.accessToken;
-  if (!token) return res.status(401).json("Not authenticated!");
+  if (!token) throw new Error("Not authenticated!");
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid!");
-
-    if (Object.keys(req.body).length === 0) {
-      return res.status(400).json("No updates provided");
-    }
-    const updates = Object.entries(req.body)
-      .map(([key, _]) => `\`${key}\` = ?`)
-      .join(", ");
-
-    const values = [...Object.values(req.body), userInfo.id];
-
-    const q = `UPDATE users SET ${updates} WHERE user_id = ?`;
-
-    db.query(q, values, (err, data) => {
-      if (err) return res.status(500).json(err);
-      if (data.affectedRows > 0) {
-        return res.json({
-          message: "User updated successfully",
-          updates: req.body,
-        });
-      }
-      return res.status(400).json("No changes made.");
+  const userInfo = await new Promise((resolve, reject) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) reject(err);
+      else resolve(decoded);
     });
   });
+  if (Object.keys(req.body).length === 0) {
+    return { success: false, message: "No fields to update" };
+  }
+
+  const updates = Object.entries(req.body)
+    .map(([key]) => `\`${key}\` = ?`)
+    .join(", ");
+  const values = [...Object.values(req.body), userInfo.id];
+
+  const q = `UPDATE users SET ${updates} WHERE user_id = ?`;
+  const [result] = await connection.query(q, values);
+
+  if (result.affectedRows > 0) {
+    return { success: true };
+  }
+
+  return { success: false, message: "No user updated" };
 };

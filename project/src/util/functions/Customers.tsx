@@ -23,32 +23,6 @@ export function formatPhone(value: string) {
   return `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6, 10)}`;
 }
 
-export async function fetchPredictions(address: string, sessionToken: string) {
-  try {
-    const response = await makeRequest.post("/api/address/autocomplete", {
-      address,
-      sessiontoken: sessionToken,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Autocomplete API error:", error);
-    throw error;
-  }
-}
-
-export async function fetchPlaceDetails(placeId: string, sessionToken: string) {
-  try {
-    const response = await makeRequest.post("/api/address/place-details", {
-      place_id: placeId,
-      sessiontoken: sessionToken,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Place details API error:", error);
-    throw error;
-  }
-}
-
 export function parseAddressComponents(components: any[]) {
   const getComponent = (type: string) =>
     components.find((c) => c.types.includes(type))?.long_name || "";

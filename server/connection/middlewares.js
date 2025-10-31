@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken";
 
 // Rate limiting middleware
 export const rateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500,
+  windowMs: 10 * 60 * 1000, 
+  max: 100,
   message: "Too many requests. Please try again later.",
   standardHeaders: true,
   legacyHeaders: false,

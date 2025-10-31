@@ -7,8 +7,6 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { CheckCircle2 } from "lucide-react";
 import FallbackUserImage from "@/components/blocks/FallbackUserImage";
 import {
-  fetchPlaceDetails,
-  fetchPredictions,
   formatPhone,
   parseAddressComponents,
 } from "@/util/functions/Customers";
@@ -25,11 +23,14 @@ import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { runFrontendModule } from "../runFrontendModule";
 
 export const CustomerView = () => {
   const { currentUser } = useContext(AuthContext);
-  const { productsData } = useContextQueries();
-  const { currentCustomer, currentProjectId } = useCurrentDataStore();
+  const { productsData, moduleDefinitions, projectModules, integrations } =
+    useContextQueries();
+  const { currentProject, currentCustomer, currentProjectId } =
+    useCurrentDataStore();
   const { addingCustomer } = useUiStore();
   const { onCustomerFormSubmit } = useCustomerFormSubmit();
   const customerForm = useCustomerForm(currentCustomer);
@@ -86,32 +87,64 @@ export const CustomerView = () => {
 
   const handleSelectAddress = async (prediction: any) => {
     try {
-      const details = await fetchPlaceDetails(
-        prediction.place_id,
-        sessionToken
-      );
-      if (details.status === "OK") {
-        const result = details.result;
-        const { address_components } = result;
-
-        const parsed = parseAddressComponents(address_components);
-
-        customerForm.setValue("address_line1", parsed.address_line1, {
-          shouldValidate: true,
-          shouldDirty: true,
+      if (currentProject) {
+        const res = await runFrontendModule("google-maps-api-module", {
+          moduleDefinitions,
+          projectModules,
+          integrations,
+          currentProject,
+          body: {
+            requestType: "place",
+            sessionToken,
+            place_id: prediction.place_id ?? undefined,
+          },
         });
-        customerForm.setValue("address_line2", parsed.address_line2, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-        customerForm.setValue("city", parsed.city, { shouldDirty: true });
-        customerForm.setValue("state", parsed.state, { shouldDirty: true });
-        customerForm.setValue("zip", parsed.zip, { shouldDirty: true });
+        if (res && res.result) {
+          const { address_components } = res.result;
+          const parsed = parseAddressComponents(address_components);
+          customerForm.setValue("address_line1", parsed.address_line1, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          customerForm.setValue("address_line2", parsed.address_line2, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          customerForm.setValue("city", parsed.city, { shouldDirty: true });
+          customerForm.setValue("state", parsed.state, { shouldDirty: true });
+          customerForm.setValue("zip", parsed.zip, { shouldDirty: true });
+        }
       }
       setPopupVisible(false);
     } catch (err) {
-      console.error(err);
+      console.error("Address suggestions failed", err);
     }
+
+    // try {
+    // const details = await fetchPlaceDetails(
+    //   prediction.place_id,
+    //   sessionToken
+    // );
+    // if (details.status === "OK") {
+    // const result = details.result;
+    // const { address_components } = result;
+    // const parsed = parseAddressComponents(address_components);
+    // customerForm.setValue("address_line1", parsed.address_line1, {
+    //   shouldValidate: true,
+    //   shouldDirty: true,
+    // });
+    // customerForm.setValue("address_line2", parsed.address_line2, {
+    //   shouldValidate: true,
+    //   shouldDirty: true,
+    // });
+    // customerForm.setValue("city", parsed.city, { shouldDirty: true });
+    // customerForm.setValue("state", parsed.state, { shouldDirty: true });
+    // customerForm.setValue("zip", parsed.zip, { shouldDirty: true });
+    // }
+    // setPopupVisible(false);
+    // } catch (err) {
+    //   console.error(err);
+    // }
   };
 
   useOutsideClick(popupRef, () => setPopupVisible(false));
@@ -122,12 +155,27 @@ export const CustomerView = () => {
     }
     timerRef.current = setTimeout(async () => {
       const latestAddressValue = addressInputRef.current;
-      const suggestions = await fetchPredictions(
-        latestAddressValue,
-        sessionToken
-      );
-      setPredictions(suggestions.predictions || []);
-      setPopupVisible(true);
+      try {
+        if (currentProject) {
+          const res = await runFrontendModule("google-maps-api-module", {
+            moduleDefinitions,
+            projectModules,
+            integrations,
+            currentProject,
+            body: {
+              requestType: "predictions",
+              sessionToken,
+              address: latestAddressValue,
+            },
+          });
+          if (res && res.predictions) {
+            setPredictions(res.predictions || []);
+            setPopupVisible(true);
+          }
+        }
+      } catch (err) {
+        console.error("Address suggestions failed", err);
+      }
     }, 800);
   };
 
@@ -233,10 +281,7 @@ export const CustomerView = () => {
 
               <input
                 style={{
-                  color:
-                    currentUser.theme === "light"
-                      ? t.text_3
-                      : t.text_4,
+                  color: currentUser.theme === "light" ? t.text_3 : t.text_4,
                 }}
                 {...customerForm.register("email", {
                   required: "Email is required",
@@ -348,8 +393,7 @@ export const CustomerView = () => {
                           <div
                             className="w-[100%] h-[1.5px] rounded-[1px] opacity-[0.3]"
                             style={{
-                              backgroundColor:
-                                t.text_4,
+                              backgroundColor: t.text_4,
                             }}
                           ></div>
                         )}
@@ -392,11 +436,12 @@ export const CustomerView = () => {
           <button
             type="submit"
             className={`${
-              customerForm.formState.isDirty && customerForm.formState.isValid ? "flex" : "opacity-0 pointer-events-none"
+              customerForm.formState.isDirty && customerForm.formState.isValid
+                ? "flex"
+                : "opacity-0 pointer-events-none"
             } cursor-pointer hover:brightness-90 dim flex flex-row items-center gap-[7px] mt-[9px] self-start px-4 py-2 rounded-full font-semibold shadow-sm text-sm`}
             style={{
-              backgroundColor:
-                t.background_2_selected,
+              backgroundColor: t.background_2_selected,
               color: t.text_3,
             }}
           >
@@ -442,12 +487,9 @@ export const CustomerView = () => {
         select:-webkit-autofill:hover,
         select:-webkit-autofill:focus,
         select:-webkit-autofill:active {
-          -webkit-text-fill-color: ${t
-            .text_4} !important;
-          -webkit-box-shadow: 0 0 0px 1000px
-            ${t.background_2} inset !important;
-          box-shadow: 0 0 0px 1000px ${t.background_2}
-            inset !important;
+          -webkit-text-fill-color: ${t.text_4} !important;
+          -webkit-box-shadow: 0 0 0px 1000px ${t.background_2} inset !important;
+          box-shadow: 0 0 0px 1000px ${t.background_2} inset !important;
           transition: background-color 5000s ease-in-out 0s !important;
           caret-color: ${t.text_4} !important;
         }

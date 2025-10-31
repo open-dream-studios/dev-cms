@@ -1,7 +1,6 @@
 // server/handlers/modules/modules/modules_repositories.js
 import { db } from "../../../connection/connect.js";
-import { decrypt } from "../../../util/crypto.js";
-import { handlers } from "../../definitions/moduleHandlers.js";
+import { handlers } from "../moduleHandlers.js";
 
 // ---------- MODULE FUNCTIONS ----------
 export const getModulesFunction = async (project_idx) => {
@@ -80,26 +79,25 @@ export const deleteModuleFunction = async (
 };
 
 // ---------- RUN MODULE FUNCTION ----------
-export const runModuleFunction = async (
-  connection,
-  project_idx,
-  identifier
-) => {
-  const moduleConfig = await getModuleConfigFunction(
-    connection,
-    identifier
-  );
+export const runModuleFunction = async (connection, reqBody, identifier) => {
+  const { project_idx, body } = reqBody;
+  const moduleConfig = await getModuleConfigFunction(connection, identifier);
   if (!moduleConfig) throw new Error("Module not found");
-
-  const projectModules = await getModulesFunction(project_idx)
-  if (!projectModules || !projectModules.length) throw new Error("Module not found");
-  const module = projectModules.find((mod) => mod.identifier === identifier)
+  const projectModules = await getModulesFunction(project_idx);
+  if (!projectModules || !projectModules.length)
+    throw new Error("Module not found");
+  const module = projectModules.find((mod) => mod.identifier === identifier);
   if (!module) throw new Error("Module id not found");
   const handler = handlers[identifier];
   if (!handler) throw new Error("No handler registered");
-
-  const googleSheetId = await handler(connection, project_idx, identifier, module, moduleConfig);
-  return googleSheetId;
+  return await handler(
+    connection,
+    project_idx,
+    identifier,
+    module,
+    moduleConfig,
+    body
+  );
 };
 
 export const getModuleConfigFunction = async (connection, identifier) => {

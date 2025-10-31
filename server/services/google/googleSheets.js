@@ -1,4 +1,4 @@
-// server/definitions/moduleHelpers/google.js
+// server/services/google/googleSheets.js
 import { google } from "googleapis";
 
 export const updateGoogleSheet = async (

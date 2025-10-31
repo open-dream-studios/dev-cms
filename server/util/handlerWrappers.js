@@ -10,7 +10,7 @@ export const errorHandler = (fn) => {
     const functionName = fn.name || "anonymous";
     try {
       const result = await fn(req, res, next);
-      if (result !== undefined) res.json(result);  
+      if (result !== undefined) res.json(result);
     } catch (err) {
       console.error(`❌ Error in ${functionName}:`, err.message);
       console.error(err.stack);
@@ -35,7 +35,14 @@ export const transactionHandler = (fn) => {
       const result = await fn(req, res, connection);
       await connection.commit();
 
-      return res.json(result);
+      if (result?.cookies) {
+        result.cookies.forEach(({ name, value, options }) => {
+          res.cookie(name, value, options);
+        });
+      }
+      const { cookies, ...body } = result || {};
+
+      return res.json(body);
     } catch (err) {
       await connection.rollback();
       console.error(`❌ Transaction failed in ${functionName}:`, err.message);

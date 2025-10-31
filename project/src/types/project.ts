@@ -1,5 +1,3 @@
-import { string } from "zod";
-
 // project/src/types/project.ts
 export type Project = {
   id?: number;

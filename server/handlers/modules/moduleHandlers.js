@@ -1,14 +1,17 @@
 // server/handlers/definitions/moduleHandlers.js
-import { formatSQLDate } from "../../functions/data.js";
-import { getProductsFunction } from "../../handlers/modules/products/products_repositories.js";
-import { updateGoogleSheet } from "./moduleHelpers/google.js";
+import {
+  autoCompleteAddress,
+  addressDetails,
+} from "../../services/google/googleMaps.js";
+import { getProductsFunction } from "./products/products_repositories.js";
+import { updateGoogleSheet } from "../../services/google/googleSheets.js"
 import { getDecryptedIntegrationsFunction } from "../integrations/integrations_repositories.js";
 import axios from "axios";
-import { getMediaLinksFunction } from "../modules/media/media_repositories.js";
+import { getMediaLinksFunction } from "./media/media_repositories.js";
 import {
   getJobDefinitionsFunction,
   getJobsFunction,
-} from "../modules/jobs/jobs_repositories.js";
+} from "./jobs/jobs_repositories.js";
 
 export const handlers = {
   "customer-products-google-sheets-module": async (
@@ -16,14 +19,14 @@ export const handlers = {
     project_idx,
     identifier,
     module,
-    moduleConfig
+    moduleConfig,
+    body
   ) => {
     try {
       const configKeys = await getDecryptedIntegrationsFunction(
         project_idx,
         module.id
       );
-
       let spreadsheetId = configKeys.find(
         (key) => key.integration_key === "sheetId"
       );
@@ -101,14 +104,14 @@ export const handlers = {
     project_idx,
     identifier,
     module,
-    moduleConfig
+    moduleConfig,
+    body
   ) => {
     try {
       const configKeys = await getDecryptedIntegrationsFunction(
         project_idx,
         module.id
       );
-
       let WIX_GENERATED_SECRET = configKeys.find(
         (key) => key.integration_key === "WIX_GENERATED_SECRET"
       );
@@ -171,11 +174,11 @@ export const handlers = {
             mostRecentJob.status === "waiting_delivery" ||
             mostRecentJob.status === "delivered";
 
-          if (!listedItem) return null
+          if (!listedItem) return null;
 
           return {
             serialNumber: item.serial_number,
-            sold: soldItem, 
+            sold: soldItem,
             name: item.name,
             description_fld: item.description || "",
             make: item.make || "",
@@ -208,6 +211,47 @@ export const handlers = {
     } catch (e) {
       console.error(e);
       return false;
+    }
+  },
+
+  "google-maps-api-module": async (
+    connection,
+    project_idx,
+    identifier,
+    module,
+    moduleConfig,
+    body
+  ) => {
+    try {
+      const configKeys = await getDecryptedIntegrationsFunction(
+        project_idx,
+        module.id
+      );
+      let GOOGLE_API_KEY = configKeys.find(
+        (key) => key.integration_key === "GOOGLE_API_KEY"
+      );
+      if (!GOOGLE_API_KEY) {
+        throw new Error("Missing credentials");
+      }
+      if (!body || !body.requestType || !body.sessionToken) {
+        throw new Error("Missing body values");
+      }
+      if (body.requestType === "predictions" && body.address)
+        return await autoCompleteAddress(
+          GOOGLE_API_KEY.integration_value,
+          body.address,
+          body.sessionToken
+        );
+      if (body.requestType === "place" && body.place_id)
+        return await addressDetails(
+          GOOGLE_API_KEY.integration_value,
+          body.place_id,
+          body.sessionToken
+        );
+      return null;
+    } catch (e) {
+      console.error(e);
+      return null;
     }
   },
 };

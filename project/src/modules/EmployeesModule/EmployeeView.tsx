@@ -20,8 +20,6 @@ import {
   employeeToForm,
 } from "@/util/schemas/employeeSchema";
 import {
-  fetchPlaceDetails,
-  fetchPredictions,
   formatPhone,
   parseAddressComponents,
 } from "@/util/functions/Customers";
@@ -35,10 +33,15 @@ import {
 } from "@/hooks/forms/useEmployeeForm";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { runFrontendModule } from "../runFrontendModule";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 const EmployeeCard: React.FC = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentEmployee, currentProjectId } = useCurrentDataStore();
+  const { moduleDefinitions, projectModules, integrations } =
+    useContextQueries();
+  const { currentEmployee, currentProjectId, currentProject } =
+    useCurrentDataStore();
   const { addingEmployee } = useUiStore();
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
   const employeeForm = useEmployeeForm(currentEmployee);
@@ -113,12 +116,23 @@ const EmployeeCard: React.FC = () => {
         return;
       }
       try {
-        const suggestions = await fetchPredictions(
-          latestAddressValue,
-          sessionToken
-        );
-        setPredictions(suggestions.predictions || []);
-        setPopupVisible(true);
+        if (currentProject) {
+          const res = await runFrontendModule("google-maps-api-module", {
+            moduleDefinitions,
+            projectModules,
+            integrations,
+            currentProject,
+            body: {
+              requestType: "predictions",
+              sessionToken,
+              address: latestAddressValue,
+            },
+          });
+          if (res && res.predictions) {
+            setPredictions(res.predictions || []);
+            setPopupVisible(true);
+          }
+        }
       } catch (err) {
         console.error("Address suggestions failed", err);
       }
@@ -132,29 +146,38 @@ const EmployeeCard: React.FC = () => {
 
   const handleSelectAddress = async (prediction: any) => {
     try {
-      const details = await fetchPlaceDetails(
-        prediction.place_id,
-        sessionToken
-      );
-      if (details.status === "OK") {
-        const { address_components } = details.result;
-        const parsed = parseAddressComponents(address_components);
+      if (currentProject) {
+        const res = await runFrontendModule("google-maps-api-module", {
+          moduleDefinitions,
+          projectModules,
+          integrations,
+          currentProject,
+          body: {
+            requestType: "place",
+            sessionToken,
+            place_id: prediction.place_id ?? undefined,
+          },
+        });
+        if (res && res.result) {
+          const { address_components } = res.result;
+          const parsed = parseAddressComponents(address_components);
 
-        employeeForm.setValue("address_line1", parsed.address_line1, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-        employeeForm.setValue("address_line2", parsed.address_line2, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-        employeeForm.setValue("city", parsed.city, { shouldDirty: true });
-        employeeForm.setValue("state", parsed.state, { shouldDirty: true });
-        employeeForm.setValue("zip", parsed.zip, { shouldDirty: true });
+          employeeForm.setValue("address_line1", parsed.address_line1, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          employeeForm.setValue("address_line2", parsed.address_line2, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          employeeForm.setValue("city", parsed.city, { shouldDirty: true });
+          employeeForm.setValue("state", parsed.state, { shouldDirty: true });
+          employeeForm.setValue("zip", parsed.zip, { shouldDirty: true });
+        }
       }
       setPopupVisible(false);
     } catch (err) {
-      console.error(err);
+      console.error("Address suggestions failed", err);
     }
   };
 
@@ -643,19 +666,20 @@ const EmployeeCard: React.FC = () => {
             </div>
 
             <div className="mt-[25px] flex items-center gap-3 mb-[25px]">
-              {employeeForm.formState.isDirty && employeeForm.formState.isValid && (
-                <button
-                  type="submit"
-                  className={`hover:brightness-[74%] dim cursor-pointer transition inline-flex items-center gap-2 pl-[32px] pr-[39px] py-[10px] rounded-[10px] font-medium`}
-                  style={{
-                    backgroundColor: `${t.app_color_1}`,
-                    color: t.text_1,
-                  }}
-                >
-                  <Check size={20} />
-                  <span className="text-[16px] font-[500]">Save</span>
-                </button>
-              )}
+              {employeeForm.formState.isDirty &&
+                employeeForm.formState.isValid && (
+                  <button
+                    type="submit"
+                    className={`hover:brightness-[74%] dim cursor-pointer transition inline-flex items-center gap-2 pl-[32px] pr-[39px] py-[10px] rounded-[10px] font-medium`}
+                    style={{
+                      backgroundColor: `${t.app_color_1}`,
+                      color: t.text_1,
+                    }}
+                  >
+                    <Check size={20} />
+                    <span className="text-[16px] font-[500]">Save</span>
+                  </button>
+                )}
 
               {employeeForm.formState.isDirty && (
                 <button
@@ -695,12 +719,9 @@ const EmployeeCard: React.FC = () => {
         select:-webkit-autofill:hover,
         select:-webkit-autofill:focus,
         select:-webkit-autofill:active {
-          -webkit-text-fill-color: ${t
-            .text_4} !important;
-          -webkit-box-shadow: 0 0 0px 1000px
-            ${t.background_2} inset !important;
-          box-shadow: 0 0 0px 1000px ${t.background_2}
-            inset !important;
+          -webkit-text-fill-color: ${t.text_4} !important;
+          -webkit-box-shadow: 0 0 0px 1000px ${t.background_2} inset !important;
+          box-shadow: 0 0 0px 1000px ${t.background_2} inset !important;
           transition: background-color 5000s ease-in-out 0s !important;
           caret-color: ${t.text_4} !important;
         }

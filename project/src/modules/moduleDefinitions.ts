@@ -11,7 +11,7 @@ interface ModuleDefinition {
   label: string;
   description?: string;
   expectedSchema?: string[];
-  run: (args: RunModuleContext) => Promise<void>;
+  run: (args: RunModuleContext) => Promise<any>;
 }
 
 export const definitionTree = {
@@ -22,12 +22,24 @@ export const definitionTree = {
   },
   "customers-module": {
     "customer-products-module": {
-      "customer-products-wix-sync-module": null,
-      "customer-products-google-sheets-module": null,
+      "customer-products-wix-sync-module": {
+        key1: "WIX_GENERATED_SECRET",
+        key2: "WIX_BACKEND_URL",
+      },
+      "customer-products-google-sheets-module": {
+        key1: "sheetId",
+        key2: "sheetName",
+        key3: "serviceAccountJson",
+      },
     },
   },
   "employees-module": {
     "tasks-module": null,
+  },
+  "google-module": {
+    "google-maps-api-module": {
+      key1: "GOOGLE_API_KEY"
+    },
   },
 };
 
@@ -36,12 +48,7 @@ export const moduleDefinitions: Record<string, ModuleDefinition> = {
     identifier: "customer-products-google-sheets-module",
     label: "Export to Google Sheets",
     description: "Send products to linked Google Sheet",
-    expectedSchema: [
-      "spreadsheetId",
-      "sheetName",
-      "serviceAccountJson",
-      "googleSheetUrl",
-    ],
+    expectedSchema: ["spreadsheetId", "sheetName", "serviceAccountJson"],
     run: async (ctx) => {
       const { currentProject } = ctx;
       const identifier = "customer-products-google-sheets-module";
@@ -57,6 +64,7 @@ export const moduleDefinitions: Record<string, ModuleDefinition> = {
           "_blank"
         );
       }
+      return !!googleSheetUrl;
     },
   },
 
@@ -64,18 +72,37 @@ export const moduleDefinitions: Record<string, ModuleDefinition> = {
     identifier: "customer-products-wix-sync-module",
     label: "Sync Products to Wix",
     description: "Push local products to Wix Store",
-    expectedSchema: [],
+    expectedSchema: ["WIX_BACKEND_URL", "WIX_GENERATED_SECRET"],
     run: async (ctx) => {
       const { currentProject } = ctx;
       const identifier = "customer-products-wix-sync-module";
       const integration = checkIntegrations(identifier, ctx, true);
-      if (!integration) return;
+      if (!integration) return null;
       const success = await moduleRequest(identifier, {
         project_idx: currentProject.id,
       });
       if (success) {
         toast.success("Synced products to Wix");
       }
+      return success;
+    },
+  },
+
+  "google-maps-api-module": {
+    identifier: "google-maps-api-module",
+    label: "Fetch map predictions",
+    description: "Fetch map predictions",
+    expectedSchema: ["GOOGLE_API_KEY"],
+    run: async (ctx) => {
+      const { currentProject } = ctx;
+      const identifier = "google-maps-api-module";
+      const integration = checkIntegrations(identifier, ctx, true);
+      if (!integration) return null;
+      const predictions = await moduleRequest(identifier, {
+        project_idx: currentProject.id,
+        body: ctx.body ?? null
+      });
+      return predictions;
     },
   },
 };

@@ -37,7 +37,7 @@ export const runModule = async (req, res, connection) => {
   const { project_idx } = req.body;
   const { identifier } = req.params;
   if (!project_idx || !identifier) throw new Error("Missing required fields");
-  return await runModuleFunction(connection, project_idx, identifier);
+  return await runModuleFunction(connection, req.body, identifier);
 };
 
 // ---------- MODULE DEFINITION CONTROLLERS ----------
