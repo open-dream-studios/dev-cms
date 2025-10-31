@@ -229,7 +229,6 @@ export const loginFunction = async (connection, reqBody) => {
 };
 
 export const sendCodeFunction = async (connection, reqBody) => {
-  console.log("SEND CODE REPO");
   const { email } = reqBody;
 
   const transporter = nodemailer.createTransport({
@@ -240,7 +239,6 @@ export const sendCodeFunction = async (connection, reqBody) => {
       pass: process.env.SENDGRID_API_KEY,
     },
   });
-  console.log("SENT EMAIL");
   const resetCode = Math.floor(100000 + Math.random() * 900000);
 
   const user = await getUserFunction(connection, email);
@@ -257,12 +255,6 @@ export const sendCodeFunction = async (connection, reqBody) => {
   const values = [resetCode, currentTime, user.user_id];
   const [result] = await connection.query(q2, values);
   if (result.affectedRows > 0) {
-    console.log("upserted, ready to email");
-    await transporter
-      .verify()
-      .then(() => console.log("✅ SendGrid SMTP connection good"))
-      .catch(console.error);
-
     await transporter.sendMail({
       from: process.env.NODE_MAILER_ORIGIN,
       to: email,
