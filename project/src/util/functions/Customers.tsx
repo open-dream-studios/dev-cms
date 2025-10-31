@@ -1,7 +1,5 @@
 // project/src/util/functions/Customers.tsx
 
-import { makeRequest } from "../axios";
-
 export function formatPhoneNumber(phone: string) {
   // Remove any non-digit characters
   const digits = phone.replace(/\D/g, "");

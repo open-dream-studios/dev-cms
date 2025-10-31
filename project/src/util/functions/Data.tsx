@@ -51,8 +51,15 @@ export const parseDateString = (input: string): string | null => {
   return date.toISOString();
 };
 
-export const capitalizeFirstLetter = (word: string) => {
-  return word.charAt(0).toUpperCase() + word.slice(1);
+export const capitalizeFirstLetter = (word: any): string => {
+  if (typeof word !== "string") return "";
+  const trimmed = word.trim();
+  if (trimmed.length === 0) return "";
+  const firstChar = trimmed.charAt(0);
+  const rest = trimmed.slice(1);
+  return /^[a-zA-Z]$/.test(firstChar)
+    ? firstChar.toUpperCase() + rest
+    : firstChar + rest;
 };
 
 export const validateEmail = (email: string) => {

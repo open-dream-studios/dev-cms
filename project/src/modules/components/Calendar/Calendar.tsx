@@ -524,7 +524,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     return `${sundayStart.toLocaleDateString()} – ${saturday.toLocaleDateString()}`;
   }, [weekCenteredIndex, indexToDate]);
 
-  const movedToCorrectWeek = useRef<boolean>(false)
+  const movedToCorrectWeek = useRef<boolean>(false);
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller || movedToCorrectWeek.current) return;
@@ -534,7 +534,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
         if (entries[0].isIntersecting) {
           observer.disconnect();
           // Wait one frame so layout is finalized
-          movedToCorrectWeek.current = true
+          movedToCorrectWeek.current = true;
           requestAnimationFrame(() => {
             if (scheduled_start_date) goToWeek();
             else goToCurrentWeek();
@@ -614,6 +614,8 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
               <DatePicker
                 selected={scheduled_start_date}
                 onChange={(date) => applyChange(date, completed_date ?? null)}
+                popperPlacement="bottom-start"
+                portalId="calendar-portal"
                 className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
                   theme === "dark"
                     ? "text-white border-[#3d3d3d] border-[1px]"
@@ -631,6 +633,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
             <div className="w-[100px] relative">
               <DatePicker
                 selected={scheduled_start_date}
+                portalId="calendar-portal"
                 onChange={(date: Date | null) => {
                   if (!date) return; // ignore null
                   applyChange(date, completed_date ?? null);
@@ -663,6 +666,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
             </div>
             <div className="w-[100px] relative">
               <DatePicker
+                portalId="calendar-portal"
                 selected={completed_date}
                 onChange={(date) =>
                   applyChange(scheduled_start_date ?? null, date)
@@ -682,6 +686,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
             </div>
             <div className="w-[100px] relative">
               <DatePicker
+                portalId="calendar-portal"
                 selected={completed_date}
                 onChange={(date: Date | null) => {
                   if (!date) return;

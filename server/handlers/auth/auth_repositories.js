@@ -33,6 +33,12 @@ export const getValidEmails = async (connection) => {
   return rows.map((row) => row.email);
 };
 
+const getUserFunction = async (connection, email) => {
+  const q = "SELECT * FROM users WHERE email = ?";
+  const [rows] = await connection.query(q, [email]);
+  return rows.length ? rows[0] : null;
+};
+
 export const googleAuthFunction = async (connection, idToken) => {
   const decodedToken = await admin.auth().verifyIdToken(idToken);
   const { email, name = "", picture = "", uid } = decodedToken;
@@ -43,16 +49,14 @@ export const googleAuthFunction = async (connection, idToken) => {
       message: "Unauthorized gmail, please ask host for permission",
     };
 
-  const q = "SELECT * FROM users WHERE email = ?";
-  const [data] = await connection.query(q, [email]);
+  const user = await getUserFunction(connection, email);
 
   let [first_name, ...rest] = name.split(" ");
   let last_name = rest.join(" ") || null;
 
-  if (data.length) {
-    // If user exists, generate token and log them in
+  if (user) {
     const token = jwt.sign(
-      { id: data[0].user_id, email: data[0].email, admin: data[0].admin },
+      { id: user.user_id, email: user.email, admin: user.admin },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -118,58 +122,222 @@ export const registerFunction = async (connection, reqBody) => {
       message: "Unauthorized gmail, please ask host for permission",
     };
   }
+  const user = await getUserFunction(connection, email);
+  if (user) return { success: false, message: "User already exists!" };
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(password, salt);
+  const newUserId = await createUniqueUserId(connection);
 
-  const q = "SELECT * FROM users WHERE email = ?";
+  const q1 =
+    "INSERT INTO users (`user_id`,`email`,`password`,`first_name`,`last_name`,`profile_img_src`) VALUE (?)";
+  const values1 = [
+    newUserId,
+    email,
+    hashedPassword,
+    first_name,
+    last_name,
+    null,
+  ];
 
-  db.query(q, [req.body.email], (err, data) => {
-    if (err) {
-      console.error("Registration error:", err);
-      return res.status(500).json(err);
-    }
-    if (data.length)
-      return res.status(409).json({ error: "User already exists!" });
-
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(req.body.password, salt);
-
-    createUniqueUserId(connection)
-      .then((newUserId) => {
-        const q1 =
-          "INSERT INTO users (`user_id`,`email`,`password`,`first_name`,`last_name`,`profile_img_src`) VALUE (?)";
-        const values1 = [
-          newUserId,
-          req.body.email,
-          hashedPassword,
-          req.body.first_name,
-          req.body.last_name,
-          req.body.profile_img_src,
-        ];
-
-        db.query(q1, [values1], (err, data) => {
-          if (err) {
-            console.error("Registration error:", err);
-            return res.status(500).json(err);
-          }
-          const token = jwt.sign(
-            { id: newUserId, email: req.body.email, admin: 0 },
-            process.env.JWT_SECRET,
-            {
-              expiresIn: "7d",
-            }
-          );
-          res.cookie("accessToken", token, {
+  const [result] = await connection.query(q1, [values1]);
+  if (result.affectedRows > 0) {
+    const token = jwt.sign(
+      { id: newUserId, email, admin: 0 },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+    return {
+      message: "Google login successful",
+      cookies: [
+        {
+          name: "accessToken",
+          value: token,
+          options: {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
             path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          });
-          return res.status(200).json({ message: "Registration successful" });
-        });
-      })
-      .catch((error) => {
-        console.error("Google auth error:", error);
-        return res.status(500).json(error);
-      });
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+          },
+        },
+      ],
+    };
+  }
+  return null;
+};
+
+export const loginFunction = async (connection, reqBody) => {
+  const { email, password } = reqBody;
+  const validEmails = await getValidEmails(connection);
+  if (!validEmails.includes(email)) {
+    return {
+      success: false,
+      message: "Unauthorized email, please ask host for permission",
+    };
+  }
+  const user = await getUserFunction(connection, email);
+  if (!user)
+    return {
+      success: false,
+      message: "Login failed",
+    };
+
+  if (user.auth_provider === "google") {
+    return { success: false, message: "Please log in using Google" };
+  }
+  if (user.auth_provider === "facebook") {
+    return { success: false, message: "Please log in using Facebook" };
+  }
+  if (user.auth_provider === "discord") {
+    return { success: false, message: "Please log in using Discord" };
+  }
+
+  const checkPassword = bcrypt.compareSync(password, user.password);
+  if (!checkPassword) {
+    return {
+      success: false,
+      message: "Login failed",
+    };
+  }
+
+  const token = jwt.sign(
+    { id: user.user_id, email: user.email, admin: user.admin },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  return {
+    message: "Login successful",
+    cookies: [
+      {
+        name: "accessToken",
+        value: token,
+        options: {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+          path: "/",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        },
+      },
+    ],
+  };
+};
+
+export const sendCodeFunction = async (connection, reqBody) => {
+  const { email } = reqBody;
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.NODE_MAILER_ORIGIN,
+      pass: process.env.NODE_MAILER_PASSKEY,
+    },
   });
+  const resetCode = Math.floor(100000 + Math.random() * 900000);
+
+  const user = await getUserFunction(connection, email);
+  if (!user || user.auth_provider !== "local")
+    return {
+      success: "false",
+      message: "Send code failed",
+    };
+
+  const currentTime = new Date().toISOString().slice(0, 19).replace("T", " ");
+  const q2 =
+    "UPDATE users SET `password_reset`=?,`password_reset_timestamp`=? WHERE user_id=?";
+
+  const values = [resetCode, currentTime, user.user_id];
+  const [result] = await connection.query(q2, values);
+  if (result.affectedRows > 0) {
+    await transporter.sendMail({
+      from: process.env.NODE_MAILER_ORIGIN,
+      to: email,
+      subject: "Password Reset Code",
+      text: `Your password reset code is: ${resetCode}`,
+    });
+    return { success: true, messagE: "Email sent successfully" };
+  } else {
+    return { success: false, messagE: "Send code failed" };
+  }
+};
+
+export const checkCodeFunction = async (connection, reqBody) => {
+  const { code, email } = reqBody;
+  const user = await getUserFunction(connection, email);
+  if (!user || user.auth_provider !== "local") {
+    return {
+      success: false,
+      message: "Check code failed",
+    };
+  }
+  function isWithinOneHour(currentTime, oldTime) {
+    const currentDate = new Date(currentTime);
+    const oldDate = new Date(oldTime);
+    const timeDifference = (currentDate - oldDate) / (1000 * 60);
+    return timeDifference > 0 && timeDifference < 60;
+  }
+  const currentTime = new Date().toISOString().slice(0, 19).replace("T", " ");
+  if (user.password_reset === code) {
+    if (
+      user.password_reset_timestamp !== null &&
+      isWithinOneHour(currentTime, user.password_reset_timestamp)
+    ) {
+      const token = jwt.sign(
+        { id: user.user_id, email: user.email, admin: user.admin },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "7d",
+        }
+      );
+      return {
+        success: true,
+        accessToken: token,
+        message: "Reset code matched and is not expired",
+      };
+    } else {
+      return {
+        success: false,
+        message:
+          "Reset code is more than 1 hour old and has expired, please try again",
+      };
+    }
+  } else {
+    return {
+      success: false,
+      message: "Check code failed",
+    };
+  }
+};
+
+export const passwordResetFunction = async (connection, reqBody) => {
+  const { email, password, accessToken } = reqBody;
+  if (!accessToken) return { success: false, message: "Password reset failed" };
+
+  const user = await getUserFunction(connection, email);
+  if (!user || user.auth_provider !== "local") {
+    return { success: false, message: "Password reset failed" };
+  }
+
+  await new Promise((resolve, reject) => {
+    jwt.verify(accessToken, process.env.JWT_SECRET, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+
+  const q = "UPDATE users SET `password`=? WHERE user_id=?";
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(password, salt);
+  const values = [hashedPassword, user.user_id];
+  const [result] = await connection.query(q, values);
+
+  if (result.affectedRows > 0) {
+    return { success: true, message: "User password updated" };
+  } else {
+    return { success: false, message: "Error updating user password" };
+  }
 };

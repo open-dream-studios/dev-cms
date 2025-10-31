@@ -15,10 +15,14 @@ import { useModal1Store, useModal2Store } from "../../../store/useModalStore";
 import TermsDocument from "../../../util/forms/TermsDocument";
 import PrivacyDocument from "../../../util/forms/PrivacyDocument";
 import Modal2Warning from "../../../modals/Modal2Close";
-import { validateEmail } from "../../../util/functions/Data";
+import {
+  capitalizeFirstLetter,
+  validateEmail,
+} from "../../../util/functions/Data";
 import { useRouter } from "next/navigation";
 import { googleSignIn, login, register } from "@/util/auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { makeRequest } from "@/util/axios";
 
 const LoginSlider = () => {
   const images = [
@@ -180,15 +184,10 @@ const Login = () => {
           return;
         }
         try {
-          const response = await fetch("/api/auth/send-code", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: forgotPasswordEmail.trim().toLowerCase(),
-            }),
+          const response = await makeRequest.post("/api/auth/send-code", {
+            email: forgotPasswordEmail.trim().toLowerCase(),
           });
-          const responseData = await response.json();
-
+          const responseData = response.data;
           if (responseData.success) {
             setForgotPasswordPage(1);
           } else {
@@ -215,15 +214,11 @@ const Login = () => {
 
       const executeCodeEntered = async () => {
         try {
-          const response = await fetch("/api/auth/check-code", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: forgotPasswordEmail.trim().toLowerCase(),
-              code: codeInput.join(""),
-            }),
+          const response = await makeRequest.post("/api/auth/check-code", {
+            email: forgotPasswordEmail.trim().toLowerCase(),
+            code: codeInput.join(""),
           });
-          const responseData = await response.json();
+          const responseData = response.data;
 
           if (responseData.success && responseData.accessToken.length > 0) {
             setForgotPasswordPage(2);
@@ -252,20 +247,12 @@ const Login = () => {
 
       const confirmNewPassword = async () => {
         try {
-          const response = await fetch(
-            "/api/auth/password-reset",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: forgotPasswordEmail.trim().toLowerCase(),
-                password: updatedPassword,
-                accessToken: accessToken,
-              }),
-            }
-          );
-          const responseData = await response.json();
-
+          const response = await makeRequest.post("/api/auth/password-reset", {
+            email: forgotPasswordEmail.trim().toLowerCase(),
+            password: updatedPassword,
+            accessToken: accessToken,
+          });
+          const responseData = response.data;
           if (responseData.success) {
             setForgotPasswordPage(3);
           } else {
@@ -412,6 +399,15 @@ const Login = () => {
                         if (inputValue && index < 5) {
                           inputRefs.current[index + 1]?.focus();
                         }
+                      }
+                    }}
+                    onPaste={(e) => {
+                      const paste = e.clipboardData.getData("text").trim();
+                      if (index === 0 && /^\d{6}$/.test(paste)) {
+                        e.preventDefault();
+                        const codeArray = paste.split("");
+                        setCodeInput(codeArray);
+                        inputRefs.current[5]?.focus();
                       }
                     }}
                     name="forgotPasswordEmail"
@@ -594,8 +590,8 @@ const Login = () => {
   };
 
   let animationInstance: any;
-  let containerRef = useRef<HTMLDivElement>(null)
-  
+  let containerRef = useRef<HTMLDivElement>(null);
+
   function playAnimation1() {
     // if (containerRef.current) {
     //   animationInstance = lottie.loadAnimation({
@@ -877,7 +873,7 @@ const Login = () => {
               onChange={(e: any) => {
                 setInputs((prev) => ({
                   ...prev,
-                  first_name: e.target.value.trim(),
+                  first_name: capitalizeFirstLetter(e.target.value.trim()),
                 }));
               }}
               name="first_name"
@@ -908,7 +904,7 @@ const Login = () => {
               onChange={(e: any) => {
                 setInputs((prev) => ({
                   ...prev,
-                  last_name: e.target.value.trim(),
+                  last_name: capitalizeFirstLetter(e.target.value.trim()),
                 }));
               }}
               name="last_name"
