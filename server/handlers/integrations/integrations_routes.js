@@ -19,7 +19,7 @@ const router = express.Router();
 router.get(
   "/",
   authenticateUser,
-  checkProjectPermission(1), // owner+
+  checkProjectPermission(8), // owner+
   errorHandler(getIntegrations)
 );
 

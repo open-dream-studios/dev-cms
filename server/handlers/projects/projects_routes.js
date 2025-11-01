@@ -38,13 +38,13 @@ router.get("/project-users", authenticateUser, errorHandler(getAllUserRoles));
 router.post(
   "/upsert-project-user",
   authenticateUser,
-  checkProjectPermission(3), // owner+
+  checkProjectPermission(8), // owner+
   transactionHandler(upsertProjectUser)
 );
 router.post(
   "/delete-project-user",
   authenticateUser,
-  checkProjectPermission(3), // owner+
+  checkProjectPermission(8), // owner+
   transactionHandler(deleteProjectUser)
 );
 

@@ -32,13 +32,13 @@ router.get(
 router.post(
   "/upsert",
   authenticateUser,
-  checkProjectPermission(2),
+  checkProjectPermission(3),
   transactionHandler(upsertMedia)
 );
 router.post(
   "/delete",
   authenticateUser,
-  checkProjectPermission(2),
+  checkProjectPermission(3),
   transactionHandler(deleteMedia)
 );
 
@@ -52,13 +52,13 @@ router.get(
 router.post(
   "/folders/upsert",
   authenticateUser,
-  checkProjectPermission(2),
+  checkProjectPermission(3),
   transactionHandler(upsertMediaFolders)
 );
 router.post(
   "/folders/delete",
   authenticateUser,
-  checkProjectPermission(2),
+  checkProjectPermission(3),
   transactionHandler(deleteMediaFolder)
 );
 
@@ -72,13 +72,13 @@ router.get(
 router.post(
   "/media-links/update",
   authenticateUser,
-  checkProjectPermission(2),
+  checkProjectPermission(3),
   transactionHandler(upsertMediaLinks)
 );
 router.post(
   "/media-links/delete",
   authenticateUser,
-  checkProjectPermission(2),
+  checkProjectPermission(3),
   transactionHandler(deleteMediaLinks)
 );
 

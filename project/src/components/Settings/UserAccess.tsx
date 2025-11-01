@@ -2,8 +2,8 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useModal1Store, useModal2Store } from "@/store/useModalStore";
-import { ProjectUser, UserRole, validUserRoles } from "@/types/project";
+import { useModal1Store } from "@/store/useModalStore";
+import { accessLevels, projectRoles, ProjectUser } from "@/types/project";
 import { appTheme } from "@/util/appTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useContext, useMemo, useState } from "react";
@@ -13,6 +13,10 @@ import { ProjectUserFormData } from "@/util/schemas/projectUserSchema";
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  getClearanceFromRole,
+  getRoleFromClearance,
+} from "@/util/functions/Users";
 
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);
@@ -41,7 +45,7 @@ const UserAccess = () => {
     if (!currentProject) return;
     await upsertProjectUser({
       email: data.email,
-      role: data.role as UserRole,
+      clearance: getClearanceFromRole(data.role),
       project_idx: currentProject.id,
     } as ProjectUser);
     setShowAddProjectInput(false);
@@ -51,13 +55,8 @@ const UserAccess = () => {
     useState<boolean>(false);
   const [editListMode, setEditListMode] = useState<boolean>(false);
 
-  const handleClearProject = () => {
-    setModal1({ ...modal1, open: false });
-    setCurrentProjectData(null);
-  };
-
   const handleShowAddUserInput = () => {
-    form.reset({ email: "", role: validUserRoles[1] });
+    form.reset({ email: "", role: getRoleFromClearance(3) });
     setShowAddProjectInput(true);
     setEditListMode(false);
   };
@@ -68,15 +67,8 @@ const UserAccess = () => {
         (user: ProjectUser) =>
           user.email === currentUser.email &&
           user.project_idx === currentProject.id &&
-          user.role === "owner"
-      ) !== -1 ||
-      projectUsers.findIndex(
-        (user: ProjectUser) =>
-          user.email === currentUser.email &&
-          user.project_idx === currentProject.id &&
-          user.role === "admin"
-      ) !== -1 ||
-      currentUser.admin === 1
+          user.clearance > 10
+      ) !== -1 || currentUser.admin === 1
     );
   };
 
@@ -86,8 +78,8 @@ const UserAccess = () => {
         user.email === currentUser.email &&
         user.project_idx === currentProject.id
     );
-    if (indexFound === -1) return null;
-    return projectUsers[indexFound].role;
+    if (indexFound === -1) return 0;
+    return projectUsers[indexFound].clearance;
   };
 
   const handleDeleteProjectUser = async (user: ProjectUser) => {
@@ -113,9 +105,7 @@ const UserAccess = () => {
                   className="select-none dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
                     backgroundColor: t.background_1_2,
-                    border: editListMode
-                      ? "1px solid " + t.text_3
-                      : "none",
+                    border: editListMode ? "1px solid " + t.text_3 : "none",
                   }}
                 >
                   <FiEdit size={16} />
@@ -187,8 +177,7 @@ const UserAccess = () => {
                 }}
                 style={
                   {
-                    "--custom-input-text-color":
-                      t.text_4,
+                    "--custom-input-text-color": t.text_4,
                     color: t.text_4,
                     backgroundColor: "transparent",
                   } as React.CSSProperties
@@ -210,15 +199,13 @@ const UserAccess = () => {
               <select
                 {...form.register("role")}
                 style={{
-                  border: `0.5px solid ${
-                    t.background_4
-                  }`,
+                  border: `0.5px solid ${t.background_4}`,
                 }}
-                className="cursor-pointer hover:brightness-75 w-[71px] text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
+                className="cursor-pointer hover:brightness-75 px-[8px] text-center custom-select input py-[3.5px] text-[12px] rounded-[5px]"
               >
-                {validUserRoles &&
-                  validUserRoles
-                    .filter((role: UserRole) => role !== "admin")
+                {projectRoles &&
+                  (Object.keys(projectRoles) as (keyof typeof projectRoles)[])
+                    .sort((a, b) => projectRoles[b] - projectRoles[a])
                     .map((role: string) => (
                       <option key={role} value={role}>
                         {capitalizeFirstLetter(role)}
@@ -254,69 +241,75 @@ const UserAccess = () => {
 
                     <div className="w-[auto] flex flex-row gap-[14px] items-center h-[100%]">
                       {rowIsOwnerOrAdmin() &&
-                      user.role !== "admin" &&
+                      user.clearance < 9 &&
                       user.email !== currentUser.email ? (
                         <select
-                          value={user.role}
+                          value={getRoleFromClearance(user.clearance)}
                           style={{
-                            border: `0.5px solid ${
-                              t.background_4
-                            }`,
+                            border: `0.5px solid ${t.background_4}`,
                           }}
-                          className="cursor-pointer hover:brightness-75 dim w-[61px] text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
+                          className="cursor-pointer hover:brightness-75 dim w-[65px] text-center custom-select input py-[3.5px] text-[12px] rounded-[5px]"
                           onChange={async (e) => {
-                            const newRole = e.target.value;
                             await upsertProjectUser({
                               email: user.email,
                               project_idx: currentProject.id,
-                              role: newRole,
+                              clearance: getClearanceFromRole(e.target.value),
                             } as ProjectUser);
                           }}
                         >
-                          {validUserRoles &&
-                            validUserRoles
-                              .filter((role: UserRole) => role !== "admin")
+                          {projectRoles &&
+                            (
+                              Object.keys(
+                                projectRoles
+                              ) as (keyof typeof projectRoles)[]
+                            )
+                              .sort((a, b) => projectRoles[b] - projectRoles[a])
+                              .filter((role: string) => role !== "admin")
                               .map((role: string) => (
                                 <option key={role} value={role}>
                                   {capitalizeFirstLetter(role)}
-                                </option>
+                                </option>               
                               ))}
                         </select>
                       ) : (
                         <div
-                          className="w-[61px] select-none text-center custom-select input py-[4px] text-[12px] rounded-[5px]"
+                          className="w-[65px] select-none text-center custom-select input py-[3.5px] text-[12px] rounded-[5px]"
                           style={{
-                            border: `0.5px solid ${
-                              t.background_4
-                            }`,
+                            border: `0.5px solid ${t.background_4}`,
                           }}
                         >
-                          {capitalizeFirstLetter(user.role)}
+                          {capitalizeFirstLetter(
+                            getRoleFromClearance(user.clearance)
+                          )}
                         </div>
                       )}
                       {editListMode && (
                         <div
                           onClick={() => handleDeleteProjectUser(user)}
                           style={{
-                            backgroundColor:
-                              t.background_2_2,
+                            backgroundColor: t.background_2_2,
                           }}
                           className={`${
-                            currentUser.admin === 1 && user.role !== "admin"
+                            currentUser.admin === 1 &&
+                            getRoleFromClearance(user.clearance) !== "admin"
                               ? ""
-                              : (user.role === "admin" ||
-                                  (getCurrentRole() !== "admin" &&
-                                    getCurrentRole() !== "owner") ||
-                                  (user.role === "owner" &&
-                                    getCurrentRole() !== "admin")) &&
+                              : (getRoleFromClearance(user.clearance) ===
+                                  "admin" ||
+                                  (getRoleFromClearance(getCurrentRole()) !==
+                                    "admin" &&
+                                    getRoleFromClearance(getCurrentRole()) !==
+                                      "owner") ||
+                                  (getRoleFromClearance(user.clearance) ===
+                                    "owner" &&
+                                    getRoleFromClearance(getCurrentRole()) !==
+                                      "admin")) &&
                                 "opacity-0 pointer-events-none"
                           } cursor-pointer hover:brightness-75 dim w-[18px] h-[18px] rounded-full flex items-center justify-center mr-[-5px] mt-[-1px]`}
                         >
                           <div
                             className="w-[9px] h-[1.5px] rounded-[3px]"
                             style={{
-                              backgroundColor:
-                                t.text_4,
+                              backgroundColor: t.text_4,
                             }}
                           />
                         </div>

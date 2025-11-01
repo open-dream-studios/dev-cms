@@ -31,14 +31,14 @@ router.post(
 router.post(
   "/upsert",
   authenticateUser,
-  checkProjectPermission(3), // owner+
+  checkProjectPermission(8), // owner+
   transactionHandler(upsertPage)
 );
 
 router.post(
   "/delete",
   authenticateUser,
-  checkProjectPermission(3), // owner+
+  checkProjectPermission(8), // owner+
   transactionHandler(deletePage)
 );
 

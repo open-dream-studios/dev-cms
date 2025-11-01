@@ -22,14 +22,14 @@ router.post(
 router.post(
   "/upsert",
   authenticateUser,
-  checkProjectPermission(2), // editor+
+  checkProjectPermission(3), // editor+
   transactionHandler(upsertCustomer)
 );
 
 router.post(
   "/delete",
   authenticateUser,
-  checkProjectPermission(2), // editor+
+  checkProjectPermission(3), // editor+
   transactionHandler(deleteCustomer)
 );
 

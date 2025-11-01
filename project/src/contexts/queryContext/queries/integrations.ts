@@ -1,9 +1,7 @@
 // src/context/queryContext/queries/integrations.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Integration, ProjectUser } from "@/types/project";
-import { User } from "@/contexts/authContext";
-import { getUserAccess } from "@/util/functions/Users";
+import { Integration } from "@/types/project";
 
 export function useIntegrations(
   isLoggedIn: boolean,

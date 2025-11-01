@@ -5,14 +5,14 @@ import {
   ProjectUserSchema,
   ProjectUserFormData,
 } from "@/util/schemas/projectUserSchema";
-import { validUserRoles } from "@/types/project";
+import { getRoleFromClearance } from "@/util/functions/Users";
 
 export function useProjectUserForm(existingEmails: string[]) {
   return useForm<ProjectUserFormData>({
     resolver: zodResolver(ProjectUserSchema(existingEmails)),
     defaultValues: {
       email: "",
-      role: validUserRoles[1],
+      role: getRoleFromClearance(3),
     },
   });
 }

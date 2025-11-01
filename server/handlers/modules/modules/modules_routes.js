@@ -27,14 +27,14 @@ router.post(
 router.post(
   "/upsert",
   authenticateUser,
-  checkProjectPermission(3), // owner+
+  checkProjectPermission(8), // owner+
   transactionHandler(upsertModule)
 );
 
 router.post(
   "/delete",
   authenticateUser,
-  checkProjectPermission(3), // owner+
+  checkProjectPermission(8), // owner+
   transactionHandler(deleteModule)
 );
 
@@ -60,7 +60,7 @@ router.post(
 router.post(
   "/run/:identifier",
   authenticateUser,
-  checkProjectPermission(3), // owner
+  checkProjectPermission(8), // owner
   transactionHandler(runModule)
 );
 

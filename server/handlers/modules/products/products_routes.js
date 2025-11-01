@@ -23,13 +23,13 @@ router.get(
 router.post(
   "/upsert",
   authenticateUser,
-  checkProjectPermission(2),
+  checkProjectPermission(3),
   transactionHandler(upsertProducts)
 );
 router.post(
   "/delete",
   authenticateUser,
-  checkProjectPermission(2),
+  checkProjectPermission(3),
   transactionHandler(deleteProducts)
 );
 

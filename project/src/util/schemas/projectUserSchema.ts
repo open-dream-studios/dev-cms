@@ -1,5 +1,5 @@
+import { accessLevels } from "@/types/project";
 import { z } from "zod";
-import { validUserRoles } from "@/types/project";
 
 export const ProjectUserSchema = (existingEmails: string[]) =>
   z.object({
@@ -8,7 +8,7 @@ export const ProjectUserSchema = (existingEmails: string[]) =>
       .refine((val) => !existingEmails.includes(val), {
         message: "This email is already assigned",
       }),
-    role: z.enum(validUserRoles, { message: "Invalid role" }),
+    role: z.enum(Object.keys(accessLevels), { message: "Invalid role" }),
   });
 
 export type ProjectUserFormData = z.infer<ReturnType<typeof ProjectUserSchema>>;

@@ -61,7 +61,7 @@ export const upsertProjectFunction = async (connection, reqBody) => {
     await upsertProjectUserFunction(connection, {
       email: adminEmail,
       project_idx: rows.insertId,
-      role: "admin",
+      clearance: 9
     });
   }
 
@@ -86,7 +86,7 @@ export const deleteProjectFunction = async (connection, project_id) => {
 // ---------- PROJECT USER FUNCTIONS ----------
 export const getAllUserRolesFunction = async () => {
   const q = `
-    SELECT pu.id, pu.project_idx, pu.email, pu.role, p.name AS project_name
+    SELECT pu.id, pu.project_idx, pu.email, pu.clearance, p.name AS project_name
     FROM project_users pu
     JOIN projects p ON pu.project_idx = p.id
     ORDER BY pu.invited_at DESC
@@ -96,13 +96,13 @@ export const getAllUserRolesFunction = async () => {
 };
 
 export const upsertProjectUserFunction = async (connection, reqBody) => {
-  const { email, project_idx, role } = reqBody;
+  const { email, project_idx, clearance } = reqBody;
   const query = `
-      INSERT INTO project_users (email, project_idx, role)
+      INSERT INTO project_users (email, project_idx, clearance)
       VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE role = VALUES(role)
+      ON DUPLICATE KEY UPDATE clearance = VALUES(clearance)
     `;
-  const values = [email, project_idx, role || "viewer"];
+  const values = [email, project_idx, clearance]
   await connection.query(query, values);
   return { success: true };
 };

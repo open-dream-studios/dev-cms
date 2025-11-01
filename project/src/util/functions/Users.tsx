@@ -1,4 +1,4 @@
-import { ProjectUser } from "@/types/project";
+import { accessLevels } from "@/types/project";
 import { QueryClient } from "@tanstack/react-query";
 
 export const handleUpdateUser = (queryClient: QueryClient) => {
@@ -22,26 +22,15 @@ export const handleUpdateUser = (queryClient: QueryClient) => {
 //   }
 // };
 
-const roleLevels: Record<string, number> = {
-  viewer: 1,
-  editor: 2,
-  admin: 3,
-  owner: 4,
-};
+export function getRoleFromClearance(clearance: number) {
+  const entries = Object.entries(accessLevels);
+  entries.sort((a, b) => b[1] - a[1]);
+  const match = entries.find(([_, level]) => clearance >= level);
+  return match ? match[0] : "external";
+}
 
-export function getUserAccess(
-  currentProjectId: number,
-  projectUsers: ProjectUser[],
-  currentUserEmail?: string
-): number {
-  if (!currentProjectId || !currentUserEmail) return 0;
-  const membership = projectUsers.find(
-    (u) =>
-      u.project_idx === currentProjectId &&
-      u.email.toLowerCase() === currentUserEmail.toLowerCase()
-  );
-
-  if (!membership) return 0;
-
-  return roleLevels[membership.role] ?? 0;
+export function getClearanceFromRole(role: string) {
+  if (!role) return 0;
+  const key = role.toLowerCase().trim();
+  return accessLevels[key as keyof typeof accessLevels] ?? 0;
 }

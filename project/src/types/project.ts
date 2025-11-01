@@ -10,14 +10,32 @@ export type Project = {
   logo: string | null;
 };
 
-export const validUserRoles = ["owner", "editor", "viewer", "admin"] as const;
-export type UserRole = typeof validUserRoles[number];
+export const accessLevels = {
+  admin: 9,
+  owner: 8,
+  protected_access: 7,
+  all_access: 6,
+  manager: 5,
+  specialist: 4,
+  editor: 3,
+  client: 2,
+  viewer: 1,
+  external: 0,
+};
+
+export const projectRoles = {
+  admin: 9,
+  owner: 8,
+  manager: 5,
+  editor: 3,
+  viewer: 1,
+};
 
 export type ProjectUser = {
   id?: number;
   project_idx: number;
   email: string;
-  role: UserRole;
+  clearance: number;
   invited_at?: string;
 };
 

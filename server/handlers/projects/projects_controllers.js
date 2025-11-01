@@ -35,8 +35,8 @@ export const getAllUserRoles = async (req, res) => {
 };
 
 export const upsertProjectUser = async (req, res, connection) => {
-  const { email, project_idx } = req.body;
-  if (!email || !project_idx) throw new Error("Missing required fields");
+  const { email, project_idx, clearance } = req.body;
+  if (!email || !project_idx || !clearance) throw new Error("Missing required fields");
   return await upsertProjectUserFunction(connection, req.body);
 };
 

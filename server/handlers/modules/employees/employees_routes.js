@@ -25,14 +25,14 @@ router.post(
 router.post(
   "/upsert",
   authenticateUser,
-  checkProjectPermission(3), // owner+
+  checkProjectPermission(8), // owner+
   transactionHandler(upsertEmployee)
 );
 
 router.post(
   "/delete",
   authenticateUser,
-  checkProjectPermission(3), // owner+
+  checkProjectPermission(8), // owner+
   transactionHandler(deleteEmployee)
 );
 
@@ -47,14 +47,14 @@ router.post(
 router.post(
   "/assignments/add",
   authenticateUser,
-  checkProjectPermission(2), // editor+
+  checkProjectPermission(5), // editor+
   transactionHandler(addEmployeeAssignment)
 );
 
 router.post(
   "/assignments/delete",
   authenticateUser,
-  checkProjectPermission(2), // editor+
+  checkProjectPermission(5), // editor+
   transactionHandler(deleteEmployeeAssignment)
 );
 
