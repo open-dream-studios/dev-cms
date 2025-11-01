@@ -5,7 +5,6 @@
     "axios": "^1.8.4",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.7.0",
-    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
     "csv-parser": "^3.2.0",
@@ -54,11 +53,22 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "dev": "ts-node server/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/crypto-js": "^4.2.2",
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.9.2",
+    "cookie-parser": "^1.4.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
 }

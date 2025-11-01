@@ -12,7 +12,7 @@ import { updateProductsDB } from "../functions/products.js";
 import path from "path";
 import fs from "fs/promises";
 import { compressAndUploadFiles } from "../controllers/images.js";
-import "../env.js";
+import "../env.ts";
 import { db } from "../connection/connect.js"; 
 
 const extractRow = async (sheet, row, index) => {

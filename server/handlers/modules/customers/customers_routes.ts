@@ -1,4 +1,4 @@
-// server/handlers/modules/customers/customers_routes.js
+// server/handlers/modules/customers/customers_routes.ts
 import express from "express";
 import {
   upsertCustomer,

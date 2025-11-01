@@ -1,4 +1,4 @@
-// server/index.js
+// server/index.ts
 import "./env.js";
 import { db } from "./connection/connect.js";
 import express from "express";

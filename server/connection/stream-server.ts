@@ -1,7 +1,7 @@
 // server/connection/stream-server.js
 // import { WebSocketServer } from "ws";
 // import OpenAI from "openai";
-// import "../env.js"
+// import "../env.ts"
 
 // const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

@@ -1,21 +1,27 @@
 // server/handlers/modules/customers/customers_repositories.js
 import { db } from "../../../connection/connect.js";
+import type { Customer } from "../../../../shared/types/models/customer.js";
+import type { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 
 // ---------- CUSTOMER FUNCTIONS ----------
-export const getCustomersFunction = async (project_idx) => {
+export const getCustomersFunction = async (
+  project_idx: number
+): Promise<Customer[]> => {
   const q = `
     SELECT * FROM customers
     WHERE project_idx = ?
     ORDER BY created_at ASC
   `;
-  const [rows] = await db.promise().query(q, [project_idx]);
+  const [rows] = await db
+    .promise()
+    .query<(Customer & RowDataPacket)[]>(q, [project_idx]);
   return rows;
 };
 
 export const upsertCustomerFunction = async (
-  connection,
-  project_idx,
-  reqBody
+  connection: PoolConnection,
+  project_idx: number,
+  reqBody: any
 ) => {
   const {
     customer_id,
@@ -84,17 +90,17 @@ export const upsertCustomerFunction = async (
     notes,
   ];
 
-  const [result] = await connection.query(query, values);
+  const [result] = await connection.query<ResultSetHeader>(query, values);
   let id = result.insertId;
   if (!id) throw new Error("No ID provided from result");
   return { success: true, id, customer_id: finalCustomerId };
 };
 
 export const deleteCustomerFunction = async (
-  connection,
-  project_idx,
-  customer_id
-) => {
+  connection: PoolConnection,
+  project_idx: number,
+  customer_id: string
+): Promise<{ success: true }> => {
   const q = `DELETE FROM customers WHERE customer_id = ? AND project_idx = ?`;
   await connection.query(q, [customer_id, project_idx]);
   return { success: true };
