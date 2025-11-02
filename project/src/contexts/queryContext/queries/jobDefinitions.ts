@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/jobDefinitions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { JobDefinition } from "@shared/types/models/jobs";
+import { JobDefinition } from "@open-dream/shared";
 
 export function useJobDefinitions(
   isLoggedIn: boolean,

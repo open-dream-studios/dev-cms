@@ -2,7 +2,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { utcToProjectTimezone } from "@/util/functions/Time";
-import { Employee, EmployeeAssignment } from "@shared/types/models/employees";
+import {
+  Employee,
+  EmployeeAssignment,
+  EmployeeAssignmentInput,
+  EmployeeInput,
+} from "@open-dream/shared";
 
 export function useEmployees(
   isLoggedIn: boolean,
@@ -40,11 +45,8 @@ export function useEmployees(
   });
 
   const upsertEmployeeMutation = useMutation({
-    mutationFn: async (employee: Employee) => {
-      const res = await makeRequest.post("/api/employees/upsert", {
-        ...employee,
-        project_idx: currentProjectId,
-      });
+    mutationFn: async (employee: EmployeeInput) => {
+      const res = await makeRequest.post("/api/employees/upsert", employee);
       return res.data;
     },
     onSuccess: () => {
@@ -57,7 +59,7 @@ export function useEmployees(
     },
   });
 
-  const upsertEmployee = async (employee: Employee): Promise<string> => {
+  const upsertEmployee = async (employee: EmployeeInput): Promise<string> => {
     const res = await upsertEmployeeMutation.mutateAsync(employee);
     return res.employee_id;
   };
@@ -101,15 +103,11 @@ export function useEmployees(
   });
 
   const addEmployeeAssignmentMutation = useMutation({
-    mutationFn: async (assignment: {
-      employee_id: string;
-      task_id?: string;
-      job_id?: string;
-    }) => {
-      const res = await makeRequest.post("/api/employees/assignments/add", {
-        ...assignment,
-        project_idx: currentProjectId,
-      });
+    mutationFn: async (assignment: EmployeeAssignmentInput) => {
+      const res = await makeRequest.post(
+        "/api/employees/assignments/add",
+        assignment
+      );
       return res.data;
     },
     onSuccess: () => {
@@ -123,9 +121,9 @@ export function useEmployees(
   });
 
   const deleteEmployeeAssignmentMutation = useMutation({
-    mutationFn: async (assignment_id: number) => {
+    mutationFn: async (id: number) => {
       const res = await makeRequest.post("/api/employees/assignments/delete", {
-        assignment_id,
+        id,
         project_idx: currentProjectId,
       });
       return res.data;
@@ -140,16 +138,12 @@ export function useEmployees(
     },
   });
 
-  const addEmployeeAssignment = async (assignment: {
-    employee_id: string;
-    task_id?: string;
-    job_id?: string;
-  }) => {
+  const addEmployeeAssignment = async (assignment: EmployeeAssignmentInput) => {
     await addEmployeeAssignmentMutation.mutateAsync(assignment);
   };
 
-  const deleteEmployeeAssignment = async (assignment_id: number) => {
-    await deleteEmployeeAssignmentMutation.mutateAsync(assignment_id);
+  const deleteEmployeeAssignment = async (id: number) => {
+    await deleteEmployeeAssignmentMutation.mutateAsync(id);
   };
 
   return {

@@ -28,7 +28,7 @@ import Divider from "@/lib/blocks/Divider";
 import { FaPollH } from "react-icons/fa";
 import HoverBox from "@/lib/blocks/HoverBox";
 import { IoPersonSharp } from "react-icons/io5"; 
-import { Screen } from "@shared/types/models/screens";
+import { Screen } from "@open-dream/shared";
 import { BsFillPersonVcardFill } from "react-icons/bs";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";

@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/media.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Media } from "@shared/types/models/media";
+import { Media } from "@open-dream/shared";
 
 export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   const queryClient = useQueryClient();

@@ -1,28 +1,29 @@
 // project/src/modules/CustomerProducts/ProductView/AddEmployeeList.tsx
-import { Job, Task } from "@shared/types/models/jobs";
 import React from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
 import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
-import { Employee } from "@shared/types/models/employees";
+import { Employee, EmployeeAssignmentInput, Job, Task } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 
 const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProject } = useCurrentDataStore();
+  const { currentProject, currentProjectId } = useCurrentDataStore();
   const { addEmployeeAssignment, employees } = useContextQueries();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   const handleEmployeeClick = async (employee: Employee) => {
-    if (!assignment || !employee?.employee_id) return;
+    if (!assignment || !employee?.employee_id || !currentProjectId) return;
     if ("task_id" in assignment && assignment.task_id) {
       await addEmployeeAssignment({
         employee_id: employee.employee_id,
         task_id: assignment.task_id,
-      });
+        job_id: null,
+        project_idx: currentProjectId,
+      } as EmployeeAssignmentInput);
     }
 
     if (
@@ -32,8 +33,10 @@ const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {
     ) {
       await addEmployeeAssignment({
         employee_id: employee.employee_id,
+        task_id: null,
         job_id: String(assignment.job_id),
-      });
+        project_idx: currentProjectId,
+      } as EmployeeAssignmentInput);
     }
     setModal1({
       ...modal1,

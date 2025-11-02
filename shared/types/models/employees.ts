@@ -1,7 +1,5 @@
 // shared/types/models/employees.ts
-export type Employee = {
-  id?: number;
-  employee_id: string | null;
+export interface EmployeeBase {
   project_idx: number;
   first_name: string;
   last_name: string;
@@ -17,14 +15,31 @@ export type Employee = {
   hire_date: string | Date | null;
   termination_date: string | Date | null;
   notes: string | null;
-  updated_at?: string | Date | null;
-};
+}
 
-export type EmployeeAssignment = {
-  id?: number;
+export interface Employee extends EmployeeBase {
+  id: number;
+  employee_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmployeeInput extends EmployeeBase {
+  employee_id: string | null;
+}
+
+// ASSIGNMENTS
+export type EmployeeAssignmentBase = {
   project_idx: number;
   employee_id: string;
   task_id: string | null;
   job_id: string | null;
-  created_at?: string;
 };
+
+export interface EmployeeAssignment extends EmployeeAssignmentBase {
+  id: number;
+  created_at: string;
+}
+
+export type EmployeeAssignmentInput = EmployeeAssignmentBase;
+

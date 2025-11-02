@@ -6,13 +6,13 @@ import {
   EmployeeFormData,
   employeeToForm,
 } from "@/util/schemas/employeeSchema";
-import { Employee } from "@shared/types/models/employees";
+import { Employee, EmployeeInput } from "@open-dream/shared";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 
-export function useEmployeeForm(employee?: Employee | null) {
+export function useEmployeeForm(employee?: EmployeeInput | null) {
   return useForm<EmployeeFormData>({
     resolver: zodResolver(EmployeeSchema),
     defaultValues: employeeToForm(employee),
@@ -31,7 +31,7 @@ export function useEmployeeFormSubmit() {
   ) => {
     if (!currentProjectId) return;
 
-    const newEmployee: Employee = {
+    const newEmployee: EmployeeInput = {
       project_idx: currentProjectId,
       employee_id: currentEmployee?.employee_id ?? null,
       first_name: data.first_name,
@@ -56,7 +56,7 @@ export function useEmployeeFormSubmit() {
         setCurrentEmployeeData({
           ...newEmployee,
           employee_id: newEmployeeId,
-        });
+        } as Employee);
         setAddingEmployee(false);
       }
     } catch (err) {

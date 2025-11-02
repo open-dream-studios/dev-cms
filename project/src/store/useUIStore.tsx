@@ -1,6 +1,5 @@
 // src/store/UIStore.ts
-import { ProjectPage, Section } from "@shared/types/models/pages"; 
-import { Modal, Screen, UIState } from "@shared/types/models/screens";
+import { ProjectPage, Section, Modal, Screen, UIState } from "@open-dream/shared";
 import { create } from "zustand";
 
 interface UiState {

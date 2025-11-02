@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/sections.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Section } from "@shared/types/models/pages";
+import { Section } from "@open-dream/shared";
 
 export function useSections(
   isLoggedIn: boolean,

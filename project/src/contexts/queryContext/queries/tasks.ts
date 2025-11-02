@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/tasks.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Task } from "@shared/types/models/jobs";
+import { Task } from "@open-dream/shared";
 import { utcToProjectTimezone } from "@/util/functions/Time";
 
 export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {

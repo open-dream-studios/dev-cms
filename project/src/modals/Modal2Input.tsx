@@ -5,7 +5,7 @@ import { AuthContext } from "../contexts/authContext";
 import { useModal2Store } from "../store/useModalStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { toast } from "react-toastify";
-import { Product } from "@shared/types/models/products";
+import { Product } from "@open-dream/shared";
 
 type Modal2InputProps = {
   text: string;

@@ -6,7 +6,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext } from "react";
 import DraggableItems from "../DraggableItems";
-import { Product } from "@shared/types/models/products";
+import { Product } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { useAutoSave } from "@/hooks/useAutoSave";

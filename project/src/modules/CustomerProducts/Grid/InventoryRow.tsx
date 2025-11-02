@@ -8,7 +8,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext } from "react";
 import { FaCheck } from "react-icons/fa6";
-import { Product } from "@shared/types/models/products";
+import { Product } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useDataFilters } from "@/hooks/useDataFilters";

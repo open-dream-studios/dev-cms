@@ -20,8 +20,6 @@ export interface Customer extends CustomerBase {
   updated_at: string;
 }
 
-export interface CustomerInput extends Partial<CustomerBase> {
-  id?: number;
+export interface CustomerInput extends CustomerBase {
   customer_id: string | null;
-  project_idx: number;
 }

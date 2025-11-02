@@ -1,5 +1,5 @@
 // project/src/util/functions/Tree.tsx
-import { MediaFolder } from "@shared/types/models/media";
+import { MediaFolder } from "@open-dream/shared";
 
 export type MediaFolderNode = MediaFolder & { children: MediaFolderNode[] };
 

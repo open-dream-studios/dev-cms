@@ -17,7 +17,7 @@ import { FiEdit } from "react-icons/fi";
 import { useState } from "react";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
-import { ModuleDefinition } from "@shared/types/models/project";
+import { ModuleDefinition } from "@open-dream/shared";
 
 const EditModules = () => {
   const { currentUser } = useContext(AuthContext);

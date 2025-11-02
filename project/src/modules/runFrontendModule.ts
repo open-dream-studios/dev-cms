@@ -5,7 +5,7 @@ import {
   ModuleDefinition,
   Project,
   ProjectModule,
-} from "@shared/types/models/project";
+} from "@open-dream/shared";
 import { makeRequest } from "@/util/axios";
 import { toast } from "react-toastify";
 

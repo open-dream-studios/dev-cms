@@ -16,7 +16,7 @@ import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
-import { PageDefinition } from "@shared/types/models/pages";
+import { PageDefinition } from "@open-dream/shared";
 
 const EditPageDefinitions = () => {
   const { currentUser } = useContext(AuthContext);

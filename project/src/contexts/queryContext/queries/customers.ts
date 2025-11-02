@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/customers.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Customer, CustomerInput } from "@shared/types/models/customers";
+import { Customer, CustomerInput } from "@open-dream/shared";
 
 export function useCustomers(
   isLoggedIn: boolean,

@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/projectModules.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { ProjectModule } from "@shared/types/models/project";
+import { ProjectModule } from "@open-dream/shared";
 
 export function useProjectModules(
   isLoggedIn: boolean,

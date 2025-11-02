@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { AuthContext } from "@/contexts/authContext";
 import CustomButton from "@/lib/blocks/CustomButton";
-import { MediaFolder } from "@shared/types/models/media";
+import { MediaFolder } from "@open-dream/shared";
 import { appTheme } from "@/util/appTheme";
 import { Grid, List, Upload } from "lucide-react";
 import { useContext } from "react";

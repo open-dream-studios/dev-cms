@@ -1,4 +1,4 @@
-// server/handlers/modules/employees/employees_routes.js
+// server/handlers/modules/employees/employees_routes.ts
 import express from "express";
 import {
   upsertEmployee,

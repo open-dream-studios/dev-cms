@@ -1,7 +1,7 @@
 // project/src/context/queryContext/queries/mediaLinks.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { MediaLink } from "@shared/types/models/media";
+import { MediaLink } from "@open-dream/shared";
 
 export function useMediaLinks(
   isLoggedIn: boolean,

@@ -5,7 +5,7 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus } from "react-icons/fa6";
 import { appTheme } from "@/util/appTheme";
-import { PageDefinition, ProjectPage, Section } from "@shared/types/models/pages";
+import { PageDefinition, ProjectPage, Section } from "@open-dream/shared";
 import { MdChevronLeft } from "react-icons/md";
 import Divider from "@/lib/blocks/Divider";
 import SiteEditor from "./SiteEditor";

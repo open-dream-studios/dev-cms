@@ -22,9 +22,8 @@ import {
   useProductFormSubmit,
 } from "@/hooks/forms/useProductForm";
 import ProductInputField from "../Forms/InputField";
-import { Media, MediaFolder, MediaLink } from "@shared/types/models/media";
+import { Media, MediaLink, Customer, Job, JobDefinition, Product } from "@open-dream/shared";
 import { usePathname } from "next/navigation";
-import { Customer } from "@shared/types/models/customers";
 import CustomerTag from "@/modules/components/ProductCard/CustomerTag";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -32,11 +31,9 @@ import { useModal1Store } from "@/store/useModalStore";
 import CustomerSelection from "@/modules/components/Customers/CustomerSelection";
 import { IoImagesOutline } from "react-icons/io5";
 import { IoImageOutline } from "react-icons/io5";
-import { Job, JobDefinition } from "@shared/types/models/jobs";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import ProductJobs from "./ProductJobs";
 import ProductJobCard from "./ProductJobCard/ProductJobCard";
-import { Product } from "@shared/types/models/products";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";

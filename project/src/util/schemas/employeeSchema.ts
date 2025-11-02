@@ -1,5 +1,5 @@
 // project/src/util/schemas/employeeSchema.ts
-import { Employee } from "@shared/types/models/employees";
+import { Employee, EmployeeInput } from "@open-dream/shared";
 import { z } from "zod";
 
 export const EmployeeSchema = z.object({
@@ -33,7 +33,7 @@ export const EmployeeSchema = z.object({
 
 export type EmployeeFormData = z.infer<typeof EmployeeSchema>;
 
-export function employeeToForm(employee?: Employee | null): EmployeeFormData {
+export function employeeToForm(employee?: Employee | EmployeeInput | null): EmployeeFormData {
   return {
     first_name: employee?.first_name ?? "",
     last_name: employee?.last_name ?? "",

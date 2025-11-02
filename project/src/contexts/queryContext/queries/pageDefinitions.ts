@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/pageDefinitions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { PageDefinition } from "@shared/types/models/pages";
+import { PageDefinition } from "@open-dream/shared";
 
 export function usePageDefinitions(isLoggedIn: boolean) {
   const queryClient = useQueryClient();

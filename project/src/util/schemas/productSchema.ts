@@ -1,6 +1,6 @@
 // project/src/util/schemas/productSchema.ts
 import { z } from "zod";
-import { Product } from "@shared/types/models/products";
+import { Product } from "@open-dream/shared";
 
 export const ProductSchema = z.object({
   serial_number: z

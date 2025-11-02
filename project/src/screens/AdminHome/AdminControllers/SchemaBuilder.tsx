@@ -4,7 +4,7 @@ import {
   FieldType,
   SectionConfigSchema,
   FieldOption,
-} from "@shared/types/models/sectionConfigSchema";
+} from "@open-dream/shared";
 import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";

@@ -9,7 +9,7 @@ import {
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { Project } from "@shared/types/models/project";
+import { Project } from "@open-dream/shared";
 
 export function useProjectSettingsForm(projectSettings?: any | null) {
   return useForm<ProjectSettingsFormData>({

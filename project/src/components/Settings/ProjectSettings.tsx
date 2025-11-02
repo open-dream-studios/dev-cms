@@ -14,7 +14,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Project } from "@shared/types/models/project";
+import { Project } from "@open-dream/shared";
 import { getCardStyle } from "@/styles/themeStyles";
 
 const ProjectSettings = () => {

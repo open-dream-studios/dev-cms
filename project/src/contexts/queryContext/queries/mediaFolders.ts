@@ -1,7 +1,7 @@
 // project/src/context/queryContext/queries/mediaFolders.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { MediaFolder } from "@shared/types/models/media";
+import { MediaFolder } from "@open-dream/shared";
 
 export function useMediaFolders(
   isLoggedIn: boolean,

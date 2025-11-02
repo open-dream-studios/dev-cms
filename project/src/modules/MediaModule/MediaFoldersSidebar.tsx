@@ -26,7 +26,7 @@ import {
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { buildFolderTree, MediaFolderNode } from "@/util/functions/Tree";
 import FolderItem from "./FolderItem";
-import { MediaFolder } from "@shared/types/models/media";
+import { MediaFolder } from "@open-dream/shared";
 import { useModal2Store } from "@/store/useModalStore";
 import Modal2MultiStepModalInput, {
   StepConfig,

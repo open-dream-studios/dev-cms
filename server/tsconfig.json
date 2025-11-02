@@ -1,32 +1,24 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "target": "esnext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ESNext",
     "rootDir": ".",
     "outDir": "./dist",
     "baseUrl": ".",
-    // "paths": {
-    //   "@shared/*": ["../shared/*"]
-    // },
     "paths": {
-      // "@shared/*": ["../shared/dist/shared/*"]
-      "@shared/*": ["./dist/shared/*"]
+      "@open-dream/shared": ["../shared/index.ts"],
+      "@open-dream/shared/*": ["../shared/*"]
     },
     "resolveJsonModule": true,
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "allowJs": true,
-    "noEmit": false,
-    "checkJs": false,
-    "emitDeclarationOnly": false,
-    "declaration": false
+    "isolatedModules": false,
+    "allowJs": false,
+    "noEmit": false
   },
   "include": ["**/*"],
-  // "exclude": ["dist", "node_modules"],
-  "exclude": ["dist", "node_modules", "../shared"],
+  "exclude": ["dist", "node_modules"],
   "references": [{ "path": "../shared" }]
 }

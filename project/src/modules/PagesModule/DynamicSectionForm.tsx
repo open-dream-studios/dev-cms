@@ -1,6 +1,6 @@
 // project/src/modules/PagesModule/DynamicSectionForm.tsx
 import React, { useContext } from "react";
-import { FieldDefinition } from "@shared/types/models/sectionConfigSchema";
+import { FieldDefinition } from "@open-dream/shared";
 import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 

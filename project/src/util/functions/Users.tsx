@@ -1,4 +1,4 @@
-import { accessLevels } from "@shared/types/models/project";
+import { accessLevels } from "@open-dream/shared";
 import { QueryClient } from "@tanstack/react-query";
 
 export const handleUpdateUser = (queryClient: QueryClient) => {

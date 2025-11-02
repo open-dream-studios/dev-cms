@@ -1,21 +1,27 @@
-// server/handlers/modules/employees/employees_repositories.js
+// server/handlers/modules/employees/employees_repositories.ts
 import { db } from "../../../connection/connect.js";
+import type { Employee, EmployeeAssignment } from "@open-dream/shared";
+import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 
 // ---------- EMPLOYEE FUNCTIONS ----------
-export const getEmployeesFunction = async (project_idx) => {
+export const getEmployeesFunction = async (
+  project_idx: number
+): Promise<Employee[]> => {
   const q = `
     SELECT * FROM employees
     WHERE project_idx = ?
     ORDER BY created_at ASC
   `;
-  const [rows] = await db.promise().query(q, [project_idx]);
+  const [rows] = await db
+    .promise()
+    .query<(Employee & RowDataPacket)[]>(q, [project_idx]);
   return rows;
 };
 
 export const upsertEmployeeFunction = async (
-  connection,
-  project_idx,
-  reqBody
+  connection: PoolConnection,
+  project_idx: number,
+  reqBody: any
 ) => {
   const {
     employee_id,
@@ -100,11 +106,11 @@ export const upsertEmployeeFunction = async (
     notes,
   ];
 
-  const [result] = await connection.query(query, values);
+  const [result] = await connection.query<ResultSetHeader>(query, values);
 
   let id = result.insertId;
   if (!id && employee_id) {
-    const [rows] = await connection.query(
+    const [rows] = await connection.query<(RowDataPacket & { id: number })[]>(
       "SELECT id FROM employees WHERE employee_id = ? AND project_idx = ?",
       [finalEmployeeId, project_idx]
     );
@@ -116,30 +122,34 @@ export const upsertEmployeeFunction = async (
 };
 
 export const deleteEmployeeFunction = async (
-  connection,
-  project_idx,
-  employee_id
-) => {
+  connection: PoolConnection,
+  project_idx: number,
+  employee_id: string
+): Promise<{ success: true }> => {
   const q = `DELETE FROM employees WHERE employee_id = ? AND project_idx = ?`;
   await connection.query(q, [employee_id, project_idx]);
   return { success: true };
 };
 
 // ---------- EMPLOYEE ASSIGNMENT FUNCTIONS ----------
-export const getEmployeeAssignmentsFunction = async (project_idx) => {
+export const getEmployeeAssignmentsFunction = async (
+  project_idx: number
+): Promise<EmployeeAssignment[]> => {
   const q = `
     SELECT * FROM assignments
     WHERE project_idx = ?
     ORDER BY created_at ASC
   `;
-  const [rows] = await db.promise().query(q, [project_idx]);
+  const [rows] = await db
+    .promise()
+    .query<(EmployeeAssignment & RowDataPacket)[]>(q, [project_idx]);
   return rows;
 };
 
 export const addEmployeeAssignmentFunction = async (
-  connection,
-  project_idx,
-  reqBody
+  connection: PoolConnection,
+  project_idx: number,
+  reqBody: any
 ) => {
   const { employee_id, task_id, job_id } = reqBody;
   const query = `
@@ -148,7 +158,7 @@ export const addEmployeeAssignmentFunction = async (
     ON DUPLICATE KEY UPDATE project_idx = VALUES(project_idx)
   `;
   const values = [project_idx, employee_id, task_id || null, job_id || null];
-  const [result] = await connection.query(query, values);
+  const [result] = await connection.query<ResultSetHeader>(query, values);
   return {
     success: true,
     assignment_id: result.insertId || null,
@@ -156,14 +166,13 @@ export const addEmployeeAssignmentFunction = async (
 };
 
 export const deleteEmployeeAssignmentFunction = async (
-  connection,
-  project_idx,
-  assignment_id
+  connection: PoolConnection,
+  project_idx: number,
+  id: number
 ) => {
   const q = `
     DELETE FROM assignments
-    WHERE id = ? AND project_idx = ?
-  `;
-  await connection.query(q, [assignment_id, project_idx]);
+    WHERE id = ? AND project_idx = ?`;
+  await connection.query(q, [id, project_idx]);
   return { success: true };
 };

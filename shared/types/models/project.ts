@@ -21,7 +21,7 @@ export const accessLevels = {
   client: 2,
   viewer: 1,
   external: 0,
-};
+} as const
 
 export const projectRoles = {
   admin: 9,
@@ -29,7 +29,7 @@ export const projectRoles = {
   manager: 5,
   editor: 3,
   viewer: 1,
-};
+} as const
 
 export type ProjectUser = {
   id?: number;

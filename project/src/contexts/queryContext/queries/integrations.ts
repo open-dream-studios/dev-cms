@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/integrations.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Integration } from "@shared/types/models/project";
+import { Integration } from "@open-dream/shared";
 
 export function useIntegrations(
   isLoggedIn: boolean,

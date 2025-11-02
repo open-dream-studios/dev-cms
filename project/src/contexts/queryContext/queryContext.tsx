@@ -29,24 +29,31 @@ import {
   useTasks,
   useEmployees,
 } from "./queries";
+
 import {
+  Customer,
+  CustomerInput,
+  Media,
+  Job,
+  JobDefinition,
+  Task,
+  MediaFolder,
+  MediaLink,
+  Integration,
+  ModuleDefinition,
+  Project,
   PageDefinition,
   ProjectPage,
   Section,
   SectionDefinition,
-} from "@shared/types/models/pages";
-import { Customer, CustomerInput } from "@shared/types/models/customers";
-import { Job, JobDefinition, Task } from "@shared/types/models/jobs";
-import { Employee, EmployeeAssignment } from "@shared/types/models/employees";
-import { Media, MediaFolder, MediaLink } from "@shared/types/models/media";
-import {
-  Integration,
-  ModuleDefinition,
-  Project,
   ProjectModule,
   ProjectUser,
-} from "@shared/types/models/project";
-import { Product } from "@shared/types/models/products";
+  Product,
+  Employee,
+  EmployeeAssignment,
+  EmployeeAssignmentInput,
+  EmployeeInput,
+} from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
 
@@ -191,18 +198,14 @@ export type QueryContextType = {
   employees: Employee[];
   isLoadingEmployees: boolean;
   refetchEmployees: () => Promise<any>;
-  upsertEmployee: (employee: Employee) => Promise<string>;
+  upsertEmployee: (employee: EmployeeInput) => Promise<string>;
   deleteEmployee: (employee_id: string) => Promise<void>;
 
-  // ---- EmployeeTasks ----
+  // ---- EmployeeAssignments ----
   employeeAssignments: EmployeeAssignment[];
   isLoadingEmployeeAssignments: boolean;
   refetchEmployeeAssignments: () => Promise<any>;
-  addEmployeeAssignment: (assignment: {
-    employee_id: string;
-    task_id?: string;
-    job_id?: string;
-  }) => Promise<void>;
+  addEmployeeAssignment: (assignment: EmployeeAssignmentInput) => Promise<void>;
   deleteEmployeeAssignment: (assignment_id: number) => Promise<void>;
 };
 

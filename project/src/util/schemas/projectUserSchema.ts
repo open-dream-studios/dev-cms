@@ -1,4 +1,4 @@
-import { accessLevels } from "@shared/types/models/project";
+import { accessLevels } from "@open-dream/shared";
 import { z } from "zod";
 
 export const ProjectUserSchema = (existingEmails: string[]) =>

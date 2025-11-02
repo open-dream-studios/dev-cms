@@ -1,33 +1,19 @@
-// project/next.config.ts
 import path from "path";
+import type { NextConfig } from "next";
 
-/** @type {import('next').NextConfig} */
 const isPlayer = process.env.PLAYER === "true";
 
-const nextConfig = {
-  // reactStrictMode: true,
+const nextConfig: NextConfig = {
   reactStrictMode: false,
   basePath: isPlayer ? "" : "",
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
+
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "plus.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-      },
+      { protocol: "https", hostname: "plus.unsplash.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },
 
@@ -35,14 +21,25 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination:
-          "https://dev-cms-production.up.railway.app/api/:path*",
-          // "http://localhost:8080/api/:path*",
+        destination: "http://localhost:8080/api/:path*",
+        // destination: "https://dev-cms-production.up.railway.app/api/:path*",
       },
     ];
   },
-  webpack: (config: any) => {
+
+  experimental: {
+    externalDir: true,
+  },
+
+  turbopack: {
+    resolveAlias: {
+      "@": path.resolve(__dirname, "src"),
+    },
+  },
+
+  webpack(config) {
     config.resolve.alias["@"] = path.resolve(__dirname, "src");
+    config.resolve.symlinks = true;
     return config;
   },
 };

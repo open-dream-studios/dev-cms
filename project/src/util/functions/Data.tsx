@@ -1,5 +1,5 @@
 // project/src/util/functions/Data.tsx
-import { Product } from "@shared/types/models/products";
+import { Product } from "@open-dream/shared";
 import crypto from "crypto";
 
 export const formatDate = (dateString: string) => {

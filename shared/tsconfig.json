@@ -1,17 +1,15 @@
 {
   "compilerOptions": {
-    "composite": true,
+    "target": "ES2020",
+    "module": "ESNext",
     "declaration": true,
-    "emitDeclarationOnly": true,
-    "outDir": "../server/dist/shared",
-    "rootDir": ".",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "target": "esnext",
-    "strict": true,
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "typeRoots": ["../node_modules/@types"], 
-    "types": ["react"] 
+    "strict": true
   },
-  "include": ["types/**/*.ts"]
+  "include": ["index.ts", "types/**/*.ts"]
 }

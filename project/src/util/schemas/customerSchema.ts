@@ -1,6 +1,6 @@
 // project/src/util/schemas/customerSchema.ts
 import { z } from "zod";
-import { Customer, CustomerInput } from "@shared/types/models/customers";
+import { Customer, CustomerInput } from "@open-dream/shared";
 
 export const CustomerSchema = z.object({
   first_name: z.string().min(1, "First name required"),

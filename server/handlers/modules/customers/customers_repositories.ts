@@ -1,6 +1,6 @@
 // server/handlers/modules/customers/customers_repositories.ts
 import { db } from "../../../connection/connect.js";
-import type { Customer } from "@shared/types/models/customer.js";
+import type { Customer } from "@open-dream/shared";
 import type { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 
 // ---------- CUSTOMER FUNCTIONS ----------

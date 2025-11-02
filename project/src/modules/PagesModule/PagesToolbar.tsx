@@ -1,7 +1,7 @@
 // project/src/modules/PagesModule/PagesToolbar.tsx
 import { Button } from "@/components/ui/button";
 import { AuthContext } from "@/contexts/authContext";
-import { MediaFolder } from "@shared/types/models/media";
+import { MediaFolder } from "@open-dream/shared";
 import { appTheme } from "@/util/appTheme";
 import { Grid, List, Upload } from "lucide-react";
 import { useContext } from "react";

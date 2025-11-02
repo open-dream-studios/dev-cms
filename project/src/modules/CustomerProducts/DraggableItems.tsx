@@ -29,7 +29,7 @@ import { toast } from "react-toastify";
 import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
 import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
-import { Product } from "@shared/types/models/products";
+import { Product } from "@open-dream/shared";
 import InventoryRow from "./Grid/InventoryRow";
 import { useUiStore } from "@/store/useUIStore";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";

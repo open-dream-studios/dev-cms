@@ -2,16 +2,13 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
-import { Customer } from "@shared/types/models/customers";
+import { Customer, MediaLink, Product, Employee } from "@open-dream/shared";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { CustomerMiniCard } from "../CustomersModule/CustomerCatalog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MediaLink } from "@shared/types/models/media";
-import { Product } from "@shared/types/models/products";
 import { usePathname } from "next/navigation";
-import { Employee } from "@shared/types/models/employees";
 import { EmployeeMiniCard } from "../EmployeesModule/EmployeeCatalog";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
 import { customerToForm } from "@/util/schemas/customerSchema";

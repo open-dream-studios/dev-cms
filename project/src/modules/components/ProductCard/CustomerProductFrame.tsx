@@ -3,15 +3,12 @@
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { Product } from "@shared/types/models/products";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Customer } from "@shared/types/models/customers";
 import app_details from "../../../util/appDetails.json";
-import { MediaLink } from "@shared/types/models/media"; 
+import { MediaLink, Product, Customer,  Job, JobDefinition, Task  } from "@open-dream/shared"; 
 import CustomerTag from "./CustomerTag";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import { Check, Activity, Plus, ChevronDown } from "lucide-react";
-import type { Job, JobDefinition, Task } from "@shared/types/models/jobs";
 import { FaWrench } from "react-icons/fa6";
 import "../../components/Calendar/Calendar.css"; 
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";

@@ -1,6 +1,6 @@
 // project/src/util/schemas/sectionSchema.ts
 import * as z from "zod";
-import { Section } from "@shared/types/models/pages";
+import { Section } from "@open-dream/shared";
 
 export const SectionSchema = z.object({
   parent_section_id: z.number().nullable().optional(),

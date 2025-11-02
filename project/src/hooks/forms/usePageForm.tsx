@@ -6,7 +6,7 @@ import {
   ProjectPageFormData,
   pageToForm,
 } from "@/util/schemas/projectPageSchema";
-import { ProjectPage, Section } from "@shared/types/models/pages";
+import { ProjectPage, Section } from "@open-dream/shared";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";

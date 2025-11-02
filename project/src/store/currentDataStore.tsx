@@ -1,13 +1,16 @@
 // src/store/currentDataStore.ts
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { Customer } from "@shared/types/models/customers";
-import { Employee } from "@shared/types/models/employees";
-import { ProjectPage, Section } from "@shared/types/models/pages";
-import { Project } from "@shared/types/models/project";
-import { Product } from "@shared/types/models/products";
-import { DataFilters } from "@shared/types/models/filters";
-import { MediaLink } from "@shared/types/models/media";
+import {
+  Customer,
+  Employee,
+  ProjectPage,
+  Section,
+  Project,
+  Product,
+  DataFilters,
+  MediaLink,
+} from "@open-dream/shared";
 
 interface CurrentDataState {
   currentProject: Project | null;
@@ -24,8 +27,8 @@ interface CurrentDataState {
   setCurrentProductImages: (currentProductImages: MediaLink[]) => void;
 
   localProductsData: Product[];
-  localProductsDataRef: { current: Product[] }; 
-  setLocalProductsData: (products: Product[]) => void;  
+  localProductsDataRef: { current: Product[] };
+  setLocalProductsData: (products: Product[]) => void;
 
   selectedProducts: string[];
   setSelectedProducts: (selectedProducts: string[]) => void;
@@ -127,6 +130,6 @@ export const useCurrentDataStore = create<CurrentDataState>()(
       setProductFilters: (filters: DataFilters) =>
         set({ productFilters: filters }),
     }),
-    { name: "CurrentDataStore" }  
+    { name: "CurrentDataStore" }
   )
 );

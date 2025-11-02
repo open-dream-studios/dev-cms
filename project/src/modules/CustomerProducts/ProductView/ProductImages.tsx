@@ -20,7 +20,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { MediaLink } from "@shared/types/models/media";
+import { MediaLink } from "@open-dream/shared";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
