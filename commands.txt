@@ -1,0 +1,6 @@
+rm -rf dist
+npx tsc --build --force --verbose
+node dist/index.js
+
+	•	Set Railway’s build command to:
+npm ci && npm run build && npm start

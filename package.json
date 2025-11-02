@@ -1,0 +1,16 @@
+{
+  "name": "dev-cms",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "scripts": {
+    "build": "tsc -b",
+    "build:server": "tsc -b server",
+    "start": "node ./server/dist/index.js",
+    "dev": "tsc -b --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

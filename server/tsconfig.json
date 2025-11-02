@@ -6,8 +6,12 @@
     "rootDir": ".",
     "outDir": "./dist",
     "baseUrl": ".",
+    // "paths": {
+    //   "@shared/*": ["../shared/*"]
+    // },
     "paths": {
-      "@shared/*": ["../shared/*"]
+      // "@shared/*": ["../shared/dist/shared/*"]
+      "@shared/*": ["./dist/shared/*"]
     },
     "resolveJsonModule": true,
     "strict": true,
@@ -22,6 +26,7 @@
     "declaration": false
   },
   "include": ["**/*"],
-  "exclude": ["dist", "node_modules"],
+  // "exclude": ["dist", "node_modules"],
+  "exclude": ["dist", "node_modules", "../shared"],
   "references": [{ "path": "../shared" }]
 }

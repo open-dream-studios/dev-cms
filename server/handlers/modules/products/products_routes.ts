@@ -1,4 +1,4 @@
-// server/handlers/modules/products/products_routes.js
+// server/handlers/modules/products/products_routes.ts
 import express from "express";
 import {
   getProducts,

@@ -1,4 +1,4 @@
-// server/handlers/modules/products/products_controllers.js
+// server/handlers/modules/products/products_controllers.ts
 import {
   deleteProductsFunction,
   getProductsFunction,

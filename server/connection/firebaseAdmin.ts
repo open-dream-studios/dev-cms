@@ -6,8 +6,6 @@ if (!process.env.FIREBASE_KEY_BASE64) {
   throw new Error("Missing FIREBASE_KEY_BASE64 env variable");
 }
 
-console.log("🔥 FIREBASE_KEY_BASE64:", process.env.FIREBASE_KEY_BASE64?.slice(0, 30));
-
 // Parse service account from base64 environment variable
 const rawServiceAccount = JSON.parse(
   Buffer.from(process.env.FIREBASE_KEY_BASE64, "base64").toString("utf-8")

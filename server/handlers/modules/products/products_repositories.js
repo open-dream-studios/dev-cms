@@ -1,4 +1,4 @@
-// server/handlers/modules/products/products_repositories.js
+// server/handlers/modules/products/products_repositories.ts
 import { db } from "../../../connection/connect.js";
 import { generateSerial } from "../../../functions/data.js";
 import { getNextOrdinal, reindexOrdinals } from "../../../lib/ordinals.js";

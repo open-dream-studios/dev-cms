@@ -4,6 +4,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "../server/dist/shared",
+    "rootDir": ".",
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "esnext",

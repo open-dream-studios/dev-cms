@@ -1,6 +1,6 @@
-// server/handlers/modules/customers/customers_controller.js
+// server/handlers/modules/customers/customers_controller.ts
 import type { Request, Response } from "express";
-import type { Customer } from "../../../../shared/types/models/customer.js";
+import type { Customer } from "@shared/types/models/customer.js";
 import {
   getCustomersFunction,
   upsertCustomerFunction,
