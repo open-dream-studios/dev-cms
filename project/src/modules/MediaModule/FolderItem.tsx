@@ -15,7 +15,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
-import { MediaFolder } from "@/types/media";
+import { MediaFolder } from "@shared/types/models/media";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";

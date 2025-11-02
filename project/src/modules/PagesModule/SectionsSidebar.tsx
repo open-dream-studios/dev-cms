@@ -1,6 +1,6 @@
 // project/src/modules/PagesModule/SectionsSidbar.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { ProjectPage, Section } from "@/types/pages";
+import { ProjectPage, Section } from "@shared/types/models/pages";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useState } from "react";
 import { FiChevronRight, FiEdit } from "react-icons/fi";

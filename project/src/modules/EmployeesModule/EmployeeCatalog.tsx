@@ -5,7 +5,7 @@ import { appTheme } from "@/util/appTheme";
 import EmployeeView from "./EmployeeView";
 import { formatPhone } from "@/util/functions/Customers";
 import ModuleLeftBar from "../components/ModuleLeftBar";
-import { Employee } from "@/types/employees";
+import { Employee } from "@shared/types/models/employees";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 

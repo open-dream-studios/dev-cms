@@ -1,5 +1,5 @@
 // project/src/util/schemas/employeeSchema.ts
-import { Employee } from "@/types/employees";
+import { Employee } from "@shared/types/models/employees";
 import { z } from "zod";
 
 export const EmployeeSchema = z.object({

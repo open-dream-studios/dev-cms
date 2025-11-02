@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/products.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Product } from "@/types/products";
+import { Product } from "@shared/types/models/products";
 import { RefObject } from "react";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 

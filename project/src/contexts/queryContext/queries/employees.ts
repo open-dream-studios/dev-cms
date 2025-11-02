@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { utcToProjectTimezone } from "@/util/functions/Time";
-import { Employee, EmployeeAssignment } from "@/types/employees";
+import { Employee, EmployeeAssignment } from "@shared/types/models/employees";
 
 export function useEmployees(
   isLoggedIn: boolean,

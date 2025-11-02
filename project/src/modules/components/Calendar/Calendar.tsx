@@ -23,7 +23,7 @@ import { getInnerCardStyle } from "@/styles/themeStyles";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Calendar.css";
-import { JobDefinition } from "@/types/jobs";
+import { JobDefinition } from "@shared/types/models/jobs";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { JobFormData } from "@/util/schemas/jobSchema";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";

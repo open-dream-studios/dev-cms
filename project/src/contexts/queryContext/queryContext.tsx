@@ -34,19 +34,19 @@ import {
   ProjectPage,
   Section,
   SectionDefinition,
-} from "@/types/pages";
-import { Customer } from "@/types/customers";
-import { Job, JobDefinition, Task } from "@/types/jobs";
-import { Employee, EmployeeAssignment } from "@/types/employees";
-import { Media, MediaFolder, MediaLink } from "@/types/media";
+} from "@shared/types/models/pages";
+import { Customer, CustomerInput } from "@shared/types/models/customers";
+import { Job, JobDefinition, Task } from "@shared/types/models/jobs";
+import { Employee, EmployeeAssignment } from "@shared/types/models/employees";
+import { Media, MediaFolder, MediaLink } from "@shared/types/models/media";
 import {
   Integration,
   ModuleDefinition,
   Project,
   ProjectModule,
   ProjectUser,
-} from "@/types/project";
-import { Product } from "@/types/products";
+} from "@shared/types/models/project";
+import { Product } from "@shared/types/models/products";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
 
@@ -160,7 +160,7 @@ export type QueryContextType = {
   customers: Customer[];
   isLoadingCustomers: boolean;
   refetchCustomers: () => Promise<any>;
-  upsertCustomer: (data: Customer) => Promise<{
+  upsertCustomer: (data: CustomerInput) => Promise<{
     id: number;
     customer_id: string;
   }>;

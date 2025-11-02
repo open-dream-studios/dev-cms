@@ -1,4 +1,4 @@
-// project/src/types/pages.ts
+// shared/types/models/pages.ts
 export type PageDefinition = {
   id?: number;
   page_definition_id: string;

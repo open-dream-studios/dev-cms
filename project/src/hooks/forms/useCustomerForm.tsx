@@ -6,13 +6,13 @@ import {
   CustomerFormData,
   customerToForm,
 } from "@/util/schemas/customerSchema";
-import { Customer } from "@/types/customers";
+import { Customer, CustomerInput } from "@shared/types/models/customers";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 
-export function useCustomerForm(customer?: Customer | null) {
+export function useCustomerForm(customer?: CustomerInput | null) {
   return useForm<CustomerFormData>({
     resolver: zodResolver(CustomerSchema),
     defaultValues: customerToForm(customer),
@@ -31,7 +31,7 @@ export function useCustomerFormSubmit() {
   ) => {
     if (!currentProjectId) return;
 
-    const newCustomer: Customer = {
+    const newCustomer: CustomerInput = {
       project_idx: currentProjectId,
       customer_id: currentCustomer?.customer_id ?? null,
       first_name: data.first_name,
@@ -52,7 +52,7 @@ export function useCustomerFormSubmit() {
           ...newCustomer,
           id,
           customer_id,
-        });
+        } as Customer);
         setAddingCustomer(false);
       }
     } catch (err) {

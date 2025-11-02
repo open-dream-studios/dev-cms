@@ -6,7 +6,7 @@ import type {
   JobDefinition,
   JobStatusOption,
   TaskStatusOption,
-} from "@/types/jobs";
+} from "@shared/types/models/jobs";
 import "../../../components/Calendar/Calendar.css";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { UseFormReturn, Path, useWatch } from "react-hook-form";

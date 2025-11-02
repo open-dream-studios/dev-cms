@@ -1,6 +1,6 @@
 // project/src/util/schemas/productSchema.ts
 import { z } from "zod";
-import { Product } from "@/types/products";
+import { Product } from "@shared/types/models/products";
 
 export const ProductSchema = z.object({
   serial_number: z

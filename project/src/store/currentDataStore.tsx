@@ -1,13 +1,13 @@
 // src/store/currentDataStore.ts
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { Customer } from "@/types/customers";
-import { Employee } from "@/types/employees";
-import { ProjectPage, Section } from "@/types/pages";
-import { Project } from "@/types/project";
-import { Product } from "@/types/products";
-import { DataFilters } from "@/types/filters";
-import { MediaLink } from "@/types/media";
+import { Customer } from "@shared/types/models/customers";
+import { Employee } from "@shared/types/models/employees";
+import { ProjectPage, Section } from "@shared/types/models/pages";
+import { Project } from "@shared/types/models/project";
+import { Product } from "@shared/types/models/products";
+import { DataFilters } from "@shared/types/models/filters";
+import { MediaLink } from "@shared/types/models/media";
 
 interface CurrentDataState {
   currentProject: Project | null;

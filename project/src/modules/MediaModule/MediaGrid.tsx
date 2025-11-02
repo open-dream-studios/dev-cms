@@ -14,7 +14,7 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Media, MediaFolder } from "@/types/media";
+import { Media, MediaFolder } from "@shared/types/models/media";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";

@@ -10,7 +10,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "@/contexts/authContext"; 
 import "./CustomerCalls.css";
-import { Customer } from "@/types/customers";
+import { Customer } from "@shared/types/models/customers";
 import { normalizeUSNumber } from "@/util/functions/Calls";
 import { formatPhoneNumber } from "@/util/functions/Customers"; 
 import { makeRequest } from "@/util/axios";

@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/projectPages.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { ProjectPage } from "@/types/pages";
+import { ProjectPage } from "@shared/types/models/pages";
 
 export function useProjectPages(
   isLoggedIn: boolean,

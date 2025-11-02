@@ -1,6 +1,6 @@
 // project/src/util/schemas/customerSchema.ts
 import { z } from "zod";
-import { Customer } from "@/types/customers";
+import { Customer, CustomerInput } from "@shared/types/models/customers";
 
 export const CustomerSchema = z.object({
   first_name: z.string().min(1, "First name required"),
@@ -29,7 +29,7 @@ export const CustomerSchema = z.object({
 
 export type CustomerFormData = z.infer<typeof CustomerSchema>;
 
-export function customerToForm(customer?: Customer | null): CustomerFormData {
+export function customerToForm(customer?: Customer | CustomerInput | null): CustomerFormData {
   return {
     first_name: customer?.first_name ?? "",
     last_name: customer?.last_name ?? "",

@@ -1,4 +1,4 @@
-// project/src/types/employees.ts
+// shared/types/models/employees.ts
 export type Employee = {
   id?: number;
   employee_id: string | null;

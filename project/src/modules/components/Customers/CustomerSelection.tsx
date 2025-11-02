@@ -3,8 +3,8 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
-import { Customer } from "@/types/customers";
-import { Product } from "@/types/products";
+import { Customer } from "@shared/types/models/customers";
+import { Product } from "@shared/types/models/products";
 import { appTheme } from "@/util/appTheme";
 import { formatPhone } from "@/util/functions/Customers";
 import { useContext, useEffect, useState } from "react";

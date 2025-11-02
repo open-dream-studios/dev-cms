@@ -1,4 +1,4 @@
-// project/src/types/theme.ts
+// shared/types/models/theme.ts
 export type Theme = {
   id: number;
   project_id: number;

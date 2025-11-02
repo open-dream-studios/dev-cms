@@ -2,7 +2,7 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Integration, ModuleDefinition, ProjectModule } from "@/types/project";
+import { Integration, ModuleDefinition, ProjectModule } from "@shared/types/models/project";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FaCheck, FaPlus, FaRegCircleCheck, FaTrash } from "react-icons/fa6";

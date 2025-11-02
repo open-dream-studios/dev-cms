@@ -6,8 +6,8 @@ import Modal2MultiStepModalInput, {
 } from "@/modals/Modal2MultiStepInput";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
-import { Job, JobDefinition } from "@/types/jobs";
-import { Product } from "@/types/products";
+import { Job, JobDefinition } from "@shared/types/models/jobs";
+import { Product } from "@shared/types/models/products";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";

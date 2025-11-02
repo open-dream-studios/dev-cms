@@ -5,7 +5,7 @@ import {
   ModuleDefinition,
   Project,
   ProjectModule,
-} from "@/types/project";
+} from "@shared/types/models/project";
 import { makeRequest } from "@/util/axios";
 import { toast } from "react-toastify";
 

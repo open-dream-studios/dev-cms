@@ -1,6 +1,4 @@
-// project/src/types/project.ts
-import { ReactNode } from "react";
-
+// shared/types/models/project.ts
 export type Screen =
   | "dashboard"
   | "add-product"
@@ -19,7 +17,7 @@ export type Screen =
 export type Modal =
   | { type: "mediaUpload" }
   | { type: "confirmDelete"; payload: { id: string } }
-  | { type: "custom"; content: ReactNode };
+  | { type: "custom"; content: React.ReactNode };
 
 export type UIState = {
   screen: Screen;

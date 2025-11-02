@@ -1,6 +1,6 @@
 // project/src/modules/PagesModule/PagesSidebar.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { ProjectPage } from "@/types/pages";
+import { ProjectPage } from "@shared/types/models/pages";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useState } from "react";
 import { FiEdit } from "react-icons/fi";

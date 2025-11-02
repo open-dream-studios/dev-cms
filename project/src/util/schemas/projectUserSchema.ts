@@ -1,4 +1,4 @@
-import { accessLevels } from "@/types/project";
+import { accessLevels } from "@shared/types/models/project";
 import { z } from "zod";
 
 export const ProjectUserSchema = (existingEmails: string[]) =>

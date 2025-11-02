@@ -6,14 +6,14 @@ import {
   ProductFormData,
   productToForm,
 } from "@/util/schemas/productSchema";
-import { Product } from "@/types/products";
+import { Product } from "@shared/types/models/products";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { getNextOrdinal } from "@/util/functions/Data";
 import { toast } from "react-toastify";
-import { MediaLink } from "@/types/media";
+import { MediaLink } from "@shared/types/models/media";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useAutoSaveStore } from "@/store/useAutoSaveStore";
 import { useMedia } from "../useMedia";

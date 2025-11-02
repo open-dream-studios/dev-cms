@@ -14,7 +14,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Project } from "@/types/project";
+import { Project } from "@shared/types/models/project";
 import { getCardStyle } from "@/styles/themeStyles";
 
 const ProjectSettings = () => {

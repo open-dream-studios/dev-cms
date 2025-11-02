@@ -1,4 +1,4 @@
-// project/src/types/filters.ts
+// shared/types/models/filters.ts
 
 export type jobType = "Service" | "Refurbishment" | "Resell";
 export type productFilter = "Active" | "Complete";

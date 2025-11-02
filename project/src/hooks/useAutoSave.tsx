@@ -1,6 +1,4 @@
 // project/src/hooks/useAutoSave.tsx
-import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore";
 import { useRef, useCallback, useEffect } from "react";
 
 export type DelayType = "fast" | "slow" | number;

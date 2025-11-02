@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { usePathname, useRouter } from "next/navigation";
 import { useUiStore } from "@/store/useUIStore";
-import { Screen } from "@/types/screens";
+import { Screen } from "@shared/types/models/screens";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useCustomerFormSubmit } from "./forms/useCustomerForm";
 import { useEmployeeFormSubmit } from "./forms/useEmployeeForm";

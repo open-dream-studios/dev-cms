@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/jobs.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Job } from "@/types/jobs";
+import { Job } from "@shared/types/models/jobs";
 import { utcToProjectTimezone, utcToLocal } from "@/util/functions/Time";
 
 export function useJobs(isLoggedIn: boolean, currentProjectId: number | null) {

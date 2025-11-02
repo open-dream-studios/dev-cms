@@ -1,7 +1,7 @@
 // src/context/queryContext/queries/customers.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { Customer } from "@shared/types/models/customers";
+import { Customer, CustomerInput } from "@shared/types/models/customers";
 
 export function useCustomers(
   isLoggedIn: boolean,
@@ -39,7 +39,7 @@ export function useCustomers(
   });
 
   const upsertCustomerMutation = useMutation({
-    mutationFn: async (data: Customer) => {
+    mutationFn: async (data: CustomerInput) => {
       const res = await makeRequest.post("/api/customers/upsert", {
         ...data,
         project_idx: currentProjectId,
@@ -73,7 +73,7 @@ export function useCustomers(
     },
   });
 
-  const upsertCustomer = async (data: Customer) => {
+  const upsertCustomer = async (data: CustomerInput) => {
     return await upsertCustomerMutation.mutateAsync(data);
   };
 

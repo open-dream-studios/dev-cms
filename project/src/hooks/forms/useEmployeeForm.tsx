@@ -6,7 +6,7 @@ import {
   EmployeeFormData,
   employeeToForm,
 } from "@/util/schemas/employeeSchema";
-import { Employee } from "@/types/employees";
+import { Employee } from "@shared/types/models/employees";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";

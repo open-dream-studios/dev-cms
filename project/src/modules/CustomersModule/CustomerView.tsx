@@ -12,7 +12,7 @@ import {
 } from "@/util/functions/Customers";
 import { Controller } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
-import { Product } from "@/types/products";
+import { Product } from "@shared/types/models/products";
 import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
 import { getCardStyle } from "@/styles/themeStyles";
 import {

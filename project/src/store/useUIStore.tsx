@@ -1,7 +1,6 @@
 // src/store/UIStore.ts
-import { ProjectPage, Section } from "@/types/pages";
-import { Product } from "@/types/products";
-import { Modal, Screen, UIState } from "@/types/screens";
+import { ProjectPage, Section } from "@shared/types/models/pages"; 
+import { Modal, Screen, UIState } from "@shared/types/models/screens";
 import { create } from "zustand";
 
 interface UiState {

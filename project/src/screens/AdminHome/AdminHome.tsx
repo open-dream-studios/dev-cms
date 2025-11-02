@@ -1,6 +1,6 @@
 // project/src/screens/AdminHome/AdminHome.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { Project } from "@/types/project";
+import { Project } from "@shared/types/models/project";
 import { appTheme } from "@/util/appTheme";
 import React, { useContext, useState } from "react";
 import { FaPlus } from "react-icons/fa6";

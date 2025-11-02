@@ -6,7 +6,7 @@ import MediaFoldersSidebar from "./MediaFoldersSidebar";
 import MediaGrid from "./MediaGrid";
 import MediaToolbar from "./MediaToolbar";
 import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
-import { Media, MediaFolder } from "@/types/media";
+import { Media, MediaFolder } from "@shared/types/models/media";
 import { collectParentIds } from "@/util/functions/Tree";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";

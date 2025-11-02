@@ -1,12 +1,12 @@
 // project/src/modules/CustomerProducts/ProductView/AddEmployeeList.tsx
-import { Job, Task } from "@/types/jobs";
+import { Job, Task } from "@shared/types/models/jobs";
 import React from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
 import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
-import { Employee } from "@/types/employees";
+import { Employee } from "@shared/types/models/employees";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 
 const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {

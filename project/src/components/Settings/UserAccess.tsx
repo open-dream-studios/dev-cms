@@ -3,7 +3,7 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
-import { accessLevels, projectRoles, ProjectUser } from "@/types/project";
+import { accessLevels, projectRoles, ProjectUser } from "@shared/types/models/project";
 import { appTheme } from "@/util/appTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useContext, useMemo, useState } from "react";

@@ -1,7 +1,5 @@
-// project/src/types/customers.ts
-export type Customer = {
-  id?: number;
-  customer_id: string | null;
+// shared/types/models/customer.ts
+export interface CustomerBase {
   project_idx: number;
   first_name: string;
   last_name: string;
@@ -13,6 +11,17 @@ export type Customer = {
   state: string | null;
   zip: string | null;
   notes: string | null;
-  created_at?: string;
-  updated_at?: string;
-};
+}
+
+export interface Customer extends CustomerBase {
+  id: number;
+  customer_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomerInput extends Partial<CustomerBase> {
+  id?: number;
+  customer_id: string | null;
+  project_idx: number;
+}

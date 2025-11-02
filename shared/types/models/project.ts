@@ -1,4 +1,4 @@
-// project/src/types/project.ts
+// shared/types/models/project.ts
 export type Project = {
   id?: number;
   project_id: string | null;

@@ -14,11 +14,11 @@ import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
-import { SectionDefinition } from "@/types/pages";
+import { SectionDefinition } from "@shared/types/models/pages";
 import {
   FieldDefinition,
   SectionConfigSchema,
-} from "@/types/sectionConfigSchema";
+} from "@shared/types/models/sectionConfigSchema";
 import SchemaBuilder from "./SchemaBuilder";
 import { toast } from "react-toastify";
 

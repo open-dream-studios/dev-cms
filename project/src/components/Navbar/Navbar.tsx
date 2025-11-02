@@ -1,3 +1,4 @@
+// project/src/components/Navbar/Navbar.tsx
 "use client";
 import { useContext, useMemo } from "react";
 import { AuthContext } from "../../contexts/authContext";

@@ -1,4 +1,4 @@
-// project/src/types/jobs.ts
+// shared/types/models/jobs.ts
 export type JobStatusOption =
   | "waiting_diagnosis"
   | "waiting_work"

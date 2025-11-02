@@ -1,12 +1,12 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useModal1Store } from "@/store/useModalStore";
-import { Customer } from "@/types/customers";
+import { Customer } from "@shared/types/models/customers";
 import { appTheme } from "@/util/appTheme";
 import { formatPhone } from "@/util/functions/Customers";
 import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import CustomerSelection from "../Customers/CustomerSelection";
-import { Product } from "@/types/products";
+import { Product } from "@shared/types/models/products";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";

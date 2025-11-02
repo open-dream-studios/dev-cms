@@ -2,7 +2,7 @@ import { MouseEventHandler, ReactNode, useContext, useState } from "react";
 import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme"; 
-import { Screen } from "@/types/screens";
+import { Screen } from "@shared/types/models/screens";
 import { useUiStore } from "@/store/useUIStore";
 
 type HoverBoxProps = {

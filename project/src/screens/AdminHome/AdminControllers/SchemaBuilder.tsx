@@ -4,7 +4,7 @@ import {
   FieldType,
   SectionConfigSchema,
   FieldOption,
-} from "@/types/sectionConfigSchema";
+} from "@shared/types/models/sectionConfigSchema";
 import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";

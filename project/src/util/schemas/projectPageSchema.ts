@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { ProjectPage } from "@/types/pages";
+import { ProjectPage } from "@shared/types/models/pages";
 
 export const ProjectPageSchema = z.object({
   parent_page_id: z.number().nullable().optional(),

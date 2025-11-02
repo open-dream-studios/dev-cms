@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { appTheme } from "@/util/appTheme";
 import CustomerView from "./CustomerView";
-import { Customer } from "@/types/customers";
+import { Customer } from "@shared/types/models/customers";
 import { formatPhone } from "@/util/functions/Customers";
 import ModuleLeftBar from "../components/ModuleLeftBar";
 import { useUiStore } from "@/store/useUIStore";

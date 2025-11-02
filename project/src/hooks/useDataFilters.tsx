@@ -1,8 +1,8 @@
 // project/src/hooks/useDataFilters.tsx
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { Job, JobDefinition } from "@/types/jobs";
-import { Product } from "@/types/products";
+import { Job, JobDefinition } from "@shared/types/models/jobs";
+import { Product } from "@shared/types/models/products";
 
 export function useDataFilters() {
   const { productFilters } = useCurrentDataStore();

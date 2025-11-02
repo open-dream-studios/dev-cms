@@ -1,4 +1,4 @@
-// project/src/types/media.ts
+// shared/types/models/media.ts
 export type FileType = "image" | "video" | "file";
 
 export type MediaFolder = {
