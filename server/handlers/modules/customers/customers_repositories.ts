@@ -37,7 +37,7 @@ export const upsertCustomerFunction = async (
     notes,
   } = reqBody;
 
-  const finalCustomerId =
+  const finalCustomerId = 
     customer_id && customer_id.trim() !== ""
       ? customer_id
       : "C-" +

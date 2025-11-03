@@ -1,12 +1,12 @@
 // server/handlers/modules/customers/customers_controller.ts
-import type { Request, Response } from "express";
-import type { Customer } from "@open-dream/shared";
 import {
   getCustomersFunction,
   upsertCustomerFunction,
   deleteCustomerFunction,
 } from "./customers_repositories.js";
 import type { PoolConnection } from "mysql2/promise";
+import type { Request, Response } from "express";
+import type { Customer } from "@open-dream/shared";
 
 // ---------- CUSTOMER CONTROLLERS ----------
 export const getCustomers = async (req: Request, res: Response) => {
