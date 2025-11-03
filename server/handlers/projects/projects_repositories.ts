@@ -2,27 +2,40 @@
 import { db } from "../../connection/connect.js";
 import crypto from "crypto";
 import { adminEmail } from "../../util/roles.js";
+import type {
+  RowDataPacket,
+  PoolConnection,
+  ResultSetHeader,
+} from "mysql2/promise";
+import { Project } from "@open-dream/shared";
 
 // ---------- PROJECT FUNCTIONS ----------
-export const getGlobalAdminEmails = async (connection) => {
-  const [rows] = await connection.query(
+export const getGlobalAdminEmails = async (connection: PoolConnection) => {
+  const [rows] = await connection.query<RowDataPacket[]>(
     "SELECT email FROM users WHERE admin = 1"
   );
   return rows.map((r) => r.email);
 };
 
-export const getProjectsFunction = async (userEmail) => {
+export const getProjectsFunction = async (
+  userEmail: string
+): Promise<Project[]> => {
   const q = `
     SELECT p.* 
     FROM projects p
     JOIN project_users pu ON p.id = pu.project_idx
     WHERE pu.email = ?
   `;
-  const [rows] = await db.promise().query(q, [userEmail]);
+  const [rows] = await db
+    .promise()
+    .query<(Project & RowDataPacket)[]>(q, [userEmail]);
   return rows;
 };
 
-export const upsertProjectFunction = async (connection, reqBody) => {
+export const upsertProjectFunction = async (
+  connection: PoolConnection,
+  reqBody: any
+) => {
   const { project_id, name, short_name, domain, backend_domain, brand, logo } =
     reqBody;
 
@@ -55,17 +68,17 @@ export const upsertProjectFunction = async (connection, reqBody) => {
     logo || null,
   ];
 
-  const [rows] = await connection.query(query, values);
+  const [rows] = await connection.query<ResultSetHeader>(query, values);
 
   if (!project_id && rows.insertId) {
     await upsertProjectUserFunction(connection, {
       email: adminEmail,
       project_idx: rows.insertId,
-      clearance: 9
+      clearance: 9,
     });
   }
 
-  const [rows2] = await connection.query(
+  const [rows2] = await connection.query<RowDataPacket[]>(
     "SELECT * FROM projects WHERE project_id = ?",
     [finalProjectId]
   );
@@ -77,40 +90,46 @@ export const upsertProjectFunction = async (connection, reqBody) => {
   };
 };
 
-export const deleteProjectFunction = async (connection, project_id) => {
+export const deleteProjectFunction = async (
+  connection: PoolConnection,
+  project_id: string
+) => {
   const q = `DELETE FROM projects WHERE project_id = ?`;
   await connection.query(q, [project_id]);
   return { success: true };
 };
 
 // ---------- PROJECT USER FUNCTIONS ----------
-export const getAllUserRolesFunction = async () => {
+export const getAllUserRolesFunction = async (): Promise<any[]> => {
   const q = `
     SELECT pu.id, pu.project_idx, pu.email, pu.clearance, p.name AS project_name
     FROM project_users pu
     JOIN projects p ON pu.project_idx = p.id
     ORDER BY pu.invited_at DESC
   `;
-  const [rows] = await db.promise().query(q, []);
+  const [rows] = await db.promise().query<RowDataPacket[]>(q, []);
   return rows;
 };
 
-export const upsertProjectUserFunction = async (connection, reqBody) => {
+export const upsertProjectUserFunction = async (
+  connection: PoolConnection,
+  reqBody: any
+) => {
   const { email, project_idx, clearance } = reqBody;
   const query = `
       INSERT INTO project_users (email, project_idx, clearance)
       VALUES (?, ?, ?)
       ON DUPLICATE KEY UPDATE clearance = VALUES(clearance)
     `;
-  const values = [email, project_idx, clearance]
+  const values = [email, project_idx, clearance];
   await connection.query(query, values);
   return { success: true };
 };
 
 export const deleteProjectUserFunction = async (
-  connection,
-  email,
-  project_idx
+  connection: PoolConnection,
+  email: string,
+  project_idx: number
 ) => {
   const q = `DELETE FROM project_users WHERE email = ? AND project_idx = ?`;
   await connection.query(q, [email, project_idx]);

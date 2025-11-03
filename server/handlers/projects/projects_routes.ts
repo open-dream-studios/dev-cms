@@ -7,7 +7,7 @@ import {
   getAllUserRoles,
   upsertProjectUser,
   deleteProjectUser,
-} from "./projects_controllers.js";
+} from "./projects_controllers.js"
 import { authenticateUser } from "../../util/auth.js";
 import { checkProjectPermission } from "../../util/permissions.js";
 import { requireAdmin } from "../../util/roles.js";
