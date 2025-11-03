@@ -21,8 +21,7 @@ export const StatusBadge: React.FC<{
   callSubmitForm: () => void;
   oneSize: boolean;
 }> = ({ form, matchedDefinition, cancelTimer, callSubmitForm, oneSize }) => {
-  if (!form || !matchedDefinition) return null;
-  const status = useWatch({ control: form.control, name: "status" });
+  const status = useWatch({ control: form?.control, name: "status" });
   const mapping: Record<string, { color: string; label: string }> = {
     waiting_diagnosis: { color: "#06b6d4", label: "Waiting On Diagnosis" },
     waiting_work: { color: "#60a5fa", label: "Work Required" },
@@ -35,6 +34,7 @@ export const StatusBadge: React.FC<{
     complete: { color: "#16a34a", label: "Complete" },
     cancelled: { color: "#ef4444", label: "Cancelled" },
   };
+  if (!form || !matchedDefinition) return null;
   const info = mapping[status] ?? {
     color: "#94a3b8",
     label: status || "Unknown",
@@ -117,8 +117,7 @@ export const TaskStatusBadge: React.FC<{
   callSubmitForm: () => void;
   oneSize: boolean;
 }> = ({ form, matchedDefinition, cancelTimer, callSubmitForm, oneSize }) => {
-  if (!form || !matchedDefinition) return null;
-  const status = useWatch({ control: form.control, name: "status" });
+  const status = useWatch({ control: form?.control, name: "status" });
   const mapping: Record<string, { color: string; label: string }> = {
     waiting_work: { color: "#60a5fa", label: "Work Required" },
     waiting_parts: { color: "#f59e0b", label: "Waiting On Parts" },
@@ -126,6 +125,7 @@ export const TaskStatusBadge: React.FC<{
     complete: { color: "#16a34a", label: "Complete" },
     cancelled: { color: "#ef4444", label: "Cancelled" },
   };
+  if (!form || !matchedDefinition) return null;
   const info = mapping[status] ?? {
     color: "#94a3b8",
     label: status || "Unknown",
@@ -206,19 +206,20 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
-  if (!form) return null;
-
   const priority = useWatch({
-    control: form.control,
+    control: form?.control,
     name: "priority" as Path<T>,
   });
-  const status = useWatch({ control: form.control, name: "status" as Path<T> });
+  const status = useWatch({ control: form?.control, name: "status" as Path<T> });
+  if (!form) return null;
 
   return (
     <div
       onClick={(e) => e.stopPropagation()}
       className={`${
-        oneSize ? "hover:brightness-90 pr-[14px] gap-2" : "pl-[calc(0.3vw+7px)] pr-[calc(0.2vw+15px)] gap-[5%] hover:brightness-[83%]"
+        oneSize
+          ? "hover:brightness-90 pr-[14px] gap-2"
+          : "pl-[calc(0.3vw+7px)] pr-[calc(0.2vw+15px)] gap-[5%] hover:brightness-[83%]"
       } cursor-pointer dim inline-flex items-center rounded-full font-semibold`}
       style={{
         background:
@@ -257,7 +258,9 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
               : "none",
         }}
         className={`w-[100%] ${
-          oneSize ? "pl-[14px] min-w-[95px] py-2 text-sm" : "py-[6%] text-[calc(10px+0.2vw)]"
+          oneSize
+            ? "pl-[14px] min-w-[95px] py-2 text-sm"
+            : "py-[6%] text-[calc(10px+0.2vw)]"
         } brightness-[140%] pr-[5px] rounded-full cursor-pointer outline-none border-none`}
       >
         <option value="low">Low</option>

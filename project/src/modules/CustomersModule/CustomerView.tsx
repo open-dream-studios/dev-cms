@@ -296,7 +296,7 @@ export const CustomerView = () => {
                 }}
                 onKeyDown={handleKeyDown(phoneInputRef)}
                 onChange={(e) => {
-                  let value = e.target.value
+                  const value = e.target.value
                     .replace(/[^A-Za-z0-9-.@]/g, "") // allow only letters + dashes
                     .replace(/\s+/g, ""); // remove spaces
                   customerForm.setValue("email", value, {
@@ -422,7 +422,7 @@ export const CustomerView = () => {
               {...customerForm.register("zip")}
               placeholder="Zip"
               onChange={(e) => {
-                let value = e.target.value.replace(/\D/g, "").slice(0, 5);
+                const value = e.target.value.replace(/\D/g, "").slice(0, 5);
                 customerForm.setValue("zip", value, {
                   shouldValidate: true,
                   shouldDirty: true,

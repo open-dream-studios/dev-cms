@@ -33,13 +33,18 @@ const UserAccess = () => {
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
-  if (!currentUser || !currentProject) return null;
+
+  const [showAddProjectInput, setShowAddProjectInput] =
+    useState<boolean>(false);
+  const [editListMode, setEditListMode] = useState<boolean>(false);
 
   const emailsInProject = projectUsers
-    .filter((u) => u.project_idx === currentProject.id)
+    .filter((u) => u.project_idx === currentProject?.id)
     .map((u) => u.email);
 
   const form = useProjectUserForm(emailsInProject);
+
+  if (!currentUser || !currentProject) return null;
 
   const onSubmit = async (data: ProjectUserFormData) => {
     if (!currentProject) return;
@@ -50,10 +55,6 @@ const UserAccess = () => {
     } as ProjectUser);
     setShowAddProjectInput(false);
   };
-
-  const [showAddProjectInput, setShowAddProjectInput] =
-    useState<boolean>(false);
-  const [editListMode, setEditListMode] = useState<boolean>(false);
 
   const handleShowAddUserInput = () => {
     form.reset({ email: "", role: getRoleFromClearance(3) });
@@ -268,7 +269,7 @@ const UserAccess = () => {
                               .map((role: string) => (
                                 <option key={role} value={role}>
                                   {capitalizeFirstLetter(role)}
-                                </option>               
+                                </option>
                               ))}
                         </select>
                       ) : (

@@ -16,14 +16,14 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
-import { productFilter, Product} from "@open-dream/shared";
+import { productFilter, Product } from "@open-dream/shared";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useModals } from "@/hooks/useModals";
 import { runFrontendModule } from "../runFrontendModule";
 import { getCardStyle } from "@/styles/themeStyles";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 
-const ProductsHeader = ({ title }: { title: String }) => {
+const ProductsHeader = ({ title }: { title: string }) => {
   const { currentUser } = useContext(AuthContext);
   const { saveProducts } = useProductFormSubmit();
   const {
@@ -60,7 +60,32 @@ const ProductsHeader = ({ title }: { title: String }) => {
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
 
-  if (!currentProjectId) return null;
+  const [showFilterPopup, setShowFilterPopup] = useState<boolean>(false);
+  const showFilterPopupRef = useRef<boolean>(false);
+  const filterPopupRef = useRef<HTMLDivElement | null>(null);
+  const handleFilterButtonClick = () => {
+    setShowFilterPopup(true);
+    showFilterPopupRef.current = true;
+  };
+  useOutsideClick(filterPopupRef, () => {
+    if (showFilterPopup) {
+      setShowFilterPopup(false);
+      showFilterPopupRef.current = false;
+    }
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (showFilterPopupRef.current) {
+        setShowFilterPopup(false);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   const handleWixSync = async () => {
     await promptContinue(`Sync data to Wix website?`, false, () => {}, wixSync);
@@ -175,6 +200,7 @@ const ProductsHeader = ({ title }: { title: String }) => {
     newMake: string,
     newModel: string
   ) => {
+    if (!currentProjectId) return null;
     const allOrdinals = localProductsData.map((p) => p.ordinal);
     const nextOrdinal =
       allOrdinals.length > 0 ? Math.max(...allOrdinals) + 1 : 0;
@@ -242,33 +268,6 @@ const ProductsHeader = ({ title }: { title: String }) => {
     }
     setInventoryView(tableView);
   };
-
-  const [showFilterPopup, setShowFilterPopup] = useState<boolean>(false);
-  const showFilterPopupRef = useRef<boolean>(false);
-  const filterPopupRef = useRef<HTMLDivElement | null>(null);
-  const handleFilterButtonClick = () => {
-    setShowFilterPopup(true);
-    showFilterPopupRef.current = true;
-  };
-  useOutsideClick(filterPopupRef, () => {
-    if (showFilterPopup) {
-      setShowFilterPopup(false);
-      showFilterPopupRef.current = false;
-    }
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (showFilterPopupRef.current) {
-        setShowFilterPopup(false);
-      }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   if (!currentUser) return null;
 

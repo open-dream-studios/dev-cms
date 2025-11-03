@@ -67,5 +67,13 @@ export type Integration = {
   project_idx: number;
   module_id: number;
   integration_key: string;
+};
+
+export type DecryptedIntegration = {
+  id?: number;
+  integration_id: string | null;
+  project_idx: number;
+  module_id: number;
+  integration_key: string;
   integration_value: string | null;
 };

@@ -13,7 +13,15 @@ import {
 import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
-import type { Job, JobDefinition, Task, Product, Customer, Employee, EmployeeAssignment } from "@open-dream/shared";
+import type {
+  Job,
+  JobDefinition,
+  Task,
+  Product,
+  Customer,
+  Employee,
+  EmployeeAssignment,
+} from "@open-dream/shared";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus, FaWrench } from "react-icons/fa6";
 import ScheduleTimeline from "@/modules/components/Calendar/Calendar";
@@ -23,13 +31,13 @@ import { BsThreeDots, BsThreeDotsVertical } from "react-icons/bs";
 import { FiEdit } from "react-icons/fi";
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
-import { useWatch } from "react-hook-form"; 
+import { useWatch } from "react-hook-form";
 import { dateToString, formatDateTime } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import AddEmployeeList from "../AddEmployeeList"; 
+import AddEmployeeList from "../AddEmployeeList";
 import CircularProgress from "./CircularProgress";
 import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
 import { useCurrentDataStore } from "@/store/currentDataStore";
@@ -73,8 +81,6 @@ const TaskCard: React.FC<{
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
-  if (!productJob || !matchedDefinition) return null;
-
   const taskForm = useTaskForm();
   const taskStatus = useWatch({ control: taskForm.control, name: "status" });
 
@@ -90,6 +96,7 @@ const TaskCard: React.FC<{
   }, [task?.task_id]);
 
   const onFormSubmitButton = async (data: TaskFormData) => {
+    if (!productJob) return;
     const submitValue = {
       ...data,
       task_id: task.task_id,
@@ -147,6 +154,8 @@ const TaskCard: React.FC<{
     });
     setEditAssignment(false);
   };
+
+  if (!productJob || !matchedDefinition) return null;
 
   if (tasksCollapsed)
     return (
@@ -530,8 +539,6 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
-  if (!matchedDefinition || !productJob) return null;
-
   useEffect(() => {
     if (productJob?.job_id) {
       jobForm.reset(productJob as JobFormData);
@@ -542,6 +549,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   const status = useWatch({ control: jobForm.control, name: "status" });
 
   const onFormSubmitButton = async (data: JobFormData) => {
+    if (!matchedDefinition || !productJob) return null;
     const safeValuation = (() => {
       if (!data.valuation) return 0;
       const num = parseFloat(data.valuation);
@@ -681,6 +689,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     setEditAssignment(false);
   };
 
+  if (!matchedDefinition || !productJob) return null;
   if (!currentUser) return null;
 
   return (

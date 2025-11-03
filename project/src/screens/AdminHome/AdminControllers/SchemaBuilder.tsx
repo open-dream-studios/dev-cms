@@ -78,6 +78,8 @@ const FieldRow: React.FC<{
   onMoveDown,
   themeColors,
 }) => {
+  const [label, setLabel] = useState("");
+  const [value, setValue] = useState("");
   const update = (patch: Partial<FieldDefinition>) =>
     onChange({ ...field, ...patch } as FieldDefinition);
 
@@ -87,8 +89,6 @@ const FieldRow: React.FC<{
       case "select":
       case "multiselect": {
         const options = field.options || [];
-        const [label, setLabel] = useState("");
-        const [value, setValue] = useState("");
         return (
           <div className="mt-3">
             <p className="font-semibold mb-1">Options</p>

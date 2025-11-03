@@ -2,7 +2,11 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Integration, ModuleDefinition, ProjectModule } from "@open-dream/shared";
+import {
+  Integration,
+  ModuleDefinition,
+  ProjectModule,
+} from "@open-dream/shared";
 import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FaCheck, FaPlus, FaRegCircleCheck, FaTrash } from "react-icons/fa6";
@@ -126,7 +130,8 @@ const ModuleSettings = () => {
       form.reset();
     } else if (selectedModule) {
       const foundParentModule = projectModules.find(
-        (mod: ProjectModule) => mod.module_definition_id === selectedModule.parent_module_id
+        (mod: ProjectModule) =>
+          mod.module_definition_id === selectedModule.parent_module_id
       );
       if (foundParentModule) {
         setSelectedModule(foundParentModule);
@@ -208,9 +213,9 @@ const ModuleSettings = () => {
     }
   };
 
-  if (!currentUser || !currentProject) return null;
-
   const editKeyInputRef = useRef<HTMLInputElement>(null);
+
+  if (!currentUser || !currentProject) return null;
 
   return (
     <form

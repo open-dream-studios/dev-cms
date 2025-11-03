@@ -15,22 +15,22 @@ const AdminController = () => {
 
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
-  
-  if (!currentUser) return null;
 
   const [controlActive, setControlActive] = useState<Control>("modules");
 
+  if (!currentUser) return null;
+
   return (
-    <div className="w-[100%] flex flex-col gap-[8px] px-[50px] py-[33px] h-[100%] overflow-y-scroll">
+    <div className="w-full flex flex-col gap-2 px-[50px] py-[33px] h-full overflow-y-scroll">
       <div className="flex flex-row gap-[19px] items-center">
-        <h1 className="flex mt-[-4px] text-[25px] md:text-[30px] font-[600]">
+        <h1 className="flex -mt-1 text-[25px] md:text-[30px] font-semibold">
           Controllers
         </h1>
         <div
           style={{
             backgroundColor: t.header_1_1,
           }}
-          className="flex w-[290px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
+          className="flex w-[290px] pl-1 h-8 rounded-[18px] flex-row items-center"
         >
           <div
             onClick={() => setControlActive("modules")}
@@ -40,7 +40,7 @@ const AdminController = () => {
                   ? t.header_1_2
                   : "transparent",
             }}
-            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-medium rounded-[18px]"
           >
             Modules
           </div>
@@ -52,7 +52,7 @@ const AdminController = () => {
                   ? t.header_1_2
                   : "transparent",
             }}
-            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-medium rounded-[18px]"
           >
             Pages
           </div>
@@ -64,7 +64,7 @@ const AdminController = () => {
                   ? t.header_1_2
                   : "transparent",
             }}
-            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-medium rounded-[18px]"
           >
             Sections
           </div>

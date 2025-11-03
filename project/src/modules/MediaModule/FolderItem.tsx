@@ -55,8 +55,6 @@ export default function FolderItem({
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
-  if (!folder || !folder.id) return;
-
   useEffect(() => {
     if (renamingFolder === folder.folder_id) {
       setTempName(folder.name);
@@ -93,10 +91,10 @@ export default function FolderItem({
     transition,
     isDragging,
   } = useSortable({
-    id: folder.id,
+    id: folder.id!,
   });
 
-  const isOpen = openFolders.has(folder.id);
+  const isOpen = openFolders.has(folder.id!);
 
   const style = {
     transform: CSS.Transform.toString(transform),

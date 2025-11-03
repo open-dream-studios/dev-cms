@@ -13,7 +13,7 @@ import {
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore"; 
+import { useModal2Store } from "@/store/useModalStore";
 import {
   SectionDefinition,
   FieldDefinition,
@@ -59,8 +59,6 @@ const EditSectionDefinitions = () => {
       }, 50);
     }
   }, [showForm]);
-
-  if (!currentUser) return null;
 
   function validateUniqueKeys(
     fields: FieldDefinition[],
@@ -195,6 +193,8 @@ const EditSectionDefinitions = () => {
         );
   }, [sectionDefinitions, selectedSection]);
 
+  if (!currentUser) return null;
+
   return (
     <form
       onSubmit={(e) => {
@@ -209,10 +209,7 @@ const EditSectionDefinitions = () => {
             onClick={handleBackClick}
             className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[33px] rounded-full w-[33px] opacity-[30%]"
           >
-            <FaChevronLeft
-              size={22}
-              color={t.text_3}
-            />
+            <FaChevronLeft size={22} color={t.text_3} />
           </div>
         )}
         <h2 className="text-[24px] ml-[4px] font-bold mt-[-5px] mr-[14px]">
@@ -224,8 +221,7 @@ const EditSectionDefinitions = () => {
             <button
               type="submit"
               style={{
-                backgroundColor:
-                  t.background_2_selected,
+                backgroundColor: t.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px] py-[6px] rounded-full"
             >
@@ -235,8 +231,7 @@ const EditSectionDefinitions = () => {
               type="button"
               onClick={resetForm}
               style={{
-                backgroundColor:
-                  t.background_2_selected,
+                backgroundColor: t.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
             >
@@ -248,8 +243,7 @@ const EditSectionDefinitions = () => {
             type="button"
             onClick={handleShowForm}
             style={{
-              backgroundColor:
-                t.background_2_selected,
+              backgroundColor: t.background_2_selected,
             }}
             className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
@@ -291,8 +285,7 @@ const EditSectionDefinitions = () => {
                       key={s}
                       className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
                       style={{
-                        backgroundColor:
-                          t.background_2_selected,
+                        backgroundColor: t.background_2_selected,
                         color: t.text_4,
                       }}
                     >
@@ -361,10 +354,7 @@ const EditSectionDefinitions = () => {
               >
                 <div className="w-[calc(100%-90px)] truncate">
                   <p className="font-semibold truncate">{section.name}</p>
-                  <p
-                    style={{ color: t.text_4 }}
-                    className="text-sm truncate"
-                  >
+                  <p style={{ color: t.text_4 }} className="text-sm truncate">
                     {section.identifier}
                   </p>
                 </div>
@@ -373,15 +363,11 @@ const EditSectionDefinitions = () => {
                     <div
                       onClick={(e) => handleEditClick(e, section)}
                       style={{
-                        backgroundColor:
-                          t.background_2_selected,
+                        backgroundColor: t.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FiEdit
-                        size={18}
-                        color={t.text_4}
-                      />
+                      <FiEdit size={18} color={t.text_4} />
                     </div>
                     <div
                       onClick={(e) => {
@@ -389,15 +375,11 @@ const EditSectionDefinitions = () => {
                         handleDeleteSectionDef(section);
                       }}
                       style={{
-                        backgroundColor:
-                          t.background_2_selected,
+                        backgroundColor: t.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FaTrash
-                        size={15}
-                        color={t.text_4}
-                      />
+                      <FaTrash size={15} color={t.text_4} />
                     </div>
                   </div>
                 )}

@@ -133,7 +133,7 @@ export function useMedia() {
         link.entity_type === "product" && link.entity_id === productId
     );
 
-    let linksToDelete = [];
+    const linksToDelete = [];
     for (const originalLink of existingProductImages) {
       const stillPresent = currentProductImages.find(
         (currentLink: MediaLink) =>
@@ -148,7 +148,7 @@ export function useMedia() {
       await deleteMediaLinks(linksToDelete);
     }
 
-    let linksToUpdate = [];
+    const linksToUpdate = [];
     for (const link of currentProductImages) {
       // if already existed and didn't change, do nothing
       const existing = existingProductImages.find(
@@ -176,7 +176,7 @@ export function useMedia() {
     } else {
       const usageItems: PopupDisplayItem[] = [];
       const usageMediaLinkItems: MediaLink[] = [];
-      for (let usage of mediaUsage) {
+      for (const usage of mediaUsage) {
         if (usage.entity_id) {
           if (usage.entity_type === "product") {
             const matchedProduct = productsData.find(

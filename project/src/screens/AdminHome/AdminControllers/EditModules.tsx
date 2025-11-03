@@ -40,6 +40,8 @@ const EditModules = () => {
   const [editingModule, setEditingModule] = useState<ModuleDefinition | null>(
     null
   );
+  const [configKeys, setConfigKeys] = useState<string[]>([]);
+  const [newKey, setNewKey] = useState("");
   const [showForm, setShowForm] = useState(false);
   const form = useModulesForm();
 
@@ -48,8 +50,6 @@ const EditModules = () => {
       form.setFocus("name");
     }
   }, [showForm, form]);
-
-  if (!currentUser) return null;
 
   const onSubmit = async (data: ModuleFormData) => {
     await upsertModuleDefinition({
@@ -112,9 +112,6 @@ const EditModules = () => {
       ),
     });
   };
-
-  const [configKeys, setConfigKeys] = useState<string[]>([]);
-  const [newKey, setNewKey] = useState("");
 
   const handleAddKey = () => {
     if (newKey.trim() && !configKeys.includes(newKey.trim())) {

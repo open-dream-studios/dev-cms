@@ -93,7 +93,7 @@ export function useRouting() {
       if (adjustScreen) {
         setScreen(adjustScreen as Screen);
       } else {
-        adjustScreen === "dashboard";
+        adjustScreen = "dashboard";
       }
       if (history.length === 0) {
         push({

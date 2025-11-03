@@ -32,22 +32,19 @@ const MediaManager = () => {
     });
   }
 
-  if (!currentUser || !currentProjectId) return null;
-
   const filteredMedia: Media[] = useMemo(() => {
     return activeFolder
       ? media.filter((m: Media) => m.folder_id === activeFolder.id)
       : media.filter((m: Media) => m.folder_id === null);
   }, [media, activeFolder]);
 
+  if (!currentUser || !currentProjectId) return null;
+
   return (
     <div className="flex w-full h-[100%]">
       <UploadModal
         multiple
         onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
-          const folderImages = activeFolder
-            ? media.filter((m: Media) => m.folder_id === activeFolder.id)
-            : [];
           const upload_items = uploadObjects.map(
             (upload: CloudinaryUpload, index: number) => {
               return {
@@ -59,7 +56,7 @@ const MediaManager = () => {
                 folder_id: activeFolder ? activeFolder.id : null,
                 media_usage: "module",
                 tags: null,
-                ordinal: null
+                ordinal: null,
               } as Media;
             }
           );

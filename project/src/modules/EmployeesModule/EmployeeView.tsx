@@ -326,7 +326,7 @@ const EmployeeCard: React.FC = () => {
                     }}
                     onKeyDown={handleKeyDown(phoneRef)}
                     onChange={(e) => {
-                      let value = e.target.value
+                      const value = e.target.value
                         .replace(/[^A-Za-z0-9-.@]/g, "") // allow only letters + dashes
                         .replace(/\s+/g, ""); // remove spaces
                       employeeForm.setValue("email", value, {
@@ -624,7 +624,7 @@ const EmployeeCard: React.FC = () => {
                       size={Math.max(employeeForm.watch("zip")?.length || 0, 4)}
                       className="flex-1 bg-transparent outline-none text-[14px] placeholder:opacity-60 w-[100%] truncate"
                       onChange={(e) => {
-                        let value = e.target.value
+                        const value = e.target.value
                           .replace(/[^0-9-]/g, "") // allow only letters + dashes
                           .replace(/\s+/g, ""); // remove spaces
                         employeeForm.setValue("zip", value, {
@@ -654,7 +654,7 @@ const EmployeeCard: React.FC = () => {
                     rows={3}
                     className="w-full bg-transparent outline-none resize-none text-[14px] placeholder:opacity-60"
                     onChange={(e) => {
-                      let value = e.target.value;
+                      const value = e.target.value;
                       employeeForm.setValue("notes", value, {
                         shouldValidate: true,
                         shouldDirty: true,
@@ -670,14 +670,14 @@ const EmployeeCard: React.FC = () => {
                 employeeForm.formState.isValid && (
                   <button
                     type="submit"
-                    className={`hover:brightness-[74%] dim cursor-pointer transition inline-flex items-center gap-2 pl-[32px] pr-[39px] py-[10px] rounded-[10px] font-medium`}
+                    className={`hover:brightness-74 dim cursor-pointer transition inline-flex items-center gap-2 pl-8 pr-[39px] py-2.5 rounded-[10px] font-medium`}
                     style={{
                       backgroundColor: `${t.app_color_1}`,
                       color: t.text_1,
                     }}
                   >
                     <Check size={20} />
-                    <span className="text-[16px] font-[500]">Save</span>
+                    <span className="text-[16px] font-medium">Save</span>
                   </button>
                 )}
 

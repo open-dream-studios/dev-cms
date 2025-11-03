@@ -358,7 +358,7 @@ const Login = () => {
                 style={{ color: appTheme[defaultTheme].text_3 }}
                 className="mt-[1px] text-center font-[400] text-[14px] leading-[14px]"
               >
-                Check your inbox to find your reset code. If you don't see it, check your spam folder.
+                Check your inbox to find your reset code. If you don&apos;t see it, check your spam folder.
               </div>
 
               <div className="w-[calc(100%-50px)] mx-[25px] mb-[7px] h-[50px] flex flex-row gap-[6px] items-center justify-center">
@@ -591,7 +591,7 @@ const Login = () => {
   };
 
   let animationInstance: any;
-  let containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   function playAnimation1() {
     // if (containerRef.current) {

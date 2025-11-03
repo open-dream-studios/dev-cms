@@ -48,8 +48,6 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const theme = currentUser?.theme ?? "dark";
   const t = appTheme[theme];
 
-  if (!form) return null;
-
   const DAY_START_HOUR = 7;
   const DAY_END_HOUR = 22;
   const HOURS = DAY_END_HOUR - DAY_START_HOUR;
@@ -63,11 +61,11 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(false);
 
   const scheduled_start_date_raw = useWatch({
-    control: form.control,
+    control: form?.control,
     name: "scheduled_start_date",
   });
   const completed_date_raw = useWatch({
-    control: form.control,
+    control: form?.control,
     name: "completed_date",
   });
 
@@ -480,7 +478,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     currentWeekSunday.setDate(
       currentWeekSunday.getDate() - currentWeekSunday.getDay()
     );
-    let targetSunday = new Date(currentWeekSunday);
+    const targetSunday = new Date(currentWeekSunday);
     if (firstVisibleDate.getDay() === 0) {
       targetSunday.setDate(targetSunday.getDate() - 7);
     }
@@ -503,6 +501,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   };
 
   const applyChange = async (sN: Date | null, eN: Date | null) => {
+    if (!form) return;
     form.setValue("scheduled_start_date", sN);
     form.setValue("completed_date", eN);
     cancelTimer();
@@ -548,6 +547,8 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     return () => observer.disconnect();
   }, [scheduled_start_date, goToWeek, goToCurrentWeek]);
 
+  if (!form) return null;
+  
   return (
     <motion.div
       initial={false}
