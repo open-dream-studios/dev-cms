@@ -1,5 +1,4 @@
 // server/index.ts
-import "./env";
 import { db } from "./connection/connect.js";
 import express from "express";
 import cors from "cors";
@@ -8,24 +7,23 @@ import http from "http";
 import https from "https";
 import fs from "fs";
 import cookieParser from "cookie-parser";
-import authRoutes from "./handlers/auth/auth_routes";
-import productRoutes from "./handlers/modules/products/products_routes";
-import projectRoutes from "./handlers/projects/projects_routes";
-import integrationRoutes from "./handlers/integrations/integrations_routes";
-import moduleRoutes from "./handlers/modules/modules/modules_routes";
-import projectMediaRoutes from "./handlers/modules/media/media_routes";
-import pageRoutes from "./handlers/modules/pages/pages_routes";
-import sectionRoutes from "./handlers/modules/pages/sections_routes";
-import customerRoutes from "./handlers/modules/customers/customers_routes";
-import jobRoutes from "./handlers/modules/jobs/jobs_routes";
-import callRoutes from "./handlers/modules/calls/calls_routes";
-import taskRoutes from "./handlers/modules/jobs/tasks_routes";
-import employeeRoutes from "./handlers/modules/employees/employees_routes";
+import authRoutes from "./handlers/auth/auth_routes.js";
+import productRoutes from "./handlers/modules/products/products_routes.js";
+import projectRoutes from "./handlers/projects/projects_routes.js";
+import integrationRoutes from "./handlers/integrations/integrations_routes.js";
+import moduleRoutes from "./handlers/modules/modules/modules_routes.js";
+import projectMediaRoutes from "./handlers/modules/media/media_routes.js";
+import pageRoutes from "./handlers/modules/pages/pages_routes.js";
+import sectionRoutes from "./handlers/modules/pages/sections_routes.js";
+import customerRoutes from "./handlers/modules/customers/customers_routes.js";
+import jobRoutes from "./handlers/modules/jobs/jobs_routes.js";
+import callRoutes from "./handlers/modules/calls/calls_routes.js";
+import taskRoutes from "./handlers/modules/jobs/tasks_routes.js";
+import employeeRoutes from "./handlers/modules/employees/employees_routes.js";
 import { WebSocketServer } from "ws";
-import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio";
-import { initCallState } from "./handlers/modules/calls/twilio/callState";
+import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio.js";
+import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
-
 dotenv.config();
 
 const app = express();
