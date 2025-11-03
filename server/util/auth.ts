@@ -1,7 +1,6 @@
 // server/util/auth.js
 import jwt from "jsonwebtoken";
-import type { Request, Response, NextFunction } from "express";
-// import type { JwtPayload } from "../../shared/types/models/requests.js";
+import type { Request, Response, NextFunction } from "express"; 
 import type { JwtPayload } from "@open-dream/shared";
 
 export const authenticateUser = (
