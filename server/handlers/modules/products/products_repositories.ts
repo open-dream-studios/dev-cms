@@ -83,7 +83,7 @@ export const upsertProductsFunction = async (
         make, model, length, width, height, ordinal, description, note
       )
       VALUES ${products
-        .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .join(", ")}
       ON DUPLICATE KEY UPDATE
         serial_number = VALUES(serial_number),

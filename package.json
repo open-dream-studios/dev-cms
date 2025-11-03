@@ -1,6 +1,7 @@
 {
   "name": "dev-cms",
   "private": true,
+  "workspaces": ["shared", "server", "project"],
   "version": "1.0.0",
   "description": "",
   "license": "ISC",

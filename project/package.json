@@ -6,8 +6,8 @@
     "dev": "next dev",
     "dev:app": "cross-env PLAYER=false next dev -p 3000",
     "dev:player": "cross-env PLAYER=true next dev -p 3001",
-    "prebuild": "npm install --legacy-peer-deps",
     "build": "next build",
+    "preinstall": "cd ../shared && npm install && npm run build",
     "start": "next start",
     "start:https": "node server.js",
     "lint": "next lint"
