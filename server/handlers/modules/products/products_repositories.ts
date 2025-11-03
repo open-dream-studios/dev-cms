@@ -133,7 +133,6 @@ export const deleteProductsFunction = async (
     project_idx,
     ...product_ids,
   ]);
-
   if (deleteResult.affectedRows === 0) {
     throw new Error("No products were deleted");
   }
