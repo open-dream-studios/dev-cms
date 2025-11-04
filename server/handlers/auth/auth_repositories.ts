@@ -1,7 +1,7 @@
 // server/handlers/auth/auth_repositories.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
+import * as nodemailer from "nodemailer";
 import { db } from "../../connection/connect.js";
 import { generateId } from "../../functions/data.js";
 import dotenv from "dotenv";
@@ -37,7 +37,7 @@ export const getValidEmails = async (connection: PoolConnection) => {
   return rows.map((row) => row.email);
 };
 
-const getUserFunction = async (connection: PoolConnection, email: string) => {
+export const getUserFunction = async (connection: PoolConnection, email: string) => {
   const q = "SELECT * FROM users WHERE email = ?";
   const [rows] = await connection.query<RowDataPacket[]>(q, [email]);
   return rows.length ? rows[0] : null;
