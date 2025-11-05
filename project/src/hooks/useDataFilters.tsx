@@ -62,8 +62,8 @@ export function useDataFilters() {
       if (productFilters.jobType.includes("Refurbishment")) {
         addProductsByType("Refurbishment");
       }
-      if (productFilters.jobType.includes("Resell")) {
-        addProductsByType("Resell");
+      if (productFilters.jobType.includes("Sale")) {
+        addProductsByType("Sale");
       }
       return Array.from(resultSet);
     };

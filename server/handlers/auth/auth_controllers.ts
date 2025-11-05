@@ -83,7 +83,6 @@ export const sendCode = async (
   res: Response,
   connection: PoolConnection
 ) => {
-  console.log("SEND CODE CONTROLLER");
   const { email } = req.body;
   if (!email) return { success: "false", message: "Missing required fields" };
   return await sendCodeFunction(connection, req.body);

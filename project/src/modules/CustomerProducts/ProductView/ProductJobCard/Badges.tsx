@@ -79,17 +79,17 @@ export const StatusBadge: React.FC<{
         )}
         <option value="waiting_work">{mapping["waiting_work"].label}</option>
         <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
-        {matchedDefinition.type.toLowerCase() !== "resell" && (
+        {matchedDefinition.type.toLowerCase() !== "sale" && (
           <option value="waiting_customer">
             {mapping["waiting_customer"].label}
           </option>
         )}
-        {matchedDefinition.type.toLowerCase() === "resell" && (
+        {matchedDefinition.type.toLowerCase() === "sale" && (
           <option value="waiting_listing">
             {mapping["waiting_listing"].label}
           </option>
         )}
-        {matchedDefinition.type.toLowerCase() === "resell" && (
+        {matchedDefinition.type.toLowerCase() === "sale" && (
           <option value="listed">{mapping["listed"].label}</option>
         )}
         {matchedDefinition.type.toLowerCase() !== "service" && (

@@ -7,7 +7,9 @@ import { generateId } from "../../functions/data.js";
 import dotenv from "dotenv";
 import admin from "../../connection/firebaseAdmin.js";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import sgMail from "@sendgrid/mail";
 dotenv.config();
+sgMail.setApiKey(process.env.SENDGRID_EMAIL_API_KEY!);
 
 const checkUserIdUnique = async (
   connection: PoolConnection,
@@ -37,7 +39,10 @@ export const getValidEmails = async (connection: PoolConnection) => {
   return rows.map((row) => row.email);
 };
 
-export const getUserFunction = async (connection: PoolConnection, email: string) => {
+export const getUserFunction = async (
+  connection: PoolConnection,
+  email: string
+) => {
   const q = "SELECT * FROM users WHERE email = ?";
   const [rows] = await connection.query<RowDataPacket[]>(q, [email]);
   return rows.length ? rows[0] : null;
@@ -253,40 +258,34 @@ export const sendCodeFunction = async (
   reqBody: any
 ) => {
   const { email } = reqBody;
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp.sendgrid.net",
-    port: 587,
-    auth: {
-      user: "apikey",
-      pass: process.env.SENDGRID_API_KEY,
-    },
-  });
   const resetCode = Math.floor(100000 + Math.random() * 900000);
 
   const user = await getUserFunction(connection, email);
-  if (!user || user.auth_provider !== "local")
-    return {
-      success: "false",
-      message: "Send code failed",
-    };
+  if (!user || user.auth_provider !== "local") {
+    return { success: false, message: "Send code failed" };
+  }
 
   const currentTime = new Date().toISOString().slice(0, 19).replace("T", " ");
   const q2 =
     "UPDATE users SET `password_reset`=?,`password_reset_timestamp`=? WHERE user_id=?";
-
   const values = [resetCode, currentTime, user.user_id];
   const [result] = await connection.query<ResultSetHeader>(q2, values);
+
   if (result.affectedRows > 0) {
-    await transporter.sendMail({
-      from: process.env.NODE_MAILER_ORIGIN,
-      to: email,
-      subject: "Password Reset Code",
-      text: `Your password reset code is: ${resetCode}`,
-    });
-    return { success: true, messagE: "Email sent successfully" };
+    try {
+      await sgMail.send({
+        to: email,
+        from: process.env.NODE_MAILER_ORIGIN!,
+        subject: "Password Reset Code",
+        text: `Your password reset code is: ${resetCode}`,
+      });
+      return { success: true, message: "Email sent successfully" };
+    } catch (error) {
+      console.error("SendGrid error:", error);
+      return { success: false, message: "SendGrid failed to send email" };
+    }
   } else {
-    return { success: false, messagE: "Send code failed" };
+    return { success: false, message: "Send code failed" };
   }
 };
 

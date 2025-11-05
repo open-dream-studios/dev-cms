@@ -8,7 +8,7 @@ import app_details from "../../../util/appDetails.json";
 import { MediaLink, Product, Customer,  Job, JobDefinition, Task  } from "@open-dream/shared"; 
 import CustomerTag from "./CustomerTag";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
-import { Check, Activity, Plus, ChevronDown } from "lucide-react";
+import { Check, Activity } from "lucide-react";
 import { FaWrench } from "react-icons/fa6";
 import "../../components/Calendar/Calendar.css"; 
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
@@ -172,7 +172,7 @@ const CustomerProductFrame = ({
       return filteredJobs[0];
     }
     return null;
-  }, [jobs]);
+  }, [jobs, product.id]);
 
   const matchedDefinition = useMemo(() => {
     if (!productJob) return null;
@@ -180,7 +180,7 @@ const CustomerProductFrame = ({
       (definition: JobDefinition) =>
         productJob.job_definition_id === definition.id
     );
-  }, [productJob]);
+  }, [productJob, product.id, jobDefinitions]);
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -217,7 +217,7 @@ const CustomerProductFrame = ({
   const jobTasks = useMemo(() => {
     if (!productJob) return [];
     return tasks.filter((task: Task) => task.job_id === productJob.id);
-  }, [tasks]);
+  }, [tasks, productJob, product.id]);
 
   const [editAssignment, setEditAssignment] = useState<boolean>(false);
 

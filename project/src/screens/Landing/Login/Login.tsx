@@ -346,17 +346,17 @@ const Login = () => {
             </>
           )}
           {forgotPasswordPage === 1 && (
-            <>
+            <div className="px-[25px] flex flex-col gap-[6px]">
               <div
                 style={{ color: appTheme[defaultTheme].text_1 }}
-                className="text-center text-[16px] leading-[16px] font-[500]"
+                className="text-center text-[16px] leading-[18px] font-[500]"
               >
                 We sent you an email! 
               </div>
 
               <div
                 style={{ color: appTheme[defaultTheme].text_3 }}
-                className="mt-[1px] text-center font-[400] text-[14px] leading-[14px]"
+                className="text-center font-[400] text-[14px] leading-[19px]"
               >
                 Check your inbox to find your reset code. If you don&apos;t see it, check your spam folder.
               </div>
@@ -450,7 +450,7 @@ const Login = () => {
                   Continue
                 </div>
               </div>
-            </>
+            </div>
           )}
           {forgotPasswordPage === 2 && (
             <>
@@ -584,7 +584,7 @@ const Login = () => {
       offClickClose: false,
       width: "w-[400px]",
       maxWidth: "max-w-[400px]",
-      aspectRatio: "aspect-[5/2.5]",
+      aspectRatio: "h-[auto] pb-[17px] pt-[12px]",
       borderRadius: "rounded-[12px] md:rounded-[15px]",
       content: <ForgotPasswordForm defaultTheme={defaultTheme} />,
     });

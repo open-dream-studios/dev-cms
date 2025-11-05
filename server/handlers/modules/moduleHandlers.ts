@@ -153,7 +153,7 @@ export const handlers: Record<
               .filter((url) => !/\.(mp4|mov)$/i.test(url))
               .join(" ");
 
-          // Filter by resell on most recent job
+          // Filter by sale on most recent job
           const productJobsFound = productJobs.filter(
             (job) => job.product_id === item.id
           );
@@ -168,7 +168,7 @@ export const handlers: Record<
 
           if (
             !jobDefinition ||
-            jobDefinition.type !== "Resell" ||
+            jobDefinition.type !== "Sale" ||
             mostRecentJob.valuation === undefined ||
             mostRecentJob.valuation === null
           )

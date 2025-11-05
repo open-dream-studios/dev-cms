@@ -1,7 +1,11 @@
 {
   "name": "dev-cms",
   "private": true,
-  "workspaces": ["shared", "server", "project"],
+  "workspaces": [
+    "shared",
+    "server",
+    "project"
+  ],
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -13,5 +17,8 @@
   "devDependencies": {
     "@types/react": "^19.2.2",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.6"
   }
 }

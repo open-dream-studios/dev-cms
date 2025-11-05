@@ -245,7 +245,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
   };
 
   const handleJobFilterClick = async (
-    filter: "Service" | "Refurbishment" | "Resell"
+    filter: "Service" | "Refurbishment" | "Sale"
   ) => {
     let active = [...productFilters.jobType];
     if (active.includes(filter)) {
@@ -337,7 +337,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
             style={{
               opacity:
                 (productFilters.jobType.length === 1 &&
-                  productFilters.jobType[0] === "Resell") ||
+                  productFilters.jobType[0] === "Sale") ||
                 productFilters.jobType.length === 0
                   ? "0.1"
                   : 0,
@@ -368,15 +368,15 @@ const ProductsHeader = ({ title }: { title: string }) => {
             }}
           />
           <div
-            onClick={() => handleJobFilterClick("Resell")}
+            onClick={() => handleJobFilterClick("Sale")}
             style={{
-              backgroundColor: productFilters.jobType.includes("Resell")
+              backgroundColor: productFilters.jobType.includes("Sale")
                 ? t.header_1_2
                 : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
           >
-            Resell
+            Sale
           </div>
         </div>
       </div>

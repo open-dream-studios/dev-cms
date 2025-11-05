@@ -811,14 +811,14 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
           </div>
         </div>
 
-        {matchedDefinition.type === "Resell" && (
+        {matchedDefinition.type === "Sale" && (
           <div
             className={`flex items-center mt-[11px] min-[750px]:mt-0 min-[870px]:mt-[11px] min-[990px]:mt-0 ${
               leftBarOpen ? "min-[1024px]:mt-[11px] min-[1220px]:mt-0" : ""
             }`}
           >
             <p className="opacity-[0.4] mr-[10px] text-[15px] font-[500]">
-              Resell Price
+              Sale Price
             </p>
             <div
               style={{

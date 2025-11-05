@@ -297,8 +297,9 @@ export const CustomerView = () => {
                 onKeyDown={handleKeyDown(phoneInputRef)}
                 onChange={(e) => {
                   const value = e.target.value
-                    .replace(/[^A-Za-z0-9-.@]/g, "") // allow only letters + dashes
-                    .replace(/\s+/g, ""); // remove spaces
+                    .replace(/[^a-z0-9.@-]/gi, "") // allow only alphanumeric + . @ -
+                    .replace(/\s+/g, "") // remove spaces
+                    .toLowerCase(); // force lowercase
                   customerForm.setValue("email", value, {
                     shouldValidate: true,
                     shouldDirty: true,
