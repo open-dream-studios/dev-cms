@@ -3,8 +3,10 @@ import cron from "node-cron";
 import { exec } from "child_process";
 
 // Schedule: "minute hour * * *"
-const BACKUP_SCHEDULE = "32 13 * * *";
+const BACKUP_SCHEDULE = "59 13 * * *";
 const BACKUP_SCRIPT = "node --loader ts-node/esm sql/sql_backup.ts";
+
+console.log("Scheduling backup at: ", BACKUP_SCHEDULE);
 
 cron.schedule(BACKUP_SCHEDULE, () => {
   console.log("🚀 Running daily DB backup...");
