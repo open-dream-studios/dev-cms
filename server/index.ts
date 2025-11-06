@@ -1,12 +1,13 @@
 // server/index.ts
 import { db } from "./connection/connect.js";
-import "./sql/sql_backup_schedule.js";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import http from "http";
 import https from "https";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import authRoutes from "./handlers/auth/auth_routes.js";
 import productRoutes from "./handlers/modules/products/products_routes.js";
@@ -26,6 +27,12 @@ import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio.js";
 import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 dotenv.config();
+
+console.log("🧭 Running from directory:", process.cwd());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import(path.join(__dirname, "sql/sql_backup_schedule.js"));
 
 const app = express();
 app.set("trust proxy", 1);
