@@ -3,27 +3,57 @@ import cron from "node-cron";
 import { exec } from "child_process";
 import moment from "moment-timezone";
 
+const IS_PRODUCTION =
+  process.env.NODE_ENV === "production" ||
+  process.env.RAILWAY_ENVIRONMENT === "production";
+
+// Your desired backup time in local timezone
 const LOCAL_TIMEZONE = "America/New_York";
-const LOCAL_HOUR = 15;  
-const LOCAL_MINUTE = 45;
+const LOCAL_HOUR = 15;
+const LOCAL_MINUTE = 50;
 
-const utcMoment = moment.tz({ hour: LOCAL_HOUR, minute: LOCAL_MINUTE }, LOCAL_TIMEZONE).utc();
-const UTC_HOUR = utcMoment.hour();
-const UTC_MINUTE = utcMoment.minute();
+let schedule: string;
+let displayTime: string;
 
-const BACKUP_SCHEDULE = `${UTC_MINUTE} ${UTC_HOUR} * * *`;
-const BACKUP_SCRIPT = "node --loader ts-node/esm sql/sql_backup.ts";
-// const BACKUP_SCRIPT = "node dist/sql/sql_backup.js";
+// If production → convert to UTC for Railway
+if (IS_PRODUCTION) {
+  const utcMoment = moment
+    .tz({ hour: LOCAL_HOUR, minute: LOCAL_MINUTE }, LOCAL_TIMEZONE)
+    .utc();
+  const UTC_HOUR = utcMoment.hour();
+  const UTC_MINUTE = utcMoment.minute();
+  schedule = `${UTC_MINUTE} ${UTC_HOUR} * * *`;
+  displayTime = `${LOCAL_HOUR.toString().padStart(
+    2,
+    "0"
+  )}:${LOCAL_MINUTE.toString().padStart(
+    2,
+    "0"
+  )} ${LOCAL_TIMEZONE} → ${UTC_HOUR.toString().padStart(
+    2,
+    "0"
+  )}:${UTC_MINUTE.toString().padStart(2, "0")} UTC`;
+} else {
+  // Local dev mode → use local time directly
+  schedule = `${LOCAL_MINUTE} ${LOCAL_HOUR} * * *`;
+  displayTime = `${LOCAL_HOUR.toString().padStart(
+    2,
+    "0"
+  )}:${LOCAL_MINUTE.toString().padStart(
+    2,
+    "0"
+  )} (${LOCAL_TIMEZONE}, local mode)`;
+}
 
-console.log(
-  `📅 Scheduling daily DB backup at ${LOCAL_HOUR}:${LOCAL_MINUTE
-    .toString()
-    .padStart(2, "0")} ${LOCAL_TIMEZONE} (→ ${UTC_HOUR}:${UTC_MINUTE
-    .toString()
-    .padStart(2, "0")} UTC)`
-);
+// You can switch between compiled JS or TS-node depending on environment
+const BACKUP_SCRIPT = IS_PRODUCTION
+  ? "node dist/sql/sql_backup.js"
+  : "node --loader ts-node/esm sql/sql_backup.ts";
 
-cron.schedule(BACKUP_SCHEDULE, () => {
+console.log(`📅 Scheduling daily DB backup at ${displayTime}`);
+console.log(`🔧 Environment: ${IS_PRODUCTION ? "Production" : "Local Dev"}`);
+
+cron.schedule(schedule, () => {
   console.log("🚀 Running daily DB backup...");
   const start = new Date();
 
