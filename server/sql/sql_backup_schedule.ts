@@ -9,8 +9,8 @@ const IS_PRODUCTION =
 
 // Your desired backup time in local timezone
 const LOCAL_TIMEZONE = "America/New_York";
-const LOCAL_HOUR = 15;
-const LOCAL_MINUTE = 56;
+const LOCAL_HOUR = 16;
+const LOCAL_MINUTE = 8;
 
 let schedule: string;
 let displayTime: string;
