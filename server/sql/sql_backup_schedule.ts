@@ -5,7 +5,7 @@ import moment from "moment-timezone";
 
 const LOCAL_TIMEZONE = "America/New_York";
 const LOCAL_HOUR = 15;  
-const LOCAL_MINUTE = 36;
+const LOCAL_MINUTE = 41;
 
 const utcMoment = moment.tz({ hour: LOCAL_HOUR, minute: LOCAL_MINUTE }, LOCAL_TIMEZONE).utc();
 const UTC_HOUR = utcMoment.hour();
