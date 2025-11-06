@@ -10,9 +10,6 @@ const SiteSettings = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { projectsData } = useContextQueries();
 
-  // const theme = currentUser?.theme ?? "dark";
-  // const t = appTheme[theme];
-
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
   }, [projectsData, currentProjectId]);

@@ -1,9 +1,9 @@
 import { MouseEventHandler, ReactNode, useContext, useState } from "react";
 import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme"; 
 import { Screen } from "@open-dream/shared";
 import { useUiStore } from "@/store/useUIStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type HoverBoxProps = {
   children: ReactNode;
@@ -14,6 +14,8 @@ type HoverBoxProps = {
 const HoverBox = ({ children, onClick, pages }: HoverBoxProps) => {
   const { currentUser } = useContext(AuthContext);
   const { screen } = useUiStore();
+  const currentTheme = useCurrentTheme();
+
   const [hovered, setHovered] = useState(false);
 
   if (!currentUser) return null;
@@ -25,10 +27,10 @@ const HoverBox = ({ children, onClick, pages }: HoverBoxProps) => {
       onHoverEnd={() => setHovered(false)}
       animate={{
         backgroundColor: hovered
-          ? appTheme[currentUser.theme].background_2
+          ? currentTheme.background_2
           : pages.includes(screen)
-            ? appTheme[currentUser.theme].background_2
-            : appTheme[currentUser.theme].background_1,
+          ? currentTheme.background_2
+          : currentTheme.background_1,
       }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="cursor-pointer rounded-[8px] w-full h-[38px] flex items-center justify-start px-[12px]"

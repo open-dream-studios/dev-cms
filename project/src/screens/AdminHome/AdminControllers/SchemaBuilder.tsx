@@ -5,11 +5,11 @@ import {
   SectionConfigSchema,
   FieldOption,
 } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { FaPlus, FaTrash, FaChevronUp, FaChevronDown } from "react-icons/fa6";
 import { FiEdit } from "react-icons/fi";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type SchemaBuilderProps = {
   value: SectionConfigSchema | null | undefined;
@@ -534,15 +534,15 @@ const SchemaBuilder: React.FC<SchemaBuilderProps> = ({
   title,
 }) => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   if (!currentUser) return null;
 
-  const themeColors = appTheme[currentUser.theme];
   const schema = value ?? { fields: [] };
 
   return (
     <div
       className="rounded-[10px] p-4"
-      style={{ background: themeColors.background_1_2 }}
+      style={{ background: currentTheme.background_1_2 }}
     >
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-[18px] font-semibold">
@@ -552,7 +552,7 @@ const SchemaBuilder: React.FC<SchemaBuilderProps> = ({
           type="button"
           onClick={() => onChange({ fields: [] })}
           className="px-3 py-1 rounded-full hover:brightness-90 dim"
-          style={{ background: themeColors.background_2_selected }}
+          style={{ background: currentTheme.background_2_selected }}
           title="Clear schema"
         >
           Reset
@@ -562,7 +562,7 @@ const SchemaBuilder: React.FC<SchemaBuilderProps> = ({
       <FieldList
         fields={schema.fields}
         onChange={(fields) => onChange({ fields })}
-        themeColors={themeColors}
+        themeColors={currentTheme}
       />
 
       <details className="mt-3">

@@ -1,13 +1,13 @@
 // project/src/modules/CustomersModule/CustomerCatalog.tsx
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import CustomerView from "./CustomerView";
 import { Customer } from "@open-dream/shared";
 import { formatPhone } from "@/util/functions/Customers";
 import ModuleLeftBar from "../components/ModuleLeftBar";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export const CustomerMiniCard = ({
   customer,
@@ -20,11 +20,9 @@ export const CustomerMiniCard = ({
   handleContextMenu: (e: any, customer: Customer) => void;
   handleCustomerClick: (customer: Customer) => void;
 }) => {
-  const { currentCustomer } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
+  const { currentCustomer } = useCurrentDataStore();
 
   if (!currentUser) return null;
 
@@ -39,16 +37,16 @@ export const CustomerMiniCard = ({
           currentCustomer.customer_id === customer.customer_id
             ? "rgba(255,255,255,0.057)"
             : "rgba(255,255,255,0.028)",
-        color: t.text_4,
+        color: currentTheme.text_4,
       }}
       className="mb-[9.5px] w-full h-[70px] pl-[14px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 
-             hover:brightness-[85%] transition cursor-pointer shadow-sm"
+            dim hover:brightness-[85%] transition cursor-pointer shadow-sm"
     >
       <div
         className="flex items-center justify-center rounded-full border font-semibold text-[13px] min-w-[33px] min-h-[33px]"
         style={{
-          borderColor: t.text_4,
-          color: t.text_4,
+          borderColor: currentTheme.text_4,
+          color: currentTheme.text_4,
         }}
       >
         {`${customer.first_name?.[0] ?? ""}${
@@ -59,7 +57,7 @@ export const CustomerMiniCard = ({
       <div className="flex flex-col items-start justify-start overflow-hidden h-[58px] mt-[1px]">
         <p
           className="w-[100%] font-bold text-[16px] leading-[19px] truncate"
-          style={{ color: t.text_4 }}
+          style={{ color: currentTheme.text_4 }}
         >
           {customer.first_name} {customer.last_name}
         </p>

@@ -3,7 +3,6 @@
 import ProductsHeader from "../ProductsHeader";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { appTheme } from "@/util/appTheme";
 import React, { useContext } from "react";
 import DraggableItems from "../DraggableItems";
 import { Product } from "@open-dream/shared";
@@ -11,6 +10,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export type InventoryDataItem = {
   title: string;
@@ -102,6 +102,7 @@ export const inventoryDataLayout: InventoryDataItem[] = [
 
 const InventoryGrid = () => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme()
   const { currentProjectId } = useCurrentDataStore();
   const { productsData, hasProjectModule } = useContextQueries();
   const { localProductsData, selectedProducts, setSelectedProducts } =
@@ -114,9 +115,6 @@ const InventoryGrid = () => {
       await saveProducts();
     },
   });
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const selectAllProducts = () => {
     if (productsData && filteredProducts(productsData).length > 0) {
@@ -147,21 +145,21 @@ const InventoryGrid = () => {
           <div className="mt-[75px] h-[calc(100%-75px)] w-[100%] min-h-[101px] relative rounded-t-[13px]">
             <div
               style={{
-                backgroundColor: t.background_2,
+                backgroundColor: currentTheme.background_2,
               }}
               className="absolute top-0 left-0 h-[40px] w-[100%] flex flex-row items-center rounded-t-[13px]"
             >
               <div className="w-[48px] h-[100%] items-center justify-center flex">
                 <div
                   style={{
-                    border: `1px solid ${t.background_4}`,
+                    border: `1px solid ${currentTheme.background_4}`,
                   }}
                   onClick={selectAllProducts}
                   className="cursor-pointer dim w-[17px] h-[17px] rounded-[4px] flex items-center justify-center"
                 >
                   <div
                     style={{
-                      backgroundColor: t.background_4,
+                      backgroundColor: currentTheme.background_4,
                     }}
                     className="w-[8px] h-[1px]"
                   ></div>

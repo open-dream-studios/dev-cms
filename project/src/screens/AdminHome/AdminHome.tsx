@@ -1,7 +1,6 @@
 // project/src/screens/AdminHome/AdminHome.tsx
 import { AuthContext } from "@/contexts/authContext";
 import { Project } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import React, { useContext, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
@@ -12,6 +11,7 @@ import Modal2Continue from "@/modals/Modal2Continue";
 import { useQueryClient } from "@tanstack/react-query";
 import { FiEdit } from "react-icons/fi";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const ProjectItem = ({
   project,
@@ -21,13 +21,11 @@ const ProjectItem = ({
   editProjectsMode: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { setCurrentProjectData } = useCurrentDataStore();
   const { deleteProject } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const handleProjectClick = () => {
     setCurrentProjectData(project);
@@ -67,29 +65,29 @@ const ProjectItem = ({
       {editProjectsMode && (
         <div
           style={{
-            border: `1px solid ${t.text_4}`,
-            backgroundColor: t.background_1,
+            border: `1px solid ${currentTheme.text_4}`,
+            backgroundColor: currentTheme.background_1,
           }}
           className="absolute top-[-8px] right-[-9px] z-[350] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
           onClick={handleConfirmDelete}
         >
-          <IoCloseOutline color={t.text_2} />
+          <IoCloseOutline color={currentTheme.text_2} />
         </div>
       )}
       <div
         onClick={handleProjectClick}
         className="dim cursor-pointer hover:brightness-75 w-[100%] h-[100px] rounded-[10px] px-[30px] py-[20px] gap-[5px] flex flex-col"
-        style={{ backgroundColor: t.background_1_2 }}
+        style={{ backgroundColor: currentTheme.background_1_2 }}
       >
         <p
           className="text-[20px] font-bold truncate"
-          style={{ color: t.text_1 }}
+          style={{ color: currentTheme.text_1 }}
         >
           {project.name}
         </p>
         <p
           className="text-[15px] font-[300] truncate"
-          style={{ color: t.text_1 }}
+          style={{ color: currentTheme.text_1 }}
         >
           {project.domain}
         </p>
@@ -101,12 +99,10 @@ const ProjectItem = ({
 const AdminHome = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { projectsData, upsertProject, isLoadingProjects } =
     useContextQueries();
   const [editProjectsMode, setEditProjectsMode] = useState<boolean>(false);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -178,7 +174,7 @@ const AdminHome = () => {
                   onClick={handleAddProjectClick}
                   className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
-                    backgroundColor: t.background_1_2,
+                    backgroundColor: currentTheme.background_1_2,
                   }}
                 >
                   <FaPlus size={16} />
@@ -191,9 +187,9 @@ const AdminHome = () => {
                   className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
                     border: editProjectsMode
-                      ? "1.4px solid" + t.text_3
+                      ? "1.4px solid" + currentTheme.text_3
                       : "none",
-                    backgroundColor: t.background_1_2,
+                    backgroundColor: currentTheme.background_1_2,
                   }}
                 >
                   <FiEdit size={16} />

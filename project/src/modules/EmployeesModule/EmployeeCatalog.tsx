@@ -1,13 +1,13 @@
 // project/src/modules/EmployeesModule/EmployeeCatalog.tsx
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import EmployeeView from "./EmployeeView";
 import { formatPhone } from "@/util/functions/Customers";
 import ModuleLeftBar from "../components/ModuleLeftBar";
 import { Employee } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export const EmployeeMiniCard = ({
   employee,
@@ -20,11 +20,9 @@ export const EmployeeMiniCard = ({
   handleContextMenu: (e: any, employee: Employee) => void;
   handleEmployeeClick: (employee: Employee) => void;
 }) => {
-  const { currentEmployee } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
+  const { currentEmployee } = useCurrentDataStore();
 
   if (!currentUser) return null;
 
@@ -40,7 +38,7 @@ export const EmployeeMiniCard = ({
           currentEmployee.employee_id === employee.employee_id
             ? "rgba(255,255,255,0.057)"
             : "rgba(255,255,255,0.028)",
-        color: t.text_4,
+        color: currentTheme.text_4,
       }}
       className="mb-[9.5px] w-full h-[70px] pl-[14px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 
              hover:brightness-[85%] transition cursor-pointer shadow-sm"
@@ -48,8 +46,8 @@ export const EmployeeMiniCard = ({
       <div
         className="flex items-center justify-center rounded-full border font-semibold text-[13px] min-w-[33px] min-h-[33px]"
         style={{
-          borderColor: t.text_4,
-          color: t.text_4,
+          borderColor: currentTheme.text_4,
+          color: currentTheme.text_4,
         }}
       >
         {`${employee.first_name?.[0] ?? ""}${
@@ -60,7 +58,7 @@ export const EmployeeMiniCard = ({
       <div className="flex flex-col items-start justify-start overflow-hidden h-[58px] mt-[1px]">
         <p
           className="w-[100%] font-bold text-[16px] leading-[19px] truncate"
-          style={{ color: t.text_4 }}
+          style={{ color: currentTheme.text_4 }}
         >
           {employee.first_name} {employee.last_name}
         </p>

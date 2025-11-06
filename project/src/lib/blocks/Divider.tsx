@@ -1,17 +1,21 @@
 // project/src/lib/blocks/Divider.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
+import { useCurrentTheme } from "@/hooks/useTheme";
 import { useContext } from "react";
 
-const Divider = ({ width }: { width?: string }) => {
+const Divider = ({ width, mb }: { width?: string; mb?: number }) => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   if (!currentUser) return null;
 
   return (
-    <div className="w-full h-[1px] flex justify-center mb-[10px]">
+    <div
+      className="w-full h-[1px] flex justify-center"
+      style={{ marginBottom: mb ? `${mb}px` : "none" }}
+    >
       <div
         style={{
-          backgroundColor: appTheme[currentUser.theme].background_2,
+          backgroundColor: currentTheme.background_2,
           width,
         }}
         className="w-full h-[100%] rounded-[1px]"
@@ -20,4 +24,4 @@ const Divider = ({ width }: { width?: string }) => {
   );
 };
 
-export default Divider
+export default Divider;

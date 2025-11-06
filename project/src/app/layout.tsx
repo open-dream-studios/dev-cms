@@ -1,7 +1,5 @@
 // project/src/app/layout.tsx
 import type { Metadata } from "next";
-import { appTheme, ThemeType } from "@/util/appTheme";
-import appDetails from "../util/appDetails.json";
 import AppLayout from "../layouts/appLayout";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,8 +23,7 @@ export default async function RootLayout({
     <html
       lang="en"
       style={{
-        backgroundColor:
-          appTheme[appDetails.default_theme as ThemeType].background_1,
+        backgroundColor: "white",
       }}
     >
       <body>

@@ -15,7 +15,6 @@ import {
 } from "../../store/useLeftBarOpenStore";
 import { useModal2Store } from "../../store/useModalStore";
 import Modal2Continue from "../../modals/Modal2Continue";
-import { appTheme } from "../../util/appTheme";
 import appDetails from "../../util/appDetails.json";
 import { AuthContext } from "@/contexts/authContext";
 import { LuPanelLeftClose } from "react-icons/lu";
@@ -27,11 +26,12 @@ import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
 import Divider from "@/lib/blocks/Divider";
 import { FaPollH } from "react-icons/fa";
 import HoverBox from "@/lib/blocks/HoverBox";
-import { IoPersonSharp } from "react-icons/io5"; 
+import { IoPersonSharp } from "react-icons/io5";
 import { Screen } from "@open-dream/shared";
 import { BsFillPersonVcardFill } from "react-icons/bs";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type BoxItem = {
   title: string;
@@ -47,7 +47,7 @@ type BoxSectionProps = {
 const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
   return (
     <div className="w-[100%] flex flex-col mb-[10px]">
-      <Divider />
+      <Divider mb={10} />
       <div className="flex flex-col gap-[9px]">
         {items.map((item: BoxItem, index: number) => (
           <HoverBox key={index} onClick={item.onClick} pages={item.pages}>
@@ -82,10 +82,8 @@ const LeftBar = () => {
   const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
   const windowLargeRef = useRef<boolean>(window.innerWidth > 1024);
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
+  const currentTheme = useCurrentTheme();
 
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
-  
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
   }, [projectsData, currentProjectId]);
@@ -214,7 +212,7 @@ const LeftBar = () => {
       <div className="w-[100%] flex flex-row-reverse justify-end items-center mb-[11px]">
         {withClose && (
           <LuPanelLeftClose
-            style={{ color: t.text_4 }}
+            style={{ color: currentTheme.text_4 }}
             className="hidden lg:block dim cursor-pointer brightness-75 hover:brightness-50 w-[24px] h-[24px] mr-[-8px] ml-[10px]"
             onClick={closeLeftBar}
           />
@@ -242,7 +240,7 @@ const LeftBar = () => {
       icon: (
         <HiServer
           size={15}
-          color={t.text_3}
+          color={currentTheme.text_3}
           className="w-[17px] h-[17px] brightness-75"
         />
       ),
@@ -301,10 +299,7 @@ const LeftBar = () => {
     displayedModules.push({
       title: "Inventory",
       icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-      pages: [
-        "customer-products" as Screen, 
-        "edit-customer-product" as Screen,
-      ],
+      pages: ["customer-products" as Screen, "edit-customer-product" as Screen],
       onClick: () => handleTabClick("customer-products"),
     });
   }
@@ -334,7 +329,7 @@ const LeftBar = () => {
       onClick: () => handleTabClick("employees"),
     });
   }
-  
+
   if (hasProjectModule("tasks-module")) {
     displayedModules.push({
       title: "Tasks",
@@ -367,10 +362,8 @@ const LeftBar = () => {
         <div
           ref={leftBarRef}
           style={{
-            backgroundColor: t.background_1,
-            borderRight: `0.5px solid ${
-              t.background_2
-            }`,
+            backgroundColor: currentTheme.background_1,
+            borderRight: `0.5px solid ${currentTheme.background_2}`,
           }}
           className={`z-[951] pointer-events-auto ${
             leftBarOpen ? "right-0" : "right-[100%]"
@@ -379,7 +372,7 @@ const LeftBar = () => {
         >
           <div
             style={{
-              color: t.text_1,
+              color: currentTheme.text_1,
             }}
             className="relative w-[100%] h-[100%] px-[20px] pt-[8.8px] items-start flex flex-col"
           >
@@ -400,7 +393,7 @@ const LeftBar = () => {
               <p
                 className="select-none text-[23px] font-[700] ml-[8px] mt-[1px]"
                 style={{
-                  color: t.text_1,
+                  color: currentTheme.text_1,
                 }}
               >
                 {currentProject ? currentProject.short_name : "CMS"}
@@ -422,8 +415,8 @@ const LeftBar = () => {
             className="dim select-none cursor-pointer w-[80%] hover:brightness-75 h-[40px] absolute bottom-[20px] flex items-center justify-center font-[600]"
             style={{
               borderRadius: "6px",
-              backgroundColor: t.background_2,
-              color: t.text_2,
+              backgroundColor: currentTheme.background_2,
+              color: currentTheme.text_2,
             }}
           >
             Sign out

@@ -11,7 +11,6 @@ import {
   Check,
   X,
 } from "lucide-react";
-import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
@@ -35,9 +34,11 @@ import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { runFrontendModule } from "../runFrontendModule";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const EmployeeCard: React.FC = () => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { moduleDefinitions, projectModules, integrations } =
     useContextQueries();
   const { currentEmployee, currentProjectId, currentProject } =
@@ -46,11 +47,8 @@ const EmployeeCard: React.FC = () => {
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
   const employeeForm = useEmployeeForm(currentEmployee);
   const { registerForm, unregisterForm } = useFormInstanceStore();
-  const { handleSubmit, formState } = employeeForm;
+  const { handleSubmit } = employeeForm;
   const leftBarOpen = useLeftBarOpenStore((s: any) => s.leftBarOpen);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const [popupVisible, setPopupVisible] = useState<boolean>(false);
   const [predictions, setPredictions] = useState<any[]>([]);
@@ -188,7 +186,7 @@ const EmployeeCard: React.FC = () => {
       onSubmit={handleSubmit(onEmployeeFormSubmit)}
       className="rounded-xl relative w-full max-w-[900px]"
       style={{
-        ...getInnerCardStyle(theme, t),
+        ...getInnerCardStyle(currentUser.theme, currentTheme),
         transform: "translateZ(0)",
       }}
     >
@@ -233,7 +231,7 @@ const EmployeeCard: React.FC = () => {
                 </label>
                 <div
                   className="rounded-md px-3 py-2 flex items-center gap-3"
-                  style={{ background: t.background_2 }}
+                  style={{ background: currentTheme.background_2 }}
                 >
                   <User size={16} className="opacity-50 min-w-[16px]" />
                   <input
@@ -271,7 +269,7 @@ const EmployeeCard: React.FC = () => {
                 </label>
                 <div
                   className="rounded-md px-3 py-2 flex items-center gap-3"
-                  style={{ background: t.background_2 }}
+                  style={{ background: currentTheme.background_2 }}
                 >
                   <User size={16} className="opacity-50 min-w-[16px]" />
                   <input
@@ -309,7 +307,7 @@ const EmployeeCard: React.FC = () => {
                 </label>
                 <div
                   className="rounded-md px-3 py-2 flex items-center gap-3"
-                  style={{ background: t.background_2 }}
+                  style={{ background: currentTheme.background_2 }}
                 >
                   <Mail size={16} className="opacity-50 min-w-[16px]" />
                   <input
@@ -348,7 +346,7 @@ const EmployeeCard: React.FC = () => {
                 </label>
                 <div
                   className="rounded-md px-3 py-2 flex items-center gap-3"
-                  style={{ background: t.background_2 }}
+                  style={{ background: currentTheme.background_2 }}
                 >
                   <Phone size={16} className="opacity-50 min-w-[16px]" />
                   <Controller
@@ -385,7 +383,7 @@ const EmployeeCard: React.FC = () => {
                 </label>
                 <div
                   className="rounded-md px-3 py-2 flex items-center gap-3"
-                  style={{ background: t.background_2 }}
+                  style={{ background: currentTheme.background_2 }}
                 >
                   <Briefcase size={16} className="opacity-50 min-w-[16px]" />
                   <input
@@ -419,7 +417,7 @@ const EmployeeCard: React.FC = () => {
                 </label>
                 <div
                   className="rounded-md px-3 py-2 flex items-center gap-3"
-                  style={{ background: t.background_2 }}
+                  style={{ background: currentTheme.background_2 }}
                 >
                   <Home size={16} className="opacity-50 min-w-[16px]" />
                   <input
@@ -454,7 +452,7 @@ const EmployeeCard: React.FC = () => {
                 <div ref={addressContainerRef} className="relative mt-[7px]">
                   <div
                     className="rounded-md w-[100%] px-3 py-2 flex items-center gap-3"
-                    style={{ background: t.background_2 }}
+                    style={{ background: currentTheme.background_2 }}
                   >
                     <MapPin size={16} className="opacity-50" />
                     <input
@@ -487,7 +485,7 @@ const EmployeeCard: React.FC = () => {
                       ref={popupRef}
                       className="absolute left-0 right-0 mt-1 rounded-md shadow-lg overflow-hidden z-50"
                       style={{
-                        background: t.background_2,
+                        background: currentTheme.background_2,
                         border: "1px solid rgba(0,0,0,0.06)",
                       }}
                     >
@@ -520,7 +518,7 @@ const EmployeeCard: React.FC = () => {
 
                 <div
                   className="mt-[15px] w-[100%] rounded-md px-3 py-2 flex items-center gap-3"
-                  style={{ background: t.background_2 }}
+                  style={{ background: currentTheme.background_2 }}
                 >
                   <input
                     {...employeeForm.register("address_line2")}
@@ -549,7 +547,7 @@ const EmployeeCard: React.FC = () => {
                 <div className="mt-[15px] grid grid-cols-3 sm:grid-cols-8 gap-[15px] w-[100%]">
                   <div
                     className="col-span-3 rounded-md px-3 py-2 flex items-center gap-3"
-                    style={{ background: t.background_2 }}
+                    style={{ background: currentTheme.background_2 }}
                   >
                     <input
                       {...employeeForm.register("city")}
@@ -580,7 +578,7 @@ const EmployeeCard: React.FC = () => {
 
                   <div
                     className="col-span-3 rounded-md px-3 py-2 flex items-center gap-3"
-                    style={{ background: t.background_2 }}
+                    style={{ background: currentTheme.background_2 }}
                   >
                     <input
                       {...employeeForm.register("state")}
@@ -611,7 +609,7 @@ const EmployeeCard: React.FC = () => {
 
                   <div
                     className="col-span-3 sm:col-span-2 rounded-md px-3 py-2 flex items-center gap-3"
-                    style={{ background: t.background_2 }}
+                    style={{ background: currentTheme.background_2 }}
                   >
                     <input
                       {...employeeForm.register("zip")}
@@ -642,7 +640,7 @@ const EmployeeCard: React.FC = () => {
                 </label>
                 <div
                   className="mt-[7px] rounded-md px-3 py-2"
-                  style={{ background: t.background_2 }}
+                  style={{ background: currentTheme.background_2 }}
                 >
                   <textarea
                     {...employeeForm.register("notes")}
@@ -672,8 +670,8 @@ const EmployeeCard: React.FC = () => {
                     type="submit"
                     className={`hover:brightness-74 dim cursor-pointer transition inline-flex items-center gap-2 pl-8 pr-[39px] py-2.5 rounded-[10px] font-medium`}
                     style={{
-                      backgroundColor: `${t.app_color_1}`,
-                      color: t.text_1,
+                      backgroundColor: `${currentTheme.app_color_1}`,
+                      color: currentTheme.text_1,
                     }}
                   >
                     <Check size={20} />
@@ -686,8 +684,8 @@ const EmployeeCard: React.FC = () => {
                   type="button"
                   className={`hover:brightness-[88%] dim cursor-pointer transition inline-flex items-center gap-2 pl-[32px] pr-[39px] py-[10px] rounded-[10px] font-medium`}
                   style={{
-                    backgroundColor: t.background_2,
-                    color: t.text_2,
+                    backgroundColor: currentTheme.background_2,
+                    color: currentTheme.text_2,
                   }}
                   onClick={() => {
                     if (currentEmployee) {
@@ -719,11 +717,11 @@ const EmployeeCard: React.FC = () => {
         select:-webkit-autofill:hover,
         select:-webkit-autofill:focus,
         select:-webkit-autofill:active {
-          -webkit-text-fill-color: ${t.text_4} !important;
-          -webkit-box-shadow: 0 0 0px 1000px ${t.background_2} inset !important;
-          box-shadow: 0 0 0px 1000px ${t.background_2} inset !important;
+          -webkit-text-fill-color: ${currentTheme.text_4} !important;
+          -webkit-box-shadow: 0 0 0px 1000px ${currentTheme.background_2} inset !important;
+          box-shadow: 0 0 0px 1000px ${currentTheme.background_2} inset !important;
           transition: background-color 5000s ease-in-out 0s !important;
-          caret-color: ${t.text_4} !important;
+          caret-color: ${currentTheme.text_4} !important;
         }
       `}</style>
     </form>

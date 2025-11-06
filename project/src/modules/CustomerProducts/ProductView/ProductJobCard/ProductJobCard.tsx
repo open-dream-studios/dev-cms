@@ -1,5 +1,12 @@
 // project/src/modules/CustomerProducts/ProductView/ProductJobCard/ProductJobCard.tsx
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  use,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Check,
   Activity,
@@ -10,7 +17,6 @@ import {
   ChevronUp,
   Plus,
 } from "lucide-react";
-import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import type {
@@ -42,6 +48,7 @@ import CircularProgress from "./CircularProgress";
 import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 // ---------- TaskCard ----------
 const TaskCard: React.FC<{
@@ -73,9 +80,7 @@ const TaskCard: React.FC<{
   } = useContextQueries();
   const { screenClick } = useRouting();
   const { setCurrentEmployeeData } = useCurrentDataStore();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
   const modal1 = useModal1Store((state: any) => state.modal1);
@@ -155,7 +160,7 @@ const TaskCard: React.FC<{
     setEditAssignment(false);
   };
 
-  if (!productJob || !matchedDefinition) return null;
+  if (!currentUser || !productJob || !matchedDefinition) return null;
 
   if (tasksCollapsed)
     return (
@@ -164,7 +169,7 @@ const TaskCard: React.FC<{
         className={`${
           taskStatus === "cancelled" && "opacity-[0.5]"
         } cursor-pointer hover:brightness-[86%] dim rounded-xl relative`}
-        style={getInnerCardStyle(theme, t)}
+        style={getInnerCardStyle(currentUser.theme, currentTheme)}
       >
         <div
           onClick={() => {
@@ -226,7 +231,7 @@ const TaskCard: React.FC<{
         taskStatus === "cancelled" && "opacity-[0.5]"
       } rounded-xl relative`}
       style={{
-        ...getInnerCardStyle(theme, t),
+        ...getInnerCardStyle(currentUser.theme, currentTheme),
         transform: "translateZ(0)",
       }}
     >
@@ -240,8 +245,8 @@ const TaskCard: React.FC<{
         <div className="w-[100%] h-[100%] bg-black opacity-[0.1] z-[500] absolute left-0 top-0 rounded-xl" />
         <div
           style={{
-            border: "1px solid " + t.background_3,
-            backgroundColor: t.background_2,
+            border: "1px solid " + currentTheme.background_3,
+            backgroundColor: currentTheme.background_2,
           }}
           onClick={async () => {
             if (task.task_id) {
@@ -293,7 +298,7 @@ const TaskCard: React.FC<{
               className={`relative rounded-[5px] transition-all duration-200 ${
                 descriptionOpen ? "h-[120px]" : "h-[30px]"
               }`}
-              style={{ backgroundColor: appTheme[theme].background_2 }}
+              style={{ backgroundColor: currentTheme.background_2 }}
             >
               <textarea
                 {...taskForm.register("description")}
@@ -340,15 +345,19 @@ const TaskCard: React.FC<{
                       await callSubmitForm();
                     }}
                     className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
-                      theme === "dark"
+                      currentUser.theme === "dark"
                         ? "text-[#999] border-[#3d3d3d] border-[1px]"
                         : "text-black border-[#111] border-[0.5px]"
                     }`}
                     calendarClassName={
-                      theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                      currentUser.theme === "dark"
+                        ? "datepicker-dark"
+                        : "datepicker-light"
                     }
                     popperClassName={
-                      theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                      currentUser.theme === "dark"
+                        ? "datepicker-dark"
+                        : "datepicker-light"
                     }
                   />
                 </div>
@@ -414,7 +423,7 @@ const TaskCard: React.FC<{
                           {editAssignment && (
                             <div
                               style={{
-                                backgroundColor: t.background_4,
+                                backgroundColor: currentTheme.background_4,
                               }}
                               onClick={async () => {
                                 if (assignment.id) {
@@ -426,7 +435,7 @@ const TaskCard: React.FC<{
                               <div
                                 className="w-[6px] h-[1.5px] rounded-full"
                                 style={{
-                                  backgroundColor: t.text_1,
+                                  backgroundColor: currentTheme.text_1,
                                 }}
                               />
                             </div>
@@ -438,7 +447,7 @@ const TaskCard: React.FC<{
                   <div
                     className="ml-[1px] cursor-pointer hover:brightness-90 dim w-[25px] h-[25px] rounded-full flex items-center justify-center"
                     style={{
-                      backgroundColor: t.background_2,
+                      backgroundColor: currentTheme.background_2,
                     }}
                     onClick={handleAddAssignmentClick}
                   >
@@ -452,9 +461,9 @@ const TaskCard: React.FC<{
                     <div
                       className="cursor-pointer mt-[-0.5px] hover:brightness-90 dim w-[26px] h-[26px] rounded-full flex items-center justify-center"
                       style={{
-                        backgroundColor: t.background_2,
+                        backgroundColor: currentTheme.background_2,
                         border: editAssignment
-                          ? "1px solid " + t.text_3
+                          ? "1px solid " + currentTheme.text_3
                           : "none",
                       }}
                       onClick={() => setEditAssignment((prev) => !prev)}
@@ -530,8 +539,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   } = useContextQueries();
   const { screenClick } = useRouting();
   const { setCurrentEmployeeData } = useCurrentDataStore();
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -697,7 +705,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
       className={`${
         status === "cancelled" && "opacity-[0.5]"
       } w-[100%] rounded-2xl px-[16px] pt-[14px]`}
-      style={getCardStyle(theme, t)}
+      style={getCardStyle(currentUser.theme, currentTheme)}
       ref={parentRef}
     >
       <form
@@ -713,7 +721,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
             <div
               className="p-3 rounded-xl shadow-sm"
               style={{
-                backgroundColor: t.background_3,
+                backgroundColor: currentTheme.background_3,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -724,14 +732,14 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
               <FaWrench
                 size={20}
                 className="opacity-[0.65]"
-                style={{ color: t.text_1 }}
+                style={{ color: currentTheme.text_1 }}
               />
             </div>
 
             <div className="flex flex-col mt-[6px]">
               <div className="mt-[0px] flex flex-row gap-[5px] items-center">
                 <div
-                  style={{ color: t.text_1 }}
+                  style={{ color: currentTheme.text_1 }}
                   className="text-[20px] leading-[24px] font-semibold mt-[-5px]"
                 >
                   {matchedDefinition.type} {" Job"}
@@ -751,8 +759,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                   {deleteButtonVisible && (
                     <div
                       style={{
-                        border: "1px solid " + t.background_3,
-                        backgroundColor: t.delete,
+                        backgroundColor: currentTheme.delete,
                       }}
                       onClick={async () => {
                         if (productJob.job_id) {
@@ -761,7 +768,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                       }}
                       className="absolute right-0 top-[-6px] shadow-xl z-[502] w-[90px] h-[27px] rounded-[6px] flex items-center justify-center cursor-pointer hover:brightness-90 dim"
                     >
-                      <div className="text-[12.5px] font-[500] opacity-[0.8]">
+                      <div className="text-[12.5px] font-[500] opacity-[0.9] text-[#fff]">
                         Delete Job
                       </div>
                     </div>
@@ -785,7 +792,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
 
           <div
             className="flex items-center gap-[15px] py-[6.5px] px-[12px] rounded-[10px]"
-            style={getInnerCardStyle(theme, t)}
+            style={getInnerCardStyle(currentUser.theme, currentTheme)}
           >
             <div className="flex flex-col gap-[7px]">
               <p className="ml-[2.5px] mt-[-3px] font-[500] text-[13px] leading-[15px] opacity-[0.26]">
@@ -805,7 +812,9 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
               stroke={8}
               color={progressPct >= 100 ? "#22c55e" : "#06b6d4"}
               bg={
-                theme === "dark" ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)"
+                currentUser.theme === "dark"
+                  ? "rgba(255,255,255,0.04)"
+                  : "rgba(0,0,0,0.05)"
               }
             />
           </div>
@@ -822,7 +831,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
             </p>
             <div
               style={{
-                backgroundColor: t.background_2,
+                backgroundColor: currentTheme.background_2,
               }}
               className="rounded-[6px] px-[9px] flex flex-row gap-[2px] w-[140px] items-center"
             >
@@ -857,13 +866,13 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
           <div className="flex flex-col gap-[12px]">
             <div
               className="rounded-xl px-[15px] pt-[11px] pb-[10px] w-[100%]"
-              style={getInnerCardStyle(theme, t)}
+              style={getInnerCardStyle(currentUser.theme, currentTheme)}
             >
               <div className="flex items-start justify-between">
                 <div>
                   <div
                     className="text-[15px] font-[600] ml-[3px]"
-                    style={{ color: t.text_2 }}
+                    style={{ color: currentTheme.text_2 }}
                   >
                     Job Details
                   </div>
@@ -875,7 +884,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                     <div className="ml-[1px]">Updated</div>
                     <div
                       className="font-semibold opacity-[0.85]"
-                      style={{ color: t.text_1 }}
+                      style={{ color: currentTheme.text_1 }}
                     >
                       {formatDateTime(productJob.updated_at)}
                     </div>
@@ -888,7 +897,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                   className={`relative rounded-[8px] transition-all duration-200 ${
                     noteOpen ? "h-[210px]" : "h-[56px]"
                   }`}
-                  style={{ backgroundColor: appTheme[theme].background_2 }}
+                  style={{ backgroundColor: currentTheme.background_2 }}
                 >
                   <textarea
                     {...jobForm.register("notes")}
@@ -912,7 +921,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
               <div className="mt-[14px] flex flex-row gap-[13px] items-start">
                 <div
                   className="text-[14px] font-[500] ml-[3px] mt-[1.5px] opacity-[0.6]"
-                  style={{ color: t.text_2 }}
+                  style={{ color: currentTheme.text_2 }}
                 >
                   Assignment
                 </div>
@@ -966,7 +975,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                           {editAssignment && (
                             <div
                               style={{
-                                backgroundColor: t.background_4,
+                                backgroundColor: currentTheme.background_4,
                               }}
                               onClick={async () => {
                                 if (assignment.id) {
@@ -978,7 +987,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                               <div
                                 className="w-[6px] h-[1.5px] rounded-full"
                                 style={{
-                                  backgroundColor: t.text_1,
+                                  backgroundColor: currentTheme.text_1,
                                 }}
                               />
                             </div>
@@ -990,7 +999,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                   <div
                     className="ml-[1px] cursor-pointer hover:brightness-90 dim w-[25px] h-[25px] rounded-full flex items-center justify-center"
                     style={{
-                      backgroundColor: t.background_2,
+                      backgroundColor: currentTheme.background_2,
                     }}
                     onClick={handleAddAssignmentClick}
                   >
@@ -1004,9 +1013,9 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                     <div
                       className="cursor-pointer mt-[-0.5px] hover:brightness-90 dim w-[26px] h-[26px] rounded-full flex items-center justify-center"
                       style={{
-                        backgroundColor: t.background_2,
+                        backgroundColor: currentTheme.background_2,
                         border: editAssignment
-                          ? "1px solid " + t.text_3
+                          ? "1px solid " + currentTheme.text_3
                           : "none",
                       }}
                       onClick={() => setEditAssignment((prev) => !prev)}

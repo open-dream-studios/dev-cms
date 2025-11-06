@@ -1,17 +1,24 @@
 // project/src/modules/CustomerProducts/ProductView/AddEmployeeList.tsx
-import React from "react";
+import React, { use } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
-import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
-import { Employee, EmployeeAssignmentInput, Job, Task } from "@open-dream/shared";
+import {
+  Employee,
+  EmployeeAssignmentInput,
+  Job,
+  Task,
+} from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {
   const { currentUser } = useContext(AuthContext);
   const { currentProject, currentProjectId } = useCurrentDataStore();
   const { addEmployeeAssignment, employees } = useContextQueries();
+  const currentTheme = useCurrentTheme();
+
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
@@ -59,7 +66,7 @@ const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {
             <div
               key={index}
               style={{
-                backgroundColor: appTheme[currentUser.theme].background_3,
+                backgroundColor: currentTheme.background_3,
               }}
               onClick={() => handleEmployeeClick(employee)}
               className="cursor-pointer hover:brightness-[86%] dim px-[18px] py-[5px] w-[100%] min-h-[60px] rounded-[12px] flex flex-row items-center"

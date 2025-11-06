@@ -1,6 +1,5 @@
 "use client";
-import { HiBars3 } from "react-icons/hi2";
-import { appTheme, ThemeType } from "../../../util/appTheme";
+import { HiBars3 } from "react-icons/hi2"; 
 import {
   useLeftBarOpenStore,
   useLeftBarRefStore,
@@ -9,9 +8,10 @@ import appDetails from "../../../util/appDetails.json";
 import { useModal1Store } from "../../../store/useModalStore";
 import Login from "../Login/Login";
 import { removeWhiteSpace } from "@/util/functions/Data";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const LandingNav = () => {
-  const defaultTheme = appDetails.default_theme as ThemeType;
+  const currentTheme = useCurrentTheme();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -52,7 +52,6 @@ const LandingNav = () => {
           "--nav-height": `${appDetails.nav_height}px`,
           "--left-bar-width": removeWhiteSpace(appDetails.left_bar_width),
           "--nav-ml": appDetails.left_bar_width,
-          // backgroundColor: appTheme[defaultTheme].background_1,
           backgroundColor: "black",
         } as React.CSSProperties
       }
@@ -69,7 +68,7 @@ const LandingNav = () => {
               toggleLeftBar();
             }}
             className="w-[30px] dim cursor-pointer lg:hidden hover:brightness-75"
-            color={appTheme[defaultTheme].text_1}
+            color={currentTheme.text_1}
             fontSize={29}
           /> */}
           <div className="flex flex-row gap-[5px] items-center">
@@ -81,7 +80,7 @@ const LandingNav = () => {
             <p
               className="dim select-none text-[23px] font-[700] ml-[2px] hover:brightness-75"
               style={{
-                color: appTheme[defaultTheme].text_1,
+                color: currentTheme.text_1,
               }}
             >
               Project CMS

@@ -5,7 +5,6 @@ import { FiEdit } from "react-icons/fi";
 import { PiExport } from "react-icons/pi";
 import { BsFilter, BsWindow } from "react-icons/bs";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import { toast } from "react-toastify";
 import { IoTrashSharp } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
@@ -22,6 +21,7 @@ import { useModals } from "@/hooks/useModals";
 import { runFrontendModule } from "../runFrontendModule";
 import { getCardStyle } from "@/styles/themeStyles";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const ProductsHeader = ({ title }: { title: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -53,9 +53,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
   } = useContextQueries();
   const { screenClick } = useRouting();
   const { onProductFormSubmit } = useProductFormSubmit();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -280,7 +278,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
       >
         <div
           style={{
-            backgroundColor: t.header_1_1,
+            backgroundColor: currentTheme.header_1_1,
           }}
           className="flex w-[184px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
         >
@@ -288,7 +286,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
             onClick={() => handleFilterClick("Active")}
             style={{
               backgroundColor: productFilters.products.includes("Active")
-                ? t.header_1_2
+                ? currentTheme.header_1_2
                 : "transparent",
             }}
             className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -299,14 +297,14 @@ const ProductsHeader = ({ title }: { title: string }) => {
             className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
             style={{
               opacity: productFilters.products.length === 0 ? "0.1" : 0,
-              backgroundColor: t.text_1,
+              backgroundColor: currentTheme.text_1,
             }}
           />
           <div
             onClick={() => handleFilterClick("Complete")}
             style={{
               backgroundColor: productFilters.products.includes("Complete")
-                ? t.header_1_2
+                ? currentTheme.header_1_2
                 : "transparent",
             }}
             className="select-none cursor-pointer w-[88px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -317,7 +315,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
 
         <div
           style={{
-            backgroundColor: t.header_1_1,
+            backgroundColor: currentTheme.header_1_1,
           }}
           className="flex w-[330px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
         >
@@ -325,7 +323,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
             onClick={() => handleJobFilterClick("Service")}
             style={{
               backgroundColor: productFilters.jobType.includes("Service")
-                ? t.header_1_2
+                ? currentTheme.header_1_2
                 : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -341,14 +339,14 @@ const ProductsHeader = ({ title }: { title: string }) => {
                 productFilters.jobType.length === 0
                   ? "0.1"
                   : 0,
-              backgroundColor: t.text_1,
+              backgroundColor: currentTheme.text_1,
             }}
           />
           <div
             onClick={() => handleJobFilterClick("Refurbishment")}
             style={{
               backgroundColor: productFilters.jobType.includes("Refurbishment")
-                ? t.header_1_2
+                ? currentTheme.header_1_2
                 : "transparent",
             }}
             className="select-none cursor-pointer w-[124px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -364,14 +362,14 @@ const ProductsHeader = ({ title }: { title: string }) => {
                 productFilters.jobType.length === 0
                   ? "0.1"
                   : 0,
-              backgroundColor: t.text_1,
+              backgroundColor: currentTheme.text_1,
             }}
           />
           <div
             onClick={() => handleJobFilterClick("Sale")}
             style={{
               backgroundColor: productFilters.jobType.includes("Sale")
-                ? t.header_1_2
+                ? currentTheme.header_1_2
                 : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -390,7 +388,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
           <div className="hidden min-[400px]:flex flex-row gap-[13px] items-center">
             <div
               style={{
-                backgroundColor: t.header_1_1,
+                backgroundColor: currentTheme.header_1_1,
               }}
               className="flex w-[160px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
             >
@@ -398,7 +396,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
                 onClick={() => handleViewClick(false)}
                 style={{
                   backgroundColor: !inventoryView
-                    ? t.header_1_2
+                    ? currentTheme.header_1_2
                     : "transparent",
                 }}
                 className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
@@ -408,7 +406,9 @@ const ProductsHeader = ({ title }: { title: string }) => {
               <div
                 onClick={() => handleViewClick(true)}
                 style={{
-                  backgroundColor: inventoryView ? t.header_1_2 : "transparent",
+                  backgroundColor: inventoryView
+                    ? currentTheme.header_1_2
+                    : "transparent",
                 }}
                 className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
               >
@@ -424,11 +424,11 @@ const ProductsHeader = ({ title }: { title: string }) => {
               <div
                 onClick={handleFilterButtonClick}
                 style={{
-                  backgroundColor: t.header_1_1,
+                  backgroundColor: currentTheme.header_1_1,
                   border:
                     productFilters.products.length ||
                     productFilters.jobType.length
-                      ? `1px solid ${t.text_1}`
+                      ? `1px solid ${currentTheme.text_1}`
                       : "none",
                 }}
                 className="flex min-[1380px]:hidden w-[30px] h-[30px] rounded-full justify-center items-center pt-[1px] cursor-pointer hover:brightness-90 dim ml-[-3px] min-[1380px]:ml-0"
@@ -438,7 +438,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
               {showFilterPopup && (
                 <div
                   ref={filterPopupRef}
-                  style={getCardStyle(theme, t)}
+                  style={getCardStyle(currentUser.theme, currentTheme)}
                   className="absolute bottom-[-92px] left-[-140px] min-[600px]:left-[-25px] h-[86px] justify-center items-start rounded-[10px] px-[6px] flex flex-col"
                 >
                   <FilterSelections popup={true} />
@@ -451,70 +451,72 @@ const ProductsHeader = ({ title }: { title: string }) => {
             {hasProjectModule("customer-products-module") && (
               <div
                 style={{
-                  backgroundColor: t.background_2,
+                  backgroundColor: currentTheme.background_2,
                 }}
                 className="dim hover:brightness-75 rounded-[25px] w-[33px] min-[700px]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[6px] text-[13px] font-[600] cursor-pointer"
                 onClick={handleGoogleExport}
               >
                 <p
                   style={{
-                    color: t.text_1,
+                    color: currentTheme.text_1,
                   }}
                   className="hidden min-[700px]:flex"
                 >
                   Export Sheet
                 </p>
 
-                <PiExport color={t.text_1} size={18} />
+                <PiExport color={currentTheme.text_1} size={18} />
               </div>
             )}
 
             {hasProjectModule("customer-products-module") && (
               <div
                 style={{
-                  backgroundColor: t.background_2,
+                  backgroundColor: currentTheme.background_2,
                 }}
                 className="dim hover:brightness-75 rounded-[25px] w-[33px] min-[700px]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[13px] font-[600] cursor-pointer"
                 onClick={handleWixSync}
               >
                 <p
                   style={{
-                    color: t.text_1,
+                    color: currentTheme.text_1,
                   }}
                   className="hidden min-[700px]:flex"
                 >
                   Sync Wix
                 </p>
 
-                <BsWindow color={t.text_1} size={17} />
+                <BsWindow color={currentTheme.text_1} size={17} />
               </div>
             )}
 
             <div
               style={{
-                backgroundColor: t.background_2,
-                border: editingProducts ? `1px solid ${t.text_1}` : "none",
+                backgroundColor: currentTheme.background_2,
+                border: editingProducts
+                  ? `1px solid ${currentTheme.text_1}`
+                  : "none",
               }}
               className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
               onClick={handleEditClick}
             >
               <FiEdit
                 size={17}
-                color={t.text_1}
+                color={currentTheme.text_1}
                 className="flex items-center justify-center"
               />
             </div>
 
             <div
               style={{
-                backgroundColor: t.background_2,
+                backgroundColor: currentTheme.background_2,
               }}
               className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
               onClick={handleAddRow}
             >
               <FaPlus
                 size={17}
-                color={t.text_1}
+                color={currentTheme.text_1}
                 className="flex items-center justify-center"
               />
             </div>
@@ -522,14 +524,14 @@ const ProductsHeader = ({ title }: { title: string }) => {
             {selectedProducts.length > 0 && inventoryView && (
               <div
                 style={{
-                  backgroundColor: t.background_2,
+                  backgroundColor: currentTheme.background_2,
                 }}
                 className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
                 onClick={handleConfirmDelete}
               >
                 <IoTrashSharp
                   size={18}
-                  color={t.text_1}
+                  color={currentTheme.text_1}
                   className="flex items-center justify-center"
                 />
               </div>

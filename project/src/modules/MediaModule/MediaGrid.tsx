@@ -14,14 +14,14 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Media, MediaFolder } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
+import { Media, MediaFolder } from "@open-dream/shared"; 
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useMedia } from "@/hooks/useMedia";
 import { useDnDStore } from "@/store/useDnDStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type SortableMediaItemProps = {
   media: Media;
@@ -55,12 +55,10 @@ function SortableMediaItem({
     animateLayoutChanges: () => false,
   });
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme()
   const { handleDeleteMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (disabled) {
@@ -134,8 +132,8 @@ function SortableMediaItem({
       {editMode && (
         <div
           style={{
-            backgroundColor: t.background_1,
-            border: "0.5px solid " + t.text_3,
+            backgroundColor: currentTheme.background_1,
+            border: "0.5px solid " + currentTheme.text_3,
           }}
           className="absolute top-[-8px] right-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
           onClick={async (e: any) => {
@@ -145,7 +143,7 @@ function SortableMediaItem({
             }
           }}
         >
-          <IoCloseOutline color={t.text_2} />
+          <IoCloseOutline color={currentTheme.text_2} />
         </div>
       )}
       {media.type === "image" ? (
@@ -195,14 +193,12 @@ export default function MediaGrid({
     })
   );
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme()
   const { upsertMedia } = useContextQueries();
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [mediaSelected, setMediaSelected] = useState<Media | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const originalMediaRef = useRef<Media[]>([]);
   useEffect(() => {
@@ -275,12 +271,12 @@ export default function MediaGrid({
   if (!currentUser) return null;
 
   return (
-    <div className="w-[100%] h-[100%] relative">
+    <div className="w-[100%] h-[100%] relative overflow-auto pb-[24px]">
       {mediaSelected && (
         <div
           className="fixed z-[990] top-0 left-0 w-[100%] h-[100%] flex items-center justify-center"
           style={{
-            backgroundColor: t.background_1,
+            backgroundColor: currentTheme.background_1,
           }}
           onClick={() => setMediaSelected(null)}
         >

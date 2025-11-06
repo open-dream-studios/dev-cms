@@ -1,8 +1,8 @@
 // project/src/modules/PagesModule/DynamicSectionForm.tsx
 import React, { useContext } from "react";
 import { FieldDefinition } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type Props = {
   fields: FieldDefinition[];
@@ -12,9 +12,7 @@ type Props = {
 
 const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
   const { currentUser } = useContext(AuthContext);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const update = (key: string, val: any) => {
     onChange({ ...values, [key]: val });
@@ -30,7 +28,7 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
         const labelEl = (
           <label
             className="text-[14px] font-[600] opacity-80"
-            style={{ color: t.text_3 }}
+            style={{ color: currentTheme.text_3 }}
           >
             {f.label || f.key}
           </label>
@@ -44,8 +42,8 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                 <textarea
                   className="resize-y rounded-[8px] px-[10px] py-[6px] outline-none border-none dim"
                   style={{
-                    backgroundColor: t.background_2_2,
-                    color: t.text_1,
+                    backgroundColor: currentTheme.background_2_2,
+                    color: currentTheme.text_1,
                   }}
                   value={val}
                   onChange={(e) => update(f.key, e.target.value)}
@@ -65,8 +63,8 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                   type={f.type === "link" || f.type === "url" ? "text" : f.type}
                   className="rounded-[8px] px-[10px] py-[6px] outline-none border-none dim"
                   style={{
-                    backgroundColor: t.background_2_2,
-                    color: t.text_1,
+                    backgroundColor: currentTheme.background_2_2,
+                    color: currentTheme.text_1,
                   }}
                   value={val}
                   onChange={(e) => update(f.key, e.target.value)}
@@ -81,8 +79,8 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                 <textarea
                   className="resize-y rounded-[8px] px-[10px] py-[6px] outline-none border-none dim"
                   style={{
-                    backgroundColor: t.background_2_2,
-                    color: t.text_1,
+                    backgroundColor: currentTheme.background_2_2,
+                    color: currentTheme.text_1,
                   }}
                   value={val}
                   onChange={(e) => update(f.key, e.target.value)}
@@ -98,8 +96,8 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                   type="number"
                   className="rounded-[8px] px-[10px] py-[6px] outline-none border-none dim"
                   style={{
-                    backgroundColor: t.background_2_2,
-                    color: t.text_1,
+                    backgroundColor: currentTheme.background_2_2,
+                    color: currentTheme.text_1,
                   }}
                   value={val}
                   onChange={(e) => update(f.key, e.target.valueAsNumber)}
@@ -131,8 +129,8 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                   multiple={f.type === "multiselect"}
                   className="rounded-[8px] px-[10px] py-[6px] outline-none border-none cursor-pointer dim"
                   style={{
-                    backgroundColor: t.background_2_2,
-                    color: t.text_1,
+                    backgroundColor: currentTheme.background_2_2,
+                    color: currentTheme.text_1,
                   }}
                   value={val}
                   onChange={(e) =>
@@ -161,7 +159,7 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                 key={f.key}
                 className="p-3 rounded-[8px] dim"
                 style={{
-                  backgroundColor: t.background_2_2,
+                  backgroundColor: currentTheme.background_2_2,
                 }}
               >
                 <p className="font-semibold mb-2">{f.label || f.key}</p>
@@ -179,7 +177,7 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                 key={f.key}
                 className="p-3 rounded-[8px] dim"
                 style={{
-                  backgroundColor: t.background_2_2,
+                  backgroundColor: currentTheme.background_2_2,
                 }}
               >
                 <p className="font-semibold mb-2">{f.label || f.key}</p>
@@ -188,7 +186,7 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                     key={i}
                     className="mb-2 p-2 rounded-[8px]"
                     style={{
-                      backgroundColor: t.background_3,
+                      backgroundColor: currentTheme.background_3,
                     }}
                   >
                     <DynamicSectionForm
@@ -206,9 +204,8 @@ const DynamicSectionForm: React.FC<Props> = ({ fields, values, onChange }) => {
                   type="button"
                   className="mt-1 px-3 py-1 rounded-full dim cursor-pointer font-[600]"
                   style={{
-                    backgroundColor:
-                      t.background_2_selected,
-                    color: t.text_3,
+                    backgroundColor: currentTheme.background_2_selected,
+                    color: currentTheme.text_3,
                   }}
                   onClick={() => update(f.key, [...(val || []), {}])}
                 >

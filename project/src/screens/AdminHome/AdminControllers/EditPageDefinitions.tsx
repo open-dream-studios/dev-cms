@@ -5,7 +5,6 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { usePageDefinitionsForm } from "@/hooks/forms/usePageDefinitionsForm";
 import { PageDefinitionFormData } from "@/util/schemas/pageDefinitionsSchema";
-import { appTheme } from "@/util/appTheme";
 import {
   FaChevronLeft,
   FaPlus,
@@ -17,9 +16,11 @@ import { FiEdit } from "react-icons/fi";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { PageDefinition } from "@open-dream/shared";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const EditPageDefinitions = () => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const {
     pageDefinitions,
     upsertPageDefinition,
@@ -37,9 +38,6 @@ const EditPageDefinitions = () => {
 
   const [allowedSections, setAllowedSections] = useState<string[]>([]);
   const [newSection, setNewSection] = useState("");
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   useEffect(() => {
     if (showForm) form.setFocus("name");
@@ -148,7 +146,7 @@ const EditPageDefinitions = () => {
             onClick={handleBackClick}
             className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[33px] rounded-full w-[33px] opacity-[30%]"
           >
-            <FaChevronLeft size={22} color={t.text_3} />
+            <FaChevronLeft size={22} color={currentTheme.text_3} />
           </div>
         )}
         <h2 className="text-[24px] ml-[4px] font-bold mt-[-5px] mr-[14px]">
@@ -160,7 +158,7 @@ const EditPageDefinitions = () => {
             <button
               type="submit"
               style={{
-                backgroundColor: t.background_2_selected,
+                backgroundColor: currentTheme.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px] py-[6px] rounded-full"
             >
@@ -170,7 +168,7 @@ const EditPageDefinitions = () => {
               type="button"
               onClick={handleCancelForm}
               style={{
-                backgroundColor: t.background_2_selected,
+                backgroundColor: currentTheme.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
             >
@@ -182,11 +180,11 @@ const EditPageDefinitions = () => {
             type="button"
             onClick={handleShowForm}
             style={{
-              backgroundColor: t.background_2_selected,
+              backgroundColor: currentTheme.background_2_selected,
             }}
             className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
-            <FaPlus size={16} color={t.text_4} />
+            <FaPlus size={16} color={currentTheme.text_4} />
           </button>
         )}
       </div>
@@ -194,7 +192,7 @@ const EditPageDefinitions = () => {
       {showForm && (
         <div
           style={{
-            backgroundColor: t.background_1_2,
+            backgroundColor: currentTheme.background_1_2,
           }}
           className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
         >
@@ -221,8 +219,8 @@ const EditPageDefinitions = () => {
                       key={s}
                       className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
                       style={{
-                        backgroundColor: t.background_2_selected,
-                        color: t.text_4,
+                        backgroundColor: currentTheme.background_2_selected,
+                        color: currentTheme.text_4,
                       }}
                     >
                       {s}
@@ -248,7 +246,7 @@ const EditPageDefinitions = () => {
                   type="button"
                   onClick={handleAddSection}
                   style={{
-                    backgroundColor: t.background_2_2,
+                    backgroundColor: currentTheme.background_2_2,
                   }}
                   className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm"
                 >
@@ -269,7 +267,7 @@ const EditPageDefinitions = () => {
               <div
                 key={page.id}
                 style={{
-                  backgroundColor: t.background_1_2,
+                  backgroundColor: currentTheme.background_1_2,
                 }}
                 className={`${
                   selectedPage === null &&
@@ -279,7 +277,10 @@ const EditPageDefinitions = () => {
               >
                 <div className="w-[calc(100%-90px)] truncate">
                   <p className="font-semibold truncate">{page.name}</p>
-                  <p style={{ color: t.text_4 }} className="text-sm truncate">
+                  <p
+                    style={{ color: currentTheme.text_4 }}
+                    className="text-sm truncate"
+                  >
                     {page.identifier}
                   </p>
                 </div>
@@ -288,11 +289,11 @@ const EditPageDefinitions = () => {
                     <div
                       onClick={(e) => handleEditClick(e, page)}
                       style={{
-                        backgroundColor: t.background_2_selected,
+                        backgroundColor: currentTheme.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FiEdit size={18} color={t.text_4} />
+                      <FiEdit size={18} color={currentTheme.text_4} />
                     </div>
                     <div
                       onClick={(e) => {
@@ -300,11 +301,11 @@ const EditPageDefinitions = () => {
                         handleDeletePage(page);
                       }}
                       style={{
-                        backgroundColor: t.background_2_selected,
+                        backgroundColor: currentTheme.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FaTrash size={15} color={t.text_4} />
+                      <FaTrash size={15} color={currentTheme.text_4} />
                     </div>
                   </div>
                 )}

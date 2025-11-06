@@ -1,7 +1,6 @@
 // project/src/modules/PagesModule/PagesSidebar.tsx
 import { AuthContext } from "@/contexts/authContext";
 import { ProjectPage } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useState } from "react";
 import { FiEdit } from "react-icons/fi";
 import {
@@ -23,6 +22,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { ContextInput, ContextInputType } from "./PagesEditor";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 interface PagesSidebarProps {
   filteredActivePages: ProjectPage[];
@@ -47,6 +47,7 @@ const SortablePageItem = ({
   handleContextMenu,
 }: SortablePageItemProps) => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { setCurrentPageData } = useCurrentDataStore();
   const { setEditingPage } = useUiStore();
   const {
@@ -82,8 +83,8 @@ const SortablePageItem = ({
         onContextMenu={(e) => handleContextMenu(e, page, "page")}
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
         style={{
-          color: appTheme[currentUser.theme].text_4,
-          backgroundColor: appTheme[currentUser.theme].background_1_2,
+          color: currentTheme.text_4,
+          backgroundColor: currentTheme.background_1_2,
         }}
       >
         <p className="select-none truncate w-[calc(100%-40px)]">{page.title}</p>
@@ -95,8 +96,7 @@ const SortablePageItem = ({
             }}
             className="hover:brightness-90 dim flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full dim cursor-pointer"
             style={{
-              backgroundColor:
-                appTheme[currentUser.theme].background_2_selected,
+              backgroundColor: currentTheme.background_2_selected,
             }}
           >
             <FiEdit size={15} />

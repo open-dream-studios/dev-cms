@@ -1,17 +1,13 @@
 "use client";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useModal1Store, useModal2Store } from "../store/useModalStore";
-import { appTheme, ThemeType } from "../util/appTheme";
 import { AuthContext } from "../contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
-import appDetails from "../util/appDetails.json";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const Modals = ({ landing }: { landing: boolean }) => {
-  let currentTheme = appDetails.default_theme as ThemeType;
   const { currentUser } = useContext(AuthContext);
-  if (!landing && currentUser) {
-    currentTheme = currentUser.theme;
-  }
+  const currentTheme = useCurrentTheme();
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -123,9 +119,9 @@ const Modals = ({ landing }: { landing: boolean }) => {
             onClick={(e) => e.stopPropagation()}
             className={`relative overflow-hidden ${modal1.width} ${modal1.maxWidth} ${modal1.aspectRatio} ${modal1.borderRadius}`}
             style={{
-              border: `1px solid ${appTheme[currentTheme].background_2_2}`,
-              color: appTheme[currentTheme].text_1,
-              backgroundColor: appTheme[currentTheme].background_1,
+              border: `1px solid ${currentTheme.background_2_2}`,
+              color: currentTheme.text_1,
+              backgroundColor: currentTheme.background_1,
             }}
           >
             {modal1.showClose && (
@@ -133,13 +129,10 @@ const Modals = ({ landing }: { landing: boolean }) => {
                 className="dim hover:brightness-90 cursor-pointer absolute right-[13px] top-[10px] w-[36px] h-[36px] rounded-full flex items-center justify-center"
                 onClick={() => setModal1({ ...modal1, open: false })}
                 style={{
-                  backgroundColor: appTheme[currentTheme].background_2_2,
+                  backgroundColor: currentTheme.background_2_2,
                 }}
               >
-                <IoCloseOutline
-                  color={appTheme[currentTheme].text_3}
-                  size={25}
-                />
+                <IoCloseOutline color={currentTheme.text_3} size={25} />
               </div>
             )}
             {modal1.content}
@@ -167,9 +160,9 @@ const Modals = ({ landing }: { landing: boolean }) => {
             onClick={(e) => e.stopPropagation()}
             className={`relative overflow-hidden ${modal2.width} ${modal2.maxWidth} ${modal2.aspectRatio} ${modal2.borderRadius}`}
             style={{
-              border: `1px solid ${appTheme[currentTheme].background_2_2}`,
-              color: appTheme[currentTheme].text_1,
-              backgroundColor: appTheme[currentTheme].background_1_2,
+              border: `1px solid ${currentTheme.background_2_2}`,
+              color: currentTheme.text_1,
+              backgroundColor: currentTheme.background_1_2,
             }}
           >
             {modal2.showClose && (
@@ -177,13 +170,10 @@ const Modals = ({ landing }: { landing: boolean }) => {
                 className="dim hover:brightness-90 cursor-pointer absolute right-[13px] top-[10px] w-[36px] h-[36px] rounded-full flex items-center justify-center"
                 onClick={() => setModal2({ ...modal2, open: false })}
                 style={{
-                  backgroundColor: appTheme[currentTheme].background_2_2,
+                  backgroundColor: currentTheme.background_2_2,
                 }}
               >
-                <IoCloseOutline
-                  color={appTheme[currentTheme].text_3}
-                  size={25}
-                />
+                <IoCloseOutline color={currentTheme.text_3} size={25} />
               </div>
             )}
             {modal2.content}

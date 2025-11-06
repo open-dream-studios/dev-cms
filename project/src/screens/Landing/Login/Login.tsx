@@ -8,8 +8,7 @@ import { FaFacebook } from "react-icons/fa";
 import { BsQuestion } from "react-icons/bs";
 import { IoEyeOff } from "react-icons/io5";
 import { IoEye } from "react-icons/io5";
-import appDetails from "../../../util/appDetails.json";
-import { appTheme, ThemeType } from "../../../util/appTheme";
+import appDetails from "../../../util/appDetails.json"; 
 import animationData from "../../../util/animations/loading-animation-black.json";
 import { useModal1Store, useModal2Store } from "../../../store/useModalStore";
 import TermsDocument from "../../../util/forms/TermsDocument";
@@ -23,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { googleSignIn, login, register } from "@/util/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const LoginSlider = () => {
   const images = [
@@ -106,9 +106,8 @@ const LoginSlider = () => {
   );
 };
 
-const Login = () => {
-  const queryClient = useQueryClient();
-  const defaultTheme = appDetails.default_theme as ThemeType;
+const Login = () => { 
+  const currentTheme = useCurrentTheme()
   const router = useRouter();
   const [inputs, setInputs] = useState({
     email: "",
@@ -152,11 +151,7 @@ const Login = () => {
   };
 
   const handleQuestionClick = () => {
-    const ForgotPasswordForm = ({
-      defaultTheme,
-    }: {
-      defaultTheme: ThemeType;
-    }) => {
+    const ForgotPasswordForm = () => {
       const [forgotPasswordEmail, setForgotPasswordEmail] =
         useState<string>("");
       const [errorText, setErrorText] = useState<string>(
@@ -293,14 +288,14 @@ const Login = () => {
           {forgotPasswordPage === 0 && (
             <>
               <div
-                style={{ color: appTheme[defaultTheme].text_1 }}
+                style={{ color: currentTheme.text_1 }}
                 className="text-center text-[16px] leading-[16px] font-[500]"
               >
                 Forgot your password?
               </div>
 
               <div
-                style={{ color: appTheme[defaultTheme].text_3 }}
+                style={{ color: currentTheme.text_3 }}
                 className="mt-[1px] text-center font-[400] text-[14px] leading-[14px]"
               >
                 We&lsquo;ll help you get logged back in
@@ -309,7 +304,7 @@ const Login = () => {
               <input
                 className={`dim w-[calc(100%-50px)] mx-[25px] text-[15px] mt-[3px] px-[17px] items-center justify-center h-[50px] md:h-[46px] lg:h-[50px] rounded-[12px] focus:ring-white/50 focus:ring-1 outline-none border-none`}
                 style={{
-                  backgroundColor: appTheme[defaultTheme].background_3,
+                  backgroundColor: currentTheme.background_3,
                 }}
                 type="text"
                 placeholder="Enter your email"
@@ -325,8 +320,8 @@ const Login = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
                   style={{
-                    color: appTheme[defaultTheme].text_1,
-                    backgroundColor: appTheme[defaultTheme].background_2_2,
+                    color: currentTheme.text_1,
+                    backgroundColor: currentTheme.background_2_2,
                   }}
                   onClick={cancelModal}
                 >
@@ -335,8 +330,8 @@ const Login = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
                   style={{
-                    color: appTheme[defaultTheme].background_1_2,
-                    backgroundColor: appTheme[defaultTheme].text_3,
+                    color: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.text_3,
                   }}
                   onClick={executeForgotPassword}
                 >
@@ -348,14 +343,14 @@ const Login = () => {
           {forgotPasswordPage === 1 && (
             <div className="px-[25px] flex flex-col gap-[6px]">
               <div
-                style={{ color: appTheme[defaultTheme].text_1 }}
+                style={{ color: currentTheme.text_1 }}
                 className="text-center text-[16px] leading-[18px] font-[500]"
               >
                 We sent you an email! 
               </div>
 
               <div
-                style={{ color: appTheme[defaultTheme].text_3 }}
+                style={{ color: currentTheme.text_3 }}
                 className="text-center font-[400] text-[14px] leading-[19px]"
               >
                 Check your inbox to find your reset code. If you don&apos;t see it, check your spam folder.
@@ -370,7 +365,7 @@ const Login = () => {
                     }}
                     className={`dim w-[40px] h-[50px] pb-[5px] text-[21px] pl-[13px] mt-[3px] justify-center rounded-[12px] focus:ring-white/50 focus:ring-1 outline-none border-none`}
                     style={{
-                      backgroundColor: appTheme[defaultTheme].background_3,
+                      backgroundColor: currentTheme.background_3,
                     }}
                     type="text"
                     value={codeInput[index]}
@@ -421,8 +416,8 @@ const Login = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
                   style={{
-                    color: appTheme[defaultTheme].text_1,
-                    backgroundColor: appTheme[defaultTheme].background_2_2,
+                    color: currentTheme.text_1,
+                    backgroundColor: currentTheme.background_2_2,
                   }}
                   onClick={cancelModal}
                 >
@@ -435,8 +430,8 @@ const Login = () => {
                       : "cursor-default brightness-[60%]"
                   } flex-1 h-full rounded-[10px] flex items-center justify-center`}
                   style={{
-                    color: appTheme[defaultTheme].background_1_2,
-                    backgroundColor: appTheme[defaultTheme].text_3,
+                    color: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.text_3,
                   }}
                   onClick={() => {
                     if (
@@ -455,14 +450,14 @@ const Login = () => {
           {forgotPasswordPage === 2 && (
             <>
               <div
-                style={{ color: appTheme[defaultTheme].text_1 }}
+                style={{ color: currentTheme.text_1 }}
                 className="text-center text-[16px] leading-[16px] font-[500]"
               >
                 Your account password can now be reset!
               </div>
 
               <div
-                style={{ color: appTheme[defaultTheme].text_3 }}
+                style={{ color: currentTheme.text_3 }}
                 className="mt-[1px] text-center font-[400] text-[14px] leading-[14px]"
               >
                 Please enter a new password below
@@ -471,7 +466,7 @@ const Login = () => {
               <input
                 className={`dim w-[calc(100%-50px)] pr-[40px] h-[45px] mt-[6px] text-[15px] px-[17px] items-center justify-center rounded-[12px] focus:ring-white/50 focus:ring-1 outline-none border-none`}
                 style={{
-                  backgroundColor: appTheme[defaultTheme].background_3,
+                  backgroundColor: currentTheme.background_3,
                 }}
                 type={showUpdatePassword ? "text" : "password"}
                 placeholder="Password"
@@ -489,9 +484,9 @@ const Login = () => {
                 title={showUpdatePassword ? "Hide password" : "Show password"}
               >
                 {showUpdatePassword ? (
-                  <IoEyeOff color={appTheme[defaultTheme].text_2} size={16} />
+                  <IoEyeOff color={currentTheme.text_2} size={16} />
                 ) : (
-                  <IoEye color={appTheme[defaultTheme].text_2} size={16} />
+                  <IoEye color={currentTheme.text_2} size={16} />
                 )}
               </div>
 
@@ -499,8 +494,8 @@ const Login = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
                   style={{
-                    color: appTheme[defaultTheme].text_1,
-                    backgroundColor: appTheme[defaultTheme].background_2_2,
+                    color: currentTheme.text_1,
+                    backgroundColor: currentTheme.background_2_2,
                   }}
                   onClick={cancelModal}
                 >
@@ -509,8 +504,8 @@ const Login = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
                   style={{
-                    color: appTheme[defaultTheme].background_1_2,
-                    backgroundColor: appTheme[defaultTheme].text_3,
+                    color: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.text_3,
                   }}
                   onClick={confirmNewPassword}
                 >
@@ -522,14 +517,14 @@ const Login = () => {
           {forgotPasswordPage === 3 && (
             <>
               <div
-                style={{ color: appTheme[defaultTheme].text_1 }}
+                style={{ color: currentTheme.text_1 }}
                 className="text-center text-[16px] leading-[16px] font-[500]"
               >
                 Password has been updated!
               </div>
 
               <div
-                style={{ color: appTheme[defaultTheme].text_3 }}
+                style={{ color: currentTheme.text_3 }}
                 className="mt-[1px] text-center font-[400] text-[14px] leading-[14px]"
               >
                 You can now sign in with your new password
@@ -537,8 +532,8 @@ const Login = () => {
               <div
                 className="mt-[12px] w-[130px] h-[40px] select-none dim hover:brightness-75 cursor-pointer rounded-[10px] flex items-center justify-center"
                 style={{
-                  color: appTheme[defaultTheme].background_1_2,
-                  backgroundColor: appTheme[defaultTheme].text_3,
+                  color: currentTheme.background_1_2,
+                  backgroundColor: currentTheme.text_3,
                 }}
                 onClick={cancelModal}
               >
@@ -549,14 +544,14 @@ const Login = () => {
           {forgotPasswordPage === -1 && (
             <>
               <div
-                style={{ color: appTheme[defaultTheme].text_1 }}
+                style={{ color: currentTheme.text_1 }}
                 className="text-center text-[16px] leading-[16px] font-[500]"
               >
                 Looks like there was an issue
               </div>
 
               <div
-                style={{ color: appTheme[defaultTheme].text_3 }}
+                style={{ color: currentTheme.text_3 }}
                 className="mt-[1px] px-[50px] text-center font-[400] text-[14px] leading-[17px]"
               >
                 {errorText}
@@ -564,8 +559,8 @@ const Login = () => {
               <div
                 className="mt-[12px] w-[130px] h-[40px] select-none dim hover:brightness-75 cursor-pointer rounded-[10px] flex items-center justify-center"
                 style={{
-                  color: appTheme[defaultTheme].background_1_2,
-                  backgroundColor: appTheme[defaultTheme].text_3,
+                  color: currentTheme.background_1_2,
+                  backgroundColor: currentTheme.text_3,
                 }}
                 onClick={cancelModal}
               >
@@ -586,7 +581,7 @@ const Login = () => {
       maxWidth: "max-w-[400px]",
       aspectRatio: "h-[auto] pb-[17px] pt-[12px]",
       borderRadius: "rounded-[12px] md:rounded-[15px]",
-      content: <ForgotPasswordForm defaultTheme={defaultTheme} />,
+      content: <ForgotPasswordForm />,
     });
   };
 
@@ -737,7 +732,7 @@ const Login = () => {
   return (
     <div
       className="select-none w-full h-full flex flex-row gap-[5px] p-[8px] pointer-events-none"
-      style={{ backgroundColor: appTheme[defaultTheme].background_stark }}
+      style={{ backgroundColor: currentTheme.background_stark }}
     >
       <div className="hidden md:flex flex-1 mb-[3px] overflow-hidden rounded-[14px]">
         <LoginSlider />
@@ -746,7 +741,7 @@ const Login = () => {
         <div
           className="mb-[20px] sm:mb-[25px] md:mb-[18px] lg:mb-[25px] text-[calc(3vw+15px)] sm:text-[calc(2.5vw+15px)] md:text-[calc(1.3vw+15px)] leading-[calc(3vw+20px)] sm:leading-[calc(2vw+20px)] md:leading-[calc(1.4vw+20px)] font-[600] text-center px-[15px]"
           style={{
-            color: appTheme[defaultTheme].text_1,
+            color: currentTheme.text_1,
           }}
         >
           CMS Login
@@ -770,14 +765,14 @@ const Login = () => {
             <div
               className="dim w-full h-full absolute brightness-75 hover:brightness-100"
               style={{
-                backgroundColor: appTheme[defaultTheme].background_3,
+                backgroundColor: currentTheme.background_3,
               }}
             ></div>
             <div className="w-full h-full absolute pointer-events-none flex items-center justify-center gap-[11px]">
               <FcGoogle className="w-[23px] h-[23px]" />
               <div
                 className="font-[600] leading-[15px] text-[15px] brightness-90"
-                style={{ color: appTheme[defaultTheme].text_2 }}
+                style={{ color: currentTheme.text_2 }}
               >
                 Continue with Google
               </div>
@@ -787,7 +782,7 @@ const Login = () => {
             <div
               className="dim w-full h-full absolute brightness-75 hover:brightness-100"
               style={{
-                backgroundColor: appTheme[defaultTheme].background_3,
+                backgroundColor: currentTheme.background_3,
               }}
             ></div>
             <div className="w-full h-full absolute pointer-events-none flex items-center justify-center">
@@ -798,7 +793,7 @@ const Login = () => {
             <div
               className="dim w-full h-full absolute brightness-75 hover:brightness-100"
               style={{
-                backgroundColor: appTheme[defaultTheme].background_3,
+                backgroundColor: currentTheme.background_3,
               }}
             ></div>
             <div className="w-full h-full absolute pointer-events-none flex items-center justify-center">
@@ -810,19 +805,19 @@ const Login = () => {
         <div className="flex flex-row mt-[19px] gap-[15px]">
           <div
             className="h-[1px] w-[115px] mt-[12px]"
-            style={{ backgroundColor: appTheme[defaultTheme].background_2 }}
+            style={{ backgroundColor: currentTheme.background_2 }}
           ></div>
           <p
             className="text-[17px] brightness-90"
             style={{
-              color: appTheme[defaultTheme].text_2,
+              color: currentTheme.text_2,
             }}
           >
             or
           </p>
           <div
             className="h-[1px] w-[115px] mt-[12px]"
-            style={{ backgroundColor: appTheme[defaultTheme].background_2 }}
+            style={{ backgroundColor: currentTheme.background_2 }}
           ></div>
         </div>
 
@@ -841,7 +836,7 @@ const Login = () => {
               signUpPage && "text-[16px] font-[400] text-center"
             } brightness-90`}
             style={{
-              color: appTheme[defaultTheme].text_2,
+              color: currentTheme.text_2,
               transition:
                 "opacity 0.6s ease-in-out, margin-top 0.6s ease-in-out, margin-bottom 0.6s ease-in-out",
             }}
@@ -866,7 +861,7 @@ const Login = () => {
                 transitionDelay: nameInputVisible
                   ? "0s, 0s, 0.4s"
                   : "0.1s, 0.1s, 0s",
-                backgroundColor: appTheme[defaultTheme].background_3,
+                backgroundColor: currentTheme.background_3,
               }}
               type="text"
               placeholder="First name"
@@ -897,7 +892,7 @@ const Login = () => {
                 transitionDelay: nameInputVisible
                   ? "0s, 0s, 0.4s"
                   : "0.1s, 0.1s, 0s",
-                backgroundColor: appTheme[defaultTheme].background_3,
+                backgroundColor: currentTheme.background_3,
               }}
               type="text"
               placeholder="Last name"
@@ -919,7 +914,7 @@ const Login = () => {
                 : ""
             } text-[15px] px-[17px] items-center justify-center h-[50px] md:h-[46px] lg:h-[50px] rounded-[12px] focus:ring-white/50 focus:ring-1 outline-none border-none`}
             style={{
-              backgroundColor: appTheme[defaultTheme].background_3,
+              backgroundColor: currentTheme.background_3,
             }}
             type="text"
             placeholder="Enter your email"
@@ -949,7 +944,7 @@ const Login = () => {
               transition:
                 "height 0.7s ease-in-out, margin-top 0.7s ease-in-out, opacity 0.5s ease-in-out",
               transitionDelay: passwordVisible ? "0s, 0s, 0.3s" : "0s",
-              backgroundColor: appTheme[defaultTheme].background_3,
+              backgroundColor: currentTheme.background_3,
             }}
             type={showPassword ? "text" : "password"}
             placeholder="Password"
@@ -982,9 +977,9 @@ const Login = () => {
               title={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
-                <IoEyeOff color={appTheme[defaultTheme].text_2} size={16} />
+                <IoEyeOff color={currentTheme.text_2} size={16} />
               ) : (
-                <IoEye color={appTheme[defaultTheme].text_2} size={16} />
+                <IoEye color={currentTheme.text_2} size={16} />
               )}
             </div>
 
@@ -1000,11 +995,11 @@ const Login = () => {
               style={{
                 transition: "opacity 0.9s ease-in-out, top 0.6s ease-in-out",
                 transitionDelay: passwordVisible ? "0.7s, 0s" : "0s, 0s",
-                border: `1px solid ${appTheme[defaultTheme].text_3}`,
+                border: `1px solid ${currentTheme.text_3}`,
               }}
               title="Forgot password"
             >
-              <BsQuestion color={appTheme[defaultTheme].text_3} size={19} />
+              <BsQuestion color={currentTheme.text_3} size={19} />
             </div>
           </div>
           <div
@@ -1028,7 +1023,7 @@ const Login = () => {
                     inputs.last_name.length === 0)) ||
                 (!signUpPage &&
                   (inputs.email.length === 0 || inputs.password.length === 0))
-                  ? appTheme[defaultTheme].background_3
+                  ? currentTheme.background_3
                   : "white",
               color:
                 (signUpPage &&
@@ -1038,8 +1033,8 @@ const Login = () => {
                     inputs.last_name.length === 0)) ||
                 (!signUpPage &&
                   (inputs.email.length === 0 || inputs.password.length === 0))
-                  ? appTheme[defaultTheme].text_1
-                  : appTheme[defaultTheme].background_1,
+                  ? currentTheme.text_1
+                  : currentTheme.background_1,
               transition:
                 "color 0.2s ease-in-out, background-color 0.2s ease-in-out",
             }}
@@ -1075,8 +1070,8 @@ const Login = () => {
             onClick={triggerSignUpPage}
             className="ml-[1px] pb-[2px] cursor-pointer dim hover:brightness-75"
             style={{
-              color: appTheme[defaultTheme].app_text_color_1,
-              borderBottom: `1px solid ${appTheme[defaultTheme].app_text_color_1}`,
+              color: currentTheme.app_text_color_1,
+              borderBottom: `1px solid ${currentTheme.app_text_color_1}`,
             }}
           >
             {signUpPage ? "Sign in" : "Sign up"}
@@ -1086,7 +1081,7 @@ const Login = () => {
         {/* <div
           className="text-[15px] md:text-[14.5px] lg:text-[15px] absolute bottom-[20px] text-center flex flex-col justify-center"
           style={{
-            color: appTheme[defaultTheme].text_2,
+            color: currentTheme.text_2,
           }}
         >
           <div className="">
@@ -1101,8 +1096,8 @@ const Login = () => {
               }}
               className="cursor-pointer dim hover:brightness-75"
               style={{
-                color: appTheme[defaultTheme].app_text_color_1,
-                borderBottom: `1px solid ${appTheme[defaultTheme].app_text_color_1}`,
+                color: currentTheme.app_text_color_1,
+                borderBottom: `1px solid ${currentTheme.app_text_color_1}`,
               }}
             >
               Terms of use
@@ -1120,8 +1115,8 @@ const Login = () => {
               }}
               className="cursor-pointer dim hover:brightness-75"
               style={{
-                color: appTheme[defaultTheme].app_text_color_1,
-                borderBottom: `1px solid ${appTheme[defaultTheme].app_text_color_1}`,
+                color: currentTheme.app_text_color_1,
+                borderBottom: `1px solid ${currentTheme.app_text_color_1}`,
               }}
             >
               Privacy Policy
@@ -1137,7 +1132,7 @@ const Login = () => {
             style={{
               transition: "opacity 0.5s ease-in-out",
               transitionDelay: hideDocument ? "0.5s" : "0s",
-              backgroundColor: appTheme[defaultTheme].background_stark,
+              backgroundColor: currentTheme.background_stark,
             }}
           >
             <div
@@ -1152,7 +1147,7 @@ const Login = () => {
               <div
                 className="absolute bottom-0 left-0 w-full h-[60px] items-center justify-center flex pl-[50px] pr-[40px]"
                 style={{
-                  backgroundColor: appTheme[defaultTheme].background_stark,
+                  backgroundColor: currentTheme.background_stark,
                 }}
               >
                 <div
@@ -1160,7 +1155,7 @@ const Login = () => {
                 hover:brightness-50 cursor-pointer flex items-center justify-center h-[45px] rounded-[12px] text-[17px] font-[700]`}
                   style={{
                     backgroundColor: "white",
-                    color: appTheme[defaultTheme].background_1,
+                    color: currentTheme.background_1,
                   }}
                   onClick={() => {
                     setHideDocument(true);
@@ -1180,7 +1175,7 @@ const Login = () => {
             <div
               className="w-full h-[20px] absolute bottom-[60px] left-0"
               style={{
-                background: `linear-gradient(to top, ${appTheme[defaultTheme].background_stark}, transparent)`,
+                background: `linear-gradient(to top, ${currentTheme.background_stark}, transparent)`,
               }}
             ></div>
           </div>

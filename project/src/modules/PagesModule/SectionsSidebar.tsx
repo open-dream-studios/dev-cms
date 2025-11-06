@@ -1,9 +1,8 @@
 // project/src/modules/PagesModule/SectionsSidbar.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { ProjectPage, Section } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
+import { Section } from "@open-dream/shared";
 import React, { useContext, useEffect, useState } from "react";
-import { FiChevronRight, FiEdit } from "react-icons/fi";
+import { FiChevronRight } from "react-icons/fi";
 import {
   DndContext,
   closestCenter,
@@ -23,6 +22,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { ContextInput, ContextInputType } from "./PagesEditor";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 interface SectionsSidebarProps {
   filteredActiveSections: Section[];
@@ -47,6 +47,7 @@ const SortableSectionItem = ({
   handleContextMenu,
 }: SortableSectionItemProps) => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { setEditingSection } = useUiStore();
   const {
     attributes,
@@ -81,8 +82,8 @@ const SortableSectionItem = ({
         onContextMenu={(e) => handleContextMenu(e, section, "section")}
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
         style={{
-          color: appTheme[currentUser.theme].text_4,
-          backgroundColor: appTheme[currentUser.theme].background_1_2,
+          color: currentTheme.text_4,
+          backgroundColor: currentTheme.background_1_2,
         }}
       >
         <p className="select-none truncate w-[calc(100%-40px)]">
@@ -92,7 +93,7 @@ const SortableSectionItem = ({
           <div
             className="flex items-center justify-center min-w-[30px] w-[33px] h-[33px] rounded-full"
             style={{
-              backgroundColor: appTheme[currentUser.theme].background_2_2,
+              backgroundColor: currentTheme.background_2_2,
             }}
           >
             <FiChevronRight size={25} />

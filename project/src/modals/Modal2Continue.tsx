@@ -1,13 +1,13 @@
+// project/src/modals/Modal2Continue.tsx
 "use client";
 import { useContext, useEffect } from "react";
-import { appTheme } from "../util/appTheme";
 import { AuthContext } from "../contexts/authContext";
 import { useModal2Store } from "../store/useModalStore";
-import { usePathname } from "next/navigation";
 import { PopupDisplayItem } from "@/hooks/useModals";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { useRouting } from "@/hooks/useRouting";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type Modal2ContinueProps = {
   text: string;
@@ -26,9 +26,7 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
 }) => {
   const { currentUser } = useContext(AuthContext);
   const { screenClick } = useRouting();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -71,7 +69,7 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
   return (
     <div className="py-[14px] w-full h-full flex items-center justify-center flex-col">
       <div
-        style={{ color: t.text_1 }}
+        style={{ color: currentTheme.text_1 }}
         className="text-center px-[20px] font-[500]"
       >
         {text}
@@ -92,12 +90,12 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
                     await screenClick("products", `/products/${item.title}`);
                   }
                 }}
-                style={getInnerCardStyle(theme, t)}
+                style={getInnerCardStyle(currentUser.theme, currentTheme)}
                 className="px-[12px] w-[100%] h-[39px] flex flex-row items-center gap-[9px] rounded-[9px] cursor-pointer hover:brightness-75 dim"
               >
                 <div
                   className="w-[9px] h-[9px] rounded-full"
-                  style={{ backgroundColor: t.app_color_1 }}
+                  style={{ backgroundColor: currentTheme.app_color_1 }}
                 ></div>
                 <p>{`${capitalizeFirstLetter(item.type)} - ${item.title}`}</p>
               </div>
@@ -111,8 +109,8 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
           className="select-none dim hover:brightness-90 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
             width: threeOptions ? "50%" : "33%",
-            color: t.text_1,
-            backgroundColor: t.background_2_2,
+            color: currentTheme.text_1,
+            backgroundColor: currentTheme.background_2_2,
           }}
           onClick={handleCancel}
         >
@@ -122,8 +120,8 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
           <div
             className="w-[33%] select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
             style={{
-              color: t.text_1,
-              backgroundColor: t.background_2_2,
+              color: currentTheme.text_1,
+              backgroundColor: currentTheme.background_2_2,
             }}
             onClick={handleNoSave}
           >
@@ -134,8 +132,8 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
           className="w-[50%] select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
             width: threeOptions ? "50%" : "33%",
-            color: t.background_1_2,
-            backgroundColor: t.text_3,
+            color: currentTheme.background_1_2,
+            backgroundColor: currentTheme.text_3,
           }}
           onClick={handleContinue}
         >

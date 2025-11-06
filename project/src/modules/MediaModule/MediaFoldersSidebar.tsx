@@ -32,13 +32,13 @@ import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
 import { useQueryClient } from "@tanstack/react-query";
-import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { FaPlus } from "react-icons/fa6";
 import Divider from "@/lib/blocks/Divider";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { motion } from "framer-motion";
 import { useDnDStore } from "@/store/useDnDStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type MediaFoldersSidebarProps = {
   activeFolder: MediaFolder | null;
@@ -69,12 +69,10 @@ export default function MediaFoldersSidebar({
 }: MediaFoldersSidebarProps) {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { currentProjectId } = useCurrentDataStore();
   const { mediaFolders, upsertMediaFolders, deleteMediaFolder } =
     useContextQueries();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const sensors = useSensors(useSensor(PointerSensor));
   const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
@@ -335,7 +333,7 @@ export default function MediaFoldersSidebar({
     <div
       className="w-60 h-[100%] flex flex-col"
       style={{
-        borderRight: `0.5px solid ${t.background_2}`,
+        borderRight: `0.5px solid ${currentTheme.background_2}`,
       }}
     >
       {contextMenu && (
@@ -368,7 +366,9 @@ export default function MediaFoldersSidebar({
           "px-[15px] flex flex-row items-center justify-between pt-[12px] pb-[6px] h-[61px]"
         }
         animate={{
-          backgroundColor: isDraggedOver ? t.background_2 : t.background_1,
+          backgroundColor: isDraggedOver
+            ? currentTheme.background_2
+            : currentTheme.background_1,
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
@@ -385,7 +385,7 @@ export default function MediaFoldersSidebar({
           onClick={handleAddFolder}
           className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
           style={{
-            backgroundColor: t.background_1_2,
+            backgroundColor: currentTheme.background_1_2,
           }}
         >
           <FaPlus size={12} />
@@ -393,7 +393,7 @@ export default function MediaFoldersSidebar({
       </motion.div>
 
       <div className="w-[100%] px-[15px] mt-[-1px]">
-        <Divider />
+        <Divider mb={10} />
       </div>
 
       <div className="px-[15px] flex-1 overflow-y-auto">
@@ -438,7 +438,7 @@ export default function MediaFoldersSidebar({
                   return (
                     <div
                       style={{
-                        backgroundColor: t.background_2,
+                        backgroundColor: currentTheme.background_2,
                       }}
                       className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]"
                     >

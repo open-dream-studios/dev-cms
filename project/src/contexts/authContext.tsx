@@ -1,10 +1,9 @@
 // project/src/contexts/authContext
 "use client";
-import { createContext, ReactNode, useEffect, useState } from "react";
+import { createContext, ReactNode } from "react";
 import { makeRequest } from "../util/axios";
 import { ThemeType } from "../util/appTheme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { logout } from "@/util/auth";
@@ -41,7 +40,6 @@ interface AuthContextProviderProps {
 
 export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   const queryClient = useQueryClient();
-  const router = useRouter();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const modal2 = useModal2Store((state: any) => state.modal2);

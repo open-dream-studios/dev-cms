@@ -1,7 +1,6 @@
 // project/src/modules/CustomerProducts/Forms/InputCell.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import { useContext } from "react";
 import {
   FieldValues,
@@ -11,6 +10,7 @@ import {
 } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import { IoClose } from "react-icons/io5";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const InputCell = <T extends FieldValues>({
   inputType,
@@ -50,9 +50,7 @@ const InputCell = <T extends FieldValues>({
   onType?: (newValue: string) => void;
 }) => {
   const { currentUser } = useContext(AuthContext);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   if (!currentUser) return null;
 
@@ -61,8 +59,7 @@ const InputCell = <T extends FieldValues>({
       className={className}
       style={{
         position: "relative",
-        ["--custom-input-text-color" as any]:
-          t.text_1,
+        ["--custom-input-text-color" as any]: currentTheme.text_1,
       }}
     >
       {inputType === "input" ? (
@@ -77,9 +74,7 @@ const InputCell = <T extends FieldValues>({
             name === "price" && "pl-[11px] [@media(min-width:550px)]:pl-[8px]"
           } pl-[7px] pr-[6px] py-[4px] text-[12px]`}
           style={{
-            borderRight: `0.5px solid ${
-              t.background_3
-            }`,
+            borderRight: `0.5px solid ${currentTheme.background_3}`,
           }}
         />
       ) : inputType === "textarea" ? (
@@ -94,18 +89,14 @@ const InputCell = <T extends FieldValues>({
             }
           }}
           style={{
-            borderRight: `0.5px solid ${
-              t.background_3
-            }`,
+            borderRight: `0.5px solid ${currentTheme.background_3}`,
           }}
         />
       ) : inputType === "dropdown" ? (
         <select
           {...register(name)}
           style={{
-            borderRight: `0.5px solid ${
-              t.background_3
-            }`,
+            borderRight: `0.5px solid ${currentTheme.background_3}`,
           }}
           className="custom-select input w-[100%] h-[100%] px-[6px] py-[4px] text-[12px]"
           onInput={onInput}
@@ -120,9 +111,7 @@ const InputCell = <T extends FieldValues>({
       ) : inputType === "date" ? (
         <div
           style={{
-            borderRight: `0.5px solid ${
-              t.background_3
-            }`,
+            borderRight: `0.5px solid ${currentTheme.background_3}`,
           }}
         >
           <DatePicker
@@ -138,7 +127,7 @@ const InputCell = <T extends FieldValues>({
 
       {error && (
         <div
-          style={{ backgroundColor: t.background_3 }}
+          style={{ backgroundColor: currentTheme.background_3 }}
           className="z-[800] flex items-center text-left px-[10px] absolute left-[calc(100%-7px)] top-[5px] rounded-[10px] min-h-[50px] whitespace-nowrap w-auto"
         >
           <p className="text-red-500 text-[13px] whitespace-nowrap">{error}</p>

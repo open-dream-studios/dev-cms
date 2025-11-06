@@ -1,7 +1,6 @@
 // project/src/modules/CustomerProducts/Forms/InputField.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import { useContext, useRef, useState } from "react";
 import {
   FieldValues,
@@ -13,6 +12,7 @@ import DatePicker from "react-datepicker";
 import { IoClose } from "react-icons/io5";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { formatDropdownOption } from "@/util/functions/UI";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const InputField = <T extends FieldValues>({
   inputType,
@@ -52,9 +52,7 @@ const InputField = <T extends FieldValues>({
   placeholder?: string;
 }) => {
   const { currentUser } = useContext(AuthContext);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const isDatePickerOpenRef = useRef<boolean>(false);
@@ -68,8 +66,7 @@ const InputField = <T extends FieldValues>({
         margin: 0,
         padding: 0,
         position: "relative",
-        ["--custom-input-text-color" as any]:
-          t.text_1,
+        ["--custom-input-text-color" as any]: currentTheme.text_1,
       }}
     >
       {/* <label className="block font-[400]">{label}</label> */}
@@ -95,7 +92,7 @@ const InputField = <T extends FieldValues>({
             placeholder ? placeholder : capitalizeFirstLetter(name) + "..."
           }
           style={{
-            backgroundColor: t.background_2,
+            backgroundColor: currentTheme.background_2,
           }}
           rows={rows}
         />
@@ -107,7 +104,7 @@ const InputField = <T extends FieldValues>({
             style={{
               appearance: "none",
               WebkitAppearance: "none",
-              color: t.text_1,
+              color: currentTheme.text_1,
             }}
           >
             {options &&
@@ -122,7 +119,7 @@ const InputField = <T extends FieldValues>({
               xmlns="http://www.w3.org/2000/svg"
               width="14"
               height="14"
-              fill={t.text_1}
+              fill={currentTheme.text_1}
               viewBox="0 0 20 20"
             >
               <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" />
@@ -163,14 +160,14 @@ const InputField = <T extends FieldValues>({
                 }
               }}
               style={{
-                backgroundColor: t.background_3,
+                backgroundColor: currentTheme.background_3,
                 opacity: isDatePickerOpen ? 1 : 0,
               }}
               className={`ml-[-10px] mt-[1px] flex items-center justify-center w-[25px] h-[25px] pb-[0.5px] pr-[0.5px] rounded-[4px] ${
                 isDatePickerOpen && "cursor-pointer dim hover:brightness-90"
               }`}
             >
-              <IoClose color={t.text_4} size={21} />
+              <IoClose color={currentTheme.text_4} size={21} />
             </div>
           )}
         </div>

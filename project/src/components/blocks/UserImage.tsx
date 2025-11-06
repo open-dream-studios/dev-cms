@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import FallbackUserImage from "./FallbackUserImage";
 
 const UserImage = () => {

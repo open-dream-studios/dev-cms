@@ -1,6 +1,6 @@
-import { AuthContext } from '@/contexts/authContext';
-import { appTheme } from '@/util/appTheme';
-import React, { ReactNode, useContext } from 'react'
+import { AuthContext } from "@/contexts/authContext";
+import { useCurrentTheme } from "@/hooks/useTheme";
+import React, { ReactNode, useContext } from "react";
 
 interface CustomButtonProps {
   variant: "switch" | "outline" | "fill";
@@ -9,20 +9,34 @@ interface CustomButtonProps {
   active?: boolean;
 }
 
-const CustomButton = ({ variant, onClick, children, active = true }: CustomButtonProps) => {
-  const { currentUser } = useContext(AuthContext)
-  if (!currentUser) return
+const CustomButton = ({
+  variant,
+  onClick,
+  children,
+  active = true,
+}: CustomButtonProps) => {
+  const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
+  if (!currentUser) return;
 
-  const outlineStyle = { bg: "transparent", color: appTheme[currentUser.theme].text_1, border: "1.5px solid" + appTheme[currentUser.theme].background_2 }
-  const fillStyle = { bg: currentUser.theme === "light" ? "#10172A" : "#FFFFFF", color: appTheme[currentUser.theme].background_1, border: "1px solid" + currentUser.theme === "light" ? "#10172A" : "#FFFFFF" }
+  const outlineStyle = {
+    bg: "transparent",
+    color: currentTheme.text_1,
+    border: "1.5px solid" + currentTheme.background_2,
+  };
+  const fillStyle = {
+    bg: currentUser.theme === "light" ? "#10172A" : "#FFFFFF",
+    color: currentTheme.background_1,
+    border: "1px solid" + currentUser.theme === "light" ? "#10172A" : "#FFFFFF",
+  };
 
   const variantStyles: Record<
     NonNullable<CustomButtonProps["variant"]>,
-    { bg: string; color: string, border: string; }
+    { bg: string; color: string; border: string }
   > = {
     switch: active ? fillStyle : outlineStyle,
     outline: outlineStyle,
-    fill: fillStyle
+    fill: fillStyle,
   };
 
   const { bg, color, border } = variantStyles[variant];
@@ -35,7 +49,7 @@ const CustomButton = ({ variant, onClick, children, active = true }: CustomButto
     >
       {children}
     </div>
-  )
-}
+  );
+};
 
-export default CustomButton
+export default CustomButton;

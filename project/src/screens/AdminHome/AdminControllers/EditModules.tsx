@@ -5,7 +5,6 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModulesForm } from "@/hooks/forms/useModulesForm";
 import { ModuleFormData } from "@/util/schemas/moduleSchema";
-import { appTheme } from "@/util/appTheme";
 import {
   FaChevronLeft,
   FaPlus,
@@ -18,18 +17,17 @@ import { useState } from "react";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal2Store } from "@/store/useModalStore";
 import { ModuleDefinition } from "@open-dream/shared";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const EditModules = () => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const {
     moduleDefinitions,
     upsertModuleDefinition,
     deleteModuleDefinition,
     isLoadingModuleDefinitions,
   } = useContextQueries();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -194,7 +192,7 @@ const EditModules = () => {
             onClick={handleBackClick}
             className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[33px] rounded-full w-[33px] opacity-[30%]"
           >
-            <FaChevronLeft size={22} color={t.text_3} />
+            <FaChevronLeft size={22} color={currentTheme.text_3} />
           </div>
         )}
         <h2 className="text-[24px] ml-[2px] font-bold mt-[-5px] mr-[14px]">
@@ -205,7 +203,7 @@ const EditModules = () => {
             <button
               type="submit"
               style={{
-                backgroundColor: t.background_2_selected,
+                backgroundColor: currentTheme.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px]  py-[6px] rounded-full"
             >
@@ -214,7 +212,7 @@ const EditModules = () => {
             <button
               onClick={handleCancelForm}
               style={{
-                backgroundColor: t.background_2_selected,
+                backgroundColor: currentTheme.background_2_selected,
               }}
               className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
             >
@@ -225,11 +223,11 @@ const EditModules = () => {
           <button
             onClick={handleShowForm}
             style={{
-              backgroundColor: t.background_2_selected,
+              backgroundColor: currentTheme.background_2_selected,
             }}
             className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
           >
-            <FaPlus size={15} color={t.text_4} />
+            <FaPlus size={15} color={currentTheme.text_4} />
           </button>
         )}
       </div>
@@ -237,7 +235,7 @@ const EditModules = () => {
       {showForm && (
         <div
           style={{
-            backgroundColor: t.background_1_2,
+            backgroundColor: currentTheme.background_1_2,
           }}
           className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
         >
@@ -249,7 +247,7 @@ const EditModules = () => {
                 className="input outline-none rounded px-2 py-1 w-[100%] text-[17px]"
               />
             </p>
-            <p style={{ color: t.text_4 }} className="text-sm">
+            <p style={{ color: currentTheme.text_4 }} className="text-sm">
               <input
                 {...form.register("description")}
                 placeholder="Description..."
@@ -257,7 +255,7 @@ const EditModules = () => {
               />
             </p>
 
-            <p style={{ color: t.text_4 }} className="text-sm">
+            <p style={{ color: currentTheme.text_4 }} className="text-sm">
               <input
                 {...form.register("identifier")}
                 placeholder="Identifier..."
@@ -277,8 +275,8 @@ const EditModules = () => {
                       key={key}
                       className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
                       style={{
-                        backgroundColor: t.background_2_selected,
-                        color: t.text_4,
+                        backgroundColor: currentTheme.background_2_selected,
+                        color: currentTheme.text_4,
                       }}
                     >
                       {key}
@@ -304,7 +302,7 @@ const EditModules = () => {
                   type="button"
                   onClick={handleAddKey}
                   style={{
-                    backgroundColor: t.background_2_2,
+                    backgroundColor: currentTheme.background_2_2,
                   }}
                   className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm "
                 >
@@ -325,7 +323,7 @@ const EditModules = () => {
               <div
                 key={moduleDefinitions.id}
                 style={{
-                  backgroundColor: t.background_1_2,
+                  backgroundColor: currentTheme.background_1_2,
                 }}
                 className={`hover:brightness-[88%] dim cursor-pointer
                  flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
@@ -335,7 +333,10 @@ const EditModules = () => {
                   <p className="font-semibold truncate">
                     {moduleDefinitions.name}
                   </p>
-                  <p style={{ color: t.text_4 }} className="text-sm truncate">
+                  <p
+                    style={{ color: currentTheme.text_4 }}
+                    className="text-sm truncate"
+                  >
                     {moduleDefinitions.identifier} |{" "}
                     {moduleDefinitions.description}
                   </p>
@@ -348,11 +349,11 @@ const EditModules = () => {
                         handleEditModuleClick(e, moduleDefinitions)
                       }
                       style={{
-                        backgroundColor: t.background_2_selected,
+                        backgroundColor: currentTheme.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FiEdit size={18} color={t.text_4} />
+                      <FiEdit size={18} color={currentTheme.text_4} />
                     </div>
 
                     <div
@@ -360,11 +361,11 @@ const EditModules = () => {
                         handleDeleteModuleClick(e, moduleDefinitions)
                       }
                       style={{
-                        backgroundColor: t.background_2_selected,
+                        backgroundColor: currentTheme.background_2_selected,
                       }}
                       className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
                     >
-                      <FaTrash size={15} color={t.text_4} />
+                      <FaTrash size={15} color={currentTheme.text_4} />
                     </div>
                   </div>
                 )}

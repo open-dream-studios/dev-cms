@@ -1,9 +1,10 @@
+// project/src/modals/Modal2MultiStepInput.tsx
 "use client";
 import { useContext, useEffect, useRef, useState } from "react";
-import { appTheme } from "../util/appTheme";
 import { AuthContext } from "../contexts/authContext";
 import { useModal2Store } from "../store/useModalStore";
 import { formatPhone } from "@/util/functions/Customers";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export type StepConfig = {
   name: string;
@@ -23,9 +24,7 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
   onComplete,
 }) => {
   const { currentUser } = useContext(AuthContext);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -81,7 +80,7 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
   return (
     <div className="pt-[2px] w-full h-full flex items-center justify-center flex-col gap-[10px]">
       <div
-        style={{ color: t.text_1 }}
+        style={{ color: currentTheme.text_1 }}
         className="relative w-[250px]"
       >
         <input
@@ -104,8 +103,8 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
             }
           }}
           style={{
-            backgroundColor: t.background_2_2,
-            color: t.text_1,
+            backgroundColor: currentTheme.background_2_2,
+            color: currentTheme.text_1,
           }}
           className="rounded-[7px] w-full px-[11px] py-[5px]"
         />
@@ -120,8 +119,8 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: t.text_1,
-            backgroundColor: t.background_2_2,
+            color: currentTheme.text_1,
+            backgroundColor: currentTheme.background_2_2,
           }}
           onClick={() => setModal2({ ...modal2, open: false })}
         >
@@ -131,8 +130,8 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: t.background_1_2,
-            backgroundColor: t.text_3,
+            color: currentTheme.background_1_2,
+            backgroundColor: currentTheme.text_3,
           }}
           onClick={handleContinue}
         >

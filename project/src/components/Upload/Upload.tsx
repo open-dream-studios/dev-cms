@@ -1,12 +1,12 @@
 // project/src/components/Upload/Upload.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext"; 
-import { appTheme } from "@/util/appTheme";
 import React, { useContext, useRef, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useUiStore } from "@/store/useUIStore";
 import { useMedia } from "@/hooks/useMedia";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export type CloudinaryUpload = {
   metadata: {
@@ -35,6 +35,7 @@ function UploadModal({ onUploaded, multiple = true }: UploadModalProps) {
   const { handleFileProcessing } = useMedia();
   const { uploadPopup, setUploadPopup } = useUiStore();
   const uploadPopupRef = useRef<HTMLDivElement | null>(null);
+  const currentTheme = useCurrentTheme();
   useOutsideClick(uploadPopupRef, () => setUploadPopup(false));
 
   const handleFiles = async (files: File[]) => {
@@ -63,7 +64,7 @@ function UploadModal({ onUploaded, multiple = true }: UploadModalProps) {
               <Upload handleFiles={handleFiles} multiple={multiple} />
               <IoCloseOutline
                 size={35}
-                color={appTheme[currentUser.theme].text_4}
+                color={currentTheme.text_4}
                 onClick={() => setUploadPopup(false)}
                 className="cursor-pointer hover:brightness-75 dim absolute top-[15px] right-[19px]"
               />
@@ -78,7 +79,8 @@ function UploadModal({ onUploaded, multiple = true }: UploadModalProps) {
 const Upload: React.FC<UploadProps> = ({ handleFiles, multiple = true }) => {
   const { currentUser } = useContext(AuthContext);
   const [dragging, setDragging] = useState(false);
-
+  const currentTheme = useCurrentTheme();
+  
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragging(false);
@@ -93,7 +95,7 @@ const Upload: React.FC<UploadProps> = ({ handleFiles, multiple = true }) => {
       style={{
         width: "100%",
         height: "100%",
-        backgroundColor: appTheme[currentUser.theme].background_stark,
+        backgroundColor: currentTheme.background_stark,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

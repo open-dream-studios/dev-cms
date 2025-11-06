@@ -17,7 +17,6 @@ import {
   Minimize2,
   Maximize2,
 } from "lucide-react";
-import { appTheme } from "@/util/appTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import DatePicker from "react-datepicker";
@@ -27,6 +26,7 @@ import { JobDefinition } from "@open-dream/shared";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { JobFormData } from "@/util/schemas/jobSchema";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 // ---------- ScheduleTimeline ----------
 type ScheduleTimelineProps = {
@@ -45,8 +45,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   calendarContainerRef,
 }) => {
   const { currentUser } = React.useContext(AuthContext);
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme()
 
   const DAY_START_HOUR = 7;
   const DAY_END_HOUR = 22;
@@ -547,7 +546,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     return () => observer.disconnect();
   }, [scheduled_start_date, goToWeek, goToCurrentWeek]);
 
-  if (!form) return null;
+  if (!currentUser || !form) return null;
   
   return (
     <motion.div
@@ -555,11 +554,11 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       className={`ScheduleTimeline w-[100%] rounded-xl px-[14px] py-[9px] bg-opacity-80`}
       style={
         {
-          ...getInnerCardStyle?.(theme, t),
+          ...getInnerCardStyle?.(currentUser.theme, currentTheme),
           "--time-icon-filter":
-            theme === "dark" ? "invert(100%)" : "invert(0%)",
+            currentUser.theme === "dark" ? "invert(100%)" : "invert(0%)",
           "--date-icon-filter":
-            theme === "dark" ? "invert(100%)" : "invert(0%)",
+            currentUser.theme === "dark" ? "invert(100%)" : "invert(0%)",
         } as React.CSSProperties
       }
     >
@@ -606,7 +605,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
           } gap-2 bg-opacity-60 rounded-[10px] px-[13px] py-[4.5px]`}
           style={{
             background:
-              theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.04)",
+              currentUser.theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.04)",
           }}
         >
           <div className="flex items-center gap-[6px] z-[500]">
@@ -618,15 +617,15 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                 popperPlacement="bottom-start"
                 portalId="calendar-portal"
                 className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
-                  theme === "dark"
+                  currentUser.theme === "dark"
                     ? "text-white border-[#3d3d3d] border-[1px]"
                     : "text-black border-[#111] border-[0.5px]"
                 }`}
                 calendarClassName={
-                  theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
                 }
                 popperClassName={
-                  theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
                 }
               />
             </div>
@@ -645,15 +644,15 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                 timeCaption="Time"
                 dateFormat="hh:mm aa"
                 className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
-                  theme === "dark"
+                  currentUser.theme === "dark"
                     ? "text-white border-[#3d3d3d] border-[1px]"
                     : "text-black border-[#111] border-[0.5px]"
                 }`}
                 calendarClassName={
-                  theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
                 }
                 popperClassName={
-                  theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
                 }
               />
             </div>
@@ -673,15 +672,15 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                   applyChange(scheduled_start_date ?? null, date)
                 }
                 className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
-                  theme === "dark"
+                  currentUser.theme === "dark"
                     ? "text-white border-[#3d3d3d] border-[1px]"
                     : "text-black border-[#111] border-[0.5px]"
                 }`}
                 calendarClassName={
-                  theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
                 }
                 popperClassName={
-                  theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
                 }
               />
             </div>
@@ -699,15 +698,15 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                 timeCaption="Time"
                 dateFormat="hh:mm aa"
                 className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
-                  theme === "dark"
+                  currentUser.theme === "dark"
                     ? "text-white border-[#3d3d3d] border-[1px]"
                     : "text-black border-[#111] border-[0.5px]"
                 }`}
                 calendarClassName={
-                  theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
                 }
                 popperClassName={
-                  theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
                 }
               />
             </div>

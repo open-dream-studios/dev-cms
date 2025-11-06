@@ -27,7 +27,6 @@ import {
 } from "@dnd-kit/modifiers";
 import { toast } from "react-toastify";
 import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
-import { appTheme } from "@/util/appTheme";
 import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@open-dream/shared";
 import InventoryRow from "./Grid/InventoryRow";
@@ -36,6 +35,7 @@ import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { DelayType } from "@/hooks/useAutoSave";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 function SortableItem({
   resetTimer,
@@ -51,6 +51,7 @@ function SortableItem({
   sheet: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { editingProducts } = useUiStore();
   const { saveProducts } = useProductFormSubmit();
   const { deleteProducts } = useContextQueries();
@@ -102,13 +103,13 @@ function SortableItem({
         {editingProducts && !inventoryView && (
           <div
             style={{
-              border: `1px solid ${appTheme[currentUser.theme].text_4}`,
-              backgroundColor: appTheme[currentUser.theme].background_1,
+              border: `1px solid ${currentTheme.text_4}`,
+              backgroundColor: currentTheme.background_1,
             }}
             className="absolute top-[-8px] right-[-9px] z-[950] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
             onClick={() => handleDeleteProduct(product)}
           >
-            <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
+            <IoCloseOutline color={currentTheme.text_2} />
           </div>
         )}
 

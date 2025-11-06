@@ -4,17 +4,16 @@ import {
   useLeftBarOpenStore,
   useLeftBarRefStore,
 } from "../../../store/useLeftBarOpenStore";
-import { appTheme } from "../../../util/appTheme";
-import { ThemeType } from "../../../util/appTheme";
 import appDetails from "../../../util/appDetails.json";
 import { login } from "@/util/auth";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const LandingLeftBar = () => {
   const router = useRouter();
-  const queryClient = useQueryClient()
-  const defaultTheme = appDetails.default_theme as ThemeType;
+  const queryClient = useQueryClient();
+  const currentTheme = useCurrentTheme();
   const leftBarRef = useRef<HTMLDivElement>(null);
   const setLeftBarRef = useLeftBarRefStore((state) => state.setLeftBarRef);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
@@ -35,8 +34,8 @@ const LandingLeftBar = () => {
       password: "guest",
     });
     if (success) {
-      router.push('/');
-      window.location.href = '/'; 
+      router.push("/");
+      window.location.href = "/";
     }
   };
 
@@ -114,7 +113,7 @@ const LandingLeftBar = () => {
         {/* <div
           ref={leftBarRef}
           style={{
-            backgroundColor: appTheme[defaultTheme].background_1,
+            backgroundColor: currentTheme.background_1,
           }}
           className={`z-[951] pointer-events-auto lg:right-0 ${
             leftBarOpen ? "right-0" : "right-[100%]"
@@ -125,8 +124,8 @@ const LandingLeftBar = () => {
             className="dim select-none cursor-pointer w-[80%] hover:brightness-75 h-[40px] absolute bottom-[20px] flex items-center justify-center font-[600]"
             style={{
               borderRadius: "6px",
-              backgroundColor: appTheme[defaultTheme].background_2,
-              color: appTheme[defaultTheme].text_2,
+              backgroundColor: currentTheme.background_2,
+              color: currentTheme.text_2,
             }}
           >
             Sign in

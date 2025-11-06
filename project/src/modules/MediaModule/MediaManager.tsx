@@ -41,7 +41,7 @@ const MediaManager = () => {
   if (!currentUser || !currentProjectId) return null;
 
   return (
-    <div className="flex w-full h-[100%]">
+    <div className="flex w-full h-[100%] overflow-hidden">
       <UploadModal
         multiple
         onUploaded={async (uploadObjects: CloudinaryUpload[]) => {

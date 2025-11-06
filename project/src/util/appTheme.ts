@@ -1,92 +1,75 @@
+// project/src/util/theme.ts
 export type ThemeType = "light" | "dark";
-export const appTheme = {
-  light: {
-    // Backgrounds
-    background_stark: "#FFFFFF",
-    background_1: "#FFFFFF",
-    background_2: "#E9E9E9",
-    background_3: "#BBBBBB",
-    background_3_2: "#AAAAAA",
-    background_4: "#AAAAAA",
-    background_1_2: "#EFEFEF",
-    background_1_2Mix: "#FFFFFF",
-    background_2_dim: "#F0F0F0",
-    background_2_selected: "#D9D9D9",
-    background_2_2: "#E0E0E0",
 
-    component_bg_1: "#f5f5f5",
-    bot_message: "#DDDDDD",
-    user_message: "#DDDDDD",
-    bot_time_stamp: "#CCCCCC",
+const c = (light: string, dark: string) => [light, dark] as const;
+export const makeTheme = (isDark: boolean) =>
+  Object.freeze(
+    Object.fromEntries(
+      Object.entries(themeColors).map(([key, [light, dark]]) => [
+        key,
+        isDark ? dark : light,
+      ])
+    )
+  );
 
-    // Components
-    header_1_1: "#E9E9E9",
-    header_1_2: "#CCCCCC",
+const themeColors = {
+  background_stark: c("#FFFFFF", "#131313"),
+  background_1: c("#FFFFFF", "#161616"),
+  background_2: c("#E9E9E9", "#282828"),
+  background_3: c("#BBBBBB", "#333333"),
+  background_3_2: c("#AAAAAA", "#494949"),
+  background_4: c("#AAAAAA", "#666666"),
+  background_1_2: c("#EFEFEF", "#252525"),
+  background_1_2Mix: c("#FFFFFF", "#252525"),
+  background_2_dim: c("#F0F0F0", "#1e1e1e"),
+  background_2_selected: c("#D9D9D9", "#343434"),
+  background_2_2: c("#E0E0E0", "#343434"),
 
-    // Texts
-    text_1: "#000000",
-    text_2: "#1F1F1F",
-    text_3: "#555555",
-    text_4: "#999999",
+  component_bg_1: c("#f5f5f5", "#161616"),
+  bot_message: c("#DDDDDD", "#222222"),
+  user_message: c("#DDDDDD", "#222222"),
+  bot_time_stamp: c("#CCCCCC", "#393939"),
 
-    flash_cards: "#FAFAFA",
+  // Components
+  header_1_1: c("#E9E9E9", "#252525"),
+  header_1_2: c("#CCCCCC", "#333333"),
 
-    // Tables
-    table_bg_1: "#FFFFFF",
-    table_bg_2: "#E9E9E9",
+  // Texts
+  text_1: c("#000000", "#FFFFFF"),
+  text_2: c("#1F1F1F", "#DDDDDD"),
+  text_3: c("#555555", "#BBBBBB"),
+  text_4: c("#999999", "#888888"),
 
-    // Globals
-    app_color_1: "#5CABD9",
-    app_color_2: "#366A7F",
-    app_color_3: "#318CBF",
-    app_text_color_1: "#5CABD9",
+  flash_cards: c("#FAFAFA", "#888888"),
 
-    delete: "#cf2d27",
-  },
-  dark: {
-    // Backgrounds
-    background_stark: "#131313",
-    background_1: "#161616",
-    background_2: "#282828",
-    background_3: "#333333",
-    background_3_2: "#494949",
-    background_4: "#666666",
-    background_1_2: "#252525",
-    background_2_dim: "#1e1e1e",
-    background_2_selected: "#343434",
-    background_2_2: "#343434",
+  // Tables
+  table_bg_1: c("#FFFFFF", "#161616"),
+  table_bg_2: c("#E9E9E9", "#252525"),
 
-    component_bg_1: "#161616",
-    bot_message: "#222222",
-    user_message: "#222222",
-    bot_time_stamp: "#393939",
+  // Globals
+  app_color_1: c("#5CABD9", "#5CABD9"),
+  app_color_2: c("#366A7F", "#366A7F"),
+  app_color_3: c("#318CBF", "#318CBF"),
+  app_text_color_1: c("#5CABD9", "#5CABD9"),
 
-    // Components
-    header_1_1: "#252525",
-    header_1_2: "#333333",
+  // Delete
+  delete: c("#cf2d27", "#cf2d27"),
 
-    // Texts
-    text_1: "#FFFFFF",
-    text_2: "#DDDDDD",
-    text_3: "#BBBBBB",
-    text_4: "#888888",
+  // PRIORITY COLORS
+  priority_urgent: c("#B30000", "#ef4444"),
+  priority_high: c("#AD7E11", "#f59e0b"),
 
-    // Tables
-    table_bg_1: "#161616",
-    table_bg_2: "#252525",
-
-    // Flash Cards
-    flash_cards: "#888888",
-
-    // Globals
-    app_color_1: "#5CABD9",
-    app_color_2: "#366A7F",
-    app_color_3: "#318CBF",
-    app_text_color_1: "#5CABD9",
-    
-    delete: "#cf2d27",
-  },
-};
+  // STATUS COLORS
+  status_waiting_diagnosis: c("#0B8499", "#06b6d4"),
+  status_waiting_work: c("#477DBF", "#60a5fa"),
+  status_waiting_parts: c("#AD7E11", "#f59e0b"),
+  status_waiting_customer: c("#AD7E11", "#f59e0b"),
+  status_waiting_listing: c("#8b5cf6", "#8b5cf6"),
+  status_listed: c("#8b5cf6", "#8b5cf6"),
+  status_waiting_delivery: c("#477DBF", "#60a5fa"),
+  status_complete: c("#1E9649", "#16a34a"),
+  status_cancelled: c("#E01010", "#ef4444"),
+} as const;
 
 export const appTextSizes = {
   textHead1:
@@ -95,7 +78,6 @@ export const appTextSizes = {
     "text-[14px] sm:text-[16px] md:text-[17px] lg:text-[19px] leading-[21px] sm:leading-[23px] md:leading-[24px] lg:leading-[26px]",
   textHead5:
     "text-[14px] sm:text-[14px] md:text-[15px] lg:text-[17px] leading-[19px] sm:leading-[21px] md:leading-[22px] lg:leading-[24px]",
-
   textSub1:
     "text-[11px] sm:text-[11px] md:text-[12px] lg:text-[13px] leading-[11px] sm:leading-[11px] md:leading-[12px] lg:leading-[13px]",
 };

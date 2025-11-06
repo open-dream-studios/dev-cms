@@ -3,8 +3,7 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
-import { accessLevels, projectRoles, ProjectUser } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
+import {  projectRoles, ProjectUser } from "@open-dream/shared";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useContext, useMemo, useState } from "react";
 import { FaPlus, FaRegCircleCheck } from "react-icons/fa6";
@@ -17,22 +16,18 @@ import {
   getClearanceFromRole,
   getRoleFromClearance,
 } from "@/util/functions/Users";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
+  const { currentProjectId } = useCurrentDataStore();
   const { upsertProjectUser, projectUsers, deleteProjectUser, projectsData } =
     useContextQueries();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
   }, [projectsData, currentProjectId]);
-
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   const [showAddProjectInput, setShowAddProjectInput] =
     useState<boolean>(false);
@@ -105,8 +100,8 @@ const UserAccess = () => {
                   onClick={() => setEditListMode((prev) => !prev)}
                   className="select-none dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
-                    backgroundColor: t.background_1_2,
-                    border: editListMode ? "1px solid " + t.text_3 : "none",
+                    backgroundColor: currentTheme.background_1_2,
+                    border: editListMode ? "1px solid " + currentTheme.text_3 : "none",
                   }}
                 >
                   <FiEdit size={16} />
@@ -116,7 +111,7 @@ const UserAccess = () => {
                   onClick={handleShowAddUserInput}
                   className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
-                    backgroundColor: t.background_1_2,
+                    backgroundColor: currentTheme.background_1_2,
                   }}
                 >
                   <FaPlus size={16} />
@@ -127,8 +122,8 @@ const UserAccess = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer text-[14.5px] h-[36px] mt-[-0.6px] rounded-full flex justify-center items-center gap-[6px] pl-[16px] pr-[15px]"
                   style={{
-                    backgroundColor: t.background_1_2,
-                    color: t.text_3,
+                    backgroundColor: currentTheme.background_1_2,
+                    color: currentTheme.text_3,
                   }}
                   onClick={() => setShowAddProjectInput(false)}
                 >
@@ -139,8 +134,8 @@ const UserAccess = () => {
                   type="submit"
                   className="select-none dim hover:brightness-75 cursor-pointer text-[15px] h-[36px] rounded-full mt-[-0.4px] flex justify-center items-center gap-[9px] pl-[16px] pr-[15px]"
                   style={{
-                    backgroundColor: t.background_1_2,
-                    color: t.text_3,
+                    backgroundColor: currentTheme.background_1_2,
+                    color: currentTheme.text_3,
                   }}
                 >
                   <p className=" mt-[-1.5px]">Save</p>
@@ -154,17 +149,17 @@ const UserAccess = () => {
 
       <div
         className="w-[90%] max-h-[305px] overflow-y-scroll rounded-[8px]"
-        style={{ backgroundColor: t.background_1_2 }}
+        style={{ backgroundColor: currentTheme.background_1_2 }}
       >
         {showAddProjectInput && (
           <div
             className="w-[100%]"
             style={{
-              backgroundColor: t.background_2_2,
+              backgroundColor: currentTheme.background_2_2,
             }}
           >
             <div
-              style={{ color: t.text_4 }}
+              style={{ color: currentTheme.text_4 }}
               className="relative w-[100%] h-[50px] text-[15.5px] leading-[22px] gap-[10px] font-[400] flex flex-row items-center justify-between px-[20px]"
             >
               <input
@@ -178,8 +173,8 @@ const UserAccess = () => {
                 }}
                 style={
                   {
-                    "--custom-input-text-color": t.text_4,
-                    color: t.text_4,
+                    "--custom-input-text-color": currentTheme.text_4,
+                    color: currentTheme.text_4,
                     backgroundColor: "transparent",
                   } as React.CSSProperties
                 }
@@ -189,7 +184,7 @@ const UserAccess = () => {
                 <div
                   className="absolute z-[352] right-[96px] top-[9.5px] py-[8px] text-[16px] px-[11px] rounded-[6px]"
                   style={{
-                    backgroundColor: t.background_1_2,
+                    backgroundColor: currentTheme.background_1_2,
                   }}
                 >
                   <p className="text-red-500 text-xs">
@@ -200,7 +195,7 @@ const UserAccess = () => {
               <select
                 {...form.register("role")}
                 style={{
-                  border: `0.5px solid ${t.background_4}`,
+                  border: `0.5px solid ${currentTheme.background_4}`,
                 }}
                 className="cursor-pointer hover:brightness-75 px-[8px] text-center custom-select input py-[3.5px] text-[12px] rounded-[5px]"
               >
@@ -229,13 +224,13 @@ const UserAccess = () => {
                   {(index !== 0 || showAddProjectInput) && (
                     <div
                       style={{
-                        backgroundColor: t.text_4,
+                        backgroundColor: currentTheme.text_4,
                       }}
                       className="w-[100%] h-[1px] rounded-[2px] opacity-[0.5]"
                     />
                   )}
                   <div
-                    style={{ color: t.text_4 }}
+                    style={{ color: currentTheme.text_4 }}
                     className="w-[100%] h-[50px] text-[15.5px] leading-[22px] font-[400] flex flex-row items-center justify-between px-[20px]"
                   >
                     <p>{user.email}</p>
@@ -247,7 +242,7 @@ const UserAccess = () => {
                         <select
                           value={getRoleFromClearance(user.clearance)}
                           style={{
-                            border: `0.5px solid ${t.background_4}`,
+                            border: `0.5px solid ${currentTheme.background_4}`,
                           }}
                           className="cursor-pointer hover:brightness-75 dim w-[65px] text-center custom-select input py-[3.5px] text-[12px] rounded-[5px]"
                           onChange={async (e) => {
@@ -276,7 +271,7 @@ const UserAccess = () => {
                         <div
                           className="w-[65px] select-none text-center custom-select input py-[3.5px] text-[12px] rounded-[5px]"
                           style={{
-                            border: `0.5px solid ${t.background_4}`,
+                            border: `0.5px solid ${currentTheme.background_4}`,
                           }}
                         >
                           {capitalizeFirstLetter(
@@ -288,7 +283,7 @@ const UserAccess = () => {
                         <div
                           onClick={() => handleDeleteProjectUser(user)}
                           style={{
-                            backgroundColor: t.background_2_2,
+                            backgroundColor: currentTheme.background_2_2,
                           }}
                           className={`${
                             currentUser.admin === 1 &&
@@ -310,7 +305,7 @@ const UserAccess = () => {
                           <div
                             className="w-[9px] h-[1.5px] rounded-[3px]"
                             style={{
-                              backgroundColor: t.text_4,
+                              backgroundColor: currentTheme.text_4,
                             }}
                           />
                         </div>

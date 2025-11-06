@@ -2,10 +2,10 @@
 "use client";
 import { ReactNode, RefObject, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import appDetails from "@/util/appDetails.json";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export const PageLayout = ({
   children,
@@ -16,9 +16,7 @@ export const PageLayout = ({
 }) => {
   const { currentUser } = useContext(AuthContext);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const pageLayoutRef = useRef<HTMLDivElement>(null);
   const setPageLayoutRef = usePageLayoutRefStore(
@@ -39,8 +37,8 @@ export const PageLayout = ({
           {
             "--nav-height": `${appDetails.nav_height}px`,
             "--left-bar-width": appDetails.left_bar_width,
-            backgroundColor: t.background_1,
-            color: t.text_1,
+            backgroundColor: currentTheme.background_1,
+            color: currentTheme.text_1,
           } as React.CSSProperties
         }
         className={`absolute left-0 ${
@@ -58,8 +56,8 @@ export const PageLayout = ({
       style={
         {
           "--nav-height": `${appDetails.nav_height}px`,
-          backgroundColor: t.background_1,
-          color: t.text_1,
+          backgroundColor: currentTheme.background_1,
+          color: currentTheme.text_1,
         } as React.CSSProperties
       }
       className={`absolute left-0  top-[var(--nav-height)] w-[100vw] flex h-[calc(100%-var(--nav-height))]`}

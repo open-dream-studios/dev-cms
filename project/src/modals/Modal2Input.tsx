@@ -1,11 +1,11 @@
 "use client";
 import { useContext, useEffect, useRef, useState } from "react";
-import { appTheme } from "../util/appTheme";
 import { AuthContext } from "../contexts/authContext";
 import { useModal2Store } from "../store/useModalStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { toast } from "react-toastify";
 import { Product } from "@open-dream/shared";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type Modal2InputProps = {
   text: string;
@@ -17,9 +17,7 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const { currentUser } = useContext(AuthContext);
   const { productsData } = useContextQueries();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -98,7 +96,7 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
   return (
     <div className="pt-[2px] w-full h-full flex items-center justify-center flex-col gap-[10px]">
       <div
-        style={{ color: t.text_1 }}
+        style={{ color: currentTheme.text_1 }}
         className="relative w-[250px]"
       >
         <input
@@ -114,8 +112,8 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
             }
           }}
           style={{
-            backgroundColor: t.background_2_2,
-            color: t.text_1,
+            backgroundColor: currentTheme.background_2_2,
+            color: currentTheme.text_1,
           }}
           className="rounded-[7px] w-full px-[11px] py-[5px]"
         />
@@ -130,8 +128,8 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: t.text_1,
-            backgroundColor: t.background_2_2,
+            color: currentTheme.text_1,
+            backgroundColor: currentTheme.background_2_2,
           }}
           onClick={() => setModal2({ ...modal2, open: false })}
         >
@@ -141,8 +139,8 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: t.background_1_2,
-            backgroundColor: t.text_3,
+            color: currentTheme.background_1_2,
+            backgroundColor: currentTheme.text_3,
           }}
           onClick={handleContinue}
         >

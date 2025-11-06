@@ -1,10 +1,7 @@
 // project/src/modules/CustomerProducts/Grid/InventoryRowForm.tsx
 "use client";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import {
-  useProductForm, 
-} from "@/hooks/forms/useProductForm";
-import { appTheme } from "@/util/appTheme";
+import { useProductForm } from "@/hooks/forms/useProductForm";
 import ProductInputCell from "../Forms/InputCell";
 import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
@@ -16,6 +13,7 @@ import { Product, MediaLink } from "@open-dream/shared";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { DelayType } from "@/hooks/useAutoSave";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type InventoryRowFormProps = {
   resetTimer: (delay: DelayType) => void;
@@ -30,9 +28,7 @@ const InventoryRowForm = ({
   const { currentUser } = useContext(AuthContext);
   const { screenClick } = useRouting();
   const { productsData, mediaLinks } = useContextQueries();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const formKey = `product-${product.serial_number}`;
   const { registerForm, unregisterForm } = useFormInstanceStore();
@@ -92,7 +88,7 @@ const InventoryRowForm = ({
     >
       <div
         style={{
-          borderRight: `0.5px solid ${t.background_3}`,
+          borderRight: `0.5px solid ${currentTheme.background_3}`,
         }}
         className={`pl-[10.5px] h-[100%] flex items-center ${inventoryDataLayout[0].className}`}
       >
@@ -124,11 +120,11 @@ const InventoryRowForm = ({
             ) : (
               <div
                 style={{
-                  backgroundColor: t.header_1_1,
+                  backgroundColor: currentTheme.header_1_1,
                 }}
                 className="w-[100%] h-[100%] rounded-[5px] flex items-center justify-center pb-[2px] pr-[2px]"
               >
-                <FaPlus color={t.text_1} size={20} />
+                <FaPlus color={currentTheme.text_1} size={20} />
               </div>
             )}
           </div>
@@ -139,7 +135,7 @@ const InventoryRowForm = ({
         onClick={handleProductClick}
         className={`cursor-pointer dim hover:brightness-75 flex items-center h-[100%] w-[100%] pl-[7px] pr-[6px] py-[4px] text-[12px] ${inventoryDataLayout[1].className}`}
         style={{
-          borderRight: `0.5px solid ${t.background_3}`,
+          borderRight: `0.5px solid ${currentTheme.background_3}`,
         }}
       >
         <div className="w-[100%] overflow-hidden">{product.serial_number}</div>

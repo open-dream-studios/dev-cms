@@ -17,13 +17,13 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { appTheme } from "@/util/appTheme";
 import { useContext, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { MediaLink } from "@open-dream/shared";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 function SortableImage({
   id,
@@ -43,6 +43,7 @@ function SortableImage({
   singleRow: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const {
     attributes,
     listeners,
@@ -100,15 +101,15 @@ function SortableImage({
         {!singleRow && (
           <div
             style={{
-              border: `1px solid ${appTheme[currentUser.theme].text_4}`,
-              backgroundColor: appTheme[currentUser.theme].background_1,
+              border: `1px solid ${currentTheme.text_4}`,
+              backgroundColor: currentTheme.background_1,
             }}
             className="ignore-click w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[10px] absolute top-[-8px] right-[-9px] z-20"
             onClick={async () => {
               await handleDeleteImage(index);
             }}
           >
-            <IoCloseOutline color={appTheme[currentUser.theme].text_2} />
+            <IoCloseOutline color={currentTheme.text_2} />
           </div>
         )}
       </div>

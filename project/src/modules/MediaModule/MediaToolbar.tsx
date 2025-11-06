@@ -1,9 +1,9 @@
 // project/src/modules/MediaModule/MediaToolbar.tsx
 import { Button } from "@/components/ui/button";
 import { AuthContext } from "@/contexts/authContext";
+import { useCurrentTheme } from "@/hooks/useTheme";
 import CustomButton from "@/lib/blocks/CustomButton";
 import { MediaFolder } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import { Grid, List, Upload } from "lucide-react";
 import { useContext } from "react";
 import { FiEdit } from "react-icons/fi";
@@ -26,13 +26,14 @@ const MediaToolbar = ({
   activeFolder,
 }: Props) => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   if (!currentUser) return null;
 
   return (
     <div
       className="flex items-center justify-end md:justify-between px-4 py-2"
       style={{
-        borderBottom: `0.5px solid ${appTheme[currentUser.theme].background_2}`,
+        borderBottom: `0.5px solid ${currentTheme.background_2}`,
       }}
     >
       <div className="hidden md:flex gap-2 items-center ml-[1px]">

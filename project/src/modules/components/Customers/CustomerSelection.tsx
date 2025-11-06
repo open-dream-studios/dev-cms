@@ -5,23 +5,21 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useModal1Store } from "@/store/useModalStore";
 import { Customer } from "@open-dream/shared";
 import { Product } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import { formatPhone } from "@/util/functions/Customers";
 import { useContext, useEffect, useState } from "react";
 import { IoTrashSharp } from "react-icons/io5";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const CustomerSelection = ({ product }: { product: Product | null }) => {
   const { currentUser } = useContext(AuthContext);
   const { customers, upsertProducts } = useContextQueries();
   const { getForm } = useFormInstanceStore();
+  const currentTheme = useCurrentTheme();
 
   const [initialCustomerId, setInitialCustomerId] = useState<number | null>(
     null
   );
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const productForm = getForm("product");
 
@@ -76,7 +74,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
         {shouldShowRemove && (
           <div
             style={{
-              backgroundColor: t.background_3,
+              backgroundColor: currentTheme.background_3,
             }}
             onClick={handleRemoveCustomer}
             className="w-auto flex flex-row gap-[7px] px-[16px] h-[37px] rounded-full cursor-pointer hover:brightness-75 dim items-center justify-center"
@@ -84,7 +82,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
             <p
               className="font-bold text-[15px]"
               style={{
-                color: t.text_3,
+                color: currentTheme.text_3,
               }}
             >
               Remove
@@ -99,7 +97,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
             <div
               key={index}
               style={{
-                backgroundColor: t.background_3,
+                backgroundColor: currentTheme.background_3,
               }}
               onClick={() => handleSelectCustomer(customer)}
               className="cursor-pointer hover:brightness-[86%] dim px-[18px] py-[5px] w-[100%] min-h-[60px] rounded-[12px] flex flex-row items-center"
@@ -108,8 +106,8 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
                 <div
                   className="w-[38px] h-[38px] flex items-center justify-center rounded-full border font-semibold text-[13px] min-w-[38px] min-h-[38px]"
                   style={{
-                    borderColor: t.text_3,
-                    color: t.text_3,
+                    borderColor: currentTheme.text_3,
+                    color: currentTheme.text_3,
                   }}
                 >
                   {`${customer.first_name?.[0] ?? ""}${

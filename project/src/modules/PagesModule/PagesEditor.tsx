@@ -4,7 +4,6 @@ import { useState, useContext, useMemo, useEffect, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus } from "react-icons/fa6";
-import { appTheme } from "@/util/appTheme";
 import { PageDefinition, ProjectPage, Section } from "@open-dream/shared";
 import { MdChevronLeft } from "react-icons/md";
 import Divider from "@/lib/blocks/Divider";
@@ -27,12 +26,14 @@ import {
 import { pageToForm } from "@/util/schemas/projectPageSchema";
 import { sectionToForm } from "@/util/schemas/sectionSchema";
 import { useWatch } from "react-hook-form";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export type ContextInput = ProjectPage | Section | null;
 export type ContextInputType = "page" | "section";
 
 const ProjectPagesEditor = () => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const {
     currentProjectId,
     currentProject,
@@ -67,9 +68,6 @@ const ProjectPagesEditor = () => {
   const { onSectionFormSubmit } = useSectionFormSubmit();
 
   const [siteEditorKey, setSiteEditorKey] = useState<number>(0);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const firstInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -272,7 +270,7 @@ const ProjectPagesEditor = () => {
       <div
         className="w-60 h-[100%] flex flex-col px-[15px]"
         style={{
-          borderRight: `0.5px solid ${t.background_2}`,
+          borderRight: `0.5px solid ${currentTheme.background_2}`,
         }}
       >
         {contextMenu && (
@@ -297,7 +295,7 @@ const ProjectPagesEditor = () => {
                 onClick={handleBackClick}
                 className="dim hover:brightness-75 cursor-pointer w-[30px] h-[30px] min-w-[30px] mt-[-5px] pr-[2px] pb-[2px] rounded-full flex justify-center items-center"
                 style={{
-                  backgroundColor: t.background_1_2,
+                  backgroundColor: currentTheme.background_1_2,
                 }}
               >
                 <MdChevronLeft size={25} />
@@ -314,7 +312,7 @@ const ProjectPagesEditor = () => {
                 onClick={handleAddItemClick}
                 className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
                 style={{
-                  backgroundColor: t.background_1_2,
+                  backgroundColor: currentTheme.background_1_2,
                 }}
               >
                 <FaPlus size={12} />
@@ -322,7 +320,7 @@ const ProjectPagesEditor = () => {
             )}
         </div>
 
-        <Divider />
+        <Divider mb={10} />
 
         {!currentPage ? (
           <>
@@ -331,7 +329,7 @@ const ProjectPagesEditor = () => {
                 onSubmit={pageForm.handleSubmit(onPageFormSubmit)}
                 className="w-[100%] rounded-[8px] p-[15px] flex flex-col gap-[10px]"
                 style={{
-                  backgroundColor: t.background_1_2,
+                  backgroundColor: currentTheme.background_1_2,
                 }}
               >
                 <select
@@ -369,8 +367,8 @@ const ProjectPagesEditor = () => {
                   type="submit"
                   className="hover:brightness-90 dim px-[12px] py-[8px] rounded-full dim cursor-pointer font-[600]"
                   style={{
-                    backgroundColor: t.background_2_selected,
-                    color: t.text_3,
+                    backgroundColor: currentTheme.background_2_selected,
+                    color: currentTheme.text_3,
                   }}
                 >
                   <p className="opacity-[70%]">Save</p>
@@ -390,14 +388,14 @@ const ProjectPagesEditor = () => {
               <form
                 onSubmit={sectionForm.handleSubmit(onSectionFormSubmit)}
                 style={{
-                  backgroundColor: t.background_1_2,
+                  backgroundColor: currentTheme.background_1_2,
                 }}
                 className="flex flex-col gap-[10px] px-[15px] py-[15px] rounded-[8px]"
               >
                 <p
                   className="text-[14px] font-[600] opacity-[0.8] leading-[15px]"
                   style={{
-                    color: t.text_3,
+                    color: currentTheme.text_3,
                   }}
                 >
                   Section Type
@@ -405,7 +403,7 @@ const ProjectPagesEditor = () => {
                 <div
                   className="dim hover:brightness-90 rounded-[6px] pr-[9px] mb-[10px]"
                   style={{
-                    backgroundColor: t.background_2_2,
+                    backgroundColor: currentTheme.background_2_2,
                   }}
                 >
                   <select
@@ -428,14 +426,14 @@ const ProjectPagesEditor = () => {
                 <p
                   className="text-[14px] font-[600] opacity-[0.8] leading-[15px]"
                   style={{
-                    color: t.text_3,
+                    color: currentTheme.text_3,
                   }}
                 >
                   Content
                 </p>
                 <div
                   style={{
-                    backgroundColor: t.background_3,
+                    backgroundColor: currentTheme.background_3,
                   }}
                   className="w-[100%] h-[1.3px] mt-[-2px] rounded-[2px] opacity-[0.5]"
                 />
@@ -455,8 +453,8 @@ const ProjectPagesEditor = () => {
                   type="submit"
                   className="mt-[6px] dim hover:brightness-90 cursor-pointer px-4 py-2 rounded-[8px] text-[15px] font-[600]"
                   style={{
-                    backgroundColor: t.background_2_2,
-                    color: t.text_2,
+                    backgroundColor: currentTheme.background_2_2,
+                    color: currentTheme.text_2,
                   }}
                 >
                   Save

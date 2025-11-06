@@ -1,13 +1,13 @@
 // project/src/modules/CustomerProducts/ProductView/ProductJobs.tsx
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { useCurrentTheme } from "@/hooks/useTheme";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
 import { Product, Job, JobDefinition } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import { useContext, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 
@@ -18,6 +18,7 @@ interface ProductJobsProps {
 
 const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { currentProject } = useCurrentDataStore();
   const {
     upsertJobDefinition,
@@ -25,9 +26,6 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
     deleteJobDefinition,
     upsertJob,
   } = useContextQueries();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -140,8 +138,8 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
           style={{
             top: contextMenu.y,
             left: contextMenu.x,
-            backgroundColor: t.background_3_2,
-            border: `1px solid ${t.background_4}`,
+            backgroundColor: currentTheme.background_3_2,
+            border: `1px solid ${currentTheme.background_4}`,
           }}
         >
           <button
@@ -150,7 +148,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
               handleCloseContextMenu();
             }}
             style={{
-              backgroundColor: t.background_3_2,
+              backgroundColor: currentTheme.background_3_2,
             }}
             className="w-full text-left px-3 py-2 text-sm cursor-pointer hover:brightness-75 dim"
           >
@@ -165,7 +163,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
         {currentUser.admin === 1 && (
           <div
             style={{
-              backgroundColor: t.background_3,
+              backgroundColor: currentTheme.background_3,
             }}
             onClick={handleAddJobDefinition}
             className="w-[40px] h-[40px] rounded-full cursor-pointer hover:brightness-75 dim flex items-center justify-center"
@@ -183,7 +181,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
                 handleContextMenu(e, definition.job_definition_id)
               }
               style={{
-                backgroundColor: t.background_3,
+                backgroundColor: currentTheme.background_3,
               }}
               onClick={() => handleSelectJob(definition)}
               className="cursor-pointer hover:brightness-[86%] dim px-[18px] py-[5px] w-[100%] min-h-[60px] rounded-[12px] flex flex-row items-center"

@@ -3,7 +3,6 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
 import { Customer, MediaLink, Product, Employee } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { CustomerMiniCard } from "../CustomersModule/CustomerCatalog";
@@ -20,6 +19,7 @@ import { useEmployeeFormSubmit } from "@/hooks/forms/useEmployeeForm";
 import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productToForm } from "@/util/schemas/productSchema";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const ModuleLeftBar = () => {
   const { setCurrentEmployeeData, setCurrentCustomerData } =
@@ -48,9 +48,7 @@ const ModuleLeftBar = () => {
     addingProduct,
     setAddingProduct,
   } = useUiStore();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const productForm = getForm("product");
   const { onProductFormSubmit } = useProductFormSubmit();
@@ -71,7 +69,7 @@ const ModuleLeftBar = () => {
       }
       setCurrentCustomerData(null);
       setAddingCustomer(true);
-      refetchProductsData()
+      refetchProductsData();
     }
   };
 
@@ -194,192 +192,199 @@ const ModuleLeftBar = () => {
         addingProduct
           ? "hidden md:flex"
           : "hidden"
-      } w-[240px] min-w-[240px] h-[100%] flex-col px-[15px] overflow-hidden`}
+      } w-[240px] min-w-[240px] h-[100%] flex-col overflow-hidden`}
       style={{
-        borderRight: `0.5px solid ${t.background_2}`,
+        borderRight: `0.5px solid ${currentTheme.background_2}`,
       }}
     >
-      {contextMenu && screen === "customers" && (
-        <div
-          className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
-          style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
-            backgroundColor: t.background_1_2,
-            border: "1px solid" + t.background_3,
-          }}
-          onContextMenu={handleCloseContextMenu}
-        >
-          <button
-            onClick={handleDeleteCustomer}
-            className="hover:brightness-50 dim cursor-pointer w-full text-left px-3 py-2 text-sm"
-          >
-            {`Delete customer`}
-          </button>
-        </div>
-      )}
-      {contextMenu && screen === "employees" && (
-        <div
-          className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
-          style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
-            backgroundColor: t.background_1_2,
-            border: "1px solid" + t.background_3,
-          }}
-          onContextMenu={handleCloseContextMenu}
-        >
-          <button
-            onClick={handleDeleteEmployee}
-            className="hover:brightness-50 dim cursor-pointer w-full text-left px-3 py-2 text-sm"
-          >
-            {`Delete employee`}
-          </button>
-        </div>
-      )}
-
-      <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
-        <div className="select-none flex flex-row gap-[13.5px] items-center w-[100%]">
-          <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
-            {screen === "customers" && "Customers"}
-            {screen === "employees" && "Employees"}
-            {(screen === "edit-customer-product" ||
-              screen === "customer-products") &&
-              "Products"}
-          </p>
-        </div>
-        {!addingCustomer && !addingEmployee && !addingProduct && (
+      <div className="flex flex-col px-[15px]">
+        {contextMenu && screen === "customers" && (
           <div
-            onClick={handlePlusClick}
-            className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+            className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
             style={{
-              backgroundColor: t.background_1_2,
+              top: contextMenu.y,
+              left: contextMenu.x,
+              backgroundColor: currentTheme.background_1_2,
+              border: "1px solid" + currentTheme.background_3,
             }}
+            onContextMenu={handleCloseContextMenu}
           >
-            <FaPlus size={12} />
+            <button
+              onClick={handleDeleteCustomer}
+              className="hover:brightness-50 dim cursor-pointer w-full text-left px-3 py-2 text-sm"
+            >
+              {`Delete customer`}
+            </button>
+          </div>
+        )}
+        {contextMenu && screen === "employees" && (
+          <div
+            className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
+            style={{
+              top: contextMenu.y,
+              left: contextMenu.x,
+              backgroundColor: currentTheme.background_1_2,
+              border: "1px solid" + currentTheme.background_3,
+            }}
+            onContextMenu={handleCloseContextMenu}
+          >
+            <button
+              onClick={handleDeleteEmployee}
+              className="hover:brightness-50 dim cursor-pointer w-full text-left px-3 py-2 text-sm"
+            >
+              {`Delete employee`}
+            </button>
+          </div>
+        )}
+
+        <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
+          <div className="select-none flex flex-row gap-[13.5px] items-center w-[100%]">
+            <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
+              {screen === "customers" && "Customers"}
+              {screen === "employees" && "Employees"}
+              {(screen === "edit-customer-product" ||
+                screen === "customer-products") &&
+                "Products"}
+            </p>
+          </div>
+          {!addingCustomer && !addingEmployee && !addingProduct && (
+            <div
+              onClick={handlePlusClick}
+              className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+              style={{
+                backgroundColor: currentTheme.background_1_2,
+              }}
+            >
+              <FaPlus size={12} />
+            </div>
+          )}
+        </div>
+        <Divider />
+      </div>
+
+      <div className="flex flex-col h-[100%]">
+        {screen === "customers" && (
+          <div className="px-[15px] pt-[10px]">
+            {customers.map((customer: Customer, index: number) => {
+              return (
+                <CustomerMiniCard
+                  customer={customer}
+                  key={index}
+                  index={index}
+                  handleContextMenu={handleContextMenu}
+                  handleCustomerClick={handleCustomerClick}
+                />
+              );
+            })}
+          </div>
+        )}
+        {screen === "employees" && (
+          <div className="px-[15px] pt-[10px]">
+            {employees.map((employee: Employee, index: number) => {
+              return (
+                <EmployeeMiniCard
+                  employee={employee}
+                  key={index}
+                  index={index}
+                  handleContextMenu={handleContextMenu}
+                  handleEmployeeClick={handleEmployeeClick}
+                />
+              );
+            })}
+          </div>
+        )}
+        {(screen === "edit-customer-product" || addingProduct) && (
+          <div className="flex w-[100%] h-[100%] overflow-y-auto flex-col gap-[8.25px] pt-[10px]">
+            {isLoadingProductsData ? (
+              <div className="px-[15px]">
+                {Array.from({ length: 4 }, (_, index) => {
+                  return (
+                    <div key={index}>
+                      <Skeleton
+                        style={{
+                          backgroundColor: currentTheme.background_2,
+                        }}
+                        className="w-[100%] h-[58px] rounded-[9px] flex flex-row gap-[10px] py-[9px] px-[12px]"
+                      >
+                        <div
+                          style={{
+                            backgroundColor: currentTheme.background_3,
+                          }}
+                          className="aspect-[1/1] rounded-[6px] h-[100%] "
+                        ></div>
+                      </Skeleton>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              localProductsData.map((product, index) => {
+                const foundLinks = mediaLinks.filter(
+                  (mediaLink: MediaLink) =>
+                    mediaLink.entity_id === product.id &&
+                    mediaLink.entity_type === "product"
+                );
+
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      background:
+                        currentUser.theme === "dark"
+                          ? "linear-gradient(180deg, #1E1E1E, #1A1A1A)"
+                          : currentTheme.background_1,
+                      boxShadow:
+                        currentUser.theme === "dark"
+                          ? "none"
+                          : "0px 0px 6px 2px rgba(0, 0, 0, 0.09)",
+                    }}
+                    className="w-[calc(100%-30px)] ml-[15px] h-[58px] rounded-[9px] items-center hover:brightness-[92%] dim cursor-pointer flex flex-row gap-[10px] py-[9px] px-[12px]"
+                    onClick={() => handleProductClick(product)}
+                  >
+                    <div
+                      style={{
+                        backgroundColor:
+                          currentProductId === product.serial_number
+                            ? currentTheme.background_3_2
+                            : currentTheme.background_3,
+                      }}
+                      className="select-none min-w-[40px] w-[40px] h-[40px] min-h-[40px] rounded-[6px] overflow-hidden"
+                    >
+                      {foundLinks.length > 0 && (
+                        <>
+                          {/\.(mp4|mov)$/i.test(foundLinks[0].url) ? (
+                            <video
+                              src={foundLinks[0].url}
+                              className="w-full h-full object-cover"
+                              playsInline
+                              muted
+                              loop
+                            />
+                          ) : (
+                            <img
+                              draggable={false}
+                              className="w-full h-full object-cover"
+                              src={foundLinks[0].url}
+                            />
+                          )}
+                        </>
+                      )}
+                    </div>
+                    <div className="select-none flex w-[136px] h-[100%] flex-col gap-[2px] ">
+                      <div className="text-[15px] leading-[20px] font-[500] opacity-70 truncate w-[100%]">
+                        {product.name ? product.name : product.serial_number}
+                      </div>
+                      <div className="text-[14px] leading-[18px] font-[400] opacity-40 truncate w-[100%]">
+                        {product.make} {product.model && "|"} {product.model}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
       </div>
-
-      <Divider />
-      {screen === "customers" && (
-        <>
-          {customers.map((customer: Customer, index: number) => {
-            return (
-              <CustomerMiniCard
-                customer={customer}
-                key={index}
-                index={index}
-                handleContextMenu={handleContextMenu}
-                handleCustomerClick={handleCustomerClick}
-              />
-            );
-          })}
-        </>
-      )}
-      {screen === "employees" && (
-        <>
-          {employees.map((employee: Employee, index: number) => {
-            return (
-              <EmployeeMiniCard
-                employee={employee}
-                key={index}
-                index={index}
-                handleContextMenu={handleContextMenu}
-                handleEmployeeClick={handleEmployeeClick}
-              />
-            );
-          })}
-        </>
-      )}
-      {(screen === "edit-customer-product" || addingProduct) && (
-        <div className="flex w-[100%] h-[100%] overflow-y-auto flex-col gap-[8.25px]">
-          {isLoadingProductsData ? (
-            <>
-              {Array.from({ length: 4 }, (_, index) => {
-                return (
-                  <div key={index}>
-                    <Skeleton
-                      style={{
-                        backgroundColor: t.background_2,
-                      }}
-                      className="w-[100%] h-[58px] rounded-[9px] flex flex-row gap-[10px] py-[9px] px-[12px]"
-                    >
-                      <div
-                        style={{
-                          backgroundColor: t.background_3,
-                        }}
-                        className="aspect-[1/1] rounded-[6px] h-[100%] "
-                      ></div>
-                    </Skeleton>
-                  </div>
-                );
-              })}
-            </>
-          ) : (
-            localProductsData.map((product, index) => {
-              const foundLinks = mediaLinks.filter(
-                (mediaLink: MediaLink) =>
-                  mediaLink.entity_id === product.id &&
-                  mediaLink.entity_type === "product"
-              );
-
-              return (
-                <div
-                  key={index}
-                  style={{
-                    backgroundColor:
-                      currentProductId &&
-                      currentProductId === product.serial_number
-                        ? "rgba(255,255,255,0.057)"
-                        : "rgba(255,255,255,0.028)",
-                  }}
-                  className="w-[100%] h-[58px] rounded-[9px] items-center hover:brightness-[86%] dim cursor-pointer flex flex-row gap-[10px] py-[9px] px-[12px]"
-                  onClick={() => handleProductClick(product)}
-                >
-                  <div
-                    style={{
-                      backgroundColor:
-                        currentProductId === product.serial_number
-                          ? t.background_3_2
-                          : t.background_3,
-                    }}
-                    className="select-none min-w-[40px] w-[40px] h-[40px] min-h-[40px] rounded-[6px] overflow-hidden"
-                  >
-                    {foundLinks.length > 0 && (
-                      <>
-                        {/\.(mp4|mov)$/i.test(foundLinks[0].url) ? (
-                          <video
-                            src={foundLinks[0].url}
-                            className="w-full h-full object-cover"
-                            playsInline
-                            muted
-                            loop
-                          />
-                        ) : (
-                          <img
-                            draggable={false}
-                            className="w-full h-full object-cover"
-                            src={foundLinks[0].url}
-                          />
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <div className="select-none flex w-[136px] h-[100%] flex-col gap-[2px] ">
-                    <div className="text-[15px] leading-[20px] font-[500] opacity-70 truncate w-[100%]">
-                      {product.name ? product.name : product.serial_number}
-                    </div>
-                    <div className="text-[14px] leading-[18px] font-[400] opacity-40 truncate w-[100%]">
-                      {product.make} {product.model && "|"} {product.model}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
     </div>
   );
 };

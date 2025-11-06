@@ -1,8 +1,8 @@
 // project/src/modules/PagesModule/PagesEditorToolbar.tsx
 import { AuthContext } from "@/contexts/authContext";
+import { useCurrentTheme } from "@/hooks/useTheme";
 import CustomButton from "@/lib/blocks/CustomButton";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { appTheme } from "@/util/appTheme";
+import { useCurrentDataStore } from "@/store/currentDataStore"; 
 import { makeRequest } from "@/util/axios";
 import { domainToUrl } from "@/util/functions/Pages";
 import { Link2 } from "lucide-react";
@@ -28,6 +28,7 @@ const PagesEditorToolbar = () =>
   // }: Props
   {
     const { currentUser } = useContext(AuthContext);
+    const currentTheme = useCurrentTheme()
     const { currentProject, currentPage } = useCurrentDataStore();
 
     const handleLinkClick = () => {
@@ -52,7 +53,7 @@ const PagesEditorToolbar = () =>
         className="flex items-center justify-end md:justify-between px-4 py-2"
         style={{
           borderBottom: `0.5px solid ${
-            appTheme[currentUser.theme].background_2
+            currentTheme.background_2
           }`,
         }}
       >

@@ -1,7 +1,6 @@
 // project/src/modules/CustomerProducts/ProductCard/ProductFrame.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import app_details from "../../../util/appDetails.json";
@@ -27,6 +26,7 @@ import {
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 // ---------- TaskCard ----------
 const MiniTaskCard: React.FC<{
@@ -38,8 +38,7 @@ const MiniTaskCard: React.FC<{
   const { currentUser } = React.useContext(AuthContext);
   const { upsertTask, deleteTask, employeeAssignments, employees } =
     useContextQueries();
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme()
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
   const taskForm = useTaskForm();
   const taskStatus = useWatch({ control: taskForm.control, name: "status" });
@@ -66,7 +65,8 @@ const MiniTaskCard: React.FC<{
   };
 
   const completed = task.status === "complete";
-
+  if (!currentUser) return null;
+  
   return (
     <form
       onSubmit={taskForm.handleSubmit(onFormSubmitButton)}
@@ -74,7 +74,7 @@ const MiniTaskCard: React.FC<{
         taskStatus === "cancelled" && "opacity-[0.5]"
       } rounded-[calc(6px+0.2vw)] relative`}
       style={{
-        ...getInnerCardStyle(theme, t),
+        ...getInnerCardStyle(currentUser.theme, currentTheme),
         transform: "translateZ(0)",
       }}
     >
@@ -126,6 +126,7 @@ const CustomerProductFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme()
   const { setCurrentProductData } = useCurrentDataStore()
   const {
     tasks,
@@ -138,8 +139,6 @@ const CustomerProductFrame = ({
   } = useContextQueries();
   const { screenClick } = useRouting();
   const { screen } = useUiStore()
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   const handleClick = async () => {
     await screenClick(
@@ -277,7 +276,7 @@ const CustomerProductFrame = ({
       className={`select-none ${
         screen !== "customers" && "min-h-[100%]"
       } group cursor-pointer rounded-[15px] overflow-hidden relative w-[100%] flex flex-col`}
-      style={getCardStyle(theme, t)}
+      style={getCardStyle(currentUser.theme, currentTheme)}
     >
       <form
         onSubmit={jobForm.handleSubmit(onFormSubmitButton)}
@@ -344,7 +343,7 @@ const CustomerProductFrame = ({
                 <div
                   className="hidden min-[870px]:flex min-[1024px]:hidden min-[1200px]:flex mt-[2px] p-[4px] rounded-[7px] shadow-sm"
                   style={{
-                    backgroundColor: t.background_3,
+                    backgroundColor: currentTheme.background_3,
                     alignItems: "center",
                     justifyContent: "center",
                     minWidth: 35,
@@ -354,14 +353,14 @@ const CustomerProductFrame = ({
                   <FaWrench
                     size={14}
                     className="opacity-[0.65]"
-                    style={{ color: t.text_1 }}
+                    style={{ color: currentTheme.text_1 }}
                   />
                 </div>
 
                 <div className="flex flex-col max-[800px]:items-start gap-[calc(5px+0.3vw)] min-[800px]:gap-[calc(3px+0.2vw)] w-[100%] items-end">
                   <div className="flex flex-col gap-[calc(5px+0.3vw)] min-[800px]:gap-[calc(3px+0.2vw)] min-[800px]:flex-row min-[800px]:items-center justify-between  w-[100%] mt-[1px]">
                     <div
-                      style={{ color: t.text_1 }}
+                      style={{ color: currentTheme.text_1 }}
                       className="text-[14.5px] leading-[16px] font-semibold"
                     >
                       {productJobs.length === 1 ? matchedDefinition.type : productJobs.length + " Jobs"}

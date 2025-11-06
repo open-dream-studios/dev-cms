@@ -1,20 +1,18 @@
 // project/src/screens/AdminHome/AdminControllers/AdminController.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import React, { useContext, useState } from "react";
 import EditModules from "./EditModules";
 import Divider from "@/lib/blocks/Divider";
 import EditPageDefinitions from "./EditPageDefinitions";
 import EditSectionDefinitions from "./EditSectionDefinitions";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export type Control = "modules" | "pages" | "sections";
 
 const AdminController = () => {
   const { currentUser } = useContext(AuthContext);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const [controlActive, setControlActive] = useState<Control>("modules");
 
@@ -28,7 +26,7 @@ const AdminController = () => {
         </h1>
         <div
           style={{
-            backgroundColor: t.header_1_1,
+            backgroundColor: currentTheme.header_1_1,
           }}
           className="flex w-[290px] pl-1 h-8 rounded-[18px] flex-row items-center"
         >
@@ -37,7 +35,7 @@ const AdminController = () => {
             style={{
               backgroundColor:
                 controlActive === "modules"
-                  ? t.header_1_2
+                  ? currentTheme.header_1_2
                   : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-medium rounded-[18px]"
@@ -49,7 +47,7 @@ const AdminController = () => {
             style={{
               backgroundColor:
                 controlActive === "pages"
-                  ? t.header_1_2
+                  ? currentTheme.header_1_2
                   : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-medium rounded-[18px]"
@@ -61,7 +59,7 @@ const AdminController = () => {
             style={{
               backgroundColor:
                 controlActive === "sections"
-                  ? t.header_1_2
+                  ? currentTheme.header_1_2
                   : "transparent",
             }}
             className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-medium rounded-[18px]"
@@ -71,7 +69,7 @@ const AdminController = () => {
         </div>
       </div>
 
-      <Divider />
+      <Divider mb={10} />
 
       <div className="flex-1">
         {controlActive === "modules" && <EditModules />}

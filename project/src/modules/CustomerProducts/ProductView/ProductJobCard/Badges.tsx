@@ -1,7 +1,5 @@
 // project/src/modules/CustomerProducts/ProductView/ProductJobCard/ProductJobCard.tsx
 import React from "react";
-import { appTheme } from "@/util/appTheme";
-import { AuthContext } from "@/contexts/authContext";
 import type {
   JobDefinition,
   JobStatusOption,
@@ -11,7 +9,7 @@ import "../../../components/Calendar/Calendar.css";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { UseFormReturn, Path, useWatch } from "react-hook-form";
 import { Check, Dot } from "lucide-react";
-import { useUiStore } from "@/store/useUIStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 // ---------- StatusBadge ----------
 export const StatusBadge: React.FC<{
@@ -21,18 +19,37 @@ export const StatusBadge: React.FC<{
   callSubmitForm: () => void;
   oneSize: boolean;
 }> = ({ form, matchedDefinition, cancelTimer, callSubmitForm, oneSize }) => {
+  const currentTheme = useCurrentTheme();
   const status = useWatch({ control: form?.control, name: "status" });
   const mapping: Record<string, { color: string; label: string }> = {
-    waiting_diagnosis: { color: "#06b6d4", label: "Waiting On Diagnosis" },
-    waiting_work: { color: "#60a5fa", label: "Work Required" },
-    waiting_parts: { color: "#f59e0b", label: "Waiting On Parts" },
-    waiting_customer: { color: "#f59e0b", label: "Waiting On Customer" },
-    waiting_listing: { color: "#8b5cf6", label: "Ready To List" },
-    listed: { color: "#8b5cf6", label: "Listed" },
-    waiting_delivery: { color: "#60a5fa", label: "Ready For Delivery" },
-    delivered: { color: "#16a34a", label: "Delivered" },
-    complete: { color: "#16a34a", label: "Complete" },
-    cancelled: { color: "#ef4444", label: "Cancelled" },
+    waiting_diagnosis: {
+      color: currentTheme.status_waiting_diagnosis,
+      label: "Waiting On Diagnosis",
+    },
+    waiting_work: {
+      color: currentTheme.status_waiting_work,
+      label: "Work Required",
+    },
+    waiting_parts: {
+      color: currentTheme.status_waiting_parts,
+      label: "Waiting On Parts",
+    },
+    waiting_customer: {
+      color: currentTheme.status_waiting_customer,
+      label: "Waiting On Customer",
+    },
+    waiting_listing: {
+      color: currentTheme.status_waiting_listing,
+      label: "Ready To List",
+    },
+    listed: { color: currentTheme.status_listed, label: "Listed" },
+    waiting_delivery: {
+      color: currentTheme.status_waiting_delivery,
+      label: "Ready For Delivery",
+    },
+    delivered: { color: currentTheme.status_complete, label: "Delivered" },
+    complete: { color: currentTheme.status_complete, label: "Complete" },
+    cancelled: { color: currentTheme.status_cancelled, label: "Cancelled" },
   };
   if (!form || !matchedDefinition) return null;
   const info = mapping[status] ?? {
@@ -117,13 +134,23 @@ export const TaskStatusBadge: React.FC<{
   callSubmitForm: () => void;
   oneSize: boolean;
 }> = ({ form, matchedDefinition, cancelTimer, callSubmitForm, oneSize }) => {
+  const currentTheme = useCurrentTheme();
   const status = useWatch({ control: form?.control, name: "status" });
   const mapping: Record<string, { color: string; label: string }> = {
-    waiting_work: { color: "#60a5fa", label: "Work Required" },
-    waiting_parts: { color: "#f59e0b", label: "Waiting On Parts" },
-    waiting_customer: { color: "#f59e0b", label: "Waiting On Customer" },
-    complete: { color: "#16a34a", label: "Complete" },
-    cancelled: { color: "#ef4444", label: "Cancelled" },
+    waiting_work: {
+      color: currentTheme.status_waiting_work,
+      label: "Work Required",
+    },
+    waiting_parts: {
+      color: currentTheme.status_waiting_parts,
+      label: "Waiting On Parts",
+    },
+    waiting_customer: {
+      color: currentTheme.status_waiting_customer,
+      label: "Waiting On Customer",
+    },
+    complete: { color: currentTheme.status_complete, label: "Complete" },
+    cancelled: { color: currentTheme.status_cancelled, label: "Cancelled" },
   };
   if (!form || !matchedDefinition) return null;
   const info = mapping[status] ?? {
@@ -201,16 +228,16 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
   callSubmitForm: () => void;
   oneSize: boolean;
 }) => {
-  const { screen } = useUiStore();
-  const { currentUser } = React.useContext(AuthContext);
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const priority = useWatch({
     control: form?.control,
     name: "priority" as Path<T>,
   });
-  const status = useWatch({ control: form?.control, name: "status" as Path<T> });
+  const status = useWatch({
+    control: form?.control,
+    name: "status" as Path<T>,
+  });
   if (!form) return null;
 
   return (
@@ -226,12 +253,12 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
           status === "complete" ||
           status === "cancelled" ||
           status === "delivered"
-            ? t.background_2
+            ? currentTheme.background_2
             : priority === "urgent"
             ? "rgba(239,68,68,0.12)"
             : priority === "high"
             ? "#f59e0b20"
-            : t.background_2,
+            : currentTheme.background_2,
       }}
     >
       <select
@@ -246,12 +273,12 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
             status === "complete" ||
             status === "cancelled" ||
             status === "delivered"
-              ? t.text_1
+              ? currentTheme.text_1
               : priority === "urgent"
-              ? "#ef4444"
+              ? currentTheme.priority_urgent
               : priority === "high"
-              ? "#f59e0b"
-              : t.text_1,
+              ? currentTheme.priority_high
+              : currentTheme.text_1,
           filter:
             priority === "urgent" || priority === "high"
               ? "brightness(140%)"

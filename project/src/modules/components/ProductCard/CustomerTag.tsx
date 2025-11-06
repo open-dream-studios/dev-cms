@@ -1,7 +1,6 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useModal1Store } from "@/store/useModalStore";
 import { Customer, Product } from "@open-dream/shared";
-import { appTheme } from "@/util/appTheme";
 import { formatPhone } from "@/util/functions/Customers";
 import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
@@ -9,6 +8,7 @@ import CustomerSelection from "../Customers/CustomerSelection";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 const CustomerTag = ({
   product,
@@ -23,9 +23,7 @@ const CustomerTag = ({
   const { setCurrentCustomerData } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const { screen } = useUiStore();
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const currentTheme = useCurrentTheme();
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -50,7 +48,7 @@ const CustomerTag = ({
     return (
       <div
         style={{
-          backgroundColor: t.background_2,
+          backgroundColor: currentTheme.background_2,
         }}
         className={`${
           oneSize
@@ -72,8 +70,8 @@ const CustomerTag = ({
               : "min-w-[calc(22px+0.6vw)] min-h-[calc(22px+0.6vw)] aspect-[1/1] text-[calc(8px+0.2vw)]"
           } flex items-center justify-center rounded-full border font-semibold`}
           style={{
-            borderColor: t.text_3,
-            color: t.text_3,
+            borderColor: currentTheme.text_3,
+            color: currentTheme.text_3,
           }}
         >
           {`${productCustomer.first_name?.[0] ?? ""}${
@@ -96,7 +94,7 @@ const CustomerTag = ({
           </div>
           <div
             style={{
-              color: t.text_4,
+              color: currentTheme.text_4,
             }}
             className={`${
               oneSize
@@ -119,7 +117,7 @@ const CustomerTag = ({
     return (
       <div
         style={{
-          backgroundColor: t.background_2,
+          backgroundColor: currentTheme.background_2,
         }}
         className={`${
           oneSize
@@ -139,8 +137,8 @@ const CustomerTag = ({
               : "w-[22px] min-w-[22px] lg:w-[24px] lg:min-w-[24px]"
           } opacity-[0.8] flex items-center justify-center rounded-full border font-semibold`}
           style={{
-            borderColor: t.text_3,
-            color: t.text_3,
+            borderColor: currentTheme.text_3,
+            color: currentTheme.text_3,
           }}
         >
           <FaPlus className="w-[calc(27%+5px)]" />

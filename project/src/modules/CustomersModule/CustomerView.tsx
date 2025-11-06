@@ -1,7 +1,6 @@
 // project/src/modules/CustomersModule/CustomerView.tsx
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
 import { customerToForm } from "@/util/schemas/customerSchema";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { CheckCircle2 } from "lucide-react";
@@ -24,9 +23,11 @@ import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { runFrontendModule } from "../runFrontendModule";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export const CustomerView = () => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { productsData, moduleDefinitions, projectModules, integrations } =
     useContextQueries();
   const { currentProject, currentCustomer, currentProjectId } =
@@ -35,10 +36,7 @@ export const CustomerView = () => {
   const { onCustomerFormSubmit } = useCustomerFormSubmit();
   const customerForm = useCustomerForm(currentCustomer);
   const { registerForm, unregisterForm } = useFormInstanceStore();
-  const { handleSubmit, formState } = customerForm;
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
+  const { handleSubmit } = customerForm;
 
   const [sessionToken] = useState(uuidv4());
   const [popupVisible, setPopupVisible] = useState(false);
@@ -193,15 +191,15 @@ export const CustomerView = () => {
       <form
         onSubmit={handleSubmit(onCustomerFormSubmit)}
         className="w-[100%] max-w-[550px] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
-        style={getCardStyle(theme, t)}
+        style={getCardStyle(currentUser.theme, currentTheme)}
       >
         <div className="flex flex-row gap-[10px]">
           <div className="flex items-center gap-4 pb-[10px]">
             <div
               className="flex items-center justify-center rounded-full border font-semibold text-xl w-[60px] h-[60px]"
               style={{
-                borderColor: t.text_4,
-                color: t.text_4,
+                borderColor: currentTheme.text_4,
+                color: currentTheme.text_4,
               }}
             >
               {currentCustomer ? (
@@ -219,7 +217,7 @@ export const CustomerView = () => {
             <div className="flex flex-col">
               <div
                 style={{
-                  color: t.text_2,
+                  color: currentTheme.text_2,
                 }}
                 className="flex flex-row items-center font-bold text-[19px] "
               >
@@ -281,7 +279,10 @@ export const CustomerView = () => {
 
               <input
                 style={{
-                  color: currentUser.theme === "light" ? t.text_3 : t.text_4,
+                  color:
+                    currentUser.theme === "light"
+                      ? currentTheme.text_3
+                      : currentTheme.text_4,
                 }}
                 {...customerForm.register("email", {
                   required: "Email is required",
@@ -341,7 +342,7 @@ export const CustomerView = () => {
 
           <div
             style={{
-              backgroundColor: t.background_2,
+              backgroundColor: currentTheme.background_2,
             }}
             className="rounded-[8px] w-[50%] h-[100%] px-[9px]"
           >
@@ -377,7 +378,7 @@ export const CustomerView = () => {
               <div
                 ref={popupRef}
                 style={{
-                  backgroundColor: t.background_2_2,
+                  backgroundColor: currentTheme.background_2_2,
                 }}
                 className="z-[900] absolute w-[100%] py-[10px] px-[15px] flex flex-col gap-[2px] h-[auto] left-0 top-[33px] rounded-[11px]"
               >
@@ -394,7 +395,7 @@ export const CustomerView = () => {
                           <div
                             className="w-[100%] h-[1.5px] rounded-[1px] opacity-[0.3]"
                             style={{
-                              backgroundColor: t.text_4,
+                              backgroundColor: currentTheme.text_4,
                             }}
                           ></div>
                         )}
@@ -442,8 +443,8 @@ export const CustomerView = () => {
                 : "opacity-0 pointer-events-none"
             } cursor-pointer hover:brightness-90 dim flex flex-row items-center gap-[7px] mt-[9px] self-start px-4 py-2 rounded-full font-semibold shadow-sm text-sm`}
             style={{
-              backgroundColor: t.background_2_selected,
-              color: t.text_3,
+              backgroundColor: currentTheme.background_2_selected,
+              color: currentTheme.text_3,
             }}
           >
             <CheckCircle2 size={20} />{" "}
@@ -488,11 +489,11 @@ export const CustomerView = () => {
         select:-webkit-autofill:hover,
         select:-webkit-autofill:focus,
         select:-webkit-autofill:active {
-          -webkit-text-fill-color: ${t.text_4} !important;
-          -webkit-box-shadow: 0 0 0px 1000px ${t.background_2} inset !important;
-          box-shadow: 0 0 0px 1000px ${t.background_2} inset !important;
+          -webkit-text-fill-color: ${currentTheme.text_4} !important;
+          -webkit-box-shadow: 0 0 0px 1000px ${currentTheme.background_2} inset !important;
+          box-shadow: 0 0 0px 1000px ${currentTheme.background_2} inset !important;
           transition: background-color 5000s ease-in-out 0s !important;
-          caret-color: ${t.text_4} !important;
+          caret-color: ${currentTheme.text_4} !important;
         }
       `}</style>
     </div>

@@ -18,10 +18,10 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { MediaFolder } from "@open-dream/shared";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { motion } from "framer-motion";
-import { AuthContext } from "@/contexts/authContext";
-import { appTheme } from "@/util/appTheme";
+import { AuthContext } from "@/contexts/authContext"; 
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useDnDStore } from "@/store/useDnDStore";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
@@ -47,13 +47,11 @@ export default function FolderItem({
   setRenamingFolder,
 }: FolderItemProps) {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme()
   const { upsertMediaFolders } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
   const [tempName, setTempName] = useState<string>(folder.name);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const theme = currentUser?.theme ?? "dark";
-  const t = appTheme[theme];
 
   useEffect(() => {
     if (renamingFolder === folder.folder_id) {
@@ -151,10 +149,10 @@ export default function FolderItem({
         animate={{
           backgroundColor:
             hovered || isDraggedOver
-              ? t.background_2
+              ? currentTheme.background_2
               : activeFolder && activeFolder.id === folder.id
-              ? t.background_2
-              : t.background_1,
+              ? currentTheme.background_2
+              : currentTheme.background_1,
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
