@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.925.0",
     "@dqbd/tiktoken": "^1.0.20",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.8.4",
@@ -28,6 +29,7 @@
     "mysql": "^2.18.1",
     "mysql2": "^3.11.4",
     "netlify-lambda": "^2.0.16",
+    "node-cron": "^4.2.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.0",
     "nodemon": "^2.0.22",

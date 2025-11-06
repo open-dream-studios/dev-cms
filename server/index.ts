@@ -1,5 +1,6 @@
 // server/index.ts
 import { db } from "./connection/connect.js";
+import "./sql/sql_backup_schedule.js";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
