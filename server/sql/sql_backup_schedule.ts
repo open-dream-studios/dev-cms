@@ -3,7 +3,7 @@ import cron from "node-cron";
 import { exec } from "child_process";
 
 // Schedule: "minute hour * * *"
-const BACKUP_SCHEDULE = "1 15 * * *";
+const BACKUP_SCHEDULE = "7 15 * * *";
 const BACKUP_SCRIPT = "node --loader ts-node/esm sql/sql_backup.ts";
 
 console.log("Scheduling backup at: ", BACKUP_SCHEDULE);
