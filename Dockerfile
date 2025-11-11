@@ -6,17 +6,13 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
-
-# Copy all files (including workspace package.jsons)
 COPY . .
 
-# 🟩 Install all workspace deps together
 RUN npm ci --workspaces
 
-# Build
-RUN npm run build
+# 🔧 Rebuild sharp *from source* against system libraries
+RUN npm rebuild sharp --build-from-source --sharp-libvips=system
 
-# Optional: rebuild sharp for container arch
-RUN npm rebuild sharp --force
+RUN npm run build
 
 CMD ["node", "server/dist/index.js"]
