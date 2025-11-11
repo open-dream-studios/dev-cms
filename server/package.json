@@ -76,6 +76,8 @@
     "@types/nodemailer": "^7.0.3",
     "@types/wav": "^1.0.4",
     "cookie-parser": "^1.4.7",
+    "node-addon-api": "^8.5.0",
+    "node-gyp": "^11.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

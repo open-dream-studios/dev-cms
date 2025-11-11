@@ -11,7 +11,7 @@ export async function uploadToS3(localFile: string) {
     },
   });
 
-  const bucket = process.env.S3_BUCKET;
+  const bucket = process.env.AWS_S3_BUCKET;
   const name = path.basename(localFile);
   const base = name.replace(/(\.sql\.gz|\.sql\.gz\.sha256|\.sha256)$/, "");
 
@@ -27,6 +27,5 @@ export async function uploadToS3(localFile: string) {
       Tagging: `type=${weekly ? "weekly" : "daily"}`, 
     })
   );
-
   console.log(`☁️ Uploaded to S3: s3://${bucket}/${key}`);
 }

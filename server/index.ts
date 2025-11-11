@@ -28,7 +28,6 @@ import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 dotenv.config();
 
-console.log("🧭 Running from directory:", process.cwd());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

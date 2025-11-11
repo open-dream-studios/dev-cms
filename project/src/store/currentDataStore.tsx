@@ -10,12 +10,16 @@ import {
   Product,
   DataFilters,
   MediaLink,
+  Media,
 } from "@open-dream/shared";
 
 interface CurrentDataState {
   currentProject: Project | null;
   currentProjectId: number | null;
   setCurrentProjectData: (project: Project | null) => void;
+
+  currentMediaSelected: Media | null;
+  setCurrentMediaSelected: (selected: Media | null) => void;
 
   currentProduct: Product | null;
   currentProductSerial: string | null;
@@ -65,6 +69,12 @@ export const useCurrentDataStore = create<CurrentDataState>()(
         set({
           currentProject: project,
           currentProjectId: project?.id ?? null,
+        }),
+
+      currentMediaSelected: null,
+      setCurrentMediaSelected: (selected: Media | null) =>
+        set({
+          currentMediaSelected: selected,
         }),
 
       currentProduct: null,

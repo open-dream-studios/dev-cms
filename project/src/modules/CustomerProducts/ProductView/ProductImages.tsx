@@ -17,17 +17,18 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useContext, useRef, useState } from "react";
+import { useContext, useMemo, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { MediaLink } from "@open-dream/shared";
+import { Media } from "@open-dream/shared";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 function SortableImage({
   id,
-  url,
+  mediaLink,
   index,
   setImageDisplayed,
   handleDeleteImage,
@@ -35,14 +36,15 @@ function SortableImage({
   singleRow,
 }: {
   id: string;
-  url: string;
+  mediaLink: any;
   index: number;
-  setImageDisplayed: React.Dispatch<React.SetStateAction<string | null>>;
+  setImageDisplayed: React.Dispatch<React.SetStateAction<Media | null>>;
   handleDeleteImage: (index: number) => void;
   imageEditorOpen: boolean;
   singleRow: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
+  const { media } = useContextQueries();
   const currentTheme = useCurrentTheme();
   const {
     attributes,
@@ -76,11 +78,15 @@ function SortableImage({
     const dx = e.clientX - startPos.current.x;
     const dy = e.clientY - startPos.current.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance < wiggleThreshold) {
-      setImageDisplayed(url);
+    if (distance < wiggleThreshold && matchedMedia) {
+      setImageDisplayed(matchedMedia);
     }
     startPos.current = null;
   };
+
+  const matchedMedia = useMemo(() => {
+    return media.find((item: Media) => item.id === parseInt(mediaLink.id));
+  }, [media, mediaLink]);
 
   if (!currentUser) return null;
 
@@ -97,7 +103,7 @@ function SortableImage({
         {!singleRow && (
           <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />
         )}
-        <RenderedImage url={url} />
+        {matchedMedia && <RenderedImage media={matchedMedia} rounded={true} />}
         {!singleRow && (
           <div
             style={{
@@ -122,7 +128,7 @@ export default function ProductImages({
   imageEditorOpen,
   singleRow,
 }: {
-  setImageDisplayed: React.Dispatch<React.SetStateAction<string | null>>;
+  setImageDisplayed: React.Dispatch<React.SetStateAction<Media | null>>;
   imageEditorOpen: boolean;
   singleRow: boolean;
 }) {
@@ -203,7 +209,7 @@ export default function ProductImages({
                 key={`${item.id}${item.url}`}
                 id={item.id}
                 index={index}
-                url={item.url}
+                mediaLink={item}
                 setImageDisplayed={setImageDisplayed}
                 handleDeleteImage={handleDeleteImage}
                 imageEditorOpen={imageEditorOpen}

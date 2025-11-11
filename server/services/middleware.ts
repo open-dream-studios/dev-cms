@@ -1,3 +1,4 @@
+// server/services/middleware.ts
 import multer from "multer";
 import os from "os";
 
@@ -9,7 +10,7 @@ const upload = multer({
     },
   }),
   limits: {
-    fileSize: 500 * 1024 * 1024, // 500 MB limit
+    fileSize: 1024 * 1024 * 1024, // 1 GB limit
   },
 });
 

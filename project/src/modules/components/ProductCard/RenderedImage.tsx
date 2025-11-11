@@ -1,14 +1,21 @@
+import { Media } from "@open-dream/shared";
 import Image from "next/image";
 import React from "react";
 import { IoPlayCircleOutline } from "react-icons/io5";
 
-const RenderedImage = ({ url }: { url: string }) => {
+const RenderedImage = ({
+  media,
+  rounded,
+}: {
+  media: Media;
+  rounded: boolean;
+}) => {
   return (
     <div className="w-[100%] aspect-[1/1]">
-      {/\.(mp4|mov)$/i.test(url) ? (
+      {/* {/\.(mp4|mov)$/i.test(media.url) ? (
         <>
           <video
-            src={url}
+            src={media.url}
             className="object-cover w-full h-full rounded-[10px]"
             playsInline
             muted
@@ -20,13 +27,36 @@ const RenderedImage = ({ url }: { url: string }) => {
         </>
       ) : (
         <Image
-          src={url}
+          src={media.url}
           alt="image"
           width={200}
           height={200}
           draggable={false}
           className="object-cover w-full h-full rounded-[10px]"
         />
+      )} */}
+
+      {media.type === "image" ? (
+        <img
+          style={{ willChange: "transform" }}
+          draggable={false}
+          src={media.url}
+          alt={media.alt_text || ""}
+          className="dim hover:brightness-90 object-cover w-full max-h-[210px] aspect-[1/1]"
+        />
+      ) : (
+        <>
+          <video
+            src={media.url}
+            className={`object-cover w-full h-full ${rounded && "rounded-[10px]"}`}
+            playsInline
+            muted
+            loop
+          />
+          <div className="absolute top-0 left-0 w-[100%] h-[100%] flex items-center justify-center pb-[4px]">
+            <IoPlayCircleOutline size={35} color={"white"} />
+          </div>
+        </>
       )}
     </div>
   );

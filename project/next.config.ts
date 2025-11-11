@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "plus.unsplash.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "dev-cms-project-media.s3.us-east-1.amazonaws.com" },
     ],
   }, 
 
@@ -21,8 +22,8 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        // destination: "http://localhost:8080/api/:path*",
-        destination: "https://dev-cms-production.up.railway.app/api/:path*",
+        destination: "http://localhost:8080/api/:path*",
+        // destination: "https://dev-cms-production.up.railway.app/api/:path*",
       },
     ];
   },

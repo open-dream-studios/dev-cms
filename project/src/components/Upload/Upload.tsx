@@ -1,24 +1,13 @@
 // project/src/components/Upload/Upload.tsx
 "use client";
-import { AuthContext } from "@/contexts/authContext"; 
+import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useRef, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useUiStore } from "@/store/useUIStore";
 import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/useTheme";
-
-export type CloudinaryUpload = {
-  metadata: {
-    duration: number | null;
-    extension: string;
-    height: number;
-    size: number;
-    width: number;
-  };
-  public_id: string;
-  url: string;
-};
+import { Media, MediaUsage } from "@open-dream/shared";
 
 interface UploadProps {
   handleFiles: (files: File[]) => void;
@@ -26,11 +15,18 @@ interface UploadProps {
 }
 
 type UploadModalProps = {
-  onUploaded: (cloudinaryUploads: CloudinaryUpload[], files: File[]) => void;
+  onUploaded?: (uploads: Media[], files: File[]) => void;
   multiple?: boolean;
+  folder_id: number | null;
+  usage: MediaUsage;
 };
 
-function UploadModal({ onUploaded, multiple = true }: UploadModalProps) {
+function UploadModal({
+  onUploaded,
+  multiple = true,
+  folder_id,
+  usage,
+}: UploadModalProps) {
   const { currentUser } = useContext(AuthContext);
   const { handleFileProcessing } = useMedia();
   const { uploadPopup, setUploadPopup } = useUiStore();
@@ -40,8 +36,12 @@ function UploadModal({ onUploaded, multiple = true }: UploadModalProps) {
 
   const handleFiles = async (files: File[]) => {
     const filtered = multiple ? files : files.slice(0, 1);
-    const uploadedImages = await handleFileProcessing(filtered);
-    if (uploadedImages.length > 0) {
+    const uploadedImages = await handleFileProcessing(
+      filtered,
+      folder_id,
+      usage
+    );
+    if (onUploaded && uploadedImages.length > 0) {
       onUploaded(multiple ? uploadedImages : [uploadedImages[0]], filtered);
     }
   };
@@ -80,7 +80,7 @@ const Upload: React.FC<UploadProps> = ({ handleFiles, multiple = true }) => {
   const { currentUser } = useContext(AuthContext);
   const [dragging, setDragging] = useState(false);
   const currentTheme = useCurrentTheme();
-  
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragging(false);

@@ -6,6 +6,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -14,7 +15,7 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Media, MediaFolder } from "@open-dream/shared"; 
+import { Media, MediaFolder } from "@open-dream/shared";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
@@ -22,12 +23,15 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useMedia } from "@/hooks/useMedia";
 import { useDnDStore } from "@/store/useDnDStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import RenderedImage from "../components/ProductCard/RenderedImage";
+import MediaPlayer from "./MediaPlayer";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type SortableMediaItemProps = {
   media: Media;
   disabled?: boolean;
   editMode: boolean;
-  setMediaSelected: React.Dispatch<React.SetStateAction<Media | null>>;
+  activeMedia: Media | null;
   activeFolder: MediaFolder | null;
   setActiveFolder: React.Dispatch<React.SetStateAction<MediaFolder | null>>;
   openAllParents: (folder: MediaFolder) => void;
@@ -37,7 +41,7 @@ function SortableMediaItem({
   media,
   disabled = false,
   editMode,
-  setMediaSelected,
+  activeMedia,
   activeFolder,
   setActiveFolder,
   openAllParents,
@@ -55,7 +59,8 @@ function SortableMediaItem({
     animateLayoutChanges: () => false,
   });
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
+  const { setCurrentMediaSelected } = useCurrentDataStore();
   const { handleDeleteMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
@@ -110,7 +115,7 @@ function SortableMediaItem({
     //     setActiveFolder(folderFound);
     //   }
     // } else {
-    setMediaSelected(media);
+    setCurrentMediaSelected(media);
     // }
   };
 
@@ -129,39 +134,27 @@ function SortableMediaItem({
         isDragging ? "shadow-xl" : ""
       }`}
     >
-      {editMode && (
-        <div
-          style={{
-            backgroundColor: currentTheme.background_1,
-            border: "0.5px solid " + currentTheme.text_3,
-          }}
-          className="absolute top-[-8px] right-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
-          onClick={async (e: any) => {
-            e.stopPropagation();
-            if (media.id && media.media_id) {
-              await handleDeleteMedia(media.id, media.media_id);
-            }
-          }}
-        >
-          <IoCloseOutline color={currentTheme.text_2} />
+      {!(activeMedia && media.media_id === activeMedia.media_id) && (
+        <div>
+          {editMode && (
+            <div
+              style={{
+                backgroundColor: currentTheme.background_1,
+                border: "0.5px solid " + currentTheme.text_3,
+              }}
+              className="absolute top-[-8px] right-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+              onClick={async (e: any) => {
+                e.stopPropagation();
+                if (media.id && media.media_id) {
+                  await handleDeleteMedia(media.id, media.media_id);
+                }
+              }}
+            >
+              <IoCloseOutline color={currentTheme.text_2} />
+            </div>
+          )}
+          <RenderedImage media={media} rounded={false} />
         </div>
-      )}
-      {media.type === "image" ? (
-        <img
-          style={{ willChange: "transform" }}
-          draggable={false}
-          src={media.url}
-          alt={media.alt_text || ""}
-          className="dim hover:brightness-90 object-cover w-full max-h-[210px] aspect-[1/1]"
-        />
-      ) : (
-        <video
-          style={{ willChange: "transform" }}
-          draggable={false}
-          src={media.url}
-          className="w-full h-[150px]"
-          controls
-        />
       )}
     </div>
   );
@@ -193,12 +186,12 @@ export default function MediaGrid({
     })
   );
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
   const { upsertMedia } = useContextQueries();
+  const { currentMediaSelected, setCurrentMediaSelected } =
+    useCurrentDataStore();
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
-  const [mediaSelected, setMediaSelected] = useState<Media | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
+  const [activeMedia, setActiveMedia] = useState<Media | null>(null);
 
   const originalMediaRef = useRef<Media[]>([]);
   useEffect(() => {
@@ -271,107 +264,31 @@ export default function MediaGrid({
   if (!currentUser) return null;
 
   return (
-    <div className="w-[100%] h-[100%] relative overflow-auto pb-[24px]">
-      {mediaSelected && (
+    <div className="w-[100%] h-[100%] relative pb-[24px]">
+      {currentMediaSelected && (
         <div
           className="fixed z-[990] top-0 left-0 w-[100%] h-[100%] flex items-center justify-center"
           style={{
             backgroundColor: currentTheme.background_1,
           }}
-          onClick={() => setMediaSelected(null)}
+          onClick={() => setCurrentMediaSelected(null)}
         >
-          {/\.(mp4|mov)$/i.test(mediaSelected.url) ? (
-            <div className="relative max-w-[100%] max-h-[100%]">
-              <video
-                ref={videoRef}
-                src={mediaSelected.url}
-                className="object-contain max-w-[100%] max-h-[90vh]"
-                playsInline
-                loop
-                autoPlay
-                onClick={() => setMediaSelected(null)}
-                onTimeUpdate={(e) => {
-                  const v = e.currentTarget;
-                  setVideoTime({
-                    current: v.currentTime,
-                    duration: v.duration,
-                  });
-                }}
-              />
-              <div
-                className="absolute left-0 right-0 bottom-4 px-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <input
-                  type="range"
-                  min={0}
-                  max={videoTime.duration || 0}
-                  step={0.01}
-                  value={videoTime.current || 0}
-                  onChange={(e) => {
-                    const newTime = parseFloat(e.target.value);
-                    if (videoRef.current)
-                      videoRef.current.currentTime = newTime;
-                    setVideoTime((prev) => ({ ...prev, current: newTime }));
-                  }}
-                  className="w-full appearance-none bg-transparent cursor-pointer"
-                  style={{
-                    WebkitAppearance: "none",
-                    appearance: "none",
-                  }}
-                />
-                <style jsx>{`
-                  input[type="range"] {
-                    height: 4px;
-                  }
-                  input[type="range"]::-webkit-slider-runnable-track {
-                    height: 4px;
-                    background: #ccc;
-                    border-radius: 2px;
-                  }
-                  input[type="range"]::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    height: 14px;
-                    width: 14px;
-                    border-radius: 50%;
-                    background: #d1d5db;
-                    margin-top: -5px; /* centers thumb vertically */
-                    transition: background 0.2s ease;
-                  }
-                  input[type="range"]::-webkit-slider-thumb:hover {
-                    background: #d1d5db;
-                  }
-                  input[type="range"]::-moz-range-track {
-                    height: 4px;
-                    background: #ccc;
-                    border-radius: 2px;
-                  }
-                  input[type="range"]::-moz-range-thumb {
-                    height: 14px;
-                    width: 14px;
-                    border-radius: 50%;
-                    background: #d1d5db;
-                    border: none;
-                    transition: background 0.2s ease;
-                  }
-                  input[type="range"]::-moz-range-thumb:hover {
-                    background: #d1d5db;
-                  }
-                `}</style>
-              </div>
-            </div>
-          ) : (
-            <img
-              src={mediaSelected.url}
-              className="object-cover max-w-[100%] max-h-[100%]"
-            />
-          )}
+          <MediaPlayer />
         </div>
       )}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+        onDragStart={(event) => {
+          const activeId = event.active.id;
+          const dragged = localMedia.find((m) => m.media_id === activeId);
+          if (dragged) setActiveMedia(dragged);
+        }}
+        onDragEnd={(event) => {
+          setActiveMedia(null);
+          handleDragEnd(event);
+        }}
+        onDragCancel={() => setActiveMedia(null)}
       >
         <SortableContext
           items={localMedia.map((m: Media) => m.media_id!)}
@@ -390,7 +307,7 @@ export default function MediaGrid({
                 media={m}
                 disabled={false}
                 editMode={editMode}
-                setMediaSelected={setMediaSelected}
+                activeMedia={activeMedia}
                 activeFolder={activeFolder}
                 setActiveFolder={setActiveFolder}
                 openAllParents={openAllParents}
@@ -398,6 +315,33 @@ export default function MediaGrid({
             ))}
           </div>
         </SortableContext>
+
+        <DragOverlay>
+          {activeMedia ? (
+            <div
+              className="overflow-hidden"
+              style={{
+                width: 170,
+                height: 170,
+                pointerEvents: "none",
+              }}
+            >
+              {activeMedia.type === "image" ? (
+                <img
+                  src={activeMedia.url}
+                  alt={activeMedia.alt_text || ""}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <video
+                  src={activeMedia.url}
+                  className="object-cover w-full h-full"
+                  muted
+                />
+              )}
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );

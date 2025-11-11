@@ -12,9 +12,6 @@ import {
   FaChevronUp,
   FaPlus,
 } from "react-icons/fa6";
-import UploadModal, {
-  CloudinaryUpload,
-} from "../../../components/Upload/Upload";
 import { ProductFormData, productToForm } from "@/util/schemas/productSchema";
 import {
   useProductForm,
@@ -29,7 +26,6 @@ import {
   JobDefinition,
   Product,
 } from "@open-dream/shared";
-import { usePathname } from "next/navigation";
 import CustomerTag from "@/modules/components/ProductCard/CustomerTag";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -48,11 +44,13 @@ import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useWatch } from "react-hook-form";
 import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import UploadModal from "@/components/Upload/Upload";
+import MediaPlayer from "@/modules/MediaModule/MediaPlayer";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
   const { history } = useRouting();
-  const { productsData, mediaLinks, customers, jobs, jobDefinitions } =
+  const { productsData, media, mediaLinks, customers, jobs, jobDefinitions } =
     useContextQueries();
   const { uploadProductImages } = useMedia();
   const { screen, setUploadPopup, addingProduct, setAddingProduct } =
@@ -64,13 +62,14 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     setCurrentProductImages,
     originalProductImages,
     setOriginalProductImages,
+    currentMediaSelected,
+    setCurrentMediaSelected,
   } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
   const { screenClick, screenClickAction } = useRouting();
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
-  const [imageView, setImageView] = useState<string | null>(null);
-  const [imageDisplayed, setImageDisplayed] = useState<string | null>(null);
+  const [imageDisplayed, setImageDisplayed] = useState<Media | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
   const [imageEditorOpen, setImageEditorOpen] = useState<boolean>(false);
@@ -216,17 +215,22 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     if (originalChanged) {
       setOriginalProductImages(loadedLinks);
     }
-  }, [serialNumber, mediaLinks]);
+  }, [
+    serialNumber,
+    mediaLinks,
+    setCurrentProductImages,
+    setOriginalProductImages,
+  ]);
 
   useEffect(() => {
-    if (
-      currentProductImages &&
-      currentProductImages.length &&
-      currentProductImages[0].url
-    ) {
-      setImageDisplayed(currentProductImages[0].url);
+    if (currentProductImages && currentProductImages.length) {
+      const matchedMedia = media.find(
+        (item: Media) => item.id === currentProductImages[0].media_id
+      );
+      console.log(matchedMedia)
+      setImageDisplayed(matchedMedia ?? null);
     }
-  }, [currentProductImages]);
+  }, [media, currentProductImages]);
 
   const handleBackButton = async () => {
     await screenClick("customer-products", "/products");
@@ -306,106 +310,15 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     <div className="w-[100%] h-[100%] overflow-scroll hide-scrollbar">
       <UploadModal
         multiple={true}
-        onUploaded={(uploadObjects: CloudinaryUpload[]) => {
-          uploadProductImages(uploadObjects, serialNumber ?? null);
+        onUploaded={async (items: Media[]) => {
+          await uploadProductImages(items, serialNumber ?? null);
           setImageEditorOpen(true);
         }}
+        folder_id={null}
+        usage={"product"}
       />
-      {imageView && (
-        <div
-          className="fixed z-[990] top-0 left-0 w-[100vw] display-height flex items-center justify-center"
-          style={{
-            backgroundColor: currentTheme.background_1,
-          }}
-          onClick={() => setImageView("")}
-        >
-          {/\.(mp4|mov)$/i.test(imageView) ? (
-            <div className="relative max-w-[100%] max-h-[100%]">
-              <video
-                ref={videoRef}
-                src={imageView}
-                className="object-contain max-w-[100%] max-h-[90vh]"
-                playsInline
-                loop
-                autoPlay
-                onClick={() => setImageView("")}
-                onTimeUpdate={(e) => {
-                  const v = e.currentTarget;
-                  setVideoTime({
-                    current: v.currentTime,
-                    duration: v.duration,
-                  });
-                }}
-              />
-              <div
-                className="absolute left-0 right-0 bottom-4 px-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <input
-                  type="range"
-                  min={0}
-                  max={videoTime.duration || 0}
-                  step={0.01}
-                  value={videoTime.current || 0}
-                  onChange={(e) => {
-                    const newTime = parseFloat(e.target.value);
-                    if (videoRef.current)
-                      videoRef.current.currentTime = newTime;
-                    setVideoTime((prev) => ({ ...prev, current: newTime }));
-                  }}
-                  className="w-full appearance-none bg-transparent cursor-pointer"
-                  style={{
-                    WebkitAppearance: "none",
-                    appearance: "none",
-                  }}
-                />
-                <style jsx>{`
-                  input[type="range"] {
-                    height: 4px;
-                  }
-                  input[type="range"]::-webkit-slider-runnable-track {
-                    height: 4px;
-                    background: #ccc;
-                    border-radius: 2px;
-                  }
-                  input[type="range"]::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    height: 14px;
-                    width: 14px;
-                    border-radius: 50%;
-                    background: #d1d5db;
-                    margin-top: -5px; /* centers thumb vertically */
-                    transition: background 0.2s ease;
-                  }
-                  input[type="range"]::-webkit-slider-thumb:hover {
-                    background: #d1d5db;
-                  }
-                  input[type="range"]::-moz-range-track {
-                    height: 4px;
-                    background: #ccc;
-                    border-radius: 2px;
-                  }
-                  input[type="range"]::-moz-range-thumb {
-                    height: 14px;
-                    width: 14px;
-                    border-radius: 50%;
-                    background: #d1d5db;
-                    border: none;
-                    transition: background 0.2s ease;
-                  }
-                  input[type="range"]::-moz-range-thumb:hover {
-                    background: #d1d5db;
-                  }
-                `}</style>
-              </div>
-            </div>
-          ) : (
-            <img
-              src={imageView}
-              className="object-cover max-w-[100%] max-h-[100%]"
-            />
-          )}
-        </div>
+      {currentMediaSelected && (
+        <MediaPlayer />
       )}
 
       <div
@@ -467,14 +380,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
               {currentProductImages.length >= 1 ? (
                 <div
                   onClick={() => {
-                    setImageView(imageDisplayed);
+                    setCurrentMediaSelected(imageDisplayed);
                   }}
                   style={{
                     backgroundColor: currentTheme.background_2,
                   }}
                   className="cursor-pointer hover:brightness-[86%] dim w-[100%] aspect-[1/1] rounded-[10px]"
                 >
-                  {imageDisplayed && <RenderedImage url={imageDisplayed} />}
+                  {imageDisplayed && (
+                    <RenderedImage media={imageDisplayed} rounded={true} />
+                  )}
                 </div>
               ) : (
                 <div

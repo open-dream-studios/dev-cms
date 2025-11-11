@@ -1,14 +1,13 @@
 // project/src/hooks/useMedia.tsx
-import { CloudinaryUpload } from "@/components/Upload/Upload";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { Media, MediaLink } from "@open-dream/shared";
+import { Media, MediaLink, MediaUsage } from "@open-dream/shared";
 import { ProjectPage } from "@open-dream/shared";
 import { Product } from "@open-dream/shared";
 import { getCurrentTimestamp } from "@/util/functions/Data";
-import axios from "axios";
 import { PopupDisplayItem, useModals } from "./useModals";
+import { makeRequest } from "@/util/axios";
 
 export type FileImage = {
   name: string;
@@ -19,47 +18,31 @@ export function useMedia() {
   const { setUpdatingLock, setUploadPopup } = useUiStore();
   const {
     productsData,
-    upsertMedia,
     deleteMedia,
     mediaLinks,
     upsertMediaLinks,
     deleteMediaLinks,
     projectPages,
+    refetchMedia,
   } = useContextQueries();
-  const { currentProjectId, currentProductImages, setCurrentProductImages } =
-    useCurrentDataStore();
+  const {
+    currentProject,
+    currentProjectId,
+    currentProductImages,
+    setCurrentProductImages,
+  } = useCurrentDataStore();
   const { promptContinue } = useModals();
 
-  const handleSend = async (files: FileImage[]) => {
-    const formData = new FormData();
-    files.forEach((fileImage) => {
-      formData.append("files", fileImage.file, fileImage.name);
-    });
-
-    try {
-      const response = await axios.post("/api/media/compress", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (response.status === 200) {
-        const uploadedFiles = response.data.files;
-        return uploadedFiles;
-      } else {
-        return [];
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      return [];
-    }
-  };
-
   const handleFileProcessing = async (
-    files: File[]
-  ): Promise<CloudinaryUpload[]> => {
+    files: File[],
+    folder_id: number | null,
+    usage: MediaUsage
+  ): Promise<Media[]> => {
+    if (!currentProject || !currentProject.project_id || !currentProjectId)
+      return [];
     setUpdatingLock(true);
     try {
       const uploadedNames: string[] = [];
-
       const readerPromises = files.map(
         (file) =>
           new Promise<FileImage>((resolve) => {
@@ -73,21 +56,35 @@ export function useMedia() {
             resolve({ name: sanitizedFileName, file });
           })
       );
-
       const images = await Promise.all(readerPromises);
       setUploadPopup(false);
-      const uploadObjects = await handleSend(images);
-      return uploadObjects;
+      const formData = new FormData();
+      formData.append("projectId", currentProject.project_id);
+      formData.append("project_idx", String(currentProjectId));
+      formData.append("folder_id", String(folder_id));
+      formData.append("media_usage", String(usage));
+      images.forEach((fileImage) => {
+        formData.append("files", fileImage.file, fileImage.name);
+      });
+      const response = await makeRequest.post("/api/media/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (response.status === 200) {
+        return response.data.media;
+      } else {
+        return [];
+      }
     } catch (err) {
       console.error("Error processing files:", err);
       return [];
     } finally {
       setUpdatingLock(false);
+      refetchMedia();
     }
   };
 
   const uploadProductImages = async (
-    uploadObjects: CloudinaryUpload[],
+    items: Media[],
     serialNumber: string | null
   ) => {
     if (!currentProjectId) return;
@@ -96,24 +93,7 @@ export function useMedia() {
           (product: Product) => product.serial_number === serialNumber
         )
       : null;
-
-    const newMediaInserts = uploadObjects.map((upload: CloudinaryUpload) => {
-      return {
-        media_id: null,
-        project_idx: currentProjectId,
-        public_id: upload.public_id,
-        url: upload.url,
-        type: upload.metadata.duration ? "video" : "image",
-        folder_id: null,
-        media_usage: "product",
-        tags: null,
-        ordinal: null,
-      } as Media;
-    });
-
-    const newMedia = await upsertMedia(newMediaInserts);
-
-    const newProductImages: MediaLink[] = newMedia
+    const newProductImages: MediaLink[] = items
       .filter((m): m is Media & { id: number } => m.id != null)
       .map((m, index) => ({
         entity_type: "product",
@@ -224,7 +204,6 @@ export function useMedia() {
   return {
     uploadProductImages,
     saveCurrentProductImages,
-    handleSend,
     handleFileProcessing,
     handleDeleteMedia,
   };

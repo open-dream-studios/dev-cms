@@ -8,12 +8,12 @@ import {
 import { projectSettingsToForm } from "@/util/schemas/projectSettingsSchema";
 import { useContext, useEffect } from "react";
 import { FaPlus } from "react-icons/fa6";
-import UploadModal, { CloudinaryUpload } from "../Upload/Upload";
+import UploadModal from "../Upload/Upload";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Project } from "@open-dream/shared";
+import { Media, Project } from "@open-dream/shared";
 import { getCardStyle } from "@/styles/themeStyles";
 import { useCurrentTheme } from "@/hooks/useTheme";
 
@@ -66,11 +66,11 @@ const ProjectSettings = () => {
     >
       <UploadModal
         multiple={false}
-        onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
-          await onLogoSubmit(
-            uploadObjects.map((item: CloudinaryUpload) => item.url)
-          );
+        onUploaded={async (uploadObjects: Media[]) => {
+          await onLogoSubmit(uploadObjects.map((item: Media) => item.url));
         }}
+        folder_id={null}
+        usage={"module"}
       />
       <div
         style={{

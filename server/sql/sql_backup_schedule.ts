@@ -50,8 +50,8 @@ const BACKUP_SCRIPT = IS_PRODUCTION
   ? "node dist/sql/sql_backup.js"
   : "node --loader ts-node/esm sql/sql_backup.ts";
 
-console.log(`📅 Scheduling daily DB backup at ${displayTime}`);
-console.log(`🔧 Environment: ${IS_PRODUCTION ? "Production" : "Local Dev"}`);
+// console.log(`📅 Scheduling daily DB backup at ${displayTime}`);
+// console.log(`🔧 Environment: ${IS_PRODUCTION ? "Production" : "Local Dev"}`);
 
 cron.schedule(schedule, () => {
   console.log("🚀 Running daily DB backup...");

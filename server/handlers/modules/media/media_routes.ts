@@ -1,7 +1,7 @@
 // server/modules/mdeia/media_routes.ts
 import express from "express";
 import {
-  uploadImages,
+  uploadMedia,
   getMedia,
   upsertMedia,
   deleteMedia,
@@ -83,6 +83,6 @@ router.post(
 );
 
 // ---- IMAGES ----
-router.post("/compress", upload.array("files"), errorHandler(uploadImages));
+router.post("/upload", upload.array("files"), transactionHandler(uploadMedia));
 
 export default router;

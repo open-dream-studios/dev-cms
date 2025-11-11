@@ -6,13 +6,18 @@ import {
   getNextOrdinal,
   reindexOrdinals,
 } from "../../../lib/ordinals.js";
-import { deleteFromCloudinary } from "../../../functions/cloudinary.js";
-import { Media, MediaFolder, MediaLink } from "@open-dream/shared";
-import type {
-  RowDataPacket,
-  PoolConnection,
-  ResultSetHeader,
-} from "mysql2/promise";
+import { Media, MediaFolder, MediaLink, MediaUsage } from "@open-dream/shared";
+import type { RowDataPacket, PoolConnection } from "mysql2/promise";
+import fs from "fs/promises";
+import { existsSync } from "fs";
+import path from "path";
+import {
+  buildS3Key,
+  compressImage,
+  getContentTypeAndExt,
+} from "../../../functions/media.js";
+import mime from "mime-types";
+import { uploadFileToS3 } from "../../../services/aws/S3.js";
 
 // ---------- MEDIA FOLDER FUNCTIONS ----------
 export const getMediaFoldersFunction = async (
@@ -212,7 +217,13 @@ export const upsertMediaFunction = async (
       m.metadata ? JSON.stringify(m.metadata) : null,
       m.media_usage ?? "",
       m.tags ? JSON.stringify(m.tags) : null,
-      finalOrdinal
+      finalOrdinal,
+      m.originalName,
+      m.extension,
+      m.s3Key,
+      m.bucket,
+      m.mimeType,
+      m.transformed
     );
 
     m.media_id = finalMediaId;
@@ -220,7 +231,7 @@ export const upsertMediaFunction = async (
   }
 
   const placeholders = items
-    .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
     .join(", ");
   const query = `
       INSERT INTO media (
@@ -234,7 +245,13 @@ export const upsertMediaFunction = async (
         metadata,
         media_usage,
         tags,
-        ordinal
+        ordinal,
+        originalName,
+        extension,
+        s3Key,
+        bucket,
+        mimeType,
+        transformed
       )
       VALUES ${placeholders}
       ON DUPLICATE KEY UPDATE
@@ -246,6 +263,12 @@ export const upsertMediaFunction = async (
         metadata = VALUES(metadata),
         media_usage = VALUES(media_usage),
         tags = VALUES(tags),
+        originalName = VALUES(originalName),
+        extension = VALUES(extension),
+        s3Key = VALUES(s3Key),
+        bucket = VALUES(bucket),
+        mimeType = VALUES(mimeType),
+        transformed = VALUES(transformed),
         ordinal = VALUES(ordinal),
         updated_at = NOW()
     `;
@@ -263,10 +286,9 @@ export const upsertMediaFunction = async (
 
   const mediaIds = items.map((m) => m.media_id);
   const [rows] = await connection.query(
-    `SELECT id, media_id, url FROM media WHERE media_id IN (?) AND project_idx = ?`,
+    `SELECT * FROM media WHERE media_id IN (?) AND project_idx = ?`,
     [mediaIds, project_idx]
   );
-
   return {
     success: true,
     media: rows,
@@ -289,7 +311,7 @@ export const deleteMediaFunction = async (
     return { success: false, message: "Media not found" };
   }
   const { public_id, type } = rows[0];
-  await deleteFromCloudinary([{ public_id, type }]);
+  // await deleteFromCloudinary([{ public_id, type }]);
 
   const result = await deleteAndReindex(
     connection,
@@ -364,3 +386,158 @@ export const deleteMediaLinksFunction = async (
   );
   return result;
 };
+
+// UPLOAD MEDIA FUNCTION
+export async function uploadMediaFunction(
+  connection: PoolConnection,
+  files: any[],
+  projectId: string,
+  project_idx: number,
+  folder_id: number | null,
+  media_usage: MediaUsage
+) {
+  const supportedImageExts = [
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+    "tiff",
+    "avif",
+    "heic",
+    "svg",
+  ];
+  const supportedVideoExts = ["mp4", "mov", "quicktime", "webm"];
+  const allSupportedExts = [...supportedImageExts, ...supportedVideoExts];
+  const results: any[] = [];
+
+  for (const file of files) {
+    const origPath = file.path;
+    const origName = file.originalname || path.basename(origPath);
+    const { ext: origExt, mimeType: origMime } = getContentTypeAndExt(origName);
+
+    if (!allSupportedExts.includes(origExt)) {
+      console.warn(`Skipping unsupported file: ${origName}`);
+      continue;
+    }
+
+    let toUploadPath = origPath;
+    let finalMeta: {
+      width: number | null;
+      height: number | null;
+      size: number;
+      ext: string;
+      mimeType: string;
+      transformed: boolean;
+    } = {
+      width: null,
+      height: null,
+      size: (await fs.stat(origPath)).size,
+      ext: origExt,
+      mimeType: origMime,
+      transformed: false,
+    };
+
+    const imageExts = supportedImageExts;
+    const videoExts = supportedVideoExts;
+
+    if (imageExts.includes(origExt)) {
+      // Try to compress/transform images (sharp). If compressImage fails, we fall back to original file.
+      try {
+        const compressed = await compressImage({
+          inputPath: origPath,
+          maxWidth: 1200,
+          quality: 90,
+          convertToWebp: true,
+        });
+
+        toUploadPath = compressed.outputPath;
+        finalMeta = {
+          width: compressed.width,
+          height: compressed.height,
+          size: compressed.size,
+          ext: compressed.ext,
+          mimeType: compressed.mimeType,
+          transformed: compressed.transformed,
+        };
+      } catch (imgErr) {
+        console.warn("image compression failed, uploading original", imgErr);
+        // leave toUploadPath as origPath and finalMeta as initialized above
+      }
+    } else if (videoExts.includes(origExt)) {
+      // For now we do NOT transcode videos here; just set metadata for upload
+      const derivedMime = mime.lookup(origExt) || "video/mp4";
+      const stat = await fs.stat(origPath);
+      finalMeta = {
+        ...finalMeta,
+        size: stat.size,
+        ext: origExt,
+        mimeType: String(derivedMime),
+        transformed: false,
+      };
+    } else {
+      // Unknown but previously filtered – defensive fallback
+      const derivedMime = mime.lookup(origExt) || "application/octet-stream";
+      const stat = await fs.stat(origPath);
+      finalMeta = {
+        ...finalMeta,
+        size: stat.size,
+        ext: origExt || "bin",
+        mimeType: String(derivedMime),
+        transformed: false,
+      };
+    }
+
+    // Build S3 key (we include projectId in key for filtering)
+    const s3Key = buildS3Key({ projectId, ext: finalMeta.ext });
+
+    if (finalMeta.ext === "svg") {
+      finalMeta.mimeType = "image/svg+xml";
+    }
+
+    // Upload
+    const uploadResult = await uploadFileToS3({
+      filePath: toUploadPath,
+      key: s3Key,
+      contentType: finalMeta.mimeType,
+    });
+
+    // Remove local files (both original and compressed) unless they are the same path
+    try {
+      if (toUploadPath !== origPath && existsSync(toUploadPath)) {
+        await fs.unlink(toUploadPath);
+      }
+      // original Multer tmp file - remove always
+      if (existsSync(origPath)) await fs.unlink(origPath);
+    } catch (cleanupErr) {
+      // Log but don't crash the whole request
+      console.warn("cleanup error", cleanupErr);
+    }
+
+    // Compose returned object (good for inserting into DB)
+    const publicUrl = uploadResult.Location || null;
+    results.push({
+      project_idx,
+      media_id: null,
+      folder_id,
+      public_id: null,
+      type: videoExts.includes(origExt) ? "video" : "image",
+      url: publicUrl,
+      alt_text: null,
+      metadata: null,
+      width: finalMeta.width,
+      height: finalMeta.height,
+      size: finalMeta.size,
+      media_usage,
+      tags: null,
+      ordinal: null,
+      originalName: origName,
+      s3Key: uploadResult.Key,
+      bucket: uploadResult.Bucket,
+      extension: finalMeta.ext,
+      mimeType: finalMeta.mimeType,
+      transformed: !!finalMeta.transformed,
+    } as Media);
+  }
+  const result = await upsertMediaFunction(connection, project_idx, results);
+  return { success: true, media: result.media ?? [] };
+}

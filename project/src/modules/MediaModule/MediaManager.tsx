@@ -5,7 +5,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MediaFoldersSidebar from "./MediaFoldersSidebar";
 import MediaGrid from "./MediaGrid";
 import MediaToolbar from "./MediaToolbar";
-import UploadModal, { CloudinaryUpload } from "@/components/Upload/Upload";
+import UploadModal from "@/components/Upload/Upload";
 import { Media, MediaFolder } from "@open-dream/shared";
 import { collectParentIds } from "@/util/functions/Tree";
 import { useCurrentDataStore } from "@/store/currentDataStore";
@@ -15,8 +15,7 @@ const MediaManager = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const { setUploadPopup } = useUiStore();
-  const { media, upsertMedia, refetchMedia, mediaFolders } =
-    useContextQueries();
+  const { media, mediaFolders } = useContextQueries();
 
   const [activeFolder, setActiveFolder] = useState<MediaFolder | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -44,25 +43,8 @@ const MediaManager = () => {
     <div className="flex w-full h-[100%] overflow-hidden">
       <UploadModal
         multiple
-        onUploaded={async (uploadObjects: CloudinaryUpload[]) => {
-          const upload_items = uploadObjects.map(
-            (upload: CloudinaryUpload, index: number) => {
-              return {
-                media_id: null,
-                project_idx: currentProjectId,
-                public_id: upload.public_id,
-                url: upload.url,
-                type: "image",
-                folder_id: activeFolder ? activeFolder.id : null,
-                media_usage: "module",
-                tags: null,
-                ordinal: null,
-              } as Media;
-            }
-          );
-          await upsertMedia(upload_items);
-          refetchMedia();
-        }}
+        folder_id={activeFolder?.id ?? null}
+        usage={"module"}
       />
 
       <MediaFoldersSidebar

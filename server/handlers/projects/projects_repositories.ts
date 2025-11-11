@@ -42,7 +42,10 @@ export const upsertProjectFunction = async (
   const finalProjectId =
     project_id && project_id.trim() !== ""
       ? project_id
-      : crypto.randomBytes(8).toString("hex").toUpperCase();
+      : "PROJ-" +
+        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
+          ""
+        );
 
   const query = `
       INSERT INTO projects (

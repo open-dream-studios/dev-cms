@@ -26,9 +26,18 @@ export type Media = {
   url: string;
   alt_text?: string | null;
   metadata?: Record<string, any> | null;
+  width: number | null;
+  height: number | null;
+  size: number | null;
   media_usage: MediaUsage;
   tags: string[] | null;
   ordinal: number | null;
+  originalName: string | null;
+  s3Key: string | null;
+  bucket: string | null;
+  extension: string | null;
+  mimeType: string | null;
+  transformed: boolean;
   created_at?: string;
   updated_at?: string;
 };
