@@ -24,7 +24,6 @@ export function useProducts(
       const res = await makeRequest.get("/api/products", {
         params: { project_idx: currentProjectId },
       });
-      // console.log(res.data.products)
       const result = res.data.products || [];
       const sorted = result.sort(
         (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)

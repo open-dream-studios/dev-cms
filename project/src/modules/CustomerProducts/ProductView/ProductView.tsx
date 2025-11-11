@@ -294,7 +294,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       usage: "product",
       folder_id: null,
       onUploaded: async (uploads: Media[], files: File[]) => {
-        console.log(uploads);
         await uploadProductImages(uploads, serialNumber ?? null);
         setImageEditorOpen(true);
       },

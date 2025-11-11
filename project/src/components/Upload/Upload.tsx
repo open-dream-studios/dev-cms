@@ -40,9 +40,6 @@ function UploadModal() {
           filtered
         );
       }
-
-      console.log("onUploaded prop is:", uploadContext.onUploaded);
-      console.log("typeof onUploaded:", typeof uploadContext.onUploaded);
     }
   };
 
