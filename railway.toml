@@ -1,7 +1,6 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "npm run build"
-installCommand = "npm ci"
+builder = "DOCKERFILE"
+
 [build.env]
 NODE_VERSION = "20"
 
