@@ -1,4 +1,4 @@
-FROM node:18-bullseye
+FROM node:20-bullseye
 
 RUN apt-get update && apt-get install -y \
   build-essential ca-certificates gcc g++ make python3 pkg-config \
@@ -6,15 +6,17 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
-COPY package.json package-lock.json ./
-RUN npm ci
 
+# Copy all files (including workspace package.jsons)
 COPY . .
 
-# ✅ Build your TypeScript project here
+# 🟩 Install all workspace deps together
+RUN npm ci --workspaces
+
+# Build
 RUN npm run build
 
-# (If necessary)
+# Optional: rebuild sharp for container arch
 RUN npm rebuild sharp --force
 
 CMD ["node", "server/dist/index.js"]
