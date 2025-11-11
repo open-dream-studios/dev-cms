@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Install latest libvips from source (8.17.3+)
-RUN git clone --branch v8.17.4 https://github.com/libvips/libvips.git /tmp/libvips \
+RUN git clone --branch v8.17.3 https://github.com/libvips/libvips.git /tmp/libvips \
   && cd /tmp/libvips \
   && meson setup builddir --prefix=/usr \
   && ninja -C builddir \
