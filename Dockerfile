@@ -30,3 +30,5 @@ COPY . .
 RUN npm ci --workspaces
 RUN npm rebuild sharp --build-from-source --sharp-libvips=system
 RUN npm run build
+
+CMD ["npm", "start"]
