@@ -11,10 +11,13 @@ RUN apt-get update && apt-get install -y \
 RUN git clone https://github.com/strukturag/libheif.git /tmp/libheif \
  && cd /tmp/libheif && mkdir build && cd build \
  && cmake -DENABLE_PLUGIN_LOADING=ON -DENABLE_X265=ON -DENABLE_LIBDE265=ON -DENABLE_LIBAVIF=ON .. \
- && make -j$(nproc) && make install && ldconfig \
+ && make -j"$(nproc)" && make install && ldconfig \
  && rm -rf /tmp/libheif
 
-# ---- app ----
+# make sure pkg-config can find glib-2.0 when sharp builds
+ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig"
+ENV CXXFLAGS="-I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+
 WORKDIR /usr/src/app
 COPY . .
 
