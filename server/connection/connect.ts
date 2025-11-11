@@ -3,9 +3,9 @@ import mysql from "mysql2";
 import dotenv from "dotenv";
 dotenv.config();
 
-const localDev = true;
-const isProduction = process.env.NODE_ENV === "production";
-const useDevDB = localDev && !isProduction;
+const useDevDB =
+  process.env.USE_DEV_DB === "true" && process.env.NODE_ENV !== "production";
+
 console.log(`${useDevDB ? "DEV" : "PROD"} DB`);
 
 const DB_HOST = useDevDB ? process.env.DEV_DB_HOST : process.env.DB_HOST;
