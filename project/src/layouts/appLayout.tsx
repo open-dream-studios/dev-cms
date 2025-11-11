@@ -28,6 +28,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useTesting } from "@/hooks/useTesting";
 import { PageLayout } from "./pageLayout";
+import UploadModal from "@/components/Upload/Upload";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -121,6 +122,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
         <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
       )}
       <Modals landing={false} />
+      <UploadModal />
       <Navbar />
       {currentProjectId ? (
         <>

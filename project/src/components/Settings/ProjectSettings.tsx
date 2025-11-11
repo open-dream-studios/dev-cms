@@ -1,4 +1,4 @@
-// project/src/components/Settings/Account.tsx
+// project/src/components/Settings/ProjectSettings.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import {
@@ -20,7 +20,7 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 const ProjectSettings = () => {
   const { currentProject } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-  const { setUploadPopup } = useUiStore();
+  const { setUploadContext } = useUiStore();
   const { onProjectSettingsFormSubmit } = useProjectSettingsFormSubmit();
   const projectSettingsForm = useProjectSettingsForm(currentProject);
   const { registerForm, unregisterForm } = useFormInstanceStore();
@@ -48,7 +48,7 @@ const ProjectSettings = () => {
         keepValues: false,
       });
     }
-  }, [projectsData, projectSettingsForm]);
+  }, [currentProject, projectsData, projectSettingsForm]);
 
   if (!currentUser || !currentProject) return null;
 
@@ -59,19 +59,23 @@ const ProjectSettings = () => {
     await onProjectSettingsFormSubmit(data);
   };
 
+  const onUploadClick = () => {
+    setUploadContext({
+      visible: true,
+      folder_id: null,
+      usage: "module",
+      multiple: false,
+      onUploaded: async (uploads: Media[], files: File[]) => {
+        await onLogoSubmit(uploads.map((item: Media) => item.url));
+      },
+    });
+  };
+
   return (
     <form
       onSubmit={projectSettingsForm.handleSubmit(onProjectSettingsFormSubmit)}
       className="relative ml-[5px] md:ml-[8px] w-[calc(100%-43px)] sm:w-[calc(100%-80px)] h-full flex flex-col pt-[50px]"
     >
-      <UploadModal
-        multiple={false}
-        onUploaded={async (uploadObjects: Media[]) => {
-          await onLogoSubmit(uploadObjects.map((item: Media) => item.url));
-        }}
-        folder_id={null}
-        usage={"module"}
-      />
       <div
         style={{
           ["--custom-input-text-color" as any]: currentTheme.text_3,
@@ -93,7 +97,7 @@ const ProjectSettings = () => {
         >
           {currentProject.logo !== null ? (
             <div
-              onClick={() => setUploadPopup(true)}
+              onClick={onUploadClick}
               className="hover:brightness-75 dim h-[100%] aspect-[1/1] rounded-[15px] overflow-hidden cursor-pointer relative group"
             >
               <img
@@ -107,7 +111,7 @@ const ProjectSettings = () => {
             </div>
           ) : (
             <div
-              onClick={() => setUploadPopup(true)}
+              onClick={onUploadClick}
               className="hover:brightness-75 dim cursor-pointer h-[100%] aspect-[1/1] rounded-[15px] flex items-center justify-center"
               style={{
                 border: "0.5px solid " + currentTheme.text_3,

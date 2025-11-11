@@ -1,6 +1,22 @@
 // src/store/UIStore.ts
-import { ProjectPage, Section, Modal, Screen, UIState } from "@open-dream/shared";
+import {
+  ProjectPage,
+  Section,
+  Modal,
+  Screen,
+  UIState,
+  Media,
+  MediaUsage,
+} from "@open-dream/shared";
 import { create } from "zustand";
+
+interface UploadContext {
+  visible: boolean;
+  multiple: boolean;
+  folder_id: number | null;
+  usage: MediaUsage;
+  onUploaded: (uploads: Media[], files: File[]) => Promise<void>;
+}
 
 interface UiState {
   updatingLock: boolean;
@@ -16,8 +32,12 @@ interface UiState {
   sidebar: UIState["sidebar"];
   setSidebar: (val: UiState["sidebar"]) => void;
 
-  uploadPopup: boolean;
-  setUploadPopup: (val: boolean) => void;
+  uploadContext: UploadContext | null;
+  setUploadContext: (
+    updater:
+      | UploadContext
+      | ((prev: UploadContext | null) => UploadContext | null)
+  ) => void;
 
   // Products
   inventoryView: boolean;
@@ -68,8 +88,12 @@ export const useUiStore = create<UiState>((set) => ({
   sidebar: "none",
   setSidebar: (val) => set({ sidebar: val }),
 
-  uploadPopup: false,
-  setUploadPopup: (val) => set({ uploadPopup: val }),
+  uploadContext: null,
+  setUploadContext: (updater) =>
+    set((state) => ({
+      uploadContext:
+        typeof updater === "function" ? updater(state.uploadContext) : updater,
+    })),
 
   // Products
   inventoryView: false,

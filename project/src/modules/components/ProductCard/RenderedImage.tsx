@@ -12,30 +12,6 @@ const RenderedImage = ({
 }) => {
   return (
     <div className="w-[100%] aspect-[1/1]">
-      {/* {/\.(mp4|mov)$/i.test(media.url) ? (
-        <>
-          <video
-            src={media.url}
-            className="object-cover w-full h-full rounded-[10px]"
-            playsInline
-            muted
-            loop
-          />
-          <div className="absolute top-0 left-0 w-[100%] h-[100%] flex items-center justify-center pb-[4px]">
-            <IoPlayCircleOutline size={35} color={"white"} />
-          </div>
-        </>
-      ) : (
-        <Image
-          src={media.url}
-          alt="image"
-          width={200}
-          height={200}
-          draggable={false}
-          className="object-cover w-full h-full rounded-[10px]"
-        />
-      )} */}
-
       {media.type === "image" ? (
         <img
           style={{ willChange: "transform" }}

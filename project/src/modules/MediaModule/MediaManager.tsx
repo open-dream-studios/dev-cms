@@ -4,17 +4,15 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MediaFoldersSidebar from "./MediaFoldersSidebar";
 import MediaGrid from "./MediaGrid";
-import MediaToolbar from "./MediaToolbar";
-import UploadModal from "@/components/Upload/Upload";
+import MediaToolbar from "./MediaToolbar"; 
 import { Media, MediaFolder } from "@open-dream/shared";
 import { collectParentIds } from "@/util/functions/Tree";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
+import { useCurrentDataStore } from "@/store/currentDataStore"; 
 
 const MediaManager = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-  const { setUploadPopup } = useUiStore();
+
   const { media, mediaFolders } = useContextQueries();
 
   const [activeFolder, setActiveFolder] = useState<MediaFolder | null>(null);
@@ -41,12 +39,6 @@ const MediaManager = () => {
 
   return (
     <div className="flex w-full h-[100%] overflow-hidden">
-      <UploadModal
-        multiple
-        folder_id={activeFolder?.id ?? null}
-        usage={"module"}
-      />
-
       <MediaFoldersSidebar
         activeFolder={activeFolder}
         setActiveFolder={setActiveFolder}
@@ -58,7 +50,6 @@ const MediaManager = () => {
         <MediaToolbar
           view={view}
           setView={setView}
-          onUploadClick={() => setUploadPopup(true)}
           editeMode={editMode}
           setEditMode={setEditMode}
           activeFolder={activeFolder}

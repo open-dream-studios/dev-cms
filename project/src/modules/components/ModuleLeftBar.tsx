@@ -2,7 +2,13 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
-import { Customer, MediaLink, Product, Employee } from "@open-dream/shared";
+import {
+  Customer,
+  MediaLink,
+  Product,
+  Employee,
+  Media,
+} from "@open-dream/shared";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { CustomerMiniCard } from "../CustomersModule/CustomerCatalog";
@@ -20,6 +26,7 @@ import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import RenderedImage from "./ProductCard/RenderedImage";
 
 const ModuleLeftBar = () => {
   const { setCurrentEmployeeData, setCurrentCustomerData } =
@@ -33,6 +40,7 @@ const ModuleLeftBar = () => {
     mediaLinks,
     deleteEmployee,
     employees,
+    media,
   } = useContextQueries();
   const { localProductsData, setCurrentProductData } = useCurrentDataStore();
   const { screenClick } = useRouting();
@@ -296,7 +304,7 @@ const ModuleLeftBar = () => {
         {(screen === "edit-customer-product" || addingProduct) && (
           <div className="flex w-[100%] h-[100%] overflow-y-auto flex-col gap-[8.25px] pt-[10px]">
             {isLoadingProductsData ? (
-              <div className="px-[15px]">
+              <div className="px-[15px] flex flex-col gap-[8.25px]">
                 {Array.from({ length: 4 }, (_, index) => {
                   return (
                     <div key={index}>
@@ -324,6 +332,11 @@ const ModuleLeftBar = () => {
                     mediaLink.entity_id === product.id &&
                     mediaLink.entity_type === "product"
                 );
+                const matchedMedia = !foundLinks.length
+                  ? null
+                  : media.find(
+                      (item: Media) => item.id === foundLinks[0].media_id
+                    );
 
                 return (
                   <div
@@ -350,24 +363,8 @@ const ModuleLeftBar = () => {
                       }}
                       className="select-none min-w-[40px] w-[40px] h-[40px] min-h-[40px] rounded-[6px] overflow-hidden"
                     >
-                      {foundLinks.length > 0 && (
-                        <>
-                          {/\.(mp4|mov)$/i.test(foundLinks[0].url) ? (
-                            <video
-                              src={foundLinks[0].url}
-                              className="w-full h-full object-cover"
-                              playsInline
-                              muted
-                              loop
-                            />
-                          ) : (
-                            <img
-                              draggable={false}
-                              className="w-full h-full object-cover"
-                              src={foundLinks[0].url}
-                            />
-                          )}
-                        </>
+                      {foundLinks.length > 0 && matchedMedia && (
+                        <RenderedImage media={matchedMedia} rounded={true} />
                       )}
                     </div>
                     <div className="select-none flex w-[136px] h-[100%] flex-col gap-[2px] ">

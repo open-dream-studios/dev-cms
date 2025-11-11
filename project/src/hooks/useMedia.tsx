@@ -15,7 +15,7 @@ export type FileImage = {
 };
 
 export function useMedia() {
-  const { setUpdatingLock, setUploadPopup } = useUiStore();
+  const { setUpdatingLock, uploadContext, setUploadContext } = useUiStore();
   const {
     productsData,
     deleteMedia,
@@ -57,7 +57,7 @@ export function useMedia() {
           })
       );
       const images = await Promise.all(readerPromises);
-      setUploadPopup(false);
+      setUploadContext((prev) => (prev ? { ...prev, visible: false } : prev));
       const formData = new FormData();
       formData.append("projectId", currentProject.project_id);
       formData.append("project_idx", String(currentProjectId));

@@ -7,42 +7,42 @@ import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useUiStore } from "@/store/useUIStore";
 import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/useTheme";
-import { Media, MediaUsage } from "@open-dream/shared";
 
 interface UploadProps {
   handleFiles: (files: File[]) => void;
   multiple?: boolean;
 }
 
-type UploadModalProps = {
-  onUploaded?: (uploads: Media[], files: File[]) => void;
-  multiple?: boolean;
-  folder_id: number | null;
-  usage: MediaUsage;
-};
-
-function UploadModal({
-  onUploaded,
-  multiple = true,
-  folder_id,
-  usage,
-}: UploadModalProps) {
+function UploadModal() {
   const { currentUser } = useContext(AuthContext);
   const { handleFileProcessing } = useMedia();
-  const { uploadPopup, setUploadPopup } = useUiStore();
+  const { uploadContext, setUploadContext } = useUiStore();
   const uploadPopupRef = useRef<HTMLDivElement | null>(null);
   const currentTheme = useCurrentTheme();
-  useOutsideClick(uploadPopupRef, () => setUploadPopup(false));
+
+  useOutsideClick(uploadPopupRef, () =>
+    setUploadContext((prev) => (prev ? { ...prev, visible: false } : prev))
+  );
+
+  if (!uploadContext) return null;
 
   const handleFiles = async (files: File[]) => {
-    const filtered = multiple ? files : files.slice(0, 1);
+    const filtered = uploadContext.multiple ? files : files.slice(0, 1);
     const uploadedImages = await handleFileProcessing(
       filtered,
-      folder_id,
-      usage
+      uploadContext.folder_id ?? null,
+      uploadContext.usage ?? "module"
     );
-    if (onUploaded && uploadedImages.length > 0) {
-      onUploaded(multiple ? uploadedImages : [uploadedImages[0]], filtered);
+    if (uploadedImages.length > 0) {
+      if (uploadContext.onUploaded) {
+        await uploadContext.onUploaded(
+          uploadContext.multiple ? uploadedImages : [uploadedImages[0]],
+          filtered
+        );
+      }
+
+      console.log("onUploaded prop is:", uploadContext.onUploaded);
+      console.log("typeof onUploaded:", typeof uploadContext.onUploaded);
     }
   };
 
@@ -50,7 +50,7 @@ function UploadModal({
 
   return (
     <>
-      {uploadPopup && (
+      {uploadContext && uploadContext.visible && (
         <div className="z-[999] fixed top-0 left-0">
           <div
             className="absolute top-0 w-[100vw] display-height"
@@ -61,11 +61,18 @@ function UploadModal({
               ref={uploadPopupRef}
               className="shadow-lg w-[85%] sm:w-[70%] aspect-[1/1.2] sm:aspect-[1.5/1] relative"
             >
-              <Upload handleFiles={handleFiles} multiple={multiple} />
+              <Upload
+                handleFiles={handleFiles}
+                multiple={uploadContext.multiple}
+              />
               <IoCloseOutline
                 size={35}
                 color={currentTheme.text_4}
-                onClick={() => setUploadPopup(false)}
+                onClick={() =>
+                  setUploadContext((prev) =>
+                    prev ? { ...prev, visible: false } : prev
+                  )
+                }
                 className="cursor-pointer hover:brightness-75 dim absolute top-[15px] right-[19px]"
               />
             </div>

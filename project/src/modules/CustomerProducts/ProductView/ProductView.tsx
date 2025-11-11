@@ -53,7 +53,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { productsData, media, mediaLinks, customers, jobs, jobDefinitions } =
     useContextQueries();
   const { uploadProductImages } = useMedia();
-  const { screen, setUploadPopup, addingProduct, setAddingProduct } =
+  const { screen, setUploadContext, addingProduct, setAddingProduct } =
     useUiStore();
   const {
     currentProduct,
@@ -227,7 +227,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       const matchedMedia = media.find(
         (item: Media) => item.id === currentProductImages[0].media_id
       );
-      console.log(matchedMedia)
       setImageDisplayed(matchedMedia ?? null);
     }
   }, [media, currentProductImages]);
@@ -288,6 +287,20 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     );
   };
 
+  const onUploadClick = () => {
+    setUploadContext({
+      visible: true,
+      multiple: true,
+      usage: "product",
+      folder_id: null,
+      onUploaded: async (uploads: Media[], files: File[]) => {
+        console.log(uploads);
+        await uploadProductImages(uploads, serialNumber ?? null);
+        setImageEditorOpen(true);
+      },
+    });
+  };
+
   if (!currentUser) return null;
 
   if (!addingProduct && serialNumber && productsData?.length) {
@@ -308,18 +321,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
   return (
     <div className="w-[100%] h-[100%] overflow-scroll hide-scrollbar">
-      <UploadModal
-        multiple={true}
-        onUploaded={async (items: Media[]) => {
-          await uploadProductImages(items, serialNumber ?? null);
-          setImageEditorOpen(true);
-        }}
-        folder_id={null}
-        usage={"product"}
-      />
-      {currentMediaSelected && (
-        <MediaPlayer />
-      )}
+      {currentMediaSelected && <MediaPlayer />}
 
       <div
         className={`max-w-4xl mx-auto px-[17px] pt-[18px] pb-[50px] flex flex-col`}
@@ -393,9 +395,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 </div>
               ) : (
                 <div
-                  onClick={() => {
-                    setUploadPopup(true);
-                  }}
+                  onClick={onUploadClick}
                   style={{
                     backgroundColor: currentTheme.background_2,
                   }}
@@ -458,9 +458,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     </div>
                   </div>
                   <div
-                    onClick={() => {
-                      setUploadPopup(true);
-                    }}
+                    onClick={onUploadClick}
                     style={{
                       backgroundColor: currentTheme.background_2,
                     }}

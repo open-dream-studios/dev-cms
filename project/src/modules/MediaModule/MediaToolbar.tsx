@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import CustomButton from "@/lib/blocks/CustomButton";
+import { useUiStore } from "@/store/useUIStore";
 import { MediaFolder } from "@open-dream/shared";
 import { Grid, List, Upload } from "lucide-react";
 import { useContext } from "react";
@@ -11,7 +12,6 @@ import { FiEdit } from "react-icons/fi";
 type Props = {
   view: "grid" | "list";
   setView: (v: "grid" | "list") => void;
-  onUploadClick: () => void;
   editeMode: boolean;
   setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
   activeFolder: MediaFolder | null;
@@ -20,13 +20,22 @@ type Props = {
 const MediaToolbar = ({
   view,
   setView,
-  onUploadClick,
   editeMode,
   setEditMode,
   activeFolder,
 }: Props) => {
   const { currentUser } = useContext(AuthContext);
+  const { setUploadContext } = useUiStore();
   const currentTheme = useCurrentTheme();
+  const onUploadClick = () => {
+    setUploadContext({
+      visible: true,
+      multiple: true,
+      usage: "module",
+      folder_id: activeFolder?.id ?? null,
+      onUploaded: async () => {},
+    });
+  };
   if (!currentUser) return null;
 
   return (

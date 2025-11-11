@@ -264,7 +264,7 @@ export default function MediaGrid({
   if (!currentUser) return null;
 
   return (
-    <div className="w-[100%] h-[100%] relative pb-[24px]">
+    <div className="w-[100%] h-[100%] relative pb-[24px] overflow-auto">
       {currentMediaSelected && (
         <div
           className="fixed z-[990] top-0 left-0 w-[100%] h-[100%] flex items-center justify-center"
