@@ -1,22 +1,25 @@
 FROM node:20-bookworm
 
-# ---- system deps ----
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential ca-certificates gcc g++ make python3 pkg-config cmake git \
-    libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev \
-    libvips-dev libglib2.0-dev libpango1.0-dev libgirepository1.0-dev \
-    && rm -rf /var/lib/apt/lists/*
+  build-essential ca-certificates gcc g++ make python3 pkg-config cmake git curl \
+  libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev libglib2.0-dev libpango1.0-dev libgirepository1.0-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-# ---- build libheif with HEVC/AVIF ----
+# Install latest libvips from source (8.17.3+)
+RUN git clone --branch v8.17.4 https://github.com/libvips/libvips.git /tmp/libvips \
+  && cd /tmp/libvips \
+  && meson setup builddir --prefix=/usr \
+  && ninja -C builddir \
+  && ninja -C builddir install \
+  && ldconfig \
+  && rm -rf /tmp/libvips
+
+# Optional: Install libheif (for HEIF/AVIF support)
 RUN git clone https://github.com/strukturag/libheif.git /tmp/libheif \
- && cd /tmp/libheif && mkdir build && cd build \
- && cmake -DENABLE_PLUGIN_LOADING=ON -DENABLE_X265=ON -DENABLE_LIBDE265=ON -DENABLE_LIBAVIF=ON .. \
- && make -j"$(nproc)" && make install && ldconfig \
- && rm -rf /tmp/libheif
-
-# make sure pkg-config can find glib-2.0 when sharp builds
-ENV PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig"
-ENV CXXFLAGS="-I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+  && cd /tmp/libheif && mkdir build && cd build \
+  && cmake -DENABLE_PLUGIN_LOADING=ON -DENABLE_X265=ON -DENABLE_LIBDE265=ON -DENABLE_LIBAVIF=ON .. \
+  && make -j"$(nproc)" && make install && ldconfig && rm -rf /tmp/libheif
 
 WORKDIR /usr/src/app
 COPY . .
@@ -24,5 +27,3 @@ COPY . .
 RUN npm ci --workspaces
 RUN npm rebuild sharp --build-from-source --sharp-libvips=system
 RUN npm run build
-
-CMD ["node", "server/dist/index.js"]
