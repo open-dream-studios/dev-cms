@@ -1,4 +1,4 @@
-FROM node:20-bullseye
+FROM node:18-bullseye
 
 RUN apt-get update && apt-get install -y \
   build-essential ca-certificates gcc g++ make python3 pkg-config \
