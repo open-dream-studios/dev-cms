@@ -1,6 +1,8 @@
 {
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.925.0",
+    "@aws-sdk/client-s3": "^3.926.0",
+    "@aws-sdk/lib-storage": "^3.926.0",
+    "mime-types": "^3.0.1",
     "@dqbd/tiktoken": "^1.0.20",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.8.4",
