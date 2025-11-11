@@ -36,20 +36,16 @@ export function getContentTypeAndExt(filename: string) {
 export function buildS3Key({
   projectId,
   ext,
-  folderPrefix = "public-media",
 }: {
   projectId: string;
   ext: string;
-  folderPrefix?: string;
 }) {
   // const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const useDevDB =
     process.env.USE_DEV_DB === "true" && process.env.NODE_ENV !== "production";
   const safeProject = String(projectId || "global").replace(/[^\w-]/g, "_");
   const id = randomUUID();
-  const key = `${folderPrefix}/${
-    useDevDB ? "dev" : "prod"
-  }/${safeProject}/${id}.${ext}`;
+  const key = `${useDevDB ? "dev" : "prod"}/${safeProject}/${id}.${ext}`;
   return key;
 }
 
