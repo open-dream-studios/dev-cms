@@ -15,7 +15,6 @@
     "start": "cd server && npm start"
   },
   "devDependencies": {
-    "@types/mime-types": "^3.0.1",
     "@types/react": "^19.2.2",
     "typescript": "^5.9.3"
   },
