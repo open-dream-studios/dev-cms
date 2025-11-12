@@ -5,7 +5,8 @@ import {
   tokenHandler,
   callStatusHandler,
   declineCallHandler,
-  handleIncomingSMS
+  handleIncomingSMS,
+  handleCode
 } from "./calls_controller.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.post("/token", tokenHandler);
 router.post("/decline", declineCallHandler);
 router.post("/call-status", callStatusHandler);
 router.post("/sms", handleIncomingSMS);
+router.post("/verify-code", handleCode);
 
 export default router;

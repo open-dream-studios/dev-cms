@@ -390,12 +390,6 @@ export const callStatusHandler = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
-
-
-
 export const handleIncomingSMS = async (req: Request, res: Response) => {
   try {
     const { Body, From, To, MessageSid } = req.body;
@@ -434,5 +428,58 @@ export const handleIncomingSMS = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("❌ handleIncomingSMS error:", err);
     res.status(500).send("Error processing SMS");
+  }
+};
+
+export const handleCode = async (req: Request, res: Response) => {
+  try {
+    // Twilio sends the digits pressed in req.body.Digits
+    const digits = req.body?.Digits;
+
+    console.log("🔢 Received verification code:", digits);
+
+    const { VoiceResponse } = twilio.twiml;
+    const vr = new VoiceResponse();
+
+    if (!digits || digits.length !== 6) {
+      vr.say(
+        { voice: "alice" },
+        "Sorry, that was not a valid code. Please try again."
+      );
+      // Repeat the gather for another attempt
+      const gather = vr.gather({
+        input: ["dtmf"],
+        timeout: 10,
+        numDigits: 6,
+        action: `${process.env.BASE_URL}/api/voice/verifyCode`,
+        method: "POST",
+      });
+      gather.say(
+        { voice: "alice" },
+        "Please enter your six digit verification code now."
+      );
+      res.type("text/xml").send(vr.toString());
+      return;
+    }
+
+    // (Optional) Broadcast or log somewhere if you want
+    // e.g. broadcastToProject(req.app.get("wss"), someProjectId, { type: "verification_code", code: digits });
+
+    // Twilio will speak back a confirmation message
+    vr.say(
+      { voice: "alice" },
+      `Thank you. The code ${digits.split("").join(" ")} has been received.`
+    );
+    vr.say(
+      { voice: "alice" },
+      "You may now complete your verification on Google Voice. Goodbye!"
+    );
+    vr.hangup();
+
+    // Send TwiML XML response
+    res.type("text/xml").send(vr.toString());
+  } catch (err) {
+    console.error("❌ handleCode error:", err);
+    res.status(500).send("Error handling verification code");
   }
 };
