@@ -451,7 +451,7 @@ export const handleCode = async (req: Request, res: Response) => {
         input: ["dtmf"],
         timeout: 10,
         numDigits: 6,
-        action: `${process.env.BASE_URL}/api/voice/verifyCode`,
+        action: `${process.env.BASE_URL}/api/voice/verify-code`,
         method: "POST",
       });
       gather.say(
