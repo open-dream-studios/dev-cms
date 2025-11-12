@@ -8,6 +8,8 @@ import { getInnerCardStyle } from "@/styles/themeStyles";
 import { useRouting } from "@/hooks/useRouting";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { Job, Product } from "@open-dream/shared";
 
 type Modal2ContinueProps = {
   text: string;
@@ -25,6 +27,7 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
   displayItems,
 }) => {
   const { currentUser } = useContext(AuthContext);
+  const { jobs, productsData } = useContextQueries();
   const { screenClick } = useRouting();
   const currentTheme = useCurrentTheme();
 
@@ -65,6 +68,27 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
     }
   };
 
+  const onDisplayItemClick = async (item: PopupDisplayItem) => {
+    handleCancel();
+    if (item.type === "product" && item.title) {
+      await screenClick("products", `/products/${item.title}`);
+    }
+    if (item.type === "job") {
+      const matchedJob = jobs.find((job: Job) => job.id === item.id);
+      if (matchedJob) {
+        const matchedProduct = productsData.find(
+          (product: Product) => product.id === matchedJob.product_id
+        );
+        if (matchedProduct && matchedProduct.serial_number) {
+          await screenClick(
+            "products",
+            `/products/${matchedProduct.serial_number}`
+          );
+        }
+      }
+    }
+  };
+
   if (!currentUser) return null;
   return (
     <div className="py-[14px] w-full h-full flex items-center justify-center flex-col">
@@ -84,12 +108,7 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
             return (
               <div
                 key={index}
-                onClick={async () => {
-                  handleCancel();
-                  if (item.type === "product" && item.title) {
-                    await screenClick("products", `/products/${item.title}`);
-                  }
-                }}
+                onClick={async () => await onDisplayItemClick(item)}
                 style={getInnerCardStyle(currentUser.theme, currentTheme)}
                 className="px-[12px] w-[100%] h-[39px] flex flex-row items-center gap-[9px] rounded-[9px] cursor-pointer hover:brightness-75 dim"
               >

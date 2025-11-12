@@ -2,7 +2,7 @@
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { Media, MediaLink, MediaUsage } from "@open-dream/shared";
+import { Job, Media, MediaLink, MediaUsage } from "@open-dream/shared";
 import { ProjectPage } from "@open-dream/shared";
 import { Product } from "@open-dream/shared";
 import { getCurrentTimestamp } from "@/util/functions/Data";
@@ -24,12 +24,12 @@ export function useMedia() {
     deleteMediaLinks,
     projectPages,
     refetchMedia,
+    jobs,
   } = useContextQueries();
   const {
     currentProject,
     currentProjectId,
     currentProductImages,
-    currentJobImages,
     setCurrentProductImages,
   } = useCurrentDataStore();
   const { promptContinue } = useModals();
@@ -201,6 +201,18 @@ export function useMedia() {
                 id: usage.entity_id,
                 type: usage.entity_type,
                 title: matchedPage.title,
+              });
+              usageMediaLinkItems.push(usage);
+            }
+          } else if (usage.entity_type === "job") {
+            const matchedJob = jobs.find(
+              (job: Job) => job.id === usage.entity_id
+            );
+            if (matchedJob && matchedJob.job_id) {
+              usageItems.push({
+                id: usage.entity_id,
+                type: usage.entity_type,
+                title: matchedJob.job_id,
               });
               usageMediaLinkItems.push(usage);
             }

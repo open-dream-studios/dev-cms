@@ -14,8 +14,6 @@ const MediaManager = () => {
   const { currentUser } = useContext(AuthContext);
   const {
     currentActiveFolder,
-    setCurrentActiveFolder,
-    currentOpenFolders,
     setCurrentOpenFolders,
   } = useCurrentDataStore();
 

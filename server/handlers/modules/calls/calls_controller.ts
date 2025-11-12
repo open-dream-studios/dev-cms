@@ -389,3 +389,50 @@ export const callStatusHandler = async (req: Request, res: Response) => {
     res.status(500).send("Error processing call status");
   }
 };
+
+
+
+
+
+
+
+export const handleIncomingSMS = async (req: Request, res: Response) => {
+  try {
+    const { Body, From, To, MessageSid } = req.body;
+
+    const from = normalizeUSNumber(From);
+    const to = normalizeUSNumber(To);
+
+    const projectId = await getProjectByNumber(to);
+
+    console.log("📩 Incoming SMS:", { projectId, from, to, body: Body });
+
+    // If no project is tied to this number, just ACK Twilio
+    if (!projectId) {
+      console.log("⚠️ No project found for number:", to);
+      res.type("text/xml").send("<Response></Response>");
+      return;
+    }
+
+    // Optionally broadcast to clients connected to this project
+    broadcastToProject(req.app.get("wss"), projectId, {
+      type: "incoming_sms",
+      projectId,
+      from,
+      to,
+      message: Body,
+      messageSid: MessageSid,
+    });
+
+    // Optionally auto-reply
+    const { MessagingResponse } = twilio.twiml;
+    const twiml = new MessagingResponse();
+    // twiml.message("Thanks for your message! We’ll get back to you soon.");
+
+    // Twilio expects TwiML (XML) response
+    res.type("text/xml").send(twiml.toString());
+  } catch (err) {
+    console.error("❌ handleIncomingSMS error:", err);
+    res.status(500).send("Error processing SMS");
+  }
+};
