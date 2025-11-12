@@ -40,13 +40,6 @@ import { motion } from "framer-motion";
 import { useDnDStore } from "@/store/useDnDStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 
-type MediaFoldersSidebarProps = {
-  activeFolder: MediaFolder | null;
-  setActiveFolder: (mediaFolder: MediaFolder | null) => void;
-  openFolders: Set<number>;
-  setOpenFolders: React.Dispatch<React.SetStateAction<Set<number>>>;
-};
-
 function findNode(
   nodes: MediaFolderNode[],
   id: number
@@ -61,18 +54,19 @@ function findNode(
   return null;
 }
 
-export default function MediaFoldersSidebar({
-  activeFolder,
-  setActiveFolder,
-  openFolders,
-  setOpenFolders,
-}: MediaFoldersSidebarProps) {
+export default function MediaFoldersSidebar() {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme();
-  const { currentProjectId } = useCurrentDataStore();
+  const currentTheme = useCurrentTheme(); 
   const { mediaFolders, upsertMediaFolders, deleteMediaFolder } =
     useContextQueries();
+  const {
+    currentProjectId,
+    currentActiveFolder,
+    setCurrentActiveFolder,
+    currentOpenFolders,
+    setCurrentOpenFolders,
+  } = useCurrentDataStore();
 
   const sensors = useSensors(useSensor(PointerSensor));
   const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
@@ -118,8 +112,8 @@ export default function MediaFoldersSidebar({
     if (contextMenu?.folderId) {
       await deleteMediaFolder(contextMenu.folderId);
       setContextMenu(null);
-      if (activeFolder && activeFolder.folder_id === contextMenu.folderId) {
-        setActiveFolder(null);
+      if (currentActiveFolder && currentActiveFolder.folder_id === contextMenu.folderId) {
+        setCurrentActiveFolder(null);
       }
       queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
       queryClient.invalidateQueries({
@@ -129,7 +123,7 @@ export default function MediaFoldersSidebar({
   };
 
   const toggleFolderOpen = (id: number) => {
-    setOpenFolders((prev) => {
+    setCurrentOpenFolders((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -209,7 +203,7 @@ export default function MediaFoldersSidebar({
           mediaFolder.folder_id === newlyAddedFolderRef.current
       );
       if (folderFound) {
-        setActiveFolder(folderFound);
+        setCurrentActiveFolder(folderFound);
       }
       newlyAddedFolderRef.current = null;
     }
@@ -242,14 +236,14 @@ export default function MediaFoldersSidebar({
               {
                 folder_id: null,
                 project_idx: currentProjectId,
-                parent_folder_id: activeFolder ? activeFolder.id : null,
+                parent_folder_id: currentActiveFolder ? currentActiveFolder.id : null,
                 name: values.name,
                 ordinal: null,
               } as MediaFolder,
             ]);
             if (newIds && newIds.length) {
-              if (activeFolder && activeFolder.id) {
-                setOpenFolders((prev) => new Set(prev).add(activeFolder.id!));
+              if (currentActiveFolder && currentActiveFolder.id) {
+                setCurrentOpenFolders((prev) => new Set(prev).add(currentActiveFolder.id!));
               }
               newlyAddedFolderRef.current = newIds[0];
             }
@@ -261,7 +255,7 @@ export default function MediaFoldersSidebar({
 
   const renderFolderIcons = (folder: MediaFolderNode) => {
     if (!folder.id) return;
-    const isOpen = openFolders.has(folder.id);
+    const isOpen = currentOpenFolders.has(folder.id);
 
     return (
       <>
@@ -374,7 +368,7 @@ export default function MediaFoldersSidebar({
       >
         <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
           <p
-            onClick={() => setActiveFolder(null)}
+            onClick={() => setCurrentActiveFolder(null)}
             className="cursor-pointer hover:opacity-[75%] transition-all duration-300 ease-in-out w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]"
           >
             Media
@@ -418,9 +412,6 @@ export default function MediaFoldersSidebar({
                 key={folder.id}
                 folder={folder}
                 depth={0}
-                activeFolder={activeFolder}
-                setActiveFolder={setActiveFolder}
-                openFolders={openFolders}
                 toggleFolderOpen={toggleFolderOpen}
                 onContextMenu={handleContextMenu}
                 renamingFolder={renamingFolder}

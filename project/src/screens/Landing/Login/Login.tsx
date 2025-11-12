@@ -26,9 +26,9 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 
 const LoginSlider = () => {
   const images = [
-    "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917736/1_ufsrz3.png",
-    "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917736/2_o7xvvb.png",
-    "https://res.cloudinary.com/dlzspcvgq/image/upload/v1755917736/3_h4kojt.jpg",
+    "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img1.png",
+    "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img2.png",
+    "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img3.jpg",
   ];
 
   images.push(images[0]);

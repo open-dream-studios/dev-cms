@@ -5,7 +5,6 @@ import { AuthContext } from "../../../contexts/authContext";
 import React from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import ProductImages from "./ProductImages";
 import {
   FaChevronDown,
   FaChevronLeft,
@@ -44,8 +43,8 @@ import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useWatch } from "react-hook-form";
 import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/useTheme";
-import UploadModal from "@/components/Upload/Upload";
 import MediaPlayer from "@/modules/MediaModule/MediaPlayer";
+import ImageGallery from "@/modules/components/ImageGallery";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -70,8 +69,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   const [imageDisplayed, setImageDisplayed] = useState<Media | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
   const [imageEditorOpen, setImageEditorOpen] = useState<boolean>(false);
   const [descriptionEditorOpen, setDescriptionEditorOpen] =
     useState<boolean>(false);
@@ -98,7 +95,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       setCurrentProductImages([]);
       setOriginalProductImages([]);
     }
-  }, [addingProduct]);
+  }, [addingProduct, setCurrentProductImages, setOriginalProductImages]);
 
   const customerId = useWatch({
     control: productForm.control,
@@ -115,13 +112,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     return productsData.find(
       (product: Product) => product.serial_number === serialNumber
     );
-  }, [productsData]);
+  }, [productsData, serialNumber]);
 
   const matchedCustomer = useMemo(() => {
     return (
       customers.find((customer: Customer) => customer.id === customerId) || null
     );
-  }, [productsData, customers, serialNumber, customerId]);
+  }, [customers, customerId]);
 
   const productJobs = useMemo(() => {
     if (!matchedProduct || !matchedProduct.id) return [];
@@ -137,7 +134,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     ) {
       screenClick("edit-customer-product", `/products/${serialNumber}`);
     }
-  }, [serialNumber, screen, history]);
+  }, [serialNumber, screen, history, screenClick]);
 
   useEffect(() => {
     if (!addingProduct && serialNumber && productsData?.length) {
@@ -167,7 +164,13 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       initialFormState.current = formDefaults;
       productForm.reset(productToForm(matchedProduct));
     }
-  }, [addingProduct, serialNumber, productsData, productForm.reset]);
+  }, [
+    addingProduct,
+    serialNumber,
+    productsData,
+    productForm,
+    productForm.reset,
+  ]);
 
   const productsDataRef = useRef(productsData);
   useEffect(() => {
@@ -319,11 +322,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }
 
   return (
-    <div className="w-[100%] h-[100%] overflow-scroll hide-scrollbar">
+    <div className="w-full h-full overflow-y-auto overflow-x-hidden hide-scrollbar">
       {currentMediaSelected && <MediaPlayer />}
 
       <div
-        className={`max-w-4xl mx-auto px-[17px] pt-[18px] pb-[50px] flex flex-col`}
+        className={`w-[100%] max-w-[100%] mx-auto px-[17px] pt-[18px] pb-[50px] flex flex-col`}
       >
         <div className="flex flex-row gap-[13px] ml-[3px]">
           <div
@@ -425,10 +428,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                   className="w-[100%] h-[100%] overflow-x-auto flex flex-row"
                 >
-                  <ProductImages
-                    imageEditorOpen={imageEditorOpen}
-                    setImageDisplayed={setImageDisplayed}
+                  <ImageGallery
+                    enableReorder={false}
+                    onReorder={async () => {}}
+                    showDeleteButtons={false}
+                    onDeleteLink={async () => {}}
                     singleRow={true}
+                    entityType="product"
+                    onMediaClick={async (img: Media) => {
+                      setImageDisplayed(img);
+                    }}
                   />
                 </div>
               </div>
@@ -473,10 +482,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     </div>
                   </div>
                 </div>
-                <ProductImages
-                  imageEditorOpen={imageEditorOpen}
-                  setImageDisplayed={setImageDisplayed}
+                <ImageGallery
+                  enableReorder={true}
+                  onReorder={async () => {}}
+                  showDeleteButtons={true}
+                  onDeleteLink={async () => {}}
                   singleRow={false}
+                  entityType="product"
+                  onMediaClick={async (img: Media) => {
+                    setImageDisplayed(img);
+                  }}
                 />
               </div>
             ) : (
@@ -884,7 +899,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             return (
               <div
                 key={index}
-                className={`w-[100%] ${
+                className={`w-full max-w-full overflow-hidden ${
                   index === 0 ? "mt-[12px]" : "mt-[34px]"
                 }`}
               >

@@ -122,7 +122,7 @@ export async function uploadMedia(
   res: Response,
   connection: PoolConnection
 ) {
-  const { projectId, project_idx, folder_id, media_usage } = req.body || {};
+  const { projectId, project_idx, folder_id } = req.body || {};
   const files =
     (req.files as Express.Multer.File[]) ||
     Object.values(req.files as Record<string, Express.Multer.File[]>).flat();
@@ -140,7 +140,6 @@ export async function uploadMedia(
     files,
     projectId,
     project_idx,
-    cleanFolderId,
-    media_usage
+    cleanFolderId
   );
 }

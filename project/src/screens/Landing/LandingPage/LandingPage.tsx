@@ -14,7 +14,7 @@ const LandingPage = () => {
         className={`absolute left-0 top-[var(--nav-height)] w-[100vw] flex h-[calc(100%-var(--nav-height))] overflow-scroll`}
       >
         <img
-          src="https://res.cloudinary.com/dlzspcvgq/image/upload/v1755910905/login_mthap6.jpg"
+          src="https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img4.jpg"
           alt="logo"
           className="select-none w-[100vw] object-contain"
         />

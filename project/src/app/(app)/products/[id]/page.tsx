@@ -19,7 +19,7 @@ const Product = () => {
         <ModuleLeftBar />
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 w-[100%] max-w-[100%] overflow-x-hidden">
         <ProductView serialNumber={serialNumber} />
       </div>
     </div>

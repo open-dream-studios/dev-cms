@@ -1,4 +1,4 @@
-// project/src/screens/Inventory/ProductPage/ProductImages.tsx
+// project/src/modules/components/ImageGallery.tsx
 "use client";
 import { IoCloseOutline } from "react-icons/io5";
 import {
@@ -19,7 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useContext, useMemo, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { Media } from "@open-dream/shared";
+import { Media, MediaLink, MediaUsage } from "@open-dream/shared";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
@@ -30,18 +30,20 @@ function SortableImage({
   id,
   mediaLink,
   index,
-  setImageDisplayed,
+  onMediaClick,
   handleDeleteImage,
-  imageEditorOpen,
   singleRow,
+  enableReorder,
+  showDeleteButtons,
 }: {
   id: string;
   mediaLink: any;
   index: number;
-  setImageDisplayed: React.Dispatch<React.SetStateAction<Media | null>>;
+  onMediaClick: (media: Media) => Promise<void>;
   handleDeleteImage: (index: number) => void;
-  imageEditorOpen: boolean;
   singleRow: boolean;
+  enableReorder: boolean;
+  showDeleteButtons: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
   const { media } = useContextQueries();
@@ -79,7 +81,7 @@ function SortableImage({
     const dy = e.clientY - startPos.current.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     if (distance < wiggleThreshold && matchedMedia) {
-      setImageDisplayed(matchedMedia);
+      onMediaClick(matchedMedia);
     }
     startPos.current = null;
   };
@@ -100,11 +102,11 @@ function SortableImage({
       onMouseUp={handleMouseUp}
     >
       <div className="select-none cursor-pointer hover:brightness-75 dim w-[100%] h-[100%] inset-0">
-        {!singleRow && (
+        {enableReorder && (
           <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />
         )}
         {matchedMedia && <RenderedImage media={matchedMedia} rounded={true} />}
-        {!singleRow && (
+        {showDeleteButtons && (
           <div
             style={{
               border: `1px solid ${currentTheme.text_4}`,
@@ -123,17 +125,29 @@ function SortableImage({
   );
 }
 
-export default function ProductImages({
-  setImageDisplayed,
-  imageEditorOpen,
+export default function ImageGallery({
+  enableReorder,
+  showDeleteButtons,
+  onDeleteLink,
+  onReorder,
   singleRow,
+  entityType,
+  onMediaClick,
 }: {
-  setImageDisplayed: React.Dispatch<React.SetStateAction<Media | null>>;
-  imageEditorOpen: boolean;
+  enableReorder: boolean;
+  showDeleteButtons: boolean;
+  onDeleteLink: (link: MediaLink) => Promise<void>;
+  onReorder: (reordered: MediaLink[]) => Promise<void>;
   singleRow: boolean;
+  entityType: MediaUsage;
+  onMediaClick: (media: Media) => Promise<void>;
 }) {
-  const { currentProductImages, setCurrentProductImages } =
-    useCurrentDataStore();
+  const {
+    currentProductImages,
+    setCurrentProductImages,
+    currentJobImages,
+    setCurrentJobImages,
+  } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
@@ -147,36 +161,48 @@ export default function ProductImages({
     })
   );
 
-  const items = currentProductImages.map((img) => ({
+  let images: MediaLink[] = [];
+  let setImages: (imgs: MediaLink[]) => void;
+
+  if (entityType === "job") {
+    images = currentJobImages;
+    setImages = setCurrentJobImages;
+  } else if (entityType === "product") {
+    images = currentProductImages;
+    setImages = setCurrentProductImages;
+  }
+
+  const items = images.map((img) => ({
     id: img.media_id.toString(),
     url: img.url,
   }));
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = currentProductImages.findIndex(
+    const oldIndex = images.findIndex(
       (item) => item.media_id.toString() === active.id
     );
-    const newIndex = currentProductImages.findIndex(
+    const newIndex = images.findIndex(
       (item) => item.media_id.toString() === over.id
     );
-
-    const reordered = arrayMove(currentProductImages, oldIndex, newIndex).map(
-      (img, idx) => ({ ...img, ordinal: idx })
-    );
-
-    setCurrentProductImages(reordered);
-  };
-
-  const handleDeleteImage = (index: number) => {
-    const filtered = currentProductImages.filter((_, i) => i !== index);
-    const newProductImages = filtered.map((img, idx) => ({
+    const reordered = arrayMove(images, oldIndex, newIndex).map((img, idx) => ({
       ...img,
       ordinal: idx,
     }));
-    setCurrentProductImages(newProductImages);
+    setImages(reordered);
+    await onReorder(reordered)
+  };
+
+  const handleDeleteImage = async (index: number) => {
+    await onDeleteLink(currentJobImages[index]);
+    const filtered = images.filter((_, i) => i !== index);
+    const newImages = filtered.map((img, idx) => ({
+      ...img,
+      ordinal: idx,
+    }));
+    setImages(newImages);
   };
 
   if (!currentUser) return null;
@@ -191,11 +217,11 @@ export default function ProductImages({
         items={items.map((item) => item.id)}
         strategy={rectSortingStrategy}
       >
-        {currentProductImages.length > 0 && (
+        {images.length > 0 && (
           <div
             className={
               singleRow
-                ? "flex flex-row h-[100%] gap-[11px] touch-none"
+                ? "flex flex-row h-[100%] gap-[11px] touch-none w-[100%]"
                 : `gap-[11px] touch-none py-[4px] md:py-[6px] grid grid-cols-3 min-[400px]:grid-cols-4 min-[500px]:grid-cols-5 min-[580px]:grid-cols-4 min-[720px]:grid-cols-5 min-[870px]:grid-cols-4 
                 ${
                   leftBarOpen
@@ -210,10 +236,11 @@ export default function ProductImages({
                 id={item.id}
                 index={index}
                 mediaLink={item}
-                setImageDisplayed={setImageDisplayed}
+                onMediaClick={onMediaClick}
                 handleDeleteImage={handleDeleteImage}
-                imageEditorOpen={imageEditorOpen}
                 singleRow={singleRow}
+                enableReorder={enableReorder}
+                showDeleteButtons={showDeleteButtons}
               />
             ))}
           </div>

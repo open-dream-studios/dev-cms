@@ -57,7 +57,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   const [isMini, setIsMini] = useState<boolean>(true);
-  const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(false);
+  const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(true);
 
   const scheduled_start_date_raw = useWatch({
     control: form?.control,

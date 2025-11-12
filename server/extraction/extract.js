@@ -70,7 +70,6 @@ const extractRow = async (sheet, row, index) => {
       url: upload.url,
       type: "image",
       folder_id: null,
-      media_usage: "product",
     }));
 
     // THIS WAS IN 

@@ -1,10 +1,9 @@
-// project/src/modules/MediaModule/MediaToolbar.tsx
-import { Button } from "@/components/ui/button";
+// project/src/modules/MediaModule/MediaToolbar.tsx 
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import CustomButton from "@/lib/blocks/CustomButton";
-import { useUiStore } from "@/store/useUIStore";
-import { MediaFolder } from "@open-dream/shared";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/useUIStore"; 
 import { Grid, List, Upload } from "lucide-react";
 import { useContext } from "react";
 import { FiEdit } from "react-icons/fi";
@@ -13,8 +12,7 @@ type Props = {
   view: "grid" | "list";
   setView: (v: "grid" | "list") => void;
   editeMode: boolean;
-  setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
-  activeFolder: MediaFolder | null;
+  setEditMode: React.Dispatch<React.SetStateAction<boolean>>; 
 };
 
 const MediaToolbar = ({
@@ -22,17 +20,18 @@ const MediaToolbar = ({
   setView,
   editeMode,
   setEditMode,
-  activeFolder,
 }: Props) => {
   const { currentUser } = useContext(AuthContext);
   const { setUploadContext } = useUiStore();
   const currentTheme = useCurrentTheme();
+  const { currentActiveFolder } = useCurrentDataStore()
+
   const onUploadClick = () => {
     setUploadContext({
       visible: true,
       multiple: true,
       usage: "module",
-      folder_id: activeFolder?.id ?? null,
+      folder_id: currentActiveFolder?.id ?? null,
       onUploaded: async () => {},
     });
   };
@@ -65,7 +64,7 @@ const MediaToolbar = ({
         </CustomButton>
 
         <p className="text-[24px] font-[700] mt-[-2px] px-[10.5px]">
-          {activeFolder ? activeFolder.name : "No Folder"}
+          {currentActiveFolder ? currentActiveFolder.name : "No Folder"}
         </p>
       </div>
       <div className="flex gap-2">

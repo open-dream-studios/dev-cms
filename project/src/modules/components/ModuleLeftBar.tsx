@@ -27,6 +27,7 @@ import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import RenderedImage from "./ProductCard/RenderedImage";
+import NoProductImage from "./ProductCard/NoProductImage";
 
 const ModuleLeftBar = () => {
   const { setCurrentEmployeeData, setCurrentCustomerData } =
@@ -344,7 +345,11 @@ const ModuleLeftBar = () => {
                     style={{
                       background:
                         currentUser.theme === "dark"
-                          ? "linear-gradient(180deg, #1E1E1E, #1A1A1A)"
+                          ? currentProductId === product.serial_number
+                            ? "linear-gradient(180deg, #282828, #2B2B2B)"
+                            : "linear-gradient(180deg, #1E1E1E, #1A1A1A)"
+                          : currentProductId === product.serial_number
+                          ? currentTheme.background_2
                           : currentTheme.background_1,
                       boxShadow:
                         currentUser.theme === "dark"
@@ -354,17 +359,11 @@ const ModuleLeftBar = () => {
                     className="w-[calc(100%-30px)] ml-[15px] h-[58px] rounded-[9px] items-center hover:brightness-[92%] dim cursor-pointer flex flex-row gap-[10px] py-[9px] px-[12px]"
                     onClick={() => handleProductClick(product)}
                   >
-                    <div
-                      style={{
-                        backgroundColor:
-                          currentProductId === product.serial_number
-                            ? currentTheme.background_3_2
-                            : currentTheme.background_3,
-                      }}
-                      className="select-none min-w-[40px] w-[40px] h-[40px] min-h-[40px] rounded-[6px] overflow-hidden"
-                    >
-                      {foundLinks.length > 0 && matchedMedia && (
+                    <div className="select-none min-w-[40px] w-[40px] h-[40px] min-h-[40px] rounded-[6px] overflow-hidden">
+                      {foundLinks.length > 0 && matchedMedia ? (
                         <RenderedImage media={matchedMedia} rounded={true} />
+                      ) : (
+                        <NoProductImage />
                       )}
                     </div>
                     <div className="select-none flex w-[136px] h-[100%] flex-col gap-[2px] ">

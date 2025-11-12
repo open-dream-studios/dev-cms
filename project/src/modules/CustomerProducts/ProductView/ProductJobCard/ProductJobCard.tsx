@@ -1,18 +1,10 @@
 // project/src/modules/CustomerProducts/ProductView/ProductJobCard/ProductJobCard.tsx
-import React, {
-  use,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   Activity,
   Calendar,
   Clock,
-  Tag,
   ChevronDown,
   ChevronUp,
   Plus,
@@ -27,6 +19,8 @@ import type {
   Customer,
   Employee,
   EmployeeAssignment,
+  Media,
+  MediaLink,
 } from "@open-dream/shared";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus, FaWrench } from "react-icons/fa6";
@@ -49,6 +43,9 @@ import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import ImageGallery from "@/modules/components/ImageGallery";
+import { useUiStore } from "@/store/useUIStore";
+import { useMedia } from "@/hooks/useMedia";
 
 // ---------- TaskCard ----------
 const TaskCard: React.FC<{
@@ -98,7 +95,7 @@ const TaskCard: React.FC<{
     if (task?.task_id) {
       taskForm.reset(task as TaskFormData);
     }
-  }, [task?.task_id]);
+  }, [task, taskForm]);
 
   const onFormSubmitButton = async (data: TaskFormData) => {
     if (!productJob) return;
@@ -536,25 +533,34 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     employeeAssignments,
     deleteEmployeeAssignment,
     customers,
+    mediaLinks,
+    upsertMediaLinks,
+    deleteMediaLinks,
   } = useContextQueries();
+  const { setUploadContext } = useUiStore();
   const { screenClick } = useRouting();
-  const { setCurrentEmployeeData } = useCurrentDataStore();
+  const {
+    setCurrentMediaSelected,
+    setCurrentJobImages,
+    setCurrentEmployeeData,
+    currentJobImages,
+  } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
+  const { saveCurrentJobImages } = useMedia();
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const jobForm = useJobForm();
+  const status = useWatch({ control: jobForm.control, name: "status" });
 
   useEffect(() => {
     if (productJob?.job_id) {
       jobForm.reset(productJob as JobFormData);
     }
-  }, [productJob?.job_id]);
-
-  const jobForm = useJobForm();
-  const status = useWatch({ control: jobForm.control, name: "status" });
+  }, [productJob, jobForm]);
 
   const onFormSubmitButton = async (data: JobFormData) => {
     if (!matchedDefinition || !productJob) return null;
@@ -607,7 +613,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   const jobTasks = useMemo(() => {
     if (!productJob) return [];
     return tasks.filter((task: Task) => task.job_id === productJob.id);
-  }, [tasks]);
+  }, [tasks, productJob]);
 
   const progressPct = useMemo(() => {
     const completedCount = jobTasks.filter(
@@ -631,6 +637,16 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
       childRefs.current.push(ref);
     }
   };
+
+  useEffect(() => {
+    if (!mediaLinks || !productJob) return;
+    const loadedLinks = mediaLinks.filter(
+      (link: MediaLink) =>
+        link.entity_id === productJob.id && link.entity_type === "job"
+    );
+    setCurrentJobImages(loadedLinks);
+  }, [productJob, mediaLinks, setCurrentJobImages]);
+
   useEffect(() => {
     function handleClick(event: MouseEvent) {
       const target = event.target as Node;
@@ -710,7 +726,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     >
       <form
         onSubmit={jobForm.handleSubmit(onFormSubmitButton)}
-        className="flex flex-col"
+        className="flex flex-col w-[100%]"
       >
         <div
           className={`flex flex-col gap-[15px] min-[750px]:flex-row min-[870px]:flex-col min-[990px]:flex-row ${
@@ -862,8 +878,8 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
         )}
 
         {/* MIDDLE */}
-        <div className="w-[100%] h-auto mt-[13.5px] gap-[14px] flex flex-col">
-          <div className="flex flex-col gap-[12px]">
+        <div className="w-[100%] h-auto mt-[13.5px] gap-[12.5px] flex flex-col">
+          <div className="flex flex-col gap-[12px] w-[100%]">
             <div
               className="rounded-xl px-[15px] pt-[11px] pb-[10px] w-[100%]"
               style={getInnerCardStyle(currentUser.theme, currentTheme)}
@@ -895,7 +911,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
               <div className="mt-[10.5px]">
                 <div
                   className={`relative rounded-[8px] transition-all duration-200 ${
-                    noteOpen ? "h-[210px]" : "h-[56px]"
+                    noteOpen ? "h-[210px]" : "h-[99px]"
                   }`}
                   style={{ backgroundColor: currentTheme.background_2 }}
                 >
@@ -1025,6 +1041,84 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                   )}
                 </div>
               </div>
+            </div>
+
+            <div
+              className={`${
+                currentJobImages.length
+                  ? "h-[95px] pt-[3px] pb-[11px]"
+                  : "h-[48px] py-[7px]"
+              } w-[100%] px-[15px] rounded-xl flex flex-row gap-[11px]`}
+              style={getInnerCardStyle(currentUser.theme, currentTheme)}
+            >
+              <div
+                className={`${
+                  currentJobImages.length && "pt-[8px]"
+                } h-[100%] cursor-pointer hover:brightness-[95%] dim flex flex-row gap-[11px] items-center`}
+                onClick={async () => {
+                  setUploadContext({
+                    visible: true,
+                    multiple: true,
+                    folder_id: null,
+                    usage: "job",
+                    onUploaded: async (uploads: Media[], files: File[]) => {
+                      const newMediaLinks: MediaLink[] = uploads
+                        .filter(
+                          (m): m is Media & { id: number } => m.id != null
+                        )
+                        .map((m, index) => ({
+                          entity_type: "job",
+                          entity_id: productJob.id ? productJob.id : null,
+                          media_id: m.id,
+                          url: m.url,
+                          ordinal: currentJobImages.length + index,
+                        }));
+                      await upsertMediaLinks(newMediaLinks);
+                    },
+                  });
+                }}
+              >
+                <div
+                  className={`h-[100%] aspect-[1/1] rounded-[8px] flex items-center justify-center`}
+                  style={{ backgroundColor: currentTheme.background_2 }}
+                >
+                  <FaPlus
+                    className="opacity-[0.5]"
+                    size={currentJobImages.length ? 23 : 16}
+                  />
+                </div>
+
+                {currentJobImages.length === 0 && (
+                  <div className="text-[15px] font-[600] opacity-[0.5]">
+                    Add Media
+                  </div>
+                )}
+              </div>
+
+              {currentJobImages.length > 0 && (
+                <div
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  className="w-[100%] max-w-[100%] h-[100%] overflow-x-auto pt-[8px]"
+                >
+                  <ImageGallery
+                    enableReorder={true}
+                    onReorder={async (reordered: MediaLink[]) => {
+                      if (productJob.id) {
+                        await saveCurrentJobImages(productJob.id, reordered);
+                      }
+                    }}
+                    showDeleteButtons={true}
+                    onDeleteLink={async (link: MediaLink) => {
+                      await deleteMediaLinks([link]);
+                    }}
+                    singleRow={true}
+                    entityType="job"
+                    onMediaClick={async (img: Media) =>
+                      setCurrentMediaSelected(img)
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
 

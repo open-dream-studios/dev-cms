@@ -30,8 +30,7 @@ function UploadModal() {
     const filtered = uploadContext.multiple ? files : files.slice(0, 1);
     const uploadedImages = await handleFileProcessing(
       filtered,
-      uploadContext.folder_id ?? null,
-      uploadContext.usage ?? "module"
+      uploadContext.folder_id ?? null
     );
     if (uploadedImages.length > 0) {
       if (uploadContext.onUploaded) {

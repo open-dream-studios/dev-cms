@@ -1,7 +1,6 @@
 // project/src/modules/MediaModule/MediaPlayer.tsx
 import { useCurrentTheme } from "@/hooks/useTheme";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { Media } from "@open-dream/shared";
+import { useCurrentDataStore } from "@/store/currentDataStore"; 
 import React, { useRef, useState } from "react";
 
 const MediaPlayer = () => {

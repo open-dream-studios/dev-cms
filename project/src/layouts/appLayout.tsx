@@ -112,7 +112,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
     if (projectsData.length === 1) {
       setCurrentProjectData(projectsData[0]);
     }
-  }, [projectsData]);
+  }, [projectsData, setCurrentProjectData]);
 
   if (!currentUser) return;
 

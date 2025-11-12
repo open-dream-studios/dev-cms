@@ -11,6 +11,7 @@ import {
   DataFilters,
   MediaLink,
   Media,
+  MediaFolder,
 } from "@open-dream/shared";
 
 interface CurrentDataState {
@@ -21,6 +22,19 @@ interface CurrentDataState {
   currentMediaSelected: Media | null;
   setCurrentMediaSelected: (selected: Media | null) => void;
 
+  currentActiveFolder: MediaFolder | null;
+  setCurrentActiveFolder: (
+    updater:
+      | MediaFolder
+      | null
+      | ((prev: MediaFolder | null) => MediaFolder | null)
+  ) => void;
+
+  currentOpenFolders: Set<number>;
+  setCurrentOpenFolders: (
+    updater: Set<number> | ((prev: Set<number>) => Set<number>)
+  ) => void;
+
   currentProduct: Product | null;
   currentProductSerial: string | null;
   setCurrentProductData: (product: Product | null) => void;
@@ -29,6 +43,11 @@ interface CurrentDataState {
   setOriginalProductImages: (originalProductImages: MediaLink[]) => void;
   currentProductImages: MediaLink[];
   setCurrentProductImages: (currentProductImages: MediaLink[]) => void;
+
+  originalJobImages: MediaLink[];
+  setOriginalJobImages: (originalJobImages: MediaLink[]) => void;
+  currentJobImages: MediaLink[];
+  setCurrentJobImages: (currentJobImages: MediaLink[]) => void;
 
   localProductsData: Product[];
   localProductsDataRef: { current: Product[] };
@@ -77,6 +96,31 @@ export const useCurrentDataStore = create<CurrentDataState>()(
           currentMediaSelected: selected,
         }),
 
+      currentActiveFolder: null,
+      setCurrentActiveFolder: (
+        updater:
+          | MediaFolder
+          | null
+          | ((prev: MediaFolder | null) => MediaFolder | null)
+      ) =>
+        set((state) => ({
+          currentActiveFolder:
+            typeof updater === "function"
+              ? updater(state.currentActiveFolder)
+              : updater,
+        })),
+
+      currentOpenFolders: new Set<number>(),
+      setCurrentOpenFolders: (
+        updater: Set<number> | ((prev: Set<number>) => Set<number>)
+      ) =>
+        set((state) => ({
+          currentOpenFolders:
+            typeof updater === "function"
+              ? updater(state.currentOpenFolders)
+              : updater,
+        })),
+
       currentProduct: null,
       currentProductSerial: null,
       setCurrentProductData: (product) =>
@@ -92,6 +136,14 @@ export const useCurrentDataStore = create<CurrentDataState>()(
       currentProductImages: [],
       setCurrentProductImages: (images: MediaLink[]) =>
         set({ currentProductImages: images }),
+
+      originalJobImages: [],
+      setOriginalJobImages: (images: MediaLink[]) =>
+        set({ originalJobImages: images }),
+
+      currentJobImages: [],
+      setCurrentJobImages: (images: MediaLink[]) =>
+        set({ currentJobImages: images }),
 
       localProductsData: [],
       localProductsDataRef,

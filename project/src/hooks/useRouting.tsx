@@ -51,6 +51,7 @@ export function useRouting() {
     setCurrentProductData,
     setCurrentCustomerData,
     setCurrentEmployeeData,
+    setCurrentActiveFolder,
   } = useCurrentDataStore();
 
   const { getForm } = useFormInstanceStore();
@@ -119,6 +120,9 @@ export function useRouting() {
     }
     if (newScreen === "customers" && screen === "customers") {
       setCurrentCustomerData(null);
+    }
+    if (newScreen === "media" && screen === "media") {
+      setCurrentActiveFolder(null);
     }
     if (newScreen === "employees" && screen === "employees") {
       setCurrentEmployeeData(null);

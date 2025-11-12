@@ -12,8 +12,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { getNextOrdinal } from "@/util/functions/Data";
-import { toast } from "react-toastify";
-import { MediaLink } from "@open-dream/shared";
+import { toast } from "react-toastify"; 
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useAutoSaveStore } from "@/store/useAutoSaveStore";
 import { useMedia } from "../useMedia";
@@ -30,9 +29,6 @@ export function useProductFormSubmit() {
   const {
     upsertProducts,
     productsData,
-    upsertMediaLinks,
-    deleteMediaLinks,
-    mediaLinks,
     refetchProductsData,
   } = useContextQueries();
   const { setAddingProduct, setUpdatingLock, addingProduct } = useUiStore();

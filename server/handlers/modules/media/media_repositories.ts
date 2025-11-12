@@ -112,7 +112,7 @@ export const deleteMediaFolderFunction = async (
   project_idx: number,
   folder_id: string
 ) => {
-  // Recursively delete from cloudinary
+  // Recursively delete from storage
   // const [[folder]] = await connection.query(
   //   `SELECT parent_folder_id FROM media_folders WHERE project_idx = ? AND folder_id = ?`,
   //   [project_idx, folder_id]
@@ -136,7 +136,7 @@ export const deleteMediaFolderFunction = async (
   //   project_idx,
   // ]);
   // if (mediaResults.length > 0) {
-  //   await deleteFromCloudinary(mediaResults);
+  //   await deleteFromAWS(mediaResults);
   // }
 
   const result = await deleteAndReindex(
@@ -215,7 +215,6 @@ export const upsertMediaFunction = async (
       m.url ?? "",
       m.alt_text ?? "",
       m.metadata ? JSON.stringify(m.metadata) : null,
-      m.media_usage ?? "",
       m.tags ? JSON.stringify(m.tags) : null,
       finalOrdinal,
       m.originalName,
@@ -231,7 +230,7 @@ export const upsertMediaFunction = async (
   }
 
   const placeholders = items
-    .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
     .join(", ");
   const query = `
       INSERT INTO media (
@@ -243,7 +242,6 @@ export const upsertMediaFunction = async (
         url,
         alt_text,
         metadata,
-        media_usage,
         tags,
         ordinal,
         originalName,
@@ -260,8 +258,7 @@ export const upsertMediaFunction = async (
         type = VALUES(type),
         url = VALUES(url),
         alt_text = VALUES(alt_text),
-        metadata = VALUES(metadata),
-        media_usage = VALUES(media_usage),
+        metadata = VALUES(metadata), 
         tags = VALUES(tags),
         originalName = VALUES(originalName),
         extension = VALUES(extension),
@@ -311,7 +308,7 @@ export const deleteMediaFunction = async (
     return { success: false, message: "Media not found" };
   }
   const { public_id, type } = rows[0];
-  // await deleteFromCloudinary([{ public_id, type }]);
+  // await deleteFromAWS([{ public_id, type }]);
 
   const result = await deleteAndReindex(
     connection,
@@ -393,8 +390,7 @@ export async function uploadMediaFunction(
   files: any[],
   projectId: string,
   project_idx: number,
-  folder_id: number | null,
-  media_usage: MediaUsage
+  folder_id: number | null
 ) {
   const supportedImageExts = [
     "jpg",
@@ -527,7 +523,6 @@ export async function uploadMediaFunction(
       width: finalMeta.width,
       height: finalMeta.height,
       size: finalMeta.size,
-      media_usage,
       tags: null,
       ordinal: null,
       originalName: origName,

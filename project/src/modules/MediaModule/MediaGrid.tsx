@@ -32,8 +32,6 @@ type SortableMediaItemProps = {
   disabled?: boolean;
   editMode: boolean;
   activeMedia: Media | null;
-  activeFolder: MediaFolder | null;
-  setActiveFolder: React.Dispatch<React.SetStateAction<MediaFolder | null>>;
   openAllParents: (folder: MediaFolder) => void;
 };
 
@@ -42,8 +40,6 @@ function SortableMediaItem({
   disabled = false,
   editMode,
   activeMedia,
-  activeFolder,
-  setActiveFolder,
   openAllParents,
 }: SortableMediaItemProps) {
   const {
@@ -106,17 +102,7 @@ function SortableMediaItem({
   };
 
   const handleMediaClick = (e: any) => {
-    // if (!activeFolder) {
-    //   const folderFound = mediaFolders.find(
-    //     (mediaFolder: MediaFolder) => mediaFolder.id === media.folder_id
-    //   );
-    //   if (folderFound) {
-    //     openAllParents(folderFound);
-    //     setActiveFolder(folderFound);
-    //   }
-    // } else {
     setCurrentMediaSelected(media);
-    // }
   };
 
   if (!currentUser) return null;
@@ -164,8 +150,6 @@ type MediaGridProps = {
   filteredMedia: Media[];
   view: "grid" | "list";
   projectId: number;
-  activeFolder: MediaFolder | null;
-  setActiveFolder: React.Dispatch<React.SetStateAction<MediaFolder | null>>;
   editMode: boolean;
   openAllParents: (folder: MediaFolder) => void;
 };
@@ -173,8 +157,6 @@ type MediaGridProps = {
 export default function MediaGrid({
   filteredMedia,
   view,
-  activeFolder,
-  setActiveFolder,
   editMode,
   openAllParents,
 }: MediaGridProps) {
@@ -188,8 +170,12 @@ export default function MediaGrid({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { upsertMedia } = useContextQueries();
-  const { currentMediaSelected, setCurrentMediaSelected } =
-    useCurrentDataStore();
+  const {
+    currentMediaSelected,
+    setCurrentMediaSelected,
+    currentActiveFolder,
+    setCurrentActiveFolder,
+  } = useCurrentDataStore();
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [activeMedia, setActiveMedia] = useState<Media | null>(null);
 
@@ -226,7 +212,7 @@ export default function MediaGrid({
     }
     if (!over || active.id === over.id) return;
 
-    const folderId = activeFolder ? activeFolder.id : null;
+    const folderId = currentActiveFolder ? currentActiveFolder.id : null;
 
     const siblings = folderId
       ? localMedia.filter((m) => m.folder_id === folderId)
@@ -308,8 +294,6 @@ export default function MediaGrid({
                 disabled={false}
                 editMode={editMode}
                 activeMedia={activeMedia}
-                activeFolder={activeFolder}
-                setActiveFolder={setActiveFolder}
                 openAllParents={openAllParents}
               />
             ))}

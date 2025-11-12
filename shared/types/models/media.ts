@@ -29,7 +29,6 @@ export type Media = {
   width: number | null;
   height: number | null;
   size: number | null;
-  media_usage: MediaUsage;
   tags: string[] | null;
   ordinal: number | null;
   originalName: string | null;

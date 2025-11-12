@@ -4,12 +4,20 @@ import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import app_details from "../../../util/appDetails.json";
-import { MediaLink, Product, Customer,  Job, JobDefinition, Task  } from "@open-dream/shared"; 
+import {
+  MediaLink,
+  Product,
+  Customer,
+  Job,
+  JobDefinition,
+  Task,
+  Media,
+} from "@open-dream/shared";
 import CustomerTag from "./CustomerTag";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import { Check, Activity } from "lucide-react";
 import { FaWrench } from "react-icons/fa6";
-import "../../components/Calendar/Calendar.css"; 
+import "../../components/Calendar/Calendar.css";
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
@@ -22,11 +30,13 @@ import {
   PriorityBadge,
   StatusBadge,
   TaskStatusBadge,
-} from "../../CustomerProducts/ProductView/ProductJobCard/Badges"; 
+} from "../../CustomerProducts/ProductView/ProductJobCard/Badges";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import RenderedImage from "./RenderedImage";
+import NoProductImage from "./NoProductImage";
 
 // ---------- TaskCard ----------
 const MiniTaskCard: React.FC<{
@@ -38,7 +48,7 @@ const MiniTaskCard: React.FC<{
   const { currentUser } = React.useContext(AuthContext);
   const { upsertTask, deleteTask, employeeAssignments, employees } =
     useContextQueries();
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
   const taskForm = useTaskForm();
   const taskStatus = useWatch({ control: taskForm.control, name: "status" });
@@ -66,7 +76,7 @@ const MiniTaskCard: React.FC<{
 
   const completed = task.status === "complete";
   if (!currentUser) return null;
-  
+
   return (
     <form
       onSubmit={taskForm.handleSubmit(onFormSubmitButton)}
@@ -126,8 +136,8 @@ const CustomerProductFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme()
-  const { setCurrentProductData } = useCurrentDataStore()
+  const currentTheme = useCurrentTheme();
+  const { setCurrentProductData } = useCurrentDataStore();
   const {
     tasks,
     upsertJob,
@@ -136,16 +146,17 @@ const CustomerProductFrame = ({
     mediaLinks,
     jobs,
     jobDefinitions,
+    media,
   } = useContextQueries();
   const { screenClick } = useRouting();
-  const { screen } = useUiStore()
+  const { screen } = useUiStore();
 
   const handleClick = async () => {
     await screenClick(
       "edit-customer-product",
       `/products/${product.serial_number}`
     );
-    setCurrentProductData(product)
+    setCurrentProductData(product);
   };
 
   const productCustomer = useMemo(() => {
@@ -153,15 +164,17 @@ const CustomerProductFrame = ({
     return customers.find(
       (customer: Customer) => customer.id === product.customer_id
     );
-  }, [customers, productsData, product.customer_id]);
+  }, [customers, productsData, product]);
 
-  const itemImage = useMemo(() => {
+  const mediaFound = useMemo(() => {
     const mediaLinksFound = mediaLinks.filter(
       (m: MediaLink) =>
         m.entity_type === "product" && m.entity_id === product.id
     );
-    return mediaLinksFound.length > 0 ? mediaLinksFound[0] : null;
-  }, [product, mediaLinks]);
+    const firstImage = mediaLinksFound.length > 0 ? mediaLinksFound[0] : null;
+    if (!firstImage) return null;
+    return media.find((item: Media) => item.id === firstImage.media_id);
+  }, [product, mediaLinks, media]);
 
   const productJob = useMemo(() => {
     const filteredJobs = jobs.filter(
@@ -284,26 +297,10 @@ const CustomerProductFrame = ({
       >
         <div className="h-[100%] min-[510px]:w-[100%] min-[800px]:w-[calc(60px+10vw)] aspect-[1/1]">
           <div className="w-[100%] h-[100%] rounded-[10px] overflow-hidden">
-            {!itemImage ? (
-              <img
-                draggable={false}
-                className="w-full h-full object-cover"
-                src={app_details.default_img}
-              />
-            ) : /\.(mp4|mov)$/i.test(itemImage.url) ? (
-              <video
-                src={itemImage.url}
-                className="w-full h-full object-cover"
-                playsInline
-                muted
-                loop
-              />
+            {!mediaFound ? (
+              <NoProductImage />
             ) : (
-              <img
-                draggable={false}
-                className="w-full h-full object-cover"
-                src={itemImage.url}
-              />
+              <RenderedImage media={mediaFound} rounded={true} />
             )}
           </div>
         </div>
@@ -363,7 +360,9 @@ const CustomerProductFrame = ({
                       style={{ color: currentTheme.text_1 }}
                       className="text-[14.5px] leading-[16px] font-semibold"
                     >
-                      {productJobs.length === 1 ? matchedDefinition.type : productJobs.length + " Jobs"}
+                      {productJobs.length === 1
+                        ? matchedDefinition.type
+                        : productJobs.length + " Jobs"}
                     </div>
 
                     <div className="max-[800px]:w-[100%] max-[800px]:flex max-[800px]:justify-start min-[800px]:flex min-[800px]:flex-1 min-[800px]:justify-end">

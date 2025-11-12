@@ -15,7 +15,7 @@ export type FileImage = {
 };
 
 export function useMedia() {
-  const { setUpdatingLock, uploadContext, setUploadContext } = useUiStore();
+  const { setUpdatingLock, setUploadContext } = useUiStore();
   const {
     productsData,
     deleteMedia,
@@ -29,14 +29,14 @@ export function useMedia() {
     currentProject,
     currentProjectId,
     currentProductImages,
+    currentJobImages,
     setCurrentProductImages,
   } = useCurrentDataStore();
   const { promptContinue } = useModals();
 
   const handleFileProcessing = async (
     files: File[],
-    folder_id: number | null,
-    usage: MediaUsage
+    folder_id: number | null
   ): Promise<Media[]> => {
     if (!currentProject || !currentProject.project_id || !currentProjectId)
       return [];
@@ -62,7 +62,6 @@ export function useMedia() {
       formData.append("projectId", currentProject.project_id);
       formData.append("project_idx", String(currentProjectId));
       formData.append("folder_id", String(folder_id));
-      formData.append("media_usage", String(usage));
       images.forEach((fileImage) => {
         formData.append("files", fileImage.file, fileImage.name);
       });
@@ -103,7 +102,6 @@ export function useMedia() {
         url: m.url,
         ordinal: currentProductImages.length + index,
       }));
-
     setCurrentProductImages([...currentProductImages, ...newProductImages]);
   };
 
@@ -112,7 +110,6 @@ export function useMedia() {
       (link: MediaLink) =>
         link.entity_type === "product" && link.entity_id === productId
     );
-
     const linksToDelete = [];
     for (const originalLink of existingProductImages) {
       const stillPresent = currentProductImages.find(
@@ -139,6 +136,31 @@ export function useMedia() {
         linksToUpdate.push({
           ...link,
           entity_id: productId,
+        });
+      }
+    }
+    if (linksToUpdate.length) {
+      await upsertMediaLinks(linksToUpdate);
+    }
+  };
+
+  const saveCurrentJobImages = async (
+    jobId: number,
+    currentImages: MediaLink[]
+  ) => {
+    const existingJobImages = mediaLinks.filter(
+      (link: MediaLink) =>
+        link.entity_type === "job" && link.entity_id === jobId
+    );
+    const linksToUpdate = [];
+    for (const link of currentImages) {
+      const existing = existingJobImages.find(
+        (originalLink: MediaLink) => originalLink.media_id === link.media_id
+      );
+      if (!existing || (existing && existing.ordinal !== link.ordinal)) {
+        linksToUpdate.push({
+          ...link,
+          entity_id: jobId,
         });
       }
     }
@@ -204,6 +226,7 @@ export function useMedia() {
   return {
     uploadProductImages,
     saveCurrentProductImages,
+    saveCurrentJobImages,
     handleFileProcessing,
     handleDeleteMedia,
   };
