@@ -1,12 +1,13 @@
 // server/handlers/modules/modules/modules_repositories.ts
 import { ModuleDefinition, ProjectModule } from "@open-dream/shared";
 import { db } from "../../../connection/connect.js";
-import { handlers } from "../moduleHandlers.js";
-import type {
-  RowDataPacket,
-  PoolConnection,
-  ResultSetHeader,
-} from "mysql2/promise";
+import type { RowDataPacket, PoolConnection } from "mysql2/promise";
+import {
+  findNodeByName,
+  getModulesStructure,
+  loadModuleConfig,
+} from "../../../functions/modules.js";
+import { getDecryptedIntegrationsFunction, getIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
 
 // ---------- MODULE FUNCTIONS ----------
 export const getModulesFunction = async (
@@ -96,37 +97,38 @@ export const runModuleFunction = async (
   identifier: string
 ) => {
   const { project_idx, body } = reqBody;
-  const moduleConfig = await getModuleConfigFunction(connection, identifier);
-  if (!moduleConfig) throw new Error("Module not found");
   const projectModules = await getModulesFunction(project_idx);
   if (!projectModules || !projectModules.length)
     throw new Error("Module not found");
   const module = projectModules.find((mod) => mod.identifier === identifier);
-  if (!module) throw new Error("Module id not found");
-  const handler = handlers[identifier];
-  if (!handler) throw new Error("No handler registered");
-  return await handler(
+  if (!module) throw new Error("Module not found");
+
+  const tree = await getModulesStructure();
+  const moduleFolder = findNodeByName(tree, identifier);
+  if (!moduleFolder) throw new Error("Module folder not found in structure");
+  const { run, keys, required_keys } = await loadModuleConfig(moduleFolder);
+  if (!run) throw new Error(`No run() function exported for ${identifier}`);
+
+  const projectKeys = await getIntegrationsFunction(project_idx);
+  for (const reqKey of required_keys) {
+    const match = projectKeys.find(
+      (k) => k.integration_key.toLowerCase() === reqKey.toLowerCase()
+    );
+    if (!match) {
+      throw new Error(`Project is missing required integration key: ${reqKey}`);
+    }
+  }
+
+  const decryptedKeys = await getDecryptedIntegrationsFunction(project_idx, keys)
+
+  return await run({
     connection,
     project_idx,
     identifier,
     module,
-    moduleConfig,
-    body
-  );
-};
-
-export const getModuleConfigFunction = async (
-  connection: PoolConnection,
-  identifier: string
-) => {
-  const q = `
-      SELECT config_schema
-      FROM module_definitions pm
-      WHERE identifier = ?
-      LIMIT 1
-    `;
-  const [rows] = await connection.query(q, [identifier]);
-  return rows;
+    body,
+    decryptedKeys
+  });
 };
 
 // ---------- MODULE DEFINITION FUNCTIONS ----------

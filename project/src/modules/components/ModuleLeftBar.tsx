@@ -28,9 +28,11 @@ import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import RenderedImage from "./ProductCard/RenderedImage";
 import NoProductImage from "./ProductCard/NoProductImage";
+import { GoSync } from "react-icons/go";
+import { runFrontendModule } from "../runFrontendModule";
 
 const ModuleLeftBar = () => {
-  const { setCurrentEmployeeData, setCurrentCustomerData } =
+  const { setCurrentEmployeeData, setCurrentCustomerData, currentProject } =
     useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const {
@@ -42,6 +44,9 @@ const ModuleLeftBar = () => {
     deleteEmployee,
     employees,
     media,
+    moduleDefinitions,
+    projectModules,
+    integrations,
   } = useContextQueries();
   const { localProductsData, setCurrentProductData } = useCurrentDataStore();
   const { screenClick } = useRouting();
@@ -181,6 +186,17 @@ const ModuleLeftBar = () => {
     }
   };
 
+  const handleCustomerSync = async () => {
+    if (currentProject) {
+      await runFrontendModule("customer-google-wave-sync", {
+        moduleDefinitions,
+        projectModules,
+        integrations,
+        currentProject,
+      });
+    }
+  };
+
   const currentProductId = useMemo(() => {
     const dividedPath = pathname.split("/").filter((item) => item.length > 0);
     if (dividedPath.length === 2) {
@@ -256,17 +272,31 @@ const ModuleLeftBar = () => {
                 "Products"}
             </p>
           </div>
-          {!addingCustomer && !addingEmployee && !addingProduct && (
-            <div
-              onClick={handlePlusClick}
-              className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
-              style={{
-                backgroundColor: currentTheme.background_1_2,
-              }}
-            >
-              <FaPlus size={12} />
-            </div>
-          )}
+          <div className="flex flex-row gap-[6px]">
+            {!addingCustomer && screen === "customers" && (
+              <div
+                onClick={handleCustomerSync}
+                className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+                style={{
+                  backgroundColor: currentTheme.background_1_2,
+                }}
+              >
+                <GoSync size={12} className="rotate-[50deg]" />
+              </div>
+            )}
+
+            {!addingCustomer && !addingEmployee && !addingProduct && (
+              <div
+                onClick={handlePlusClick}
+                className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+                style={{
+                  backgroundColor: currentTheme.background_1_2,
+                }}
+              >
+                <FaPlus size={12} />
+              </div>
+            )}
+          </div>
         </div>
         <Divider />
       </div>

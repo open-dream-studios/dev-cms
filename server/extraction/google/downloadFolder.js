@@ -9,32 +9,6 @@ dotenv.config({
   path: path.resolve(process.cwd(), "../..", ".env"),
 });
 
-async function authorize() {
-  const client_id = process.env.GOOGLE_CLIENT_ID;
-  const client_secret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
-
-  const oAuth2Client = new google.auth.OAuth2(
-    client_id,
-    client_secret,
-    redirect_uri
-  );
-
-  const token = {
-    access_token: process.env.GOOGLE_ACCESS_TOKEN,
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-    scope: process.env.GOOGLE_ACCESS_TOKEN_SCOPE,
-    token_type: process.env.GOOGLE_ACCESS_TOKEN_TYPE,
-    refresh_token_expires_in: Number(
-      process.env.GOOGLE_REFRESH_TOKEN_EXPIRES_IN
-    ),
-    expiry_date: Number(process.env.GOOGLE_REFRESH_TOKEN_EXPIRATION_DATE),
-  };
-
-  oAuth2Client.setCredentials(token);
-  return oAuth2Client;
-}
-
 async function downloadFile(drive, fileId, fileName) {
   const destPath = path.join("downloads", fileName);
   const dest = fs.createWriteStream(destPath);
@@ -94,7 +68,7 @@ function isMediaFile(mimeType) {
     "image/heif",
     "image/webp",
     "video/mp4",
-    "video/quicktime", // MOV
+    "video/quicktime",  
   ];
   return mediaMimeTypes.includes(mimeType);
 }
@@ -175,6 +149,6 @@ async function downloadFolder(auth, folderId) {
 }
 
 export const downloadCommand = async (folderId) => {
-  const auth = await authorize();
+  const auth = await AuthoirizeOAuth2Client();
   await downloadFolder(auth, folderId);
 };

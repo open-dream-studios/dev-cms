@@ -28,6 +28,9 @@ import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 dotenv.config();
 
+// RUN FILE COMMAND
+// node --loader ts-node/esm test.ts
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

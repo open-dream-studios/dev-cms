@@ -26,26 +26,36 @@ export const getIntegrationsFunction = async (
 
 export const getDecryptedIntegrationsFunction = async (
   project_idx: number,
-  module_id: number
-) => {
+  keyNames: string[]
+): Promise<Record<string, string | null>> => {
   const q = `
     SELECT id, integration_id, project_idx, module_id, integration_key, integration_value
     FROM project_integrations
-    WHERE project_idx = ? AND module_id = ?
+    WHERE project_idx = ?
     ORDER BY created_at DESC
   `;
-  const [rows] = await db
-    .promise()
-    .query<RowDataPacket[]>(q, [project_idx, module_id]);
-  return rows.map(
-    (row) =>
-      ({
-        ...row,
-        integration_value: row.integration_value
-          ? decrypt(row.integration_value)
-          : null,
-      } as DecryptedIntegration)
-  );
+  const [rows] = await db.promise().query<RowDataPacket[]>(q, [project_idx]);
+
+  const integrations = rows.map((row) => ({
+    ...row,
+    integration_key: row.integration_key,
+    integration_value: row.integration_value
+      ? decrypt(row.integration_value)
+      : null,
+  }));
+  const result: Record<string, string | null> = {};
+  for (const keyName of keyNames) {
+    const match = integrations.find(
+      (row) => row.integration_key.toLowerCase() === keyName.toLowerCase()
+    );
+    if (!match) {
+      throw new Error(
+        `Integration key '${keyName}' was expected but not found.`
+      );
+    }
+    result[keyName] = match.integration_value;
+  }
+  return result;
 };
 
 export const upsertIntegrationFunction = async (

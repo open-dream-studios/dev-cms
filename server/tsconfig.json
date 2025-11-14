@@ -8,7 +8,14 @@
     "baseUrl": ".",
     "paths": {
       "@open-dream/shared": ["../shared/index.ts"],
-      "@open-dream/shared/*": ["../shared/*"]
+      "@open-dream/shared/*": ["../shared/*"],
+      "@handlers/*": ["handlers/*"],
+      "@functions/*": ["functions/*"],
+      "@services/*": ["services/*"],
+      "@sql/*": ["sql/*"],
+      "@connection/*": ["connection/*"],
+      "@lib/*": ["lib/*"],
+      "@module_structure/*": ["module_structure/*"],
     },
     "resolveJsonModule": true,
     "strict": true,

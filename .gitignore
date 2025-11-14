@@ -24,3 +24,6 @@ yarn-error.log*
 # Coverage
 coverage/
 .vercel
+
+# Temporary files
+**/tmp/

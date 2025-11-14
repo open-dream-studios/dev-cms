@@ -432,6 +432,7 @@ export const handleIncomingSMS = async (req: Request, res: Response) => {
 };
 
 export const handleCode = async (req: Request, res: Response) => {
+  console.log("code came")
   try {
     // Twilio sends the digits pressed in req.body.Digits
     const digits = req.body?.Digits;

@@ -1,49 +1,9 @@
 // project/modules/moduleDefinitions.ts
 import { toast } from "react-toastify";
-import {
-  checkIntegrations,
-  moduleRequest,
-  RunModuleContext,
-} from "./runFrontendModule";
+import { checkIntegrations, moduleRequest } from "./runFrontendModule";
+import { ModuleInputs } from "@open-dream/shared";
 
-interface ModuleDefinition {
-  identifier: string;
-  label: string;
-  description?: string;
-  expectedSchema?: string[];
-  run: (args: RunModuleContext) => Promise<any>;
-}
-
-export const definitionTree = {
-  "dashboard-module": null,
-  "pages-module": null,
-  "media-module": {
-    "global-media-module": null,
-  },
-  "customers-module": {
-    "customer-products-module": {
-      "customer-products-wix-sync-module": {
-        key1: "WIX_GENERATED_SECRET",
-        key2: "WIX_BACKEND_URL",
-      },
-      "customer-products-google-sheets-module": {
-        key1: "sheetId",
-        key2: "sheetName",
-        key3: "serviceAccountJson",
-      },
-    },
-  },
-  "employees-module": {
-    "tasks-module": null,
-  },
-  "google-module": {
-    "google-maps-api-module": {
-      key1: "GOOGLE_API_KEY"
-    },
-  },
-};
-
-export const moduleDefinitions: Record<string, ModuleDefinition> = {
+export const moduleDefinitions: Record<string, ModuleInputs> = {
   "customer-products-google-sheets-module": {
     identifier: "customer-products-google-sheets-module",
     label: "Export to Google Sheets",
@@ -100,7 +60,25 @@ export const moduleDefinitions: Record<string, ModuleDefinition> = {
       if (!integration) return null;
       const predictions = await moduleRequest(identifier, {
         project_idx: currentProject.id,
-        body: ctx.body ?? null
+        body: ctx.body ?? null,
+      });
+      return predictions;
+    },
+  },
+
+  "customer-google-wave-sync": {
+    identifier: "customer-google-wave-sync",
+    label: "Sync customers",
+    description: "Sync customers with Google contacts and Wave customers",
+    expectedSchema: [""],
+    run: async (ctx) => {
+      const { currentProject } = ctx;
+      const identifier = "customer-google-wave-sync";
+      const integration = checkIntegrations(identifier, ctx, true);
+      if (!integration) return null;
+      const predictions = await moduleRequest(identifier, {
+        project_idx: currentProject.id,
+        body: ctx.body ?? null,
       });
       return predictions;
     },

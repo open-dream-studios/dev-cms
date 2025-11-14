@@ -10,3 +10,4 @@ export * from "./types/models/requests";
 export * from "./types/models/screens";
 export * from "./types/models/sectionConfigSchema";
 export * from "./types/models/theme";
+export * from "./types/models/modules";
