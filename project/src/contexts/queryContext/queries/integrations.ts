@@ -26,10 +26,11 @@ export function useIntegrations(
 
   const upsertIntegrationMutation = useMutation({
     mutationFn: async (data: Integration) => {
-      await makeRequest.post("/api/integrations/upsert", {
+      const res = await makeRequest.post("/api/integrations/upsert", {
         ...data,
         project_idx: currentProjectId,
       });
+      return res.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -46,7 +47,7 @@ export function useIntegrations(
   });
 
   const upsertIntegration = async (data: Integration) => {
-    await upsertIntegrationMutation.mutateAsync(data);
+    return await upsertIntegrationMutation.mutateAsync(data);
   };
 
   const deleteIntegrationMutation = useMutation({

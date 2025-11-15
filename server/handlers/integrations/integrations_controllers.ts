@@ -23,9 +23,9 @@ export const upsertIntegration = async (
   res: Response,
   connection: PoolConnection
 ) => {
-  const { project_idx, module_id, integration_key, integration_value } =
+  const { project_idx, integration_key, integration_value } =
     req.body;
-  if (!project_idx || !module_id || !integration_key || !integration_value)
+  if (!project_idx || !integration_key || !integration_value)
     throw new Error("Missing required fields");
   return await upsertIntegrationFunction(connection, project_idx, req.body);
 };

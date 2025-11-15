@@ -39,7 +39,7 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 const EmployeeCard: React.FC = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { moduleDefinitions, projectModules, integrations } =
+  const { projectModules, integrations } =
     useContextQueries();
   const { currentEmployee, currentProjectId, currentProject } =
     useCurrentDataStore();
@@ -116,7 +116,6 @@ const EmployeeCard: React.FC = () => {
       try {
         if (currentProject) {
           const res = await runFrontendModule("google-maps-api-module", {
-            moduleDefinitions,
             projectModules,
             integrations,
             currentProject,
@@ -146,7 +145,6 @@ const EmployeeCard: React.FC = () => {
     try {
       if (currentProject) {
         const res = await runFrontendModule("google-maps-api-module", {
-          moduleDefinitions,
           projectModules,
           integrations,
           currentProject,

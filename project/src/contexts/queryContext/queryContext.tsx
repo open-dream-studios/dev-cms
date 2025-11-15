@@ -40,7 +40,6 @@ import {
   MediaFolder,
   MediaLink,
   Integration,
-  ModuleDefinition,
   Project,
   PageDefinition,
   ProjectPage,
@@ -53,6 +52,7 @@ import {
   EmployeeAssignment,
   EmployeeAssignmentInput,
   EmployeeInput,
+  ModuleDefinitionTree,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
@@ -96,15 +96,13 @@ export type QueryContextType = {
   integrations: Integration[];
   isLoadingIntegrations: boolean;
   refetchIntegrations: () => Promise<any>;
-  upsertIntegration: (data: Integration) => Promise<void>;
+  upsertIntegration: (data: Integration) => Promise<any>;
   deleteIntegration: (integration_id: string) => Promise<void>;
 
   // ---- Modules Definitions ----
-  moduleDefinitions: ModuleDefinition[];
-  isLoadingModuleDefinitions: boolean;
-  refetchModuleDefinitions: () => Promise<any>;
-  upsertModuleDefinition: (data: ModuleDefinition) => Promise<void>;
-  deleteModuleDefinition: (module_definition_id: string) => Promise<void>;
+  moduleDefinitionTree: ModuleDefinitionTree;
+  isLoadingModuleDefinitionTree: boolean;
+  refetchModuleDefinitionTree: () => Promise<any>;
 
   // ---- Media ----
   media: Media[];
@@ -260,12 +258,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     deleteIntegration,
   } = useIntegrations(isLoggedIn, currentProjectId);
   const {
-    moduleDefinitions,
-    isLoadingModuleDefinitions,
-    refetchModuleDefinitions,
-    upsertModuleDefinition,
-    deleteModuleDefinition,
-  } = useModuleDefinitions(isLoggedIn, currentProjectId);
+    moduleDefinitionTree,
+    isLoadingModuleDefinitionTree,
+    refetchModuleDefinitionTree,
+  } = useModuleDefinitions(isLoggedIn);
   const { media, isLoadingMedia, refetchMedia, upsertMedia, deleteMedia } =
     useMedia(isLoggedIn, currentProjectId);
   const {
@@ -376,11 +372,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchIntegrations,
         upsertIntegration,
         deleteIntegration,
-        moduleDefinitions,
-        isLoadingModuleDefinitions,
-        refetchModuleDefinitions,
-        upsertModuleDefinition,
-        deleteModuleDefinition,
+        moduleDefinitionTree,
+        isLoadingModuleDefinitionTree,
+        refetchModuleDefinitionTree,
         media,
         mediaFolders,
         isLoadingMedia,

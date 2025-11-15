@@ -4,9 +4,8 @@ import { ModuleFunctionInputs } from "@open-dream/shared";
 import { updateGoogleSheet } from "@services/google/googleSheets.js";
 
 export const keys = {
-  sheetId: true,
-  sheetName: true,
-  serviceAccountJson: true,
+  GOOGLE_INVENTORY_SHEET_ID: true,
+  GOOGLE_INVENTORY_SHEET_NAME: true,
 };
 
 export const run = async ({
@@ -18,8 +17,16 @@ export const run = async ({
   decryptedKeys,
 }: ModuleFunctionInputs) => {
   try {
-    const { sheetId, sheetName, serviceAccountJson } = decryptedKeys;
-    if (!sheetId || !sheetName || !serviceAccountJson) {
+    const {
+      GOOGLE_INVENTORY_SHEET_ID,
+      GOOGLE_INVENTORY_SHEET_NAME,
+      GOOGLE_SERVICE_ACCOUNT_JSON,
+    } = decryptedKeys;
+    if (
+      !GOOGLE_INVENTORY_SHEET_ID ||
+      !GOOGLE_INVENTORY_SHEET_NAME ||
+      !GOOGLE_SERVICE_ACCOUNT_JSON
+    ) {
       throw new Error("Missing credentials");
     }
 
@@ -66,11 +73,11 @@ export const run = async ({
     const success = await updateGoogleSheet(
       header,
       rows,
-      sheetId,
-      sheetName,
-      serviceAccountJson
+      GOOGLE_INVENTORY_SHEET_ID,
+      GOOGLE_INVENTORY_SHEET_NAME,
+      GOOGLE_SERVICE_ACCOUNT_JSON
     );
-    return sheetId;
+    return GOOGLE_INVENTORY_SHEET_ID;
   } catch (err) {
     console.error(err);
     return false;

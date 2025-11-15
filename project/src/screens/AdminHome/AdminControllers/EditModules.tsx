@@ -1,193 +1,61 @@
 // project/src/screens/AdminHome/AdminControl/EditModules/EditModules.tsx
 "use client";
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useModulesForm } from "@/hooks/forms/useModulesForm";
-import { ModuleFormData } from "@/util/schemas/moduleSchema";
-import {
-  FaChevronLeft,
-  FaPlus,
-  FaRegCircleCheck,
-  FaTrash,
-} from "react-icons/fa6";
-import { IoClose } from "react-icons/io5";
-import { FiEdit } from "react-icons/fi";
+import { FaChevronLeft } from "react-icons/fa6";
 import { useState } from "react";
-import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore";
-import { ModuleDefinition } from "@open-dream/shared";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import {
+  cleanModuleIdentifier,
+  nodeHasChildren,
+} from "@/util/functions/Modules";
+import { ModuleDefinitionTree } from "@open-dream/shared";
 
 const EditModules = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const {
-    moduleDefinitions,
-    upsertModuleDefinition,
-    deleteModuleDefinition,
-    isLoadingModuleDefinitions,
-  } = useContextQueries();
+  const { moduleDefinitionTree, isLoadingModuleDefinitionTree } =
+    useContextQueries();
+    
+  const [path, setPath] = useState<any[]>([]);
 
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
-
-  const [selectedModule, setSelectedModule] = useState<ModuleDefinition | null>(
-    null
-  );
-  const [editingModule, setEditingModule] = useState<ModuleDefinition | null>(
-    null
-  );
-  const [configKeys, setConfigKeys] = useState<string[]>([]);
-  const [newKey, setNewKey] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const form = useModulesForm();
-
-  useEffect(() => {
-    if (showForm) {
-      form.setFocus("name");
+  const currentFolder = useMemo(() => {
+    let node = moduleDefinitionTree;
+    for (const segment of path) {
+      const child = node.children?.find(
+        (c: ModuleDefinitionTree) => c.name === segment.name
+      );
+      if (!child) return node;
+      node = child;
     }
-  }, [showForm, form]);
-
-  const onSubmit = async (data: ModuleFormData) => {
-    await upsertModuleDefinition({
-      module_definition_id: editingModule
-        ? editingModule.module_definition_id
-        : null,
-      name: data.name,
-      description: data.description ?? null,
-      identifier: data.identifier,
-      config_schema: configKeys,
-      parent_module_id: editingModule
-        ? editingModule.parent_module_id
-        : selectedModule !== null && selectedModule.id
-        ? selectedModule.id
-        : null,
-    });
-    setEditingModule(null);
-    setShowForm(false);
-    setConfigKeys([]);
-    form.reset();
-  };
-
-  const handleShowForm = () => {
-    form.reset({
-      name: "",
-      description: "",
-      identifier: "",
-    });
-    setShowForm(true);
-    setEditingModule(null);
-  };
-
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setEditingModule(null);
-    form.reset();
-    setNewKey("");
-  };
-
-  const handleDeleteModule = async (moduleDefinition: ModuleDefinition) => {
-    if (!currentUser) return null;
-    setModal2({
-      ...modal2,
-      open: !modal2.open,
-      showClose: false,
-      offClickClose: true,
-      width: "w-[300px]",
-      maxWidth: "max-w-[400px]",
-      aspectRatio: "aspect-[5/2]",
-      borderRadius: "rounded-[12px] md:rounded-[15px]",
-      content: (
-        <Modal2Continue
-          text={"Delete module " + moduleDefinition.name + "?"}
-          onContinue={() => {
-            if (moduleDefinition.module_definition_id)
-              deleteModuleDefinition(moduleDefinition.module_definition_id);
-          }}
-          threeOptions={false}
-        />
-      ),
-    });
-  };
-
-  const handleAddKey = () => {
-    if (newKey.trim() && !configKeys.includes(newKey.trim())) {
-      setConfigKeys([...configKeys, newKey.trim()]);
-      setNewKey("");
-    }
-  };
-
-  const handleDeleteKey = (key: string) => {
-    setConfigKeys(configKeys.filter((k) => k !== key));
-  };
-
-  const handleModuleClick = (moduleDefinition: ModuleDefinition) => {
-    setSelectedModule(moduleDefinition);
-  };
-
-  const handleEditModuleClick = (
-    e: React.MouseEvent,
-    moduleDefinition: ModuleDefinition
-  ) => {
-    e.stopPropagation();
-    setEditingModule(moduleDefinition);
-    form.reset({
-      name: moduleDefinition.name,
-      description: moduleDefinition.description || "",
-      identifier: moduleDefinition.identifier || "",
-    });
-    setConfigKeys(moduleDefinition.config_schema || []);
-    setShowForm(true);
-  };
+    return node;
+  }, [moduleDefinitionTree, path]);
 
   const filteredModules = useMemo(() => {
-    return selectedModule === null
-      ? moduleDefinitions.filter((m) => m.parent_module_id === null)
-      : moduleDefinitions.filter(
-          (m) => m.parent_module_id === selectedModule.id
-        );
-  }, [moduleDefinitions, selectedModule]);
+    if (!currentFolder?.children) return [];
+    return currentFolder.children.filter(
+      (c: ModuleDefinitionTree) => c.type === "folder"
+    );
+  }, [currentFolder]);
+
+  const handleModuleClick = (node: ModuleDefinitionTree) => {
+    if (node.type === "folder" && nodeHasChildren(node)) {
+      setPath([...path, node]);
+    }
+  };
 
   const handleBackClick = () => {
-    setShowForm(false);
-    if (selectedModule) {
-      const foundParentModule = moduleDefinitions.find(
-        (definition: ModuleDefinition) =>
-          definition.id === selectedModule.parent_module_id
-      );
-      if (foundParentModule) {
-        setSelectedModule(foundParentModule);
-      } else {
-        setSelectedModule(null);
-      }
-    } else {
-      setSelectedModule(null);
-    }
-    form.reset({
-      name: "",
-      description: "",
-      identifier: "",
-    });
-    setConfigKeys([]);
-    setEditingModule(null);
+    if (path.length === 0) return;
+    setPath(path.slice(0, -1));
   };
 
-  const handleDeleteModuleClick = (
-    e: React.MouseEvent,
-    moduleDefinitions: ModuleDefinition
-  ) => {
-    e.stopPropagation();
-    handleDeleteModule(moduleDefinitions);
-  };
+  if (!currentUser) return null;
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="w-full flex flex-col gap-[8px] h-[100%] overflow-y-scroll"
-    >
+    <div className="w-full flex flex-col gap-[8px] h-[100%] overflow-y-scroll">
       <div className="flex flex-row gap-[5px] items-center mb-[8px] justify-center">
-        {selectedModule !== null && (
+        {path.length !== 0 && (
           <div
             onClick={handleBackClick}
             className="cursor-pointer mt-[-2px] dim hover:brightness-75 flex items-center justify-center h-[33px] rounded-full w-[33px] opacity-[30%]"
@@ -196,185 +64,43 @@ const EditModules = () => {
           </div>
         )}
         <h2 className="text-[24px] ml-[2px] font-bold mt-[-5px] mr-[14px]">
-          {selectedModule === null ? "Modules" : selectedModule.name}
+          {path.length === 0 ? "Modules" : cleanModuleIdentifier(path[path.length - 1].name)}
         </h2>
-        {showForm ? (
-          <div className="flex gap-[9px]">
-            <button
-              type="submit"
-              style={{
-                backgroundColor: currentTheme.background_2_selected,
-              }}
-              className="cursor-pointer hover:brightness-75 dim flex items-center gap-2 pl-[15px] pr-[18px]  py-[6px] rounded-full"
-            >
-              <FaRegCircleCheck /> Save
-            </button>
-            <button
-              onClick={handleCancelForm}
-              style={{
-                backgroundColor: currentTheme.background_2_selected,
-              }}
-              className="cursor-pointer hover:brightness-75 dim flex items-center gap-[4px] pl-[13px] pr-[19px] py-[6px] rounded-full"
-            >
-              <IoClose size={19} /> Cancel
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleShowForm}
-            style={{
-              backgroundColor: currentTheme.background_2_selected,
-            }}
-            className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim hover:brightness-75 cursor-pointer"
-          >
-            <FaPlus size={15} color={currentTheme.text_4} />
-          </button>
-        )}
       </div>
 
-      {showForm && (
-        <div
-          style={{
-            backgroundColor: currentTheme.background_1_2,
-          }}
-          className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
-        >
-          <div className="w-[100%]">
-            <p className="font-semibold">
-              <input
-                {...form.register("name")}
-                placeholder="Name..."
-                className="input outline-none rounded px-2 py-1 w-[100%] text-[17px]"
-              />
-            </p>
-            <p style={{ color: currentTheme.text_4 }} className="text-sm">
-              <input
-                {...form.register("description")}
-                placeholder="Description..."
-                className="input outline-none px-2 py-1 w-[100%]"
-              />
-            </p>
-
-            <p style={{ color: currentTheme.text_4 }} className="text-sm">
-              <input
-                {...form.register("identifier")}
-                placeholder="Identifier..."
-                className="input outline-none px-2 py-1 w-[100%]"
-              />
-            </p>
-
-            <div className="mt-4 px-2">
-              <p className="font-semibold text-[17px] mb-[6px]">
-                Accepted Keys
-              </p>
-
-              {configKeys.length > 0 && (
-                <div className="flex flex-wrap gap-2 my-1">
-                  {configKeys.map((key) => (
-                    <div
-                      key={key}
-                      className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
-                      style={{
-                        backgroundColor: currentTheme.background_2_selected,
-                        color: currentTheme.text_4,
-                      }}
-                    >
-                      {key}
-                      <button
-                        onClick={() => handleDeleteKey(key)}
-                        className="ml-1 text-xs hover:brightness-75 dim cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <input
-                  value={newKey}
-                  onChange={(e) => setNewKey(e.target.value)}
-                  placeholder="Add a key..."
-                  className="outline-none input py-[6px] rounded-[5px] text-[14px] flex-1"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddKey}
-                  style={{
-                    backgroundColor: currentTheme.background_2_2,
-                  }}
-                  className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm "
+      <div className="flex flex-col gap-2">
+        {isLoadingModuleDefinitionTree ? (
+          <p>Loading...</p>
+        ) : (
+          filteredModules.map((node: ModuleDefinitionTree) => (
+            <div
+              key={node.name}
+              style={{
+                backgroundColor: currentTheme.background_1_2,
+              }}
+              className={`${
+                nodeHasChildren(node) &&
+                "hover:brightness-[88%] dim cursor-pointer"
+              } 
+                 flex justify-between items-center rounded-[10px] px-[20px] py-[10px] min-h-[50px]`}
+              onClick={() => handleModuleClick(node)}
+            >
+              <div className="w-[calc(100%-90px)] truncate">
+                <p className="font-semibold truncate">
+                  {cleanModuleIdentifier(node.name)}
+                </p>
+                <p
+                  style={{ color: currentTheme.text_4 }}
+                  className="text-sm truncate"
                 >
-                  Add
-                </button>
+                  {node.name}
+                </p>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {!editingModule && (
-        <div className="flex flex-col gap-2">
-          {isLoadingModuleDefinitions ? (
-            <p>Loading...</p>
-          ) : (
-            filteredModules.map((moduleDefinitions: ModuleDefinition) => (
-              <div
-                key={moduleDefinitions.id}
-                style={{
-                  backgroundColor: currentTheme.background_1_2,
-                }}
-                className={`hover:brightness-[88%] dim cursor-pointer
-                 flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
-                onClick={() => handleModuleClick(moduleDefinitions)}
-              >
-                <div className="w-[calc(100%-90px)] truncate">
-                  <p className="font-semibold truncate">
-                    {moduleDefinitions.name}
-                  </p>
-                  <p
-                    style={{ color: currentTheme.text_4 }}
-                    className="text-sm truncate"
-                  >
-                    {moduleDefinitions.identifier} |{" "}
-                    {moduleDefinitions.description}
-                  </p>
-                </div>
-
-                {!showForm && (
-                  <div className="flex flex-row gap-[8px]">
-                    <div
-                      onClick={(e) =>
-                        handleEditModuleClick(e, moduleDefinitions)
-                      }
-                      style={{
-                        backgroundColor: currentTheme.background_2_selected,
-                      }}
-                      className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
-                    >
-                      <FiEdit size={18} color={currentTheme.text_4} />
-                    </div>
-
-                    <div
-                      onClick={(e) =>
-                        handleDeleteModuleClick(e, moduleDefinitions)
-                      }
-                      style={{
-                        backgroundColor: currentTheme.background_2_selected,
-                      }}
-                      className="flex items-center justify-center w-[36px] h-[36px] hover:brightness-90 dim cursor-pointer rounded-full"
-                    >
-                      <FaTrash size={15} color={currentTheme.text_4} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      )}
-    </form>
+          ))
+        )}
+      </div>
+    </div>
   );
 };
 

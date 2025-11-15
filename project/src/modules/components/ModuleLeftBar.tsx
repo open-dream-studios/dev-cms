@@ -44,7 +44,6 @@ const ModuleLeftBar = () => {
     deleteEmployee,
     employees,
     media,
-    moduleDefinitions,
     projectModules,
     integrations,
   } = useContextQueries();
@@ -189,7 +188,6 @@ const ModuleLeftBar = () => {
   const handleCustomerSync = async () => {
     if (currentProject) {
       await runFrontendModule("customer-google-wave-sync", {
-        moduleDefinitions,
         projectModules,
         integrations,
         currentProject,

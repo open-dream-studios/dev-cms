@@ -1,26 +1,11 @@
 // server/functions/modules.ts
+import { ModuleDefinitionTree } from "@open-dream/shared";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
-type FileNode = {
-  name: string;
-  type: "file" | "folder";
-  children?: FileNode[];
-  keys?: string[];
-  required_keys?: string[];
-  fullPath?: string;
-};
+const moduleStructureDir = path.resolve(process.cwd(), "module_structure");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const moduleStructureDir = path.join(
-  path.dirname(__dirname),
-  "module_structure"
-);
-
-function buildTree(dirPath: string): FileNode {
+function buildTree(dirPath: string): ModuleDefinitionTree {
   const stats = fs.statSync(dirPath);
 
   if (!stats.isDirectory()) {
@@ -68,7 +53,10 @@ function buildTree(dirPath: string): FileNode {
   };
 }
 
-export function findNodeByName(node: FileNode, name: string): FileNode | null {
+export function findNodeByName(
+  node: ModuleDefinitionTree,
+  name: string
+): ModuleDefinitionTree | null {
   if (node.name === name) return node;
   if (node.children) {
     for (const child of node.children) {
@@ -79,7 +67,7 @@ export function findNodeByName(node: FileNode, name: string): FileNode | null {
   return null;
 }
 
-export async function loadModuleConfig(moduleFolder: FileNode) {
+export async function loadModuleConfig(moduleFolder: ModuleDefinitionTree) {
   if (!moduleFolder.children) {
     return { run: null, keys: [], required_keys: [] };
   }
@@ -97,10 +85,30 @@ export async function loadModuleConfig(moduleFolder: FileNode) {
   };
 }
 
+export async function getModulesStructureKeys(
+  tree: ModuleDefinitionTree
+): Promise<string[]> {
+  const keySet = new Set<string>();
+  function walk(node: ModuleDefinitionTree) {
+    if (node.type === "file" && Array.isArray(node.keys)) {
+      for (const key of node.keys) {
+        keySet.add(key);
+      }
+    }
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        walk(child);
+      }
+    }
+  }
+  walk(tree);
+  return Array.from(keySet);
+}
+
 export const getModulesStructure = async () => {
   const tree = buildTree(moduleStructureDir);
   // console.log(JSON.stringify(tree, null, 2));
-  return tree;
+  return tree as ModuleDefinitionTree;
 };
 
 // const folder = {

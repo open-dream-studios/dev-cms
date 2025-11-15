@@ -54,7 +54,7 @@ export function useProjectModules(
   });
 
   const hasProjectModule = (identifier: string): boolean => {
-    return projectModules?.some((pm) => pm.identifier === identifier);
+    return projectModules?.some((pm) => pm.module_identifier === identifier);
   };
 
   const upsertProjectModule = async (projectModule: ProjectModule) => {

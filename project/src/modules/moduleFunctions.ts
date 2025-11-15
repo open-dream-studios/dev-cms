@@ -1,19 +1,13 @@
-// project/modules/moduleDefinitions.ts
+// project/modules/moduleFunctions.ts
 import { toast } from "react-toastify";
-import { checkIntegrations, moduleRequest } from "./runFrontendModule";
-import { ModuleInputs } from "@open-dream/shared";
+import { moduleRequest } from "./runFrontendModule";
+import { ModuleInput, RunModuleContext } from "@open-dream/shared";
 
-export const moduleDefinitions: Record<string, ModuleInputs> = {
+export const moduleFunctions: Record<string, ModuleInput> = {
   "customer-products-google-sheets-module": {
-    identifier: "customer-products-google-sheets-module",
-    label: "Export to Google Sheets",
-    description: "Send products to linked Google Sheet",
-    expectedSchema: ["spreadsheetId", "sheetName", "serviceAccountJson"],
-    run: async (ctx) => {
+    run: async (ctx: RunModuleContext) => {
       const { currentProject } = ctx;
       const identifier = "customer-products-google-sheets-module";
-      const integrations = checkIntegrations(identifier, ctx, true);
-      if (integrations === null) return;
       const googleSheetUrl = await moduleRequest(identifier, {
         project_idx: currentProject.id,
       });
@@ -29,15 +23,9 @@ export const moduleDefinitions: Record<string, ModuleInputs> = {
   },
 
   "customer-products-wix-sync-module": {
-    identifier: "customer-products-wix-sync-module",
-    label: "Sync Products to Wix",
-    description: "Push local products to Wix Store",
-    expectedSchema: ["WIX_BACKEND_URL", "WIX_GENERATED_SECRET"],
-    run: async (ctx) => {
+    run: async (ctx: RunModuleContext) => {
       const { currentProject } = ctx;
       const identifier = "customer-products-wix-sync-module";
-      const integration = checkIntegrations(identifier, ctx, true);
-      if (!integration) return null;
       const success = await moduleRequest(identifier, {
         project_idx: currentProject.id,
       });
@@ -49,15 +37,9 @@ export const moduleDefinitions: Record<string, ModuleInputs> = {
   },
 
   "google-maps-api-module": {
-    identifier: "google-maps-api-module",
-    label: "Fetch map predictions",
-    description: "Fetch map predictions",
-    expectedSchema: ["GOOGLE_API_KEY"],
-    run: async (ctx) => {
+    run: async (ctx: RunModuleContext) => {
       const { currentProject } = ctx;
       const identifier = "google-maps-api-module";
-      const integration = checkIntegrations(identifier, ctx, true);
-      if (!integration) return null;
       const predictions = await moduleRequest(identifier, {
         project_idx: currentProject.id,
         body: ctx.body ?? null,
@@ -67,15 +49,9 @@ export const moduleDefinitions: Record<string, ModuleInputs> = {
   },
 
   "customer-google-wave-sync": {
-    identifier: "customer-google-wave-sync",
-    label: "Sync customers",
-    description: "Sync customers with Google contacts and Wave customers",
-    expectedSchema: [""],
-    run: async (ctx) => {
+    run: async (ctx: RunModuleContext) => {
       const { currentProject } = ctx;
       const identifier = "customer-google-wave-sync";
-      const integration = checkIntegrations(identifier, ctx, true);
-      if (!integration) return null;
       const predictions = await moduleRequest(identifier, {
         project_idx: currentProject.id,
         body: ctx.body ?? null,

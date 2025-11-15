@@ -46,8 +46,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
   const { promptContinue } = useModals();
   const {
     deleteProducts,
-    hasProjectModule,
-    moduleDefinitions,
+    hasProjectModule, 
     projectModules,
     integrations,
   } = useContextQueries();
@@ -94,7 +93,6 @@ const ProductsHeader = ({ title }: { title: string }) => {
     try {
       if (currentProject) {
         await runFrontendModule("customer-products-wix-sync-module", {
-          moduleDefinitions,
           projectModules,
           integrations,
           currentProject,
@@ -121,7 +119,6 @@ const ProductsHeader = ({ title }: { title: string }) => {
     try {
       if (currentProject) {
         await runFrontendModule("customer-products-google-sheets-module", {
-          moduleDefinitions,
           projectModules,
           integrations,
           currentProject,

@@ -3,21 +3,16 @@ import { ResultSetHeader, RowDataPacket, PoolConnection } from "mysql2/promise";
 import { db } from "../../connection/connect.js";
 import { decrypt, encrypt } from "../../util/crypto.js";
 import {
-  getModuleDefinitionsFunction,
-  getModulesFunction,
-} from "../modules/modules/modules_repositories.js";
-import {
-  DecryptedIntegration,
   Integration,
-  ModuleDefinition,
-  ProjectModule,
+  ModuleDecryptedKeys, 
 } from "@open-dream/shared";
+import { getModulesStructure, getModulesStructureKeys } from "../../functions/modules.js";
 
 // ---------- INTEGRATION FUNCTIONS ----------
 export const getIntegrationsFunction = async (
   project_idx: number
 ): Promise<Integration[]> => {
-  const q = `SELECT id, integration_id, project_idx, module_id, integration_key FROM project_integrations WHERE project_idx = ? ORDER BY created_at DESC`;
+  const q = `SELECT id, integration_id, project_idx, integration_key FROM project_integrations WHERE project_idx = ? ORDER BY created_at DESC`;
   const [rows] = await db
     .promise()
     .query<(Integration & RowDataPacket)[]>(q, [project_idx]);
@@ -27,9 +22,9 @@ export const getIntegrationsFunction = async (
 export const getDecryptedIntegrationsFunction = async (
   project_idx: number,
   keyNames: string[]
-): Promise<Record<string, string | null>> => {
+): Promise<ModuleDecryptedKeys> => {
   const q = `
-    SELECT id, integration_id, project_idx, module_id, integration_key, integration_value
+    SELECT id, integration_id, project_idx, integration_key, integration_value
     FROM project_integrations
     WHERE project_idx = ?
     ORDER BY created_at DESC
@@ -43,7 +38,7 @@ export const getDecryptedIntegrationsFunction = async (
       ? decrypt(row.integration_value)
       : null,
   }));
-  const result: Record<string, string | null> = {};
+  const result: ModuleDecryptedKeys = {};
   for (const keyName of keyNames) {
     const match = integrations.find(
       (row) => row.integration_key.toLowerCase() === keyName.toLowerCase()
@@ -63,40 +58,15 @@ export const upsertIntegrationFunction = async (
   project_idx: number,
   reqBody: any
 ) => {
-  const { integration_id, module_id, integration_key, integration_value } =
-    reqBody;
-
-  const projectModules = await getModulesFunction(project_idx);
-  if (!projectModules || !projectModules.length) {
-    throw Error("No modules found");
-  }
-  const matched_pm = projectModules.find(
-    (pm: ProjectModule) => pm.id === module_id
-  );
-  if (!matched_pm) {
-    throw Error("Integration module not found");
-  }
-  const moduleDefinitions = await getModuleDefinitionsFunction();
-  const matched_md = moduleDefinitions.find(
-    (md: ModuleDefinition) => md.id === matched_pm.module_definition_id
-  );
-
-  if (
-    !matched_md ||
-    !matched_md.config_schema ||
-    !Array.isArray(matched_md.config_schema) ||
-    !matched_md.config_schema.length
-  ) {
-    throw Error("No module config found");
-  }
-  const allowedKeys = matched_md.config_schema;
-  if (!allowedKeys.includes(integration_key)) {
-    throw Error(
-      "Invalid key provided: " +
-        integration_key +
-        "Allowed keys: " +
-        allowedKeys
-    );
+  const { integration_id, integration_key, integration_value } = reqBody;
+  const tree = await getModulesStructure()
+  const moduleDefinitionTreeKeys = await getModulesStructureKeys(tree);
+  if (!moduleDefinitionTreeKeys.includes(integration_key)) {
+    return {
+      success: false,
+      integration_id: null,
+      message: "Invalid key provided: " + integration_key,
+    };
   }
 
   const encryptedValue = encrypt(integration_value);
@@ -110,11 +80,10 @@ export const upsertIntegrationFunction = async (
 
   const query = `
       INSERT INTO project_integrations (
-        integration_id, project_idx, module_id, integration_key, integration_value
+        integration_id, project_idx, integration_key, integration_value
       )
-      VALUES (?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        module_id = VALUES(module_id),
+      VALUES (?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE 
         integration_key = VALUES(integration_key),
         integration_value = VALUES(integration_value),
         updated_at = NOW()
@@ -123,7 +92,6 @@ export const upsertIntegrationFunction = async (
   const values = [
     finalIntegrationId,
     project_idx,
-    module_id,
     integration_key,
     encryptedValue,
   ];

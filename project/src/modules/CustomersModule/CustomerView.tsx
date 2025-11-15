@@ -28,8 +28,7 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 export const CustomerView = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { productsData, moduleDefinitions, projectModules, integrations } =
-    useContextQueries();
+  const { productsData, projectModules, integrations } = useContextQueries();
   const { currentProject, currentCustomer, currentProjectId } =
     useCurrentDataStore();
   const { addingCustomer } = useUiStore();
@@ -87,7 +86,6 @@ export const CustomerView = () => {
     try {
       if (currentProject) {
         const res = await runFrontendModule("google-maps-api-module", {
-          moduleDefinitions,
           projectModules,
           integrations,
           currentProject,
@@ -117,32 +115,6 @@ export const CustomerView = () => {
     } catch (err) {
       console.error("Address suggestions failed", err);
     }
-
-    // try {
-    // const details = await fetchPlaceDetails(
-    //   prediction.place_id,
-    //   sessionToken
-    // );
-    // if (details.status === "OK") {
-    // const result = details.result;
-    // const { address_components } = result;
-    // const parsed = parseAddressComponents(address_components);
-    // customerForm.setValue("address_line1", parsed.address_line1, {
-    //   shouldValidate: true,
-    //   shouldDirty: true,
-    // });
-    // customerForm.setValue("address_line2", parsed.address_line2, {
-    //   shouldValidate: true,
-    //   shouldDirty: true,
-    // });
-    // customerForm.setValue("city", parsed.city, { shouldDirty: true });
-    // customerForm.setValue("state", parsed.state, { shouldDirty: true });
-    // customerForm.setValue("zip", parsed.zip, { shouldDirty: true });
-    // }
-    // setPopupVisible(false);
-    // } catch (err) {
-    //   console.error(err);
-    // }
   };
 
   useOutsideClick(popupRef, () => setPopupVisible(false));
@@ -156,7 +128,6 @@ export const CustomerView = () => {
       try {
         if (currentProject) {
           const res = await runFrontendModule("google-maps-api-module", {
-            moduleDefinitions,
             projectModules,
             integrations,
             currentProject,

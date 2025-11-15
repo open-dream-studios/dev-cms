@@ -21,7 +21,7 @@ export const accessLevels = {
   client: 2,
   viewer: 1,
   external: 0,
-} as const
+} as const;
 
 export const projectRoles = {
   admin: 9,
@@ -29,7 +29,7 @@ export const projectRoles = {
   manager: 5,
   editor: 3,
   viewer: 1,
-} as const
+} as const;
 
 export type ProjectUser = {
   id?: number;
@@ -39,33 +39,20 @@ export type ProjectUser = {
   invited_at?: string;
 };
 
-export type ModuleDefinition = {
-  id?: number;
-  module_definition_id: string | null;
-  name: string;
-  identifier: string;
-  description: string | null;
-  parent_module_id: number | null;
-  config_schema: string[];
-};
-
 export type ProjectModule = {
   id?: number;
   module_id: string | null;
-  module_definition_id: number;
+  module_identifier: string;
   project_idx: number;
   settings: any;
-  name?: string;
-  description?: string | null;
-  identifier?: string;
-  parent_module_id?: number | null;
+  required_access: number;
+  frontend_visible: boolean;
 };
 
 export type Integration = {
   id?: number;
   integration_id: string | null;
   project_idx: number;
-  module_id: number;
   integration_key: string;
 };
 
@@ -73,7 +60,6 @@ export type DecryptedIntegration = {
   id?: number;
   integration_id: string | null;
   project_idx: number;
-  module_id: number;
   integration_key: string;
   integration_value: string | null;
 };

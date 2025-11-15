@@ -5,7 +5,7 @@ import {
   autoCompleteAddress,
 } from "../../../services/google/googleMaps.js";
 
-export const keys = { GOOGLE_API_KEY: true };
+export const keys = { GOOGLE_MAPS_API_KEY: true };
 
 export const run = async ({
   connection,
@@ -16,8 +16,8 @@ export const run = async ({
   decryptedKeys,
 }: ModuleFunctionInputs) => {
   try {
-    const { GOOGLE_API_KEY } = decryptedKeys;
-    if (!GOOGLE_API_KEY) {
+    const { GOOGLE_MAPS_API_KEY } = decryptedKeys;
+    if (!GOOGLE_MAPS_API_KEY) {
       throw new Error("Missing credentials");
     }
 
@@ -26,13 +26,13 @@ export const run = async ({
     }
     if (body.requestType === "predictions" && body.address)
       return await autoCompleteAddress(
-        GOOGLE_API_KEY,
+        GOOGLE_MAPS_API_KEY,
         body.address,
         body.sessionToken
       );
     if (body.requestType === "place" && body.place_id)
       return await addressDetails(
-        GOOGLE_API_KEY,
+        GOOGLE_MAPS_API_KEY,
         body.place_id,
         body.sessionToken
       );
