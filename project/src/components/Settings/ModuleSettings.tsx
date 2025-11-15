@@ -397,7 +397,7 @@ const ModuleSettings = () => {
         </div>
       ) : (
         <div
-          className="w-[90%] max-h-[305px] overflow-y-scroll rounded-[8px]"
+          className="w-[90%] overflow-y-scroll rounded-[8px]"
           style={{
             backgroundColor: currentTheme.background_1_2,
           }}

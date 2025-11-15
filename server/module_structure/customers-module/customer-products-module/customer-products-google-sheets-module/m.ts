@@ -1,11 +1,12 @@
 // server/module_structure/customers-module/customer-products-module/customer-products-google-sheets-module/m.ts
-import { getProductsFunction } from "@handlers/modules/products/products_repositories.js";
+import { getProductsFunction } from "../../../../handlers/modules/products/products_repositories.js";
 import { ModuleFunctionInputs } from "@open-dream/shared";
-import { updateGoogleSheet } from "@services/google/googleSheets.js";
+import { updateGoogleSheet } from "../../../../services/google/googleSheets.js";
 
 export const keys = {
   GOOGLE_INVENTORY_SHEET_ID: true,
   GOOGLE_INVENTORY_SHEET_NAME: true,
+  GOOGLE_SERVICE_ACCOUNT_JSON: true,
 };
 
 export const run = async ({
@@ -27,7 +28,7 @@ export const run = async ({
       !GOOGLE_INVENTORY_SHEET_NAME ||
       !GOOGLE_SERVICE_ACCOUNT_JSON
     ) {
-      throw new Error("Missing credentials");
+      return { success: false, GOOGLE_INVENTORY_SHEET_ID: null };
     }
 
     const products = await getProductsFunction(project_idx);
@@ -77,9 +78,12 @@ export const run = async ({
       GOOGLE_INVENTORY_SHEET_NAME,
       GOOGLE_SERVICE_ACCOUNT_JSON
     );
-    return GOOGLE_INVENTORY_SHEET_ID;
+    if (success) {
+      return { success: true, GOOGLE_INVENTORY_SHEET_ID };
+    }
+    return { success: false, GOOGLE_INVENTORY_SHEET_ID: null };
   } catch (err) {
     console.error(err);
-    return false;
+    return { success: false, GOOGLE_INVENTORY_SHEET_ID: null };
   }
 };

@@ -8,17 +8,17 @@ export const moduleFunctions: Record<string, ModuleInput> = {
     run: async (ctx: RunModuleContext) => {
       const { currentProject } = ctx;
       const identifier = "customer-products-google-sheets-module";
-      const googleSheetUrl = await moduleRequest(identifier, {
+      const response = await moduleRequest(identifier, {
         project_idx: currentProject.id,
       });
-      if (googleSheetUrl) {
+      if (response && response.GOOGLE_INVENTORY_SHEET_ID) {
         toast.success("Exported to Google Sheets");
         window.open(
-          `https://docs.google.com/spreadsheets/d/${googleSheetUrl}`,
+          `https://docs.google.com/spreadsheets/d/${response.GOOGLE_INVENTORY_SHEET_ID}`,
           "_blank"
         );
       }
-      return !!googleSheetUrl;
+      return !!response.GOOGLE_INVENTORY_SHEET_ID;
     },
   },
 

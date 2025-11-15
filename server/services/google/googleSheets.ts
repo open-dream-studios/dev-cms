@@ -17,21 +17,19 @@ export const updateGoogleSheet = async (
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
-    console.log(parsed)
+    const sheets = google.sheets({ version: "v4", auth });
 
-    // const sheets = google.sheets({ version: "v4", auth });
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId: spreadsheetId,
+      range: `${sheetName}!A1:ZZZ`,
+    });
 
-    // await sheets.spreadsheets.values.clear({
-    //   spreadsheetId: spreadsheetId,
-    //   range: `${sheetName}!A1:ZZZ`,
-    // });
-
-    // await sheets.spreadsheets.values.update({
-    //   spreadsheetId: spreadsheetId,
-    //   range: `${sheetName}!A1:ZZZ`,
-    //   valueInputOption: "RAW",
-    //   requestBody: { values: [header, ...rows] },
-    // });
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: spreadsheetId,
+      range: `${sheetName}!A1:ZZZ`,
+      valueInputOption: "RAW",
+      requestBody: { values: [header, ...rows] },
+    });
     return true;
   } catch (err: any) {
     console.error(err);
