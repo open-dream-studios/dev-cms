@@ -11,5 +11,10 @@
     "build": "tsc"
   },
   "types": "./dist/index.d.ts",
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "mysql2": "^3.15.3"
+  }
 }

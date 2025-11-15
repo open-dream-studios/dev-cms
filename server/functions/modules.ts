@@ -3,7 +3,7 @@ import { ModuleDefinitionTree } from "@open-dream/shared";
 import fs from "fs";
 import path from "path";
 
-const moduleStructureDir = path.resolve(process.cwd(), "module_structure");
+const moduleStructureDir = path.resolve(process.cwd(), "dist/module_structure");
 
 function buildTree(dirPath: string): ModuleDefinitionTree {
   const stats = fs.statSync(dirPath);
