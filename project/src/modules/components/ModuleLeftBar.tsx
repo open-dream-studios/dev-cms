@@ -135,7 +135,6 @@ const ModuleLeftBar = () => {
 
     const elTop = el.offsetTop;
     const targetScrollTop = elTop - 106;
-
     container.scrollTo({
       top: targetScrollTop,
       behavior: "auto",
