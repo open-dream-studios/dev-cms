@@ -53,32 +53,33 @@ export const run = async ({
       return { success: false };
     }
 
-    // const wave_success = await importWaveCustomers(
-    //   WAVE_ACCESS_TOKEN,
-    //   WAVE_BUSINESS_ID
-    // );
+    const wave_success = await importWaveCustomers(
+      WAVE_ACCESS_TOKEN,
+      WAVE_BUSINESS_ID
+    );
 
-    // const google_success = await importGoogleContacts(
-    //   GOOGLE_CLIENT_SECRET_OBJECT,
-    //   GOOGLE_REFRESH_TOKEN_OBJECT
-    // );
+    const google_success = await importGoogleContacts(
+      GOOGLE_CLIENT_SECRET_OBJECT,
+      GOOGLE_REFRESH_TOKEN_OBJECT
+    );
 
-    // if (wave_success && google_success) {
-    const collectedCustomers: CollectedCustomer[] | false =
-      await collectCustomersFromCSVs();
-    if (collectedCustomers) {
-      const success = await internalTransaction(
-        async (connection: PoolConnection) => {
-          return await integrateCollectedCustomers(
-            project_idx,
-            collectedCustomers,
-            connection
-          );
-        }
-      );
+    if (wave_success && google_success) {
+      const collectedCustomers: CollectedCustomer[] | false =
+        await collectCustomersFromCSVs();
+      if (collectedCustomers) {
+        const success = await internalTransaction(
+          async (connection: PoolConnection) => {
+            return await integrateCollectedCustomers(
+              project_idx,
+              collectedCustomers,
+              connection
+            );
+          }
+        );
+        return { success };
+      }
     }
-    // }
-    // return { success: false };
+    return { success: false };
   } catch (err) {
     console.error(err);
     return { success: false };
