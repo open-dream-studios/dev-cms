@@ -1,4 +1,8 @@
 // server/index.ts
+const tmpDir = path.resolve("./tmp");
+if (!fs.existsSync(tmpDir)) {
+  fs.mkdirSync(tmpDir, { recursive: true });
+}
 import { db } from "./connection/connect.js";
 import express from "express";
 import cors from "cors";
