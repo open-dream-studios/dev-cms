@@ -5,7 +5,7 @@ import { updateGoogleSheet } from "../../../../services/google/googleSheets.js";
 
 export const keys = {
   GOOGLE_INVENTORY_SHEET_ID: true,
-  GOOGLE_INVENTORY_SHEET_NAME: true,
+  GOOGLE_INVENTORY_TAB_GID: true,
   GOOGLE_SERVICE_ACCOUNT_JSON: true,
 };
 
@@ -20,16 +20,18 @@ export const run = async ({
   try {
     const {
       GOOGLE_INVENTORY_SHEET_ID,
-      GOOGLE_INVENTORY_SHEET_NAME,
+      GOOGLE_INVENTORY_TAB_GID,
       GOOGLE_SERVICE_ACCOUNT_JSON,
     } = decryptedKeys;
+
     if (
       !GOOGLE_INVENTORY_SHEET_ID ||
-      !GOOGLE_INVENTORY_SHEET_NAME ||
+      !GOOGLE_INVENTORY_TAB_GID ||
       !GOOGLE_SERVICE_ACCOUNT_JSON
     ) {
       return { success: false, GOOGLE_INVENTORY_SHEET_ID: null };
     }
+    const sheetGID = Number(GOOGLE_INVENTORY_TAB_GID);
 
     const products = await getProductsFunction(project_idx);
 
@@ -75,7 +77,7 @@ export const run = async ({
       header,
       rows,
       GOOGLE_INVENTORY_SHEET_ID,
-      GOOGLE_INVENTORY_SHEET_NAME,
+      sheetGID,
       GOOGLE_SERVICE_ACCOUNT_JSON
     );
     if (success) {

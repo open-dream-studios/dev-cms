@@ -28,7 +28,7 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 export const CustomerView = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { productsData, projectModules, integrations } = useContextQueries();
+  const { productsData } = useContextQueries();
   const { currentProject, currentCustomer, currentProjectId } =
     useCurrentDataStore();
   const { addingCustomer } = useUiStore();
@@ -86,8 +86,6 @@ export const CustomerView = () => {
     try {
       if (currentProject) {
         const res = await runFrontendModule("google-maps-api-module", {
-          projectModules,
-          integrations,
           currentProject,
           body: {
             requestType: "place",
@@ -128,8 +126,6 @@ export const CustomerView = () => {
       try {
         if (currentProject) {
           const res = await runFrontendModule("google-maps-api-module", {
-            projectModules,
-            integrations,
             currentProject,
             body: {
               requestType: "predictions",

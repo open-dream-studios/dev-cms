@@ -74,6 +74,9 @@ interface CurrentDataState {
 
   productFilters: DataFilters;
   setProductFilters: (productFilters: DataFilters) => void;
+
+  currentCustomerSearchTerm: string;
+  setCurrentCustomerSearchTerm: (searchTerm: string) => void;
 }
 
 const localProductsDataRef = { current: [] as Product[] };
@@ -191,6 +194,10 @@ export const useCurrentDataStore = create<CurrentDataState>()(
       productFilters: { products: [], jobType: [] },
       setProductFilters: (filters: DataFilters) =>
         set({ productFilters: filters }),
+
+      currentCustomerSearchTerm: "",
+      setCurrentCustomerSearchTerm: (searchTerm: string) =>
+        set({ currentCustomerSearchTerm: searchTerm }),
     }),
     { name: "CurrentDataStore" }
   )

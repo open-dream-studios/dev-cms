@@ -1,14 +1,8 @@
 // shared/types/models/modules.ts
-import {
-  Integration,
-  Project,
-  ProjectModule,
-} from "./project";
+import { Project } from "./project";
 import { PoolConnection } from "mysql2/promise";
 
 export type RunModuleContext = {
-  projectModules: ProjectModule[];
-  integrations: Integration[];
   currentProject: Project;
   body?: any;
 };

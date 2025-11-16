@@ -30,8 +30,39 @@ import RenderedImage from "./ProductCard/RenderedImage";
 import NoProductImage from "./ProductCard/NoProductImage";
 import { GoSync } from "react-icons/go";
 import { runFrontendModule } from "../runFrontendModule";
+import { useQueryClient } from "@tanstack/react-query";
+import { Search } from "lucide-react";
+
+const SearchBar = () => {
+  const currentTheme = useCurrentTheme();
+  const { setCurrentCustomerSearchTerm } = useCurrentDataStore();
+
+  return (
+    <div className="h-[38px] w-[100%] pt-[10px]">
+      <div
+        className="rounded-[8px] w-[100%] h-[100%] flex items-center pl-[10px] flex-row gap-[5px]"
+        style={{ backgroundColor: "rgba(255,255,255,0.028)" }}
+      >
+        <Search
+          color={currentTheme.text_3}
+          size={15}
+          className="opacity-[0.7]"
+        />
+        <input
+          type="text"
+          className="border-none outline-none font-[400] text-[13px] opacity-[0.72]"
+          onChange={(e) => {
+            console.log(e.target.value);
+            setCurrentCustomerSearchTerm(e.target.value);
+          }}
+        />
+      </div>
+    </div>
+  );
+};
 
 const ModuleLeftBar = () => {
+  const queryClient = useQueryClient();
   const { setCurrentEmployeeData, setCurrentCustomerData, currentProject } =
     useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
@@ -44,23 +75,22 @@ const ModuleLeftBar = () => {
     deleteEmployee,
     employees,
     media,
-    projectModules,
-    integrations,
+    refetchCustomers,
   } = useContextQueries();
-  const { localProductsData, setCurrentProductData } = useCurrentDataStore();
+  const { localProductsData, setCurrentProductData, currentProjectId } =
+    useCurrentDataStore();
   const { screenClick } = useRouting();
   const pathname = usePathname();
   const { getForm } = useFormInstanceStore();
-
+  const { setUpdatingLock } = useUiStore();
   const {
     screen,
-    addingCustomer,
     setAddingCustomer,
-    addingEmployee,
     setAddingEmployee,
     addingProduct,
     setAddingProduct,
   } = useUiStore();
+  const { currentCustomerSearchTerm } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
 
   const productForm = getForm("product");
@@ -71,6 +101,46 @@ const ModuleLeftBar = () => {
 
   const employeeForm = getForm("employee");
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
+
+  const itemRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+  const scrollRef = React.useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!currentCustomerSearchTerm || currentCustomerSearchTerm.trim() === "")
+      return;
+    if (!customers || customers.length === 0) return;
+    if (!scrollRef.current) return;
+
+    const search = currentCustomerSearchTerm.trim().toLowerCase();
+
+    const firstMatches = customers.filter((c) =>
+      c.first_name?.toLowerCase().startsWith(search)
+    );
+
+    const lastMatches =
+      firstMatches.length > 0
+        ? []
+        : customers.filter((c) =>
+            c.last_name?.toLowerCase().startsWith(search)
+          );
+
+    const matches = firstMatches.length > 0 ? firstMatches : lastMatches;
+
+    if (matches.length === 0) return;
+
+    const match = matches[0];
+    const el = itemRefs.current[match.customer_id];
+    const container = scrollRef.current;
+
+    if (!el || !container) return;
+
+    const elTop = el.offsetTop;
+    const targetScrollTop = elTop - 106;
+
+    container.scrollTo({
+      top: targetScrollTop,
+      behavior: "auto",
+    });
+  }, [currentCustomerSearchTerm, customers]);
 
   const handleDeleteCustomer = async () => {
     if (!contextMenu || !contextMenu.input) return;
@@ -186,11 +256,15 @@ const ModuleLeftBar = () => {
   };
 
   const handleCustomerSync = async () => {
+    setUpdatingLock(true);
     if (currentProject) {
-      await runFrontendModule("customer-google-wave-sync", {
-        projectModules,
-        integrations,
+      await runFrontendModule("customer-google-wave-sync-module", {
         currentProject,
+      });
+      refetchCustomers();
+      setUpdatingLock(false);
+      queryClient.invalidateQueries({
+        queryKey: ["customers", currentProjectId],
       });
     }
   };
@@ -215,12 +289,12 @@ const ModuleLeftBar = () => {
         addingProduct
           ? "hidden md:flex"
           : "hidden"
-      } w-[240px] min-w-[240px] h-[100%] flex-col overflow-hidden`}
+      } w-[240px] min-w-[240px] h-full flex flex-col min-h-0 overflow-hidden`}
       style={{
         borderRight: `0.5px solid ${currentTheme.background_2}`,
       }}
     >
-      <div className="flex flex-col px-[15px]">
+      <div className="flex flex-col px-[15px] pb-[8px]">
         {contextMenu && screen === "customers" && (
           <div
             className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
@@ -271,7 +345,7 @@ const ModuleLeftBar = () => {
             </p>
           </div>
           <div className="flex flex-row gap-[6px]">
-            {!addingCustomer && screen === "customers" && (
+            {screen === "customers" && (
               <div
                 onClick={handleCustomerSync}
                 className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
@@ -283,7 +357,9 @@ const ModuleLeftBar = () => {
               </div>
             )}
 
-            {!addingCustomer && !addingEmployee && !addingProduct && (
+            {(screen === "customers" ||
+              screen === "employees" ||
+              screen === "customer-products") && (
               <div
                 onClick={handlePlusClick}
                 className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
@@ -297,20 +373,31 @@ const ModuleLeftBar = () => {
           </div>
         </div>
         <Divider />
+        {screen === "customers" && <SearchBar />}
       </div>
 
-      <div className="flex flex-col h-[100%]">
+      <div
+        className="flex flex-col flex-1 min-h-0 h-[100%] overflow-y-auto pb-[20px]"
+        ref={scrollRef}
+      >
         {screen === "customers" && (
-          <div className="px-[15px] pt-[10px]">
+          <div className="px-[15px] pt-[1px]">
             {customers.map((customer: Customer, index: number) => {
               return (
-                <CustomerMiniCard
-                  customer={customer}
-                  key={index}
-                  index={index}
-                  handleContextMenu={handleContextMenu}
-                  handleCustomerClick={handleCustomerClick}
-                />
+                <div
+                  key={customer.customer_id}
+                  ref={(el) => {
+                    itemRefs.current[customer.customer_id] = el;
+                  }}
+                >
+                  <CustomerMiniCard
+                    customer={customer}
+                    key={index}
+                    index={index}
+                    handleContextMenu={handleContextMenu}
+                    handleCustomerClick={handleCustomerClick}
+                  />
+                </div>
               );
             })}
           </div>

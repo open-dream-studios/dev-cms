@@ -1,7 +1,11 @@
 // server/handlers/modules/customers/customers_repositories.ts
 import { db } from "../../../connection/connect.js";
 import type { Customer } from "@open-dream/shared";
-import type { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
+import type {
+  RowDataPacket,
+  PoolConnection,
+  ResultSetHeader,
+} from "mysql2/promise";
 
 // ---------- CUSTOMER FUNCTIONS ----------
 export const getCustomersFunction = async (
@@ -37,7 +41,7 @@ export const upsertCustomerFunction = async (
     notes,
   } = reqBody;
 
-  const finalCustomerId = 
+  const finalCustomerId =
     customer_id && customer_id.trim() !== ""
       ? customer_id
       : "C-" +
@@ -78,8 +82,8 @@ export const upsertCustomerFunction = async (
   const values = [
     finalCustomerId,
     project_idx,
-    first_name,
-    last_name,
+    first_name.toLowerCase(),
+    last_name.toLowerCase(),
     email,
     phone,
     address_line1,
@@ -91,9 +95,40 @@ export const upsertCustomerFunction = async (
   ];
 
   const [result] = await connection.query<ResultSetHeader>(query, values);
-  let id = result.insertId;
-  if (!id) throw new Error("No ID provided from result");
-  return { success: true, id, customer_id: finalCustomerId };
+
+  // console.log(">>> incoming customer_id:", customer_id);
+  // console.log(">>> finalCustomerId:", finalCustomerId);
+
+  // console.log(">>> result from MySQL:", {
+  //   insertId: result.insertId,
+  //   affectedRows: result.affectedRows,
+  //   changedRows: (result as any).changedRows,
+  //   warningStatus: result.warningStatus,
+  // });
+
+  // let id = result.insertId;
+  // if (!id) throw new Error("No ID provided from result");
+
+  const inserted = result.insertId && result.insertId > 0;
+
+  // If no insertId, we fall back to the existing customer's internal DB ID
+  let internalId = inserted ? result.insertId : null;
+
+  if (!inserted) {
+    // Fetch the row to get its primary key ID
+    const [rows] = await connection.query<RowDataPacket[]>(
+      `SELECT id FROM customers WHERE customer_id = ? AND project_idx = ?`,
+      [finalCustomerId, project_idx]
+    );
+    if (rows.length) internalId = rows[0].id;
+  }
+
+  if (!internalId) {
+    console.error("ERROR READING INTERNAL ID:", result);
+    throw new Error("Could not determine internal ID after upsert");
+  }
+
+  return { success: true, id: internalId, customer_id: finalCustomerId };
 };
 
 export const deleteCustomerFunction = async (

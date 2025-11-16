@@ -428,97 +428,99 @@ const ModuleSettings = () => {
             </div>
           )}
 
-          {integrations.map((i: Integration, index: number) => {
-            return (
-              <div key={index}>
-                {editingKey === i.integration_id ? (
-                  <div
-                    key={i.integration_key}
-                    className="w-full flex px-[20px] h-[50px] items-center gap-[10px]"
-                  >
-                    <input
-                      value={i.integration_key}
-                      disabled
-                      className="outline-none w-[25%] input py-[6px] rounded-[5px] text-[14px] opacity-60"
-                    />
-                    <input
-                      ref={editKeyInputRef}
-                      value={tempValue}
-                      onChange={(e) => setTempValue(e.target.value)}
-                      className="outline-none flex-1 input py-[6px] rounded-[5px] text-[14px]"
-                    />
-                    <button
-                      onClick={async () => {
-                        await saveIntegration(i.integration_key, tempValue);
-                      }}
-                      className="cursor-pointer hover:brightness-90 dim px-[12px] h-[32px] rounded-full text-sm dim"
-                      style={{
-                        backgroundColor: currentTheme.background_2_selected,
-                        color: currentTheme.text_4,
-                      }}
+          {[...integrations]
+            .sort((a, b) => a.integration_key.localeCompare(b.integration_key))
+            .map((i: Integration, index: number) => {
+              return (
+                <div key={index}>
+                  {editingKey === i.integration_id ? (
+                    <div
+                      key={i.integration_key}
+                      className="w-full flex px-[20px] h-[50px] items-center gap-[10px]"
                     >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingKey(null)}
-                      className="cursor-pointer hover:brightness-90 dim px-[12px] h-[32px] rounded-full text-sm dim"
-                      style={{
-                        backgroundColor: currentTheme.background_2_selected,
-                        color: currentTheme.text_4,
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div key={i.integration_id} className="w-full relative">
-                      <div className="flex justify-between items-center px-[20px] h-[50px] text-[14.5px]">
-                        <p className="w-[40%] pr-[5px] truncate opacity-[50%]">
-                          {i.integration_key}
-                        </p>
-                        <p className="flex-1 pr-[69px] truncate opacity-[50%]">
-                          {"xxxxxxxxxxxxxxxx"}
-                        </p>
-                        <div className="absolute right-[12px] top-[9px] flex gap-[10px]">
-                          <div
-                            onClick={() => {
-                              setEditingKey(i.integration_id);
-                              setTempValue("");
-                              setTimeout(() => {
-                                if (editKeyInputRef.current) {
-                                  editKeyInputRef.current.focus();
-                                }
-                              }, 20);
-                            }}
-                            className="flex items-center justify-center w-[32px] h-[32px] rounded-full dim cursor-pointer"
-                            style={{
-                              backgroundColor:
-                                currentTheme.background_2_selected,
-                            }}
-                          >
-                            <FiEdit size={16} color={currentTheme.text_4} />
-                          </div>
-                          <div
-                            onClick={() =>
-                              handleDeleteIntegration(i.integration_id)
-                            }
-                            className="flex items-center justify-center w-[32px] h-[32px] rounded-full dim cursor-pointer"
-                            style={{
-                              backgroundColor:
-                                currentTheme.background_2_selected,
-                            }}
-                          >
-                            <FaTrash size={14} color={currentTheme.text_4} />
+                      <input
+                        value={i.integration_key}
+                        disabled
+                        className="outline-none w-[25%] input py-[6px] rounded-[5px] text-[14px] opacity-60"
+                      />
+                      <input
+                        ref={editKeyInputRef}
+                        value={tempValue}
+                        onChange={(e) => setTempValue(e.target.value)}
+                        className="outline-none flex-1 input py-[6px] rounded-[5px] text-[14px]"
+                      />
+                      <button
+                        onClick={async () => {
+                          await saveIntegration(i.integration_key, tempValue);
+                        }}
+                        className="cursor-pointer hover:brightness-90 dim px-[12px] h-[32px] rounded-full text-sm dim"
+                        style={{
+                          backgroundColor: currentTheme.background_2_selected,
+                          color: currentTheme.text_4,
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingKey(null)}
+                        className="cursor-pointer hover:brightness-90 dim px-[12px] h-[32px] rounded-full text-sm dim"
+                        style={{
+                          backgroundColor: currentTheme.background_2_selected,
+                          color: currentTheme.text_4,
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div key={i.integration_id} className="w-full relative">
+                        <div className="flex justify-between items-center px-[20px] h-[50px] text-[14.5px]">
+                          <p className="w-[40%] pr-[5px] truncate opacity-[50%]">
+                            {i.integration_key}
+                          </p>
+                          <p className="flex-1 pr-[69px] truncate opacity-[50%]">
+                            {"xxxxxxxxxxxxxxxx"}
+                          </p>
+                          <div className="absolute right-[12px] top-[9px] flex gap-[10px]">
+                            <div
+                              onClick={() => {
+                                setEditingKey(i.integration_id);
+                                setTempValue("");
+                                setTimeout(() => {
+                                  if (editKeyInputRef.current) {
+                                    editKeyInputRef.current.focus();
+                                  }
+                                }, 20);
+                              }}
+                              className="flex items-center justify-center w-[32px] h-[32px] rounded-full dim cursor-pointer"
+                              style={{
+                                backgroundColor:
+                                  currentTheme.background_2_selected,
+                              }}
+                            >
+                              <FiEdit size={16} color={currentTheme.text_4} />
+                            </div>
+                            <div
+                              onClick={() =>
+                                handleDeleteIntegration(i.integration_id)
+                              }
+                              className="flex items-center justify-center w-[32px] h-[32px] rounded-full dim cursor-pointer"
+                              style={{
+                                backgroundColor:
+                                  currentTheme.background_2_selected,
+                              }}
+                            >
+                              <FaTrash size={14} color={currentTheme.text_4} />
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
+                    </>
+                  )}
+                </div>
+              );
+            })}
         </div>
       )}
 

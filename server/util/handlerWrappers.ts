@@ -74,3 +74,23 @@ export const transactionHandler = (fn: TransactionFn) => {
     }
   };
 };
+
+export async function internalTransaction<T>(
+  fn: (connection: PoolConnection) => Promise<T>
+): Promise<T> {
+  const connection = await db.promise().getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const result = await fn(connection);
+
+    await connection.commit();
+    return result;
+  } catch (err) {
+    await connection.rollback();
+    console.error("❌ Internal transaction failed:", err);
+    throw err;
+  } finally {
+    connection.release();
+  }
+}

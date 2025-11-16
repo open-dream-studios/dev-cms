@@ -48,15 +48,14 @@ export const moduleFunctions: Record<string, ModuleInput> = {
     },
   },
 
-  "customer-google-wave-sync": {
+  "customer-google-wave-sync-module": {
     run: async (ctx: RunModuleContext) => {
       const { currentProject } = ctx;
-      const identifier = "customer-google-wave-sync";
-      const predictions = await moduleRequest(identifier, {
+      const identifier = "customer-google-wave-sync-module";
+      return await moduleRequest(identifier, {
         project_idx: currentProject.id,
         body: ctx.body ?? null,
       });
-      return predictions;
     },
   },
 };

@@ -5,7 +5,7 @@ export const updateGoogleSheet = async (
   header: string[],
   rows: any[],
   spreadsheetId: string,
-  sheetName: string,
+  tabGID: number,
   serviceAccountJson: string
 ) => {
   try {
@@ -18,6 +18,22 @@ export const updateGoogleSheet = async (
     });
 
     const sheets = google.sheets({ version: "v4", auth });
+
+    const meta = await sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: "sheets.properties",
+    });
+
+    const match = meta.data.sheets?.find(
+      (s) => s.properties?.sheetId === tabGID
+    );
+
+    if (!match) {
+      console.error("Sheet GID match not found for inventory export");
+      return FileSystemWritableFileStream;
+    }
+
+    const sheetName = match.properties!.title;
 
     await sheets.spreadsheets.values.clear({
       spreadsheetId: spreadsheetId,

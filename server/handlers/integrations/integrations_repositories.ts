@@ -2,11 +2,12 @@
 import { ResultSetHeader, RowDataPacket, PoolConnection } from "mysql2/promise";
 import { db } from "../../connection/connect.js";
 import { decrypt, encrypt } from "../../util/crypto.js";
+import { Integration, ModuleDecryptedKeys } from "@open-dream/shared";
 import {
-  Integration,
-  ModuleDecryptedKeys, 
-} from "@open-dream/shared";
-import { getModulesStructure, getModulesStructureKeys } from "../../functions/modules.js";
+  getModulesStructure,
+  getModulesStructureKeys,
+} from "../../functions/modules.js";
+import { sanitizeJsonLikeString } from "../../functions/data.js";
 
 // ---------- INTEGRATION FUNCTIONS ----------
 export const getIntegrationsFunction = async (
@@ -59,7 +60,7 @@ export const upsertIntegrationFunction = async (
   reqBody: any
 ) => {
   const { integration_id, integration_key, integration_value } = reqBody;
-  const tree = await getModulesStructure()
+  const tree = await getModulesStructure();
   const moduleDefinitionTreeKeys = await getModulesStructureKeys(tree);
   if (!moduleDefinitionTreeKeys.includes(integration_key)) {
     return {
@@ -69,7 +70,8 @@ export const upsertIntegrationFunction = async (
     };
   }
 
-  const encryptedValue = encrypt(integration_value);
+  const normalizedValue = sanitizeJsonLikeString(integration_value);
+  const encryptedValue = encrypt(normalizedValue);
   const finalIntegrationId =
     integration_id && integration_id.trim() !== ""
       ? integration_id

@@ -3,9 +3,9 @@ import axios from "axios";
 import {
   getJobDefinitionsFunction,
   getJobsFunction,
-} from "@handlers/modules/jobs/jobs_repositories.js";
-import { getMediaLinksFunction } from "@handlers/modules/media/media_repositories.js";
-import { getProductsFunction } from "@handlers/modules/products/products_repositories.js";
+} from "../../../../handlers/modules/jobs/jobs_repositories.js";
+import { getMediaLinksFunction } from "../../../../handlers/modules/media/media_repositories.js";
+import { getProductsFunction } from "../../../../handlers/modules/products/products_repositories.js";
 
 export const keys = { WIX_GENERATED_SECRET: true, WIX_BACKEND_URL: true };
 
@@ -81,9 +81,9 @@ export const run = async ({
           description_fld: item.description || "",
           make: item.make || "",
           model: item.model || "",
-          price: mostRecentJob.valuation,
-          length: item.length || 0,
-          width: item.width || 0,
+          price: Number(mostRecentJob.valuation),
+          length: Number(item.length) || 0,
+          width: Number(item.width) || 0,
           images: productImages,
         };
       })

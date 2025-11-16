@@ -3,23 +3,17 @@ import fetch from "node-fetch";
 import { writeFileSync } from "fs";
 import { parse as json2csv } from "json2csv";
 import dotenv from "dotenv";
+import { cleanPhone } from "../../functions/data.js";
 dotenv.config();
 
 const API_URL = "https://gql.waveapps.com/graphql/public";
-const ACCESS_TOKEN = process.env.WAVE_ACCESS_TOKEN;
-const WAVE_BUSINESS_ID = process.env.WAVE_BUSINESS_ID;
 const PAGE_SIZE = 100;
 
-if (!ACCESS_TOKEN) {
-  console.error("Missing WAVE_ACCESS_TOKEN in .env");
-  process.exit(1);
-}
-
-async function graphql(query: any, variables = {}) {
+async function graphql(WAVE_ACCESS_TOKEN: string, query: any, variables = {}) {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
+      Authorization: `Bearer ${WAVE_ACCESS_TOKEN}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ query, variables }),
@@ -37,7 +31,7 @@ async function graphql(query: any, variables = {}) {
   return j.data;
 }
 
-async function listBusinesses() {
+async function listBusinesses(WAVE_ACCESS_TOKEN: string) {
   const query = `
     query ($page: Int!, $pageSize: Int!) {
       businesses(page: $page, pageSize: $pageSize) {
@@ -57,54 +51,56 @@ async function listBusinesses() {
   `;
   // fetch first page (small)
   const variables = { page: 1, pageSize: 50 };
-  const data = await graphql(query, variables);
+  const data = await graphql(WAVE_ACCESS_TOKEN, query, variables);
   const b = data.businesses.edges.map((e: any) => e.node);
   return { businesses: b, pageInfo: data.businesses.pageInfo };
 }
 
-async function fetchAllCustomersForBusiness(businessId: string) {
-  // We'll page until we've collected all pages.
+async function fetchAllCustomersForBusiness(
+  WAVE_ACCESS_TOKEN: string,
+  businessId: string
+) {
   const query = `
-query ($businessId: ID!, $page: Int!, $pageSize: Int!) {
-  business(id: $businessId) {
-    customers(page: $page, pageSize: $pageSize) {
-      pageInfo {
-        currentPage
-        totalPages
-        totalCount
-      }
-      edges {
-        node {
-          id
-          name
-          firstName
-          lastName
-          email
-          phone
-          mobile
-          address {
-            addressLine1
-            addressLine2
-            city
-            province {
-              code
-              name
-            }
-            postalCode
-            country {
-              code
-              name
-            }
+    query ($businessId: ID!, $page: Int!, $pageSize: Int!) {
+      business(id: $businessId) {
+        customers(page: $page, pageSize: $pageSize) {
+          pageInfo {
+            currentPage
+            totalPages
+            totalCount
           }
-          currency {
-            code
+          edges {
+            node {
+              id
+              name
+              firstName
+              lastName
+              email
+              phone
+              mobile
+              address {
+                addressLine1
+                addressLine2
+                city
+                province {
+                  code
+                  name
+                }
+                postalCode
+                country {
+                  code
+                  name
+                }
+              }
+              currency {
+                code
+              }
+            }
           }
         }
       }
     }
-  }
-}
-`;
+  `;
 
   const customers = [];
   let page = 1;
@@ -112,15 +108,15 @@ query ($businessId: ID!, $page: Int!, $pageSize: Int!) {
 
   while (page <= totalPages) {
     const variables = { businessId, page, pageSize: PAGE_SIZE };
-    const data = await graphql(query, variables);
+    const data = await graphql(WAVE_ACCESS_TOKEN, query, variables);
     const block = data.business.customers;
-    if (!block) break; // no customers or no access
+    if (!block) break;
 
     totalPages = block.pageInfo.totalPages || 1;
     for (const edge of block.edges) {
       const c = edge.node;
 
-      // --- normalize address ---
+      // --- NORMALIZE ---
       const addr = c.address
         ? [
             c.address.addressLine1 || "",
@@ -134,17 +130,9 @@ query ($businessId: ID!, $page: Int!, $pageSize: Int!) {
             .join(", ")
         : "";
 
-      // --- clean functions ---
+      // --- CLEAN ---
       const lower = (val: string) => (val ? val.toLowerCase().trim() : "");
-      const cleanPhone = (val: string) => {
-        if (!val) return "";
-        // remove everything that's not a number
-        const digits = val.replace(/\D/g, "");
-        // get the last 10 digits (useful for US numbers)
-        return digits.slice(-10);
-      };
 
-      // --- push cleaned data ---
       customers.push({
         id: c.id,
         name: lower(
@@ -169,31 +157,41 @@ query ($businessId: ID!, $page: Int!, $pageSize: Int!) {
   return customers;
 }
 
-export async function importWaveCustomers() {
+export async function importWaveCustomers(
+  WAVE_ACCESS_TOKEN: string,
+  WAVE_BUSINESS_ID: string
+) {
+  if (!WAVE_ACCESS_TOKEN.length || !WAVE_BUSINESS_ID.length) {
+    console.error("Missing required credentials");
+    return false;
+  }
+
   try {
-    const { businesses } = await listBusinesses();
+    const { businesses } = await listBusinesses(WAVE_ACCESS_TOKEN);
     if (!businesses || businesses.length === 0) {
       console.log("No businesses found for this token.");
-      return;
+      return false;
     }
 
-    const chosenBusiness = businesses.find((b: any) =>
-      b.id === WAVE_BUSINESS_ID
+    const chosenBusiness = businesses.find(
+      (b: any) => b.id === WAVE_BUSINESS_ID
     );
-    if (!chosenBusiness) return
+    if (!chosenBusiness) return false;
 
     console.log(
       `\Fetching Wave Customers: ${chosenBusiness.name} (id: ${chosenBusiness.id})\n`
     );
 
-    const customers = await fetchAllCustomersForBusiness(chosenBusiness.id);
+    const customers = await fetchAllCustomersForBusiness(
+      WAVE_ACCESS_TOKEN,
+      chosenBusiness.id
+    );
 
     if (!customers.length) {
       console.log("No customers found.");
-      return;
+      return false;
     }
 
-    // CSV fields: custom order
     const fields = [
       "id",
       "name",
@@ -209,9 +207,9 @@ export async function importWaveCustomers() {
     const outName = `./tmp/wave_customers.csv`;
     writeFileSync(outName, csv, "utf8");
     console.log(`\n✅ Wrote ${customers.length} customers to ${outName}`);
+    return true;
   } catch (err) {
     console.error("Error:", err);
+    return false;
   }
 }
-
-importWaveCustomers();

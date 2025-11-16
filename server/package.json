@@ -8,6 +8,7 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
+    "csv-parse": "^6.1.0",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.6.1",
     "exceljs": "^4.4.0",
@@ -59,8 +60,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node server/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "start": "npm run build && node dist/index.js"
   },
   "keywords": [],
   "author": "",

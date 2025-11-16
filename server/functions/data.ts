@@ -93,7 +93,7 @@ export const generateSerial = (length: any, width: any, make: any) => {
     width = 80;
   }
   const variable = "N1";
-  const total = "00"
+  const total = "00";
   return `TSA${length}${width}${variable}${brand}${total
     .toString()
     .padStart(3, "0")}`;
@@ -106,4 +106,78 @@ export function storeStringAsUTC(input: any, projectTimezone: any) {
   });
   if (!dt.isValid) return null;
   return dt.toUTC().toFormat("yyyy-MM-dd HH:mm:ss");
+}
+
+export function sanitizeJsonLikeString(value: any): any {
+  if (typeof value !== "string") return value;
+
+  const trimmed = value.trim();
+
+  // Must at least LOOK like an object/array to sanitize
+  const looksLikeJsonObject =
+    (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+    (trimmed.startsWith("[") && trimmed.endsWith("]"));
+
+  if (!looksLikeJsonObject) return value;
+
+  // If it's already valid JSON → return it unchanged
+  try {
+    JSON.parse(trimmed);
+    return trimmed;
+  } catch (_) {
+    /* continue to fix */
+  }
+
+  // Attempt to convert JS-style object → valid JSON
+  let fixed = trimmed;
+
+  // Replace single quotes with double quotes
+  fixed = fixed.replace(/'/g, '"');
+
+  // Quote unquoted keys → turns: foo: "bar" → "foo": "bar"
+  fixed = fixed.replace(/([{,]\s*)([A-Za-z0-9_\-]+)\s*:/g, '$1"$2":');
+
+  // Remove trailing commas before } or ]
+  fixed = fixed.replace(/,\s*([}\]])/g, "$1");
+
+  // Try parsing again
+  try {
+    JSON.parse(fixed);
+    return fixed;
+  } catch (err) {
+    console.error(
+      "Failed to sanitize JSON-like string:",
+      err,
+      "\nValue:",
+      value
+    );
+    return value; // fail gracefully
+  }
+}
+
+export function cleanPhone(val?: string): string {
+  if (!val) return "";
+  const digits = val.replace(/\D/g, "");
+  return digits.slice(-10); // keeps last 10 digits (US style)
+}
+
+export function isValidEmail(email: string) {
+  if (!email) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function cleanNameForMatch(first: string, last: string): string {
+  const clean = (s: string) =>
+    (s || "")
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, "")
+      .trim();
+
+  return clean(`${first} ${last}`);
+}
+
+export function isValidPhone10(phone: string | null): boolean {
+  if (!phone) return false;
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10;
 }

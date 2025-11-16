@@ -1,6 +1,7 @@
 // project/src/util/schemas/customerSchema.ts
 import { z } from "zod";
 import { Customer, CustomerInput } from "@open-dream/shared";
+import { capitalizeFirstLetter } from "../functions/Data";
 
 export const CustomerSchema = z.object({
   first_name: z.string().min(1, "First name required"),
@@ -29,10 +30,12 @@ export const CustomerSchema = z.object({
 
 export type CustomerFormData = z.infer<typeof CustomerSchema>;
 
-export function customerToForm(customer?: Customer | CustomerInput | null): CustomerFormData {
+export function customerToForm(
+  customer?: Customer | CustomerInput | null
+): CustomerFormData {
   return {
-    first_name: customer?.first_name ?? "",
-    last_name: customer?.last_name ?? "",
+    first_name: capitalizeFirstLetter(customer?.first_name),
+    last_name: capitalizeFirstLetter(customer?.last_name),
     email: customer?.email ?? null,
     phone: customer?.phone ?? null,
     address_line1: customer?.address_line1 ?? null,

@@ -44,12 +44,8 @@ const ProductsHeader = ({ title }: { title: string }) => {
     setInventoryView,
   } = useUiStore();
   const { promptContinue } = useModals();
-  const {
-    deleteProducts,
-    hasProjectModule, 
-    projectModules,
-    integrations,
-  } = useContextQueries();
+  const { deleteProducts, hasProjectModule, projectModules, integrations } =
+    useContextQueries();
   const { screenClick } = useRouting();
   const { onProductFormSubmit } = useProductFormSubmit();
   const currentTheme = useCurrentTheme();
@@ -93,8 +89,6 @@ const ProductsHeader = ({ title }: { title: string }) => {
     try {
       if (currentProject) {
         await runFrontendModule("customer-products-wix-sync-module", {
-          projectModules,
-          integrations,
           currentProject,
         });
       }
@@ -119,8 +113,6 @@ const ProductsHeader = ({ title }: { title: string }) => {
     try {
       if (currentProject) {
         await runFrontendModule("customer-products-google-sheets-module", {
-          projectModules,
-          integrations,
           currentProject,
         });
       }

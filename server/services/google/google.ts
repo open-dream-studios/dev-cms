@@ -38,31 +38,26 @@ export async function generateGoogleRefreshToken() {
 }
 
 export async function AuthoirizeOAuth2Client(
-  client_id: string,
-  client_secret: string,
-  redirect_uri: string,
-  access_token: string,
-  refresh_token: string,
-  scope: string,
-  token_type: string,
-  refresh_token_expires_in: string,
-  expiry_date: string
+  GOOGLE_CLIENT_SECRET_OBJECT: string,
+  GOOGLE_REFRESH_TOKEN_OBJECT: string
 ) {
+  const rawClient = JSON.parse(GOOGLE_CLIENT_SECRET_OBJECT);
+  const tokens = JSON.parse(GOOGLE_REFRESH_TOKEN_OBJECT);
+  const client = rawClient.installed;
+
   const oAuth2Client = new google.auth.OAuth2(
-    client_id,
-    client_secret,
-    redirect_uri
+    client.client_id,
+    client.client_secret,
+    client.redirect_uris[0]
   );
 
-  const token = {
-    access_token,
-    refresh_token,
-    scope,
-    token_type,
-    refresh_token_expires_in: Number(refresh_token_expires_in),
-    expiry_date: Number(expiry_date),
-  };
+  oAuth2Client.setCredentials({
+    refresh_token: tokens.refresh_token,
+    access_token: tokens.access_token,
+    scope: tokens.scope,
+    token_type: tokens.token_type,
+    expiry_date: tokens.expiry_date,
+  });
 
-  oAuth2Client.setCredentials(token);
   return oAuth2Client;
 }
