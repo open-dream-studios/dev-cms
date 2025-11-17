@@ -178,6 +178,7 @@ const EmployeeCard: React.FC = () => {
     <form
       onSubmit={handleSubmit(onEmployeeFormSubmit)}
       className="rounded-xl relative w-full max-w-[900px]"
+      key={currentUser.theme}
       style={{
         ...getInnerCardStyle(currentUser.theme, currentTheme),
         transform: "translateZ(0)",

@@ -154,7 +154,10 @@ export const CustomerView = () => {
   if (!currentUser || !currentProjectId) return null;
 
   return (
-    <div className="flex flex-col items-start w-full h-[100%] p-6 overflow-scroll">
+    <div
+      key={currentUser.theme}
+      className="flex flex-col items-start w-full h-[100%] p-6 overflow-scroll"
+    >
       <form
         onSubmit={handleSubmit(onCustomerFormSubmit)}
         className="w-[100%] max-w-[550px] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"

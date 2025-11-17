@@ -12,6 +12,7 @@ import {
   MediaLink,
   Media,
   MediaFolder,
+  SearchContext,
 } from "@open-dream/shared";
 
 interface CurrentDataState {
@@ -77,6 +78,9 @@ interface CurrentDataState {
 
   currentCustomerSearchTerm: string;
   setCurrentCustomerSearchTerm: (searchTerm: string) => void;
+
+  searchContext: SearchContext;
+  setSearchContext: (ctx: SearchContext) => void;
 }
 
 const localProductsDataRef = { current: [] as Product[] };
@@ -198,6 +202,9 @@ export const useCurrentDataStore = create<CurrentDataState>()(
       currentCustomerSearchTerm: "",
       setCurrentCustomerSearchTerm: (searchTerm: string) =>
         set({ currentCustomerSearchTerm: searchTerm }),
+
+      searchContext: null,
+      setSearchContext: (ctx) => set({ searchContext: ctx }),
     }),
     { name: "CurrentDataStore" }
   )

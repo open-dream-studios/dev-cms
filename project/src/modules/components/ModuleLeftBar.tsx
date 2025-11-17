@@ -32,15 +32,25 @@ import { GoSync } from "react-icons/go";
 import { runFrontendModule } from "../runFrontendModule";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
+import { determineSearchContext, scrollToItem } from "@/util/functions/Search";
 
 const SearchBar = () => {
   const currentTheme = useCurrentTheme();
-  const { setCurrentCustomerSearchTerm } = useCurrentDataStore();
+  const { currentCustomerSearchTerm, setCurrentCustomerSearchTerm } =
+    useCurrentDataStore();
+
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.value = currentCustomerSearchTerm || "";
+    }
+  }, [currentCustomerSearchTerm]);
 
   return (
     <div className="h-[38px] w-[100%] pt-[10px]">
       <div
-        className="rounded-[8px] w-[100%] h-[100%] flex items-center pl-[10px] flex-row gap-[5px]"
+        className="rounded-[8px] w-[100%] h-[100%] flex items-center px-[10px] flex-row gap-[5px]"
         style={{ backgroundColor: "rgba(255,255,255,0.028)" }}
       >
         <Search
@@ -49,10 +59,10 @@ const SearchBar = () => {
           className="opacity-[0.7]"
         />
         <input
+          ref={inputRef}
           type="text"
-          className="border-none outline-none font-[400] text-[13px] opacity-[0.72]"
+          className="w-[100%] truncate border-none outline-none font-[400] text-[13px] opacity-[0.72]"
           onChange={(e) => {
-            console.log(e.target.value);
             setCurrentCustomerSearchTerm(e.target.value);
           }}
         />
@@ -77,8 +87,12 @@ const ModuleLeftBar = () => {
     media,
     refetchCustomers,
   } = useContextQueries();
-  const { localProductsData, setCurrentProductData, currentProjectId } =
-    useCurrentDataStore();
+  const {
+    localProductsData,
+    setCurrentProductData,
+    currentProjectId,
+    setSearchContext,
+  } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const pathname = usePathname();
   const { getForm } = useFormInstanceStore();
@@ -104,42 +118,22 @@ const ModuleLeftBar = () => {
 
   const itemRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
-    if (!currentCustomerSearchTerm || currentCustomerSearchTerm.trim() === "")
+    if (!currentCustomerSearchTerm.trim()) {
+      setSearchContext(null);
       return;
-    if (!customers || customers.length === 0) return;
-    if (!scrollRef.current) return;
-
-    const search = currentCustomerSearchTerm.trim().toLowerCase();
-
-    const firstMatches = customers.filter((c) =>
-      c.first_name?.toLowerCase().startsWith(search)
+    }
+    if (!customers.length) return;
+    const ctx = determineSearchContext(
+      currentCustomerSearchTerm.trim(),
+      customers
     );
-
-    const lastMatches =
-      firstMatches.length > 0
-        ? []
-        : customers.filter((c) =>
-            c.last_name?.toLowerCase().startsWith(search)
-          );
-
-    const matches = firstMatches.length > 0 ? firstMatches : lastMatches;
-
-    if (matches.length === 0) return;
-
-    const match = matches[0];
-    const el = itemRefs.current[match.customer_id];
-    const container = scrollRef.current;
-
-    if (!el || !container) return;
-
-    const elTop = el.offsetTop;
-    const targetScrollTop = elTop - 106;
-    container.scrollTo({
-      top: targetScrollTop,
-      behavior: "auto",
-    });
-  }, [currentCustomerSearchTerm, customers]);
+    if (ctx.bestMatch) {
+      scrollToItem(ctx.bestMatch.customer_id, itemRefs, scrollRef, 106);
+    }
+    setSearchContext(ctx);
+  }, [currentCustomerSearchTerm, customers, setSearchContext]);
 
   const handleDeleteCustomer = async () => {
     if (!contextMenu || !contextMenu.input) return;
@@ -268,7 +262,7 @@ const ModuleLeftBar = () => {
     }
   };
 
-  const currentProductId = useMemo(() => {
+  const currentProductSerial = useMemo(() => {
     const dividedPath = pathname.split("/").filter((item) => item.length > 0);
     if (dividedPath.length === 2) {
       return dividedPath[1];
@@ -459,10 +453,10 @@ const ModuleLeftBar = () => {
                     style={{
                       background:
                         currentUser.theme === "dark"
-                          ? currentProductId === product.serial_number
+                          ? currentProductSerial === product.serial_number
                             ? "linear-gradient(180deg, #282828, #2B2B2B)"
                             : "linear-gradient(180deg, #1E1E1E, #1A1A1A)"
-                          : currentProductId === product.serial_number
+                          : currentProductSerial === product.serial_number
                           ? currentTheme.background_2
                           : currentTheme.background_1,
                       boxShadow:
@@ -477,7 +471,15 @@ const ModuleLeftBar = () => {
                       {foundLinks.length > 0 && matchedMedia ? (
                         <RenderedImage media={matchedMedia} rounded={true} />
                       ) : (
-                        <NoProductImage />
+                        <div
+                          className={`${
+                            product.serial_number === currentProductSerial
+                              ? "brightness-90"
+                              : "brightness-100"
+                          }`}
+                        >
+                          <NoProductImage />
+                        </div>
                       )}
                     </div>
                     <div className="select-none flex w-[136px] h-[100%] flex-col gap-[2px] ">
