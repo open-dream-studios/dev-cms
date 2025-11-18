@@ -1,0 +1,7 @@
+{
+  "type": "commonjs",
+  "dependencies": {
+    "google-ads-api": "21.0.1",
+    "csv-parser": "^3.2.0"
+  }
+}

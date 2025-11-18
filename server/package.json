@@ -3,6 +3,7 @@
     "@aws-sdk/client-s3": "^3.926.0",
     "@aws-sdk/lib-storage": "^3.926.0",
     "@dqbd/tiktoken": "^1.0.20",
+    "@grpc/grpc-js": "^1.8.21",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.8.4",
     "bcryptjs": "^2.4.3",
@@ -62,7 +63,8 @@
     "dev": "ts-node server/index.ts",
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc",
-    "start": "npm run build && node dist/index.js"
+    "start": "npm run build && node dist/index.js",
+    "postinstall": "cd services/google/google-ads/google-ads-common && npm install"
   },
   "keywords": [],
   "author": "",
