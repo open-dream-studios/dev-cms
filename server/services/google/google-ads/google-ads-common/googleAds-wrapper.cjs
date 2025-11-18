@@ -3,7 +3,12 @@ async function load() {
   const esmModule = await import("./googleAds.mjs");
   return {
     fetchCampaigns: esmModule.fetchCampaigns,
+    fetchCampaignLocations: esmModule.fetchCampaignLocations,
     setCampaignLocations: esmModule.setCampaignLocations,
+    fetchCampaignDailyCoreStats: esmModule.fetchCampaignDailyCoreStats,
+    fetchCampaignAdGroups: esmModule.fetchCampaignAdGroups,
+    fetchSearchTermsForCampaign: esmModule.fetchSearchTermsForCampaign,
+    fetchPerformanceMaxKeywords: esmModule.fetchPerformanceMaxKeywords,
   };
 }
 module.exports = load();

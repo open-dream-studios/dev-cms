@@ -3,7 +3,15 @@ const googleAds = require("./googleAds-wrapper.cjs"); // this is a Promise
 const { GoogleAdsApi } = require("google-ads-api");
 
 async function runAction(action, params, credentials) {
-  const { fetchCampaigns, setCampaignLocations } = await googleAds;
+  const {
+    fetchCampaigns,
+    fetchCampaignLocations,
+    setCampaignLocations,
+    fetchCampaignDailyCoreStats,
+    fetchCampaignAdGroups,
+    fetchSearchTermsForCampaign,
+    fetchPerformanceMaxKeywords,
+  } = await googleAds;
   const client = new GoogleAdsApi({
     client_id: credentials.clientId,
     client_secret: credentials.clientSecret,
@@ -20,6 +28,17 @@ async function runAction(action, params, credentials) {
       const campaigns = await fetchCampaigns(customer);
       return { ok: true, action: "fetchCampaigns", campaigns };
 
+    case "fetchCampaignLocations":
+      const locations = await fetchCampaignLocations(
+        params.campaignId,
+        customer
+      );
+      return {
+        ok: true,
+        action: "fetchCampaignLocations",
+        locations,
+      };
+
     case "setCampaignLocations":
       const updateResult = await setCampaignLocations(
         params.campaignId,
@@ -27,16 +46,65 @@ async function runAction(action, params, credentials) {
         credentials.customerId,
         params.geoIds
       );
-
       return {
         ok: true,
         action: "setCampaignLocations",
         ...updateResult,
       };
 
+    case "fetchCampaignDailyCoreStats":
+      const core = await fetchCampaignDailyCoreStats(
+        params.campaignId,
+        customer
+      );
+      return {
+        ok: true,
+        action: "fetchCampaignDailyCoreStats",
+        days: core,
+      };
+
+    case "fetchCampaignAdGroups":
+      const adGroups = await fetchCampaignAdGroups(params.campaignId, customer);
+      return {
+        ok: true,
+        action: "fetchCampaignAdGroups",
+        adGroups,
+      };
+
+    case "fetchSearchTermsForCampaign":
+      const terms = await fetchSearchTermsForCampaign(
+        params.campaignId,
+        customer
+      );
+      return {
+        ok: true,
+        action: "fetchSearchTermsForCampaign",
+        terms,
+      };
+
+    case "fetchPerformanceMaxKeywords":
+      const pmax = await fetchPerformanceMaxKeywords(
+        params.campaignId,
+        customer
+      );
+      return {
+        ok: true,
+        action: "fetchPerformanceMaxKeywords",
+        keywords: pmax,
+      };
+
     default:
       throw new Error(`Unknown action: ${action}`);
   }
+}
+
+function serializeError(err) {
+  return {
+    message: err?.message || String(err),
+    stack: err?.stack,
+    raw: err,
+    details: JSON.stringify(err?.errors),
+  };
 }
 
 async function main() {
@@ -55,7 +123,8 @@ async function main() {
     console.error(
       JSON.stringify({
         success: false,
-        error: (err && err.message) || String(err),
+        // error: (err && err.message) || String(err),
+        error: serializeError(err),
       })
     );
     process.exit(1);
