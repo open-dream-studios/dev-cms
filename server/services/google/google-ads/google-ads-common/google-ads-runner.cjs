@@ -9,7 +9,7 @@ async function runAction(action, params, credentials) {
     setCampaignLocations,
     fetchCampaignDailyCoreStats,
     fetchCampaignAdGroups,
-    fetchSearchTermsForCampaign,
+    fetchAppAdGroupDataForCampaign,
     fetchPerformanceMaxKeywords,
   } = await googleAds;
   const client = new GoogleAdsApi({
@@ -71,14 +71,14 @@ async function runAction(action, params, credentials) {
         adGroups,
       };
 
-    case "fetchSearchTermsForCampaign":
-      const terms = await fetchSearchTermsForCampaign(
+    case "fetchAppAdGroupDataForCampaign":
+      const terms = await fetchAppAdGroupDataForCampaign(
         params.campaignId,
         customer
       );
       return {
         ok: true,
-        action: "fetchSearchTermsForCampaign",
+        action: "fetchAppAdGroupDataForCampaign",
         terms,
       };
 

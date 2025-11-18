@@ -20,11 +20,6 @@ export const run = async ({
   decryptedKeys,
 }: ModuleFunctionInputs) => {
   try {
-    console.log(body)
-
-    console.log("000")
-    console.log(decryptedKeys)
-
     if (!body || !body.action) {
       throw new Error("Missing Google Ads action");
     }
@@ -40,7 +35,7 @@ export const run = async ({
       },
     };
 
-    return await runGoogleAdsFunction(body.action, params);
+    return await runGoogleAdsFunction(body.action, params); 
   } catch (err) {
     console.error("Google Ads Module error:", err);
     return { ok: false, error: String(err) };

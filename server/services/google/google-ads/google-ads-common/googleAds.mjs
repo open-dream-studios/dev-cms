@@ -181,45 +181,7 @@ export async function fetchPerformanceMaxKeywords(campaignId, customer) {
   }));
 }
 
-// export async function fetchSearchTermsForCampaign(campaignId, customer) {
-//   const query = `
-//     SELECT
-//       ad_group.id,
-//       ad_group.name,
-//       ad_group_ad_asset_view.field_type,
-//       asset.resource_name,
-//       asset.type,
-//       asset.text_asset.text,
-//       asset.youtube_video_asset.youtube_video_id,
-//       metrics.impressions,
-//       metrics.clicks,
-//       metrics.cost_micros,
-//       metrics.conversions
-//     FROM ad_group_ad_asset_view
-//     WHERE campaign.id = ${campaignId}
-//     ORDER BY metrics.impressions DESC
-//     LIMIT 500
-//   `;
-
-//   const rows = await customer.query(query);
-
-//   return rows.map((r) => ({
-//     adGroupId: r.ad_group.id,
-//     adGroupName: r.ad_group.name,
-//     fieldType: r.ad_group_ad_asset_view.field_type,
-
-//     assetType: r.asset.type,
-//     text: r.asset.text_asset?.text ?? null,
-//     video: r.asset.youtube_video_asset?.youtube_video_id ?? null,
-
-//     impressions: r.metrics.impressions ?? 0,
-//     clicks: r.metrics.clicks ?? 0,
-//     cost: (r.metrics.cost_micros ?? 0) / 1_000_000,
-//     conversions: r.metrics.conversions ?? 0,
-//   }));
-// }
-
-export async function fetchSearchTermsForCampaign(campaignId, customer) {
+export async function fetchAppAdGroupDataForCampaign(campaignId, customer) {
   const query = `
     SELECT
       ad_group.id,

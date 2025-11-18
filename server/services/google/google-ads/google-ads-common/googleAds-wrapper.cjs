@@ -7,7 +7,7 @@ async function load() {
     setCampaignLocations: esmModule.setCampaignLocations,
     fetchCampaignDailyCoreStats: esmModule.fetchCampaignDailyCoreStats,
     fetchCampaignAdGroups: esmModule.fetchCampaignAdGroups,
-    fetchSearchTermsForCampaign: esmModule.fetchSearchTermsForCampaign,
+    fetchAppAdGroupDataForCampaign: esmModule.fetchAppAdGroupDataForCampaign,
     fetchPerformanceMaxKeywords: esmModule.fetchPerformanceMaxKeywords,
   };
 }

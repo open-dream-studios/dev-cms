@@ -26,21 +26,11 @@ type Credentials = {
   customerId: string;
 };
 
-function getCredentials(): Credentials {
-  return {
-    clientId: process.env.GOOGLE_ADS_CLIENT_ID || "",
-    clientSecret: process.env.GOOGLE_ADS_CLIENT_SECRET || "",
-    developerToken: process.env.GOOGLE_ADS_DEVELOPER_TOKEN || "",
-    refreshToken: process.env.GOOGLE_ADS_REFRESH_TOKEN || "",
-    customerId: process.env.GOOGLE_ADS_CUSTOMER_ID || "",
-  };
-}
-
-function runGoogleAdsAction(action: string, params: any = {}): Promise<any> {
+function runGoogleAdsAction(adCredentials: Credentials, action: string, params: any = {}): Promise<any> {
   const payload = {
     action,
     params,
-    credentials: getCredentials(),
+    credentials: { ...adCredentials },
   };
 
   return new Promise((resolve, reject) => {
@@ -86,12 +76,12 @@ function runGoogleAdsAction(action: string, params: any = {}): Promise<any> {
   });
 }
 
-async function setCampaignLocationsForZips(campaignId: string, zips: string[]) {
+async function setCampaignLocationsForZips(credentials: any, campaignId: string, zips: string[]) {
   const geoIds = await getLocationsForZips(zips);
   if (!geoIds.length)
     throw new Error("No valid geo ids found for provided zips");
 
-  const result = await runGoogleAdsAction("setCampaignLocations", {
+  const result = await runGoogleAdsAction(credentials, "setCampaignLocations", {
     campaignId: campaignId,
     geoIds,
   });
@@ -99,15 +89,8 @@ async function setCampaignLocationsForZips(campaignId: string, zips: string[]) {
   return result;
 }
 
-async function getCampaignActiveLocations(campaignId: string) {
-  const result = await runGoogleAdsAction("fetchCampaignLocations", {
-    campaignId,
-  });
-  return result.locations || [];
-}
-
-async function getNormalizedCampaignDailyCoreStats(campaignId: string) {
-  const raw = await runGoogleAdsAction("fetchCampaignDailyCoreStats", {
+async function getNormalizedCampaignDailyCoreStats(credentials: any, campaignId: string) {
+  const raw = await runGoogleAdsAction(credentials, "fetchCampaignDailyCoreStats", {
     campaignId,
   });
   const rows = raw?.days || raw || [];
@@ -138,13 +121,6 @@ async function getNormalizedCampaignDailyCoreStats(campaignId: string) {
   };
 }
 
-async function getCampaignAdGroups(campaignId: string) {
-  const result = await runGoogleAdsAction("fetchCampaignAdGroups", {
-    campaignId,
-  });
-  return result.adGroups || [];
-}
-
 const CAMPAIGN_TYPE_MAP = {
   0: "UNSPECIFIED",
   1: "UNKNOWN",
@@ -162,55 +138,54 @@ const CAMPAIGN_TYPE_MAP = {
   13: "TRAVEL",
 } as const;
 
-
-async function findActiveCampaignById(campaignId: string) {
-  const campaigns = await runGoogleAdsAction("fetchCampaigns", {});
-
+async function findActiveCampaignById(credentials: any, campaignId: string) {
+  const campaigns = await runGoogleAdsAction(credentials, "fetchCampaigns", {});
   if (!campaigns.ok || !campaigns.campaigns) return null;
 
-  return campaigns.campaigns.find((c: any) => String(c.id) === String(campaignId)) || null;
+  return (
+    campaigns.campaigns.find((c: any) => String(c.id) === String(campaignId)) ||
+    null
+  );
 }
 
-export async function getCompleteCampaignData(campaignId: string) {
-  const campaign = await findActiveCampaignById(campaignId);
-
+export async function getCompleteCampaignData(
+  action: string,
+  params: any = {}
+) {
+  const credentials = params.credentials
+  const campaignId = credentials.campaignId;
+  const campaign = await findActiveCampaignById(credentials, campaignId);
   if (!campaign) {
     return { ok: false, error: "Campaign not found", campaignId };
   }
 
-  const campaignType = CAMPAIGN_TYPE_MAP[campaign.type as keyof typeof CAMPAIGN_TYPE_MAP];
+  const campaignType =
+    CAMPAIGN_TYPE_MAP[campaign.type as keyof typeof CAMPAIGN_TYPE_MAP];
 
-  // 🚀 Step 1 — locations
-  const locations = await runGoogleAdsAction("fetchCampaignLocations", {
+  const locations = await runGoogleAdsAction(credentials, "fetchCampaignLocations", {
     campaignId,
   }).catch(() => ({ locations: [] }));
-
-  // 🚀 Step 2 — daily stats (normalized)
-  const stats = await getNormalizedCampaignDailyCoreStats(campaignId);
-
-  // 🚀 Step 3 — ad groups
-  const adGroupsResult = await runGoogleAdsAction("fetchCampaignAdGroups", {
+  
+  const stats = await getNormalizedCampaignDailyCoreStats(credentials, campaignId);
+  
+  const adGroupsResult = await runGoogleAdsAction(credentials, "fetchCampaignAdGroups", {
     campaignId,
   });
   const adGroups = adGroupsResult?.adGroups || [];
-
   const selectedAdGroup =
     adGroups.find((a: any) => a.status === 2) || adGroups[0] || null;
-
-  // 🚀 Step 4 — keywords or search terms depending on type
+  
   let keywordData = null;
-
   if (campaignType === "PERFORMANCE_MAX") {
-    keywordData = await runGoogleAdsAction("fetchPerformanceMaxKeywords", {
+    keywordData = await runGoogleAdsAction(credentials, "fetchPerformanceMaxKeywords", {
       campaignId,
     });
   } else if (campaignType === "APP") {
-    // If you add support later for APP search terms
-    // keywordData = await runGoogleAdsAction("fetchSearchTermsForCampaign", { campaignId });
-    keywordData = { note: "APP campaign keyword fetching not implemented" };
+    keywordData = await runGoogleAdsAction(credentials, "fetchAppAdGroupDataForCampaign", {
+      campaignId,
+    });
   }
 
-  // 🎉 Return complete bundle
   return {
     ok: true,
     campaign,
@@ -224,153 +199,16 @@ export async function getCompleteCampaignData(campaignId: string) {
 }
 
 export async function runGoogleAdsFunction(action: string, params: any = {}) {
+  const credentials = params.credentials
   try {
-
     if (action === "getDashboardData") {
-      console.log(params.credentials.campaignId)
-      const res = await getCompleteCampaignData(
-        params.credentials.campaignId
-      );
-      console.log(res)
-      return res
+      const res = await getCompleteCampaignData(action, params);
+      return res;
     }
 
-    // (all your other actions remain the same)
-    return await runGoogleAdsAction(action, params);
-
+    return await runGoogleAdsAction(credentials, action, params);
   } catch (err) {
     console.error("Google Ads error:", err);
     return { ok: false, error: String(err) };
   }
 }
-
-// export async function runGoogleAdsFunction(
-//   action: string,
-//   params: any = {}
-// ): Promise<any> {
-//   try {
-//     let activeCampaign = null;
-//     const campaigns = await runGoogleAdsAction("fetchCampaigns", {});
-//     if (campaigns.ok && campaigns.campaigns && campaigns.campaigns.length) {
-//       const activeCampaigns = campaigns.campaigns.filter(
-//         (c: any) => c.status === 2
-//       );
-//       if (activeCampaigns && activeCampaigns.length && activeCampaigns[0].id) {
-//         activeCampaign = activeCampaigns[0];
-//       }
-//     }
-//     console.log(activeCampaign);
-//     // if (campaignId) {
-//     //   const result = await setCampaignLocationsForZips(campaignId, ["03755"]);
-//     //   console.log(result);
-//     // }
-//     if (activeCampaign.id && activeCampaign.type) {
-//       const typeName =
-//         CAMPAIGN_TYPE_MAP[
-//           activeCampaign.type as keyof typeof CAMPAIGN_TYPE_MAP
-//         ];
-
-//       const locs = await getCampaignActiveLocations(activeCampaign.id);
-//       console.log(
-//         "Active Locations:",
-//         util.inspect(locs, { depth: null, colors: false })
-//       );
-
-//       // const stats = await getNormalizedCampaignDailyCoreStats(campaignId);
-//       // console.log("Daily Stats:", stats);
-//       const adGroups = await getCampaignAdGroups(activeCampaign.id);
-//       console.log("Ad Groups:", adGroups);
-
-//       if (adGroups.length) {
-//         const selectedAdGroup =
-//           adGroups.find((a: any) => a.status === 2) || adGroups[0];
-//         console.log("Selected Ad Group:", selectedAdGroup);
-//         if (typeName === "APP") {
-//           console.log("APP");
-//           // const terms = await runGoogleAdsAction(
-//           //   "fetchSearchTermsForCampaign",
-//           //   {
-//           //     campaignId: activeCampaign.id,
-//           //   }
-//           // );
-//           // console.log(
-//           //   "Search Terms:",
-//           //   util.inspect(terms, { depth: null, colors: false })
-//           // );
-//         } else if (typeName === "PERFORMANCE_MAX") {
-//           const pmax = await runGoogleAdsAction("fetchPerformanceMaxKeywords", {
-//             campaignId: activeCampaign.id,
-//           });
-//           console.log("PMax Keywords:", pmax);
-//         }
-//       }
-//     }
-//   } catch (err) {
-//     console.error("Google Ads TS error:", err);
-//   }
-// }
-
-// (async () => {
-// try {
-//   let activeCampaign = null;
-//   const campaigns = await runGoogleAdsAction("fetchCampaigns", {});
-//   if (campaigns.ok && campaigns.campaigns && campaigns.campaigns.length) {
-//     const activeCampaigns = campaigns.campaigns.filter(
-//       (c: any) => c.status === 2
-//     );
-//     if (activeCampaigns && activeCampaigns.length && activeCampaigns[0].id) {
-//       activeCampaign = activeCampaigns[0];
-//     }
-//   }
-//   console.log(activeCampaign);
-//   // if (campaignId) {
-//   //   const result = await setCampaignLocationsForZips(campaignId, ["03755"]);
-//   //   console.log(result);
-//   // }
-//   if (activeCampaign.id && activeCampaign.type) {
-//     const typeName =
-//       CAMPAIGN_TYPE_MAP[
-//         activeCampaign.type as keyof typeof CAMPAIGN_TYPE_MAP
-//       ];
-
-//     const locs = await getCampaignActiveLocations(activeCampaign.id);
-//     console.log(
-//       "Active Locations:",
-//       util.inspect(locs, { depth: null, colors: false })
-//     );
-
-//     // const stats = await getNormalizedCampaignDailyCoreStats(campaignId);
-//     // console.log("Daily Stats:", stats);
-//     const adGroups = await getCampaignAdGroups(activeCampaign.id);
-//     console.log("Ad Groups:", adGroups);
-
-//     if (adGroups.length) {
-//       const selectedAdGroup =
-//         adGroups.find((a: any) => a.status === 2) || adGroups[0];
-//       console.log("Selected Ad Group:", selectedAdGroup);
-//       if (typeName === "APP") {
-//         console.log("APP");
-//         // const terms = await runGoogleAdsAction(
-//         //   "fetchSearchTermsForCampaign",
-//         //   {
-//         //     campaignId: activeCampaign.id,
-//         //   }
-//         // );
-//         // console.log(
-//         //   "Search Terms:",
-//         //   util.inspect(terms, { depth: null, colors: false })
-//         // );
-//       } else if (typeName === "PERFORMANCE_MAX") {
-//         const pmax = await runGoogleAdsAction("fetchPerformanceMaxKeywords", {
-//           campaignId: activeCampaign.id,
-//         });
-//         console.log("PMax Keywords:", pmax);
-//       }
-//     }
-//   }
-// } catch (err) {
-//   console.error("Google Ads TS error:", err);
-// }
-// })();
-
-
