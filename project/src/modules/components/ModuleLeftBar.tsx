@@ -28,8 +28,7 @@ import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import RenderedImage from "./ProductCard/RenderedImage";
 import NoProductImage from "./ProductCard/NoProductImage";
-import { GoSync } from "react-icons/go";
-import { runFrontendModule } from "../runFrontendModule";
+import { GoSync } from "react-icons/go"; 
 import { useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { determineSearchContext, scrollToItem } from "@/util/functions/Search";
@@ -86,6 +85,7 @@ const ModuleLeftBar = () => {
     employees,
     media,
     refetchCustomers,
+    runModule,
   } = useContextQueries();
   const {
     localProductsData,
@@ -251,9 +251,7 @@ const ModuleLeftBar = () => {
   const handleCustomerSync = async () => {
     setUpdatingLock(true);
     if (currentProject) {
-      await runFrontendModule("customer-google-wave-sync-module", {
-        currentProject,
-      });
+      await runModule("customer-google-wave-sync-module", {});
       refetchCustomers();
       setUpdatingLock(false);
       queryClient.invalidateQueries({

@@ -81,6 +81,9 @@ interface CurrentDataState {
 
   searchContext: SearchContext;
   setSearchContext: (ctx: SearchContext) => void;
+
+  googleAdsData: null;
+  setGoogleAdsData: (data: any) => void;
 }
 
 const localProductsDataRef = { current: [] as Product[] };
@@ -205,6 +208,9 @@ export const useCurrentDataStore = create<CurrentDataState>()(
 
       searchContext: null,
       setSearchContext: (ctx) => set({ searchContext: ctx }),
+
+      googleAdsData: null,
+      setGoogleAdsData: (data) => set({ googleAdsData: data }),
     }),
     { name: "CurrentDataStore" }
   )

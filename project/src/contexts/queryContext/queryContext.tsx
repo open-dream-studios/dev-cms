@@ -18,7 +18,7 @@ import {
   useProducts,
   useProjectUsers,
   useIntegrations,
-  useModuleDefinitions,
+  useModuleFunctions,
   useMediaFolders,
   useMedia,
   usePageDefinitions,
@@ -103,6 +103,8 @@ export type QueryContextType = {
   moduleDefinitionTree: ModuleDefinitionTree;
   isLoadingModuleDefinitionTree: boolean;
   refetchModuleDefinitionTree: () => Promise<any>;
+  runModule: (identifier: string, body: any) => Promise<any>;
+  isRunningModule: boolean;
 
   // ---- Media ----
   media: Media[];
@@ -261,7 +263,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     moduleDefinitionTree,
     isLoadingModuleDefinitionTree,
     refetchModuleDefinitionTree,
-  } = useModuleDefinitions(isLoggedIn);
+    runModule,
+    isRunningModule,
+  } = useModuleFunctions(isLoggedIn, currentProjectId);
   const { media, isLoadingMedia, refetchMedia, upsertMedia, deleteMedia } =
     useMedia(isLoggedIn, currentProjectId);
   const {
@@ -375,6 +379,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         moduleDefinitionTree,
         isLoadingModuleDefinitionTree,
         refetchModuleDefinitionTree,
+        runModule,
+        isRunningModule,
         media,
         mediaFolders,
         isLoadingMedia,

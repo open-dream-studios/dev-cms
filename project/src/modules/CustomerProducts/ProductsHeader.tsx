@@ -18,7 +18,6 @@ import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productFilter, Product } from "@open-dream/shared";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useModals } from "@/hooks/useModals";
-import { runFrontendModule } from "../runFrontendModule";
 import { getCardStyle } from "@/styles/themeStyles";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useCurrentTheme } from "@/hooks/useTheme";
@@ -44,8 +43,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
     setInventoryView,
   } = useUiStore();
   const { promptContinue } = useModals();
-  const { deleteProducts, hasProjectModule, projectModules, integrations } =
-    useContextQueries();
+  const { deleteProducts, hasProjectModule, runModule } = useContextQueries();
   const { screenClick } = useRouting();
   const { onProductFormSubmit } = useProductFormSubmit();
   const currentTheme = useCurrentTheme();
@@ -88,9 +86,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
     setUpdatingLock(true);
     try {
       if (currentProject) {
-        await runFrontendModule("customer-products-wix-sync-module", {
-          currentProject,
-        });
+        await runModule("customer-products-wix-sync-module", {});
       }
     } catch (e) {
       toast.error("Wix sync failed");
@@ -112,9 +108,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
     setUpdatingLock(true);
     try {
       if (currentProject) {
-        await runFrontendModule("customer-products-google-sheets-module", {
-          currentProject,
-        });
+        await runModule("customer-products-google-sheets-module", {});
       }
     } catch (e) {
       toast.error("Export failed");

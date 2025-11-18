@@ -1,15 +1,5 @@
 // shared/types/models/modules.ts
-import { Project } from "./project";
 import { PoolConnection } from "mysql2/promise";
-
-export type RunModuleContext = {
-  currentProject: Project;
-  body?: any;
-};
-
-export interface ModuleInput {
-  run: (args: RunModuleContext) => Promise<any>;
-}
 
 export type ModuleFunctionInputs = {
   connection: PoolConnection;

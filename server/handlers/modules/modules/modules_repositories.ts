@@ -91,6 +91,7 @@ export const runModuleFunction = async (
   const projectModules = await getModulesFunction(project_idx);
   if (!projectModules || !projectModules.length)
     throw new Error("Module not found");
+  console.log(identifier, projectModules)
   const module = projectModules.find((mod) => mod.module_identifier === identifier);
   if (!module) throw new Error("Module not found");
 

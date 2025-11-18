@@ -6,7 +6,7 @@ export * from "./jobs";
 export * from "./media";
 export * from "./mediaFolders";
 export * from "./mediaLinks";
-export * from "./moduleDefinitions";
+export * from "./moduleFunctions";
 export * from "./pageDefinitions";
 export * from "./products";
 export * from "./projectModules";

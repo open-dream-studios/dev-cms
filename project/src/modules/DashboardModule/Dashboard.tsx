@@ -1,5 +1,5 @@
 // project/src/modules/DashboardModule/Dashboard.tsx
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   LineChart,
   Line,
@@ -29,6 +29,7 @@ import {
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 // -- Helper: fake data -----------------------------------------------------
 const salesData = [
@@ -118,7 +119,7 @@ function formatCurrency(n: any) {
 
 function MetricCard({ title, value, delta, icon }: any) {
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
 
   if (!currentUser) return null;
   return (
@@ -200,8 +201,29 @@ function MiniArea({ data, dataKey }: any) {
 const Dashboard = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProject } = useCurrentDataStore();
+  const { runModule, projectModules } = useContextQueries();
   const [range, setRange] = useState("30d");
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
+
+  const [hasRequested, setHasRequested] = useState(false);
+
+  useEffect(() => {
+    if (!projectModules || projectModules.length === 0) return;
+    if (hasRequested) return;
+
+    setHasRequested(true);
+
+    const main = async () => {
+      console.log("requesting dashboard data...");
+      const res = await runModule("google-ads-api-module", {
+        action: "getDashboardData",
+        params: {},
+      });
+      console.log(res);
+    };
+
+    main();
+  }, [projectModules, hasRequested]);
 
   const totalRevenue = useMemo(
     () => salesData.reduce((s, r) => s + r.revenue, 0),
@@ -358,7 +380,10 @@ const Dashboard = () => {
                     data={salesData}
                     margin={{ top: 10, right: 24, left: -12, bottom: 0 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke={currentTheme.text_4} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={currentTheme.text_4}
+                    />
                     <XAxis dataKey="month" stroke="#9ca3af" />
                     <YAxis stroke="#9ca3af" />
                     <Tooltip contentStyle={{ background: "#0b1220" }} />

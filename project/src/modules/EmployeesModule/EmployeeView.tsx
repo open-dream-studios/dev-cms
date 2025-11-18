@@ -32,14 +32,13 @@ import {
 } from "@/hooks/forms/useEmployeeForm";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { runFrontendModule } from "../runFrontendModule";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentTheme } from "@/hooks/useTheme";
 
 const EmployeeCard: React.FC = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { projectModules, integrations } = useContextQueries();
+  const { runModule } = useContextQueries();
   const { currentEmployee, currentProjectId, currentProject } =
     useCurrentDataStore();
   const { addingEmployee } = useUiStore();
@@ -114,13 +113,10 @@ const EmployeeCard: React.FC = () => {
       }
       try {
         if (currentProject) {
-          const res = await runFrontendModule("google-maps-api-module", {
-            currentProject,
-            body: {
-              requestType: "predictions",
-              sessionToken,
-              address: latestAddressValue,
-            },
+          const res = await runModule("google-maps-api-module", {
+            requestType: "predictions",
+            sessionToken,
+            address: latestAddressValue,
           });
           if (res && res.predictions) {
             setPredictions(res.predictions || []);
@@ -141,13 +137,10 @@ const EmployeeCard: React.FC = () => {
   const handleSelectAddress = async (prediction: any) => {
     try {
       if (currentProject) {
-        const res = await runFrontendModule("google-maps-api-module", {
-          currentProject,
-          body: {
-            requestType: "place",
-            sessionToken,
-            place_id: prediction.place_id ?? undefined,
-          },
+        const res = await runModule("google-maps-api-module", {
+          requestType: "place",
+          sessionToken,
+          place_id: prediction.place_id ?? undefined,
         });
         if (res && res.result) {
           const { address_components } = res.result;

@@ -62,7 +62,8 @@
   "scripts": {
     "dev": "ts-node server/index.ts",
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc",
+    "build": "npm run clean && tsc && npm run copy-google-ads-common",
+    "copy-google-ads-common": "cp -R services/google/google-ads/google-ads-common dist/services/google/google-ads/",
     "start": "npm run build && node dist/index.js",
     "postinstall": "cd services/google/google-ads/google-ads-common && npm install"
   },

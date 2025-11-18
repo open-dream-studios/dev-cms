@@ -521,30 +521,30 @@ const ModuleSettings = () => {
                 </div>
               );
             })}
+
+          {keysEditor &&
+            unsetIntegrations.map((i: string, index: number) => {
+              return (
+                <div key={index} className="w-[90%] relative opacity-[0.5]">
+                  {index !== 0 && (
+                    <div
+                      className="w-[100%] h-[1px] rounded-[3px] opacity-[0.5]"
+                      style={{ backgroundColor: currentTheme.background_4 }}
+                    />
+                  )}
+                  <div
+                    onClick={() => addNewKey(i)}
+                    className="w-[100%] group cursor-pointer flex items-center px-[20px] h-[50px] text-[14.5px]"
+                  >
+                    <p className="group-hover:brightness-75 dim pr-[5px] opacity-[50%]">
+                      {i}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
         </div>
       )}
-
-      {keysEditor &&
-        unsetIntegrations.map((i: string, index: number) => {
-          return (
-            <div key={index} className="w-[90%] relative opacity-[0.5]">
-              {index !== 0 && (
-                <div
-                  className="w-[100%] h-[1px] rounded-[3px] opacity-[0.5]"
-                  style={{ backgroundColor: currentTheme.background_4 }}
-                />
-              )}
-              <div
-                onClick={() => addNewKey(i)}
-                className="w-[100%] group cursor-pointer flex items-center px-[20px] h-[50px] text-[14.5px]"
-              >
-                <p className="group-hover:brightness-75 dim pr-[5px] opacity-[50%]">
-                  {i}
-                </p>
-              </div>
-            </div>
-          );
-        })}
     </form>
   );
 };
