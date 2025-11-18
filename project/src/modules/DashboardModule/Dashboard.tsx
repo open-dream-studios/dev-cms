@@ -201,29 +201,29 @@ function MiniArea({ data, dataKey }: any) {
 const Dashboard = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProject } = useCurrentDataStore();
-  const { runModule, projectModules } = useContextQueries();
+  // const { runModule, projectModules } = useContextQueries();
   const [range, setRange] = useState("30d");
   const currentTheme = useCurrentTheme();
 
-  const [hasRequested, setHasRequested] = useState(false);
+  // const [hasRequested, setHasRequested] = useState(false);
 
-  useEffect(() => {
-    if (!projectModules || projectModules.length === 0) return;
-    if (hasRequested) return;
+  // useEffect(() => {
+  //   if (!projectModules || projectModules.length === 0) return;
+  //   if (hasRequested) return;
 
-    setHasRequested(true);
+  //   setHasRequested(true);
 
-    const main = async () => {
-      console.log("requesting dashboard data...");
-      const res = await runModule("google-ads-api-module", {
-        action: "getDashboardData",
-        params: {},
-      });
-      console.log(res);
-    };
+  //   const main = async () => {
+  //     console.log("requesting dashboard data...");
+  //     const res = await runModule("google-ads-api-module", {
+  //       action: "getDashboardData",
+  //       params: {},
+  //     });
+  //     console.log(res);
+  //   };
 
-    main();
-  }, [projectModules, hasRequested]);
+  //   main();
+  // }, [projectModules, hasRequested]);
 
   const totalRevenue = useMemo(
     () => salesData.reduce((s, r) => s + r.revenue, 0),

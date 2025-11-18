@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "strict": true
   },
-  "include": ["index.ts", "types/**/*.ts"]
+  "include": ["index.ts", "types/**/*.ts",  "definitions/*.ts"]
 }

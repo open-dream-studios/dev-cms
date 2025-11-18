@@ -1,20 +1,184 @@
 // server/services/google/google-ads/google-ads-common/googleAds.mjs
+export async function fetchCampaignsWithBudgets(customer) {
+  const campaigns = await fetchCampaigns(customer);
+  const budgetResources = campaigns
+    .map((c) => c.budgetResource)
+    .filter(Boolean);
+  const budgets = await fetchBudgets(customer, budgetResources);
+  const budgetMap = Object.fromEntries(budgets.map((b) => [b.resourceName, b]));
+  return campaigns.map((c) => ({
+    ...c,
+    budget: budgetMap[c.budgetResource]?.amount ?? null,
+    budgetStatus: budgetMap[c.budgetResource]?.status ?? null,
+  }));
+}
+
 export async function fetchCampaigns(customer) {
   const rows = await customer.query(`
     SELECT
       campaign.id,
       campaign.name,
       campaign.status,
-      campaign.advertising_channel_type
+      campaign.advertising_channel_type,
+      campaign.campaign_budget
     FROM campaign
     LIMIT 50
   `);
+
   return rows.map((row) => ({
     id: row.campaign.id,
     name: row.campaign.name,
     status: row.campaign.status,
     type: row.campaign.advertising_channel_type,
+    budgetResource: row.campaign.campaign_budget,
   }));
+}
+
+export async function fetchBudgets(customer, budgetResourceNames = []) {
+  if (!budgetResourceNames.length) return [];
+
+  const query = `
+    SELECT
+      campaign_budget.resource_name,
+      campaign_budget.id,
+      campaign_budget.amount_micros,
+      campaign_budget.status
+    FROM campaign_budget
+    WHERE campaign_budget.resource_name IN (${budgetResourceNames
+      .map((r) => `"${r}"`)
+      .join(", ")})
+  `;
+
+  const rows = await customer.query(query);
+
+  return rows.map((r) => ({
+    resourceName: r.campaign_budget.resource_name,
+    id: r.campaign_budget.id,
+    amount: r.campaign_budget.amount_micros / 1_000_000,
+    status: r.campaign_budget.status,
+  }));
+}
+
+// export async function setCampaignBudget(campaignId, amount, customer) {
+//   console.log(amount);
+//   if (amount > 100 || amount < 0) {
+//     return {
+//       ok: false,
+//       campaignId,
+//       amount,
+//     };
+//   }
+//   const micros = Math.round(amount * 1_000_000);
+//   const rows = await customer.query(`
+//     SELECT campaign.campaign_budget
+//     FROM campaign
+//     WHERE campaign.id = ${campaignId}
+//   `);
+//   if (!rows.length) throw new Error("Campaign not found");
+//   console.log(rows)
+//   const budgetResource = rows[0].campaign.campaign_budget;
+//   await customer.campaignBudgets.update({
+//     resource_name: budgetResource,
+//     amount_micros: micros,
+//   });
+//   return {
+//     ok: true,
+//     campaignId,
+//     amount,
+//   };
+// }
+
+export async function setCampaignBudget(campaignId, amount, customer) {
+  if (amount > 100 || amount < 0) {
+    return { ok: false, campaignId, amount };
+  }
+
+  const micros = Math.round(amount * 1_000_000);
+
+  // Load the campaign's budget (needs campaign query)
+  const campRows = await customer.query(`
+    SELECT campaign.campaign_budget
+    FROM campaign
+    WHERE campaign.id = ${campaignId}
+  `);
+
+  if (!campRows.length) throw new Error("Campaign not found");
+
+  const budgetResource = campRows[0].campaign.campaign_budget;
+
+  // Check if the budget is shared
+  const budgetRows = await customer.query(`
+    SELECT
+      campaign_budget.resource_name,
+      campaign_budget.type,
+      campaign_budget.amount_micros
+    FROM campaign_budget
+    WHERE campaign_budget.resource_name = "${budgetResource}"
+  `);
+
+  const budget = budgetRows[0].campaign_budget;
+
+  console.log("Budget type:", budget.type);
+
+  if (budget.type === 2) {
+    console.log("Shared budget detected. Using customer.budgets.update");
+
+    try {
+      const result = await customer.budgets.update(
+        {
+          resource_name: budgetResource,
+          amount_micros: micros,
+        },
+        {
+          update_mask: ["amount_micros"],
+        }
+      );
+
+      console.log(
+        "Shared budget update result:",
+        JSON.stringify(result, null, 2)
+      );
+    } catch (err) {
+      console.error("Shared budget update FAILED:");
+      console.error("ERR MESSAGE:", err?.message);
+      console.error("ERR ERRORS:", JSON.stringify(err?.errors, null, 2));
+      console.error("ERR RAW:", JSON.stringify(err, null, 2));
+
+      throw err;
+    }
+  } else {
+    console.log("Standard budget detected. Using campaignBudgets.update");
+
+    try {
+      const result = await customer.campaignBudgets.update(
+        {
+          resource_name: budgetResource,
+          amount_micros: micros,
+        },
+        {
+          update_mask: ["amount_micros"],
+        }
+      );
+
+      console.log(
+        "Campaign budget update result:",
+        JSON.stringify(result, null, 2)
+      );
+    } catch (err) {
+      console.error("Standard budget update FAILED:");
+      console.error("ERR MESSAGE:", err?.message);
+      console.error("ERR ERRORS:", JSON.stringify(err?.errors, null, 2));
+      console.error("ERR RAW:", JSON.stringify(err, null, 2));
+
+      throw err;
+    }
+  }
+
+  return {
+    ok: true,
+    campaignId,
+    amount,
+  };
 }
 
 export async function fetchCampaignLocations(campaignId, customer) {

@@ -26,7 +26,11 @@ type Credentials = {
   customerId: string;
 };
 
-function runGoogleAdsAction(adCredentials: Credentials, action: string, params: any = {}): Promise<any> {
+function runGoogleAdsAction(
+  adCredentials: Credentials,
+  action: string,
+  params: any = {}
+): Promise<any> {
   const payload = {
     action,
     params,
@@ -43,13 +47,19 @@ function runGoogleAdsAction(adCredentials: Credentials, action: string, params: 
         }
 
         if (stdout) {
+          console.log("RAW CHILD STDOUT:\n" + stdout); 
           try {
-            const parsed = JSON.parse(stdout.trim());
-            if (parsed && parsed.success) return resolve(parsed.result);
-            // if runner printed something else, still resolve with parsed payload
-            return resolve(parsed);
+            const lines = stdout.trim().split("\n");
+            const lastJsonLine = lines
+              .reverse()
+              .find((l) => l.trim().startsWith("{"));
+            if (lastJsonLine) {
+              const parsed = JSON.parse(lastJsonLine);
+              if (parsed && parsed.success) return resolve(parsed.result);
+              return resolve(parsed);
+            }
+            return resolve({ raw: stdout });
           } catch (e) {
-            // not JSON — return raw stdout
             return resolve({ raw: stdout });
           }
         }
@@ -76,7 +86,11 @@ function runGoogleAdsAction(adCredentials: Credentials, action: string, params: 
   });
 }
 
-async function setCampaignLocationsForZips(credentials: any, campaignId: string, zips: string[]) {
+async function setCampaignLocationsForZips(
+  credentials: any,
+  campaignId: string,
+  zips: string[]
+) {
   const geoIds = await getLocationsForZips(zips);
   if (!geoIds.length)
     throw new Error("No valid geo ids found for provided zips");
@@ -89,10 +103,17 @@ async function setCampaignLocationsForZips(credentials: any, campaignId: string,
   return result;
 }
 
-async function getNormalizedCampaignDailyCoreStats(credentials: any, campaignId: string) {
-  const raw = await runGoogleAdsAction(credentials, "fetchCampaignDailyCoreStats", {
-    campaignId,
-  });
+async function getNormalizedCampaignDailyCoreStats(
+  credentials: any,
+  campaignId: string
+) {
+  const raw = await runGoogleAdsAction(
+    credentials,
+    "fetchCampaignDailyCoreStats",
+    {
+      campaignId,
+    }
+  );
   const rows = raw?.days || raw || [];
   const end = new Date();
   const start = new Date();
@@ -121,7 +142,19 @@ async function getNormalizedCampaignDailyCoreStats(credentials: any, campaignId:
   };
 }
 
-const CAMPAIGN_TYPE_MAP = {
+async function findActiveCampaignById(credentials: any, campaignId: string) {
+  const campaigns = await runGoogleAdsAction(credentials, "fetchCampaigns", {});
+  if (!campaigns.ok || !campaigns.campaigns) return null;
+  const activeCampaign = campaigns.campaigns.find(
+    (c: any) => String(c.id) === String(campaignId)
+  );
+  return {
+    campaigns,
+    activeCampaign,
+  };
+}
+
+export const CAMPAIGN_TYPE_MAP = {
   0: "UNSPECIFIED",
   1: "UNKNOWN",
   2: "SEARCH",
@@ -138,57 +171,70 @@ const CAMPAIGN_TYPE_MAP = {
   13: "TRAVEL",
 } as const;
 
-async function findActiveCampaignById(credentials: any, campaignId: string) {
-  const campaigns = await runGoogleAdsAction(credentials, "fetchCampaigns", {});
-  if (!campaigns.ok || !campaigns.campaigns) return null;
-
-  return (
-    campaigns.campaigns.find((c: any) => String(c.id) === String(campaignId)) ||
-    null
-  );
-}
-
 export async function getCompleteCampaignData(
   action: string,
   params: any = {}
 ) {
-  const credentials = params.credentials
+  const credentials = params.credentials;
   const campaignId = credentials.campaignId;
-  const campaign = await findActiveCampaignById(credentials, campaignId);
-  if (!campaign) {
+  const result = await findActiveCampaignById(credentials, campaignId);
+  if (!result || !result.activeCampaign) {
     return { ok: false, error: "Campaign not found", campaignId };
   }
+  const { campaigns, activeCampaign } = result;
 
   const campaignType =
-    CAMPAIGN_TYPE_MAP[campaign.type as keyof typeof CAMPAIGN_TYPE_MAP];
+    CAMPAIGN_TYPE_MAP[activeCampaign.type as keyof typeof CAMPAIGN_TYPE_MAP];
 
-  const locations = await runGoogleAdsAction(credentials, "fetchCampaignLocations", {
-    campaignId,
-  }).catch(() => ({ locations: [] }));
-  
-  const stats = await getNormalizedCampaignDailyCoreStats(credentials, campaignId);
-  
-  const adGroupsResult = await runGoogleAdsAction(credentials, "fetchCampaignAdGroups", {
-    campaignId,
-  });
+  const locations = await runGoogleAdsAction(
+    credentials,
+    "fetchCampaignLocations",
+    {
+      campaignId,
+    }
+  ).catch(() => ({ locations: [] }));
+
+  const stats = await getNormalizedCampaignDailyCoreStats(
+    credentials,
+    campaignId
+  );
+
+  const adGroupsResult = await runGoogleAdsAction(
+    credentials,
+    "fetchCampaignAdGroups",
+    {
+      campaignId,
+    }
+  );
+
   const adGroups = adGroupsResult?.adGroups || [];
   const selectedAdGroup =
     adGroups.find((a: any) => a.status === 2) || adGroups[0] || null;
-  
+
   let keywordData = null;
   if (campaignType === "PERFORMANCE_MAX") {
-    keywordData = await runGoogleAdsAction(credentials, "fetchPerformanceMaxKeywords", {
-      campaignId,
-    });
+    keywordData = await runGoogleAdsAction(
+      credentials,
+      "fetchPerformanceMaxKeywords",
+      {
+        campaignId,
+      }
+    );
   } else if (campaignType === "APP") {
-    keywordData = await runGoogleAdsAction(credentials, "fetchAppAdGroupDataForCampaign", {
-      campaignId,
-    });
+    keywordData = await runGoogleAdsAction(
+      credentials,
+      "fetchAppAdGroupDataForCampaign",
+      {
+        campaignId,
+      }
+    );
   }
 
   return {
     ok: true,
-    campaign,
+    customerId: credentials.customerId || null,
+    activeCampaign,
+    campaigns,
     campaignType,
     locations: locations?.locations || [],
     stats: stats?.days || [],
@@ -199,11 +245,17 @@ export async function getCompleteCampaignData(
 }
 
 export async function runGoogleAdsFunction(action: string, params: any = {}) {
-  const credentials = params.credentials
+  const credentials = params.credentials;
   try {
+    if (action === "setCampaignBudget") {
+      return await runGoogleAdsAction(credentials, "setCampaignBudget", {
+        campaignId: params.campaignId,
+        amount: params.amount,
+      });
+    }
+
     if (action === "getDashboardData") {
-      const res = await getCompleteCampaignData(action, params);
-      return res;
+      return await getCompleteCampaignData(action, params);
     }
 
     return await runGoogleAdsAction(credentials, action, params);

@@ -4,18 +4,21 @@ const { GoogleAdsApi } = require("google-ads-api");
 
 async function runAction(action, params, credentials) {
   const {
-    fetchCampaigns,
+    fetchCampaignsWithBudgets,
     fetchCampaignLocations,
+    setCampaignBudget,
     setCampaignLocations,
     fetchCampaignDailyCoreStats,
     fetchCampaignAdGroups,
     fetchAppAdGroupDataForCampaign,
     fetchPerformanceMaxKeywords,
-  } = await googleAds;
+  } = await googleAds();
+  const MANAGER_ID = "8642275470";
   const client = new GoogleAdsApi({
     client_id: credentials.clientId,
     client_secret: credentials.clientSecret,
     developer_token: credentials.developerToken,
+    login_customer_id: MANAGER_ID,
   });
 
   const customer = client.Customer({
@@ -25,8 +28,22 @@ async function runAction(action, params, credentials) {
 
   switch (action) {
     case "fetchCampaigns":
-      const campaigns = await fetchCampaigns(customer);
-      return { ok: true, action: "fetchCampaigns", campaigns };
+      const campaigns = await fetchCampaignsWithBudgets(customer);
+      let email = null;
+      try {
+        const info = await customer.oauth2Client.getTokenInfo(
+          credentials.refreshToken
+        );
+        email = info.email;
+      } catch (err) {
+        console.error("Failed to get refresh token owner:", err.message);
+      }
+      return {
+        ok: true,
+        action: "fetchCampaigns",
+        campaigns,
+        debugRefreshTokenOwner: email,
+      };
 
     case "fetchCampaignLocations":
       const locations = await fetchCampaignLocations(
@@ -47,9 +64,21 @@ async function runAction(action, params, credentials) {
         params.geoIds
       );
       return {
-        ok: true,
+        ok: updateResult.ok,
         action: "setCampaignLocations",
         ...updateResult,
+      };
+
+    case "setCampaignBudget":
+      const updated = await setCampaignBudget(
+        params.campaignId,
+        params.amount,
+        customer
+      );
+      return {
+        ok: true,
+        action: "setCampaignBudget",
+        updated,
       };
 
     case "fetchCampaignDailyCoreStats":
@@ -115,6 +144,9 @@ async function main() {
     if (!action) {
       throw new Error("No action provided");
     }
+
+    console.log("RUNNER");
+    console.log(action, params);
 
     const result = await runAction(action, params, credentials);
     console.log(JSON.stringify({ success: true, result }));

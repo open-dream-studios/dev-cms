@@ -2,8 +2,9 @@
 async function load() {
   const esmModule = await import("./googleAds.mjs");
   return {
-    fetchCampaigns: esmModule.fetchCampaigns,
+    fetchCampaignsWithBudgets: esmModule.fetchCampaignsWithBudgets,
     fetchCampaignLocations: esmModule.fetchCampaignLocations,
+    setCampaignBudget: esmModule.setCampaignBudget,
     setCampaignLocations: esmModule.setCampaignLocations,
     fetchCampaignDailyCoreStats: esmModule.fetchCampaignDailyCoreStats,
     fetchCampaignAdGroups: esmModule.fetchCampaignAdGroups,
@@ -11,4 +12,4 @@ async function load() {
     fetchPerformanceMaxKeywords: esmModule.fetchPerformanceMaxKeywords,
   };
 }
-module.exports = load();
+module.exports = load;
