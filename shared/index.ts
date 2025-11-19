@@ -12,5 +12,6 @@ export * from "./types/models/sectionConfigSchema";
 export * from "./types/models/theme";
 export * from "./types/models/modules";
 export * from "./types/models/search";
+export * from "./types/models/services"
 
 // export * from "./definitions/google";

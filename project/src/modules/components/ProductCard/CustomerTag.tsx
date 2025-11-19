@@ -9,6 +9,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { capitalizeFirstLetter } from "@/util/functions/Data";
 
 const CustomerTag = ({
   product,
@@ -90,7 +91,7 @@ const CustomerTag = ({
                 : "text-[calc(11.5px+0.15vw)] leading-[calc(13px+0.4vw)]"
             } truncate font-[600]`}
           >
-            {productCustomer.first_name} {productCustomer.last_name}
+            {capitalizeFirstLetter(productCustomer.first_name)} {capitalizeFirstLetter(productCustomer.last_name)}
           </div>
           <div
             style={{

@@ -72,6 +72,12 @@ interface UiState {
 
   siteWindowKey: number;
   setSiteWindowKey: (val: number | ((prev: number) => number)) => void;
+
+  showCampaignPicker: boolean;
+  setShowCampaignPicker: (val: boolean) => void;
+
+  isLoadingGoogleAdsData: boolean;
+  setIsLoadingGoogleAdsData: (val: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -131,4 +137,10 @@ export const useUiStore = create<UiState>((set) => ({
     set((state) => ({
       siteWindowKey: typeof val === "function" ? val(state.siteWindowKey) : val,
     })),
+
+  showCampaignPicker: false,
+  setShowCampaignPicker: (val) => set({ showCampaignPicker: val }),
+
+  isLoadingGoogleAdsData: false,
+  setIsLoadingGoogleAdsData: (val) => set({ isLoadingGoogleAdsData: val }),
 }));

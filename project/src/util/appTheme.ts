@@ -34,6 +34,9 @@ const themeColors = {
   header_1_1: c("#E9E9E9", "#252525"),
   header_1_2: c("#CCCCCC", "#333333"),
 
+  // Cards
+  card_bg_1: c("#E6E6E6", "#1D1D1D"),
+
   // Texts
   text_1: c("#000000", "#FFFFFF"),
   text_2: c("#1F1F1F", "#DDDDDD"),

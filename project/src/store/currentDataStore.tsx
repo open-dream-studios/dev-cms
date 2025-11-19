@@ -13,6 +13,8 @@ import {
   Media,
   MediaFolder,
   SearchContext,
+  GoogleAdsData,
+  GoogleAdsRange,
 } from "@open-dream/shared";
 
 interface CurrentDataState {
@@ -82,8 +84,20 @@ interface CurrentDataState {
   searchContext: SearchContext;
   setSearchContext: (ctx: SearchContext) => void;
 
-  googleAdsData: null;
+  googleAdsData: GoogleAdsData | null;
   setGoogleAdsData: (data: any) => void;
+
+  selectedCampaignId: number | null;
+  setSelectedCampaignId: (activeCampaignId: number | null) => void;
+
+  selectedAdGroupId: number | null;
+  setSelectedAdGroupId: (activeAdGroupId: number | null) => void;
+
+  currentGoogleAdsRange: GoogleAdsRange;
+  setCurrentGoogleAdsRange: (currentGoogleAdsRange: GoogleAdsRange) => void;
+
+  selectedGoogleAdsMetrics: string[];
+  setSelectedGoogleAdsMetrics: (selectedGoogleAdsMetrics: string[]) => void;
 }
 
 const localProductsDataRef = { current: [] as Product[] };
@@ -211,6 +225,20 @@ export const useCurrentDataStore = create<CurrentDataState>()(
 
       googleAdsData: null,
       setGoogleAdsData: (data) => set({ googleAdsData: data }),
+
+      selectedCampaignId: null,
+      setSelectedCampaignId: (id) => set({ selectedCampaignId: id }),
+
+      selectedAdGroupId: null,
+      setSelectedAdGroupId: (id) => set({ selectedAdGroupId: id }),
+
+      currentGoogleAdsRange: "7d",
+      setCurrentGoogleAdsRange: (range) =>
+        set({ currentGoogleAdsRange: range }),
+
+      selectedGoogleAdsMetrics: ["spend", "clicks"],
+      setSelectedGoogleAdsMetrics: (metrics) =>
+        set({ selectedGoogleAdsMetrics: metrics }),
     }),
     { name: "CurrentDataStore" }
   )

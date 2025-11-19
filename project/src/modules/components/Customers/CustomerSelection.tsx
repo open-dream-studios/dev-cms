@@ -10,6 +10,7 @@ import { useContext, useEffect, useState } from "react";
 import { IoTrashSharp } from "react-icons/io5";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { capitalizeFirstLetter } from "@/util/functions/Data";
 
 const CustomerSelection = ({ product }: { product: Product | null }) => {
   const { currentUser } = useContext(AuthContext);
@@ -116,7 +117,9 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
                 </div>
                 <div className="flex h-[100%] w-[100%] flex-col justify-center">
                   <div className="flex flex-row justify-between w-[100%]">
-                    <div className="font-[600] text-[17px] leading-[19px]">{`${customer.first_name} ${customer.last_name}`}</div>
+                    <div className="font-[600] text-[17px] leading-[19px]">{`${capitalizeFirstLetter(
+                      customer.first_name
+                    )} ${capitalizeFirstLetter(customer.last_name)}`}</div>
                     {customer.email && (
                       <div className="font-[500] text-[14px] opacity-[0.3]">
                         {customer.email}

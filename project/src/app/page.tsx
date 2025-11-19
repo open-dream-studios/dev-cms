@@ -5,8 +5,8 @@ import MediaManager from "@/modules/MediaModule/MediaManager";
 import PagesEditor from "@/modules/PagesModule/PagesEditor";
 import CustomerCatalog from "@/modules/CustomersModule/CustomerCatalog";
 import EmployeeCatalog from "@/modules/EmployeesModule/EmployeeCatalog";
-import { useUiStore } from "@/store/useUIStore";
-import GoogleAdsDashboard from "@/modules/GoogleAdsModule/GoogleAdsDashboard";
+import { useUiStore } from "@/store/useUIStore"; 
+import GoogleAdsDashboard from "@/modules/DashboardModule/GoogleAdsDashboard";
 
 const HomePage = () => {
   const { screen } = useUiStore();
