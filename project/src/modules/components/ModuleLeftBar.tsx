@@ -28,12 +28,13 @@ import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import RenderedImage from "./ProductCard/RenderedImage";
 import NoProductImage from "./ProductCard/NoProductImage";
-import { GoSync } from "react-icons/go"; 
+import { GoSync } from "react-icons/go";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { determineSearchContext, scrollToItem } from "@/util/functions/Search";
 
 const SearchBar = () => {
+  const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentCustomerSearchTerm, setCurrentCustomerSearchTerm } =
     useCurrentDataStore();
@@ -46,11 +47,19 @@ const SearchBar = () => {
     }
   }, [currentCustomerSearchTerm]);
 
+  if (!currentUser) return null;
+
   return (
     <div className="h-[38px] w-[100%] pt-[10px]">
       <div
         className="rounded-[8px] w-[100%] h-[100%] flex items-center px-[10px] flex-row gap-[5px]"
-        style={{ backgroundColor: "rgba(255,255,255,0.028)" }}
+        style={{
+          backgroundColor:
+            currentUser.theme === "dark"
+              ? "rgba(255,255,255,0.028)"
+              : currentTheme.background_1_2,
+          
+        }}
       >
         <Search
           color={currentTheme.text_3}

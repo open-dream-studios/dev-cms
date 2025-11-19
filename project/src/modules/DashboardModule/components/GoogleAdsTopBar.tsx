@@ -50,7 +50,7 @@ const GoogleAdsTopBar = () => {
       googleAdsData?.activeCampaign ??
       null
     );
-  }, [googleAdsData, campaignsList]);
+  }, [googleAdsData, campaignsList, selectedCampaignId]);
 
   const displayBudget = activeCampaign?.budget ?? 0;
 
@@ -58,7 +58,7 @@ const GoogleAdsTopBar = () => {
     const normalized = editedBudgetValue === "" ? "0" : editedBudgetValue;
     const parsed = Number(normalized);
     if (activeCampaign && activeCampaign.id) {
-      console.log(activeCampaign.id, parsed);
+      // console.log(activeCampaign.id, parsed);
       // await onSaveBudget(activeCampaign.id, parsed);
       // setShowLayoutSkeleton(true);
       await runModule("google-ads-api-module", {
@@ -82,6 +82,8 @@ const GoogleAdsTopBar = () => {
 
   const handleRangeChange = (r: typeof currentGoogleAdsRange) =>
     setCurrentGoogleAdsRange(r);
+
+  if (!currentUser) return null;
 
   return (
     <div className="pl-[4px] w-[100%] h-[100%] flex items-center justify-between gap-4 mb-4">
@@ -144,12 +146,23 @@ const GoogleAdsTopBar = () => {
           >
             <div
               className="w-[32px] h-[32px] rounded-full flex items-center justify-center mb-[2px] pt-[1px]"
-              style={{ backgroundColor: currentTheme.background_2 }}
+              style={{
+                backgroundColor:
+                  currentUser.theme === "dark"
+                    ? currentTheme.background_2
+                    : "#f1f1f1",
+              }}
             >
               <ChevronDown
                 size={28}
-                color={currentTheme.background_4}
-                className="opacity-30"
+                color={
+                  currentUser.theme === "dark"
+                    ? currentTheme.background_4
+                    : currentTheme.text_3
+                }
+                className={`${
+                  currentUser.theme === "dark" ? "opacity-30" : "opacity-20"
+                }`}
               />
             </div>
             <div className="min-w-[220px] group-hover:brightness-79 dim mt-[-2px] ml-[1px]">
@@ -163,16 +176,18 @@ const GoogleAdsTopBar = () => {
                 style={{ color: currentTheme.text_2 }}
                 className="text-xs mt-1"
               >
-                {`Campaign ${activeCampaign.id ? "ID:" : ""} ${
-                  activeCampaign?.id ?? "—"
-                } ${activeCampaign.id ? "•" : ""} `}
+                {`Campaign ${
+                  activeCampaign && activeCampaign.id ? "ID:" : ""
+                } ${activeCampaign?.id ?? "—"} ${
+                  activeCampaign && activeCampaign.id ? "•" : ""
+                } `}
                 <span
                   style={{
                     color: activeCampaign?.status === 2 ? "#22c55e" : "#94a3b8",
                   }}
                   className="font-medium"
                 >
-                  {activeCampaign.id
+                  {activeCampaign && activeCampaign.id
                     ? activeCampaign.status === 2
                       ? "Active"
                       : "Paused"
@@ -184,7 +199,7 @@ const GoogleAdsTopBar = () => {
             {!editingBudget ? (
               <div
                 onClick={() => {
-                  if (activeCampaign.id) {
+                  if (activeCampaign && activeCampaign.id) {
                     setEditedBudgetValue(String(displayBudget));
                     setEditingBudget(true);
                   }
@@ -199,10 +214,14 @@ const GoogleAdsTopBar = () => {
                   }}
                 >
                   <span
-                    className={`${activeCampaign.id ? "" : "text-slate-400"}`}
+                    className={`${
+                      activeCampaign && activeCampaign.id
+                        ? ""
+                        : "text-slate-400"
+                    }`}
                   >
                     {`$${
-                      activeCampaign.id
+                      activeCampaign && activeCampaign.id
                         ? Number(displayBudget).toLocaleString()
                         : ""
                     } `}
@@ -317,9 +336,9 @@ const GoogleAdsTopBar = () => {
                         style={{
                           background:
                             selectedCampaignId === c.id
-                              ? currentTheme.background_2
-                              : currentTheme.card_bg_1,
-                          border: `1px solid ${currentTheme.text_4}`,
+                              ? currentTheme.background_3
+                              : currentTheme.background_2_2,
+                          // border: `1px solid ${currentTheme.background_2_2}`,
                         }}
                       >
                         <div
@@ -343,7 +362,7 @@ const GoogleAdsTopBar = () => {
                           </div>
                         </div>
                         <div
-                          className="text-xs"
+                          className="text-xs mr-[3px]"
                           style={{ color: currentTheme.text_2 }}
                         >
                           {isActive ? "Active" : "Paused"}
@@ -379,7 +398,11 @@ const GoogleAdsTopBar = () => {
               Insights
             </p>
             <img
-              src="https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/openai.png"
+              src={
+                currentUser.theme === "dark"
+                  ? "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/openai.png"
+                  : "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/openai-dark.png"
+              }
               alt=""
               className="group-hover:brightness-70 dim cursor-pointer w-[20px] h-[20px]"
             />

@@ -13,12 +13,12 @@ async function runAction(action, params, credentials) {
     fetchAppAdGroupDataForCampaign,
     fetchPerformanceMaxKeywords,
   } = await googleAds();
-  const MANAGER_ID = "8642275470";
+  const MANAGER_ID = ""
   const client = new GoogleAdsApi({
     client_id: credentials.clientId,
     client_secret: credentials.clientSecret,
     developer_token: credentials.developerToken,
-    login_customer_id: MANAGER_ID,
+    // login_customer_id: MANAGER_ID,
   });
 
   const customer = client.Customer({

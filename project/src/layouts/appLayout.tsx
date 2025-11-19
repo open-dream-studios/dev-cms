@@ -29,6 +29,7 @@ import { useRouting } from "@/hooks/useRouting";
 import { useTesting } from "@/hooks/useTesting";
 import { PageLayout } from "./pageLayout";
 import UploadModal from "@/components/Upload/Upload";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -103,6 +104,8 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   const { projectsData } = useContextQueries();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
+  const currentTheme = useCurrentTheme();
+
   useWebSocketManager();
   useRouting();
   // useTesting();

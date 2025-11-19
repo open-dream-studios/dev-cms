@@ -1,3 +1,4 @@
+// project/src/modules/DashboardModule/GoogleAdsDashboard.tsx
 import { useCallback, useEffect, useRef } from "react";
 import { useLayoutStore } from "@/store/useLayoutStore";
 import DashboardSkeleton, { EmptyComponent } from "./DashboardSkeleton";
@@ -7,15 +8,10 @@ import savedData from "./data.json";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsPerformanceGraph from "./components/GoogleAdsPerformanceGraph";
-
-const TopBar2 = () => {
-  return <div className="w-[100%] h-[100%]"></div>;
-};
+import GoogleAdsMap from "./GoogleAdsMap";
 
 export default function GoogleAdsDashboard() {
-  const clearModules = useLayoutStore((s) => s.clearModules);
-  const addModule = useLayoutStore((s) => s.addModule);
-  const updateModule = useLayoutStore((s) => s.updateModule);
+  const { clearModules, addModule, updateModule } = useLayoutStore();
 
   const { projectModules, runModule } = useContextQueries();
   const { setGoogleAdsData, selectedCampaignId, setSelectedCampaignId } =
@@ -28,7 +24,7 @@ export default function GoogleAdsDashboard() {
       id: "topBar",
       component: GoogleAdsTopBar,
       colSpan: 8,
-      rowSpan: 1,
+      rowSpan: 2,
       bg: false,
       loading: false,
       overflowHidden: false,
@@ -38,16 +34,15 @@ export default function GoogleAdsDashboard() {
       id: "mainGraph",
       component: GoogleAdsPerformanceGraph,
       colSpan: 5,
-      rowSpan: 6,
-      bg: true,
+      rowSpan: 10,
     });
 
     addModule({
       id: "rightTop",
-      component: EmptyComponent,
+      component: GoogleAdsMap,
       props: { type: "summary" },
       colSpan: 3,
-      rowSpan: 3,
+      rowSpan: 5,
     });
 
     addModule({
@@ -55,16 +50,30 @@ export default function GoogleAdsDashboard() {
       component: EmptyComponent,
       props: { type: "secondary" },
       colSpan: 3,
-      rowSpan: 3,
+      rowSpan: 5,
     });
 
     addModule({
       id: "bottomFull",
       component: EmptyComponent,
       colSpan: 8,
-      rowSpan: 3,
+      rowSpan: 7,
     });
   }, []);
+
+  const showLoadingSkeletons = () => {
+    updateModule("mainGraph", { loading: true });
+    updateModule("rightTop", { loading: true });
+    updateModule("rightBottom", { loading: true });
+    updateModule("bottomFull", { loading: true });
+  };
+
+  const hideLoadingSkeletons = () => {
+    updateModule("mainGraph", { loading: false });
+    updateModule("rightTop", { loading: false });
+    updateModule("rightBottom", { loading: false });
+    updateModule("bottomFull", { loading: false });
+  };
 
   const fetchGoogleAdsData = useCallback(
     async (
@@ -73,29 +82,26 @@ export default function GoogleAdsDashboard() {
     ) => {
       if (!projectModules || projectModules.length === 0) return;
       try {
+        showLoadingSkeletons();
         setIsLoadingGoogleAdsData(true);
 
-        // const res = await runModule("google-ads-api-module", {
+        // const response = await runModule("google-ads-api-module", {
         //   action: "getDashboardData",
         //   params: campaignId ? { campaignId } : {},
         // });
         const res = savedData;
 
         if (cancelToken.cancelled) return;
-
+        // const res = response.data
         setGoogleAdsData(res);
         console.log(res);
 
         // if (!campaignId) {
-        //   const incomingActiveCampaignId =
-        //     res.activeCampaign?.id ?? res.selectedAdGroup?.campaignId ?? null;
+        // const incomingActiveCampaignId =
+        //   res.activeCampaign?.id ?? res.selectedAdGroup?.campaignId ?? null;
         const incomingActiveCampaignId = savedData.activeCampaign.id;
 
         setSelectedCampaignId(incomingActiveCampaignId);
-
-        updateModule("mainGraph", {
-          loading: false,
-        });
         // }
       } catch (err) {
         if (!cancelToken.cancelled) {
@@ -103,7 +109,10 @@ export default function GoogleAdsDashboard() {
           setGoogleAdsData({ ok: false, error: String(err) });
         }
       } finally {
-        if (!cancelToken.cancelled) setIsLoadingGoogleAdsData(false);
+        if (!cancelToken.cancelled) {
+          setIsLoadingGoogleAdsData(false);
+        }
+        hideLoadingSkeletons();
       }
     },
     [projectModules, runModule]

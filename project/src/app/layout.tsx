@@ -5,6 +5,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "react-datepicker/dist/react-datepicker.css";
 import "../styles/globals.css";
+import ThemeBody from "@/util/wrappers/ThemeBody";
 
 export const metadata: Metadata = {
   title: "Project CMS",
@@ -20,16 +21,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      style={{
-        backgroundColor: "white",
-      }}
-    >
-      <body>
+    <html lang="en">
+      <ThemeBody>
         <AppLayout>{children}</AppLayout>
         <ToastContainer />
-      </body>
+      </ThemeBody>
     </html>
   );
 }

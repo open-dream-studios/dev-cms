@@ -159,7 +159,7 @@ const GoogleAdsPerformanceGraph = () => {
         </div>
       </div>
 
-      <div style={{ height: 320 }} className="w-full">
+      <div style={{ height: 325 }} className="w-full">
         {isLoadingGoogleAdsData ? (
           <div className="w-full h-full grid place-items-center">
             <div className="w-[80%]">{/* <SkeletonBox height={220} /> */}</div>

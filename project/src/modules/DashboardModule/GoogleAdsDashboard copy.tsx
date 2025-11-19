@@ -136,7 +136,7 @@ const GoogleAdsDashboard: React.FC = () => {
       <div className="w-[100%] grid grid-cols-12 gap-6">
         <main className="col-span-12">
           {/* <CampaignTopBar /> */}
-          {budgetSavedToast && (
+          {/* {budgetSavedToast && (
             <div
               className="fixed right-6 top-28 z-50 px-4 py-2 rounded-md shadow"
               style={{
@@ -146,7 +146,7 @@ const GoogleAdsDashboard: React.FC = () => {
             >
               {budgetSavedToast}
             </div>
-          )}
+          )} */}
 
           {/* Bottom section: top creatives + keywords + products */}
           <div className="grid grid-cols-12 gap-4 mt-4">

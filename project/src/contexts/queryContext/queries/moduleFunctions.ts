@@ -28,34 +28,58 @@ export function useModuleFunctions(
     enabled: isLoggedIn,
   });
 
-  const runModuleMutation = useMutation({
-    mutationFn: async (params: { identifier: string; body: any }) => {
-      const { identifier, body } = params;
+  type RunModuleVariables = { identifier: string; body: any };
+  type RunModuleResult = { ok: true; data: any } | { ok: false; error: string };
+
+  const runModuleMutation = useMutation<
+    RunModuleResult,
+    never,
+    RunModuleVariables
+  >({
+    mutationFn: async ({ identifier, body }) => {
       if (!currentProjectId) {
-        throw new Error("No project selected");
+        return { ok: false, error: "No project selected" };
       }
+
       const projectModuleIdentifiers = projectModules.map(
         (m) => m.module_identifier
       );
+
       if (!projectModuleIdentifiers.includes(identifier)) {
-        console.warn(
-          `Module "${identifier}" is not installed, request did not execute`
-        );
-        return null;
+        console.warn(`Module "${identifier}" is not installed`);
+        return { ok: false, error: "Module not installed" };
       }
-      const res = await makeRequest.post(`/api/modules/run/${identifier}`, {
-        project_idx: currentProjectId,
-        body,
-      });
+
+      const res = await makeRequest
+        .post(`/api/modules/run/${identifier}`, {
+          project_idx: currentProjectId,
+          body,
+        })
+        .catch((err) => {
+          const msg =
+            err?.response?.data?.error || err.message || "Unknown module error";
+
+          return { data: { error: msg }, __error: true as const };
+        });
+
+      if ("__error" in res) {
+        return { ok: false, error: res.data.error };
+      }
+
       const processor = moduleProcessors[identifier];
-      if (processor) {
-        return processor(res.data);
-      }
-      return res.data;
+      return {
+        ok: true,
+        data: processor ? processor(res.data) : res.data,
+      };
     },
   });
+
   const runModule = async (identifier: string, body: any) => {
-    return await runModuleMutation.mutateAsync({ identifier, body });
+    try {
+      return await runModuleMutation.mutateAsync({ identifier, body });
+    } catch (err: any) {
+      console.error(err);
+    }
   };
 
   return {
