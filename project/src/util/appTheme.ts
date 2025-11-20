@@ -72,6 +72,20 @@ const themeColors = {
   status_waiting_delivery: c("#477DBF", "#60a5fa"),
   status_complete: c("#1E9649", "#16a34a"),
   status_cancelled: c("#E01010", "#ef4444"),
+
+  // NEW DEFINITION STANDARDS
+  // gmail_background_1: c("#ffffff", "#0B0B0B"),
+  // gmail_background_2: c("#ffffff", "#101014"),
+  // gmail_button_1: c("#DDDDDD", "#1D1D20"),
+  // skeleton_background_1: c("#DDDDDD", "#0d0d0e"),
+  // gmail_detail_background_1: c("#ffffff", "#080809")
+
+  gmail_background_1: c("#FFFFFF", "#161616"),
+  gmail_background_1_2: c("#FFFFFF", "#1a1a1a"),
+  gmail_background_2: c("#F5F5F5", "#1D1D1D"),
+  gmail_button_1: c("#E6E6E6", "#252525"),
+  skeleton_background_1: c("#E0E0E0", "#1E1E1E"),
+  gmail_detail_background_1: c("#FFFFFF", "#1A1A1A"),
 } as const;
 
 export const appTextSizes = {

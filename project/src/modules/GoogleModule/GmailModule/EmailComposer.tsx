@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { IoClose } from "react-icons/io5";
 import { Paperclip, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 interface EmailComposerProps {
   mode: "reply" | "compose";
@@ -27,6 +28,7 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
   onSend,
   onClose,
 }) => {
+  const currentTheme = useCurrentTheme();
   const [to, setTo] = useState(initialTo);
   const [cc, setCC] = useState("");
   const [bcc, setBCC] = useState("");
@@ -73,8 +75,8 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 25 }}
       transition={{ duration: 0.22 }}
-      className="absolute bottom-0 left-0 right-0 bg-[#101014] border-t border-white/5 p-4 rounded-t-2xl shadow-lg shadow-black/50 z-[500]"
-      style={{ height: 380 }}
+      className="absolute bottom-0 left-0 right-0 border-t border-white/5 p-4 rounded-t-2xl shadow-lg shadow-black/50 z-[500]"
+      style={{ height: 380, backgroundColor: currentTheme.gmail_background_1_2 }}
     >
       {/* Header Row */}
       <div className="flex justify-between items-center mb-2">
@@ -84,7 +86,8 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
 
         <button
           onClick={onClose}
-          className="bg-[#1c1c1d] w-[27px] h-[27px] rounded-full flex items-center justify-center hover:brightness-90"
+          style={{ backgroundColor: currentTheme.gmail_button_1 }}
+          className="w-[27px] h-[27px] rounded-full flex items-center justify-center hover:brightness-85 cursor-pointer dim"
         >
           <IoClose />
         </button>
@@ -97,7 +100,8 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
           value={to}
           onChange={(e) => setTo(e.target.value)}
           placeholder="To"
-          className="bg-[#1a1a1d] text-[13px] px-3 py-2 rounded-lg outline-none border border-white/5"
+          style={{ backgroundColor: currentTheme.gmail_button_1 }}
+          className="text-[13px] px-3 py-2 rounded-lg outline-none border border-white/5"
         />
 
         {/* CC / BCC toggles */}
@@ -130,7 +134,8 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
               value={cc}
               onChange={(e) => setCC(e.target.value)}
               placeholder="CC"
-              className="bg-[#1a1a1d] text-[13px] px-3 py-2 rounded-lg outline-none border border-white/5"
+              style={{ backgroundColor: currentTheme.gmail_button_1 }}
+              className="text-[13px] px-3 py-2 rounded-lg outline-none border border-white/5"
             />
           )}
 
@@ -145,7 +150,8 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
               value={bcc}
               onChange={(e) => setBCC(e.target.value)}
               placeholder="BCC"
-              className="bg-[#1a1a1d] text-[13px] px-3 py-2 rounded-lg outline-none border border-white/5"
+              style={{ backgroundColor: currentTheme.gmail_button_1 }}
+              className="text-[13px] px-3 py-2 rounded-lg outline-none border border-white/5"
             />
           )}
         </AnimatePresence>
@@ -156,7 +162,8 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Subject"
-            className="bg-[#1a1a1d] text-[13px] px-3 py-2 rounded-lg outline-none border border-white/5"
+            style={{ backgroundColor: currentTheme.gmail_button_1 }}
+            className="text-[13px] px-3 py-2 rounded-lg outline-none border border-white/5"
           />
         )}
 
@@ -168,14 +175,16 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
             mode === "reply" ? "Type your reply…" : "Write your message…"
           }
           rows={6}
-          className="bg-[#1a1a1d] text-[13px] p-3 rounded-lg outline-none border border-white/5 flex-1 resize-none "
+          style={{ backgroundColor: currentTheme.gmail_button_1 }}
+          className="text-[13px] p-3 rounded-lg outline-none border border-white/5 flex-1 resize-none "
         />
 
         {/* Attachments */}
         <div className="flex items-center justify-between mt-1">
           <button
             onClick={triggerFilePicker}
-            className="cursor-pointer hover:brightness-85 dim bg-[#1c1c1d] text-[13px] pr-[16px] pl-[10px] py-[7px] rounded-lg flex items-center gap-[6px]"
+            style={{ backgroundColor: currentTheme.gmail_button_1 }}
+            className="cursor-pointer hover:brightness-85 dim text-[13px] pr-[16px] pl-[10px] py-[7px] rounded-lg flex items-center gap-[6px]"
           >
             <Plus size={14} />
             <span>Add attachment</span>
@@ -194,7 +203,8 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
             {attachments.map((f, i) => (
               <div
                 key={i}
-                className="text-[11px] bg-white/5 px-2 py-1 rounded-md flex items-center gap-1"
+                style={{ backgroundColor: currentTheme.gmail_button_1 }}
+                className="text-[11px] px-2 py-1 rounded-md flex items-center gap-1"
               >
                 <Paperclip size={12} />
                 {f.name}
@@ -206,7 +216,8 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
           <div className="flex justify-end">
             <button
               onClick={send}
-              className="cursor-pointer dim bg-[#1c1c1d] text-[13px] px-[16px] py-[7px] rounded-lg hover:brightness-85"
+              style={{ backgroundColor: currentTheme.gmail_button_1 }}
+              className="cursor-pointer dim text-[13px] px-[16px] py-[7px] rounded-lg hover:brightness-85"
             >
               {mode === "reply" ? "Send Reply" : "Send Email"}
             </button>

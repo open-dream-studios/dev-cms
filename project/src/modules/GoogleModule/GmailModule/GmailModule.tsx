@@ -22,6 +22,7 @@ import {
 import { IoClose } from "react-icons/io5";
 import EmailComposer from "./EmailComposer";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
+import { useCurrentTheme } from "@/hooks/useTheme";
 
 /**
  * Deep Gmail-like UI
@@ -110,17 +111,21 @@ const IconButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
   children,
   className = "",
   ...props
-}) => (
-  <button
-    {...props}
-    className={
-      "cursor-pointer hover:brightness-80 dim inline-flex items-center gap-2 px-[18px] py-[6px] rounded-lg bg-white/6 text-[13px]" +
-      className
-    }
-  >
-    {children}
-  </button>
-);
+}) => {
+  const currentTheme = useCurrentTheme();
+  return (
+    <button
+      {...props}
+      style={{ backgroundColor: currentTheme.gmail_button_1 }}
+      className={
+        "cursor-pointer hover:brightness-80 dim inline-flex items-center gap-2 px-[18px] py-[6px] rounded-lg text-[13px]" +
+        className
+      }
+    >
+      {children}
+    </button>
+  );
+};
 
 const SkeletonLine: React.FC<{
   width?: string;
@@ -136,6 +141,7 @@ const SkeletonLine: React.FC<{
 /* ------------------ Main GmailModule ------------------ */
 const GmailModule: React.FC = () => {
   const { runModule } = useContextQueries();
+  const currentTheme = useCurrentTheme();
 
   // UI state
   const [label, setLabel] = useState<string>("INBOX");
@@ -393,14 +399,18 @@ const GmailModule: React.FC = () => {
 
   /* ------------------ Layout ------------------ */
   return (
-    <div className="w-full h-full bg-[#0b0b0c] text-white grid grid-cols-[220px_1fr_46%] gap-4 p-4">
+    <div
+      style={{ backgroundColor: currentTheme.gmail_background_1 }}
+      className="w-full h-full text-white gap-4 p-4 flex flex-row"
+    >
       {/* Sidebar */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 w-[220px]">
         <div
           onClick={(e: any) => {
             window.open("https://mail.google.com/mail/u/0/#inbox", "_blank");
           }}
-          className="group flex items-center justify-between py-2 pl-[14px] pr-[16px] rounded-xl bg-[#101014] cursor-pointer"
+          style={{ backgroundColor: currentTheme.gmail_background_2 }}
+          className="group flex items-center justify-between py-2 pl-[14px] pr-[16px] rounded-xl cursor-pointer"
         >
           <div className="group-hover:brightness-75 dim flex items-center gap-[10px] font-semibold">
             <img
@@ -435,7 +445,8 @@ const GmailModule: React.FC = () => {
 
         <div
           onClick={openCompose}
-          className={`group bg-[#0f0f12] flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer`}
+          style={{ backgroundColor: currentTheme.gmail_background_2 }}
+          className={`group flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer`}
         >
           <div className="select-none flex items-center gap-3">
             <div className="group-hover:brightness-70 dim opacity-90">
@@ -447,7 +458,10 @@ const GmailModule: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-xl bg-[#0f0f12] p-2 flex-1 overflow-auto">
+        <div
+          style={{ backgroundColor: currentTheme.gmail_background_2 }}
+          className="rounded-xl p-2 flex-1 overflow-auto"
+        >
           <div className="space-y-2">
             <SidebarItem
               icon={<Inbox size={16} />}
@@ -488,7 +502,10 @@ const GmailModule: React.FC = () => {
       </div>
 
       {/* Message List */}
-      <div className="flex flex-col rounded-xl bg-[#0f0f12] overflow-hidden">
+      <div
+        style={{ backgroundColor: currentTheme.gmail_background_2 }}
+        className="flex flex-col rounded-xl overflow-hidden min-w-[300px] w-[25%] max-w-[370px]"
+      >
         <div className="flex flex-col gap-[8px] items-center p-3 border-b border-white/6">
           <div className="flex flex-row justify-between w-[100%] items-center px-[5px]">
             <div className="text-lg font-semibold">
@@ -546,7 +563,13 @@ const GmailModule: React.FC = () => {
           {loading && (
             <div className="space-y-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-[#0d0d0e] p-3 rounded-xl">
+                <div
+                  style={{
+                    backgroundColor: currentTheme.skeleton_background_1,
+                  }}
+                  key={i}
+                  className="p-3 rounded-xl"
+                >
                   <SkeletonLine width="45%" height={14} />
                   <div className="mt-2">
                     <SkeletonLine width="80%" height={12} />
@@ -580,15 +603,15 @@ const GmailModule: React.FC = () => {
                     animate={{ opacity: 1 }}
                     transition={{ ease: "easeOut", duration: 0.4 }}
                     exit={{ opacity: 0 }}
-                    className={`px-4 py-2 rounded-xl cursor-pointer border border-white/5 transition-all duration-200
-                      ${
-                        isSelected
-                          ? "bg-[#111213]/80 shadow-md shadow-black/40"
-                          : isUnread
-                          ? "bg-white/[0.06]"
-                          : "hover:bg-white/5"
-                      }
-                    `}
+                    style={{
+                      backgroundColor: isUnread
+                        ? currentTheme.gmail_button_1
+                        : currentTheme.gmail_background_2,
+                      border: isSelected
+                        ? `0.5px solid ${currentTheme.text_3}`
+                        : `0.5px solid ${currentTheme.background_3}`,
+                    }}
+                    className={`cursor-pointer hover:brightness-80 dim px-4 py-2 rounded-xl`}
                     onClick={() => handleEmailClick(m)}
                   >
                     {/* ROW */}
@@ -640,7 +663,10 @@ const GmailModule: React.FC = () => {
       </div>
 
       {/* Message viewer */}
-      <div className="flex flex-col rounded-xl bg-[#0f0f12] overflow-hidden">
+      <div
+        style={{ backgroundColor: currentTheme.gmail_background_2 }}
+        className="flex flex-col rounded-xl overflow-hidden flex-1 w-[100%]"
+      >
         <div className="px-4 p-3 h-[62px] min-h-[62px] border-b border-white/6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="font-semibold">Message</div>
@@ -693,7 +719,12 @@ const GmailModule: React.FC = () => {
             {detail && (
               <div className="space-y-4 pb-[65px]">
                 {showHeaders && (
-                  <pre className="bg-[#080809] p-3 rounded-md text-xs text-white/60 overflow-auto">
+                  <pre
+                    style={{
+                      backgroundColor: currentTheme.gmail_detail_background_1,
+                    }}
+                    className="p-3 rounded-md text-xs text-white/60 overflow-auto"
+                  >
                     {JSON.stringify(detail.headers, null, 2)}
                   </pre>
                 )}
@@ -717,7 +748,12 @@ const GmailModule: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-[#0b0b0c] rounded-lg border border-white/6 p-3">
+                <div
+                  style={{
+                    backgroundColor: currentTheme.gmail_background_1,
+                  }}
+                  className="rounded-lg border border-white/6 p-3"
+                >
                   {detail.html ? (
                     <div style={{ height: 480 }}>
                       <iframe
@@ -840,12 +876,16 @@ function SidebarItem({
   onClick?: () => void;
   active?: boolean;
 }) {
+  const currentTheme = useCurrentTheme();
   return (
     <div
       onClick={onClick}
-      className={`group select-none flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer hover:brightness-85 dim ${
-        active ? "bg-white/6" : ""
-      }`}
+      style={{
+        backgroundColor: active
+          ? currentTheme.gmail_button_1
+          : currentTheme.gmail_background_2,
+      }}
+      className={`group select-none flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer hover:brightness-85 dim`}
     >
       <div className="flex items-center gap-3 group-hover:brightness-85 dim">
         <div className="opacity-80">{icon}</div>
@@ -867,12 +907,14 @@ function LabelPill({
   labelName: string;
   onClick?: () => void;
 }) {
+  const currentTheme = useCurrentTheme();
   return (
     <button
       onClick={onClick}
-      className="text-sm px-3 py-1 rounded-full bg-white/5 text-white/90 hover:bg-white/8"
+      style={{ backgroundColor: currentTheme.gmail_button_1 }}
+      className="group text-sm px-3 py-1 rounded-full text-white/90 cursor-pointer hover:brightness-95 dim"
     >
-      {labelName}
+      <div className="group-hover:brightness-75 dim">{labelName}</div>
     </button>
   );
 }
