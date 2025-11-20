@@ -1,12 +1,13 @@
 // project/src/app/page.tsx
 "use client";
-import React from "react"; 
+import React from "react";
 import MediaManager from "@/modules/MediaModule/MediaManager";
 import PagesEditor from "@/modules/PagesModule/PagesEditor";
 import CustomerCatalog from "@/modules/CustomersModule/CustomerCatalog";
 import EmployeeCatalog from "@/modules/EmployeesModule/EmployeeCatalog";
-import { useUiStore } from "@/store/useUIStore"; 
+import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsDashboard from "@/modules/DashboardModule/GoogleAdsDashboard";
+import GmailModule from "@/modules/GoogleModule/GmailModule/GmailModule";
 
 const HomePage = () => {
   const { screen } = useUiStore();
@@ -17,6 +18,7 @@ const HomePage = () => {
       {screen === "pages" && <PagesEditor />}
       {screen === "customers" && <CustomerCatalog />}
       {screen === "employees" && <EmployeeCatalog />}
+      {screen === "gmail" && <GmailModule />}
     </div>
   );
 };

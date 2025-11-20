@@ -26,10 +26,9 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useWebSocketManager } from "@/store/webSocketStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
-import { useTesting } from "@/hooks/useTesting";
+// import { useTesting } from "@/hooks/useTesting";
 import { PageLayout } from "./pageLayout";
 import UploadModal from "@/components/Upload/Upload";
-import { useCurrentTheme } from "@/hooks/useTheme";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -74,7 +73,7 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
     if (!isLoadingCurrentUserData && !currentUser && pathname !== "/") {
       router.push("/");
     }
-  }, [currentUser, isLoadingCurrentUserData, pathname]);
+  }, [router, currentUser, isLoadingCurrentUserData, pathname]);
 
   if (isLoadingCurrentUserData) return null;
   if (!currentUser && pathname !== "/") return null;
@@ -100,11 +99,17 @@ const UnprotectedLayout = () => {
 };
 
 const ProtectedLayout = ({ children }: { children: ReactNode }) => {
-  const { updatingLock } = useUiStore();
+  const { updatingLock, resetUIStore } = useUiStore();
   const { projectsData } = useContextQueries();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
-  const currentTheme = useCurrentTheme();
+  const router = useRouter();
+
+  // Reset UI whenever the project changes
+  useEffect(() => {
+    resetUIStore();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProjectId]);
 
   useWebSocketManager();
   useRouting();
@@ -116,6 +121,12 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
       setCurrentProjectData(projectsData[0]);
     }
   }, [projectsData, setCurrentProjectData]);
+
+  useEffect(() => {
+    if (!currentProjectId) {
+      router.push("/");
+    }
+  }, [router, currentProjectId]);
 
   if (!currentUser) return;
 

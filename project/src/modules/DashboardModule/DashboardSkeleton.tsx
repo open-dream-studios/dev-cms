@@ -13,9 +13,8 @@ export default function DashboardSkeleton() {
 
   return (
     <div
-      className="w-full min-h-screen px-[15px] py-[13px]"
+      className="w-full px-[15px] py-[13px]"
       style={{
-        backgroundColor: currentTheme.background_1,
         display: "grid",
         gridTemplateColumns: `repeat(${layout.columns}, 1fr)`,
         gap: layout.gap,
@@ -28,13 +27,13 @@ export default function DashboardSkeleton() {
         return (
           <div
             key={mod.id}
-            className={`rounded-2xl ${mod.overflowHidden ? "overflow-hidden" : ""}`}
+            className={`rounded-2xl ${
+              mod.overflowHidden ? "overflow-hidden" : ""
+            }`}
             style={{
               gridColumn: `span ${mod.colSpan}`,
               gridRow: `span ${mod.rowSpan}`,
-              backgroundColor: mod.bg
-                ? currentTheme.card_bg_1
-                : "transparent",
+              backgroundColor: mod.bg ? currentTheme.card_bg_1 : "transparent",
             }}
           >
             {mod.loading ? (

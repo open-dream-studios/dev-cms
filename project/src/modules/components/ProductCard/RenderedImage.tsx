@@ -18,7 +18,7 @@ const RenderedImage = ({
           draggable={false}
           src={media.url}
           alt={media.alt_text || ""}
-          className="dim hover:brightness-90 object-cover w-full max-h-[210px] aspect-[1/1]"
+          className="dim hover:brightness-90 object-cover w-full aspect-[1/1]"
         />
       ) : (
         <>

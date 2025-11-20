@@ -58,7 +58,7 @@ export const useLayoutStore = create<DashboardLayoutState>((set) => ({
 
   layout: {
     columns: 8,
-    rowHeight: 35,
+    rowHeight: 6,
     gap: 15,
   },
 }));

@@ -9,6 +9,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsPerformanceGraph from "./components/GoogleAdsPerformanceGraph";
 import GoogleAdsMap from "./GoogleAdsMap";
+import GoogleAdsMetrics from "./components/GoogleAdsMetrics";
 
 export default function GoogleAdsDashboard() {
   const { clearModules, addModule, updateModule } = useLayoutStore();
@@ -24,7 +25,7 @@ export default function GoogleAdsDashboard() {
       id: "topBar",
       component: GoogleAdsTopBar,
       colSpan: 8,
-      rowSpan: 2,
+      rowSpan: 4,
       bg: false,
       loading: false,
       overflowHidden: false,
@@ -34,7 +35,7 @@ export default function GoogleAdsDashboard() {
       id: "mainGraph",
       component: GoogleAdsPerformanceGraph,
       colSpan: 5,
-      rowSpan: 10,
+      rowSpan: 24,
     });
 
     addModule({
@@ -42,22 +43,22 @@ export default function GoogleAdsDashboard() {
       component: GoogleAdsMap,
       props: { type: "summary" },
       colSpan: 3,
-      rowSpan: 5,
+      rowSpan: 12,
     });
 
     addModule({
       id: "rightBottom",
-      component: EmptyComponent,
+      component: GoogleAdsMetrics,
       props: { type: "secondary" },
       colSpan: 3,
-      rowSpan: 5,
+      rowSpan: 12,
     });
 
     addModule({
       id: "bottomFull",
       component: EmptyComponent,
       colSpan: 8,
-      rowSpan: 7,
+      rowSpan: 11,
     });
   }, []);
 

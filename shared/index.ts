@@ -13,5 +13,6 @@ export * from "./types/models/theme";
 export * from "./types/models/modules";
 export * from "./types/models/search";
 export * from "./types/models/services"
+export * from "./types/models/google"
 
 // export * from "./definitions/google";

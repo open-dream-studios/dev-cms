@@ -32,6 +32,7 @@ import { BsFillPersonVcardFill } from "react-icons/bs";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { IoMdMail } from "react-icons/io";
 
 type BoxItem = {
   title: string;
@@ -249,6 +250,15 @@ const LeftBar = () => {
     });
   }
 
+  if (hasProjectModule("google-gmail-module")) {
+    displayedModules.push({
+      title: "Gmail",
+      icon: <IoMdMail className="brightness-75 mt-[-1.25px]" size={18} />,
+      pages: ["gmail" as Screen],
+      onClick: () => handleTabClick("gmail"),
+    });
+  }
+
   if (
     hasProjectModule("media-module") &&
     hasProjectModule("global-media-module")
@@ -263,7 +273,7 @@ const LeftBar = () => {
 
   if (hasProjectModule("pages-module")) {
     displayedModules.push({
-      title: "Pages",
+      title: "Website",
       icon: <FaPollH className="brightness-75 mt-[1px]" size={16} />,
       pages: ["pages" as Screen],
       onClick: () => handleTabClick("pages"),

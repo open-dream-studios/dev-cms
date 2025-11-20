@@ -10,9 +10,10 @@ export type Screen =
   | "settings"
   | "customers"
   | "customer-products"
-  | "edit-customer-product" 
+  | "edit-customer-product"
   | "tasks"
-  | "employees";
+  | "employees"
+  | "gmail";
 
 export type Modal =
   | { type: "mediaUpload" }

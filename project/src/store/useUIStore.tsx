@@ -18,7 +18,60 @@ interface UploadContext {
   onUploaded: (uploads: Media[], files: File[]) => Promise<void>;
 }
 
+const initialUIState: Omit<
+  UiState,
+  | "setUpdatingLock"
+  | "setScreen"
+  | "pushModal"
+  | "popModal"
+  | "setSidebar"
+  | "setUploadContext"
+  | "setInventoryView"
+  | "setAddingProduct"
+  | "setEditingProducts"
+  | "setAddingCustomer"
+  | "setAddingEmployee"
+  | "setAddingPage"
+  | "setEditingPage"
+  | "setAddingSection"
+  | "setEditingSection"
+  | "setSiteWindowKey"
+  | "setShowCampaignPicker"
+  | "setIsLoadingGoogleAdsData"
+  | "resetUIStore"
+> = {
+  updatingLock: false,
+  screen: "dashboard",
+  modals: [],
+  sidebar: "none",
+  uploadContext: null,
+
+  // Products
+  inventoryView: false,
+  addingProduct: false,
+  editingProducts: false,
+
+  // Customers
+  addingCustomer: false,
+
+  // Employees
+  addingEmployee: false,
+
+  // Pages
+  addingPage: false,
+  editingPage: null,
+  addingSection: false,
+  editingSection: null,
+
+  siteWindowKey: 0,
+
+  showCampaignPicker: false,
+  isLoadingGoogleAdsData: false,
+};
+
 interface UiState {
+  resetUIStore: () => void;
+
   updatingLock: boolean;
   setUpdatingLock: (val: boolean) => void;
 
@@ -81,7 +134,9 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>((set) => ({
-  updatingLock: false,
+  ...initialUIState,
+  resetUIStore: () => set(initialUIState),
+
   setUpdatingLock: (val) => set({ updatingLock: val }),
 
   screen: "dashboard",

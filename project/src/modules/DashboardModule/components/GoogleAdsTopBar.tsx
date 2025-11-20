@@ -376,6 +376,23 @@ const GoogleAdsTopBar = () => {
         </div>
         <div className="flex flex-col gap-[6.5px] mt-[1px]">
           <div
+            className="group rounded-lg flex flex-row justify-between items-center w-[100%] px-[15px] h-[30px] cursor-pointer"
+            style={{ backgroundColor: currentTheme.card_bg_1 }}
+          >
+            <p className="group-hover:brightness-70 dim font-[500] text-[13px]">
+              Insights
+            </p>
+            <img
+              src={
+                currentUser.theme === "dark"
+                  ? "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/openai.png"
+                  : "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/openai-dark.png"
+              }
+              alt=""
+              className="group-hover:brightness-70 dim cursor-pointer w-[20px] h-[20px]"
+            />
+          </div>
+          <div
             className="group w-[auto] rounded-lg px-[15px] h-[30px] flex items-center cursor-pointer"
             style={{ backgroundColor: currentTheme.card_bg_1 }}
           >
@@ -388,24 +405,6 @@ const GoogleAdsTopBar = () => {
               <option value="30d">Last 30d</option>
               <option value="90d">Last 90d</option>
             </select>
-          </div>
-
-          <div
-            className="group rounded-lg flex flex-row justify-between items-center w-[100%] px-[15px] h-[30px] cursor-pointer"
-            style={{ backgroundColor: currentTheme.card_bg_1 }}
-          >
-            <p className="group-hover:brightness-70 dim font-semibold text-[13px]">
-              Insights
-            </p>
-            <img
-              src={
-                currentUser.theme === "dark"
-                  ? "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/openai.png"
-                  : "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/openai-dark.png"
-              }
-              alt=""
-              className="group-hover:brightness-70 dim cursor-pointer w-[20px] h-[20px]"
-            />
           </div>
         </div>
       </div>

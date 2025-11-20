@@ -257,7 +257,7 @@ const Navbar = () => {
                   className="opacity-[60%]"
                 />
                 <div
-                  className="truncate text-[14.5px] leading-[17px] font-[500] opacity-[87%]"
+                  className="select-none truncate text-[14.5px] leading-[17px] font-[500] opacity-[87%]"
                   style={{
                     color: currentTheme.text_1,
                   }}

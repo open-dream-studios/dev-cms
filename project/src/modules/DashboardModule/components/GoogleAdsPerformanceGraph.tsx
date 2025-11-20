@@ -130,7 +130,7 @@ const GoogleAdsPerformanceGraph = () => {
 
   return (
     <div
-      className={"w-[100%] p-4"}
+      className={"w-[100%] p-[20px]"}
       style={{ background: currentTheme.cardBackground }}
     >
       <div className="flex items-center justify-between mb-3">
@@ -142,7 +142,7 @@ const GoogleAdsPerformanceGraph = () => {
             className="text-lg font-semibold"
             style={{ color: currentTheme.text_1 }}
           >
-            Spend / Clicks / Impressions over time
+            Spend / Clicks / Impressions
           </div>
         </div>
 
@@ -159,7 +159,7 @@ const GoogleAdsPerformanceGraph = () => {
         </div>
       </div>
 
-      <div style={{ height: 325 }} className="w-full">
+      <div style={{ height: 295 }} className="w-full">
         {isLoadingGoogleAdsData ? (
           <div className="w-full h-full grid place-items-center">
             <div className="w-[80%]">{/* <SkeletonBox height={220} /> */}</div>
@@ -247,7 +247,7 @@ const GoogleAdsPerformanceGraph = () => {
               <></>
             )}
           </div>
-          <div className="mt-2 text-xs" style={{ color: currentTheme.text_2 }}>
+          {/* <div className="mt-2 text-xs" style={{ color: currentTheme.text_2 }}>
             Clicks:{" "}
             {
               chartData.reduce((a, b) => (a.spend > b.spend ? a : b), {
@@ -255,7 +255,7 @@ const GoogleAdsPerformanceGraph = () => {
                 spend: 0,
               }).clicks
             }
-          </div>
+          </div> */}
         </div>
 
         <div
@@ -273,10 +273,10 @@ const GoogleAdsPerformanceGraph = () => {
               ? `Video • ${topVideos[0].youtubeVideoId}`
               : topImages?.[0]?.resourceName ?? "—"}
           </div>
-          <div className="mt-2 text-xs" style={{ color: currentTheme.text_2 }}>
+          {/* <div className="mt-2 text-xs" style={{ color: currentTheme.text_2 }}>
             Impr:{" "}
             {topVideos?.[0]?.impressions ?? topImages?.[0]?.impressions ?? 0}
-          </div>
+          </div> */}
         </div>
 
         <div
@@ -292,9 +292,9 @@ const GoogleAdsPerformanceGraph = () => {
           >
             45 ms
           </div>
-          <div className="mt-2 text-xs" style={{ color: currentTheme.text_2 }}>
+          {/* <div className="mt-2 text-xs" style={{ color: currentTheme.text_2 }}>
             Server load nominal
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -37,6 +37,7 @@
     "cross-env": "^7.0.3",
     "crypto": "^1.0.1",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.3.0",
     "firebase": "^11.6.0",
     "framer-motion": "^12.7.2",
     "js-cookie": "^3.0.5",
