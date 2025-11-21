@@ -250,12 +250,39 @@ const LeftBar = () => {
     });
   }
 
+  if (hasProjectModule("customer-products-module")) {
+    displayedModules.push({
+      title: "Inventory",
+      icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+      pages: ["customer-products" as Screen, "edit-customer-product" as Screen],
+      onClick: () => handleTabClick("customer-products"),
+    });
+  }
+
+  if (hasProjectModule("customers-module")) {
+    displayedModules.push({
+      title: "Customers",
+      icon: <IoPersonSharp className="brightness-75 mt-[1px]" size={16} />,
+      pages: ["customers" as Screen],
+      onClick: () => handleTabClick("customers"),
+    });
+  }
+
   if (hasProjectModule("google-gmail-module")) {
     displayedModules.push({
       title: "Gmail",
       icon: <IoMdMail className="brightness-75 mt-[-1.25px]" size={18} />,
       pages: ["gmail" as Screen],
       onClick: () => handleTabClick("gmail"),
+    });
+  }
+
+  if (hasProjectModule("pages-module")) {
+    displayedModules.push({
+      title: "Website",
+      icon: <FaPollH className="brightness-75 mt-[1px]" size={16} />,
+      pages: ["pages" as Screen],
+      onClick: () => handleTabClick("pages"),
     });
   }
 
@@ -268,15 +295,6 @@ const LeftBar = () => {
       icon: <FaImages className="w-[17px] h-[17px] brightness-75" />,
       pages: ["media" as Screen],
       onClick: () => handleTabClick("media"),
-    });
-  }
-
-  if (hasProjectModule("pages-module")) {
-    displayedModules.push({
-      title: "Website",
-      icon: <FaPollH className="brightness-75 mt-[1px]" size={16} />,
-      pages: ["pages" as Screen],
-      onClick: () => handleTabClick("pages"),
     });
   }
 
@@ -303,24 +321,6 @@ const LeftBar = () => {
         onClick: () => handleTabClick("products-table"),
       }
     );
-  }
-
-  if (hasProjectModule("customer-products-module")) {
-    displayedModules.push({
-      title: "Inventory",
-      icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-      pages: ["customer-products" as Screen, "edit-customer-product" as Screen],
-      onClick: () => handleTabClick("customer-products"),
-    });
-  }
-
-  if (hasProjectModule("customers-module")) {
-    displayedModules.push({
-      title: "Customers",
-      icon: <IoPersonSharp className="brightness-75 mt-[1px]" size={16} />,
-      pages: ["customers" as Screen],
-      onClick: () => handleTabClick("customers"),
-    });
   }
 
   if (hasProjectModule("employees-module")) {
