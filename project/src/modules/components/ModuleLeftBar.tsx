@@ -479,7 +479,7 @@ const ModuleLeftBar = () => {
                         <RenderedImage media={matchedMedia} rounded={true} />
                       ) : (
                         <div
-                          className={`${
+                          className={`w-[100%] h-[100%] ${
                             product.serial_number === currentProductSerial
                               ? "brightness-90"
                               : "brightness-100"

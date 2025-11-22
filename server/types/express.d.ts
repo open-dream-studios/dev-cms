@@ -1,5 +1,11 @@
-// server/types/express.d.ts
 import "express";
+import "http";
+
+declare module "http" {
+  interface IncomingMessage {
+    rawBody?: string | Buffer;
+  }
+}
 
 declare global {
   namespace Express {
@@ -13,6 +19,7 @@ declare global {
         [key: string]: any;
       };
       accessToken?: string | undefined;
+      rawBody?: string | Buffer;
     }
   }
 }

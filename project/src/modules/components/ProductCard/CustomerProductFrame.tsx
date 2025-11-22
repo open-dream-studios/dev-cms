@@ -1,9 +1,8 @@
 // project/src/modules/CustomerProducts/ProductCard/ProductFrame.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import app_details from "../../../util/appDetails.json";
 import {
   MediaLink,
   Product,
@@ -21,11 +20,9 @@ import "../../components/Calendar/Calendar.css";
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
-import { dateToString } from "@/util/functions/Time";
-import { useModal1Store } from "@/store/useModalStore";
+import { dateToString } from "@/util/functions/Time"; 
 import { useAutoSave } from "@/hooks/useAutoSave";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import AddEmployeeList from "@/modules/CustomerProducts/ProductView/AddEmployeeList";
+import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore"; 
 import {
   PriorityBadge,
   StatusBadge,
@@ -46,8 +43,7 @@ const MiniTaskCard: React.FC<{
   index: number;
 }> = ({ task, productJob, matchedDefinition, index }) => {
   const { currentUser } = React.useContext(AuthContext);
-  const { upsertTask, deleteTask, employeeAssignments, employees } =
-    useContextQueries();
+  const { upsertTask } = useContextQueries();
   const currentTheme = useCurrentTheme();
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
   const taskForm = useTaskForm();
@@ -57,7 +53,7 @@ const MiniTaskCard: React.FC<{
     if (task?.task_id) {
       taskForm.reset(task as TaskFormData);
     }
-  }, [task?.task_id]);
+  }, [task, task?.task_id, taskForm]);
 
   if (!productJob || !matchedDefinition) return null;
   const onFormSubmitButton = async (data: TaskFormData) => {
@@ -141,7 +137,6 @@ const CustomerProductFrame = ({
   const {
     tasks,
     upsertJob,
-    productsData,
     customers,
     mediaLinks,
     jobs,
@@ -150,6 +145,9 @@ const CustomerProductFrame = ({
   } = useContextQueries();
   const { screenClick } = useRouting();
   const { screen } = useUiStore();
+
+  const jobForm = useJobForm();
+  const status = useWatch({ control: jobForm.control, name: "status" });
 
   const handleClick = async () => {
     await screenClick(
@@ -164,7 +162,7 @@ const CustomerProductFrame = ({
     return customers.find(
       (customer: Customer) => customer.id === product.customer_id
     );
-  }, [customers, productsData, product]);
+  }, [customers, product]);
 
   const mediaFound = useMemo(() => {
     const mediaLinksFound = mediaLinks.filter(
@@ -192,20 +190,15 @@ const CustomerProductFrame = ({
       (definition: JobDefinition) =>
         productJob.job_definition_id === definition.id
     );
-  }, [productJob, product.id, jobDefinitions]);
+  }, [productJob, jobDefinitions]);
 
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
   const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   useEffect(() => {
     if (productJob?.job_id) {
       jobForm.reset(productJob as JobFormData);
     }
-  }, [productJob?.job_id]);
-
-  const jobForm = useJobForm();
-  const status = useWatch({ control: jobForm.control, name: "status" });
+  }, [productJob?.job_id, jobForm, productJob]);
 
   const { resetTimer, cancelTimer } = useAutoSave({
     onSave: async () => {
@@ -229,25 +222,7 @@ const CustomerProductFrame = ({
   const jobTasks = useMemo(() => {
     if (!productJob) return [];
     return tasks.filter((task: Task) => task.job_id === productJob.id);
-  }, [tasks, productJob, product.id]);
-
-  const [editAssignment, setEditAssignment] = useState<boolean>(false);
-
-  const handleAddAssignmentClick = () => {
-    if (!productJob) return;
-    setModal1({
-      ...modal1,
-      open: !modal1.open,
-      showClose: true,
-      offClickClose: true,
-      width: "w-[90vw] md:w-[80vw]",
-      maxWidth: "md:max-w-[1000px]",
-      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
-      borderRadius: "rounded-[15px] md:rounded-[20px]",
-      content: <AddEmployeeList assignment={productJob ?? null} />,
-    });
-    setEditAssignment(false);
-  };
+  }, [tasks, productJob]);
 
   const onFormSubmitButton = async (data: JobFormData) => {
     if (!matchedDefinition || !productJob) return null;
@@ -279,7 +254,7 @@ const CustomerProductFrame = ({
 
   const productJobs = useMemo(() => {
     return jobs.filter((job: Job) => job.product_id === product.id);
-  }, [jobs]);
+  }, [jobs, product.id]);
 
   if (!currentUser) return null;
 

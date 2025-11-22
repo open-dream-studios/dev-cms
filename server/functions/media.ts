@@ -4,7 +4,6 @@ import path from "path";
 import fs from "fs/promises";
 import { existsSync } from "fs";
 import mime from "mime-types";
-import { randomUUID } from "crypto";
 
 export function getContentTypeAndExt(filename: string) {
   let ext = path
@@ -26,27 +25,6 @@ export function getContentTypeAndExt(filename: string) {
   };
   const finalMimeType = correctedMimeMap[ext] || mimeType;
   return { ext, mimeType: finalMimeType };
-}
-
-/**
- * Build S3 key. Using project_id included in path gives easy filtering.
- * We use uuid to avoid collisions. Keep extension to reflect final file type.
- * Example: media/PROJECT_123/2025-11-06/uuid.webp
- */
-export function buildS3Key({
-  projectId,
-  ext,
-}: {
-  projectId: string;
-  ext: string;
-}) {
-  // const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const useDevDB =
-    process.env.USE_DEV_DB === "true" && process.env.NODE_ENV !== "production";
-  const safeProject = String(projectId || "global").replace(/[^\w-]/g, "_");
-  const id = randomUUID();
-  const key = `${useDevDB ? "dev" : "prod"}/${safeProject}/${id}.${ext}`;
-  return key;
 }
 
 /**

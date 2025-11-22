@@ -22,8 +22,9 @@ export const getIntegrationsFunction = async (
 
 export const getDecryptedIntegrationsFunction = async (
   project_idx: number,
-  keyNames: string[]
-): Promise<ModuleDecryptedKeys> => {
+  requiredKeys: string[],
+  allKeys: string[]
+): Promise<ModuleDecryptedKeys | null> => {
   const q = `
     SELECT id, integration_id, project_idx, integration_key, integration_value
     FROM project_integrations
@@ -31,7 +32,6 @@ export const getDecryptedIntegrationsFunction = async (
     ORDER BY created_at DESC
   `;
   const [rows] = await db.promise().query<RowDataPacket[]>(q, [project_idx]);
-
   const integrations = rows.map((row) => ({
     ...row,
     integration_key: row.integration_key,
@@ -40,16 +40,23 @@ export const getDecryptedIntegrationsFunction = async (
       : null,
   }));
   const result: ModuleDecryptedKeys = {};
-  for (const keyName of keyNames) {
+  for (const keyName of requiredKeys) {
     const match = integrations.find(
       (row) => row.integration_key.toLowerCase() === keyName.toLowerCase()
     );
-    if (!match) {
-      throw new Error(
-        `Integration key '${keyName}' was expected but not found.`
-      );
-    }
+    if (!match || !match.integration_value) return null;
     result[keyName] = match.integration_value;
+  }
+  for (const keyName of allKeys) {
+    if (result[keyName] !== undefined) continue;
+    const match = integrations.find(
+      (row) => row.integration_key.toLowerCase() === keyName.toLowerCase()
+    );
+    if (match) {
+      result[keyName] = match.integration_value;
+    } else {
+      result[keyName] = null;
+    }
   }
   return result;
 };

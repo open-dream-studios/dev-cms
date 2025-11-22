@@ -1,37 +1,13 @@
-// server/services/aws/S3.js
+// server/services/aws/S3.ts
 import {
   S3Client,
   S3ClientConfig,
   PutObjectCommandInput,
-  ObjectCannedACL,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
+import { ModuleDecryptedKeys } from "@open-dream/shared";
 import fs from "fs";
-
-const {
-  AWS_REGION,
-  AWS_S3_MEDIA_BUCKET,
-  AWS_ACCESS_KEY_ID,
-  AWS_SECRET_ACCESS_KEY,
-  S3_PUBLIC = "true", // if "true" we put ACL: public-read (you can remove if you prefer bucket policy)
-} = process.env;
-
-if (!AWS_S3_MEDIA_BUCKET || !AWS_REGION) {
-  throw new Error("Missing S3 config in env (AWS_S3_BUCKET, AWS_REGION)");
-}
-
-const s3Config: S3ClientConfig = {
-  region: AWS_REGION!,
-  ...(AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
-    ? {
-        credentials: {
-          accessKeyId: AWS_ACCESS_KEY_ID,
-          secretAccessKey: AWS_SECRET_ACCESS_KEY,
-        },
-      }
-    : {}),
-};
-export const s3Client = new S3Client(s3Config);
+import { randomUUID } from "crypto";
 
 interface UploadFileOptions {
   filePath: string;
@@ -39,25 +15,70 @@ interface UploadFileOptions {
   contentType?: string;
 }
 
-/**
- * Uploads a file to S3 using multipart streaming (lib-storage).
- * @param {object} options
- * @param {string} options.filePath Local filesystem path
- * @param {string} options.key Desired S3 key (path/filename in bucket)
- * @param {string} options.contentType MIME type
- * @returns {Promise<{Bucket:string, Key:string, Location:string, ETag?:string, ContentLength:number}>}
- */
-export async function uploadFileToS3({
-  filePath,
-  key,
-  contentType,
-}: UploadFileOptions): Promise<{
+export function buildS3Key({
+  projectId,
+  ext,
+}: {
+  projectId: string;
+  ext: string;
+}) {
+  // const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const useDevDB =
+    process.env.USE_DEV_DB === "true" && process.env.NODE_ENV !== "production";
+  const safeProject = String(projectId || "global").replace(/[^\w-]/g, "_");
+  const id = randomUUID();
+  const key = `${useDevDB ? "dev" : "prod"}/${safeProject}/${id}.${ext}`;
+  return key;
+}
+
+export async function uploadFileToS3(
+  { filePath, key, contentType }: UploadFileOptions,
+  clientAccount: ModuleDecryptedKeys | null
+): Promise<{
   Bucket: string;
   Key: string;
   Location: string | null;
   ETag?: string;
   ContentLength: number;
 }> {
+  let AWS_REGION = null;
+  let AWS_S3_MEDIA_BUCKET = null;
+  let AWS_ACCESS_KEY_ID = null;
+  let AWS_SECRET_ACCESS_KEY = null;
+
+  if (!clientAccount) {
+    AWS_REGION = process.env.AWS_REGION;
+    AWS_S3_MEDIA_BUCKET = process.env.AWS_S3_MEDIA_BUCKET;
+    AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
+    AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
+  } else {
+    AWS_REGION = clientAccount.AWS_REGION;
+    AWS_S3_MEDIA_BUCKET = clientAccount.AWS_S3_MEDIA_BUCKET;
+    AWS_ACCESS_KEY_ID = clientAccount.AWS_ACCESS_KEY_ID;
+    AWS_SECRET_ACCESS_KEY = clientAccount.AWS_SECRET_ACCESS_KEY;
+  }
+
+  if (
+    !AWS_S3_MEDIA_BUCKET ||
+    !AWS_REGION ||
+    !AWS_ACCESS_KEY_ID ||
+    !AWS_SECRET_ACCESS_KEY
+  ) {
+    throw new Error("Missing S3 config");
+  }
+
+  const s3Config: S3ClientConfig = {
+    region: AWS_REGION!,
+    ...(AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
+      ? {
+          credentials: {
+            accessKeyId: AWS_ACCESS_KEY_ID,
+            secretAccessKey: AWS_SECRET_ACCESS_KEY,
+          },
+        }
+      : {}),
+  };
+  const s3Client = new S3Client(s3Config);
   const fileStream = fs.createReadStream(filePath);
   const fileSize = (await fs.promises.stat(filePath)).size;
 
@@ -79,12 +100,9 @@ export async function uploadFileToS3({
   const result = await uploader.done();
 
   // Construct public URL (simple form). If you use a custom domain or CloudFront, change this.
-  const location =
-    S3_PUBLIC === "true"
-      ? `https://${AWS_S3_MEDIA_BUCKET}.s3.${
-          process.env.AWS_REGION
-        }.amazonaws.com/${encodeURIComponent(key)}`
-      : null;
+  const location = `https://${AWS_S3_MEDIA_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${encodeURIComponent(
+    key
+  )}`;
 
   return {
     Bucket: AWS_S3_MEDIA_BUCKET!,

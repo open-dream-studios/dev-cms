@@ -12,12 +12,12 @@ import fs from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 import {
-  buildS3Key,
   compressImage,
   getContentTypeAndExt,
 } from "../../../functions/media.js";
 import mime from "mime-types";
-import { uploadFileToS3 } from "../../../services/aws/S3.js";
+import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
+import { getDecryptedIntegrationsFunction } from "../../integrations/integrations_repositories.js";
 
 // ---------- MEDIA FOLDER FUNCTIONS ----------
 export const getMediaFoldersFunction = async (
@@ -406,6 +406,20 @@ export async function uploadMediaFunction(
   const allSupportedExts = [...supportedImageExts, ...supportedVideoExts];
   const results: any[] = [];
 
+  const requiredKeys = [
+    "AWS_REGION",
+    "AWS_S3_MEDIA_BUCKET",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+  ];
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    project_idx,
+    requiredKeys,
+    []
+  );
+  if (!decryptedKeys)
+    return { success: false, message: "Required keys not found" };
+
   for (const file of files) {
     const origPath = file.path;
     const origName = file.originalname || path.basename(origPath);
@@ -491,11 +505,14 @@ export async function uploadMediaFunction(
     }
 
     // Upload
-    const uploadResult = await uploadFileToS3({
-      filePath: toUploadPath,
-      key: s3Key,
-      contentType: finalMeta.mimeType,
-    });
+    const uploadResult = await uploadFileToS3(
+      {
+        filePath: toUploadPath,
+        key: s3Key,
+        contentType: finalMeta.mimeType,
+      },
+      decryptedKeys
+    );
 
     // Remove local files (both original and compressed) unless they are the same path
     try {

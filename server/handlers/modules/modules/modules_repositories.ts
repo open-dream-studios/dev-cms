@@ -7,10 +7,7 @@ import {
   getModulesStructure,
   loadModuleConfig,
 } from "../../../functions/modules.js";
-import {
-  getDecryptedIntegrationsFunction,
-  getIntegrationsFunction,
-} from "../../../handlers/integrations/integrations_repositories.js";
+import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
 
 // ---------- MODULE FUNCTIONS ----------
 export const getModulesFunction = async (
@@ -90,8 +87,10 @@ export const runModuleFunction = async (
   const { project_idx, body } = reqBody;
   const projectModules = await getModulesFunction(project_idx);
   if (!projectModules || !projectModules.length)
-    throw new Error("Module not found"); 
-  const module = projectModules.find((mod) => mod.module_identifier === identifier);
+    throw new Error("Module not found");
+  const module = projectModules.find(
+    (mod) => mod.module_identifier === identifier
+  );
   if (!module) throw new Error("Module not found");
 
   const tree = await getModulesStructure();
@@ -100,20 +99,15 @@ export const runModuleFunction = async (
   const { run, keys, required_keys } = await loadModuleConfig(moduleFolder);
   if (!run) throw new Error(`No run() function exported for ${identifier}`);
 
-  const projectKeys = await getIntegrationsFunction(project_idx);
-  for (const reqKey of required_keys) {
-    const match = projectKeys.find(
-      (k) => k.integration_key.toLowerCase() === reqKey.toLowerCase()
-    );
-    if (!match) {
-      throw new Error(`Project is missing required integration key: ${reqKey}`);
-    }
-  }
-
   const decryptedKeys = await getDecryptedIntegrationsFunction(
     project_idx,
+    required_keys,
     keys
   );
+
+  if (!decryptedKeys) {
+    return { success: false, message: "Required keys not found" };
+  }
 
   return await run({
     connection,

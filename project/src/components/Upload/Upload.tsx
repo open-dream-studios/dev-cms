@@ -32,7 +32,7 @@ function UploadModal() {
       filtered,
       uploadContext.folder_id ?? null
     );
-    if (uploadedImages.length > 0) {
+    if (uploadedImages && uploadedImages.length) {
       if (uploadContext.onUploaded) {
         await uploadContext.onUploaded(
           uploadContext.multiple ? uploadedImages : [uploadedImages[0]],

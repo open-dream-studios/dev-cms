@@ -154,6 +154,7 @@ const GmailModule: React.FC = () => {
   const [pageSize] = useState<number>(50);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [showHeaders, setShowHeaders] = useState(false);
+  const [photoError, setPhotoError] = useState(false);
 
   const [isComposing, setIsComposing] = useState(false);
   const [composeData, setComposeData] = useState({
@@ -173,6 +174,10 @@ const GmailModule: React.FC = () => {
     photo?: string;
     name?: string;
   } | null>(null);
+
+  useEffect(() => {
+    setPhotoError(false);
+  }, [gmailProfile?.photo]);
 
   useEffect(() => {
     (async () => {
@@ -525,7 +530,7 @@ const GmailModule: React.FC = () => {
                   {gmailProfile.name}
                 </div>
                 <div className="group-hover:brightness-75 dim opacity-[0.8] w-[23px] h-[23px] rounded-full overflow-hidden border-white/60 border-1">
-                  {gmailProfile.photo ? (
+                  {/* {gmailProfile.photo ? (
                     <img
                       src={gmailProfile.photo}
                       alt=""
@@ -533,6 +538,24 @@ const GmailModule: React.FC = () => {
                     />
                   ) : (
                     <div className="">{gmailProfile.email.slice(1)}</div>
+                  )} */}
+                  {gmailProfile.photo && !photoError ? (
+                    <img
+                      src={gmailProfile.photo}
+                      alt=""
+                      className="w-[100%] h-[100%] rounded-full object-contain"
+                      onError={() => setPhotoError(true)}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        backgroundColor: currentTheme.background_3,
+                        color: currentTheme.text_3,
+                      }}
+                      className="text-[11px] font-[700] flex items-center justify-center w-[100%] h-[100%]  pr-[1px] pt-[1px]"
+                    >
+                      {gmailProfile.email[0].toUpperCase()}
+                    </div>
                   )}
                 </div>
               </div>

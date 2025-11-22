@@ -392,7 +392,7 @@ const LeftBar = () => {
             >
               <img
                 src={
-                  currentProject && currentProject.logo !== null
+                  currentProject && currentProject.logo
                     ? currentProject.logo
                     : appDetails.default_logo
                 }

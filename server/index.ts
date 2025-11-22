@@ -3,6 +3,10 @@ const tmpDir = path.resolve("./tmp");
 if (!fs.existsSync(tmpDir)) {
   fs.mkdirSync(tmpDir, { recursive: true });
 }
+const aircallDir = path.resolve("./handlers/webhooks/aircall/recordings");
+if (!fs.existsSync(aircallDir)) {
+  fs.mkdirSync(aircallDir, { recursive: true });
+}
 import { db } from "./connection/connect.js";
 import express from "express";
 import cors from "cors";
@@ -30,6 +34,7 @@ import { WebSocketServer } from "ws";
 import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio.js";
 import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
+import aircallRoutes from "./handlers/webhooks/aircall/aircall_routes.js";
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -104,6 +109,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/voice", callRoutes);
+app.use("/calls/aircall", aircallRoutes);
 
 // WebSocket
 const wss = new WebSocketServer({ server });

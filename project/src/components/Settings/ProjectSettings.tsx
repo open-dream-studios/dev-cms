@@ -8,7 +8,6 @@ import {
 import { projectSettingsToForm } from "@/util/schemas/projectSettingsSchema";
 import { useContext, useEffect } from "react";
 import { FaPlus } from "react-icons/fa6";
-import UploadModal from "../Upload/Upload";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
@@ -95,7 +94,7 @@ const ProjectSettings = () => {
           style={getCardStyle(currentUser.theme, currentTheme)}
           className="rounded-[15px] aspect-[1/1] h-[100%] max-h-[86px] flex items-center justify-center"
         >
-          {currentProject.logo !== null ? (
+          {currentProject.logo ? (
             <div
               onClick={onUploadClick}
               className="hover:brightness-75 dim h-[100%] aspect-[1/1] rounded-[15px] overflow-hidden cursor-pointer relative group"

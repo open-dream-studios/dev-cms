@@ -79,8 +79,6 @@ export const CustomerMiniCard = ({
     };
   }
 
-  console.log(customer.phone)
-
   if (!currentUser) return null;
 
   return (
