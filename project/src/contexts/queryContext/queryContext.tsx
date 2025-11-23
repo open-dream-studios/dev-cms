@@ -112,6 +112,7 @@ export type QueryContextType = {
   refetchMedia: () => void;
   upsertMedia: (data: Media[]) => Promise<Media[]>;
   deleteMedia: (media_id: string) => Promise<void>;
+  rotateMedia: (media_id: string, url: string, rotations: number) => Promise<any>;
 
   mediaFolders: MediaFolder[];
   isLoadingMediaFolders: boolean;
@@ -266,8 +267,14 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     runModule,
     isRunningModule,
   } = useModuleFunctions(isLoggedIn, currentProjectId);
-  const { media, isLoadingMedia, refetchMedia, upsertMedia, deleteMedia } =
-    useMedia(isLoggedIn, currentProjectId);
+  const {
+    media,
+    isLoadingMedia,
+    refetchMedia,
+    upsertMedia,
+    deleteMedia,
+    rotateMedia,
+  } = useMedia(isLoggedIn, currentProjectId);
   const {
     mediaLinks,
     isLoadingMediaLinks,
@@ -389,6 +396,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchMediaFolders,
         upsertMedia,
         deleteMedia,
+        rotateMedia,
         mediaLinks,
         isLoadingMediaLinks,
         refetchMediaLinks,

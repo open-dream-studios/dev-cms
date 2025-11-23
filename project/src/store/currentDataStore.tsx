@@ -15,6 +15,7 @@ import {
   SearchContext,
   GoogleAdsData,
   GoogleAdsRange,
+  GmailRequestType,
 } from "@open-dream/shared";
 
 interface CurrentDataState {
@@ -98,6 +99,9 @@ interface CurrentDataState {
 
   selectedGoogleAdsMetrics: string[];
   setSelectedGoogleAdsMetrics: (selectedGoogleAdsMetrics: string[]) => void;
+
+  selectedGmailTab: GmailRequestType;
+  setSelectedGmailTab: (selectedGmailTab: GmailRequestType) => void;
 }
 
 const localProductsDataRef = { current: [] as Product[] };
@@ -239,6 +243,9 @@ export const useCurrentDataStore = create<CurrentDataState>()(
       selectedGoogleAdsMetrics: ["spend", "clicks"],
       setSelectedGoogleAdsMetrics: (metrics) =>
         set({ selectedGoogleAdsMetrics: metrics }),
+
+      selectedGmailTab: "INBOX" as GmailRequestType,
+      setSelectedGmailTab: (tab) => set({ selectedGmailTab: tab }),
     }),
     { name: "CurrentDataStore" }
   )

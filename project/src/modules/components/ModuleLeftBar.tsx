@@ -2,19 +2,11 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
-import {
-  Customer,
-  MediaLink,
-  Product,
-  Employee,
-  Media,
-} from "@open-dream/shared";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import { Customer, Product, Employee } from "@open-dream/shared";
+import React, { useContext, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
-import { CustomerMiniCard } from "../CustomersModule/CustomerCatalog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { usePathname } from "next/navigation";
-import { EmployeeMiniCard } from "../EmployeesModule/EmployeeCatalog";
+import CustomerMiniCard from "../CustomersModule/CustomerMiniCard";
+import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard"; 
 import { employeeToForm } from "@/util/schemas/employeeSchema";
 import { customerToForm } from "@/util/schemas/customerSchema";
 import { useUiStore } from "@/store/useUIStore";
@@ -26,12 +18,13 @@ import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/useTheme";
-import RenderedImage from "./ProductCard/RenderedImage";
-import NoProductImage from "./ProductCard/NoProductImage";
 import { GoSync } from "react-icons/go";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { determineSearchContext, scrollToItem } from "@/util/functions/Search";
+import ProductMiniCard from "./ProductCard/ProductMiniCard";
+import ProductMiniCardSkeleton from "@/lib/skeletons/ProductMiniCardSkeleton";
+import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
 
 const SearchBar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -58,7 +51,6 @@ const SearchBar = () => {
             currentUser.theme === "dark"
               ? "rgba(255,255,255,0.028)"
               : currentTheme.background_1_2,
-          
         }}
       >
         <Search
@@ -89,12 +81,12 @@ const ModuleLeftBar = () => {
     deleteCustomer,
     refetchProductsData,
     isLoadingProductsData,
-    mediaLinks,
     deleteEmployee,
     employees,
-    media,
     refetchCustomers,
     runModule,
+    isLoadingCustomers,
+    isLoadingEmployees,
   } = useContextQueries();
   const {
     localProductsData,
@@ -103,7 +95,6 @@ const ModuleLeftBar = () => {
     setSearchContext,
   } = useCurrentDataStore();
   const { screenClick } = useRouting();
-  const pathname = usePathname();
   const { getForm } = useFormInstanceStore();
   const { setUpdatingLock } = useUiStore();
   const {
@@ -269,15 +260,6 @@ const ModuleLeftBar = () => {
     }
   };
 
-  const currentProductSerial = useMemo(() => {
-    const dividedPath = pathname.split("/").filter((item) => item.length > 0);
-    if (dividedPath.length === 2) {
-      return dividedPath[1];
-    } else {
-      return null;
-    }
-  }, [pathname]);
-
   if (!currentUser) return null;
 
   return (
@@ -376,128 +358,70 @@ const ModuleLeftBar = () => {
         {screen === "customers" && <SearchBar />}
       </div>
 
-      <div
-        className="flex flex-col flex-1 min-h-0 h-[100%] overflow-y-auto pb-[20px]"
-        ref={scrollRef}
-      >
+      <div className="flex-1 min-h-0 h-[100%]" ref={scrollRef}>
         {screen === "customers" && (
-          <div className="px-[15px] pt-[1px]">
-            {customers.map((customer: Customer, index: number) => {
-              return (
-                <div
-                  key={customer.customer_id}
-                  ref={(el) => {
-                    itemRefs.current[customer.customer_id] = el;
-                  }}
-                >
-                  <CustomerMiniCard
-                    customer={customer}
-                    key={index}
-                    index={index}
-                    handleContextMenu={handleContextMenu}
-                    handleCustomerClick={handleCustomerClick}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {screen === "employees" && (
-          <div className="px-[15px] pt-[10px]">
-            {employees.map((employee: Employee, index: number) => {
-              return (
-                <EmployeeMiniCard
-                  employee={employee}
-                  key={index}
-                  index={index}
-                  handleContextMenu={handleContextMenu}
-                  handleEmployeeClick={handleEmployeeClick}
-                />
-              );
-            })}
-          </div>
-        )}
-        {(screen === "edit-customer-product" || addingProduct) && (
-          <div className="flex w-[100%] h-[100%] overflow-y-auto flex-col gap-[8.25px] pt-[10px]">
-            {isLoadingProductsData ? (
-              <div className="px-[15px] flex flex-col gap-[8.25px]">
-                {Array.from({ length: 4 }, (_, index) => {
+          <div className="w-[100%] h-[100%] px-[15px] pb-[20px] flex flex-col overflow-y-auto gap-[9px]">
+            {isLoadingCustomers
+              ? Array.from({ length: 4 }, (_, index) => {
+                  return <CatalogMiniCardSkeleton key={index} />;
+                })
+              : customers.map((customer: Customer, index: number) => {
                   return (
-                    <div key={index}>
-                      <Skeleton
-                        style={{
-                          backgroundColor: currentTheme.background_2,
-                        }}
-                        className="w-[100%] h-[58px] rounded-[9px] flex flex-row gap-[10px] py-[9px] px-[12px]"
-                      >
-                        <div
-                          style={{
-                            backgroundColor: currentTheme.background_3,
-                          }}
-                          className="aspect-[1/1] rounded-[6px] h-[100%] "
-                        ></div>
-                      </Skeleton>
+                    <div
+                      key={customer.customer_id}
+                      ref={(el) => {
+                        itemRefs.current[customer.customer_id] = el;
+                      }}
+                    >
+                      <CustomerMiniCard
+                        customer={customer}
+                        index={index}
+                        handleContextMenu={handleContextMenu}
+                        handleCustomerClick={handleCustomerClick}
+                      />
                     </div>
                   );
                 })}
+          </div>
+        )}
+
+        {screen === "employees" && (
+          <div className="w-[100%] h-[100%] px-[15px] pb-[20px] flex flex-col overflow-y-auto gap-[9px]">
+            {isLoadingEmployees
+              ? Array.from({ length: 4 }, (_, index) => {
+                  return <CatalogMiniCardSkeleton key={index} />;
+                })
+              : employees.map((employee: Employee, index: number) => {
+                  return (
+                    <EmployeeMiniCard
+                      key={index}
+                      employee={employee}
+                      index={index}
+                      handleContextMenu={handleContextMenu}
+                      handleEmployeeClick={handleEmployeeClick}
+                    />
+                  );
+                })}
+          </div>
+        )}
+
+        {(screen === "edit-customer-product" || addingProduct) && (
+          <div className="w-[100%] h-[100%] pb-[20px] flex flex-col overflow-y-auto gap-[9px]">
+            {isLoadingProductsData ? (
+              <div className="px-[15px] flex flex-col gap-[9px]">
+                {Array.from({ length: 4 }, (_, index) => {
+                  return <ProductMiniCardSkeleton key={index} />;
+                })}
               </div>
             ) : (
-              localProductsData.map((product, index) => {
-                const foundLinks = mediaLinks.filter(
-                  (mediaLink: MediaLink) =>
-                    mediaLink.entity_id === product.id &&
-                    mediaLink.entity_type === "product"
-                );
-                const matchedMedia = !foundLinks.length
-                  ? null
-                  : media.find(
-                      (item: Media) => item.id === foundLinks[0].media_id
-                    );
-
+              localProductsData.map((product: Product, index: number) => {
                 return (
-                  <div
+                  <ProductMiniCard
                     key={index}
-                    style={{
-                      background:
-                        currentUser.theme === "dark"
-                          ? currentProductSerial === product.serial_number
-                            ? "linear-gradient(180deg, #282828, #2B2B2B)"
-                            : "linear-gradient(180deg, #1E1E1E, #1A1A1A)"
-                          : currentProductSerial === product.serial_number
-                          ? currentTheme.background_2
-                          : currentTheme.background_1,
-                      boxShadow:
-                        currentUser.theme === "dark"
-                          ? "none"
-                          : "0px 0px 6px 2px rgba(0, 0, 0, 0.09)",
-                    }}
-                    className="w-[calc(100%-30px)] ml-[15px] h-[58px] rounded-[9px] items-center hover:brightness-[92%] dim cursor-pointer flex flex-row gap-[10px] py-[9px] px-[12px]"
-                    onClick={() => handleProductClick(product)}
-                  >
-                    <div className="select-none min-w-[40px] w-[40px] h-[40px] min-h-[40px] rounded-[6px] overflow-hidden">
-                      {foundLinks.length > 0 && matchedMedia ? (
-                        <RenderedImage media={matchedMedia} rounded={true} />
-                      ) : (
-                        <div
-                          className={`w-[100%] h-[100%] ${
-                            product.serial_number === currentProductSerial
-                              ? "brightness-90"
-                              : "brightness-100"
-                          }`}
-                        >
-                          <NoProductImage />
-                        </div>
-                      )}
-                    </div>
-                    <div className="select-none flex w-[136px] h-[100%] flex-col gap-[2px] ">
-                      <div className="text-[15px] leading-[20px] font-[500] opacity-70 truncate w-[100%]">
-                        {product.name ? product.name : product.serial_number}
-                      </div>
-                      <div className="text-[14px] leading-[18px] font-[400] opacity-40 truncate w-[100%]">
-                        {product.make} {product.model && "|"} {product.model}
-                      </div>
-                    </div>
-                  </div>
+                    product={product}
+                    index={index}
+                    handleProductClick={handleProductClick}
+                  />
                 );
               })
             )}

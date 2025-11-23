@@ -26,6 +26,8 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 import RenderedImage from "../components/ProductCard/RenderedImage";
 import MediaPlayer from "./MediaPlayer";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { GrRotateRight } from "react-icons/gr";
+import { useQueryClient } from "@tanstack/react-query";
 
 type SortableMediaItemProps = {
   media: Media;
@@ -57,7 +59,7 @@ function SortableMediaItem({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { setCurrentMediaSelected } = useCurrentDataStore();
-  const { handleDeleteMedia } = useMedia();
+  const { handleDeleteMedia, handleRotateMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -139,6 +141,23 @@ function SortableMediaItem({
               <IoCloseOutline color={currentTheme.text_2} />
             </div>
           )}
+          {editMode && (
+            <div
+              style={{
+                backgroundColor: currentTheme.background_1,
+                border: "0.5px solid " + currentTheme.text_3,
+              }}
+              className="absolute top-[-8px] left-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+              onClick={async (e: any) => {
+                e.stopPropagation();
+                if (media && media.media_id && media.url && media.url.length) {
+                  await handleRotateMedia(media.media_id, media.url, 1);
+                }
+              }}
+            >
+              <GrRotateRight color={currentTheme.text_2} />
+            </div>
+          )}
           <RenderedImage media={media} rounded={false} />
         </div>
       )}
@@ -171,10 +190,10 @@ export default function MediaGrid({
   const currentTheme = useCurrentTheme();
   const { upsertMedia } = useContextQueries();
   const {
+    currentProjectId,
     currentMediaSelected,
     setCurrentMediaSelected,
     currentActiveFolder,
-    setCurrentActiveFolder,
   } = useCurrentDataStore();
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [activeMedia, setActiveMedia] = useState<Media | null>(null);
@@ -289,7 +308,7 @@ export default function MediaGrid({
           >
             {localMedia.map((m) => (
               <SortableMediaItem
-                key={m.media_id}
+                key={`${m.media_id}-${m.version ?? 0}`}
                 media={m}
                 disabled={false}
                 editMode={editMode}

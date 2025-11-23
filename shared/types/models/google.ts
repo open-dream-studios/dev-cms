@@ -1,5 +1,5 @@
 // shared/types/models/google.ts
-export type GmailRequestType = "INBOX" | "SENT";
+export type GmailRequestType = "INBOX" | "SENT" | "STARRED" | "TRASH";
 export type GmailFetchOptions = {
   userId?: string; // usually 'me'
   label: GmailRequestType

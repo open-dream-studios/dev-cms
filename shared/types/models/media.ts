@@ -14,7 +14,7 @@ export type MediaFolder = {
 
 export type UpsertMediaFolder = Omit<MediaFolder, "id">;
 
-export type MediaUsage = "page" | "product" | "module";
+export type MediaUsage = "page" | "product" | "module" | "job";
 
 export type Media = {
   id?: number;
@@ -37,6 +37,7 @@ export type Media = {
   extension: string | null;
   mimeType: string | null;
   transformed: boolean;
+  version?: number;
   created_at?: string;
   updated_at?: string;
 };

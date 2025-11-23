@@ -15,6 +15,11 @@ interface UploadFileOptions {
   contentType?: string;
 }
 
+export function extractS3KeyFromUrl(url: string) {
+  const u = new URL(url);
+  return decodeURIComponent(u.pathname.slice(1));
+}
+
 export function buildS3Key({
   projectId,
   ext,
@@ -100,9 +105,10 @@ export async function uploadFileToS3(
   const result = await uploader.done();
 
   // Construct public URL (simple form). If you use a custom domain or CloudFront, change this.
-  const location = `https://${AWS_S3_MEDIA_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${encodeURIComponent(
-    key
-  )}`;
+  // const location = `https://${AWS_S3_MEDIA_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${encodeURIComponent(
+  //   key
+  // )}`;
+  const location = `https://${AWS_S3_MEDIA_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${key}`;
 
   return {
     Bucket: AWS_S3_MEDIA_BUCKET!,

@@ -2,12 +2,14 @@
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { Job, Media, MediaLink, MediaUsage } from "@open-dream/shared";
+import { Job, Media, MediaLink } from "@open-dream/shared";
 import { ProjectPage } from "@open-dream/shared";
 import { Product } from "@open-dream/shared";
 import { getCurrentTimestamp } from "@/util/functions/Data";
 import { PopupDisplayItem, useModals } from "./useModals";
 import { makeRequest } from "@/util/axios";
+import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 
 export type FileImage = {
   name: string;
@@ -15,6 +17,7 @@ export type FileImage = {
 };
 
 export function useMedia() {
+  const queryClient = useQueryClient();
   const { setUpdatingLock, setUploadContext } = useUiStore();
   const {
     productsData,
@@ -25,6 +28,7 @@ export function useMedia() {
     projectPages,
     refetchMedia,
     jobs,
+    rotateMedia,
   } = useContextQueries();
   const {
     currentProject,
@@ -235,11 +239,28 @@ export function useMedia() {
     }
   };
 
+  const handleRotateMedia = async (
+    media_id: string,
+    url: string,
+    rotations: number
+  ) => {
+    try {
+      setUpdatingLock(true);
+      await rotateMedia(media_id, url, rotations);
+      toast.success("Image rotated");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUpdatingLock(false);
+    }
+  };
+
   return {
     uploadProductImages,
     saveCurrentProductImages,
     saveCurrentJobImages,
     handleFileProcessing,
     handleDeleteMedia,
+    handleRotateMedia,
   };
 }

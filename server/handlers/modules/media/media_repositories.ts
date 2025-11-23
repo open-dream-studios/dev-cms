@@ -14,6 +14,8 @@ import path from "path";
 import {
   compressImage,
   getContentTypeAndExt,
+  normalizeRotations,
+  rotateImageFromUrl,
 } from "../../../functions/media.js";
 import mime from "mime-types";
 import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
@@ -215,6 +217,9 @@ export const upsertMediaFunction = async (
       m.url ?? "",
       m.alt_text ?? "",
       m.metadata ? JSON.stringify(m.metadata) : null,
+      m.width,
+      m.height,
+      m.size,
       m.tags ? JSON.stringify(m.tags) : null,
       finalOrdinal,
       m.originalName,
@@ -230,7 +235,7 @@ export const upsertMediaFunction = async (
   }
 
   const placeholders = items
-    .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
     .join(", ");
   const query = `
       INSERT INTO media (
@@ -242,6 +247,9 @@ export const upsertMediaFunction = async (
         url,
         alt_text,
         metadata,
+        width, 
+        height,
+        size,
         tags,
         ordinal,
         originalName,
@@ -259,6 +267,9 @@ export const upsertMediaFunction = async (
         url = VALUES(url),
         alt_text = VALUES(alt_text),
         metadata = VALUES(metadata), 
+        width = VALUES(width),
+        height = VALUES(height),
+        size = VALUES(size),
         tags = VALUES(tags),
         originalName = VALUES(originalName),
         extension = VALUES(extension),
@@ -318,6 +329,59 @@ export const deleteMediaFunction = async (
     ["project_idx", "folder_id"]
   );
   return result;
+};
+
+export const rotateMediaFunction = async (
+  connection: PoolConnection,
+  project_idx: number,
+  reqBody: any
+) => {
+  const { media_id, url, rotations } = reqBody;
+
+  const rotatedUrl = await rotateImageFromUrl(project_idx, url, rotations);
+  if (!rotatedUrl) {
+    return { success: false, message: "Rotation failed" };
+  }
+
+  await connection.query(
+    `UPDATE media
+      SET version = version + 1,
+          updated_at = NOW()
+      WHERE media_id = ? AND project_idx = ?
+    `,
+    [media_id, project_idx]
+  );
+
+  const cleaned = normalizeRotations(rotations);
+  if (cleaned === 1 || cleaned === 3) {
+    const [rows]: any = await connection.query(
+      `SELECT width, height FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1`,
+      [media_id, project_idx]
+    );
+    if (rows.length > 0) {
+      const { width, height } = rows[0];
+      await connection.query(
+        `
+          UPDATE media
+          SET width = ?, height = ?, updated_at = NOW()
+          WHERE media_id = ? AND project_idx = ?
+        `,
+        [height, width, media_id, project_idx]
+      );
+    }
+  }
+
+  const [verRows]: any = await connection.query(
+    "SELECT version FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1",
+    [media_id, project_idx]
+  );
+  const version = verRows?.[0]?.version ?? 0;
+
+  return {
+    success: true,
+    url,
+    version,
+  };
 };
 
 // ---------- MEDIA LINK FUNCTIONS ----------

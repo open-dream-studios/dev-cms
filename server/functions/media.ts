@@ -1,13 +1,18 @@
 // server/functions/media.ts
 import sharp from "sharp";
 import path from "path";
-import fs from "fs/promises";
+import fs from "fs";
+import fsp from "fs/promises";
 import { existsSync } from "fs";
 import mime from "mime-types";
+import axios from "axios";
+import { uploadFileToS3, extractS3KeyFromUrl } from "../services/aws/S3.js";
+import { getDecryptedIntegrationsFunction } from "../handlers/integrations/integrations_repositories.js";
 
 export function getContentTypeAndExt(filename: string) {
+  const cleanName = filename.split("?")[0].split("#")[0];
   let ext = path
-    .extname(filename || "")
+    .extname(cleanName || "")
     .toLowerCase()
     .replace(".", "");
   if (ext.includes("+")) {
@@ -48,7 +53,7 @@ export async function compressImage({
 }) {
   let inputExt = path.extname(inputPath).toLowerCase().replace(".", "");
 
-  const origStats = await fs.stat(inputPath).catch(() => null);
+  const origStats = await fsp.stat(inputPath).catch(() => null);
   if (!origStats) {
     throw new Error("compressImage: input file does not exist");
   }
@@ -140,7 +145,7 @@ export async function compressImage({
     // If a partial output file exists, remove it (best-effort)
     try {
       if (existsSync(outputPath)) {
-        await fs.unlink(outputPath);
+        await fsp.unlink(outputPath);
       }
     } catch (_) {}
 
@@ -158,7 +163,7 @@ export async function compressImage({
   }
 
   // Gather output metadata and size
-  const outStats = await fs.stat(outputPath);
+  const outStats = await fsp.stat(outputPath);
   const outMeta = await sharp(outputPath)
     .metadata()
     .catch(() => ({} as sharp.Metadata));
@@ -168,7 +173,7 @@ export async function compressImage({
   // If compressed output is larger or equal, keep original and delete compressed
   if (outStats.size >= origStats.size) {
     try {
-      await fs.unlink(outputPath);
+      await fsp.unlink(outputPath);
     } catch (_) {}
     return {
       outputPath: inputPath,
@@ -193,4 +198,89 @@ export async function compressImage({
     mimeType: `image/${finalExt}`,
     transformed: true,
   };
+}
+
+export function normalizeRotations(rotations: number): 1 | 2 | 3 | null {
+  if (rotations < 0) return null;
+  const cleaned = rotations % 4;
+  if (cleaned === 0) return null;
+  return cleaned as 1 | 2 | 3;
+}
+
+export async function rotateImageFromUrl(
+  project_idx: number,
+  imageUrl: string,
+  rotations: number
+) {
+  const cleanedRotations = normalizeRotations(rotations);
+  if (cleanedRotations === null) {
+    console.log("No rotation needed (invalid, negative, or multiple-of-4).");
+    return null;
+  }
+
+  let { ext, mimeType } = getContentTypeAndExt(imageUrl);
+  if (ext === "heif") {
+    console.warn("Normalizing .heif → .heic for sharp compatibility.");
+    ext = "heic";
+  }
+  const tmpInput = path.join("/tmp", `input-${Date.now()}.${ext}`);
+  const tmpOutput = path.join("/tmp", `output-${Date.now()}.${ext}`);
+  const supportedImageExts = [
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+    "tiff",
+    "avif",
+    "heic",
+  ];
+  const supportedVectorExts = ["svg"];
+  const supportedVideoExts = ["mp4", "mov", "quicktime", "webm"];
+  if (supportedVideoExts.includes(ext)) {
+    console.log("Video detected — skipping rotation.");
+    return null;
+  }
+  if (supportedVectorExts.includes(ext)) {
+    console.log("SVG detected — cannot rotate — skipping.");
+    return null;
+  }
+  if (!supportedImageExts.includes(ext)) {
+    console.log("Unsupported file type — skipping.");
+    return null;
+  }
+  const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
+  fs.writeFileSync(tmpInput, response.data);
+  const normalizedExt = ext === "jpg" ? "jpeg" : ext;
+  let outputFormat: keyof sharp.FormatEnum;
+  if (ext === "heic") {
+    outputFormat = "jpeg";
+  } else {
+    outputFormat = normalizedExt as keyof sharp.FormatEnum;
+  }
+  const angle = cleanedRotations * 90;
+  await sharp(tmpInput).rotate(angle).toFormat(outputFormat).toFile(tmpOutput);
+  const key = extractS3KeyFromUrl(imageUrl);
+
+  const requiredKeys = [
+    "AWS_REGION",
+    "AWS_S3_MEDIA_BUCKET",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+  ];
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    project_idx,
+    requiredKeys,
+    []
+  );
+  if (!decryptedKeys) return null;
+
+  const uploadResult = await uploadFileToS3(
+    {
+      filePath: tmpOutput,
+      key,
+      contentType: mimeType,
+    },
+    decryptedKeys
+  );
+  return uploadResult.Location;
 }

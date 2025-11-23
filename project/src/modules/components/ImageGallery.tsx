@@ -25,6 +25,8 @@ import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { GrRotateRight } from "react-icons/gr";
+import { useMedia } from "@/hooks/useMedia";
 
 function SortableImage({
   id,
@@ -56,6 +58,7 @@ function SortableImage({
     transition,
     isDragging,
   } = useSortable({ id });
+  const { handleRotateMedia } = useMedia();
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -90,14 +93,14 @@ function SortableImage({
     return media.find((item: Media) => item.id === parseInt(mediaLink.id));
   }, [media, mediaLink]);
 
-  if (!currentUser) return null;
+  if (!currentUser || !matchedMedia) return null;
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="relative aspect-square"
+      className="relative aspect-square h-[100%]"
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
     >
@@ -105,7 +108,7 @@ function SortableImage({
         {enableReorder && (
           <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />
         )}
-        {matchedMedia && <RenderedImage media={matchedMedia} rounded={true} />}
+        <RenderedImage media={matchedMedia} rounded={true} />
         {showDeleteButtons && (
           <div
             style={{
@@ -118,6 +121,32 @@ function SortableImage({
             }}
           >
             <IoCloseOutline color={currentTheme.text_2} />
+          </div>
+        )}
+        {showDeleteButtons && (
+          <div
+            style={{
+              backgroundColor: currentTheme.background_1,
+              border: "1px solid " + currentTheme.text_4,
+            }}
+            className="ignore-click absolute top-[-8px] left-[-9px] z-20 w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+            onClick={async (e: any) => {
+              e.stopPropagation();
+              if (
+                matchedMedia &&
+                matchedMedia.media_id &&
+                matchedMedia.url &&
+                matchedMedia.url.length
+              ) {
+                await handleRotateMedia(
+                  matchedMedia.media_id,
+                  matchedMedia.url,
+                  1
+                );
+              }
+            }}
+          >
+            <GrRotateRight size={12} color={currentTheme.text_2} />
           </div>
         )}
       </div>
@@ -142,6 +171,7 @@ export default function ImageGallery({
   entityType: MediaUsage;
   onMediaClick: (media: Media) => Promise<void>;
 }) {
+  const { media } = useContextQueries()
   const {
     currentProductImages,
     setCurrentProductImages,
@@ -172,10 +202,14 @@ export default function ImageGallery({
     setImages = setCurrentProductImages;
   }
 
-  const items = images.map((img) => ({
-    id: img.media_id.toString(),
-    url: img.url,
-  }));
+  const items = images.map((img) => {
+    const m = media.find((mm: Media) => mm.id === img.media_id);
+    return {
+      id: img.media_id.toString(),
+      version: m?.version ?? 0,
+      url: img.url,
+    };
+  });
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -192,7 +226,7 @@ export default function ImageGallery({
       ordinal: idx,
     }));
     setImages(reordered);
-    await onReorder(reordered)
+    await onReorder(reordered);
   };
 
   const handleDeleteImage = async (index: number) => {
@@ -232,7 +266,7 @@ export default function ImageGallery({
           >
             {items.map((item: any, index: number) => (
               <SortableImage
-                key={`${item.id}${item.url}`}
+                key={`${item.id}-${item.version}`}
                 id={item.id}
                 index={index}
                 mediaLink={item}

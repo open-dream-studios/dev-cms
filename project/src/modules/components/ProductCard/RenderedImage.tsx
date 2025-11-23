@@ -16,7 +16,7 @@ const RenderedImage = ({
         <img
           style={{ willChange: "transform" }}
           draggable={false}
-          src={media.url}
+          src={`${media.url}${media.url.includes("?") ? "&" : "?"}v=${media.version ?? 0}`}
           alt={media.alt_text || ""}
           className="dim hover:brightness-90 object-cover w-full aspect-[1/1]"
         />

@@ -3,6 +3,7 @@ import {
   getMediaFunction,
   upsertMediaFunction,
   deleteMediaFunction,
+  rotateMediaFunction,
   deleteMediaFolderFunction,
   getMediaFoldersFunction,
   upsertMediaFoldersFunction,
@@ -44,6 +45,18 @@ export const deleteMedia = async (
   const project_idx = req.user?.project_idx;
   if (!project_idx || !media_id) throw new Error("Missing required fields");
   return await deleteMediaFunction(connection, project_idx, media_id);
+};
+
+export const rotateMedia = async (
+  req: Request,
+  res: Response,
+  connection: PoolConnection
+) => {
+  const { media_id, url, rotations } = req.body;
+  const project_idx = req.user?.project_idx;
+  if (!project_idx || !media_id || !url || !rotations)
+    throw new Error("Missing required fields");
+  return await rotateMediaFunction(connection, project_idx, req.body);
 };
 
 // ---------- MEDIA FOLDER CONTROLLERS ----------

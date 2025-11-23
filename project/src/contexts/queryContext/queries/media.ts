@@ -47,12 +47,8 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
         ["media", currentProjectId],
         (old = []) => {
           const updated = old.map((item) => {
-            const idx = data.findIndex(
-              (i) => i.media_id === item.media_id
-            );
-            return idx > -1
-              ? { ...item, ordinal: data[idx].ordinal }
-              : item;
+            const idx = data.findIndex((i) => i.media_id === item.media_id);
+            return idx > -1 ? { ...item, ordinal: data[idx].ordinal } : item;
           });
           return updated.sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0));
         }
@@ -98,11 +94,57 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     deleteMediaMutation.mutateAsync(media_id);
   };
 
+  const rotateMediaMutation = useMutation({
+    mutationFn: async ({
+      media_id,
+      url,
+      rotations,
+    }: {
+      media_id: string;
+      url: string;
+      rotations: number;
+    }) => {
+      const res = await makeRequest.post("/api/media/rotate", {
+        project_idx: currentProjectId,
+        media_id,
+        url,
+        rotations,
+      });
+      return res.data;
+    },
+    onSuccess: (data, vars) => {
+      const now = Date.now();
+      queryClient.setQueryData(
+        ["media", currentProjectId],
+        (old: Media[] = []) =>
+          old.map((m) =>
+            m.media_id === vars.media_id
+              ? {
+                  ...m,
+                  version: data.version,
+                  url: `${m.url.split("?")[0]}?v=${now}`,
+                  _v: now,
+                }
+              : m
+          )
+      );
+    },
+  });
+
+  const rotateMedia = async (
+    media_id: string,
+    url: string,
+    rotations: number
+  ) => {
+    return await rotateMediaMutation.mutateAsync({ media_id, url, rotations });
+  };
+
   return {
     media,
     isLoadingMedia,
     refetchMedia,
     upsertMedia,
     deleteMedia,
+    rotateMedia,
   };
 }

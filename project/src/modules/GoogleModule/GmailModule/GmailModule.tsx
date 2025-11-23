@@ -23,6 +23,12 @@ import { IoClose } from "react-icons/io5";
 import EmailComposer from "./EmailComposer";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { SkeletonLine } from "@/lib/skeletons/Skeletons";
+import GmailMessageSkeleton from "@/lib/skeletons/GmailMessageSkeleton";
+import { useGmail } from "@/hooks/google/useGmail";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGmailProfile } from "@/hooks/google/useGmailProfile";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 /**
  * Deep Gmail-like UI
@@ -127,32 +133,16 @@ const IconButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
   );
 };
 
-const SkeletonLine: React.FC<{
-  width?: string;
-  height?: number;
-  fullRounded?: boolean;
-}> = ({ width = "100%", height = 12, fullRounded = false }) => (
-  <div
-    className="smooth-skeleton"
-    style={{ width, height, borderRadius: fullRounded ? "50px" : "6px" }}
-  />
-);
-
-/* ------------------ Main GmailModule ------------------ */
 const GmailModule: React.FC = () => {
+  const queryClient = useQueryClient();
   const { runModule } = useContextQueries();
+  const { selectedGmailTab, setSelectedGmailTab } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
 
   // UI state
-  const [label, setLabel] = useState<string>("INBOX");
-  const [messages, setMessages] = useState<GmailMessage[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<MessageDetail | null>(null);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [pageSize] = useState<number>(50);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [showHeaders, setShowHeaders] = useState(false);
   const [photoError, setPhotoError] = useState(false);
 
@@ -169,64 +159,22 @@ const GmailModule: React.FC = () => {
   // reply mode
   const [isReplying, setIsReplying] = useState(false);
 
-  const [gmailProfile, setGmailProfile] = useState<{
-    email: string;
-    photo?: string;
-    name?: string;
-  } | null>(null);
+  const {
+    messages,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    refresh,
+  } = useGmail(selectedGmailTab as GmailRequestType);
 
+  const { data: gmailProfile, isLoading: profileLoading } = useGmailProfile();
   useEffect(() => {
     setPhotoError(false);
   }, [gmailProfile?.photo]);
 
-  useEffect(() => {
-    (async () => {
-      const res = await runModule("google-gmail-module", {
-        requestType: "GET_PROFILE_WITH_PHOTO",
-      });
-      if (res?.data?.email) setGmailProfile(res.data);
-    })();
-  }, []);
-
-  // iframe ref for potential postMessage communication
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-
-  // Load first page
-  useEffect(() => {
-    fetchPage({ pageToken: null, replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [label]);
-
-  // Fetch paginated messages (single page) — lightweight metadata only
-  async function fetchPage({
-    pageToken = null,
-    replace = false,
-  }: {
-    pageToken?: string | null;
-    replace?: boolean;
-  }) {
-    setLoading(replace);
-    setIsFetchingMore(!replace);
-    try {
-      const res = await runModule("google-gmail-module", {
-        requestType: label as GmailRequestType,
-        pageToken: pageToken ?? null,
-        pageSize,
-      });
-
-      // expected shape: { messages: [], nextPageToken }
-      const msgs: GmailMessage[] = res?.data?.messages ?? [];
-      const next = res?.data?.nextPageToken ?? null;
-
-      setMessages((prev) => (replace ? msgs : [...prev, ...msgs]));
-      setNextPageToken(next);
-    } catch (err) {
-      console.error("Failed to fetch page", err);
-    } finally {
-      setLoading(false);
-      setIsFetchingMore(false);
-    }
-  }
 
   // Fetch detail (full HTML) for a message. This is a placeholder call pattern — backend must support a "getMessage" style call.
   async function fetchMessageDetail(id: string) {
@@ -250,8 +198,24 @@ const GmailModule: React.FC = () => {
         };
 
         setDetail(full);
-        setMessages((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, full } : m))
+        // setMessages((prev) =>
+        //   prev.map((m) => (m.id === id ? { ...m, full } : m))
+        // );
+        queryClient.setQueryData(
+          ["gmail", selectedGmailTab],
+          (oldData: any) => {
+            if (!oldData) return oldData;
+
+            return {
+              ...oldData,
+              pages: oldData.pages.map((page: any) => ({
+                ...page,
+                messages: page.messages.map((m: any) =>
+                  m.id === id ? { ...m, full } : m
+                ),
+              })),
+            };
+          }
         );
         return;
       } else {
@@ -280,12 +244,6 @@ const GmailModule: React.FC = () => {
           : { id, text: "(no preview)", headers: {} }
       );
     }
-  }
-
-  async function refresh() {
-    setNextPageToken(null);
-    setMessages([]);
-    fetchPage({ pageToken: null, replace: true });
   }
 
   // compute filtered messages client-side by search
@@ -402,12 +360,16 @@ const GmailModule: React.FC = () => {
     }
   };
 
-  /* ------------------ Layout ------------------ */
   return (
     <div
       style={{ backgroundColor: currentTheme.gmail_background_1 }}
-      className="w-full h-full text-white gap-4 p-4 flex flex-row"
+      className="relative w-full h-full text-white gap-4 p-4 flex flex-row"
     >
+      <div
+        className="w-[100%] h-[16px] absolute bottom-0 left-0 z-[500]"
+        style={{ backgroundColor: currentTheme.background_1 }}
+      />
+
       {/* Sidebar */}
       <div className="flex flex-col gap-3 w-[220px]">
         <div
@@ -472,26 +434,26 @@ const GmailModule: React.FC = () => {
               icon={<Inbox size={16} />}
               label="Inbox"
               count={messages.length}
-              active={label === "INBOX"}
-              onClick={() => setLabel("INBOX")}
+              active={selectedGmailTab === "INBOX"}
+              onClick={() => setSelectedGmailTab("INBOX")}
             />
             <SidebarItem
               icon={<Send size={16} />}
               label="Sent"
-              active={label === "SENT"}
-              onClick={() => setLabel("SENT" as any)}
+              active={selectedGmailTab === "SENT"}
+              onClick={() => setSelectedGmailTab("SENT")}
             />
             <SidebarItem
               icon={<Star size={16} />}
               label="Starred"
-              active={label === "STARRED"}
-              onClick={() => setLabel("STARRED" as any)}
+              active={selectedGmailTab === "STARRED"}
+              onClick={() => setSelectedGmailTab("STARRED")}
             />
             <SidebarItem
               icon={<Trash2 size={16} />}
               label="Trash"
-              active={label === "TRASH"}
-              onClick={() => setLabel("TRASH" as any)}
+              active={selectedGmailTab === "TRASH"}
+              onClick={() => setSelectedGmailTab("TRASH")}
             />
           </div>
 
@@ -506,7 +468,6 @@ const GmailModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Message List */}
       <div
         style={{ backgroundColor: currentTheme.gmail_background_2 }}
         className="flex flex-col rounded-xl overflow-hidden min-w-[300px] w-[25%] max-w-[370px]"
@@ -514,9 +475,11 @@ const GmailModule: React.FC = () => {
         <div className="flex flex-col gap-[8px] items-center p-3 border-b border-white/6">
           <div className="flex flex-row justify-between w-[100%] items-center px-[5px]">
             <div className="text-lg font-semibold">
-              {label ? capitalizeFirstLetter(label.toLowerCase()) : ""}
+              {selectedGmailTab
+                ? capitalizeFirstLetter(selectedGmailTab.toLowerCase())
+                : ""}
             </div>
-            {gmailProfile ? (
+            {gmailProfile && !profileLoading ? (
               <div
                 onClick={(e: any) => {
                   window.open(
@@ -530,15 +493,6 @@ const GmailModule: React.FC = () => {
                   {gmailProfile.name}
                 </div>
                 <div className="group-hover:brightness-75 dim opacity-[0.8] w-[23px] h-[23px] rounded-full overflow-hidden border-white/60 border-1">
-                  {/* {gmailProfile.photo ? (
-                    <img
-                      src={gmailProfile.photo}
-                      alt=""
-                      className="w-[100%] h-[100%] rounded-full object-contain"
-                    />
-                  ) : (
-                    <div className="">{gmailProfile.email.slice(1)}</div>
-                  )} */}
                   {gmailProfile.photo && !photoError ? (
                     <img
                       src={gmailProfile.photo}
@@ -583,35 +537,20 @@ const GmailModule: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-auto p-4 space-y-3">
-          {loading && (
+          {(isLoading || isFetching) && (
             <div className="space-y-3">
               {[...Array(6)].map((_, i) => (
-                <div
-                  style={{
-                    backgroundColor: currentTheme.skeleton_background_1,
-                  }}
-                  key={i}
-                  className="p-3 rounded-xl"
-                >
-                  <SkeletonLine width="45%" height={14} />
-                  <div className="mt-2">
-                    <SkeletonLine width="80%" height={12} />
-                    <div className="flex gap-2 mt-2">
-                      <SkeletonLine width="30%" height={10} />
-                      <SkeletonLine width="20%" height={10} />
-                    </div>
-                  </div>
-                </div>
+                <GmailMessageSkeleton key={i} />
               ))}
             </div>
           )}
 
-          {!loading && visibleMessages.length === 0 && (
+          {!(isLoading || isFetching) && visibleMessages.length === 0 && (
             <div className="text-center text-white/40 mt-10">No messages</div>
           )}
 
           <AnimatePresence initial={false} mode="popLayout">
-            {!loading &&
+            {!(isLoading || isFetching) &&
               visibleMessages.map((m) => {
                 const from = getHeader(m, "From");
                 const subject = getHeader(m, "Subject");
@@ -667,17 +606,13 @@ const GmailModule: React.FC = () => {
               })}
           </AnimatePresence>
 
-          {isFetchingMore && (
+          {isFetchingNextPage && (
             <div className="text-center text-white/50 py-4">Loading more…</div>
           )}
 
-          {!loading && nextPageToken && (
-            <div className="flex w-[100%] justify-center mt-4">
-              <IconButton
-                onClick={() =>
-                  fetchPage({ pageToken: nextPageToken, replace: false })
-                }
-              >
+          {hasNextPage && !isFetchingNextPage && !(isLoading || isFetching) && (
+            <div className="flex w-full justify-center mt-4">
+              <IconButton onClick={() => fetchNextPage()}>
                 Load more...
               </IconButton>
             </div>

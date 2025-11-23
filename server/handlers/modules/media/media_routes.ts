@@ -5,6 +5,7 @@ import {
   getMedia,
   upsertMedia,
   deleteMedia,
+  rotateMedia,
   getMediaFolders,
   upsertMediaFolders,
   deleteMediaFolder,
@@ -40,6 +41,12 @@ router.post(
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(deleteMedia)
+);
+router.post(
+  "/rotate",
+  authenticateUser,
+  checkProjectPermission(3),
+  transactionHandler(rotateMedia)
 );
 
 // ---- MEDIA FOLDERS ----
