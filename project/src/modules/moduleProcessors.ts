@@ -1,4 +1,6 @@
 // project/src/modules/moduleProcessors.ts
+import { openWindow } from "@/util/functions/Handlers";
+
 export const moduleProcessors: Record<string, (response: any) => any> = {
   "google-maps-api-module": (response) => {
     return response;
@@ -6,9 +8,8 @@ export const moduleProcessors: Record<string, (response: any) => any> = {
 
   "customer-products-google-sheets-module": (response) => {
     if (response?.GOOGLE_INVENTORY_SHEET_ID) {
-      window.open(
-        `https://docs.google.com/spreadsheets/d/${response.GOOGLE_INVENTORY_SHEET_ID}`,
-        "_blank"
+      openWindow(
+        `https://docs.google.com/spreadsheets/d/${response.GOOGLE_INVENTORY_SHEET_ID}`
       );
     }
     return response;
@@ -23,6 +24,6 @@ export const moduleProcessors: Record<string, (response: any) => any> = {
   },
 
   "google-ads-api-module": (response) => {
-    return response;  
+    return response;
   },
 };

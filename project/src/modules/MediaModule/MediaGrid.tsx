@@ -130,7 +130,7 @@ function SortableMediaItem({
                 backgroundColor: currentTheme.background_1,
                 border: "0.5px solid " + currentTheme.text_3,
               }}
-              className="absolute top-[-8px] right-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+              className="absolute top-[-10px] right-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
               onClick={async (e: any) => {
                 e.stopPropagation();
                 if (media.id && media.media_id) {
@@ -147,7 +147,7 @@ function SortableMediaItem({
                 backgroundColor: currentTheme.background_1,
                 border: "0.5px solid " + currentTheme.text_3,
               }}
-              className="absolute top-[-8px] left-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+              className="absolute top-[-10px] right-[19px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
               onClick={async (e: any) => {
                 e.stopPropagation();
                 if (media && media.media_id && media.url && media.url.length) {

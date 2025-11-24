@@ -8,6 +8,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { formatPhone } from "@/util/functions/Customers";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useUiStore } from "@/store/useUIStore";
+import { openWindow } from "@/util/functions/Handlers";
 
 const GoogleAdsTopBar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -95,11 +96,9 @@ const GoogleAdsTopBar = () => {
               selectedCampaignId &&
               googleAdsData.customerId
             ) {
-              console.log(
+              openWindow(
                 `https://ads.google.com/aw/overview?customerId=${googleAdsData.customerId}#~campaign/id=${selectedCampaignId}`
               );
-              const url = `https://ads.google.com/aw/overview?customerId=${googleAdsData.customerId}#~campaign/id=${selectedCampaignId}`;
-              window.open(url, "_blank");
             }
           }}
           className="group cursor-pointer dim hover:brightness-85 flex items-center gap-3"

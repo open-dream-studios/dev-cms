@@ -45,6 +45,7 @@ import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import MediaPlayer from "@/modules/MediaModule/MediaPlayer";
 import ImageGallery from "@/modules/components/ImageGallery";
+import { FiEdit } from "react-icons/fi";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -73,6 +74,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const [descriptionEditorOpen, setDescriptionEditorOpen] =
     useState<boolean>(false);
   const [noteEditorOpen, setNoteEditorOpen] = useState<boolean>(false);
+  const [editMediaLinks, setEditMediaLinks] = useState<boolean>(false);
 
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -431,7 +433,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                   <ImageGallery
                     enableReorder={false}
                     onReorder={async () => {}}
-                    showDeleteButtons={false}
+                    editMediaLinks={false}
                     onDeleteLink={async () => {}}
                     singleRow={true}
                     entityType="product"
@@ -465,27 +467,48 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                       Images
                     </div>
                   </div>
-                  <div
-                    onClick={onUploadClick}
-                    style={{
-                      backgroundColor: currentTheme.background_2,
-                    }}
-                    className="pl-[17px] pr-[22px] py-[5px] rounded-full gap-[8px] flex items-center justify-center dim hover:brightness-90 cursor-pointer"
-                  >
-                    <IoImageOutline
-                      size={20}
-                      color={currentTheme.text_1}
-                      className="opacity-[0.8] ml-[1.5px]"
-                    />
-                    <div className="text-[16px] font-[500] opacity-[0.8]">
-                      Upload
+                  <div className="flex flex-row gap-[8.5px]">
+                    <div
+                      onClick={() => {
+                        setEditMediaLinks((prev) => !prev);
+                      }}
+                      style={{
+                        backgroundColor: currentTheme.background_2,
+                        border: editMediaLinks
+                          ? "1px solid " + currentTheme.text_2
+                          : "none",
+                      }}
+                      className="w-[38px] h-[38px] rounded-full flex items-center justify-center dim hover:brightness-90 cursor-pointer"
+                    >
+                      <FiEdit
+                        size={17}
+                        color={currentTheme.text_1}
+                        className="opacity-[0.81] ml-[0.5px] mb-[0.3px]"
+                      />
+                    </div>
+
+                    <div
+                      onClick={onUploadClick}
+                      style={{
+                        backgroundColor: currentTheme.background_2,
+                      }}
+                      className="pl-[17px] pr-[22px] h-[38px] rounded-full gap-[8px] flex items-center justify-center dim hover:brightness-90 cursor-pointer"
+                    >
+                      <IoImageOutline
+                        size={20}
+                        color={currentTheme.text_1}
+                        className="opacity-[0.8] ml-[1.5px]"
+                      />
+                      <div className="text-[16px] font-[500] opacity-[0.8]">
+                        Upload
+                      </div>
                     </div>
                   </div>
                 </div>
                 <ImageGallery
                   enableReorder={true}
                   onReorder={async () => {}}
-                  showDeleteButtons={true}
+                  editMediaLinks={editMediaLinks}
                   onDeleteLink={async () => {}}
                   singleRow={false}
                   entityType="product"

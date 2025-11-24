@@ -1,7 +1,7 @@
 // project/src/lib/skeletons/GmailMessageSkeleton.tsx
 import { useCurrentTheme } from "@/hooks/useTheme";
 import React from "react";
-import { SkeletonLine } from "./skeletons";
+import { SkeletonLine } from "./Skeletons";
 
 const GmailMessageSkeleton = () => {
   const currentTheme = useCurrentTheme()

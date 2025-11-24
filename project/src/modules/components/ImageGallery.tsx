@@ -36,7 +36,7 @@ function SortableImage({
   handleDeleteImage,
   singleRow,
   enableReorder,
-  showDeleteButtons,
+  editMediaLinks,
 }: {
   id: string;
   mediaLink: any;
@@ -45,7 +45,7 @@ function SortableImage({
   handleDeleteImage: (index: number) => void;
   singleRow: boolean;
   enableReorder: boolean;
-  showDeleteButtons: boolean;
+  editMediaLinks: boolean;
 }) {
   const { currentUser } = useContext(AuthContext);
   const { media } = useContextQueries();
@@ -109,13 +109,13 @@ function SortableImage({
           <div {...listeners} className="absolute inset-0 z-10 cursor-grab" />
         )}
         <RenderedImage media={matchedMedia} rounded={true} />
-        {showDeleteButtons && (
+        {editMediaLinks && (
           <div
             style={{
               border: `1px solid ${currentTheme.text_4}`,
               backgroundColor: currentTheme.background_1,
             }}
-            className="ignore-click w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[10px] absolute top-[-8px] right-[-9px] z-20"
+            className="ignore-click w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[10px] absolute top-[-8px] right-[-8px] z-20"
             onClick={async () => {
               await handleDeleteImage(index);
             }}
@@ -123,13 +123,13 @@ function SortableImage({
             <IoCloseOutline color={currentTheme.text_2} />
           </div>
         )}
-        {showDeleteButtons && (
+        {editMediaLinks && (
           <div
             style={{
               backgroundColor: currentTheme.background_1,
               border: "1px solid " + currentTheme.text_4,
             }}
-            className="ignore-click absolute top-[-8px] left-[-9px] z-20 w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+            className="ignore-click absolute top-[-8px] right-[14px] z-20 w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
             onClick={async (e: any) => {
               e.stopPropagation();
               if (
@@ -156,7 +156,7 @@ function SortableImage({
 
 export default function ImageGallery({
   enableReorder,
-  showDeleteButtons,
+  editMediaLinks,
   onDeleteLink,
   onReorder,
   singleRow,
@@ -164,7 +164,7 @@ export default function ImageGallery({
   onMediaClick,
 }: {
   enableReorder: boolean;
-  showDeleteButtons: boolean;
+  editMediaLinks: boolean;
   onDeleteLink: (link: MediaLink) => Promise<void>;
   onReorder: (reordered: MediaLink[]) => Promise<void>;
   singleRow: boolean;
@@ -274,7 +274,7 @@ export default function ImageGallery({
                 handleDeleteImage={handleDeleteImage}
                 singleRow={singleRow}
                 enableReorder={enableReorder}
-                showDeleteButtons={showDeleteButtons}
+                editMediaLinks={editMediaLinks}
               />
             ))}
           </div>

@@ -1107,7 +1107,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                         await saveCurrentJobImages(productJob.id, reordered);
                       }
                     }}
-                    showDeleteButtons={true}
+                    editMediaLinks={true}
                     onDeleteLink={async (link: MediaLink) => {
                       await deleteMediaLinks([link]);
                     }}

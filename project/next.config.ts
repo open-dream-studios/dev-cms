@@ -18,11 +18,11 @@ const nextConfig: NextConfig = {
   },
 
   async rewrites() {
+    const backend = process.env.BACKEND_URL;
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:8080/api/:path*",
-        // destination: "https://dev-cms-production.up.railway.app/api/:path*",
+        destination: `${backend}/api/:path*`,
       },
     ];
   },

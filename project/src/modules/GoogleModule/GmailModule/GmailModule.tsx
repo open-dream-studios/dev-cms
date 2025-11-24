@@ -1,25 +1,20 @@
+// project/src/modules/GoogleModule/GmailModule/GmailModule.tsx
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { GmailRequestType } from "@open-dream/shared";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Mail,
   RefreshCcw,
   ChevronDown,
   ChevronUp,
   Search,
   Inbox,
   Send,
-  FileText,
   Trash2,
-  Archive,
   Star,
-  MailOpen,
-  CornerUpRight,
   Plus,
 } from "lucide-react";
-import { IoClose } from "react-icons/io5";
 import EmailComposer from "./EmailComposer";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/useTheme";
@@ -29,6 +24,7 @@ import { useGmail } from "@/hooks/google/useGmail";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGmailProfile } from "@/hooks/google/useGmailProfile";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { openWindow } from "@/util/functions/Handlers";
 
 /**
  * Deep Gmail-like UI
@@ -373,8 +369,8 @@ const GmailModule: React.FC = () => {
       {/* Sidebar */}
       <div className="flex flex-col gap-3 w-[220px]">
         <div
-          onClick={(e: any) => {
-            window.open("https://mail.google.com/mail/u/0/#inbox", "_blank");
+          onClick={() => {
+            openWindow("https://mail.google.com/mail/u/0/#inbox");
           }}
           style={{ backgroundColor: currentTheme.gmail_background_2 }}
           className="group flex items-center justify-between py-2 pl-[14px] pr-[16px] rounded-xl cursor-pointer"
@@ -406,7 +402,7 @@ const GmailModule: React.FC = () => {
             }}
             title="Refresh"
           >
-            <RefreshCcw size={16} />
+            <RefreshCcw size={16} className="opacity-88" />
           </button>
         </div>
 
@@ -433,25 +429,44 @@ const GmailModule: React.FC = () => {
             <SidebarItem
               icon={<Inbox size={16} />}
               label="Inbox"
-              count={messages.length}
+              count={
+                selectedGmailTab === "INBOX" && !isLoading
+                  ? messages.length
+                  : null
+              }
               active={selectedGmailTab === "INBOX"}
               onClick={() => setSelectedGmailTab("INBOX")}
             />
             <SidebarItem
               icon={<Send size={16} />}
               label="Sent"
+              count={
+                selectedGmailTab === "SENT" && !isLoading
+                  ? messages.length
+                  : null
+              }
               active={selectedGmailTab === "SENT"}
               onClick={() => setSelectedGmailTab("SENT")}
             />
             <SidebarItem
               icon={<Star size={16} />}
               label="Starred"
+              count={
+                selectedGmailTab === "STARRED" && !isLoading
+                  ? messages.length
+                  : null
+              }
               active={selectedGmailTab === "STARRED"}
               onClick={() => setSelectedGmailTab("STARRED")}
             />
             <SidebarItem
               icon={<Trash2 size={16} />}
               label="Trash"
+              count={
+                selectedGmailTab === "TRASH" && !isLoading
+                  ? messages.length
+                  : null
+              }
               active={selectedGmailTab === "TRASH"}
               onClick={() => setSelectedGmailTab("TRASH")}
             />
@@ -481,11 +496,8 @@ const GmailModule: React.FC = () => {
             </div>
             {gmailProfile && !profileLoading ? (
               <div
-                onClick={(e: any) => {
-                  window.open(
-                    "https://mail.google.com/mail/u/0/#inbox",
-                    "_blank"
-                  );
+                onClick={() => {
+                  openWindow("https://mail.google.com/mail/u/0/#inbox");
                 }}
                 className="group cursor-pointer text-sm text-white/50 flex flex-row gap-[10px] items-center"
               >
@@ -550,7 +562,7 @@ const GmailModule: React.FC = () => {
           )}
 
           <AnimatePresence initial={false} mode="popLayout">
-            {!(isLoading || isFetching) &&
+            {!isLoading &&
               visibleMessages.map((m) => {
                 const from = getHeader(m, "From");
                 const subject = getHeader(m, "Subject");
@@ -830,7 +842,7 @@ function SidebarItem({
 }: {
   icon: React.ReactNode;
   label: string;
-  count?: number;
+  count: number | null;
   onClick?: () => void;
   active?: boolean;
 }) {

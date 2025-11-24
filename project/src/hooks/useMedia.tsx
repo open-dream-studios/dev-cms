@@ -10,6 +10,7 @@ import { PopupDisplayItem, useModals } from "./useModals";
 import { makeRequest } from "@/util/axios";
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
+import { showRotatedToast } from "@/util/functions/UI";
 
 export type FileImage = {
   name: string;
@@ -247,7 +248,7 @@ export function useMedia() {
     try {
       setUpdatingLock(true);
       await rotateMedia(media_id, url, rotations);
-      toast.success("Image rotated");
+      showRotatedToast("rotate-success");
     } catch (err) {
       console.error(err);
     } finally {
