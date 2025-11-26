@@ -6,7 +6,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsTopBar from "./components/GoogleAdsTopBar";
 import GoogleAdsPerformanceGraph from "./components/GoogleAdsPerformanceGraph";
-import GoogleAdsMap from "./GoogleAdsMap";
+import GoogleAdsMap from "./components/GoogleAdsMap";
 import GoogleAdsMetrics from "./components/GoogleAdsMetrics";
 import { useDashboardStore } from "../../../store/useDashboardStore";
 import { Dashboard } from "@/components/Dashboard/Dashboard";
