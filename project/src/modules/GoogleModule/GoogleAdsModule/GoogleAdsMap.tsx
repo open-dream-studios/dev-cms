@@ -6,7 +6,15 @@ import { AuthContext } from "@/contexts/authContext";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || "";
 
-const GoogleAdsMap: React.FC = () => {
+const GoogleAdsMap = () => {
+  return (
+    <div className="h-[100%]">
+      <GoogleAdsMapView />
+    </div>
+  );
+};
+
+const GoogleAdsMapView: React.FC = () => {
   const { currentUser } = useContext(AuthContext);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -17,7 +25,7 @@ const GoogleAdsMap: React.FC = () => {
   ];
 
   const exampleGeocode = {
-    geoId: 99914604,  
+    geoId: 99914604,
     zip: "14604",
     center: [-77.6047, 43.1566],
   };
@@ -125,9 +133,9 @@ const GoogleAdsMap: React.FC = () => {
       ref={mapContainerRef}
       style={{
         width: "100%",
-        height: "calc(100% + 80px)",
+        height: "calc(100% + 28px)",
         borderRadius: "12px",
-        overflow: "hidden",
+        // overflow: "hidden",
       }}
     />
   );

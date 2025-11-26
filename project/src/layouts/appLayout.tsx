@@ -25,10 +25,9 @@ import CustomerCalls from "@/modules/CustomerCallsModule/CustomerCalls";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useWebSocketManager } from "@/store/webSocketStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useRouting } from "@/hooks/useRouting";
-// import { useTesting } from "@/hooks/useTesting";
+import { useRouting } from "@/hooks/useRouting"; 
 import { PageLayout } from "./pageLayout";
-import UploadModal from "@/components/Upload/Upload";
+import UploadModal from "@/components/Upload/Upload"; 
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -101,6 +100,7 @@ const UnprotectedLayout = () => {
 const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   const { updatingLock, resetUIStore } = useUiStore();
   const { projectsData } = useContextQueries();
+  const { setScreenSize } = useUiStore();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
   const router = useRouter();
@@ -127,6 +127,13 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
       router.push("/");
     }
   }, [router, currentProjectId]);
+
+  useEffect(() => {
+    const onResize = () => setScreenSize(window.innerWidth, window.innerHeight);
+    window.addEventListener("resize", onResize);
+    onResize();
+    return () => window.removeEventListener("resize", onResize);
+  }, [setScreenSize]);
 
   if (!currentUser) return;
 

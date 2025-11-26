@@ -87,7 +87,7 @@ const GoogleAdsTopBar = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="pl-[4px] w-[100%] h-[100%] flex items-center justify-between gap-4 mb-4">
+    <div className="pl-[4px] w-[100%] h-[100%] flex items-center justify-between gap-4">
       <div className="flex items-center gap-4">
         <div
           onClick={() => {
@@ -197,7 +197,8 @@ const GoogleAdsTopBar = () => {
 
             {!editingBudget ? (
               <div
-                onClick={() => {
+                onClick={(e: any) => {
+                  e.stopPropagation();
                   if (activeCampaign && activeCampaign.id) {
                     setEditedBudgetValue(String(displayBudget));
                     setEditingBudget(true);
@@ -232,13 +233,19 @@ const GoogleAdsTopBar = () => {
               <div className="flex items-center gap-[6px] flex-col mt-[1px] ml-[5px]">
                 <div className="flex flex-row gap-[4px]">
                   <button
-                    onClick={handleSetBudget}
+                    onClick={(e: any) => {
+                      e.stopPropagation();
+                      handleSetBudget();
+                    }}
                     className="cursor-pointer hover:brightness-80 dim px-[17px] h-[23px] rounded-[8px] text-[12px] font-semibold bg-gradient-to-r from-[#06b6d4] to-[#7c3aed] text-white"
                   >
                     Save
                   </button>
                   <button
-                    onClick={() => setEditingBudget(false)}
+                    onClick={(e: any) => {
+                      e.stopPropagation();
+                      setEditingBudget(false);
+                    }}
                     className="cursor-pointer hover:brightness-95 dim px-2 h-[23px] rounded-md text-sm"
                     style={{
                       background: currentTheme.background_2,

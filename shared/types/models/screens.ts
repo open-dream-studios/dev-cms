@@ -13,7 +13,8 @@ export type Screen =
   | "edit-customer-product"
   | "tasks"
   | "employees"
-  | "gmail";
+  | "gmail"
+  | "google-ads";
 
 export type Modal =
   | { type: "mediaUpload" }

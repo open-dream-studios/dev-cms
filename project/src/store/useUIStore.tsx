@@ -20,6 +20,9 @@ interface UploadContext {
 
 const initialUIState: Omit<
   UiState,
+  | "screenWidth"
+  | "screenHeight"
+  | "setScreenSize"
   | "setUpdatingLock"
   | "setScreen"
   | "pushModal"
@@ -71,6 +74,10 @@ const initialUIState: Omit<
 
 interface UiState {
   resetUIStore: () => void;
+
+  screenWidth: number;
+  screenHeight: number;
+  setScreenSize: (w: number, h: number) => void;
 
   updatingLock: boolean;
   setUpdatingLock: (val: boolean) => void;
@@ -136,6 +143,15 @@ interface UiState {
 export const useUiStore = create<UiState>((set) => ({
   ...initialUIState,
   resetUIStore: () => set(initialUIState),
+
+  screenWidth: 0,
+  screenHeight: 0,
+
+  setScreenSize: (w, h) =>
+    set({
+      screenWidth: w,
+      screenHeight: h,
+    }),
 
   setUpdatingLock: (val) => set({ updatingLock: val }),
 

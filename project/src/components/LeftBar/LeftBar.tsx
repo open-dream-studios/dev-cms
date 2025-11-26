@@ -235,9 +235,9 @@ const LeftBar = () => {
   // Gather all available modules in order
   const displayedModules: BoxItem[] = [];
 
-  if (hasProjectModule("dashboard-module")) {
+  if (hasProjectModule("google-ads-api-module")) {
     displayedModules.push({
-      title: "Dashboard",
+      title: "Google Ads",
       icon: (
         <HiServer
           size={15}
@@ -245,8 +245,8 @@ const LeftBar = () => {
           className="w-[17px] h-[17px] brightness-75"
         />
       ),
-      pages: ["dashboard" as Screen],
-      onClick: () => handleTabClick("dashboard"),
+      pages: ["google-ads" as Screen],
+      onClick: () => handleTabClick("google-ads"),
     });
   }
 
