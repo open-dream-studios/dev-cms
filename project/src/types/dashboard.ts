@@ -1,15 +1,22 @@
 // src/types.ts
-import React from "react";
+import React, { JSX } from "react";
 
 export type ModuleId = string;
 export type ShapeId = string;
 export type SectionId = string;
 export type LayoutId = string;
 
+export type LayoutRenderer = (args: {
+  section: SectionConfig;
+  pixelHeight: number;
+  gap: number;
+  widthPx?: number;
+}) => JSX.Element;
+
 export type ModuleComponent = React.ComponentType<any>;
 
 export interface ShapeConfig {
-  id: ShapeId;
+  shapeId: ShapeId;
   // width/height can be fraction (0..1) used inside section, or grid-based
   // We'll interpret widthFraction relative to section width. Height is controlled by section height + shape-specific ratio.
   widthFraction?: number; // default: computed by layout rules
@@ -32,7 +39,7 @@ export interface SectionLayoutHint {
 }
 
 export interface SectionConfig {
-  id: SectionId;
+  sectionId: SectionId;
   name?: string;
   // relative portion of total height (sum of section ratios should be > 0)
   heightRatio?: number;
@@ -45,7 +52,7 @@ export interface SectionConfig {
 }
 
 export interface LayoutConfig {
-  id: LayoutId;
+  layoutId: LayoutId;
   name?: string;
   sections: SectionConfig[];
 }

@@ -10,7 +10,7 @@ import GoogleAdsMap from "./GoogleAdsMap";
 import GoogleAdsMetrics from "./components/GoogleAdsMetrics";
 import { useDashboardStore } from "../../../store/useDashboardStore";
 import { Dashboard } from "@/components/Dashboard/Dashboard";
-import { DashboardLayout1 } from "@/components/Dashboard/DashboardPresets";
+import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
 
 export default function GoogleAdsDashboard() {
   const { projectModules } = useContextQueries();
@@ -21,14 +21,14 @@ export default function GoogleAdsDashboard() {
 
   useEffect(() => {
     registerModules({
-      layout1_topbar: GoogleAdsTopBar,
-      layout1_graph: GoogleAdsPerformanceGraph,
-      layout1_map: GoogleAdsMap,
-      layout1_metrics: GoogleAdsMetrics,
+      layout2_topbar: GoogleAdsTopBar,
+      layout2_graph: GoogleAdsPerformanceGraph,
+      layout2_map: GoogleAdsMap,
+      layout2_metrics: GoogleAdsMetrics,
       // layout1_bottom: BottomModule,
     });
 
-    setLayout(DashboardLayout1);
+    setLayout(DashboardLayout2);
   }, [registerModules, setLayout]);
 
   // const changeLayout = () => {

@@ -20,8 +20,6 @@ interface UploadContext {
 
 const initialUIState: Omit<
   UiState,
-  | "screenWidth"
-  | "screenHeight"
   | "setScreenSize"
   | "setUpdatingLock"
   | "setScreen"
@@ -44,10 +42,13 @@ const initialUIState: Omit<
   | "resetUIStore"
 > = {
   updatingLock: false,
-  screen: "dashboard",
+  screen: "google-ads",
   modals: [],
   sidebar: "none",
   uploadContext: null,
+
+  screenWidth: 0,
+  screenHeight: 0,
 
   // Products
   inventoryView: false,
@@ -144,8 +145,8 @@ export const useUiStore = create<UiState>((set) => ({
   ...initialUIState,
   resetUIStore: () => set(initialUIState),
 
-  screenWidth: 0,
-  screenHeight: 0,
+  screenWidth: initialUIState.screenWidth,
+  screenHeight: initialUIState.screenHeight,
 
   setScreenSize: (w, h) =>
     set({
@@ -155,17 +156,17 @@ export const useUiStore = create<UiState>((set) => ({
 
   setUpdatingLock: (val) => set({ updatingLock: val }),
 
-  screen: "dashboard",
+  screen: initialUIState.screen,
   setScreen: (val) => set({ screen: val }),
 
-  modals: [],
+  modals: initialUIState.modals,
   pushModal: (m) => set((state) => ({ modals: [...state.modals, m] })),
   popModal: () => set((state) => ({ modals: state.modals.slice(0, -1) })),
 
-  sidebar: "none",
+  sidebar: initialUIState.sidebar,
   setSidebar: (val) => set({ sidebar: val }),
 
-  uploadContext: null,
+  uploadContext: initialUIState.uploadContext,
   setUploadContext: (updater) =>
     set((state) => ({
       uploadContext:
@@ -173,45 +174,45 @@ export const useUiStore = create<UiState>((set) => ({
     })),
 
   // Products
-  inventoryView: false,
+  inventoryView: initialUIState.inventoryView,
   setInventoryView: (val) => set({ inventoryView: val }),
 
-  addingProduct: false,
+  addingProduct: initialUIState.addingProduct,
   setAddingProduct: (val) => set({ addingProduct: val }),
 
-  editingProducts: false,
+  editingProducts: initialUIState.editingProducts,
   setEditingProducts: (val) => set({ editingProducts: val }),
 
   // Customers
-  addingCustomer: false,
+  addingCustomer: initialUIState.addingCustomer,
   setAddingCustomer: (val) => set({ addingCustomer: val }),
 
   // Employees
-  addingEmployee: false,
+  addingEmployee: initialUIState.addingEmployee,
   setAddingEmployee: (val) => set({ addingEmployee: val }),
 
   // Pages
-  addingPage: false,
+  addingPage: initialUIState.addingPage,
   setAddingPage: (val) => set({ addingPage: val }),
 
-  editingPage: null,
+  editingPage: initialUIState.editingPage,
   setEditingPage: (val) => set({ editingPage: val }),
 
-  addingSection: false,
+  addingSection: initialUIState.addingSection,
   setAddingSection: (val) => set({ addingSection: val }),
 
-  editingSection: null,
+  editingSection: initialUIState.editingSection,
   setEditingSection: (val) => set({ editingSection: val }),
 
-  siteWindowKey: 0,
+  siteWindowKey: initialUIState.siteWindowKey,
   setSiteWindowKey: (val) =>
     set((state) => ({
       siteWindowKey: typeof val === "function" ? val(state.siteWindowKey) : val,
     })),
 
-  showCampaignPicker: false,
+  showCampaignPicker: initialUIState.showCampaignPicker,
   setShowCampaignPicker: (val) => set({ showCampaignPicker: val }),
 
-  isLoadingGoogleAdsData: false,
+  isLoadingGoogleAdsData: initialUIState.isLoadingGoogleAdsData,
   setIsLoadingGoogleAdsData: (val) => set({ isLoadingGoogleAdsData: val }),
 }));

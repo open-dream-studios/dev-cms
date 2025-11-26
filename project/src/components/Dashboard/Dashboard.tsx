@@ -2,18 +2,8 @@
 import React, { useMemo } from "react";
 import { useDashboardStore } from "@/store/useDashboardStore";
 import { DashboardSection } from "./DashboardSection";
-import appDetails from "@/util/appDetails.json";
 import { useUiStore } from "@/store/useUIStore";
-
-const getClampedViewHeight = (
-  minHeight: number,
-  maxHeight: number,
-  screenHeight: number | undefined
-) => {
-  if (typeof screenHeight === "undefined") return minHeight;
-  const h = window.innerHeight - appDetails.nav_height;
-  return Math.max(minHeight, Math.min(maxHeight, h));
-};
+import { getClampedViewHeight } from "@/util/functions/UI";
 
 export const Dashboard: React.FC<{
   minHeight?: number;
@@ -26,6 +16,8 @@ export const Dashboard: React.FC<{
   const totalClampedHeight = useMemo(() => {
     return getClampedViewHeight(minHeight, maxHeight, screenHeight);
   }, [screenHeight, minHeight, maxHeight]);
+
+  if (!layout || !layout.sections) return
 
   // 1) Collect fixed heights
   const fixedHeightSum = layout.sections.reduce(
@@ -68,7 +60,7 @@ export const Dashboard: React.FC<{
 
         return (
           <DashboardSection
-            key={section.id}
+            key={section.sectionId}
             section={section}
             pixelHeight={sectionHeight}
             gap={gap}

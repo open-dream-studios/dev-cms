@@ -23,8 +23,7 @@ export const DashboardShape: React.FC<Props> = ({ shape, style, className }) => 
             ? currentTheme.card_bg_1
             : "transparent",
         borderRadius: 12,
-        minHeight: 24,
-        // padding: 8,
+        minHeight: 24, 
         overflow:
           shape.overflowHidden === undefined
             ? "hidden"
@@ -36,7 +35,7 @@ export const DashboardShape: React.FC<Props> = ({ shape, style, className }) => 
         flexDirection: "column",
         ...style,
       }}
-      data-shape-id={shape.id}
+      data-shape-id={shape.shapeId}
     >
       <DashboardSlot moduleId={shape.moduleId ?? null} />
     </div>

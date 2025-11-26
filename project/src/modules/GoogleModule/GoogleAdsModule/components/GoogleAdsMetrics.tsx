@@ -97,7 +97,7 @@ const GoogleAdsMetrics = () => {
           currentUser.theme === "dark"
             ? "bg-gradient-to-b from-white/3 to-transparent border border-white/6"
             : "shadow-2xl"
-        }  p-4 px-8`}
+        }  p-4`}
       >
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm text-slate-400">Traffic Sources</div>
