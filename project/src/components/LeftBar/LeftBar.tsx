@@ -237,7 +237,7 @@ const LeftBar = () => {
 
   if (hasProjectModule("google-ads-api-module")) {
     displayedModules.push({
-      title: "Google Ads",
+      title: "Dashboard",
       icon: (
         <HiServer
           size={15}

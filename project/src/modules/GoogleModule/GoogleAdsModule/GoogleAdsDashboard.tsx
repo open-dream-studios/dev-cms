@@ -2,8 +2,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import savedData from "./data.json";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsTopBar from "./components/GoogleAdsTopBar";
 import GoogleAdsPerformanceGraph from "./components/GoogleAdsPerformanceGraph";
 import GoogleAdsMap from "./components/GoogleAdsMap";
@@ -11,12 +9,14 @@ import GoogleAdsMetrics from "./components/GoogleAdsMetrics";
 import { useDashboardStore } from "../../../store/useDashboardStore";
 import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
+import { useGoogleCurrentDataStore } from "../_store/useGoogleCurrentDataStore";
+import { useGoogleUIStore } from "../_store/useGoogleUIStore";
 
 export default function GoogleAdsDashboard() {
   const { projectModules } = useContextQueries();
   const { setGoogleAdsData, selectedCampaignId, setSelectedCampaignId } =
-    useCurrentDataStore();
-  const { setIsLoadingGoogleAdsData } = useUiStore();
+    useGoogleCurrentDataStore();
+  const { setIsLoadingGoogleAdsData } = useGoogleUIStore();
   const { setLayout, registerModules } = useDashboardStore();
 
   useEffect(() => {
@@ -48,7 +48,6 @@ export default function GoogleAdsDashboard() {
       if (!projectModules || projectModules.length === 0) return;
 
       try {
-        // showLoading();
         setIsLoadingGoogleAdsData(true);
 
         const res = savedData;
@@ -68,10 +67,8 @@ export default function GoogleAdsDashboard() {
         if (!cancelToken.cancelled) {
           setIsLoadingGoogleAdsData(false);
         }
-        // hideLoading();
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       projectModules,
       setGoogleAdsData,

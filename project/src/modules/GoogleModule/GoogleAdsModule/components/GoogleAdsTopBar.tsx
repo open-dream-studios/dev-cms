@@ -2,13 +2,14 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { formatPhone } from "@/util/functions/Customers";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { useUiStore } from "@/store/useUIStore";
 import { openWindow } from "@/util/functions/Handlers";
+import { useGoogleCurrentDataStore } from "../../_store/useGoogleCurrentDataStore";
+import { useGoogleUIStore } from "../../_store/useGoogleUIStore";
+import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
 
 const GoogleAdsTopBar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -19,9 +20,10 @@ const GoogleAdsTopBar = () => {
     setCurrentGoogleAdsRange,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     currentGoogleAdsRange,
-  } = useCurrentDataStore();
+  } = useGoogleCurrentDataStore();
+  const { isLoadingGoogleAdsData } = useGoogleUIStore();
   const { runModule } = useContextQueries();
-  const { showCampaignPicker, setShowCampaignPicker } = useUiStore();
+  const { showCampaignPicker, setShowCampaignPicker } = useGoogleUIStore();
   const [editingBudget, setEditingBudget] = useState(false);
   const [editedBudgetValue, setEditedBudgetValue] = useState<string>("");
   const currentTheme = useCurrentTheme();
@@ -85,6 +87,10 @@ const GoogleAdsTopBar = () => {
     setCurrentGoogleAdsRange(r);
 
   if (!currentUser) return null;
+
+  if (isLoadingGoogleAdsData) {
+    return <SmoothSkeleton />;
+  }
 
   return (
     <div className="pl-[4px] w-[100%] h-[100%] flex items-center justify-between gap-4">

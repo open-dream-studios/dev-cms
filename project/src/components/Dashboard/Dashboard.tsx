@@ -17,7 +17,7 @@ export const Dashboard: React.FC<{
     return getClampedViewHeight(minHeight, maxHeight, screenHeight);
   }, [screenHeight, minHeight, maxHeight]);
 
-  if (!layout || !layout.sections) return
+  if (!layout || !layout.sections) return;
 
   // 1) Collect fixed heights
   const fixedHeightSum = layout.sections.reduce(

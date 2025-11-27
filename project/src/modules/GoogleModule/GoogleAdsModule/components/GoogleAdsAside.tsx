@@ -1,6 +1,6 @@
 // project/src/modules/DashboardModule/components/GoogleAdsAside.tsx
 import { useCurrentTheme } from "@/hooks/useTheme";
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -14,12 +14,9 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { AdsTooltip, MetricToggle } from "./components";
 import { formatCurrency, formatInt } from "./data";
 import { Zap } from "lucide-react";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { AuthContext } from "@/contexts/authContext";
-import { useUiStore } from "@/store/useUIStore";
+import { useGoogleCurrentDataStore } from "../../_store/useGoogleCurrentDataStore";
 
 const GoogleAdsAside = () => {
   const currentTheme = useCurrentTheme();
@@ -27,10 +24,9 @@ const GoogleAdsAside = () => {
   const {
     googleAdsData,
     currentGoogleAdsRange,
-
     selectedAdGroupId,
     setSelectedAdGroupId,
-  } = useCurrentDataStore();
+  } = useGoogleCurrentDataStore();
 
   const statsForRange = useMemo(() => {
     if (!googleAdsData || !googleAdsData.stats) return [];

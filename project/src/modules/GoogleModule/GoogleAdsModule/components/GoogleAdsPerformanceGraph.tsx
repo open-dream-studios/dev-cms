@@ -12,23 +12,25 @@ import {
 } from "recharts";
 import { AdsTooltip, MetricToggle } from "./components";
 import { formatCurrency, metricOptions } from "./data";
-import { useCurrentDataStore } from "@/store/currentDataStore";
 import { AuthContext } from "@/contexts/authContext";
-import { useUiStore } from "@/store/useUIStore";
+import { useGoogleCurrentDataStore } from "../../_store/useGoogleCurrentDataStore";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useGoogleUIStore } from "../../_store/useGoogleUIStore";
+import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
 
 const GoogleAdsPerformanceGraph = () => {
   const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
+  const { currentProject } = useCurrentDataStore();
   const {
-    currentProject,
     googleAdsData,
     currentGoogleAdsRange,
     selectedAdGroupId,
     setSelectedAdGroupId,
     selectedGoogleAdsMetrics,
     setSelectedGoogleAdsMetrics,
-  } = useCurrentDataStore();
-  const { isLoadingGoogleAdsData } = useUiStore();
+  } = useGoogleCurrentDataStore();
+  const { isLoadingGoogleAdsData } = useGoogleUIStore();
 
   const statsForRange = useMemo(() => {
     if (!googleAdsData || !googleAdsData.stats) return [];
@@ -110,11 +112,11 @@ const GoogleAdsPerformanceGraph = () => {
     setSelectedGoogleAdsMetrics(result);
   };
 
-  const adGroups = googleAdsData?.adGroups ?? [];
   useEffect(() => {
+    const adGroups = googleAdsData?.adGroups ?? [];
     if (!selectedAdGroupId && adGroups && adGroups.length > 0)
       setSelectedAdGroupId(adGroups[0].id);
-  }, [adGroups]);
+  }, [selectedAdGroupId, setSelectedAdGroupId, googleAdsData]);
 
   const videoRows = googleAdsData?.keywordData?.terms?.videos ?? [];
   const imageRows = googleAdsData?.keywordData?.terms?.images ?? [];
@@ -127,6 +129,10 @@ const GoogleAdsPerformanceGraph = () => {
   );
 
   if (!currentUser || !currentProject) return null;
+
+  if (isLoadingGoogleAdsData) {
+    return <SmoothSkeleton />;
+  }
 
   return (
     <div

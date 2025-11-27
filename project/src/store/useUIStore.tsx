@@ -68,9 +68,6 @@ const initialUIState: Omit<
   editingSection: null,
 
   siteWindowKey: 0,
-
-  showCampaignPicker: false,
-  isLoadingGoogleAdsData: false,
 };
 
 interface UiState {
@@ -133,17 +130,16 @@ interface UiState {
 
   siteWindowKey: number;
   setSiteWindowKey: (val: number | ((prev: number) => number)) => void;
-
-  showCampaignPicker: boolean;
-  setShowCampaignPicker: (val: boolean) => void;
-
-  isLoadingGoogleAdsData: boolean;
-  setIsLoadingGoogleAdsData: (val: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
   ...initialUIState,
-  resetUIStore: () => set(initialUIState),
+  resetUIStore: () =>
+    set((state) => ({
+      ...initialUIState,
+      screenWidth: state.screenWidth,
+      screenHeight: state.screenHeight,
+    })),
 
   screenWidth: initialUIState.screenWidth,
   screenHeight: initialUIState.screenHeight,
@@ -209,10 +205,4 @@ export const useUiStore = create<UiState>((set) => ({
     set((state) => ({
       siteWindowKey: typeof val === "function" ? val(state.siteWindowKey) : val,
     })),
-
-  showCampaignPicker: initialUIState.showCampaignPicker,
-  setShowCampaignPicker: (val) => set({ showCampaignPicker: val }),
-
-  isLoadingGoogleAdsData: initialUIState.isLoadingGoogleAdsData,
-  setIsLoadingGoogleAdsData: (val) => set({ isLoadingGoogleAdsData: val }),
 }));

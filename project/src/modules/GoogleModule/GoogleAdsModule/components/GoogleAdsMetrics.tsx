@@ -17,9 +17,10 @@ import {
 import { AdsTooltip, MetricToggle } from "./components";
 import { formatCurrency, formatInt } from "./data";
 import { Zap } from "lucide-react";
-import { useCurrentDataStore } from "@/store/currentDataStore";
 import { AuthContext } from "@/contexts/authContext";
-import { useUiStore } from "@/store/useUIStore";
+import { useGoogleCurrentDataStore } from "../../_store/useGoogleCurrentDataStore";
+import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
+import { useGoogleUIStore } from "../../_store/useGoogleUIStore";
 
 const GoogleAdsMetrics = () => {
   const { currentUser } = useContext(AuthContext);
@@ -29,7 +30,8 @@ const GoogleAdsMetrics = () => {
     currentGoogleAdsRange,
     selectedAdGroupId,
     setSelectedAdGroupId,
-  } = useCurrentDataStore();
+  } = useGoogleCurrentDataStore();
+  const { isLoadingGoogleAdsData } = useGoogleUIStore();
 
   const statsForRange = useMemo(() => {
     if (!googleAdsData || !googleAdsData.stats) return [];
@@ -90,6 +92,10 @@ const GoogleAdsMetrics = () => {
 
   if (!currentUser) return null;
 
+  if (isLoadingGoogleAdsData) {
+    return <SmoothSkeleton />;
+  }
+
   return (
     <aside className="w-[100%]">
       <div
@@ -103,53 +109,53 @@ const GoogleAdsMetrics = () => {
           <div className="text-sm text-slate-400">Traffic Sources</div>
           <div className="text-xs text-slate-400">Real-time</div>
         </div>
-        <div className="flex flex-row gap-4"> 
-        <div className="w-[150px] h-[170px] mt-[-10px] mb-[15px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                dataKey="value"
-                data={trafficSources}
-                innerRadius={42}
-                outerRadius={64}
-                paddingAngle={3}
-              >
-                {trafficSources.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <div className="flex flex-row gap-4">
+          <div className="w-[150px] h-[170px] mt-[-10px] mb-[15px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  dataKey="value"
+                  data={trafficSources}
+                  innerRadius={42}
+                  outerRadius={64}
+                  paddingAngle={3}
+                >
+                  {trafficSources.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
 
-        <div className="mt-3 w-[150px] gap-2 text-sm ">
-          {trafficSources.map((source, i) => (
-            <div key={source.name} className="flex items-center gap-2">
-              <div
-                style={{ background: COLORS[i] }}
-                className="w-3 h-3 rounded-sm"
-              />
-              <div
-                style={{
-                  color: currentTheme.text_2,
-                }}
-              >
-                {source.name}
+          <div className="mt-3 w-[150px] gap-2 text-sm ">
+            {trafficSources.map((source, i) => (
+              <div key={source.name} className="flex items-center gap-2">
+                <div
+                  style={{ background: COLORS[i] }}
+                  className="w-3 h-3 rounded-sm"
+                />
+                <div
+                  style={{
+                    color: currentTheme.text_2,
+                  }}
+                >
+                  {source.name}
+                </div>
+                <div
+                  style={{
+                    color: currentTheme.text_2,
+                  }}
+                  className="ml-auto font-semibold "
+                >
+                  {source.value}%
+                </div>
               </div>
-              <div
-                style={{
-                  color: currentTheme.text_2,
-                }}
-                className="ml-auto font-semibold "
-              >
-                {source.value}%
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
         </div>
       </div>
 

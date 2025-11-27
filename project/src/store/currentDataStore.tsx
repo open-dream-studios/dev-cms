@@ -13,8 +13,6 @@ import {
   Media,
   MediaFolder,
   SearchContext,
-  GoogleAdsData,
-  GoogleAdsRange,
   GmailRequestType,
 } from "@open-dream/shared";
 
@@ -84,21 +82,6 @@ interface CurrentDataState {
 
   searchContext: SearchContext;
   setSearchContext: (ctx: SearchContext) => void;
-
-  googleAdsData: GoogleAdsData | null;
-  setGoogleAdsData: (data: any) => void;
-
-  selectedCampaignId: number | null;
-  setSelectedCampaignId: (activeCampaignId: number | null) => void;
-
-  selectedAdGroupId: number | null;
-  setSelectedAdGroupId: (activeAdGroupId: number | null) => void;
-
-  currentGoogleAdsRange: GoogleAdsRange;
-  setCurrentGoogleAdsRange: (currentGoogleAdsRange: GoogleAdsRange) => void;
-
-  selectedGoogleAdsMetrics: string[];
-  setSelectedGoogleAdsMetrics: (selectedGoogleAdsMetrics: string[]) => void;
 
   selectedGmailTab: GmailRequestType;
   setSelectedGmailTab: (selectedGmailTab: GmailRequestType) => void;
@@ -226,23 +209,6 @@ export const useCurrentDataStore = create<CurrentDataState>()(
 
       searchContext: null,
       setSearchContext: (ctx) => set({ searchContext: ctx }),
-
-      googleAdsData: null,
-      setGoogleAdsData: (data) => set({ googleAdsData: data }),
-
-      selectedCampaignId: null,
-      setSelectedCampaignId: (id) => set({ selectedCampaignId: id }),
-
-      selectedAdGroupId: null,
-      setSelectedAdGroupId: (id) => set({ selectedAdGroupId: id }),
-
-      currentGoogleAdsRange: "7d",
-      setCurrentGoogleAdsRange: (range) =>
-        set({ currentGoogleAdsRange: range }),
-
-      selectedGoogleAdsMetrics: ["spend", "clicks"],
-      setSelectedGoogleAdsMetrics: (metrics) =>
-        set({ selectedGoogleAdsMetrics: metrics }),
 
       selectedGmailTab: "INBOX" as GmailRequestType,
       setSelectedGmailTab: (tab) => set({ selectedGmailTab: tab }),
