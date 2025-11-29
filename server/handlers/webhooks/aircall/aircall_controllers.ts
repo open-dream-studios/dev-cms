@@ -7,7 +7,7 @@ import { getCallDetails, downloadRecordingFile } from "./aircall_api.js";
 import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
 import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
 import { cleanPhone } from "../../../functions/data.js";
-import { sendToDiarizationService } from "services/python/diarization.js";
+import { sendToDiarizationService } from "../../../services/python/diarization.js";
 
 const processedCalls = new Set<number>();
 
