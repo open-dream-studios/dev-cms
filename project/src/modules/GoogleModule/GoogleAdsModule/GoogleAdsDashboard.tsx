@@ -46,13 +46,11 @@ export default function GoogleAdsDashboard() {
       cancelToken = { cancelled: false }
     ) => {
       if (!projectModules || projectModules.length === 0) return;
-
       try {
-        setIsLoadingGoogleAdsData(true);
-
         const res = savedData;
         if (cancelToken.cancelled) return;
-
+        setIsLoadingGoogleAdsData(true);
+        console.log(res);
         setGoogleAdsData(res);
 
         const incomingActiveCampaignId = savedData.activeCampaign.id;

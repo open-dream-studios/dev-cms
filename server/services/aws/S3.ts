@@ -23,16 +23,18 @@ export function extractS3KeyFromUrl(url: string) {
 export function buildS3Key({
   projectId,
   ext,
+  type,
 }: {
   projectId: string;
   ext: string;
+  type: "media" | "recordings";
 }) {
   // const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const useDevDB =
     process.env.USE_DEV_DB === "true" && process.env.NODE_ENV !== "production";
   const safeProject = String(projectId || "global").replace(/[^\w-]/g, "_");
   const id = randomUUID();
-  const key = `${useDevDB ? "dev" : "prod"}/${safeProject}/${id}.${ext}`;
+  const key = `${useDevDB ? "dev" : "prod"}/${safeProject}/${type}/${id}.${ext}`;
   return key;
 }
 

@@ -8,8 +8,9 @@ export type Project = {
   backend_domain: string | null;
   brand: string | null;
   logo: string | null;
-  logo_light: string | null;
-  logo_dark: string | null;
+  logo_light?: string | null;
+  logo_dark?: string | null;
+  numbers?: JSON | null;
 };
 
 export const accessLevels = {

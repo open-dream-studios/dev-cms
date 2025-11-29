@@ -1,5 +1,5 @@
 // server/handlers/projects/projects_repositories.js
-import { db } from "../../connection/connect.js"; 
+import { db } from "../../connection/connect.js";
 import { adminEmail } from "../../util/roles.js";
 import type {
   RowDataPacket,
@@ -28,6 +28,19 @@ export const getProjectsFunction = async (
   const [rows] = await db
     .promise()
     .query<(Project & RowDataPacket)[]>(q, [userEmail]);
+  return rows;
+};
+
+export const getProjectByIdFunction = async (
+  projectId: string
+): Promise<Project[]> => {
+  const q = `
+    SELECT * FROM projects 
+    WHERE project_id = ?
+  `;
+  const [rows] = await db
+    .promise()
+    .query<(Project & RowDataPacket)[]>(q, [projectId]);
   return rows;
 };
 

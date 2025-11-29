@@ -111,7 +111,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProjectId]);
 
-  useWebSocketManager();
+  // useWebSocketManager();
   useRouting();
   // useTesting();
 

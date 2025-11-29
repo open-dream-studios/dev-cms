@@ -4,6 +4,10 @@ import { AircallWebhookRequest, AircallCallData } from "./aircall_types.js";
 import path from "path";
 import fs from "fs";
 import { getCallDetails, downloadRecordingFile } from "./aircall_api.js";
+import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
+import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
+import { cleanPhone } from "../../../functions/data.js";
+import { sendToDiarizationService } from "services/python/diarization.js";
 
 const processedCalls = new Set<number>();
 
@@ -89,6 +93,26 @@ async function onRecordingReady(data: any) {
   console.log("\n🎧 RECORDING ASSET GENERATED");
   console.log("RAW RECORDING EVENT DATA:", JSON.stringify(data, null, 2));
 
+  console.log("From:", data.raw_digits);
+  console.log("To (Aircall number):", data.number?.digits);
+
+  if (
+    !data.raw_digits ||
+    cleanPhone(data.raw_digits).length !== 10 ||
+    !data.number ||
+    !data.number.digits ||
+    cleanPhone(data.number.digits).length !== 10
+  ) {
+    return;
+  }
+
+  const toNumber = cleanPhone(data.number.digits);
+  const fromNumber = cleanPhone(data.raw_digits);
+
+  // use numbers to get project idx
+  const projectId = "PROJ-90959de1e1d";
+  const project_idx = 25;
+
   // Aircall sends the direct MP3 URL as `recording`
   const url = data.recording;
 
@@ -108,6 +132,45 @@ async function onRecordingReady(data: any) {
 
     fs.writeFileSync(filePath, audioBuffer);
     console.log("✅ Recording downloaded:", filePath);
+
+    // HERE I COPIED LOGIC OVER
+    const requiredKeys = [
+      "AWS_REGION",
+      "AWS_S3_MEDIA_BUCKET",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+    ];
+    const decryptedKeys = await getDecryptedIntegrationsFunction(
+      project_idx,
+      requiredKeys,
+      []
+    );
+    if (!decryptedKeys)
+      return { success: false, message: "Required keys not found" };
+
+    const finalMeta = {
+      ext: "mp3",
+      mimeType: "audio/mpeg",
+    };
+
+    const s3Key = buildS3Key({
+      projectId,
+      ext: finalMeta.ext,
+      type: "recordings",
+    });
+
+    // Upload
+    const uploadResult = await uploadFileToS3(
+      {
+        filePath: filePath,
+        key: s3Key,
+        contentType: finalMeta.mimeType,
+      },
+      decryptedKeys
+    );
+    console.log(uploadResult);
+    const result = await sendToDiarizationService(filePath);
+    console.log(result.segments);
   } catch (err) {
     console.error("🔥 Error downloading recording:", err);
   }

@@ -560,9 +560,8 @@ export async function uploadMediaFunction(
         transformed: false,
       };
     }
-
-    // Build S3 key (we include projectId in key for filtering)
-    const s3Key = buildS3Key({ projectId, ext: finalMeta.ext });
+ 
+    const s3Key = buildS3Key({ projectId, ext: finalMeta.ext, type: "media" });
 
     if (finalMeta.ext === "svg") {
       finalMeta.mimeType = "image/svg+xml";
