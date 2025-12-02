@@ -3,7 +3,9 @@ import {
   S3Client,
   S3ClientConfig,
   PutObjectCommandInput,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Upload } from "@aws-sdk/lib-storage";
 import { ModuleDecryptedKeys } from "@open-dream/shared";
 import fs from "fs";
@@ -13,6 +15,28 @@ interface UploadFileOptions {
   filePath: string;
   key: string;
   contentType?: string;
+}
+
+export async function getSignedMediaUrl(
+  key: string,
+  bucket: string,
+  region: string,
+  accessKey: string,
+  secretKey: string
+) {
+  const client = new S3Client({
+    region,
+    credentials: {
+      accessKeyId: accessKey,
+      secretAccessKey: secretKey,
+    },
+  });
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  return await getSignedUrl(client, command, { expiresIn: 3600 });
 }
 
 export function extractS3KeyFromUrl(url: string) {
@@ -34,7 +58,9 @@ export function buildS3Key({
     process.env.USE_DEV_DB === "true" && process.env.NODE_ENV !== "production";
   const safeProject = String(projectId || "global").replace(/[^\w-]/g, "_");
   const id = randomUUID();
-  const key = `${useDevDB ? "dev" : "prod"}/${safeProject}/${type}/${id}.${ext}`;
+  const key = `${
+    useDevDB ? "dev" : "prod"
+  }/${safeProject}/${type}/${id}.${ext}`;
   return key;
 }
 
@@ -73,6 +99,11 @@ export async function uploadFileToS3(
   ) {
     throw new Error("Missing S3 config");
   }
+
+  AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID?.trim();
+  AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY?.trim();
+  AWS_REGION = AWS_REGION?.trim();
+  AWS_S3_MEDIA_BUCKET = AWS_S3_MEDIA_BUCKET?.trim();
 
   const s3Config: S3ClientConfig = {
     region: AWS_REGION!,

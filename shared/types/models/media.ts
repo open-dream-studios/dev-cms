@@ -24,6 +24,7 @@ export type Media = {
   public_id: string | null;
   type: FileType;
   url: string;
+  signedUrl?: string;
   alt_text?: string | null;
   metadata?: Record<string, any> | null;
   width: number | null;

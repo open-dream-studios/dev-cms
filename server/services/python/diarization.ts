@@ -18,4 +18,4 @@ export async function sendToDiarizationService(filepath: string) {
   return response.data;
 }
 
-sendToDiarizationService("./test2.mp3")
+// sendToDiarizationService("./test2.mp3")

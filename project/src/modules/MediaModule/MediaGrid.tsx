@@ -27,7 +27,6 @@ import RenderedImage from "../components/ProductCard/RenderedImage";
 import MediaPlayer from "./MediaPlayer";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { GrRotateRight } from "react-icons/gr";
-import { useQueryClient } from "@tanstack/react-query";
 
 type SortableMediaItemProps = {
   media: Media;
@@ -62,6 +61,17 @@ function SortableMediaItem({
   const { handleDeleteMedia, handleRotateMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (isDragging && nodeRef.current) {
+      const rect = nodeRef.current.getBoundingClientRect();
+      useDnDStore.getState().setDragItemSize({
+        width: rect.width,
+        height: rect.height,
+      });
+    }
+  }, [isDragging]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (disabled) {
@@ -111,14 +121,18 @@ function SortableMediaItem({
 
   return (
     <div
-      ref={setNodeRef}
+      // ref={setNodeRef}
+      ref={(el) => {
+        setNodeRef(el);
+        nodeRef.current = el;
+      }}
       style={style}
       {...attributes}
       onClick={handleMediaClick}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
-      className={`relative overflow-visible rounded shadow-sm ${cursorClass} ${
+      className={`select-none relative overflow-visible rounded shadow-sm ${cursorClass} ${
         isDragging ? "shadow-xl" : ""
       }`}
     >
@@ -189,14 +203,11 @@ export default function MediaGrid({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { upsertMedia } = useContextQueries();
-  const {
-    currentProjectId,
-    currentMediaSelected,
-    setCurrentMediaSelected,
-    currentActiveFolder,
-  } = useCurrentDataStore();
+  const { currentMediaSelected, setCurrentMediaSelected, currentActiveFolder } =
+    useCurrentDataStore();
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [activeMedia, setActiveMedia] = useState<Media | null>(null);
+  const draggedItemSize = useDnDStore((s) => s.dragItemSize);
 
   const originalMediaRef = useRef<Media[]>([]);
   useEffect(() => {
@@ -324,24 +335,16 @@ export default function MediaGrid({
             <div
               className="overflow-hidden"
               style={{
-                width: 170,
-                height: 170,
+                width: draggedItemSize?.width || 170,
+                height: draggedItemSize?.height || 170,
                 pointerEvents: "none",
               }}
             >
-              {activeMedia.type === "image" ? (
-                <img
-                  src={activeMedia.url}
-                  alt={activeMedia.alt_text || ""}
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <video
-                  src={activeMedia.url}
-                  className="object-cover w-full h-full"
-                  muted
-                />
-              )}
+              <RenderedImage
+                key={activeMedia.version}
+                media={activeMedia}
+                rounded={false}
+              />
             </div>
           ) : null}
         </DragOverlay>

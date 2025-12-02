@@ -45,7 +45,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   calendarContainerRef,
 }) => {
   const { currentUser } = React.useContext(AuthContext);
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
 
   const DAY_START_HOUR = 7;
   const DAY_END_HOUR = 22;
@@ -67,6 +67,15 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     control: form?.control,
     name: "completed_date",
   });
+
+  const setLoadedUIRef = useRef(false);
+  useEffect(() => {
+    if (setLoadedUIRef.current) return;
+    if (scheduled_start_date_raw && completed_date_raw) {
+      setCalendarCollapsed(false);
+      setLoadedUIRef.current = true;
+    }
+  }, [scheduled_start_date_raw, completed_date_raw]);
 
   const scheduled_start_date = scheduled_start_date_raw
     ? new Date(scheduled_start_date_raw)
@@ -547,7 +556,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   }, [scheduled_start_date, goToWeek, goToCurrentWeek]);
 
   if (!currentUser || !form) return null;
-  
+
   return (
     <motion.div
       initial={false}
@@ -564,8 +573,8 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     >
       {/* Header */}
       <div
-        className={`flex justify-between flex-col min-[900px]:flex-col min-[1010px]:flex-row ${
-          leftBarOpen ? "min-[1024px]:flex-col min-[1250px]:flex-row" : ""
+        className={`flex justify-between flex-col min-[960px]:flex-col ${
+          leftBarOpen ? "min-[1024px]:flex-col min-[1300px]:flex-row" : "min-[1060px]:flex-row"
         } gap-3 ${!calendarCollapsed && "mb-2"}`}
       >
         <div className="flex items-start pt-[6px] pl-[2px] gap-2">
@@ -595,6 +604,20 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
           >
             {isMini ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
           </button>
+
+          {(scheduled_start_date_raw || completed_date_raw) && (
+            <button
+              onClick={() => {
+                applyChange(null, null);
+              }}
+              className="cursor-pointer hover:brightness-75 dim ml-[2px] mt-[-0.5px] px-2 py-1 rounded-md border border-gray-600 text-xs"
+              title="Clear dates"
+            >
+              <p className="opacity-[0.86]">
+              Clear
+              </p>
+            </button>
+          )}
         </div>
 
         <div
@@ -605,7 +628,9 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
           } gap-2 bg-opacity-60 rounded-[10px] px-[13px] py-[4.5px]`}
           style={{
             background:
-              currentUser.theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.04)",
+              currentUser.theme === "dark"
+                ? "rgba(255,255,255,0.03)"
+                : "rgba(0,0,0,0.04)",
           }}
         >
           <div className="flex items-center gap-[6px] z-[500]">
@@ -622,10 +647,14 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                     : "text-black border-[#111] border-[0.5px]"
                 }`}
                 calendarClassName={
-                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark"
+                    ? "datepicker-dark"
+                    : "datepicker-light"
                 }
                 popperClassName={
-                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark"
+                    ? "datepicker-dark"
+                    : "datepicker-light"
                 }
               />
             </div>
@@ -649,10 +678,14 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                     : "text-black border-[#111] border-[0.5px]"
                 }`}
                 calendarClassName={
-                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark"
+                    ? "datepicker-dark"
+                    : "datepicker-light"
                 }
                 popperClassName={
-                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark"
+                    ? "datepicker-dark"
+                    : "datepicker-light"
                 }
               />
             </div>
@@ -677,10 +710,14 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                     : "text-black border-[#111] border-[0.5px]"
                 }`}
                 calendarClassName={
-                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark"
+                    ? "datepicker-dark"
+                    : "datepicker-light"
                 }
                 popperClassName={
-                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark"
+                    ? "datepicker-dark"
+                    : "datepicker-light"
                 }
               />
             </div>
@@ -703,10 +740,14 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                     : "text-black border-[#111] border-[0.5px]"
                 }`}
                 calendarClassName={
-                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark"
+                    ? "datepicker-dark"
+                    : "datepicker-light"
                 }
                 popperClassName={
-                  currentUser.theme === "dark" ? "datepicker-dark" : "datepicker-light"
+                  currentUser.theme === "dark"
+                    ? "datepicker-dark"
+                    : "datepicker-light"
                 }
               />
             </div>

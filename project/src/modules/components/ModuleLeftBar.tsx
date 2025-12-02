@@ -6,7 +6,7 @@ import { Customer, Product, Employee } from "@open-dream/shared";
 import React, { useContext, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import CustomerMiniCard from "../CustomersModule/CustomerMiniCard";
-import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard"; 
+import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
 import { customerToForm } from "@/util/schemas/customerSchema";
 import { useUiStore } from "@/store/useUIStore";
@@ -341,7 +341,8 @@ const ModuleLeftBar = () => {
 
             {(screen === "customers" ||
               screen === "employees" ||
-              screen === "customer-products") && (
+              screen === "customer-products" ||
+              screen === "edit-customer-product") && (
               <div
                 onClick={handlePlusClick}
                 className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"

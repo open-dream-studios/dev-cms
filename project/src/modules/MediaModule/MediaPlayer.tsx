@@ -13,7 +13,7 @@ const MediaPlayer = () => {
   if (!currentMediaSelected) return null;
   return (
     <div
-      className="fixed z-[990] top-0 left-0 w-[100vw] display-height flex items-center justify-center"
+      className="select-none fixed z-[990] top-0 left-0 w-[100vw] display-height flex items-center justify-center"
       style={{
         backgroundColor: currentTheme.background_1,
       }}

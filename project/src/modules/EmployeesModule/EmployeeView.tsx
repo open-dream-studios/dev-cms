@@ -112,14 +112,14 @@ const EmployeeCard: React.FC = () => {
         return;
       }
       try {
-        if (currentProject) {
+        if (currentProject) { 
           const res = await runModule("google-maps-api-module", {
             requestType: "predictions",
             sessionToken,
             address: latestAddressValue,
           });
-          if (res && res.predictions) {
-            setPredictions(res.predictions || []);
+          if (res.ok && res.data && res.data.predictions) {
+            setPredictions(res.data.predictions || []);
             setPopupVisible(true);
           }
         }
@@ -142,8 +142,8 @@ const EmployeeCard: React.FC = () => {
           sessionToken,
           place_id: prediction.place_id ?? undefined,
         });
-        if (res && res.result) {
-          const { address_components } = res.result;
+        if (res.ok && res.data && res.data.result) {
+          const { address_components } = res.data.result;
           const parsed = parseAddressComponents(address_components);
 
           employeeForm.setValue("address_line1", parsed.address_line1, {
@@ -312,16 +312,15 @@ const EmployeeCard: React.FC = () => {
                     onKeyDown={handleKeyDown(phoneRef)}
                     onChange={(e) => {
                       const value = e.target.value
-                        .replace(/[^A-Za-z0-9-.@]/g, "") // allow only letters + dashes
-                        .replace(/\s+/g, ""); // remove spaces
+                        .replace(/[^a-z0-9.@-]/gi, "") // allow only alphanumeric + . @ -
+                        .replace(/\s+/g, "") // remove spaces
+                        .toLowerCase(); // force lowercase
                       employeeForm.setValue("email", value, {
                         shouldValidate: true,
                         shouldDirty: true,
                       });
-                      employeeForm.clearErrors("email");
                     }}
                     placeholder="Email"
-                    size={Math.max(employeeForm.watch("email")?.length || 0, 4)}
                     className="flex-1 bg-transparent outline-none text-[14px] placeholder:opacity-60 w-[100%] truncate"
                   />
                 </div>

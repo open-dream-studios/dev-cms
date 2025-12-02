@@ -18,8 +18,13 @@ import {
   rotateImageFromUrl,
 } from "../../../functions/media.js";
 import mime from "mime-types";
-import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
+import {
+  buildS3Key,
+  getSignedMediaUrl,
+  uploadFileToS3,
+} from "../../../services/aws/S3.js";
 import { getDecryptedIntegrationsFunction } from "../../integrations/integrations_repositories.js";
+import { fileTypeFromFile } from "file-type";
 
 // ---------- MEDIA FOLDER FUNCTIONS ----------
 export const getMediaFoldersFunction = async (
@@ -153,18 +158,40 @@ export const deleteMediaFolderFunction = async (
 };
 
 // ---------- MEDIA FUNCTIONS ----------
-export const getMediaFunction = async (
-  project_idx: number
-): Promise<Media[]> => {
-  const q = `
-    SELECT *
-    FROM media m
-    WHERE m.project_idx = ?
-    ORDER BY m.ordinal ASC
-  `;
+export const getMediaFunction = async (project_idx: number) => {
+  const q = `SELECT * FROM media WHERE project_idx = ? ORDER BY ordinal ASC`;
   const [rows] = await db
     .promise()
     .query<(Media & RowDataPacket)[]>(q, [project_idx]);
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    project_idx,
+    [
+      "AWS_S3_MEDIA_BUCKET",
+      "AWS_REGION",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+    ],
+    []
+  );
+  if (
+    !decryptedKeys ||
+    !decryptedKeys["AWS_S3_MEDIA_BUCKET"] ||
+    !decryptedKeys["AWS_REGION"] ||
+    !decryptedKeys["AWS_ACCESS_KEY_ID"] ||
+    !decryptedKeys["AWS_SECRET_ACCESS_KEY"]
+  )
+    return [];
+  for (const m of rows) {
+    if (m.s3Key) {
+      m.url = await getSignedMediaUrl(
+        m.s3Key,
+        decryptedKeys["AWS_S3_MEDIA_BUCKET"],
+        decryptedKeys["AWS_REGION"],
+        decryptedKeys["AWS_ACCESS_KEY_ID"],
+        decryptedKeys["AWS_SECRET_ACCESS_KEY"]
+      );
+    }
+  }
   return rows;
 };
 
@@ -398,6 +425,35 @@ export const getMediaLinksFunction = async (
   const [rows] = await db
     .promise()
     .query<(MediaLink & RowDataPacket)[]>(q, [project_idx]);
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    project_idx,
+    [
+      "AWS_S3_MEDIA_BUCKET",
+      "AWS_REGION",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+    ],
+    []
+  );
+  if (
+    !decryptedKeys ||
+    !decryptedKeys["AWS_S3_MEDIA_BUCKET"] ||
+    !decryptedKeys["AWS_REGION"] ||
+    !decryptedKeys["AWS_ACCESS_KEY_ID"] ||
+    !decryptedKeys["AWS_SECRET_ACCESS_KEY"]
+  )
+    return [];
+  for (const m of rows) {
+    if (m.s3Key) {
+      m.url = await getSignedMediaUrl(
+        m.s3Key,
+        decryptedKeys["AWS_S3_MEDIA_BUCKET"],
+        decryptedKeys["AWS_REGION"],
+        decryptedKeys["AWS_ACCESS_KEY_ID"],
+        decryptedKeys["AWS_SECRET_ACCESS_KEY"]
+      );
+    }
+  }
   return rows;
 };
 
@@ -487,12 +543,21 @@ export async function uploadMediaFunction(
   for (const file of files) {
     const origPath = file.path;
     const origName = file.originalname || path.basename(origPath);
-    const { ext: origExt, mimeType: origMime } = getContentTypeAndExt(origName);
 
-    if (!allSupportedExts.includes(origExt)) {
-      console.warn(`Skipping unsupported file: ${origName}`);
+    const kind = await fileTypeFromFile(origPath);
+    if (!kind || !allSupportedExts.includes(kind.ext)) {
+      console.warn(`Skipping unsupported or corrupted file: ${origName}`);
       continue;
     }
+
+    const origExt = kind.ext;
+    const origMime = mime.lookup(kind.ext) || "application/octet-stream";
+    // const { ext: origExt, mimeType: origMime } = getContentTypeAndExt(origName);
+    // const kind = await fileTypeFromFile(origPath);
+    // if (!kind || !allSupportedExts.includes(kind.ext)) {
+    //   console.warn(`Skipping unsupported or corrupted file: ${origName}`);
+    //   continue;
+    // }
 
     let toUploadPath = origPath;
     let finalMeta: {
@@ -560,7 +625,15 @@ export async function uploadMediaFunction(
         transformed: false,
       };
     }
- 
+
+    const finalKind = await fileTypeFromFile(toUploadPath);
+    if (!finalKind || !supportedImageExts.includes(finalKind.ext)) {
+      console.warn("Post-compression file-type invalid; using original file");
+      toUploadPath = origPath;
+      finalMeta.ext = origExt;
+      finalMeta.mimeType = origMime;
+    }
+
     const s3Key = buildS3Key({ projectId, ext: finalMeta.ext, type: "media" });
 
     if (finalMeta.ext === "svg") {
@@ -568,6 +641,11 @@ export async function uploadMediaFunction(
     }
 
     // Upload
+    const validImg = await fileTypeFromFile(toUploadPath);
+    if (!validImg || !supportedImageExts.includes(validImg.ext)) {
+      throw new Error("Refusing to upload non-image file to S3");
+    }
+
     const uploadResult = await uploadFileToS3(
       {
         filePath: toUploadPath,

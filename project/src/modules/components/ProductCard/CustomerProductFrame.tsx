@@ -20,9 +20,9 @@ import "../../components/Calendar/Calendar.css";
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
-import { dateToString } from "@/util/functions/Time"; 
+import { dateToString } from "@/util/functions/Time";
 import { useAutoSave } from "@/hooks/useAutoSave";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore"; 
+import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import {
   PriorityBadge,
   StatusBadge,
@@ -84,7 +84,7 @@ const MiniTaskCard: React.FC<{
         transform: "translateZ(0)",
       }}
     >
-      <div className="w-[100%] h-[100%] z-[300] flex items-center gap-[3%] pl-[2%] pr-[calc(3px+0.5vw)] min-[1400px]:pr-[calc(10px+1vw)] py-[4px] min-[800px]:py-[0.9%]">
+      <div className="w-[100%] h-[100%] z-[300] flex items-center gap-[3%] pl-[2%] pr-[calc(2px+0.3vw)] min-[1400px]:pr-[calc(5px+0.8vw)] py-[4px] min-[800px]:py-[0.9%]">
         <div
           className="min-w-[7.3%] aspect-[1/1] rounded-[calc(6px+0.1vw)] flex items-center justify-center"
           style={{
@@ -95,15 +95,9 @@ const MiniTaskCard: React.FC<{
         >
           {completed ? <Check size={14} /> : <Activity size={14} />}
         </div>
-        <div className="flex-1 items-center flex flex-row justify-between gap-[2%]">
-          <div className="w-[100%] text-[calc(10px+0.15vw)] leading-[calc(11px+0.16vw)] font-[500] outline-none truncate">
-            {task.task && task.task.length > 0
-              ? task.task
-              : `Task ${index + 1}`}
-          </div>
-
+        <div className="flex-1 min-w-0 items-center flex flex-row-reverse justify-between gap-[2%]">
           <div
-            className={`flex gap-[10px] ${
+            className={`flex w-auto gap-[10px] ${
               leftBarOpen
                 ? "flex-col-reverse min-[1400px]:flex-row min-[1400px]:items-center"
                 : "flex-col-reverse min-[1090px]:flex-row min-[1090px]:items-center"
@@ -116,6 +110,11 @@ const MiniTaskCard: React.FC<{
               callSubmitForm={callSubmitForm}
               oneSize={false}
             />
+          </div>
+          <div className="flex-1 min-w-0 max-w-[100%] text-[calc(10px+0.15vw)] leading-[calc(11px+0.16vw)] font-[500] outline-none truncate">
+            {task.task && task.task.length > 0
+              ? task.task
+              : `Task ${index + 1}`}
           </div>
         </div>
       </div>

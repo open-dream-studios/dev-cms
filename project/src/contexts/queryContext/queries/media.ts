@@ -17,6 +17,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
       const res = await makeRequest.get("/api/media", {
         params: { project_idx: currentProjectId },
       });
+      console.log(res.data.media)
       return res.data.media || [];
     },
     enabled: isLoggedIn && !!currentProjectId,

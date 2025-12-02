@@ -854,7 +854,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
           >
             <div
               className={`relative rounded-[8px] ${
-                noteEditorOpen ? "h-[150px]" : "h-[57px]"
+                noteEditorOpen ? "h-[260px]" : "h-[111px]"
               } transition-all duration-200 ease-in-out will-change-transform`}
               style={{
                 backgroundColor: currentTheme.background_2,
@@ -878,7 +878,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
               </div>
             </div>
 
-            <div className="flex flex-row gap-[16px]">
+            <div className="flex flex-row gap-[16px] mt-[0.5px]">
               {(productForm.formState.isDirty || imagesChanged) && (
                 <button
                   type="submit"

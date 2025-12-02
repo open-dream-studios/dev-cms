@@ -89,8 +89,8 @@ export const CustomerView = () => {
           sessionToken,
           place_id: prediction.place_id ?? undefined,
         });
-        if (res && res.result) {
-          const { address_components } = res.result;
+        if (res.ok && res.data && res.data.result) {
+          const { address_components } = res.data.result;
           const parsed = parseAddressComponents(address_components);
           customerForm.setValue("address_line1", parsed.address_line1, {
             shouldValidate: true,
@@ -126,8 +126,8 @@ export const CustomerView = () => {
             sessionToken,
             address: latestAddressValue,
           });
-          if (res && res.predictions) {
-            setPredictions(res.predictions || []);
+          if (res.ok && res.data && res.data.predictions) {
+            setPredictions(res.data.predictions || []);
             setPopupVisible(true);
           }
         }
