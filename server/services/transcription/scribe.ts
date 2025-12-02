@@ -72,7 +72,7 @@ export async function run() {
 
 run();
 
-// steps
+
 
 // 1 Get all call data (call SID, call numbers, ext, projectId and project_idx)
 // 2 Pipe recording file -> transcription -> receive array
