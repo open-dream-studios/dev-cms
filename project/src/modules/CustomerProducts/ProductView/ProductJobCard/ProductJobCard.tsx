@@ -1,5 +1,12 @@
 // project/src/modules/CustomerProducts/ProductView/ProductJobCard/ProductJobCard.tsx
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Check,
   Activity,
@@ -92,30 +99,42 @@ const TaskCard: React.FC<{
   });
 
   useEffect(() => {
-    if (task?.task_id) {
+    if (!task?.task_id) return;
+    const currentValues = taskForm.getValues();
+    const isSame =
+      currentValues.task === task.task &&
+      currentValues.description === task.description &&
+      currentValues.status === task.status &&
+      currentValues.priority === task.priority;
+    if (!isSame) {
       taskForm.reset(task as TaskFormData);
     }
-  }, [task, taskForm]);
+  }, [taskForm, task]);
 
-  const onFormSubmitButton = async (data: TaskFormData) => {
-    if (!productJob) return;
-    const submitValue = {
-      ...data,
-      task_id: task.task_id,
-      job_id: productJob.id,
-      scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
-    } as Task;
-    await upsertTask(submitValue);
-  };
+  const onFormSubmitButton = useCallback(
+    async (data: TaskFormData) => {
+      if (!productJob) return;
+      const submitValue = {
+        ...data,
+        task_id: task.task_id,
+        job_id: productJob.id,
+        scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
+      } as Task;
+      await upsertTask(submitValue);
+    },
+    [productJob, task, upsertTask]
+  );
 
   const { resetTimer, cancelTimer } = useAutoSave({
     onSave: async () => {
       await callSubmitForm();
     },
   });
-  const callSubmitForm = async () => {
-    await taskForm.handleSubmit(onFormSubmitButton)();
-  };
+
+  const callSubmitForm = useCallback(() => {
+    taskForm.handleSubmit(onFormSubmitButton)(); // no await
+  }, [taskForm, onFormSubmitButton]);
+
   useEffect(() => {
     const subscription = taskForm.watch((values, { name, type }) => {
       if (name === "task" || name === "description") {
@@ -124,6 +143,15 @@ const TaskCard: React.FC<{
     });
     return () => subscription.unsubscribe();
   }, [taskForm, resetTimer]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      callSubmitForm();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [callSubmitForm]);
 
   const threeDotsRef = useRef<HTMLDivElement | null>(null);
 
@@ -298,10 +326,11 @@ const TaskCard: React.FC<{
               style={{ backgroundColor: currentTheme.background_2 }}
             >
               <textarea
-                {...taskForm.register("description")}
-                onChange={(e) => {
-                  resetTimer("slow");
-                }}
+                {...taskForm.register("description", {
+                  onChange: (e) => {
+                    resetTimer("slow");
+                  },
+                })}
                 className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] leading-[16px] opacity-[0.7] outline-none border-none resize-none px-3 py-[6.7px]"
                 placeholder="Description..."
               />
@@ -556,51 +585,93 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   const jobForm = useJobForm();
   const status = useWatch({ control: jobForm.control, name: "status" });
 
+  // This replaces your old reset effect
   useEffect(() => {
-    if (productJob?.job_id) {
-      jobForm.reset(productJob as JobFormData);
+    if (!productJob) return;
+
+    const current = jobForm.getValues();
+
+    const isSame =
+      current.notes === (productJob.notes ?? "") &&
+      current.valuation === (productJob.valuation ?? null)?.toString() &&
+      dateToString(current.scheduled_start_date ?? null) ===
+        dateToString(productJob.scheduled_start_date ?? null) &&
+      dateToString(current.completed_date ?? null) ===
+        dateToString(productJob.completed_date ?? null) &&
+      current.status === productJob.status &&
+      current.priority === productJob.priority;
+
+    if (!isSame) {
+      jobForm.reset({
+        ...productJob,
+        valuation: productJob.valuation?.toString() ?? null,
+        scheduled_start_date: productJob.scheduled_start_date
+          ? new Date(productJob.scheduled_start_date)
+          : null,
+        completed_date: productJob.completed_date
+          ? new Date(productJob.completed_date)
+          : null,
+      });
     }
   }, [productJob, jobForm]);
 
-  const onFormSubmitButton = async (data: JobFormData) => {
-    if (!matchedDefinition || !productJob) return null;
-    const safeValuation = (() => {
-      if (!data.valuation) return 0;
-      const num = parseFloat(data.valuation);
-      return isNaN(num) ? 0 : num;
+  const onFormSubmitButton = useCallback(
+    async (data: JobFormData) => {
+      console.log("saving");
+      if (!matchedDefinition || !productJob) return null;
+
+      const safeValuation = (() => {
+        if (!data.valuation) return 0;
+        const num = parseFloat(data.valuation);
+        return isNaN(num) ? 0 : num;
+      })();
+
+      const matchedCustomer =
+        matchedProduct && matchedProduct.customer_id
+          ? customers.find(
+              (customer: Customer) => customer.id === matchedProduct.customer_id
+            )
+          : null;
+
+      const submitValue = {
+        ...data,
+        scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
+        completed_date: dateToString(data.completed_date ?? null),
+        valuation: safeValuation,
+        job_id: productJob.job_id,
+        job_definition_id: matchedDefinition.id,
+        product_id: matchedProduct?.id ?? null,
+        customer_id: matchedCustomer?.id ?? null,
+      } as Job;
+
+      console.log("upserting", submitValue);
+
+      await upsertJob(submitValue);
+    },
+    [matchedDefinition, productJob, matchedProduct, customers, upsertJob]
+  );
+
+  const callSubmitForm = useCallback(async () => {
+    await jobForm.handleSubmit(onFormSubmitButton, (errors) => {
+      console.error("Submit blocked by validation errors:", errors);
     })();
-
-    const matchedCustomer =
-      matchedProduct && matchedProduct.customer_id
-        ? customers.find(
-            (customer: Customer) => customer.id === matchedProduct.customer_id
-          )
-        : null;
-
-    const submitValue = {
-      ...data,
-      scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
-      completed_date: dateToString(data.completed_date ?? null),
-      valuation: safeValuation,
-      job_id: productJob.job_id ? productJob.job_id : null,
-      job_definition_id: matchedDefinition.id,
-      product_id:
-        matchedProduct && matchedProduct.id ? matchedProduct.id : null,
-      customer_id: matchedCustomer ? matchedCustomer.id : null,
-    } as Job;
-    await upsertJob(submitValue);
-  };
+  }, [jobForm, onFormSubmitButton]);
 
   const { resetTimer, cancelTimer } = useAutoSave({
     onSave: async () => {
       await callSubmitForm();
     },
   });
-  const callSubmitForm = async () => {
-    await jobForm.handleSubmit(onFormSubmitButton, (errors) => {
-      console.error("Submit blocked by validation errors:", errors);
-    })();
-  };
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      callSubmitForm();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [callSubmitForm]);
+
   useEffect(() => {
     const subscription = jobForm.watch((values, { name, type }) => {
       if (name === "valuation" || name === "notes") {
@@ -917,6 +988,12 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                 >
                   <textarea
                     {...jobForm.register("notes")}
+                    onChange={(e) => {
+                      jobForm.setValue("notes", e.target.value, {
+                        shouldDirty: true,
+                      });
+                      resetTimer("slow");
+                    }}
                     className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] opacity-[0.95] outline-none border-none resize-none bg-transparent px-3 py-2 rounded-[7px]"
                     placeholder="Details..."
                   />

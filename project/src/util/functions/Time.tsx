@@ -16,8 +16,9 @@ export function utcToProjectTimezone(input: string | null): string | null {
 }
 
 // Convert time to string before sending to backend
-export function dateToString(date: Date | null) {
+export function dateToString(date: Date | string | null) {
   if (!date) return null;
+  if (typeof date === "string") return date;
   return date
     .toLocaleString("en-CA", {
       hour12: false,

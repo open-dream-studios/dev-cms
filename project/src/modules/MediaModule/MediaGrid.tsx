@@ -57,7 +57,11 @@ function SortableMediaItem({
   });
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { setCurrentMediaSelected } = useCurrentDataStore();
+  const {
+    setCurrentMediaSelected,
+    currentMediaItemsSelected,
+    setCurrentMediaItemsSelected,
+  } = useCurrentDataStore();
   const { handleDeleteMedia, handleRotateMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
@@ -99,7 +103,17 @@ function SortableMediaItem({
     }
   };
 
-  const cursorClass = disabled
+  // const cursorClass = disabled
+  //   ? showNotAllowed
+  //     ? "cursor-not-allowed"
+  //     : "cursor-pointer"
+  //   : isDragging
+  //   ? "cursor-grabbing"
+  //   : "cursor-grab";
+
+  const cursorClass = editMode
+    ? "cursor-pointer"
+    : disabled
     ? showNotAllowed
       ? "cursor-not-allowed"
       : "cursor-pointer"
@@ -114,6 +128,22 @@ function SortableMediaItem({
   };
 
   const handleMediaClick = (e: any) => {
+    e.stopPropagation();
+    if (editMode) {
+      const exists = currentMediaItemsSelected.some(
+        (m) => m.media_id === media.media_id
+      );
+      if (exists) {
+        setCurrentMediaItemsSelected(
+          currentMediaItemsSelected.filter((m) => m.media_id !== media.media_id)
+        );
+      } else {
+        setCurrentMediaItemsSelected([...currentMediaItemsSelected, media]);
+      }
+      return;
+    }
+
+    // normal mode → open viewer
     setCurrentMediaSelected(media);
   };
 
@@ -139,37 +169,61 @@ function SortableMediaItem({
       {!(activeMedia && media.media_id === activeMedia.media_id) && (
         <div>
           {editMode && (
-            <div
-              style={{
-                backgroundColor: currentTheme.background_1,
-                border: "0.5px solid " + currentTheme.text_3,
-              }}
-              className="absolute top-[-10px] right-[-9px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
-              onClick={async (e: any) => {
-                e.stopPropagation();
-                if (media.id && media.media_id) {
-                  await handleDeleteMedia(media.id, media.media_id);
-                }
-              }}
-            >
-              <IoCloseOutline color={currentTheme.text_2} />
-            </div>
-          )}
-          {editMode && (
-            <div
-              style={{
-                backgroundColor: currentTheme.background_1,
-                border: "0.5px solid " + currentTheme.text_3,
-              }}
-              className="absolute top-[-10px] right-[19px] z-[150] w-[26px] h-[26px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
-              onClick={async (e: any) => {
-                e.stopPropagation();
-                if (media && media.media_id && media.url && media.url.length) {
-                  await handleRotateMedia(media.media_id, media.url, 1);
-                }
-              }}
-            >
-              <GrRotateRight color={currentTheme.text_2} />
+            <div>
+              {currentMediaItemsSelected.some(
+                (m) => m.media_id === media.media_id
+              ) && (
+                <div
+                  style={{
+                    backgroundColor: currentTheme.text_2,
+                    border: "0.5px solid " + currentTheme.text_1,
+                  }}
+                  className="absolute top-[-10px] left-[-5px] z-[150] w-[20px] h-[20px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+                  onClick={async (e: any) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <div
+                    className="w-[13.5px] h-[13.5px] rounded-full shadow-md opacity-[0.8] brightness-115"
+                    style={{ backgroundColor: currentTheme.app_color_1 }}
+                  />
+                </div>
+              )}
+              <div
+                style={{
+                  backgroundColor: currentTheme.background_1,
+                  border: "0.5px solid " + currentTheme.text_3,
+                }}
+                className="absolute top-[-10px] right-[-7px] z-[150] w-[25px] h-[25px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+                onClick={async (e: any) => {
+                  e.stopPropagation();
+                  if (media.id && media.media_id) {
+                    await handleDeleteMedia(media.id, media.media_id);
+                  }
+                }}
+              >
+                <IoCloseOutline color={currentTheme.text_2} />
+              </div>
+              <div
+                style={{
+                  backgroundColor: currentTheme.background_1,
+                  border: "0.5px solid " + currentTheme.text_3,
+                }}
+                className="absolute top-[-10px] right-[20px] z-[150] w-[25px] h-[25px] flex items-center justify-center dim hover:brightness-75 cursor-pointer rounded-[20px]"
+                onClick={async (e: any) => {
+                  e.stopPropagation();
+                  if (
+                    media &&
+                    media.media_id &&
+                    media.url &&
+                    media.url.length
+                  ) {
+                    await handleRotateMedia(media.media_id, media.url, 1);
+                  }
+                }}
+              >
+                <GrRotateRight color={currentTheme.text_2} />
+              </div>
             </div>
           )}
           <RenderedImage media={media} rounded={false} />
@@ -203,8 +257,12 @@ export default function MediaGrid({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { upsertMedia } = useContextQueries();
-  const { currentMediaSelected, setCurrentMediaSelected, currentActiveFolder } =
-    useCurrentDataStore();
+  const {
+    currentMediaSelected,
+    setCurrentMediaSelected,
+    currentMediaItemsSelected,
+    currentActiveFolder,
+  } = useCurrentDataStore();
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [activeMedia, setActiveMedia] = useState<Media | null>(null);
   const draggedItemSize = useDnDStore((s) => s.dragItemSize);
@@ -231,12 +289,20 @@ export default function MediaGrid({
         (m) => m.media_id === draggedMediaId
       );
       if (draggedMedia) {
-        await upsertMedia([
-          {
-            ...draggedMedia,
+        if (draggedMedia && currentMediaItemsSelected.length <= 1) {
+          await upsertMedia([
+            {
+              ...draggedMedia,
+              folder_id: hoveredFolder === "-1" ? null : Number(hoveredFolder),
+            },
+          ]);
+        } else {
+          const movedMedia = currentMediaItemsSelected.map((m: Media) => ({
+            ...m,
             folder_id: hoveredFolder === "-1" ? null : Number(hoveredFolder),
-          },
-        ]);
+          }));
+          await upsertMedia(movedMedia);
+        }
       }
       return;
     }

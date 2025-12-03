@@ -366,48 +366,53 @@ export const rotateMediaFunction = async (
   const { media_id, url, rotations } = reqBody;
 
   const rotatedUrl = await rotateImageFromUrl(project_idx, url, rotations);
-  if (!rotatedUrl) {
-    return { success: false, message: "Rotation failed" };
-  }
+  if (!rotatedUrl) return { success: false, message: "Rotation failed" };
 
   await connection.query(
-    `UPDATE media
-      SET version = version + 1,
-          updated_at = NOW()
-      WHERE media_id = ? AND project_idx = ?
-    `,
+    `UPDATE media SET version = version + 1, updated_at = NOW()
+     WHERE media_id = ? AND project_idx = ?`,
     [media_id, project_idx]
   );
 
-  const cleaned = normalizeRotations(rotations);
-  if (cleaned === 1 || cleaned === 3) {
-    const [rows]: any = await connection.query(
-      `SELECT width, height FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1`,
-      [media_id, project_idx]
-    );
-    if (rows.length > 0) {
-      const { width, height } = rows[0];
-      await connection.query(
-        `
-          UPDATE media
-          SET width = ?, height = ?, updated_at = NOW()
-          WHERE media_id = ? AND project_idx = ?
-        `,
-        [height, width, media_id, project_idx]
-      );
-    }
-  }
+  // Fetch s3Key + bucket + region
+  const [rows]: any = await connection.query(
+    `SELECT s3Key, bucket, extension FROM media
+     WHERE media_id = ? AND project_idx = ? LIMIT 1`,
+    [media_id, project_idx]
+  );
+  const { s3Key, bucket } = rows[0];
+
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    project_idx,
+    ["AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+    []
+  );
+
+  if (
+    !decryptedKeys ||
+    !decryptedKeys.AWS_REGION ||
+    !decryptedKeys.AWS_ACCESS_KEY_ID ||
+    !decryptedKeys.AWS_SECRET_ACCESS_KEY
+  )
+    return { success: false, message: "Decrypted keys not found" };
+
+  const newSignedUrl = await getSignedMediaUrl(
+    s3Key,
+    bucket,
+    decryptedKeys.AWS_REGION,
+    decryptedKeys.AWS_ACCESS_KEY_ID,
+    decryptedKeys.AWS_SECRET_ACCESS_KEY
+  );
 
   const [verRows]: any = await connection.query(
     "SELECT version FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1",
     [media_id, project_idx]
   );
-  const version = verRows?.[0]?.version ?? 0;
 
   return {
     success: true,
-    url,
-    version,
+    url: newSignedUrl, // ← NEW
+    version: verRows?.[0]?.version ?? 0,
   };
 };
 

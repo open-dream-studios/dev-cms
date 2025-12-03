@@ -17,7 +17,6 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
       const res = await makeRequest.get("/api/media", {
         params: { project_idx: currentProjectId },
       });
-      console.log(res.data.media)
       return res.data.media || [];
     },
     enabled: isLoggedIn && !!currentProjectId,
@@ -114,7 +113,6 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
       return res.data;
     },
     onSuccess: (data, vars) => {
-      const now = Date.now();
       queryClient.setQueryData(
         ["media", currentProjectId],
         (old: Media[] = []) =>
@@ -123,8 +121,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
               ? {
                   ...m,
                   version: data.version,
-                  url: `${m.url.split("?")[0]}?v=${now}`,
-                  _v: now,
+                  url: data.url, 
                 }
               : m
           )

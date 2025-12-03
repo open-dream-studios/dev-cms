@@ -24,6 +24,9 @@ interface CurrentDataState {
   currentMediaSelected: Media | null;
   setCurrentMediaSelected: (selected: Media | null) => void;
 
+  currentMediaItemsSelected: Media[];
+  setCurrentMediaItemsSelected: (selected: Media[]) => void;
+
   currentActiveFolder: MediaFolder | null;
   setCurrentActiveFolder: (
     updater:
@@ -105,6 +108,12 @@ export const useCurrentDataStore = create<CurrentDataState>()(
       setCurrentMediaSelected: (selected: Media | null) =>
         set({
           currentMediaSelected: selected,
+        }),
+
+      currentMediaItemsSelected: [],
+      setCurrentMediaItemsSelected: (selected: Media[]) =>
+        set({
+          currentMediaItemsSelected: selected,
         }),
 
       currentActiveFolder: null,

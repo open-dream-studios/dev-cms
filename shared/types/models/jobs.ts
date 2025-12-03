@@ -51,4 +51,5 @@ export type Task = {
   scheduled_start_date: string | Date | null;
   task: string | null;
   description: string | null;
+  updated_at?: string | Date | null;
 };

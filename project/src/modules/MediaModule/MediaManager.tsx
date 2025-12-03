@@ -1,5 +1,5 @@
 // project/src/modules/MediaModule/MediaManager.tsx
-import { useState, useContext, useMemo } from "react";
+import { useState, useContext, useMemo, useEffect } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MediaFoldersSidebar from "./MediaFoldersSidebar";
@@ -13,6 +13,7 @@ const MediaManager = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const {
+    setCurrentMediaItemsSelected,
     currentActiveFolder,
     setCurrentOpenFolders,
   } = useCurrentDataStore();
@@ -29,6 +30,10 @@ const MediaManager = () => {
       return next;
     });
   }
+
+  useEffect(() => {
+    setCurrentMediaItemsSelected([]);
+  }, [currentActiveFolder]);
 
   const filteredMedia: Media[] = useMemo(() => {
     return currentActiveFolder

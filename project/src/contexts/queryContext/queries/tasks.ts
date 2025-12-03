@@ -37,13 +37,43 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
         ...task,
         project_idx: currentProjectId,
       });
-      return res.data;
+      return res.data.task; // make sure backend returns full task
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks", currentProjectId] });
+
+    onMutate: async (updatedTask: Task) => {
+      const queryKey = ["tasks", currentProjectId];
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData<Task[]>(queryKey);
+      if (!previousData) return { previousData, queryKey };
+
+      const newData = (() => {
+        const exists = previousData.some(
+          (t) => t.task_id === updatedTask.task_id
+        );
+        if (exists) {
+          return previousData.map((t) =>
+            t.task_id === updatedTask.task_id ? updatedTask : t
+          );
+        }
+        return [...previousData, updatedTask];
+      })();
+
+      queryClient.setQueryData(queryKey, newData);
+
+      return { previousData, queryKey };
     },
-    onError: (error) => {
-      console.error("❌ Upsert task failed:", error);
+
+    onError: (_err, _newData, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
+      }
+    },
+
+    onSettled: (_data, _err, _variables, context) => {
+      if (context?.queryKey) {
+        queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
     },
   });
 
