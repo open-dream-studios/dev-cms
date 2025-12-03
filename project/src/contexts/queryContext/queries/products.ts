@@ -26,7 +26,7 @@ export function useProducts(
       });
       const result = res.data.products || [];
       const sorted = result.sort(
-        (a: Product, b: Product) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
+        (a: Product, b: Product) => (b.ordinal ?? 0) - (a.ordinal ?? 0)
       );
       setLocalProductsData(sorted);
       return sorted;

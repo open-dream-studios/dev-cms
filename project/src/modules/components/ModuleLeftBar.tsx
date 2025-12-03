@@ -2,8 +2,8 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
-import { Customer, Product, Employee } from "@open-dream/shared";
-import React, { useContext, useEffect, useState } from "react";
+import { Customer, Product, Employee, Screen } from "@open-dream/shared";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import CustomerMiniCard from "../CustomersModule/CustomerMiniCard";
 import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard";
@@ -14,14 +14,18 @@ import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useEmployeeFormSubmit } from "@/hooks/forms/useEmployeeForm";
-import { useRouting } from "@/hooks/useRouting";
+import { useRouting, useScreenHistoryStore } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { GoSync } from "react-icons/go";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import { determineSearchContext, scrollToItem } from "@/util/functions/Search";
+import {
+  determineSearchContext,
+  runSearchMatch,
+  scrollToItem,
+} from "@/util/functions/Search";
 import ProductMiniCard from "./ProductCard/ProductMiniCard";
 import ProductMiniCardSkeleton from "@/lib/skeletons/ProductMiniCardSkeleton";
 import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
@@ -92,7 +96,11 @@ const ModuleLeftBar = () => {
     localProductsData,
     setCurrentProductData,
     currentProjectId,
+    searchContext,
     setSearchContext,
+    setCurrentCustomerSearchTerm,
+    currentCustomerSearchTerm,
+    currentCustomer,
   } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const { getForm } = useFormInstanceStore();
@@ -104,8 +112,8 @@ const ModuleLeftBar = () => {
     addingProduct,
     setAddingProduct,
   } = useUiStore();
-  const { currentCustomerSearchTerm } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
+  const prevScreenHistory = useScreenHistoryStore((s) => s.getPrev());
 
   const productForm = getForm("product");
   const { onProductFormSubmit } = useProductFormSubmit();
@@ -117,23 +125,76 @@ const ModuleLeftBar = () => {
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
 
   const itemRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
-  const scrollRef = React.useRef<HTMLDivElement | null>(null);
+  const customerScrollRef = React.useRef<HTMLDivElement | null>(null);
+
+  const [ignoreNextSearch, setIgnoreNextSearch] = useState(false);
+
+  const [pendingScroll, setPendingScroll] = useState(false);
+
+  const lastScreenRef = useRef<Screen | null>(null);
+  useEffect(() => {
+    const last = lastScreenRef.current;
+
+    const isRealNavigationIntoCustomers =
+      last !== "customers" && screen === "customers";
+
+    if (isRealNavigationIntoCustomers && currentCustomer) {
+      setIgnoreNextSearch(true);
+      setSearchContext(null);
+      setCurrentCustomerSearchTerm("");
+
+      setPendingScroll(true);
+    }
+
+    lastScreenRef.current = screen;
+  }, [screen, currentCustomer]);
 
   useEffect(() => {
+    if (!pendingScroll) return;
+    if (!customers.length) return;
+    if (!currentCustomer) return;
+
+    const id = currentCustomer.customer_id;
+    const el = itemRefs.current[id];
+    const container = customerScrollRef.current;
+
+    if (el && container) {
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ block: "start" });
+        // Phase 2 complete
+        setPendingScroll(false);
+      });
+    }
+  }, [pendingScroll, customers, currentCustomer]);
+
+  useEffect(() => {
+    if (ignoreNextSearch) {
+      setIgnoreNextSearch(false);
+      return;
+    }
+
     if (!currentCustomerSearchTerm.trim()) {
       setSearchContext(null);
       return;
     }
     if (!customers.length) return;
+
     const ctx = determineSearchContext(
       currentCustomerSearchTerm.trim(),
       customers
     );
+
     if (ctx.bestMatch) {
-      scrollToItem(ctx.bestMatch.customer_id, itemRefs, scrollRef, 106);
+      scrollToItem(ctx.bestMatch.customer_id, itemRefs, customerScrollRef, 106);
     }
+
     setSearchContext(ctx);
-  }, [currentCustomerSearchTerm, customers, setSearchContext]);
+  }, [
+    currentCustomerSearchTerm,
+    customers,
+    setSearchContext,
+    ignoreNextSearch,
+  ]);
 
   const handleDeleteCustomer = async () => {
     if (!contextMenu || !contextMenu.input) return;
@@ -260,6 +321,17 @@ const ModuleLeftBar = () => {
     }
   };
 
+  const filteredCustomers = React.useMemo(() => {
+    if (!currentCustomerSearchTerm.trim() || !searchContext) return customers;
+    const ctx = searchContext;
+    const parsed = ctx.parsed;
+    return customers.filter((customer) => {
+      const schema = ctx.schema(customer);
+      const result = runSearchMatch(parsed, schema);
+      return result.isMatch;
+    });
+  }, [customers, searchContext, currentCustomerSearchTerm]);
+
   if (!currentUser) return null;
 
   return (
@@ -359,14 +431,17 @@ const ModuleLeftBar = () => {
         {screen === "customers" && <SearchBar />}
       </div>
 
-      <div className="flex-1 min-h-0 h-[100%]" ref={scrollRef}>
+      <div className="flex-1 min-h-0 h-[100%]">
         {screen === "customers" && (
-          <div className="w-[100%] h-[100%] px-[15px] pb-[20px] flex flex-col overflow-y-auto gap-[9px]">
+          <div
+            ref={customerScrollRef}
+            className="w-[100%] h-[100%] px-[15px] pb-[20px] flex flex-col overflow-y-auto gap-[9px]"
+          >
             {isLoadingCustomers
               ? Array.from({ length: 4 }, (_, index) => {
                   return <CatalogMiniCardSkeleton key={index} />;
                 })
-              : customers.map((customer: Customer, index: number) => {
+              : filteredCustomers.map((customer: Customer, index: number) => {
                   return (
                     <div
                       key={customer.customer_id}

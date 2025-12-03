@@ -164,9 +164,9 @@ const DraggableItems = ({
     );
 
     const reordered = arrayMove(localProductsData, oldIndex, newIndex).map(
-      (product, i) => ({
+      (product, i, arr) => ({
         ...product,
-        ordinal: i,
+        ordinal: arr.length - 1 - i,
       })
     );
 
