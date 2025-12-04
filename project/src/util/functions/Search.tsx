@@ -53,7 +53,6 @@ export function determineSearchContext(
 
   if (isAllDigitsOrDashesOrParentheses(raw)) {
     const digits = raw.replace(/[^0-9]/g, "");
-    console.log(digits);
     return {
       type: "phone",
       schema: customerPhoneSchema,

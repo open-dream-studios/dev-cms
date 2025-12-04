@@ -70,7 +70,6 @@ export const googleAuthFunction = async (
 
   let [first_name, ...rest] = name.split(" ");
   let last_name = rest.join(" ") || null;
-
   if (user) {
     const token = jwt.sign(
       { id: user.user_id, email: user.email, admin: user.admin },

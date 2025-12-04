@@ -25,9 +25,9 @@ import CustomerCalls from "@/modules/CustomerCallsModule/CustomerCalls";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useWebSocketManager } from "@/store/webSocketStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useRouting } from "@/hooks/useRouting"; 
+import { useRouting } from "@/hooks/useRouting";
 import { PageLayout } from "./pageLayout";
-import UploadModal from "@/components/Upload/Upload"; 
+import UploadModal from "@/components/Upload/Upload";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());

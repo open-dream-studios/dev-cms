@@ -22,30 +22,24 @@ const SearchBar = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="h-[38px] w-[100%] pt-[10px]">
-      <div
-        className="rounded-[8px] w-[100%] h-[100%] flex items-center px-[10px] flex-row gap-[5px]"
-        style={{
-          backgroundColor:
-            currentUser.theme === "dark"
-              ? "rgba(255,255,255,0.028)"
-              : currentTheme.background_1_2,
+    <div
+      className="rounded-[8px] w-[100%] h-[100%] flex items-center px-[10px] flex-row gap-[5px]"
+      style={{
+        backgroundColor:
+          currentUser.theme === "dark"
+            ? "rgba(255,255,255,0.028)"
+            : currentTheme.background_1_2,
+      }}
+    >
+      <Search color={currentTheme.text_3} size={15} className="opacity-[0.7]" />
+      <input
+        ref={inputRef}
+        type="text"
+        className="w-[100%] truncate border-none outline-none font-[400] text-[13px] opacity-[0.72]"
+        onChange={(e) => {
+          setCurrentCustomerSearchTerm(e.target.value);
         }}
-      >
-        <Search
-          color={currentTheme.text_3}
-          size={15}
-          className="opacity-[0.7]"
-        />
-        <input
-          ref={inputRef}
-          type="text"
-          className="w-[100%] truncate border-none outline-none font-[400] text-[13px] opacity-[0.72]"
-          onChange={(e) => {
-            setCurrentCustomerSearchTerm(e.target.value);
-          }}
-        />
-      </div>
+      />
     </div>
   );
 };

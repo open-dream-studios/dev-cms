@@ -66,7 +66,8 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     useQuery<User | null>({
       queryKey: ["currentUser"],
       queryFn: async () => {
-        const res = await makeRequest.get("/api/auth/current-user");
+        const res = await makeRequest.get("https://dev-cms-production.up.railway.app/api/auth/current-user");
+        console.log(res.data)
         return res.data && Object.keys(res.data).length ? res.data : null;
       },
       staleTime: 1000 * 60 * 5,
