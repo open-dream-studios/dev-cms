@@ -35,7 +35,7 @@ export function useProjectSettingsFormSubmit() {
       domain: data.domain ?? null,
       backend_domain: data.backend_domain ?? null,
       brand: data.brand ?? null,
-      logo: data.logo ?? null,
+      logo_media_id: data.logo_media_id ?? null,
     };
 
     try {

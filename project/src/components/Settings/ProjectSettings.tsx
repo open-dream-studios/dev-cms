@@ -6,7 +6,7 @@ import {
   useProjectSettingsFormSubmit,
 } from "@/hooks/forms/useProjectSettingsForm";
 import { projectSettingsToForm } from "@/util/schemas/projectSettingsSchema";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
@@ -23,7 +23,7 @@ const ProjectSettings = () => {
   const { onProjectSettingsFormSubmit } = useProjectSettingsFormSubmit();
   const projectSettingsForm = useProjectSettingsForm(currentProject);
   const { registerForm, unregisterForm } = useFormInstanceStore();
-  const { projectsData } = useContextQueries();
+  const { projectsData, media } = useContextQueries();
 
   const currentTheme = useCurrentTheme();
 
@@ -49,14 +49,24 @@ const ProjectSettings = () => {
     }
   }, [currentProject, projectsData, projectSettingsForm]);
 
-  if (!currentUser || !currentProject) return null;
-
-  const onLogoSubmit = async (urls: string[]) => {
-    if (!urls || urls.length === 0) return;
-    projectSettingsForm.setValue("logo", urls[0], { shouldDirty: true });
+  const onLogoSubmit = async (media_ids: (string | null)[]) => {
+    if (!media_ids || !media_ids.length || !media_ids[0]) return;
+    projectSettingsForm.setValue("logo_media_id", media_ids[0], {
+      shouldDirty: true,
+    });
     const data = projectSettingsForm.getValues();
     await onProjectSettingsFormSubmit(data);
   };
+
+  const currentLogo = useMemo(() => {
+    if (currentProject && currentProject.logo_media_id) {
+      const foundMedia = media.find(
+        (m: Media) => m.media_id === currentProject.logo_media_id
+      );
+      return foundMedia && foundMedia.url ? foundMedia.url : null;
+    }
+    return null;
+  }, [currentProject, media]);
 
   const onUploadClick = () => {
     setUploadContext({
@@ -65,10 +75,12 @@ const ProjectSettings = () => {
       usage: "module",
       multiple: false,
       onUploaded: async (uploads: Media[], files: File[]) => {
-        await onLogoSubmit(uploads.map((item: Media) => item.url));
+        await onLogoSubmit(uploads.map((item: Media) => item.media_id));
       },
     });
   };
+
+  if (!currentUser || !currentProject) return null;
 
   return (
     <form
@@ -94,14 +106,14 @@ const ProjectSettings = () => {
           style={getCardStyle(currentUser.theme, currentTheme)}
           className="rounded-[15px] aspect-[1/1] h-[100%] max-h-[86px] flex items-center justify-center"
         >
-          {currentProject.logo ? (
+          {currentLogo ? (
             <div
               onClick={onUploadClick}
               className="hover:brightness-75 dim h-[100%] aspect-[1/1] rounded-[15px] overflow-hidden cursor-pointer relative group"
             >
               <img
                 className="h-[100%] w-[100%] object-cover"
-                src={currentProject.logo}
+                src={currentLogo}
               />
 
               <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-400 group-hover:opacity-100">

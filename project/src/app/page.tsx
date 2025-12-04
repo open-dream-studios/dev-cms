@@ -8,6 +8,7 @@ import EmployeeCatalog from "@/modules/EmployeesModule/EmployeeCatalog";
 import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsDashboard from "@/modules/GoogleModule/GoogleAdsModule/GoogleAdsDashboard";
 import GmailModule from "@/modules/GoogleModule/GmailModule/GmailModule";
+import UpdatesCatalog from "@/modules/UpdatesModule/UpdatesCatalog";
 
 const HomePage = () => {
   const { screen } = useUiStore();
@@ -19,6 +20,7 @@ const HomePage = () => {
       {screen === "customers" && <CustomerCatalog />}
       {screen === "employees" && <EmployeeCatalog />}
       {screen === "gmail" && <GmailModule />}
+      {screen === "updates" && <UpdatesCatalog />}
     </div>
   );
 };

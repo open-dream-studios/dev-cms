@@ -7,9 +7,9 @@ export type Project = {
   domain: string | null;
   backend_domain: string | null;
   brand: string | null;
-  logo: string | null;
-  logo_light?: string | null;
-  logo_dark?: string | null;
+  logo_media_id: string | null;
+  logo_dark_media_id?: string | null;
+  logo_light_media_id?: string | null;
   numbers?: JSON | null;
 };
 

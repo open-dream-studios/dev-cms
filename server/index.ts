@@ -35,6 +35,7 @@ import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio.js";
 import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 import aircallRoutes from "./handlers/webhooks/aircall/aircall_routes.js";
+import updatesRoutes from "./handlers/modules/updates/updates_routes.js";
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -110,6 +111,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/voice", callRoutes);
 app.use("/calls/aircall", aircallRoutes);
+app.use("/api/updates", updatesRoutes);
 
 // WebSocket
 const wss = new WebSocketServer({ server });

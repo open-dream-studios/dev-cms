@@ -40,6 +40,7 @@ const initialUIState: Omit<
   | "setShowCampaignPicker"
   | "setIsLoadingGoogleAdsData"
   | "resetUIStore"
+  | "setAddingUpdate"
 > = {
   updatingLock: false,
   screen: "google-ads",
@@ -68,6 +69,7 @@ const initialUIState: Omit<
   editingSection: null,
 
   siteWindowKey: 0,
+  addingUpdate: false,
 };
 
 interface UiState {
@@ -130,6 +132,10 @@ interface UiState {
 
   siteWindowKey: number;
   setSiteWindowKey: (val: number | ((prev: number) => number)) => void;
+
+  // Updates
+  addingUpdate: boolean;
+  setAddingUpdate: (val: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -205,4 +211,7 @@ export const useUiStore = create<UiState>((set) => ({
     set((state) => ({
       siteWindowKey: typeof val === "function" ? val(state.siteWindowKey) : val,
     })),
+
+  addingUpdate: false,
+  setAddingUpdate: (val) => set({ addingUpdate: val }),
 }));

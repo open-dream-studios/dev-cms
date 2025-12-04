@@ -17,7 +17,7 @@ interface UploadFileOptions {
   contentType?: string;
 }
 
-export async function getSignedMediaUrl(
+export async function getSignedS3Url(
   key: string,
   bucket: string,
   region: string,

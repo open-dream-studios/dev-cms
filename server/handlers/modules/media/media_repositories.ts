@@ -6,25 +6,21 @@ import {
   getNextOrdinal,
   reindexOrdinals,
 } from "../../../lib/ordinals.js";
-import { Media, MediaFolder, MediaLink, MediaUsage } from "@open-dream/shared";
+import { Media, MediaFolder, MediaLink } from "@open-dream/shared";
 import type { RowDataPacket, PoolConnection } from "mysql2/promise";
 import fs from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
-import {
-  compressImage,
-  getContentTypeAndExt,
-  normalizeRotations,
-  rotateImageFromUrl,
-} from "../../../functions/media.js";
+import { compressImage } from "../../../functions/media.js";
 import mime from "mime-types";
-import {
-  buildS3Key,
-  getSignedMediaUrl,
-  uploadFileToS3,
-} from "../../../services/aws/S3.js";
+import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
 import { getDecryptedIntegrationsFunction } from "../../integrations/integrations_repositories.js";
 import { fileTypeFromFile } from "file-type";
+import {
+  getSignedMediaUrl,
+  rotateImageFromUrl,
+  signPrivateMedia,
+} from "../../private/media.js";
 
 // ---------- MEDIA FOLDER FUNCTIONS ----------
 export const getMediaFoldersFunction = async (
@@ -163,36 +159,7 @@ export const getMediaFunction = async (project_idx: number) => {
   const [rows] = await db
     .promise()
     .query<(Media & RowDataPacket)[]>(q, [project_idx]);
-  const decryptedKeys = await getDecryptedIntegrationsFunction(
-    project_idx,
-    [
-      "AWS_S3_MEDIA_BUCKET",
-      "AWS_REGION",
-      "AWS_ACCESS_KEY_ID",
-      "AWS_SECRET_ACCESS_KEY",
-    ],
-    []
-  );
-  if (
-    !decryptedKeys ||
-    !decryptedKeys["AWS_S3_MEDIA_BUCKET"] ||
-    !decryptedKeys["AWS_REGION"] ||
-    !decryptedKeys["AWS_ACCESS_KEY_ID"] ||
-    !decryptedKeys["AWS_SECRET_ACCESS_KEY"]
-  )
-    return [];
-  for (const m of rows) {
-    if (m.s3Key) {
-      m.url = await getSignedMediaUrl(
-        m.s3Key,
-        decryptedKeys["AWS_S3_MEDIA_BUCKET"],
-        decryptedKeys["AWS_REGION"],
-        decryptedKeys["AWS_ACCESS_KEY_ID"],
-        decryptedKeys["AWS_SECRET_ACCESS_KEY"]
-      );
-    }
-  }
-  return rows;
+  return await signPrivateMedia(project_idx, rows);
 };
 
 export const upsertMediaFunction = async (
@@ -382,27 +349,7 @@ export const rotateMediaFunction = async (
   );
   const { s3Key, bucket } = rows[0];
 
-  const decryptedKeys = await getDecryptedIntegrationsFunction(
-    project_idx,
-    ["AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
-    []
-  );
-
-  if (
-    !decryptedKeys ||
-    !decryptedKeys.AWS_REGION ||
-    !decryptedKeys.AWS_ACCESS_KEY_ID ||
-    !decryptedKeys.AWS_SECRET_ACCESS_KEY
-  )
-    return { success: false, message: "Decrypted keys not found" };
-
-  const newSignedUrl = await getSignedMediaUrl(
-    s3Key,
-    bucket,
-    decryptedKeys.AWS_REGION,
-    decryptedKeys.AWS_ACCESS_KEY_ID,
-    decryptedKeys.AWS_SECRET_ACCESS_KEY
-  );
+  const signedUrl = getSignedMediaUrl(project_idx, s3Key, bucket);
 
   const [verRows]: any = await connection.query(
     "SELECT version FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1",
@@ -410,8 +357,8 @@ export const rotateMediaFunction = async (
   );
 
   return {
-    success: true,
-    url: newSignedUrl, // ← NEW
+    success: !!signedUrl,
+    url: signedUrl,
     version: verRows?.[0]?.version ?? 0,
   };
 };
@@ -430,36 +377,7 @@ export const getMediaLinksFunction = async (
   const [rows] = await db
     .promise()
     .query<(MediaLink & RowDataPacket)[]>(q, [project_idx]);
-  const decryptedKeys = await getDecryptedIntegrationsFunction(
-    project_idx,
-    [
-      "AWS_S3_MEDIA_BUCKET",
-      "AWS_REGION",
-      "AWS_ACCESS_KEY_ID",
-      "AWS_SECRET_ACCESS_KEY",
-    ],
-    []
-  );
-  if (
-    !decryptedKeys ||
-    !decryptedKeys["AWS_S3_MEDIA_BUCKET"] ||
-    !decryptedKeys["AWS_REGION"] ||
-    !decryptedKeys["AWS_ACCESS_KEY_ID"] ||
-    !decryptedKeys["AWS_SECRET_ACCESS_KEY"]
-  )
-    return [];
-  for (const m of rows) {
-    if (m.s3Key) {
-      m.url = await getSignedMediaUrl(
-        m.s3Key,
-        decryptedKeys["AWS_S3_MEDIA_BUCKET"],
-        decryptedKeys["AWS_REGION"],
-        decryptedKeys["AWS_ACCESS_KEY_ID"],
-        decryptedKeys["AWS_SECRET_ACCESS_KEY"]
-      );
-    }
-  }
-  return rows;
+  return await signPrivateMedia(project_idx, rows);
 };
 
 export const upsertMediaLinksFunction = async (

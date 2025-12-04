@@ -14,7 +14,8 @@ export type Screen =
   | "tasks"
   | "employees"
   | "gmail"
-  | "google-ads";
+  | "google-ads"
+  | "updates";
 
 export type Modal =
   | { type: "mediaUpload" }

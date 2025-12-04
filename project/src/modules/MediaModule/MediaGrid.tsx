@@ -309,7 +309,6 @@ export default function MediaGrid({
     if (!over || active.id === over.id) return;
 
     const folderId = currentActiveFolder ? currentActiveFolder.id : null;
-
     const siblings = folderId
       ? localMedia.filter((m) => m.folder_id === folderId)
       : localMedia.filter((m) => m.folder_id === null);

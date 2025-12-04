@@ -14,5 +14,6 @@ export * from "./types/models/modules";
 export * from "./types/models/search";
 export * from "./types/models/services"
 export * from "./types/models/google"
+export * from "./types/models/updates"
 
 // export * from "./definitions/google";

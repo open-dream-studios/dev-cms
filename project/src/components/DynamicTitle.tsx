@@ -1,18 +1,27 @@
 // project/src/components/DynamicTitle.tsx
 "use client";
 import { useEffect, useMemo } from "react";
-import { usePathname } from "next/navigation";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { Media } from "@open-dream/shared";
 
 export default function DynamicTitle() {
   const { currentProjectId } = useCurrentDataStore();
-  const { projectsData } = useContextQueries();
-  const pathname = usePathname();
+  const { projectsData, media } = useContextQueries();
 
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
   }, [projectsData, currentProjectId]);
+
+  const currentLogo = useMemo(() => {
+    if (currentProject && currentProject.logo_media_id) {
+      const foundMedia = media.find(
+        (m: Media) => m.media_id === currentProject.logo_media_id
+      );
+      return foundMedia && foundMedia.url ? foundMedia.url : null;
+    }
+    return null;
+  }, [currentProject, media]);
 
   useEffect(() => {
     if (currentProject) {
@@ -23,9 +32,9 @@ export default function DynamicTitle() {
 
     const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
     if (favicon) {
-      favicon.href = currentProject?.logo || "/favicon.ico";
+      favicon.href = currentLogo || "/favicon.ico";
     }
-  }, [currentProject, pathname]);
+  }, [currentProject, currentLogo]);
 
   return null;
 }

@@ -27,7 +27,7 @@ import Divider from "@/lib/blocks/Divider";
 import { FaPollH } from "react-icons/fa";
 import HoverBox from "@/lib/blocks/HoverBox";
 import { IoPersonSharp } from "react-icons/io5";
-import { Screen } from "@open-dream/shared";
+import { Media, Screen } from "@open-dream/shared";
 import { BsFillPersonVcardFill } from "react-icons/bs";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
@@ -68,7 +68,7 @@ const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
 const LeftBar = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
-  const { hasProjectModule, projectsData } = useContextQueries();
+  const { hasProjectModule, projectsData, media } = useContextQueries();
   const { screenClick } = useRouting();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -88,6 +88,16 @@ const LeftBar = () => {
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
   }, [projectsData, currentProjectId]);
+
+  const currentLogo = useMemo(() => {
+    if (currentProject && currentProject.logo_media_id) {
+      const foundMedia = media.find(
+        (m: Media) => m.media_id === currentProject.logo_media_id
+      );
+      return foundMedia && foundMedia.url ? foundMedia.url : null;
+    }
+    return null;
+  }, [currentProject, media]);
 
   useEffect(() => {
     setLeftBarRef(leftBarRef as RefObject<HTMLDivElement>);
@@ -391,11 +401,7 @@ const LeftBar = () => {
               className="flex lg:hidden flex-row mt-[22px] gap-[5px] mb-[18px] items-center cursor-pointer dim hover:brightness-75 pr-[6px]"
             >
               <img
-                src={
-                  currentProject && currentProject.logo
-                    ? currentProject.logo
-                    : appDetails.default_logo
-                }
+                src={currentLogo ? currentLogo : appDetails.default_logo}
                 alt="logo"
                 className={`select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover`}
               />
@@ -418,6 +424,21 @@ const LeftBar = () => {
             {displayedModules.slice(1).map((m, i) => (
               <BoxSection key={i} items={[m]} />
             ))}
+          </div>
+
+          <div
+            onClick={async () => {
+              await screenClick("updates", null);
+            }}
+            className="dim select-none cursor-pointer w-[80%] hover:brightness-75 h-[40px] absolute bottom-[70px] flex items-center justify-center font-[600]"
+            style={{
+              borderRadius: "6px",
+              border: "1px solid " + currentTheme.text_4,
+              color: currentTheme.text_2,
+              opacity: 0.75,
+            }}
+          >
+            Updates
           </div>
 
           <div

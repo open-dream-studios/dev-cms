@@ -24,13 +24,14 @@ import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { Media } from "@open-dream/shared";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const { updatingLock } = useUiStore();
-  const { projectsData } = useContextQueries();
+  const { projectsData, media } = useContextQueries();
   const { saveProducts } = useProductFormSubmit();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
@@ -120,6 +121,16 @@ const Navbar = () => {
     screenClick("dashboard", null);
   };
 
+  const currentLogo = useMemo(() => {
+    if (currentProject && currentProject.logo_media_id) {
+      const foundMedia = media.find(
+        (m: Media) => m.media_id === currentProject.logo_media_id
+      );
+      return foundMedia && foundMedia.url ? foundMedia.url : null;
+    }
+    return null;
+  }, [currentProject, media]);
+
   if (!currentUser) return null;
 
   return (
@@ -156,11 +167,7 @@ const Navbar = () => {
             className="flex flex-row gap-[5px] items-center cursor-pointer dim hover:brightness-75 pr-[6px]"
           >
             <img
-              src={
-                currentProject && currentProject.logo
-                  ? currentProject.logo
-                  : appDetails.default_logo
-              }
+              src={currentLogo ? currentLogo : appDetails.default_logo}
               alt="logo"
               className={`${
                 !currentProject

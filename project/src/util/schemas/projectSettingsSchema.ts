@@ -12,7 +12,7 @@ export const ProjectSettingsSchema = z.object({
   domain: optionalString,
   backend_domain: optionalString,
   brand: optionalString,
-  logo: optionalString,
+  logo_media_id: optionalString,
 });
 
 export type ProjectSettingsFormData = z.infer<typeof ProjectSettingsSchema>;
@@ -26,6 +26,6 @@ export function projectSettingsToForm(
     domain: projectSettings?.domain ?? null,
     backend_domain: projectSettings?.backend_domain ?? null,
     brand: projectSettings?.brand ?? null,
-    logo: projectSettings?.logo ?? null,
+    logo_media_id: projectSettings?.logo_media_id ?? null,
   };
 }

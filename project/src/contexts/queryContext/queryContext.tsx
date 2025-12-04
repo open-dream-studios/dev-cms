@@ -56,6 +56,7 @@ import {
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
+import { useUpdates } from "./queries/updates";
 
 export type QueryContextType = {
   handleThemeChange: () => void;
@@ -112,7 +113,11 @@ export type QueryContextType = {
   refetchMedia: () => void;
   upsertMedia: (data: Media[]) => Promise<Media[]>;
   deleteMedia: (media_id: string) => Promise<void>;
-  rotateMedia: (media_id: string, url: string, rotations: number) => Promise<any>;
+  rotateMedia: (
+    media_id: string,
+    url: string,
+    rotations: number
+  ) => Promise<any>;
 
   mediaFolders: MediaFolder[];
   isLoadingMediaFolders: boolean;
@@ -208,6 +213,11 @@ export type QueryContextType = {
   refetchEmployeeAssignments: () => Promise<any>;
   addEmployeeAssignment: (assignment: EmployeeAssignmentInput) => Promise<void>;
   deleteEmployeeAssignment: (assignment_id: number) => Promise<void>;
+
+  upsertUpdate: (update: any) => Promise<any>;
+  addRequest: (payload: Partial<any>) => Promise<void>;
+  deleteUpdate: (update_id: string) => Promise<void>;
+  toggleComplete: (update_id: string, completed: boolean) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -352,6 +362,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     deleteEmployeeAssignment,
   } = useEmployees(isLoggedIn, currentProjectId);
 
+  const { upsertUpdate, addRequest, deleteUpdate, toggleComplete } = useUpdates(
+    isLoggedIn,
+    currentProjectId
+  );
+
   return (
     <QueryContext.Provider
       value={{
@@ -456,6 +471,10 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchEmployeeAssignments,
         addEmployeeAssignment,
         deleteEmployeeAssignment,
+        upsertUpdate,
+        addRequest,
+        deleteUpdate,
+        toggleComplete,
       }}
     >
       {children}

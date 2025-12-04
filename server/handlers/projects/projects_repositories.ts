@@ -48,7 +48,7 @@ export const upsertProjectFunction = async (
   connection: PoolConnection,
   reqBody: any
 ) => {
-  const { project_id, name, short_name, domain, backend_domain, brand, logo } =
+  const { project_id, name, short_name, domain, backend_domain, brand, logo_media_id } =
     reqBody;
 
   const finalProjectId =
@@ -61,7 +61,7 @@ export const upsertProjectFunction = async (
 
   const query = `
       INSERT INTO projects (
-        project_id, name, short_name, domain, backend_domain, brand, logo
+        project_id, name, short_name, domain, backend_domain, brand, logo_media_id
       )
       VALUES (?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
@@ -70,7 +70,7 @@ export const upsertProjectFunction = async (
         domain = VALUES(domain),
         backend_domain = VALUES(backend_domain),
         brand = VALUES(brand),
-        logo = VALUES(logo)
+        logo_media_id = VALUES(logo_media_id)
     `;
 
   const values = [
@@ -80,7 +80,7 @@ export const upsertProjectFunction = async (
     domain || null,
     backend_domain || null,
     brand || null,
-    logo || null,
+    logo_media_id || null,
   ];
 
   const [rows] = await connection.query<ResultSetHeader>(query, values);
