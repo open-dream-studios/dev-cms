@@ -47,7 +47,7 @@ const __dirname = path.dirname(__filename);
 import(path.join(__dirname, "sql/sql_backup_schedule.js"));
 
 const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 const PORT = process.env.PORT || 8080;
 
 const useLocalHTTPS = false;

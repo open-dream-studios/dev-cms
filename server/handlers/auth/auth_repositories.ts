@@ -300,6 +300,7 @@ export const checkCodeFunction = async (
       message: "Check code failed",
     };
   }
+
   function isWithinOneHour(currentTime: string, oldTime: string): boolean {
     const currentDate = new Date(currentTime).getTime();
     const oldDate = new Date(oldTime).getTime();
