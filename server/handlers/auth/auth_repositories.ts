@@ -85,6 +85,7 @@ export const googleAuthFunction = async (
           options: {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
+            domain: "tannyspaacquisitions.shop",
             sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
