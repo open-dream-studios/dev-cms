@@ -349,8 +349,8 @@ export const rotateMediaFunction = async (
   );
   const { s3Key, bucket } = rows[0];
 
-  const signedUrl = getSignedMediaUrl(project_idx, s3Key, bucket);
-
+  const signedUrl = await getSignedMediaUrl(project_idx, s3Key, bucket);
+  
   const [verRows]: any = await connection.query(
     "SELECT version FROM media WHERE media_id = ? AND project_idx = ? LIMIT 1",
     [media_id, project_idx]

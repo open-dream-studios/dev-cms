@@ -2,269 +2,69 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
-import { Customer, Product, Employee, Screen } from "@open-dream/shared";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { Customer, Product, Employee } from "@open-dream/shared";
+import React, { use, useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
-import CustomerMiniCard from "../CustomersModule/CustomerMiniCard";
 import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
-import { customerToForm } from "@/util/schemas/customerSchema";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
-import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useEmployeeFormSubmit } from "@/hooks/forms/useEmployeeForm";
-import { useRouting, useScreenHistoryStore } from "@/hooks/useRouting";
+import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { GoSync } from "react-icons/go";
 import { useQueryClient } from "@tanstack/react-query";
-import { Search } from "lucide-react";
-import {
-  determineSearchContext,
-  runSearchMatch,
-  scrollToItem,
-} from "@/util/functions/Search";
 import ProductMiniCard from "./ProductCard/ProductMiniCard";
 import ProductMiniCardSkeleton from "@/lib/skeletons/ProductMiniCardSkeleton";
 import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
-
-const SearchBar = () => {
-  const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme();
-  const { currentCustomerSearchTerm, setCurrentCustomerSearchTerm } =
-    useCurrentDataStore();
-
-  const inputRef = React.useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.value = currentCustomerSearchTerm || "";
-    }
-  }, [currentCustomerSearchTerm]);
-
-  if (!currentUser) return null;
-
-  return (
-    <div className="h-[38px] w-[100%] pt-[10px]">
-      <div
-        className="rounded-[8px] w-[100%] h-[100%] flex items-center px-[10px] flex-row gap-[5px]"
-        style={{
-          backgroundColor:
-            currentUser.theme === "dark"
-              ? "rgba(255,255,255,0.028)"
-              : currentTheme.background_1_2,
-        }}
-      >
-        <Search
-          color={currentTheme.text_3}
-          size={15}
-          className="opacity-[0.7]"
-        />
-        <input
-          ref={inputRef}
-          type="text"
-          className="w-[100%] truncate border-none outline-none font-[400] text-[13px] opacity-[0.72]"
-          onChange={(e) => {
-            setCurrentCustomerSearchTerm(e.target.value);
-          }}
-        />
-      </div>
-    </div>
-  );
-};
+import SearchBar from "./SearchBar";
+import CustomerLeftBar from "../CustomersModule/CustomerLeftBar";
+import { useContextMenu } from "@/hooks/useContextMenu";
+import { useCustomers } from "@/hooks/useCustomers";
+import ContextMenu from "@/components/Popups/ContextMenu";
 
 const ModuleLeftBar = () => {
   const queryClient = useQueryClient();
-  const { setCurrentEmployeeData, setCurrentCustomerData, currentProject } =
-    useCurrentDataStore();
+  const { setCurrentEmployeeData, currentProject } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const {
-    customers,
-    deleteCustomer,
-    refetchProductsData,
     isLoadingProductsData,
     deleteEmployee,
     employees,
     refetchCustomers,
     runModule,
-    isLoadingCustomers,
     isLoadingEmployees,
   } = useContextQueries();
-  const {
-    localProductsData,
-    setCurrentProductData,
-    currentProjectId,
-    searchContext,
-    setSearchContext,
-    setCurrentCustomerSearchTerm,
-    currentCustomerSearchTerm,
-    currentCustomer,
-  } = useCurrentDataStore();
+  const { localProductsData, setCurrentProductData, currentProjectId } =
+    useCurrentDataStore();
   const { screenClick } = useRouting();
   const { getForm } = useFormInstanceStore();
   const { setUpdatingLock } = useUiStore();
-  const {
-    screen,
-    setAddingCustomer,
-    setAddingEmployee,
-    addingProduct,
-    setAddingProduct,
-  } = useUiStore();
+  const { screen, setAddingEmployee, addingProduct, setAddingProduct } =
+    useUiStore();
+  const { handleCustomerClick, handleDeleteCustomer } = useCustomers();
+  const { contextMenu, openContextMenu } = useContextMenu<
+    Customer | Employee
+  >();
   const currentTheme = useCurrentTheme();
-  const prevScreenHistory = useScreenHistoryStore((s) => s.getPrev());
 
   const productForm = getForm("product");
   const { onProductFormSubmit } = useProductFormSubmit();
 
-  const customerForm = getForm("customer");
-  const { onCustomerFormSubmit } = useCustomerFormSubmit();
-
   const employeeForm = getForm("employee");
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
 
-  const itemRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
-  const customerScrollRef = React.useRef<HTMLDivElement | null>(null);
-
-  const [ignoreNextSearch, setIgnoreNextSearch] = useState(false);
-
-  const [pendingScroll, setPendingScroll] = useState(false);
-
-  const lastScreenRef = useRef<Screen | null>(null);
-  useEffect(() => {
-    const last = lastScreenRef.current;
-
-    const isRealNavigationIntoCustomers =
-      last !== "customers" && screen === "customers";
-
-    if (isRealNavigationIntoCustomers && currentCustomer) {
-      setIgnoreNextSearch(true);
-      setSearchContext(null);
-      setCurrentCustomerSearchTerm("");
-
-      setPendingScroll(true);
+  const handleDeleteEmployee = async (employee: Employee | null) => {
+    if (!employee || !employee.employee_id) return;
+    await deleteEmployee(employee.employee_id);
+    if (employeeForm) {
+      employeeForm.reset(employeeToForm(null));
     }
-
-    lastScreenRef.current = screen;
-  }, [screen, currentCustomer]);
-
-  useEffect(() => {
-    if (!pendingScroll) return;
-    if (!customers.length) return;
-    if (!currentCustomer) return;
-
-    const id = currentCustomer.customer_id;
-    const el = itemRefs.current[id];
-    const container = customerScrollRef.current;
-
-    if (el && container) {
-      requestAnimationFrame(() => {
-        el.scrollIntoView({ block: "start" });
-        // Phase 2 complete
-        setPendingScroll(false);
-      });
-    }
-  }, [pendingScroll, customers, currentCustomer]);
-
-  useEffect(() => {
-    if (ignoreNextSearch) {
-      setIgnoreNextSearch(false);
-      return;
-    }
-
-    if (!currentCustomerSearchTerm.trim()) {
-      setSearchContext(null);
-      return;
-    }
-    if (!customers.length) return;
-
-    const ctx = determineSearchContext(
-      currentCustomerSearchTerm.trim(),
-      customers
-    );
-
-    if (ctx.bestMatch) {
-      scrollToItem(ctx.bestMatch.customer_id, itemRefs, customerScrollRef, 106);
-    }
-
-    setSearchContext(ctx);
-  }, [
-    currentCustomerSearchTerm,
-    customers,
-    setSearchContext,
-    ignoreNextSearch,
-  ]);
-
-  const handleDeleteCustomer = async () => {
-    if (!contextMenu || !contextMenu.input) return;
-    const customerInput = contextMenu.input as Customer;
-    if (customerInput.customer_id) {
-      await deleteCustomer(customerInput.customer_id);
-      if (customerForm) {
-        customerForm.reset(customerToForm(null));
-      }
-      setCurrentCustomerData(null);
-      setAddingCustomer(true);
-      refetchProductsData();
-    }
-  };
-
-  const handleDeleteEmployee = async () => {
-    if (!contextMenu || !contextMenu.input) return;
-    const employeeInput = contextMenu.input as Employee;
-    if (employeeInput.employee_id) {
-      await deleteEmployee(employeeInput.employee_id);
-      if (employeeForm) {
-        employeeForm.reset(employeeToForm(null));
-      }
-      setCurrentEmployeeData(null);
-      setAddingEmployee(true);
-    }
-  };
-
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    input: Customer | Employee;
-  } | null>(null);
-
-  useEffect(() => {
-    const handler = () => setContextMenu(null);
-    window.addEventListener("click", handler);
-    const handler2 = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setContextMenu(null);
-    };
-    window.addEventListener("keydown", handler2);
-    return () => {
-      window.removeEventListener("click", handler);
-      window.removeEventListener("keydown", handler2);
-    };
-  }, []);
-
-  const handleContextMenu = (
-    e: React.MouseEvent,
-    input: Customer | Employee
-  ) => {
-    e.preventDefault();
-    setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      input,
-    });
-  };
-
-  const handleCloseContextMenu = () => setContextMenu(null);
-
-  const handleCustomerClick = async (customer: Customer | null) => {
-    if (customerForm && customerForm.formState.isDirty) {
-      await customerForm.handleSubmit(onCustomerFormSubmit)();
-    }
-    setCurrentCustomerData(customer);
-    setAddingCustomer(!customer);
-    if (customerForm && !customer) {
-      customerForm.reset(customerToForm(null));
-    }
+    setCurrentEmployeeData(null);
+    setAddingEmployee(true);
   };
 
   const handleEmployeeClick = async (employee: Employee | null) => {
@@ -321,17 +121,6 @@ const ModuleLeftBar = () => {
     }
   };
 
-  const filteredCustomers = React.useMemo(() => {
-    if (!currentCustomerSearchTerm.trim() || !searchContext) return customers;
-    const ctx = searchContext;
-    const parsed = ctx.parsed;
-    return customers.filter((customer) => {
-      const schema = ctx.schema(customer);
-      const result = runSearchMatch(parsed, schema);
-      return result.isMatch;
-    });
-  }, [customers, searchContext, currentCustomerSearchTerm]);
-
   if (!currentUser) return null;
 
   return (
@@ -350,42 +139,16 @@ const ModuleLeftBar = () => {
     >
       <div className="flex flex-col px-[15px] pb-[8px]">
         {contextMenu && screen === "customers" && (
-          <div
-            className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
-            style={{
-              top: contextMenu.y,
-              left: contextMenu.x,
-              backgroundColor: currentTheme.background_1_2,
-              border: "1px solid" + currentTheme.background_3,
-            }}
-            onContextMenu={handleCloseContextMenu}
-          >
-            <button
-              onClick={handleDeleteCustomer}
-              className="hover:brightness-50 dim cursor-pointer w-full text-left px-3 py-2 text-sm"
-            >
-              {`Delete customer`}
-            </button>
-          </div>
+          <ContextMenu
+            action1Message={"Delete customer"}
+            action1Click={handleDeleteCustomer}
+          />
         )}
         {contextMenu && screen === "employees" && (
-          <div
-            className="fixed z-50 border shadow-lg rounded-md py-1 w-40 animate-fade-in"
-            style={{
-              top: contextMenu.y,
-              left: contextMenu.x,
-              backgroundColor: currentTheme.background_1_2,
-              border: "1px solid" + currentTheme.background_3,
-            }}
-            onContextMenu={handleCloseContextMenu}
-          >
-            <button
-              onClick={handleDeleteEmployee}
-              className="hover:brightness-50 dim cursor-pointer w-full text-left px-3 py-2 text-sm"
-            >
-              {`Delete employee`}
-            </button>
-          </div>
+          <ContextMenu
+            action1Message={"Delete employee"}
+            action1Click={handleDeleteEmployee}
+          />
         )}
 
         <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
@@ -432,34 +195,7 @@ const ModuleLeftBar = () => {
       </div>
 
       <div className="flex-1 min-h-0 h-[100%]">
-        {screen === "customers" && (
-          <div
-            ref={customerScrollRef}
-            className="w-[100%] h-[100%] px-[15px] pb-[20px] flex flex-col overflow-y-auto gap-[9px]"
-          >
-            {isLoadingCustomers
-              ? Array.from({ length: 4 }, (_, index) => {
-                  return <CatalogMiniCardSkeleton key={index} />;
-                })
-              : filteredCustomers.map((customer: Customer, index: number) => {
-                  return (
-                    <div
-                      key={customer.customer_id}
-                      ref={(el) => {
-                        itemRefs.current[customer.customer_id] = el;
-                      }}
-                    >
-                      <CustomerMiniCard
-                        customer={customer}
-                        index={index}
-                        handleContextMenu={handleContextMenu}
-                        handleCustomerClick={handleCustomerClick}
-                      />
-                    </div>
-                  );
-                })}
-          </div>
-        )}
+        {screen === "customers" && <CustomerLeftBar />}
 
         {screen === "employees" && (
           <div className="w-[100%] h-[100%] px-[15px] pb-[20px] flex flex-col overflow-y-auto gap-[9px]">
@@ -473,7 +209,7 @@ const ModuleLeftBar = () => {
                       key={index}
                       employee={employee}
                       index={index}
-                      handleContextMenu={handleContextMenu}
+                      handleContextMenu={(e) => openContextMenu(e, employee)}
                       handleEmployeeClick={handleEmployeeClick}
                     />
                   );

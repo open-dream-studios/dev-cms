@@ -1,4 +1,4 @@
-// src/store/UIStore.ts
+// src/store/useUIStore.ts
 import {
   ProjectPage,
   Section,
@@ -27,6 +27,7 @@ const initialUIState: Omit<
   | "popModal"
   | "setSidebar"
   | "setUploadContext"
+  | "setContextMenu"
   | "setInventoryView"
   | "setAddingProduct"
   | "setEditingProducts"
@@ -50,6 +51,8 @@ const initialUIState: Omit<
 
   screenWidth: 0,
   screenHeight: 0,
+
+  contextMenu: null,
 
   // Products
   inventoryView: false,
@@ -97,6 +100,21 @@ interface UiState {
     updater:
       | UploadContext
       | ((prev: UploadContext | null) => UploadContext | null)
+  ) => void;
+
+  // ----------------- CONTEXT MENU -----------------
+  contextMenu: {
+    x: number;
+    y: number;
+    input: any | null;
+  } | null;
+
+  setContextMenu: (
+    val: {
+      x: number;
+      y: number;
+      input: any;
+    } | null
   ) => void;
 
   // Products
@@ -174,6 +192,9 @@ export const useUiStore = create<UiState>((set) => ({
       uploadContext:
         typeof updater === "function" ? updater(state.uploadContext) : updater,
     })),
+
+  contextMenu: null,
+  setContextMenu: (val) => set({ contextMenu: val }),
 
   // Products
   inventoryView: initialUIState.inventoryView,
