@@ -84,9 +84,9 @@ export const googleAuthFunction = async (
           value: token,
           options: {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            domain: "tannyspaacquisitions.shop",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            sameSite: "None",
+            secure: true,
+            domain: ".tannyspaacquisitions.shop",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           },
