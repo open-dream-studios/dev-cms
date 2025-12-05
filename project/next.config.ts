@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  experimental: {
+  experimental: { 
     externalDir: true,
   },
 
