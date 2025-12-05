@@ -88,6 +88,7 @@ export const googleAuthFunction = async (
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
             path: "/",
+            domain: "dev-cms-production.up.railway.app",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           },
         },
