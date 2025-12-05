@@ -50,23 +50,26 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 8080;
 
-const useLocalHTTPS = true;
-const server = useLocalHTTPS
-  ? (() => {
-      try {
-        return https.createServer(
-          {
-            key: fs.readFileSync("./ssl/key.pem"),
-            cert: fs.readFileSync("./ssl/cert.pem"),
-          },
-          app
-        );
-      } catch (err) {
-        console.error("⚠️ Failed to load SSL certs. Falling back to HTTP.");
-        return http.createServer(app);
-      }
-    })()
-  : http.createServer(app);
+const isLocalHttps = process.env.LOCAL_DEV_HTTPS === "true";
+let server;
+if (isLocalHttps) {
+  try {
+    server = https.createServer(
+      {
+        key: fs.readFileSync("./ssl/key.pem"),
+        cert: fs.readFileSync("./ssl/cert.pem"),
+      },
+      app
+    );
+    console.log("Running with LOCAL HTTPS");
+  } catch (err) {
+    console.error("Failed to load local SSL certs. Falling back to HTTP.");
+    server = http.createServer(app);
+  }
+} else {
+  server = http.createServer(app);
+  console.log("Running with HTTP (Railway will provide HTTPS)");
+}
 
 // App
 app.use((req, res, next) => {
@@ -131,7 +134,7 @@ db.getConnection((err, connection) => {
   connection.release();
 });
 
-// Error handler -> 
+// Error handler ->
 process.on("uncaughtException", (err) => {
   console.error("🔥 Uncaught Exception:", err);
   // Optionally alert/notify here
