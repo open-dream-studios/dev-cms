@@ -61,21 +61,6 @@ export const logout = async (
 ) => {
   const token = req.cookies.accessToken;
   if (!token) throw new Error("Not authenticated!");
-  // return {
-  //   message: "Logout successful",
-  //   cookies: [
-  //     {
-  //       name: "accessToken",
-  //       value: "",
-  //       options: {
-  //         httpOnly: true,
-  //         secure: process.env.NODE_ENV === "production",
-  //         sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-  //         expires: new Date(0),
-  //       },
-  //     },
-  //   ],
-  // };
   return {
     message: "Logout successful",
     cookies: [
