@@ -61,6 +61,21 @@ export const logout = async (
 ) => {
   const token = req.cookies.accessToken;
   if (!token) throw new Error("Not authenticated!");
+  // return {
+  //   message: "Logout successful",
+  //   cookies: [
+  //     {
+  //       name: "accessToken",
+  //       value: "",
+  //       options: {
+  //         httpOnly: true,
+  //         secure: process.env.NODE_ENV === "production",
+  //         sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+  //         expires: new Date(0),
+  //       },
+  //     },
+  //   ],
+  // };
   return {
     message: "Logout successful",
     cookies: [
@@ -71,6 +86,7 @@ export const logout = async (
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+          path: "/",
           expires: new Date(0),
         },
       },
@@ -130,7 +146,7 @@ export const getCurrentUser = async (
   if (!rows.length) return null;
   const { password, password_reset, password_reset_timestamp, ...user } =
     rows[0];
-  console.log(user)
+  console.log(user);
   return user;
 };
 
