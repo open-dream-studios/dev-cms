@@ -70,6 +70,7 @@ export const googleAuthFunction = async (
 
   let [first_name, ...rest] = name.split(" ");
   let last_name = rest.join(" ") || null;
+
   if (user) {
     const token = jwt.sign(
       { id: user.user_id, email: user.email, admin: user.admin },
@@ -84,9 +85,8 @@ export const googleAuthFunction = async (
           value: token,
           options: {
             httpOnly: true,
-            sameSite: "None",
-            secure: true,
-            domain: ".tannyspaacquisitions.shop",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           },
@@ -301,7 +301,6 @@ export const checkCodeFunction = async (
       message: "Check code failed",
     };
   }
-
   function isWithinOneHour(currentTime: string, oldTime: string): boolean {
     const currentDate = new Date(currentTime).getTime();
     const oldDate = new Date(oldTime).getTime();

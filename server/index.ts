@@ -47,7 +47,7 @@ const __dirname = path.dirname(__filename);
 import(path.join(__dirname, "sql/sql_backup_schedule.js"));
 
 const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 const PORT = process.env.PORT || 8080;
 
 const useLocalHTTPS = false;
@@ -83,21 +83,15 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       if (!origin || allowedOrigins.includes(origin)) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     credentials: true,
-//   })
-// );
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
