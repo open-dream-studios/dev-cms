@@ -69,8 +69,8 @@ export const logout = async (
         value: "",
         options: {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+          secure: true,
+          sameSite: "none",
           path: "/",
           expires: new Date(0),
         },

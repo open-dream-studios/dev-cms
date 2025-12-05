@@ -1,92 +1,8 @@
-// import axios from "axios";
-// import { auth, provider, signInWithPopup } from "./firebase";
-// import { showToast } from "@/components/CustomToast";
-// import { toast } from "react-toastify";
-// import { makeRequest } from "./axios";
-
-// export type LoginInputs = {
-//   email: string;
-//   password: string;
-//   first_name?: string;
-//   last_name?: string;
-// };
-
-// export type RegisterInputs = {
-//   email: string;
-//   password: string;
-//   first_name: string;
-//   last_name: string;
-// };
-
-// export const login = async (inputs: LoginInputs) => {
-//   try {
-//     const res = await axios.post("/api/auth/login", inputs, {
-//       withCredentials: true,
-//     });
-//     return res.status === 200;
-//   } catch (err) {
-//     toast.error("Unauthorized user");
-//     console.error("Login failed", err);
-//     return false;
-//   }
-// };
-
-// export const logout = async () => {
-//   try {
-//     const res = await makeRequest.post(
-//       "/api/auth/logout",
-//       {},
-//       { withCredentials: true }
-//     );
-//     return res.status === 200;
-//   } catch (err) {
-//     console.error("Login failed", err);
-//     return false;
-//   }
-// };
-
-// export const register = async (inputs: RegisterInputs) => {
-//   try {
-//     const res = await axios.post("/api/auth/register", inputs, {
-//       withCredentials: true,
-//     });
-//     return res.status === 200;
-//   } catch (err) {
-//     toast.error("Unauthorized user");
-//     console.error("Registration failed", err);
-//     return false;
-//   }
-// };
-
-// export const googleSignIn = async () => {
-//   try {
-//     const googleAccount = await signInWithPopup(
-//       auth,
-//       provider.setCustomParameters({ prompt: "select_account" })
-//     );
-
-//     const user = googleAccount.user;
-//     const idToken = await user.getIdToken();
-
-//     const res = await makeRequest.post(
-//       "/api/auth/google",
-//       { idToken },
-//       {
-//         withCredentials: true,
-//       }
-//     );
-//     return res.status === 200;
-//   } catch (error) {
-//     toast.error("Unauthorized user");
-//     console.error("Login Error:", error);
-//     return false;
-//   }
-// };
-
-// project/util/auth.ts
-import { makeRequest } from "./axios";
+import axios from "axios";
 import { auth, provider, signInWithPopup } from "./firebase";
+import { showToast } from "@/components/CustomToast";
 import { toast } from "react-toastify";
+import { makeRequest } from "./axios";
 
 export type LoginInputs = {
   email: string;
@@ -102,10 +18,11 @@ export type RegisterInputs = {
   last_name: string;
 };
 
-
 export const login = async (inputs: LoginInputs) => {
   try {
-    const res = await makeRequest.post("/api/auth/login", inputs);
+    const res = await axios.post("/api/auth/login", inputs, {
+      withCredentials: true,
+    });
     return res.status === 200;
   } catch (err) {
     toast.error("Unauthorized user");
@@ -116,17 +33,19 @@ export const login = async (inputs: LoginInputs) => {
 
 export const logout = async () => {
   try {
-    const res = await makeRequest.post("/api/auth/logout", {});
+    const res = await makeRequest.post("/api/auth/logout");
     return res.status === 200;
   } catch (err) {
-    console.error("Logout failed", err);
+    console.error("Login failed", err);
     return false;
   }
 };
 
 export const register = async (inputs: RegisterInputs) => {
   try {
-    const res = await makeRequest.post("/api/auth/register", inputs);
+    const res = await axios.post("/api/auth/register", inputs, {
+      withCredentials: true,
+    });
     return res.status === 200;
   } catch (err) {
     toast.error("Unauthorized user");
@@ -142,13 +61,20 @@ export const googleSignIn = async () => {
       provider.setCustomParameters({ prompt: "select_account" })
     );
 
-    const idToken = await googleAccount.user.getIdToken();
+    const user = googleAccount.user;
+    const idToken = await user.getIdToken();
 
-    const res = await makeRequest.post("/api/auth/google", { idToken });
+    const res = await axios.post(
+      process.env.NEXT_PUBLIC_BACKEND_URL + "/api/auth/google",
+      { idToken },
+      {
+        withCredentials: true,
+      }
+    );
     return res.status === 200;
-  } catch (err) {
+  } catch (error) {
     toast.error("Unauthorized user");
-    console.error("Google login failed", err);
+    console.error("Login Error:", error);
     return false;
   }
 };
