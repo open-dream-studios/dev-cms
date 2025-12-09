@@ -67,7 +67,6 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
       queryKey: ["currentUser"],
       queryFn: async () => {
         const res = await makeRequest.get("/api/auth/current-user");
-        console.log(res.data)
         return res.data && Object.keys(res.data).length ? res.data : null;
       },
       staleTime: 1000 * 60 * 5,

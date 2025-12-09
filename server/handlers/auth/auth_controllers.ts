@@ -116,9 +116,7 @@ export const getCurrentUser = async (
   res: Response,
   connection: PoolConnection
 ) => {
-  console.log("GET CURRENT USER");
   const token = req.cookies.accessToken;
-  console.log(token);
   if (!token) return null;
   const userInfo: any = await new Promise((resolve, reject) => {
     jwt.verify(token, process.env.JWT_SECRET!, (err: any, decoded: any) => {
@@ -131,7 +129,6 @@ export const getCurrentUser = async (
   if (!rows.length) return null;
   const { password, password_reset, password_reset_timestamp, ...user } =
     rows[0];
-  console.log(user);
   return user;
 };
 

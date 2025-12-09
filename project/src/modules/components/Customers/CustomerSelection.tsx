@@ -211,8 +211,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
     }
   };
 
-  const filteredCustomers = useMemo(() => {
-    console.log(currentCustomerSearchTerm, searchContext);
+  const filteredCustomers = useMemo(() => { 
     if (!currentCustomerSearchTerm.trim() || !searchContext) return customers;
     const ctx = searchContext;
     const parsed = ctx.parsed;
@@ -220,8 +219,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
       const schema = ctx.schema(customer);
       const result = runSearchMatch(parsed, schema);
       return result.isMatch;
-    });
-    console.log(filtered);
+    }); 
     return filtered;
   }, [customers, searchContext, currentCustomerSearchTerm]);
 

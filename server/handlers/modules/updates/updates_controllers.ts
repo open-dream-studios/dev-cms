@@ -23,7 +23,6 @@ export const upsertUpdate = async (
   connection: PoolConnection
 ) => {
   const project_idx = req.user?.project_idx;
-  console.log(project_idx, req.body);
   if (!project_idx) throw new Error("Missing project_idx");
 
   const result = await upsertUpdateFunction(connection, project_idx, req.body);
