@@ -5,11 +5,11 @@ import CustomerView from "./CustomerView";
 import ModuleLeftBar from "../components/ModuleLeftBar";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import CustomerManager from "./CustomerManager";
 
 const CustomerCatalog = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useCurrentDataStore();
-  const { currentCustomer } = useCurrentDataStore();
+  const { currentCustomer, currentProjectId } = useCurrentDataStore();
   const { addingCustomer } = useUiStore();
 
   if (!currentUser || !currentProjectId) return null;
@@ -18,7 +18,7 @@ const CustomerCatalog = () => {
     <div className="flex w-full h-[100%]">
       <ModuleLeftBar />
       <div className="flex-1">
-        {(currentCustomer || addingCustomer) && <CustomerView />}
+        {(currentCustomer || addingCustomer) ? <CustomerView /> : <CustomerManager />}
       </div>
     </div>
   );

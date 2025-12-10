@@ -1,4 +1,4 @@
-// server/handlers/integrations/integrations_repositories.js
+// server/handlers/integrations/integrations_repositories.ts
 import { ResultSetHeader, RowDataPacket, PoolConnection } from "mysql2/promise";
 import { db } from "../../connection/connect.js";
 import { decrypt, encrypt } from "../../util/crypto.js";

@@ -3,7 +3,7 @@ import {
   deleteProjectFunction,
   deleteProjectUserFunction,
   getAllUserRolesFunction,
-  getProjectsFunction,
+  getAssignedProjectsFunction,
   upsertProjectFunction,
   upsertProjectUserFunction,
 } from "./projects_repositories.js";
@@ -12,10 +12,10 @@ import type { Request, Response } from "express";
 import { Project } from "@open-dream/shared";
 
 // ---------- PROJECT CONTROLLERS ----------
-export const getProjects = async (req: Request, res: Response) => {
+export const getAssignedProjects = async (req: Request, res: Response) => {
   const userEmail = req.user?.email;
   if (!userEmail) throw new Error("Missing user email");
-  const projects: Project[] = await getProjectsFunction(userEmail);
+  const projects: Project[] = await getAssignedProjectsFunction(userEmail);
   return { success: true, projects };
 };
 

@@ -17,94 +17,94 @@ export function useTwilioDevice() {
   const { currentUser } = useContext(AuthContext);
 
   const deviceRef = useRef<Device | null>(null);
-  useEffect(() => {
-    async function setup() {
-      if (!currentProjectId) return;
+  // useEffect(() => {
+  //   async function setup() {
+  //     if (!currentProjectId) return;
 
-      const res = await makeRequest.post(
-        `/api/voice/token?projectId=${currentProjectId}`
-      );
-      const { token, identity: fetchedIdentity } = res.data;
-      if (!token) return;
+  //     const res = await makeRequest.post(
+  //       `/api/voice/token?projectId=${currentProjectId}`
+  //     );
+  //     const { token, identity: fetchedIdentity } = res.data;
+  //     if (!token) return;
 
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("twilioIdentity", fetchedIdentity);
-      }
-      setIdentity(fetchedIdentity);
+  //     if (typeof window !== "undefined") {
+  //       sessionStorage.setItem("twilioIdentity", fetchedIdentity);
+  //     }
+  //     setIdentity(fetchedIdentity);
 
-      const twilioDevice = new Device(token, {
-        codecPreferences: ["opus", "pcmu"] as any,
-        logLevel: "error",
-      });
-      deviceRef.current = twilioDevice;
-      setDevice(twilioDevice);
+  //     const twilioDevice = new Device(token, {
+  //       codecPreferences: ["opus", "pcmu"] as any,
+  //       logLevel: "error",
+  //     });
+  //     deviceRef.current = twilioDevice;
+  //     setDevice(twilioDevice);
 
-      twilioDevice.on("registered", () =>
-        console.log("📟 Twilio Device registered")
-      );
+  //     twilioDevice.on("registered", () =>
+  //       console.log("📟 Twilio Device registered")
+  //     );
 
-      // incoming call
-      twilioDevice.on("incoming", (conn: any) => {
-        console.log("📞 Incoming call", conn.parameters);
-        setIncoming(conn);
+  //     // incoming call
+  //     twilioDevice.on("incoming", (conn: any) => {
+  //       console.log("📞 Incoming call", conn.parameters);
+  //       setIncoming(conn);
 
-        conn.on("accept", () => {
-          setConnection(conn);
-          setIncoming(null);
-        });
+  //       conn.on("accept", () => {
+  //         setConnection(conn);
+  //         setIncoming(null);
+  //       });
 
-        conn.on("disconnect", () => {
-          setConnection(null);
-          setIncoming(null);
-        });
+  //       conn.on("disconnect", () => {
+  //         setConnection(null);
+  //         setIncoming(null);
+  //       });
 
-        conn.on("cancel", () => {
-          setIncoming(null);
-          setConnection(null);
-        });
+  //       conn.on("cancel", () => {
+  //         setIncoming(null);
+  //         setConnection(null);
+  //       });
 
-        conn.on("reject", () => {
-          setIncoming(null);
-          setConnection(null);
-        });
-      });
+  //       conn.on("reject", () => {
+  //         setIncoming(null);
+  //         setConnection(null);
+  //       });
+  //     });
 
-      twilioDevice.register();
-    }
-    setup();
+  //     twilioDevice.register();
+  //   }
+  //   setup();
 
-    // 🔔 Subscribe to backend WS messages (call_ended, call_declined)
-    const handleWsMessage = (ev: MessageEvent) => {
-      let msg: any;
-      try {
-        msg = JSON.parse(ev.data);
-      } catch {
-        return;
-      }
+  //   // 🔔 Subscribe to backend WS messages (call_ended, call_declined)
+  //   const handleWsMessage = (ev: MessageEvent) => {
+  //     let msg: any;
+  //     try {
+  //       msg = JSON.parse(ev.data);
+  //     } catch {
+  //       return;
+  //     }
 
-      if (msg.type === "call_ended") {
-        console.log("📡 WS: call_ended received", msg);
-        setConnection(null);
-        setDialing(null);
-        setIncoming(null);
-      }
+  //     if (msg.type === "call_ended") {
+  //       console.log("📡 WS: call_ended received", msg);
+  //       setConnection(null);
+  //       setDialing(null);
+  //       setIncoming(null);
+  //     }
 
-      if (msg.type === "call_declined") {
-        console.log("📡 WS: call_declined received", msg);
-        setConnection(null);
-        setDialing(null);
-        setIncoming(null);
-      }
-    };
+  //     if (msg.type === "call_declined") {
+  //       console.log("📡 WS: call_declined received", msg);
+  //       setConnection(null);
+  //       setDialing(null);
+  //       setIncoming(null);
+  //     }
+  //   };
 
-    const removeListener = addMessageListener(handleWsMessage);
+  //   const removeListener = addMessageListener(handleWsMessage);
 
-    return () => {
-      // cleanup WS subscription + Twilio device
-      removeListener();
-      deviceRef.current?.destroy();
-    };
-  }, [currentProjectId, addMessageListener]);
+  //   return () => {
+  //     // cleanup WS subscription + Twilio device
+  //     removeListener();
+  //     deviceRef.current?.destroy();
+  //   };
+  // }, [currentProjectId, addMessageListener]);
 
   // outgoing
   const startCall = (to: string) => {

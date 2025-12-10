@@ -21,11 +21,11 @@ export default function GoogleAdsDashboard() {
 
   useEffect(() => {
     registerModules({
-      layout2_topbar: GoogleAdsTopBar,
-      layout2_graph: GoogleAdsPerformanceGraph,
-      layout2_map: GoogleAdsMap,
-      layout2_metrics: GoogleAdsMetrics,
-      // layout1_bottom: BottomModule,
+      layout2_t: GoogleAdsTopBar,
+      layout2_m1: GoogleAdsPerformanceGraph,
+      layout2_m2: GoogleAdsMap,
+      layout2_m3: GoogleAdsMetrics,
+      layout2_b: null,
     });
 
     setLayout(DashboardLayout2);

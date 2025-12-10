@@ -31,8 +31,8 @@ import callRoutes from "./handlers/modules/calls/calls_routes.js";
 import taskRoutes from "./handlers/modules/jobs/tasks_routes.js";
 import employeeRoutes from "./handlers/modules/employees/employees_routes.js";
 import { WebSocketServer } from "ws";
-import { handleTwilioStream } from "./handlers/modules/calls/twilio/twilio.js";
-import { initCallState } from "./handlers/modules/calls/twilio/callState.js";
+import { handleTwilioStream } from "./handlers/modules/calls-old/twilio/twilio.js";
+import { initCallState } from "./handlers/modules/calls-old/twilio/callState.js";
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 import aircallRoutes from "./handlers/webhooks/aircall/aircall_routes.js";
 import updatesRoutes from "./handlers/modules/updates/updates_routes.js";
@@ -112,8 +112,9 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/employees", employeeRoutes);
-app.use("/api/voice", callRoutes);
-app.use("/calls/aircall", aircallRoutes);
+// app.use("/api/voice", callRoutes);
+app.use("/api/calls", callRoutes);
+app.use("/api/calls/aircall", aircallRoutes);
 app.use("/api/updates", updatesRoutes);
 
 // WebSocket

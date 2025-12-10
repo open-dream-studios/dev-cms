@@ -7,25 +7,34 @@ import { getCallDetails, downloadRecordingFile } from "./aircall_api.js";
 import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
 import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
 import { cleanPhone } from "../../../functions/data.js";
-import { sendToDiarizationService } from "../../../services/python/diarization.js";
+import { transcribeAudio } from "../../../services/transcription/scribe.js";
+import { deleteLocalFile } from "../../../util/files.js";
+import { upsertCallFunction } from "../../../handlers/modules/calls/calls_repositories.js";
+import type { PoolConnection } from "mysql2/promise";
+import { getProjectsFunction } from "../../../handlers/projects/projects_repositories.js";
+import { Project } from "@open-dream/shared";
 
 const processedCalls = new Set<number>();
 
-export const handleAircallWebhook = async (req: Request, res: Response) => {
+export const handleAircallWebhook = async (
+  req: Request,
+  res: Response,
+  connection: PoolConnection
+) => {
   try {
     const body = req.body as AircallWebhookRequest;
 
     if (!body || !body.event || !body.data) {
       console.error("❌ Invalid webhook payload");
-      return res.status(400).json({ error: "Invalid payload" });
+      return { success: false, error: "Invalid payload", status: 400 };
     }
 
-    console.log("\n============================");
-    console.log("📞 AIRCALL WEBHOOK RECEIVED");
-    console.log("============================");
-    console.log("Event:", body.event);
-    console.log("Webhook ID:", body.id);
-    console.log("Timestamp:", new Date(body.timestamp * 1000).toISOString());
+    // console.log("\n============================");
+    // console.log("📞 AIRCALL WEBHOOK RECEIVED");
+    // console.log("============================");
+    // console.log("Event:", body.event);
+    // console.log("Webhook ID:", body.id);
+    // console.log("Timestamp:", new Date(body.timestamp * 1000).toISOString());
 
     switch (body.event) {
       case "call.created":
@@ -45,17 +54,17 @@ export const handleAircallWebhook = async (req: Request, res: Response) => {
         break;
 
       case "call.comm_assets_generated":
-        await onRecordingReady(body.data);
+        await onRecordingReady(connection, body.data);
         break;
 
       default:
         console.log("⚠️ Unhandled event type:", body.event);
     }
 
-    return res.status(200).json({ success: true });
+    return { success: true, status: 200 };
   } catch (err) {
     console.error("🔥 Aircall webhook error:", err);
-    return res.status(500).json({ error: "Server error" });
+    return { success: false, error: "Aircall webhook error", status: 500 };
   }
 };
 
@@ -64,18 +73,18 @@ export const handleAircallWebhook = async (req: Request, res: Response) => {
 // ------------------------------------------------------
 
 async function onCallCreated(data: AircallCallData) {
-  console.log("\n📞 CALL CREATED");
-  logCallMeta(data);
+  // console.log("\n📞 CALL CREATED");
+  // logCallMeta(data);
 }
 
 async function onCallAnswered(data: AircallCallData) {
-  console.log("\n📞 CALL ANSWERED");
-  logCallMeta(data);
+  // console.log("\n📞 CALL ANSWERED");
+  // logCallMeta(data);
 }
 
 async function onCallHungup(data: AircallCallData) {
-  console.log("\n📞 CALL HUNG UP");
-  logCallMeta(data);
+  // console.log("\n📞 CALL HUNG UP");
+  // logCallMeta(data);
 }
 
 async function onCallEnded(data: AircallCallData) {
@@ -85,16 +94,16 @@ async function onCallEnded(data: AircallCallData) {
     return;
   }
   processedCalls.add(callId);
-  console.log("\n📞 CALL ENDED (processing once)");
-  logCallMeta(data);
+  // console.log("\n📞 CALL ENDED (processing once)");
+  // logCallMeta(data);
 }
 
-async function onRecordingReady(data: any) {
-  console.log("\n🎧 RECORDING ASSET GENERATED");
-  console.log("RAW RECORDING EVENT DATA:", JSON.stringify(data, null, 2));
+async function onRecordingReady(connection: PoolConnection, data: any) {
+  // console.log("\n🎧 RECORDING ASSET GENERATED");
+  // console.log("RAW RECORDING EVENT DATA:", JSON.stringify(data, null, 2));
 
-  console.log("From:", data.raw_digits);
-  console.log("To (Aircall number):", data.number?.digits);
+  // console.log("From:", data.raw_digits);
+  // console.log("To (Aircall number):", data.number?.digits);
 
   if (
     !data.raw_digits ||
@@ -109,19 +118,38 @@ async function onRecordingReady(data: any) {
   const toNumber = cleanPhone(data.number.digits);
   const fromNumber = cleanPhone(data.raw_digits);
 
-  // use numbers to get project idx
-  const projectId = "PROJ-90959de1e1d";
-  const project_idx = 25;
+  if (!data.direction) return;
+  const searchNumber = data.direction === "inbound" ? toNumber : fromNumber;
 
-  // Aircall sends the direct MP3 URL as `recording`
+  const projects = await getProjectsFunction();
+
+  const project = projects.find((project: Project) => {
+    if (!project.numbers) return false;
+    let numbersArray: string[] | number[] = [];
+    if (Array.isArray(project.numbers)) {
+      numbersArray = project.numbers;
+    } else {
+      try {
+        numbersArray = JSON.parse(project.numbers as any);
+      } catch (err) {
+        console.warn(
+          `⚠️ Failed to parse numbers for project ${project.project_id}`
+        );
+        return false;
+      }
+    }
+    return numbersArray.map(String).includes(searchNumber);
+  });
+
+  if (!project || !project.id || !project.project_id) return;
+  const project_idx = project.id;
+  const projectId = project.project_id;
   const url = data.recording;
 
   if (!url) {
     console.log("⚠️ No recording URL provided in webhook payload");
     return;
   }
-
-  console.log("🎤 Recording URL:", url);
 
   try {
     const audioBuffer = await downloadRecordingFile(url);
@@ -131,7 +159,7 @@ async function onRecordingReady(data: any) {
     );
 
     fs.writeFileSync(filePath, audioBuffer);
-    console.log("✅ Recording downloaded:", filePath);
+    // console.log("✅ Recording downloaded:", filePath);
 
     // HERE I COPIED LOGIC OVER
     const requiredKeys = [
@@ -168,9 +196,41 @@ async function onRecordingReady(data: any) {
       },
       decryptedKeys
     );
-    console.log(uploadResult);
-    const result = await sendToDiarizationService(filePath);
-    console.log(result.segments);
+    // console.log(uploadResult);
+    const transcription = await transcribeAudio(filePath);
+    await deleteLocalFile(filePath);
+    // console.log(result.segments);
+
+    // console.log(toNumber, fromNumber, project_idx, transcription);
+    // console.log("DONE");
+
+    const callInput = {
+      project_idx,
+      call_id: null,
+      aircall_call_id: data.id,
+      call_uuid: data.call_uuid || null,
+      direction: data.direction || "inbound",
+      from_number: fromNumber,
+      to_number: toNumber,
+      started_at: data.started_at ? new Date(data.started_at * 1000) : null,
+      ended_at: data.ended_at ? new Date(data.ended_at * 1000) : null,
+      duration: data.duration || null,
+      status: data.status || "done",
+      agent_id: data.user?.id || null,
+      agent_name: data.user?.name || null,
+      agent_email: data.user?.email || null,
+      hangup_cause: data.hangup_cause || null,
+      recording_url: uploadResult?.Location || null,
+      transcription: transcription || null,
+      aircall_direct_link: data.direct_link || null,
+    };
+
+    // console.log(
+    //   "Prepared call input for upsert:",
+    //   JSON.stringify(callInput, null, 2)
+    // );
+
+    await upsertCallFunction(connection, callInput);
   } catch (err) {
     console.error("🔥 Error downloading recording:", err);
   }

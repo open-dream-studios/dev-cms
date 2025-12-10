@@ -71,7 +71,7 @@ export const DashboardLayout2: LayoutConfig = {
       shapes: [
         {
           shapeId: "top-shape",
-          moduleId: "layout2_topbar",
+          moduleId: "layout2_t",
           overflowHidden: false,
           bg: false,
         },
@@ -84,15 +84,15 @@ export const DashboardLayout2: LayoutConfig = {
       heightRatio: 1,
       layoutHint: { name: "left-2/3-right-stacked" },
       shapes: [
-        { shapeId: "middle-left", moduleId: "layout2_graph" },
+        { shapeId: "middle-left", moduleId: "layout2_m1" },
         {
           shapeId: "middle-right-top",
-          moduleId: "layout2_map",
+          moduleId: "layout2_m2",
           overflowHidden: true,
         },
         {
           shapeId: "middle-right-bottom",
-          moduleId: "layout2_metrics",
+          moduleId: "layout2_m3",
           overflowHidden: true,
         },
       ],
@@ -104,7 +104,7 @@ export const DashboardLayout2: LayoutConfig = {
       fixedHeight: 250,
       heightRatio: 0,
       layoutHint: { name: "full" },
-      shapes: [{ shapeId: "bottom-shape", moduleId: "layout2_bottom" }],
+      shapes: [{ shapeId: "bottom-shape", moduleId: "layout2_b" }],
     },
   ],
 };

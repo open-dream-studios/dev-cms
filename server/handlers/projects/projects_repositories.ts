@@ -16,7 +16,7 @@ export const getGlobalAdminEmails = async (connection: PoolConnection) => {
   return rows.map((r) => r.email);
 };
 
-export const getProjectsFunction = async (
+export const getAssignedProjectsFunction = async (
   userEmail: string
 ): Promise<Project[]> => {
   const q = `
@@ -28,6 +28,15 @@ export const getProjectsFunction = async (
   const [rows] = await db
     .promise()
     .query<(Project & RowDataPacket)[]>(q, [userEmail]);
+  return rows;
+};
+
+export const getProjectsFunction = async (): Promise<Project[]> => {
+  const q = `
+    SELECT p.* 
+    FROM projects p
+  `;
+  const [rows] = await db.promise().query<(Project & RowDataPacket)[]>(q, []);
   return rows;
 };
 
@@ -48,8 +57,15 @@ export const upsertProjectFunction = async (
   connection: PoolConnection,
   reqBody: any
 ) => {
-  const { project_id, name, short_name, domain, backend_domain, brand, logo_media_id } =
-    reqBody;
+  const {
+    project_id,
+    name,
+    short_name,
+    domain,
+    backend_domain,
+    brand,
+    logo_media_id,
+  } = reqBody;
 
   const finalProjectId =
     project_id && project_id.trim() !== ""

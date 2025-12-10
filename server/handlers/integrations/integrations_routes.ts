@@ -1,4 +1,4 @@
-// server/handlers/integrations/integrations_routes.js
+// server/handlers/integrations/integrations_routes.ts
 import express from "express";
 import {
   getIntegrations,

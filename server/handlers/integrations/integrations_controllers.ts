@@ -1,4 +1,4 @@
-// server/handlers/integrations/integrations_controllers.js
+// server/handlers/integrations/integrations_controllers.ts
 import {
   getIntegrationsFunction,
   upsertIntegrationFunction,

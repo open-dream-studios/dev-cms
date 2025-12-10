@@ -1,21 +1,18 @@
 // server/handlers/modules/calls/calls_routes.js
 import express from "express";
-import {
-  handleIncomingCall,
-  tokenHandler,
-  callStatusHandler,
-  declineCallHandler,
-  handleIncomingSMS,
-  handleCode
-} from "./calls_controller.js";
+import { authenticateUser } from "../../../util/auth.js";
+import { errorHandler } from "../../../util/handlerWrappers.js";
+import { getCallsByProject } from "./calls_controllers.js";
+import { checkProjectPermission } from "../../../util/permissions.js";
 
 const router = express.Router();
 
-router.post("/", handleIncomingCall);
-router.post("/token", tokenHandler);
-router.post("/decline", declineCallHandler);
-router.post("/call-status", callStatusHandler);
-router.post("/sms", handleIncomingSMS);
-router.post("/verify-code", handleCode);
+// ---- CALLS ----
+router.post(
+  "/",
+  authenticateUser,
+  checkProjectPermission(3),
+  errorHandler(getCallsByProject)
+);
 
 export default router;

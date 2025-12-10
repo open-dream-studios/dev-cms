@@ -22,7 +22,7 @@ export const DashboardShape: React.FC<Props> = ({ shape, style, className }) => 
             : shape.bg
             ? currentTheme.card_bg_1
             : "transparent",
-        borderRadius: 12,
+        borderRadius: shape.rounded ? shape.rounded : 12,
         minHeight: 24, 
         overflow:
           shape.overflowHidden === undefined

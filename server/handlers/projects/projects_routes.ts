@@ -1,7 +1,7 @@
 // server/handlers/projects/project_routes.js
 import express from "express";
 import {
-  getProjects,
+  getAssignedProjects,
   upsertProject,
   deleteProject,
   getAllUserRoles,
@@ -19,7 +19,7 @@ import {
 const router = express.Router();
 
 // ---- PROJECTS ----
-router.get("/", authenticateUser, errorHandler(getProjects));
+router.get("/", authenticateUser, errorHandler(getAssignedProjects));
 router.post(
   "/upsert",
   authenticateUser,

@@ -7,6 +7,7 @@ import {
   ModuleId,
   LayoutId,
   SectionId,
+  ShapeConfig,
 } from "../types/dashboard";
 
 interface DashboardState {
@@ -14,6 +15,7 @@ interface DashboardState {
   modules: ModuleMap;
   setLayout: (layout: LayoutConfig) => void;
   updateSection: (sectionId: SectionId, patch: Partial<any>) => void;
+  updateShape: (shapeId: ShapeId, patch: Partial<ShapeConfig>) => void;
   setModuleInShape: (shapeId: ShapeId, moduleId: ModuleId | null) => void;
   registerModules: (mods: ModuleMap) => void;
   registerModule: (id: ModuleId, comp: any) => void;
@@ -38,6 +40,19 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     const sections = layout.sections.map((s) =>
       s.sectionId === sectionId ? { ...s, ...patch } : s
     );
+    set({ layout: { ...layout, sections } });
+  },
+
+  updateShape(shapeId, patch) {
+    const layout = get().layout;
+
+    const sections = layout.sections.map((section) => {
+      const shapes = section.shapes.map((shape) =>
+        shape.shapeId === shapeId ? { ...shape, ...patch } : shape
+      );
+      return { ...section, shapes };
+    });
+
     set({ layout: { ...layout, sections } });
   },
 

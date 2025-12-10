@@ -53,10 +53,12 @@ import {
   EmployeeAssignmentInput,
   EmployeeInput,
   ModuleDefinitionTree,
+  ProjectCall,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
 import { useUpdates } from "./queries/updates";
+import { useProjectCalls } from "./queries/calls";
 
 export type QueryContextType = {
   handleThemeChange: () => void;
@@ -218,6 +220,11 @@ export type QueryContextType = {
   addRequest: (payload: Partial<any>) => Promise<void>;
   deleteUpdate: (update_id: string) => Promise<void>;
   toggleComplete: (update_id: string, completed: boolean) => Promise<void>;
+
+  // Calls
+  projectCalls: ProjectCall[];
+  isLoadingProjectCalls: boolean;
+  refetchProjectCalls: () => Promise<any>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -367,6 +374,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     currentProjectId
   );
 
+  const { projectCalls, isLoadingProjectCalls, refetchProjectCalls } =
+    useProjectCalls(isLoggedIn, currentProjectId);
+
   return (
     <QueryContext.Provider
       value={{
@@ -475,6 +485,9 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         addRequest,
         deleteUpdate,
         toggleComplete,
+        projectCalls,
+        isLoadingProjectCalls,
+        refetchProjectCalls,
       }}
     >
       {children}

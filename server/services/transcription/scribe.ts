@@ -5,9 +5,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const API_KEY = process.env.ELEVENLABS_API_KEY!;
-const AUDIO_PATH = "/Users/josephgoff/Downloads/test3.m4a";
+// const AUDIO_PATH = "/Users/josephgoff/Downloads/test3.m4a";
 
-export async function run() {
+export async function transcribeAudio(AUDIO_PATH: string) {
   const form = new FormData();
   form.append("model_id", "scribe_v1");
   form.append("diarize", "true");
@@ -61,16 +61,11 @@ export async function run() {
     chunks.push({ speaker: currentSpeaker, text: currentText });
   }
 
-  // Print chunks
-  console.log(chunks);
-  for (const chunk of chunks) {
-    // console.log(chunk.speaker);
-    // console.log(chunk.text);
-    // console.log();
-  }
+  // console.log(chunks);
+  return chunks
 }
 
-// run();
+// transcribeAudio();
 
 
 

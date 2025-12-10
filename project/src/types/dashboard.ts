@@ -13,7 +13,7 @@ export type LayoutRenderer = (args: {
   widthPx?: number;
 }) => JSX.Element;
 
-export type ModuleComponent = React.ComponentType<any>;
+export type ModuleComponent = React.ComponentType<any> | null;
 
 export interface ShapeConfig {
   shapeId: ShapeId;
@@ -27,6 +27,7 @@ export interface ShapeConfig {
   layoutHint?: string;
   bg?: boolean;
   overflowHidden?: boolean;
+  rounded?: number;
 }
 
 export interface SectionLayoutHint {
