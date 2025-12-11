@@ -1,9 +1,10 @@
 // project/src/modules/CustomersModule/CustomerManager.tsx
-import { useEffect} from "react";
+import { useEffect } from "react";
 import { useDashboardStore } from "@/store/useDashboardStore";
 import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { CustomerInteractionTimeline} from "../TimelineModule/CustomerInteractionTimeline";
+import CustomerInteractionTimeline from "./CustomerInteractions";
+import GoogleCalendar from "../components/Calendar/GoogleCalendar";
 
 export default function CustomerManager() {
   const { projectCalls } = useContextQueries();
@@ -26,6 +27,8 @@ export default function CustomerManager() {
     updateShape("top-shape", { bg: true });
   }, [registerModules, setLayout, updateSection, updateShape]);
   // return <Dashboard minHeight={800} maxHeight={900} gap={0} />;
-  // return <GoogleCalendar />;
-  return <CustomerInteractionTimeline />;
+  return <div className="px-[14px] py-[12px]">
+  <GoogleCalendar />;
+  </div>
+  // return <CustomerInteractionTimeline />;
 }

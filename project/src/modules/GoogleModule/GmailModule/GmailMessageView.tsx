@@ -10,7 +10,7 @@ import DOMPurify from "dompurify";
 import { useGmailActions } from "./useGmailActions";
 import { GmailMessage } from "@open-dream/shared";
 
-const GmailMessageView = ({ m }: { m: GmailMessage }) => {
+const GmailMessageView = () => {
   const {
     selectedId,
     detail,

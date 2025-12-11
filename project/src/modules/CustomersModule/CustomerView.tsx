@@ -23,6 +23,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import CustomerInteractionTimeline from "./CustomerInteractions";
 
 export const CustomerView = () => {
   const { currentUser } = useContext(AuthContext);
@@ -417,6 +418,8 @@ export const CustomerView = () => {
           </button>
         </div>
       </form>
+
+      <CustomerInteractionTimeline />
 
       {currentCustomer && (
         <div className="flex-1 w-[100%] pt-[30px]">

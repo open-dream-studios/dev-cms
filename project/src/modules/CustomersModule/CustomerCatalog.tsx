@@ -18,7 +18,7 @@ const CustomerCatalog = () => {
     <div className="flex w-full h-[100%]">
       <ModuleLeftBar />
       <div className="flex-1">
-        {(addingCustomer) ? <CustomerView /> : <CustomerManager />}
+        {(addingCustomer || currentCustomer) ? <CustomerView /> : <CustomerManager />}
       </div>
     </div>
   );

@@ -47,13 +47,8 @@ const GmailModule: React.FC = () => {
   } = useGmail(selectedGmailTab as GmailRequestType);
   const { data: gmailProfile, isLoading: profileLoading } = useGmailProfile();
   const {
-    selectedId,
-    setSelectedId,
     search,
     setSearch,
-    detail,
-    setDetail,
-    setShowHeaders,
     setIsComposing,
     setIsReplying,
     photoError,
@@ -302,9 +297,7 @@ const GmailModule: React.FC = () => {
           )}
         </div>
       </div>
-      <GmailMessageView
-        m={messages.find((message) => message.id === selectedId)}
-      />
+      <GmailMessageView />
     </div>
   );
 };
@@ -336,14 +329,12 @@ export const GmailMiniCardStack = ({
 export const GmailMiniCard = ({
   m,
   isSelected,
-  onClick,
 }: {
   m: GmailMessage;
   isSelected?: boolean;
-  onClick?: () => void;
 }) => {
   const currentTheme = useCurrentTheme();
-  const { selectedId } = useGmailStore();
+  const { handleEmailClick } = useGmailActions();
 
   const from = getHeader(m, "From");
   const subject = getHeader(m, "Subject");
@@ -367,7 +358,7 @@ export const GmailMiniCard = ({
           : `0.5px solid ${currentTheme.background_3}`,
       }}
       className={`cursor-pointer hover:brightness-80 dim px-4 py-2 rounded-xl`}
-      onClick={onClick}
+      onClick={() => handleEmailClick(m)}
     >
       <div className="flex items-center justify-between gap-4 w-full">
         <div className="flex-1 min-w-0 flex flex-col gap-1">

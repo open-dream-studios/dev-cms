@@ -42,7 +42,7 @@ const CustomerMiniCard = ({
         color:
           currentUser?.theme === "dark"
             ? currentTheme.background_2
-            : currentTheme.text_4,
+            : currentTheme.text_3,
       }));
 
     const nameFirst = highlight(
@@ -86,7 +86,7 @@ const CustomerMiniCard = ({
           currentCustomer.customer_id === customer.customer_id
             ? "rgba(255,255,255,0.057)"
             : "rgba(255,255,255,0.028)",
-        color: currentTheme.text_4,
+        color: currentTheme.text_3,
       }}
       className="w-full h-[70px] pl-[14px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 
             dim hover:brightness-[85%] transition cursor-pointer shadow-sm"
