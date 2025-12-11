@@ -27,6 +27,7 @@ export async function generateGoogleRefreshToken() {
     "https://www.googleapis.com/auth/adwords",
     "https://www.googleapis.com/auth/userinfo.profile",
     "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/calendar"
   ];
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: "offline",

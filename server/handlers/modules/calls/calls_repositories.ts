@@ -6,6 +6,7 @@ import type {
   PoolConnection,
   ResultSetHeader,
 } from "mysql2/promise";
+import { signCallRecordings } from "../../../handlers/private/media.js";
 
 // ---------- CALL FUNCTIONS ----------
 export const getCallsByProjectFunction = async (
@@ -20,7 +21,8 @@ export const getCallsByProjectFunction = async (
   const [rows] = await db
     .promise()
     .query<(ProjectCall & RowDataPacket)[]>(q, [project_idx]);
-  return rows;
+
+  return await signCallRecordings(project_idx, rows);
 };
 
 export const upsertCallFunction = async (

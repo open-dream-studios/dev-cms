@@ -199,6 +199,81 @@ export const run = async ({
       return { success: true };
     }
 
+    if (requestType === "GET_EMAILS_BY_ADDRESS") {
+      const targetEmail: string = body.targetEmail;
+      const pageSize: number = body.pageSize ?? 50;
+
+      if (!targetEmail)
+        return { success: false, error: "targetEmail is required" };
+
+      const gmail = await getGmailClient(
+        GOOGLE_CLIENT_SECRET_OBJECT,
+        GOOGLE_REFRESH_TOKEN_OBJECT
+      );
+
+      // ------------------------
+      // Fetch last 50 emails from that address
+      // ------------------------
+      const inboxRes = await gmail.users.messages.list({
+        userId: "me",
+        labelIds: ["INBOX"],
+        q: `from:${targetEmail}`,
+        maxResults: pageSize,
+      });
+
+      const inboxMessages = inboxRes.data.messages || [];
+
+      // ------------------------
+      // Fetch all emails sent to that address
+      // ------------------------
+      const sentRes = await gmail.users.messages.list({
+        userId: "me",
+        labelIds: ["SENT"],
+        q: `to:${targetEmail}`,
+        maxResults: pageSize, // optional limit, you can remove for all
+      });
+
+      const sentMessages = sentRes.data.messages || [];
+
+      // Fetch metadata for all messages (both inbox and sent)
+      const fetchDetails = async (messages: any[]) => {
+        return Promise.all(
+          messages.map(async (m) => {
+            const data = await gmail.users.messages.get({
+              userId: "me",
+              id: m.id!,
+              format: "metadata",
+            });
+
+            const headers = (data.data.payload?.headers || []).reduce<
+              Record<string, string>
+            >((acc, h) => {
+              if (h.name) acc[h.name] = h.value ?? "";
+              return acc;
+            }, {});
+
+            return {
+              id: m.id!,
+              threadId: data.data.threadId,
+              snippet: data.data.snippet,
+              internalDate: data.data.internalDate,
+              labelIds: data.data.labelIds || [],
+              headers,
+            };
+          })
+        );
+      };
+
+      const inboxDetailed = await fetchDetails(inboxMessages);
+      const sentDetailed = await fetchDetails(sentMessages);
+
+      return {
+        success: true,
+        inbox: inboxDetailed,
+        sent: sentDetailed,
+      };
+    }
+
     // ----------------------------
     // GET PAGINATED LIST (INBOX, SENT, etc.)
     // ----------------------------

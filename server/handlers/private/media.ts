@@ -75,6 +75,60 @@ export const getSignedMediaUrl = async (
   );
 };
 
+export const signCallRecordings = async (project_idx: number, rows: any[]) => {
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    project_idx,
+    [
+      "AWS_S3_MEDIA_BUCKET",
+      "AWS_REGION",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+    ],
+    []
+  );
+
+  if (
+    !decryptedKeys ||
+    !decryptedKeys.AWS_S3_MEDIA_BUCKET ||
+    !decryptedKeys.AWS_REGION ||
+    !decryptedKeys.AWS_ACCESS_KEY_ID ||
+    !decryptedKeys.AWS_SECRET_ACCESS_KEY
+  ) return rows;
+
+  const bucket = decryptedKeys.AWS_S3_MEDIA_BUCKET;
+
+  for (const call of rows) {
+    if (!call.recording_url) continue;
+
+    let s3Key: string | null = null;
+
+    // Case 1: s3://bucket/key
+    if (call.recording_url.startsWith("s3://")) {
+      s3Key = call.recording_url.replace(`s3://${bucket}/`, "");
+    }
+
+    // Case 2: https://bucket.s3.region.amazonaws.com/key
+    else if (
+      call.recording_url.includes(`${bucket}.s3.`)
+    ) {
+      const url = new URL(call.recording_url);
+      s3Key = url.pathname.substring(1); // remove leading slash
+    }
+
+    if (!s3Key) continue;
+
+    call.signed_recording_url = await getSignedS3Url(
+      s3Key,
+      bucket,
+      decryptedKeys.AWS_REGION,
+      decryptedKeys.AWS_ACCESS_KEY_ID,
+      decryptedKeys.AWS_SECRET_ACCESS_KEY
+    );
+  }
+
+  return rows;
+};
+
 export async function rotateImageFromUrl(
   project_idx: number,
   imageUrl: string,
