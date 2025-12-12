@@ -19,8 +19,7 @@ export async function handleLogView(req: any, res: any) {
     }
     // Extract IP
     const ip = getIp(req);
-
-    console.log(ip);
+    console.log(ip);  
 
     // Insert into MySQL
     // const insertQuery = `
