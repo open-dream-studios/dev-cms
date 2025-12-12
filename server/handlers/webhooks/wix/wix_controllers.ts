@@ -15,7 +15,7 @@ export async function handleLogView(req: any, res: any) {
     const { url, referrer, userAgent, timestamp } = req.body;
 
     if (!url || !timestamp) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return { success: false };
     }
     // Extract IP
     const ip = getIp(req);
@@ -33,9 +33,9 @@ export async function handleLogView(req: any, res: any) {
 
     // await db.promise().query(insertQuery, values);
 
-    res.json({ success: true });
+    return { success: true };
   } catch (err) {
     console.error("❌ Error handling Wix log:", err);
-    res.status(500).json({ error: "Server error processing log" });
+    return { success: false };
   }
 }
