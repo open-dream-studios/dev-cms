@@ -92,7 +92,6 @@ app.use((req, res, next) => {
   console.log("🔍 ORIGIN:", req.headers.origin);
   next();
 });
-
 app.use(
   cors({
     origin: function (origin, callback) {
