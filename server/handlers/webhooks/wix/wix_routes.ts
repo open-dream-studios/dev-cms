@@ -5,7 +5,6 @@ import { transactionHandler } from "../../../util/handlerWrappers.js";
 
 const router = Router();
 
-// Wix visitor tracking
 router.post("/log", transactionHandler(handleLogView));
 
 export default router;

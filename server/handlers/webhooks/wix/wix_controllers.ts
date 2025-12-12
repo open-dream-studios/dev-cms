@@ -1,40 +1,24 @@
-// server/handlers/webhooks/wix/wix_controllers.ts
-import { db } from "../../../connection/connect.js";
+// server/handlers/webhooks/wix/wix_controllers.js
+import { PoolConnection } from "mysql2/promise";
+import { trackIp } from "./wix_traffic_tracker.js";
 
-// Helper for IP extraction
 function getIp(req: any) {
   const forwarded = req.headers["x-forwarded-for"];
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-  return req.ip || req.connection.remoteAddress || null;
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return req.ip || req.socket?.remoteAddress || null;
 }
 
-export async function handleLogView(req: any, res: any) {
+export const handleLogView = async (
+  req: any,
+  res: any,
+  connection: PoolConnection
+) => {
   try {
-    const { url, referrer, userAgent, timestamp } = req.body;
-
-    if (!url || !timestamp) {
-      return { success: false };
-    }
-    // Extract IP
     const ip = getIp(req);
-    console.log(ip);  
-
-    // Insert into MySQL
-    // const insertQuery = `
-    //   INSERT INTO wix_traffic_logs
-    //   (url, referrer, user_agent, ip_address, timestamp)
-    //   VALUES (?, ?, ?, ?, FROM_UNIXTIME(? / 1000))
-    // `;
-
-    // const values = [url, referrer || "", userAgent || "", ip || "", ts];
-
-    // await db.promise().query(insertQuery, values);
-
+    trackIp(ip);
     return { success: true };
   } catch (err) {
-    console.error("❌ Error handling Wix log:", err);
+    console.error("❌ Error in handleLogView:", err);
     return { success: false };
   }
-}
+};

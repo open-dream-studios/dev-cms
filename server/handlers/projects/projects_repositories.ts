@@ -1,4 +1,4 @@
-// server/handlers/projects/projects_repositories.js
+// server/handlers/projects/projects_repositories.ts
 import { db } from "../../connection/connect.js";
 import { adminEmail } from "../../util/roles.js";
 import type {

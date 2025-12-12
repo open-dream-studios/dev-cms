@@ -88,10 +88,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use((req, res, next) => {
-  console.log("🔍 ORIGIN:", req.headers.origin);
-  next();
-});
 app.use(
   cors({
     origin: function (origin, callback) {

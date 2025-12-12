@@ -1,4 +1,4 @@
-// server/handlers/projects/project_controllers.js
+// server/handlers/projects/project_controllers.ts
 import {
   deleteProjectFunction,
   deleteProjectUserFunction,

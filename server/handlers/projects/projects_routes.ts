@@ -1,4 +1,4 @@
-// server/handlers/projects/project_routes.js
+// server/handlers/projects/project_routes.ts
 import express from "express";
 import {
   getAssignedProjects,
