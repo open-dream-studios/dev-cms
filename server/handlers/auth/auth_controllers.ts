@@ -50,7 +50,11 @@ export const login = async (
 ) => {
   const { email, password } = req.body;
   if (!email || !password)
-    return { success: "false", message: "Missing required fields" };
+    return {
+      status: 400,
+      success: "false",
+      message: "Missing required fields",
+    };
   return await loginFunction(connection, req.body);
 };
 

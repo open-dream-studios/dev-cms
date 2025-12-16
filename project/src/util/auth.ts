@@ -1,5 +1,5 @@
 import axios from "axios";
-import { auth, provider, signInWithPopup } from "./firebase"; 
+import { auth, provider, signInWithPopup } from "./firebase";
 import { toast } from "react-toastify";
 import { makeRequest } from "./axios";
 
@@ -19,9 +19,11 @@ export type RegisterInputs = {
 
 export const login = async (inputs: LoginInputs) => {
   try {
-    const res = await axios.post("/api/auth/login", inputs, {
-      withCredentials: true,
-    });
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`,
+      inputs,
+      { withCredentials: true }
+    );
     const success = res.status === 200;
     if (!success) {
       toast.error(res.data.message);
@@ -46,9 +48,11 @@ export const logout = async () => {
 
 export const register = async (inputs: RegisterInputs) => {
   try {
-    const res = await axios.post("/api/auth/register", inputs, {
-      withCredentials: true,
-    });
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`,
+      inputs,
+      { withCredentials: true }
+    );
     const success = res.status === 200;
     if (!success) {
       toast.error(res.data.message);

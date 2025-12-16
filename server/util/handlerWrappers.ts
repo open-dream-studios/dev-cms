@@ -22,7 +22,10 @@ export const errorHandler = (fn: ControllerFn) => {
     const functionName = fn.name || "anonymous";
     try {
       const result = await fn(req, res, next);
-      if (result !== undefined) res.json(result);
+      if (result !== undefined) {
+        const { status = 200, ...rest } = result;
+        res.status(status).json(rest);
+      }
     } catch (err: any) {
       console.error(`❌ Error in ${functionName}:`, err.message);
       console.error(err.stack);
@@ -42,9 +45,12 @@ export const transactionHandler = (fn: TransactionFn) => {
       await connection.beginTransaction();
       const result = await fn(req, res, connection);
       await connection.commit();
-
-      if (result?.cookies) {
-        result.cookies.forEach(
+      if (!result) {
+        return res.sendStatus(204);
+      }
+      const { status = 200, cookies, ...body } = result;
+      if (cookies) {
+        cookies.forEach(
           ({
             name,
             value,
@@ -58,9 +64,7 @@ export const transactionHandler = (fn: TransactionFn) => {
           }
         );
       }
-      const { cookies, ...body } = result || {};
-
-      return res.json(body);
+      return res.status(status).json(body);
     } catch (err: any) {
       await connection.rollback();
       console.error(`❌ Transaction failed in ${functionName}:`, err.message);
@@ -81,9 +85,7 @@ export async function internalTransaction<T>(
   const connection = await db.promise().getConnection();
   try {
     await connection.beginTransaction();
-
     const result = await fn(connection);
-
     await connection.commit();
     return result;
   } catch (err) {

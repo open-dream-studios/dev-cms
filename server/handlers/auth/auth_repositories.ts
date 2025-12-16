@@ -88,7 +88,7 @@ export const googleAuthFunction = async (
             secure: true,
             sameSite: "none",
             path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000, 
+            maxAge: 7 * 24 * 60 * 60 * 1000,
           },
         },
       ],
@@ -123,7 +123,7 @@ export const googleAuthFunction = async (
             secure: true,
             sameSite: "none",
             path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000, 
+            maxAge: 7 * 24 * 60 * 60 * 1000,
           },
         },
       ],
@@ -140,6 +140,7 @@ export const registerFunction = async (
   const validEmails = await getValidEmails(connection);
   if (!validEmails.includes(email)) {
     return {
+      status: 401,
       success: "false",
       message: "Unauthorized gmail, please ask host for permission",
     };
@@ -172,6 +173,7 @@ export const registerFunction = async (
     );
     return {
       message: "Registration successful",
+      status: 200,
       cookies: [
         {
           name: "accessToken",
@@ -181,7 +183,7 @@ export const registerFunction = async (
             secure: true,
             sameSite: "none",
             path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000, 
+            maxAge: 7 * 24 * 60 * 60 * 1000,
           },
         },
       ],
@@ -198,6 +200,7 @@ export const loginFunction = async (
   const validEmails = await getValidEmails(connection);
   if (!validEmails.includes(email)) {
     return {
+      status: 401,
       success: false,
       message: "Unauthorized email, please ask host for permission",
     };
@@ -205,6 +208,7 @@ export const loginFunction = async (
   const user = await getUserFunction(connection, email);
   if (!user)
     return {
+      status: 401,
       success: false,
       message: "Login failed",
     };
@@ -222,8 +226,9 @@ export const loginFunction = async (
   const checkPassword = bcrypt.compareSync(password, user.password);
   if (!checkPassword) {
     return {
+      status: 401,
       success: false,
-      message: "Login failed",
+      message: "This password or username is incorrect",
     };
   }
 
@@ -237,6 +242,7 @@ export const loginFunction = async (
 
   return {
     message: "Login successful",
+    status: 200,
     cookies: [
       {
         name: "accessToken",
@@ -246,7 +252,7 @@ export const loginFunction = async (
           secure: true,
           sameSite: "none",
           path: "/",
-          maxAge: 7 * 24 * 60 * 60 * 1000, 
+          maxAge: 7 * 24 * 60 * 60 * 1000,
         },
       },
     ],

@@ -645,11 +645,11 @@ const Login = () => {
           try {
             setContinueDisabled(true);
             const success = await register(inputs);
-            setModal1({
-              ...modal1,
-              open: false,
-            });
             if (success) {
+              setModal1({
+                ...modal1,
+                open: false,
+              });
               router.push("/");
               window.location.href = "/";
             }
@@ -669,11 +669,11 @@ const Login = () => {
           try {
             setContinueDisabled(true);
             const success = await login(inputs);
-            setModal1({
-              ...modal1,
-              open: false,
-            });
             if (success) {
+              setModal1({
+                ...modal1,
+                open: false,
+              });
               router.push("/");
               window.location.href = "/";
             }
