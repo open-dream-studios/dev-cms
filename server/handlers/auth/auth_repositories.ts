@@ -57,12 +57,14 @@ export const googleAuthFunction = async (
   const validEmails = await getValidEmails(connection);
   if (!validEmails.includes(email))
     return {
+      status: 401,
       success: "false",
       message: "Unauthorized gmail, please ask host for permission",
     };
 
   if (!email)
     return {
+      status: 401,
       success: "false",
       message: "Gmail auth error, please contact host",
     };
@@ -78,6 +80,7 @@ export const googleAuthFunction = async (
       { expiresIn: "7d" }
     );
     return {
+      status: 200,
       message: "Google login successful",
       cookies: [
         {
@@ -113,6 +116,7 @@ export const googleAuthFunction = async (
       { expiresIn: "7d" }
     );
     return {
+      status: 200,
       message: "Google login successful",
       cookies: [
         {
@@ -146,7 +150,8 @@ export const registerFunction = async (
     };
   }
   const user = await getUserFunction(connection, email);
-  if (user) return { success: false, message: "User already exists!" };
+  if (user)
+    return { status: 400, success: false, message: "User already exists!" };
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync(password, salt);
   const newUserId = await createUniqueUserId(connection);
@@ -214,13 +219,25 @@ export const loginFunction = async (
     };
 
   if (user.auth_provider === "google") {
-    return { success: false, message: "Please log in using Google" };
+    return {
+      status: 401,
+      success: false,
+      message: "Please log in using Google",
+    };
   }
   if (user.auth_provider === "facebook") {
-    return { success: false, message: "Please log in using Facebook" };
+    return {
+      status: 401,
+      success: false,
+      message: "Please log in using Facebook",
+    };
   }
   if (user.auth_provider === "discord") {
-    return { success: false, message: "Please log in using Discord" };
+    return {
+      status: 401,
+      success: false,
+      message: "Please log in using Discord",
+    };
   }
 
   const checkPassword = bcrypt.compareSync(password, user.password);
@@ -268,7 +285,7 @@ export const sendCodeFunction = async (
 
   const user = await getUserFunction(connection, email);
   if (!user || user.auth_provider !== "local") {
-    return { success: false, message: "Send code failed" };
+    return { status: 400, success: false, message: "Send code failed" };
   }
 
   const currentTime = new Date().toISOString().slice(0, 19).replace("T", " ");
@@ -285,13 +302,17 @@ export const sendCodeFunction = async (
         subject: "Password Reset Code",
         text: `Your password reset code is: ${resetCode}`,
       });
-      return { success: true, message: "Email sent successfully" };
+      return { status: 200, success: true, message: "Email sent successfully" };
     } catch (error) {
       console.error("SendGrid error:", error);
-      return { success: false, message: "SendGrid failed to send email" };
+      return {
+        status: 500,
+        success: false,
+        message: "SendGrid failed to send email",
+      };
     }
   } else {
-    return { success: false, message: "Send code failed" };
+    return { status: 500, success: false, message: "Send code failed" };
   }
 };
 
@@ -303,6 +324,7 @@ export const checkCodeFunction = async (
   const user = await getUserFunction(connection, email);
   if (!user || user.auth_provider !== "local") {
     return {
+      status: 400,
       success: false,
       message: "Check code failed",
     };
@@ -327,12 +349,14 @@ export const checkCodeFunction = async (
         }
       );
       return {
+        status: 200,
         success: true,
         accessToken: token,
         message: "Reset code matched and is not expired",
       };
     } else {
       return {
+        status: 401,
         success: false,
         message:
           "Reset code is more than 1 hour old and has expired, please try again",
@@ -340,6 +364,7 @@ export const checkCodeFunction = async (
     }
   } else {
     return {
+      status: 401,
       success: false,
       message: "Check code failed",
     };
@@ -351,11 +376,12 @@ export const passwordResetFunction = async (
   reqBody: any
 ) => {
   const { email, password, accessToken } = reqBody;
-  if (!accessToken) return { success: false, message: "Password reset failed" };
+  if (!accessToken)
+    return { status: 401, success: false, message: "Password reset failed" };
 
   const user = await getUserFunction(connection, email);
   if (!user || user.auth_provider !== "local") {
-    return { success: false, message: "Password reset failed" };
+    return { status: 401, success: false, message: "Password reset failed" };
   }
 
   const decoded = jwt.verify(
@@ -363,7 +389,7 @@ export const passwordResetFunction = async (
     process.env.JWT_SECRET!
   ) as jwt.JwtPayload;
   if (decoded.email !== email && decoded.user_id !== user.user_id) {
-    return { success: false, message: "Password reset failed" };
+    return { status: 401, success: false, message: "Password reset failed" };
   }
 
   const q = "UPDATE users SET `password`=? WHERE user_id=?";
@@ -373,8 +399,12 @@ export const passwordResetFunction = async (
   const [result] = await connection.query<ResultSetHeader>(q, values);
 
   if (result.affectedRows > 0) {
-    return { success: true, message: "User password updated" };
+    return { status: 200, success: true, message: "User password updated" };
   } else {
-    return { success: false, message: "Error updating user password" };
+    return {
+      status: 500,
+      success: false,
+      message: "Error updating user password",
+    };
   }
 };
