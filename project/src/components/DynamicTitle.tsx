@@ -1,13 +1,47 @@
+//  // project/src/components/DynamicTitle.tsx
+// "use client";
+// import { useEffect } from "react";
+// import { useEnvironmentStore } from "@/store/useEnvironmentStore";
+// import appDetails from "../util/appDetails.json"
+
+// export default function DynamicTitle() {
+//   const { domain } = useEnvironmentStore();
+//   let landing_logo = appDetails.default_logo;
+//   let landing_title = appDetails.default_title;
+//   const foundProject = appDetails.projects.find(
+//     (item) => item.domain === domain
+//   );
+//   if (foundProject) {
+//     landing_logo = foundProject.landing_logo;
+//     landing_title = foundProject.landing_title;
+//   }
+
+//   useEffect(() => {
+//     document.title = landing_title;
+//     const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+//     if (favicon) {
+//       favicon.href = landing_logo || "/favicon.ico";
+//     }
+//   }, [domain, landing_logo, landing_title]);
+
+//   return null;
+// }
+
 // project/src/components/DynamicTitle.tsx
 "use client";
-import { useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { Media } from "@open-dream/shared";
+import { useEnvironmentStore } from "@/store/useEnvironmentStore";
+import appDetails from "../util/appDetails.json";
+import { AuthContext } from "@/contexts/authContext";
 
 export default function DynamicTitle() {
   const { currentProjectId } = useCurrentDataStore();
   const { projectsData, media } = useContextQueries();
+  const { domain } = useEnvironmentStore();
+  const { currentUser } = useContext(AuthContext)
 
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
@@ -24,17 +58,36 @@ export default function DynamicTitle() {
   }, [currentProject, media]);
 
   useEffect(() => {
-    if (currentProject) {
-      document.title = `${currentProject.name}`;
-    } else {
-      document.title = "Project CMS";
+    let landing_logo = appDetails.default_logo;
+    let landing_title = appDetails.default_title;
+    const foundProject = appDetails.projects.find(
+      (item) => item.domain === domain
+    );
+    if (foundProject) {
+      landing_logo = foundProject.landing_logo;
+      landing_title = foundProject.landing_title
     }
 
-    const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
-    if (favicon) {
-      favicon.href = currentLogo || "/favicon.ico";
+    if (currentProject) {
+      document.title = currentProject.name;
+    } else {
+      document.title = landing_title;
     }
-  }, [currentProject, currentLogo]);
+
+    let favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+
+    if (!favicon) {
+      favicon = document.createElement("link");
+      favicon.rel = "icon";
+      document.head.appendChild(favicon);
+    }
+
+    if (currentUser) {
+      favicon.href = currentLogo || "./favicon.ico"
+    } else {
+      favicon.href = landing_logo;
+    }
+  }, [currentProject, currentLogo, currentUser, domain]);
 
   return null;
 }

@@ -64,7 +64,7 @@ export const googleAuthFunction = async (
   if (!email)
     return {
       success: "false",
-      message: "Unauthorized gmail, please ask host for permission",
+      message: "Gmail auth error, please contact host",
     };
   const user = await getUserFunction(connection, email);
 
@@ -101,6 +101,7 @@ export const googleAuthFunction = async (
     (user_id, email, first_name, last_name, profile_img_src, auth_provider)
     VALUES (?)
   `;
+  console.log(email, first_name)
   const values = [newUserId, email, first_name, last_name, picture, "google"];
   const [result] = await connection.query<ResultSetHeader>(insertQuery, [
     values,
@@ -136,7 +137,6 @@ export const registerFunction = async (
   reqBody: any
 ) => {
   const { email, password, first_name, last_name } = reqBody;
-
   const validEmails = await getValidEmails(connection);
   if (!validEmails.includes(email)) {
     return {
@@ -171,7 +171,7 @@ export const registerFunction = async (
       }
     );
     return {
-      message: "Google login successful",
+      message: "Registration successful",
       cookies: [
         {
           name: "accessToken",

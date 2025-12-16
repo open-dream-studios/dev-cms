@@ -1,6 +1,5 @@
 import axios from "axios";
-import { auth, provider, signInWithPopup } from "./firebase";
-import { showToast } from "@/components/CustomToast";
+import { auth, provider, signInWithPopup } from "./firebase"; 
 import { toast } from "react-toastify";
 import { makeRequest } from "./axios";
 
@@ -23,9 +22,13 @@ export const login = async (inputs: LoginInputs) => {
     const res = await axios.post("/api/auth/login", inputs, {
       withCredentials: true,
     });
-    return res.status === 200;
+    const success = res.status === 200;
+    if (!success) {
+      toast.error(res.data.message);
+    }
+    return success;
   } catch (err) {
-    toast.error("Unauthorized user");
+    toast.error("Login failed");
     console.error("Login failed", err);
     return false;
   }
@@ -46,9 +49,13 @@ export const register = async (inputs: RegisterInputs) => {
     const res = await axios.post("/api/auth/register", inputs, {
       withCredentials: true,
     });
-    return res.status === 200;
+    const success = res.status === 200;
+    if (!success) {
+      toast.error(res.data.message);
+    }
+    return success;
   } catch (err) {
-    toast.error("Unauthorized user");
+    toast.error("Registration failed");
     console.error("Registration failed", err);
     return false;
   }
@@ -71,10 +78,14 @@ export const googleSignIn = async () => {
         withCredentials: true,
       }
     );
-    return res.status === 200;
+    const success = res.status === 200;
+    if (!success) {
+      toast.error(res.data.message);
+    }
+    return success;
   } catch (error) {
-    toast.error("Unauthorized user");
-    console.error("Login Error:", error);
+    toast.error("Google auth failed");
+    console.error("Google auth failed:", error);
     return false;
   }
 };

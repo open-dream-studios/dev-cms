@@ -53,6 +53,8 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const { init, initialized } = useEnvironmentStore();
+
   const setLeftBarOpen = useLeftBarOpenStore(
     (state: any) => state.setLeftBarOpen
   );
@@ -75,6 +77,13 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
     }
   }, [router, currentUser, isLoadingCurrentUserData, pathname]);
 
+  useEffect(() => {
+    if (!initialized) {
+      init(window.location.hostname);
+    }
+  }, [initialized, init]);
+  if (!initialized) return null;
+
   if (isLoadingCurrentUserData) return null;
   if (!currentUser && pathname !== "/") return null;
 
@@ -89,16 +98,6 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
 };
 
 const UnprotectedLayout = () => {
-  const { init, initialized } = useEnvironmentStore();
-
-  useEffect(() => {
-    if (!initialized) {
-      init(window.location.hostname);
-    }
-  }, [initialized, init]);
-
-  if (!initialized) return null;
-
   return (
     <>
       <Modals landing={true} />

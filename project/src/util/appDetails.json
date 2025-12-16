@@ -4,7 +4,7 @@
   "left_bar_width": "150px + 6vw",
   "nav_height": 70,
   "default_color": "#451D65",
-  "default_title": "Project CMS",
+  "default_title": "CMS",
   "default_logo": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/logo.png",
   "default_hero": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img4.jpg",
   "default_slides": [
@@ -15,8 +15,7 @@
   "projects": [
     {
       "brand": "TSA",
-      "domain": "localhost",
-      "domain2": "tannyspaacquisitions.shop",
+      "domain": "tannyspaacquisitions.shop",
       "app_color": "#50A1CD",
       "landing_title": "TSA Portal",
       "landing_logo": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/projects/tsa/logo.png",
