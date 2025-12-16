@@ -89,6 +89,7 @@ export const googleAuthFunction = async (
             sameSite: "none",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
+            domain: ".tannyspaacquisitions.shop",
           },
         },
       ],
@@ -101,7 +102,7 @@ export const googleAuthFunction = async (
     (user_id, email, first_name, last_name, profile_img_src, auth_provider)
     VALUES (?)
   `;
-  console.log(email, first_name)
+  console.log(email, first_name);
   const values = [newUserId, email, first_name, last_name, picture, "google"];
   const [result] = await connection.query<ResultSetHeader>(insertQuery, [
     values,
@@ -124,6 +125,7 @@ export const googleAuthFunction = async (
             sameSite: "none",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
+            domain: ".tannyspaacquisitions.shop",
           },
         },
       ],
@@ -182,6 +184,7 @@ export const registerFunction = async (
             sameSite: "none",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
+            domain: ".tannyspaacquisitions.shop",
           },
         },
       ],
@@ -247,6 +250,7 @@ export const loginFunction = async (
           sameSite: "none",
           path: "/",
           maxAge: 7 * 24 * 60 * 60 * 1000,
+          domain: ".tannyspaacquisitions.shop",
         },
       },
     ],
