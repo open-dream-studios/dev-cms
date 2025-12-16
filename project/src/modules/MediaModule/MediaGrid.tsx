@@ -25,7 +25,7 @@ import { useDnDStore } from "@/store/useDnDStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import RenderedImage from "../components/ProductCard/RenderedImage";
 import MediaPlayer from "./MediaPlayer";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentMediaItemsSelected, setCurrentMediaSelected, useCurrentDataStore } from "@/store/currentDataStore";
 import { GrRotateRight } from "react-icons/gr";
 
 type SortableMediaItemProps = {
@@ -58,9 +58,7 @@ function SortableMediaItem({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const {
-    setCurrentMediaSelected,
     currentMediaItemsSelected,
-    setCurrentMediaItemsSelected,
   } = useCurrentDataStore();
   const { handleDeleteMedia, handleRotateMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);

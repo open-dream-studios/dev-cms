@@ -1,14 +1,13 @@
 // project/src/modules/GoogleModule/GmailModule/GmailMessage.tsx
 import React from "react";
 import EmailComposer from "./EmailComposer";
-import { useGmailStore } from "./_store/useGmailStore";
+import { useGmailUIStore } from "./_gmailStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate, getHeader, IconButton } from "./GmailHelpers";
 import { SkeletonLine } from "@/lib/skeletons/Skeletons";
 import DOMPurify from "dompurify";
-import { useGmailActions } from "./useGmailActions";
-import { GmailMessage } from "@open-dream/shared";
+import { useGmailActions } from "./useGmailActions"; 
 
 const GmailMessageView = () => {
   const {
@@ -20,7 +19,7 @@ const GmailMessageView = () => {
     setIsComposing,
     isReplying,
     setIsReplying,
-  } = useGmailStore();
+  } = useGmailUIStore();
   const currentTheme = useCurrentTheme();
   const { sendEmail, replyToEmail } = useGmailActions();
 

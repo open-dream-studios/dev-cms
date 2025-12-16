@@ -35,7 +35,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "@/contexts/authContext";
 import { FaPlus } from "react-icons/fa6";
 import Divider from "@/lib/blocks/Divider";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentActiveFolder, setCurrentOpenFolders, useCurrentDataStore } from "@/store/currentDataStore";
 import { motion } from "framer-motion";
 import { useDnDStore } from "@/store/useDnDStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
@@ -63,9 +63,7 @@ export default function MediaFoldersSidebar() {
   const {
     currentProjectId,
     currentActiveFolder,
-    setCurrentActiveFolder,
     currentOpenFolders,
-    setCurrentOpenFolders,
   } = useCurrentDataStore();
 
   const sensors = useSensors(useSensor(PointerSensor));

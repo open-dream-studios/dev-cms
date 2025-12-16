@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { Product } from "@open-dream/shared";
 import { RefObject } from "react";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setLocalProductsData } from "@/store/currentDataStore";
 
 export function useProducts(
   isLoggedIn: boolean,
@@ -11,7 +11,6 @@ export function useProducts(
   isOptimisticUpdate: RefObject<boolean>
 ) {
   const queryClient = useQueryClient();
-  const { setLocalProductsData } = useCurrentDataStore();
 
   const {
     data: productsData,

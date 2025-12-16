@@ -9,8 +9,8 @@ import {
 import { ProjectPage, Section } from "@open-dream/shared";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
+import { setCurrentPageData, setCurrentSectionData, useCurrentDataStore } from "@/store/currentDataStore";
+import { setSiteWindowKey, useUiStore } from "@/store/useUIStore";
 import {
   SectionFormData,
   SectionSchema,
@@ -28,14 +28,9 @@ export function usePageForm(page?: ProjectPage | null) {
 
 export function usePageFormSubmit() {
   const { upsertProjectPage, projectPages } = useContextQueries();
-  const {
-    setAddingPage,
-    setEditingPage,
-    setSiteWindowKey,
-    editingPage,
-    addingPage,
-  } = useUiStore();
-  const { currentProjectId, currentPage, setCurrentPageData } =
+  const { setAddingPage, setEditingPage, editingPage, addingPage } =
+    useUiStore();
+  const { currentProjectId, currentPage } =
     useCurrentDataStore();
 
   const onPageFormSubmit: SubmitHandler<ProjectPageFormData> = async (data) => {
@@ -83,18 +78,12 @@ export function useSectionForm(section?: Section | null) {
 
 export function useSectionFormSubmit() {
   const { upsertSection, projectSections } = useContextQueries();
-  const {
-    addingSection,
-    setAddingSection,
-    editingSection,
-    setEditingSection,
-    setSiteWindowKey,
-  } = useUiStore();
+  const { addingSection, setAddingSection, editingSection, setEditingSection } =
+    useUiStore();
   const {
     currentProjectId,
     currentPage,
     currentSection,
-    setCurrentSectionData,
   } = useCurrentDataStore();
 
   const onSectionFormSubmit: SubmitHandler<SectionFormData> = async (data) => {

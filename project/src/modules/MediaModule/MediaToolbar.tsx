@@ -2,8 +2,8 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import CustomButton from "@/lib/blocks/CustomButton";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
+import { setCurrentMediaItemsSelected, useCurrentDataStore } from "@/store/currentDataStore";
+import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { Grid, List, Upload } from "lucide-react";
 import { useContext } from "react";
 import { FiEdit } from "react-icons/fi";
@@ -17,9 +17,8 @@ type Props = {
 
 const MediaToolbar = ({ view, setView, editeMode, setEditMode }: Props) => {
   const { currentUser } = useContext(AuthContext);
-  const { setUploadContext } = useUiStore();
   const currentTheme = useCurrentTheme();
-  const { currentActiveFolder, setCurrentMediaItemsSelected } =
+  const { currentActiveFolder } =
     useCurrentDataStore();
 
   const onUploadClick = () => {

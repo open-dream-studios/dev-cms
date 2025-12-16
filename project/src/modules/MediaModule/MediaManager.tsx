@@ -7,15 +7,13 @@ import MediaGrid from "./MediaGrid";
 import MediaToolbar from "./MediaToolbar";
 import { Media, MediaFolder } from "@open-dream/shared";
 import { collectParentIds } from "@/util/functions/Tree";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentMediaItemsSelected, setCurrentOpenFolders, useCurrentDataStore } from "@/store/currentDataStore";
 
 const MediaManager = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const {
-    setCurrentMediaItemsSelected,
     currentActiveFolder,
-    setCurrentOpenFolders,
   } = useCurrentDataStore();
 
   const { media, mediaFolders } = useContextQueries();

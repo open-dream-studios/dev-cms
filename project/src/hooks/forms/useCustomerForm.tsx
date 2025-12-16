@@ -9,7 +9,7 @@ import {
 import { Customer, CustomerInput } from "@open-dream/shared";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 
 export function useCustomerForm(customer?: CustomerInput | null) {
@@ -23,7 +23,7 @@ export function useCustomerForm(customer?: CustomerInput | null) {
 export function useCustomerFormSubmit() {
   const { upsertCustomer } = useContextQueries();
   const { setAddingCustomer } = useUiStore();
-  const { currentProjectId, currentCustomer, setCurrentCustomerData } =
+  const { currentProjectId, currentCustomer } =
     useCurrentDataStore();
 
   const onCustomerFormSubmit: SubmitHandler<CustomerFormData> = async (

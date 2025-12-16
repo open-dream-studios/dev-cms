@@ -13,9 +13,8 @@ import {
 import { AdsTooltip, MetricToggle } from "./components";
 import { formatCurrency, metricOptions } from "./data";
 import { AuthContext } from "@/contexts/authContext";
-import { useGoogleCurrentDataStore } from "../../_store/useGoogleCurrentDataStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useGoogleUIStore } from "../../_store/useGoogleUIStore";
+import { useGoogleUIStore, useGoogleDataStore } from "../../_googleStore";
 import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
 
 const GoogleAdsPerformanceGraph = () => {
@@ -29,12 +28,14 @@ const GoogleAdsPerformanceGraph = () => {
     setSelectedAdGroupId,
     selectedGoogleAdsMetrics,
     setSelectedGoogleAdsMetrics,
-  } = useGoogleCurrentDataStore();
+  } = useGoogleDataStore();
   const { isLoadingGoogleAdsData } = useGoogleUIStore();
 
+  const data = googleAdsData.status === "success" ? googleAdsData.data : null;
+
   const statsForRange = useMemo(() => {
-    if (!googleAdsData || !googleAdsData.stats) return [];
-    const stats = googleAdsData.stats as any[];
+    if (!data || !data.stats) return [];
+    const stats = data.stats as any[];
     let count = 30;
     if (currentGoogleAdsRange === "7d") count = 7;
     if (currentGoogleAdsRange === "30d") count = 30;
@@ -42,7 +43,7 @@ const GoogleAdsPerformanceGraph = () => {
     // if (range === "365d") count = stats.length;
     // always take the last `count` entries
     return stats.slice(Math.max(0, stats.length - count));
-  }, [googleAdsData, currentGoogleAdsRange]);
+  }, [data, currentGoogleAdsRange]);
 
   const aggregated = useMemo(() => {
     const s = statsForRange;
@@ -113,13 +114,13 @@ const GoogleAdsPerformanceGraph = () => {
   };
 
   useEffect(() => {
-    const adGroups = googleAdsData?.adGroups ?? [];
+    const adGroups = data?.adGroups ?? [];
     if (!selectedAdGroupId && adGroups && adGroups.length > 0)
       setSelectedAdGroupId(adGroups[0].id);
-  }, [selectedAdGroupId, setSelectedAdGroupId, googleAdsData]);
+  }, [selectedAdGroupId, setSelectedAdGroupId, data]);
 
-  const videoRows = googleAdsData?.keywordData?.terms?.videos ?? [];
-  const imageRows = googleAdsData?.keywordData?.terms?.images ?? [];
+  const videoRows = data?.keywordData?.terms?.videos ?? [];
+  const imageRows = data?.keywordData?.terms?.images ?? [];
 
   const topVideos = [...videoRows].sort(
     (a: any, b: any) => (b.impressions || 0) - (a.impressions || 0)

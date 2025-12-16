@@ -24,7 +24,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import Divider from "@/lib/blocks/Divider";
 import GmailMessageView from "../GoogleModule/GmailModule/GmailMessageView";
-import { useGmailStore } from "../GoogleModule/GmailModule/_store/useGmailStore";
+import { useGmailUIStore } from "../GoogleModule/GmailModule/_gmailStore";
 import { useGmailActions } from "../GoogleModule/GmailModule/useGmailActions";
 import { AuthContext } from "@/contexts/authContext";
 import {
@@ -45,7 +45,7 @@ import { SkeletonLine } from "@/lib/skeletons/Skeletons";
 
 export default function CustomerInteractionTimeline() {
   const { currentUser } = useContext(AuthContext);
-  const { selectedId } = useGmailStore();
+  const { selectedId, setDetail, setSelectedId } = useGmailUIStore();
   const { projectCalls } = useContextQueries();
   const [expandedCall, setExpandedCall] = useState(null);
   const [expandedEmail, setExpandedEmail] = useState(null);
@@ -53,8 +53,7 @@ export default function CustomerInteractionTimeline() {
   const [emailTypeSelected, setEmailTypeSelected] = useState<"inbox" | "sent">(
     "inbox"
   );
-  const { currentCustomer } = useCurrentDataStore();
-  const { setDetail, setSelectedId } = useGmailStore();
+  const { currentCustomer } = useCurrentDataStore(); 
   useEffect(() => {
     setDetail(null);
     setSelectedId(null);

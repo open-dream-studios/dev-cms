@@ -1,25 +1,18 @@
 "use client";
 import { HiBars3 } from "react-icons/hi2"; 
-import {
-  useLeftBarOpenStore,
-  useLeftBarRefStore,
-} from "../../../store/useLeftBarOpenStore";
 import appDetails from "../../../util/appDetails.json";
 import { useModal1Store } from "../../../store/useModalStore";
 import Login from "../Login/Login";
 import { removeWhiteSpace } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { useEnvironmentStore } from "@/store/useEnvironmentStore";
+import { useUiStore } from "@/store/useUIStore";
 
 const LandingNav = () => {
   const currentTheme = useCurrentTheme();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
-  const setLeftBarOpen = useLeftBarOpenStore(
-    (state: any) => state.setLeftBarOpen
-  );
-  const leftBarRef = useLeftBarRefStore((state) => state.leftBarRef);
+  const { leftBarOpen, setLeftBarOpen, leftBarRef } = useUiStore()
 
   const { domain } = useEnvironmentStore();
   let landing_title = appDetails.default_title

@@ -25,8 +25,8 @@ import "./Calendar.css";
 import { JobDefinition } from "@open-dream/shared";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { JobFormData } from "@/util/schemas/jobSchema";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 // ---------- ScheduleTimeline ----------
 type ScheduleTimelineProps = {
@@ -53,8 +53,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const BUFFER_DAYS = 1500; // => ~4 years forward/back (adjust if desired)
   const CENTER_INDEX = Math.floor(BUFFER_DAYS / 2); // index for "today" week center
   const SNAP_DEBOUNCE = 80; // ms
-
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const { leftBarOpen } = useUiStore()
 
   const [isMini, setIsMini] = useState<boolean>(true);
   const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(true);

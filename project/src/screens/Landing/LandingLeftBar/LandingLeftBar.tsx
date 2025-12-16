@@ -1,25 +1,17 @@
+// project/src/screens/Landing/LandingLeftBar/LandingLeftBar.tsx
 "use client";
 import { useEffect, RefObject, useRef, useState } from "react";
-import {
-  useLeftBarOpenStore,
-  useLeftBarRefStore,
-} from "../../../store/useLeftBarOpenStore";
 import appDetails from "../../../util/appDetails.json";
 import { login } from "@/util/auth";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 const LandingLeftBar = () => {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const currentTheme = useCurrentTheme();
   const leftBarRef = useRef<HTMLDivElement>(null);
-  const setLeftBarRef = useLeftBarRefStore((state) => state.setLeftBarRef);
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
-  const setLeftBarOpen = useLeftBarOpenStore(
-    (state: any) => state.setLeftBarOpen
-  );
+  const { leftBarOpen, setLeftBarOpen, setLeftBarRef } = useUiStore();
   const [showLeftBar, setShowLeftBar] = useState<boolean>(false);
   const showLeftBarRef = useRef<HTMLDivElement>(null);
 

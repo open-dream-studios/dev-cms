@@ -2,10 +2,9 @@
 "use client";
 import { ReactNode, RefObject, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import appDetails from "@/util/appDetails.json";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
+import appDetails from "@/util/appDetails.json"; 
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 export const PageLayout = ({
   children,
@@ -15,13 +14,10 @@ export const PageLayout = ({
   leftbar: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const { leftBarOpen, setPageLayoutRef } = useUiStore()
   const currentTheme = useCurrentTheme();
 
   const pageLayoutRef = useRef<HTMLDivElement>(null);
-  const setPageLayoutRef = usePageLayoutRefStore(
-    (state) => state.setPageLayoutRef
-  );
 
   useEffect(() => {
     setPageLayoutRef(pageLayoutRef as RefObject<HTMLDivElement>);

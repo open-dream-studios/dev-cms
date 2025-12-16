@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { formatCurrency, formatInt } from "./data";
 import { Zap } from "lucide-react";
-import { useGoogleCurrentDataStore } from "../../_store/useGoogleCurrentDataStore";
+import { useGoogleDataStore } from "../../_googleStore";
 
 const GoogleAdsAside = () => {
   const currentTheme = useCurrentTheme();
@@ -26,11 +26,13 @@ const GoogleAdsAside = () => {
     currentGoogleAdsRange,
     selectedAdGroupId,
     setSelectedAdGroupId,
-  } = useGoogleCurrentDataStore();
+  } = useGoogleDataStore();
+
+  const data = googleAdsData.status === "success" ? googleAdsData.data : null;
 
   const statsForRange = useMemo(() => {
-    if (!googleAdsData || !googleAdsData.stats) return [];
-    const stats = googleAdsData.stats as any[];
+    if (!data || !data.stats) return [];
+    const stats = data.stats as any[];
     let count = 30;
     if (currentGoogleAdsRange === "7d") count = 7;
     if (currentGoogleAdsRange === "30d") count = 30;
@@ -38,7 +40,7 @@ const GoogleAdsAside = () => {
     // if (range === "365d") count = stats.length;
     // always take the last `count` entries
     return stats.slice(Math.max(0, stats.length - count));
-  }, [googleAdsData, currentGoogleAdsRange]);
+  }, [data, currentGoogleAdsRange]);
 
   const aggregated = useMemo(() => {
     const s = statsForRange;
@@ -73,7 +75,7 @@ const GoogleAdsAside = () => {
     };
   }, [statsForRange]);
 
-  const adGroups = googleAdsData?.adGroups ?? [];
+  const adGroups = data?.adGroups ?? [];
 
   return (
     <div>

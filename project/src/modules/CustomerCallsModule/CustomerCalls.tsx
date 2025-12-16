@@ -14,7 +14,7 @@ import { Customer } from "@open-dream/shared";
 import { normalizeUSNumber } from "@/util/functions/Calls";
 import { formatPhoneNumber } from "@/util/functions/Customers"; 
 import { makeRequest } from "@/util/axios";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useWebSocketStore } from "@/store/webSocketStore";
 import { useRouting } from "@/hooks/useRouting";
 
@@ -31,8 +31,7 @@ const CustomerCalls = () => {
     startCall,
   } = useTwilioDevice();
   const { projectUsers, customers } = useContextQueries();
-  const { currentProjectId } = useCurrentDataStore();
-  const { setCurrentCustomerData } = useCurrentDataStore();
+  const { currentProjectId } = useCurrentDataStore(); 
 
   const { screenClick } = useRouting();
 

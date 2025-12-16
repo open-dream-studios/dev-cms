@@ -8,7 +8,7 @@ import {
 } from "@/util/schemas/projectSettingsSchema";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentProjectData, useCurrentDataStore } from "@/store/currentDataStore";
 import { Project } from "@open-dream/shared";
 
 export function useProjectSettingsForm(projectSettings?: any | null) {
@@ -21,7 +21,7 @@ export function useProjectSettingsForm(projectSettings?: any | null) {
 
 export function useProjectSettingsFormSubmit() {
   const { upsertProject } = useContextQueries();
-  const { currentProject, setCurrentProjectData } = useCurrentDataStore();
+  const { currentProject } = useCurrentDataStore();
 
   const onProjectSettingsFormSubmit: SubmitHandler<
     ProjectSettingsFormData

@@ -33,7 +33,7 @@ import InventoryRow from "./Grid/InventoryRow";
 import { useUiStore } from "@/store/useUIStore";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { useDataFilters } from "@/hooks/useDataFilters";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setLocalProductsData, useCurrentDataStore } from "@/store/currentDataStore";
 import { DelayType } from "@/hooks/useAutoSave";
 import { useCurrentTheme } from "@/hooks/useTheme";
 
@@ -147,7 +147,7 @@ const DraggableItems = ({
     useSensor(TouchSensor),
     useSensor(PointerSensor)
   );
-  const { localProductsData, setLocalProductsData } = useCurrentDataStore();
+  const { localProductsData } = useCurrentDataStore();
   const { saveProducts } = useProductFormSubmit();
   const { filteredProducts } = useDataFilters();
   const containerRef = useRef<HTMLDivElement | null>(null);

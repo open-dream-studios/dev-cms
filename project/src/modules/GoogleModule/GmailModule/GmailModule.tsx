@@ -28,12 +28,11 @@ import {
   LabelPill,
   SidebarItem,
 } from "./GmailHelpers";
-import { useGmailStore } from "./_store/useGmailStore";
+import { useGmailUIStore } from "./_gmailStore";
 import GmailMessageView from "./GmailMessageView";
 import { useGmailActions } from "./useGmailActions";
 
-const GmailModule: React.FC = () => {
-  const { runModule } = useContextQueries();
+const GmailModule: React.FC = () => { 
   const { selectedGmailTab, setSelectedGmailTab } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
   const {
@@ -53,7 +52,7 @@ const GmailModule: React.FC = () => {
     setIsReplying,
     photoError,
     setPhotoError,
-  } = useGmailStore();
+  } = useGmailUIStore();
 
   useEffect(() => {
     setPhotoError(false);
@@ -310,7 +309,7 @@ export const GmailMiniCardStack = ({
   const { selectedGmailTab } = useCurrentDataStore();
   const { isLoading } = useGmail(selectedGmailTab as GmailRequestType);
   const { data: gmailProfile } = useGmailProfile();
-  const { setPhotoError } = useGmailStore();
+  const { setPhotoError } = useGmailUIStore();
 
   useEffect(() => {
     setPhotoError(false);

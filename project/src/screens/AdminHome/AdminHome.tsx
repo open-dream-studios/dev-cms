@@ -10,7 +10,7 @@ import { IoCloseOutline } from "react-icons/io5";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useQueryClient } from "@tanstack/react-query";
 import { FiEdit } from "react-icons/fi";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentProjectData } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 
 const ProjectItem = ({
@@ -21,8 +21,7 @@ const ProjectItem = ({
   editProjectsMode: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme();
-  const { setCurrentProjectData } = useCurrentDataStore();
+  const currentTheme = useCurrentTheme(); 
   const { deleteProject } = useContextQueries();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
@@ -152,7 +151,7 @@ const AdminHome = () => {
       domain,
       backend_domain: null,
       brand: null,
-      logo: null,
+      logo_media_id: null,
     } as Project);
     queryClient.invalidateQueries({ queryKey: ["projectUsers"] });
   };

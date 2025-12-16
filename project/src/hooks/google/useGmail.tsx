@@ -47,7 +47,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { GmailRequestType } from "@open-dream/shared";
 import { useEffect } from "react";
-import { useGmailDataStore } from "@/modules/GoogleModule/GmailModule/_store/useGmailDataStore";
+import { useGmailDataStore } from "@/modules/GoogleModule/GmailModule/_gmailStore";
 
 export function useGmail(label: GmailRequestType, pageSize = 50) {
   const { runModule } = useContextQueries();
@@ -78,9 +78,8 @@ export function useGmail(label: GmailRequestType, pageSize = 50) {
     queryClient.invalidateQueries({ queryKey: ["gmail", label] });
   };
 
-  // Sync React Query → Zustand
   useEffect(() => {
-    useGmailDataStore.getState()._setFromQuery({
+    useGmailDataStore.getState().set({
       label,
       messages: query.data?.pages.flatMap((p) => p.messages) ?? [],
       hasNextPage: Boolean(query.hasNextPage),

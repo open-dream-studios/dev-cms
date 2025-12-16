@@ -1,7 +1,6 @@
 // src/modules/GoogleModule/GmailModule/useGmailActions.ts
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useGmailDataStore } from "./_store/useGmailDataStore";
-import { useGmailStore } from "./_store/useGmailStore";
+import { useGmailDataStore, useGmailUIStore } from "./_gmailStore";
 import { getHeader } from "./GmailHelpers";
 import { GmailMessage, MessageDetail } from "@open-dream/shared";
 
@@ -9,7 +8,7 @@ export function useGmailActions() {
   const { runModule } = useContextQueries();
   const { refresh, label } = useGmailDataStore();
   const { detail, setDetail, setSelectedId, setIsReplying, setShowHeaders } =
-    useGmailStore();
+    useGmailUIStore();
 
   // -------------------------
   // FETCH FULL MESSAGE DETAIL

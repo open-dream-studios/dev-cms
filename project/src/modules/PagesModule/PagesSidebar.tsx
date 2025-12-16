@@ -20,7 +20,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { ContextInput, ContextInputType } from "./PagesEditor";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentPageData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 
@@ -47,8 +47,7 @@ const SortablePageItem = ({
   handleContextMenu,
 }: SortablePageItemProps) => {
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme();
-  const { setCurrentPageData } = useCurrentDataStore();
+  const currentTheme = useCurrentTheme(); 
   const { setEditingPage } = useUiStore();
   const {
     attributes,

@@ -9,7 +9,7 @@ import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentEmployeeData, setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useEmployeeFormSubmit } from "@/hooks/forms/useEmployeeForm";
 import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
@@ -28,7 +28,7 @@ import ContextMenu from "@/components/Popups/ContextMenu";
 
 const ModuleLeftBar = () => {
   const queryClient = useQueryClient();
-  const { setCurrentEmployeeData, currentProject } = useCurrentDataStore();
+  const { currentProject } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const {
     isLoadingProductsData,
@@ -38,7 +38,7 @@ const ModuleLeftBar = () => {
     runModule,
     isLoadingEmployees,
   } = useContextQueries();
-  const { localProductsData, setCurrentProductData, currentProjectId } =
+  const { localProductsData, currentProjectId } =
     useCurrentDataStore();
   const { screenClick } = useRouting();
   const { getForm } = useFormInstanceStore();

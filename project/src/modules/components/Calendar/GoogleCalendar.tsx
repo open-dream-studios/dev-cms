@@ -22,7 +22,6 @@ import { getInnerCardStyle } from "@/styles/themeStyles";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Calendar.css";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { useGoogleCalendar } from "@/hooks/google/useGoogleCalendar";
 import {
@@ -30,6 +29,7 @@ import {
   timeToPct,
   weekIndexOffsetForDate,
 } from "./CalendarHelpers";
+import { useUiStore } from "@/store/useUIStore";
 
 export const DAY_START_HOUR = 0;
 export const DAY_END_HOUR = 24;
@@ -43,7 +43,7 @@ export const SNAP_DEBOUNCE = 80; // ms
 export const GoogleCalendar = () => {
   const { currentUser } = React.useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const { leftBarOpen} = useUiStore()
   const [isMini, setIsMini] = useState<boolean>(true);
   const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(false);
   const [googleEvents, setGoogleEvents] = useState<any[]>([]);

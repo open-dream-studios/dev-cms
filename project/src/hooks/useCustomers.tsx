@@ -1,6 +1,6 @@
 // project/src/hooks/useCustomers.tsx
 import { Customer } from "@open-dream/shared";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
@@ -8,8 +8,7 @@ import { customerToForm } from "@/util/schemas/customerSchema";
 import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
 
 export function useCustomers() {
-  const { deleteCustomer, refetchProductsData } = useContextQueries();
-  const { setCurrentCustomerData } = useCurrentDataStore();
+  const { deleteCustomer, refetchProductsData } = useContextQueries(); 
   const { setAddingCustomer } = useUiStore();
 
   const { getForm } = useFormInstanceStore();

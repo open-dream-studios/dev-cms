@@ -18,9 +18,8 @@ import { AdsTooltip, MetricToggle } from "./components";
 import { formatCurrency, formatInt } from "./data";
 import { Zap } from "lucide-react";
 import { AuthContext } from "@/contexts/authContext";
-import { useGoogleCurrentDataStore } from "../../_store/useGoogleCurrentDataStore";
+import { useGoogleUIStore, useGoogleDataStore } from "../../_googleStore";
 import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
-import { useGoogleUIStore } from "../../_store/useGoogleUIStore";
 
 const GoogleAdsMetrics = () => {
   const { currentUser } = useContext(AuthContext);
@@ -30,12 +29,14 @@ const GoogleAdsMetrics = () => {
     currentGoogleAdsRange,
     selectedAdGroupId,
     setSelectedAdGroupId,
-  } = useGoogleCurrentDataStore();
+  } = useGoogleDataStore();
   const { isLoadingGoogleAdsData } = useGoogleUIStore();
 
+  const data = googleAdsData.status === "success" ? googleAdsData.data : null;
+
   const statsForRange = useMemo(() => {
-    if (!googleAdsData || !googleAdsData.stats) return [];
-    const stats = googleAdsData.stats as any[];
+    if (!data || !data.stats) return [];
+    const stats = data.stats as any[];
     let count = 30;
     if (currentGoogleAdsRange === "7d") count = 7;
     if (currentGoogleAdsRange === "30d") count = 30;
@@ -43,7 +44,7 @@ const GoogleAdsMetrics = () => {
     // if (range === "365d") count = stats.length;
     // always take the last `count` entries
     return stats.slice(Math.max(0, stats.length - count));
-  }, [googleAdsData, currentGoogleAdsRange]);
+  }, [data, currentGoogleAdsRange]);
 
   const aggregated = useMemo(() => {
     const s = statsForRange;
@@ -78,7 +79,7 @@ const GoogleAdsMetrics = () => {
     };
   }, [statsForRange]);
 
-  const adGroups = googleAdsData?.adGroups ?? [];
+  const adGroups = data?.adGroups ?? [];
 
   const COLORS = ["#22d3ee", "#7c3aed", "#06b6d4", "#60a5fa", "#f97316"];
 

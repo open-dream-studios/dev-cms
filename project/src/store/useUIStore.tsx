@@ -8,7 +8,8 @@ import {
   Media,
   MediaUsage,
 } from "@open-dream/shared";
-import { create } from "zustand";
+import { createStore } from "@/store/createStore";
+import { RefObject } from "react";
 
 interface UploadContext {
   visible: boolean;
@@ -18,41 +19,25 @@ interface UploadContext {
   onUploaded: (uploads: Media[], files: File[]) => Promise<void>;
 }
 
-const initialUIState: Omit<
-  UiState,
-  | "setScreenSize"
-  | "setUpdatingLock"
-  | "setScreen"
-  | "pushModal"
-  | "popModal"
-  | "setSidebar"
-  | "setUploadContext"
-  | "setContextMenu"
-  | "setInventoryView"
-  | "setAddingProduct"
-  | "setEditingProducts"
-  | "setAddingCustomer"
-  | "setAddingEmployee"
-  | "setAddingPage"
-  | "setEditingPage"
-  | "setAddingSection"
-  | "setEditingSection"
-  | "setSiteWindowKey"
-  | "setShowCampaignPicker"
-  | "setIsLoadingGoogleAdsData"
-  | "resetUIStore"
-  | "setAddingUpdate"
-> = {
+export const uiInitialState = {
+  pageLayoutRef: null as RefObject<HTMLDivElement> | null,
   updatingLock: false,
-  screen: "google-ads",
-  modals: [],
-  sidebar: "none",
-  uploadContext: null,
+  leftBarOpen: false,
+  leftBarRef: null as RefObject<HTMLDivElement> | null,
+  
+  screen: "google-ads" as Screen,
+  modals: [] as Modal[],
+  sidebar: "none" as UIState["sidebar"],
+  uploadContext: null as UploadContext | null,
 
   screenWidth: 0,
   screenHeight: 0,
 
-  contextMenu: null,
+  contextMenu: null as {
+    x: number;
+    y: number;
+    input: any | null;
+  } | null,
 
   // Products
   inventoryView: false,
@@ -67,172 +52,55 @@ const initialUIState: Omit<
 
   // Pages
   addingPage: false,
-  editingPage: null,
+  editingPage: null as ProjectPage | null,
   addingSection: false,
-  editingSection: null,
+  editingSection: null as Section | null,
 
   siteWindowKey: 0,
   addingUpdate: false,
 };
 
-interface UiState {
-  resetUIStore: () => void;
+export const useUiStore = createStore(uiInitialState);
 
-  screenWidth: number;
-  screenHeight: number;
-  setScreenSize: (w: number, h: number) => void;
+/** Resets UI state but preserves screen size */
+export const resetUIStore = () =>
+  useUiStore.getState().set((state) => ({
+    ...uiInitialState,
+    screenWidth: state.screenWidth,
+    screenHeight: state.screenHeight,
+  }));
 
-  updatingLock: boolean;
-  setUpdatingLock: (val: boolean) => void;
+/** setScreenSize */
+export const setScreenSize = (w: number, h: number) =>
+  useUiStore.getState().set({
+    screenWidth: w,
+    screenHeight: h,
+  });
 
-  screen: Screen;
-  setScreen: (val: UiState["screen"]) => void;
+/** Modals */
+export const pushModal = (m: Modal) =>
+  useUiStore.getState().set((state) => ({
+    modals: [...state.modals, m],
+  }));
 
-  modals: Modal[];
-  pushModal: (m: Modal) => void;
-  popModal: () => void;
+export const popModal = () =>
+  useUiStore.getState().set((state) => ({
+    modals: state.modals.slice(0, -1),
+  }));
 
-  sidebar: UIState["sidebar"];
-  setSidebar: (val: UiState["sidebar"]) => void;
+/** uploadContext (functional updater supported) */
+export const setUploadContext = (
+  updater:
+    | UploadContext
+    | ((prev: UploadContext | null) => UploadContext | null)
+) =>
+  useUiStore.getState().set((state) => ({
+    uploadContext:
+      typeof updater === "function" ? updater(state.uploadContext) : updater,
+  }));
 
-  uploadContext: UploadContext | null;
-  setUploadContext: (
-    updater:
-      | UploadContext
-      | ((prev: UploadContext | null) => UploadContext | null)
-  ) => void;
-
-  // ----------------- CONTEXT MENU -----------------
-  contextMenu: {
-    x: number;
-    y: number;
-    input: any | null;
-  } | null;
-
-  setContextMenu: (
-    val: {
-      x: number;
-      y: number;
-      input: any;
-    } | null
-  ) => void;
-
-  // Products
-  inventoryView: boolean;
-  setInventoryView: (val: boolean) => void;
-
-  addingProduct: boolean;
-  setAddingProduct: (val: boolean) => void;
-
-  editingProducts: boolean;
-  setEditingProducts: (val: boolean) => void;
-
-  // Customers
-  addingCustomer: boolean;
-  setAddingCustomer: (val: boolean) => void;
-
-  // Employees
-  addingEmployee: boolean;
-  setAddingEmployee: (val: boolean) => void;
-
-  // Pages
-  addingPage: boolean;
-  setAddingPage: (val: boolean) => void;
-
-  editingPage: ProjectPage | null;
-  setEditingPage: (val: ProjectPage | null) => void;
-
-  addingSection: boolean;
-  setAddingSection: (val: boolean) => void;
-
-  editingSection: Section | null;
-  setEditingSection: (val: Section | null) => void;
-
-  siteWindowKey: number;
-  setSiteWindowKey: (val: number | ((prev: number) => number)) => void;
-
-  // Updates
-  addingUpdate: boolean;
-  setAddingUpdate: (val: boolean) => void;
-}
-
-export const useUiStore = create<UiState>((set) => ({
-  ...initialUIState,
-  resetUIStore: () =>
-    set((state) => ({
-      ...initialUIState,
-      screenWidth: state.screenWidth,
-      screenHeight: state.screenHeight,
-    })),
-
-  screenWidth: initialUIState.screenWidth,
-  screenHeight: initialUIState.screenHeight,
-
-  setScreenSize: (w, h) =>
-    set({
-      screenWidth: w,
-      screenHeight: h,
-    }),
-
-  setUpdatingLock: (val) => set({ updatingLock: val }),
-
-  screen: initialUIState.screen,
-  setScreen: (val) => set({ screen: val }),
-
-  modals: initialUIState.modals,
-  pushModal: (m) => set((state) => ({ modals: [...state.modals, m] })),
-  popModal: () => set((state) => ({ modals: state.modals.slice(0, -1) })),
-
-  sidebar: initialUIState.sidebar,
-  setSidebar: (val) => set({ sidebar: val }),
-
-  uploadContext: initialUIState.uploadContext,
-  setUploadContext: (updater) =>
-    set((state) => ({
-      uploadContext:
-        typeof updater === "function" ? updater(state.uploadContext) : updater,
-    })),
-
-  contextMenu: null,
-  setContextMenu: (val) => set({ contextMenu: val }),
-
-  // Products
-  inventoryView: initialUIState.inventoryView,
-  setInventoryView: (val) => set({ inventoryView: val }),
-
-  addingProduct: initialUIState.addingProduct,
-  setAddingProduct: (val) => set({ addingProduct: val }),
-
-  editingProducts: initialUIState.editingProducts,
-  setEditingProducts: (val) => set({ editingProducts: val }),
-
-  // Customers
-  addingCustomer: initialUIState.addingCustomer,
-  setAddingCustomer: (val) => set({ addingCustomer: val }),
-
-  // Employees
-  addingEmployee: initialUIState.addingEmployee,
-  setAddingEmployee: (val) => set({ addingEmployee: val }),
-
-  // Pages
-  addingPage: initialUIState.addingPage,
-  setAddingPage: (val) => set({ addingPage: val }),
-
-  editingPage: initialUIState.editingPage,
-  setEditingPage: (val) => set({ editingPage: val }),
-
-  addingSection: initialUIState.addingSection,
-  setAddingSection: (val) => set({ addingSection: val }),
-
-  editingSection: initialUIState.editingSection,
-  setEditingSection: (val) => set({ editingSection: val }),
-
-  siteWindowKey: initialUIState.siteWindowKey,
-  setSiteWindowKey: (val) =>
-    set((state) => ({
-      siteWindowKey: typeof val === "function" ? val(state.siteWindowKey) : val,
-    })),
-
-  addingUpdate: false,
-  setAddingUpdate: (val) => set({ addingUpdate: val }),
-}));
+/** siteWindowKey (supports increment fn) */
+export const setSiteWindowKey = (val: number | ((prev: number) => number)) =>
+  useUiStore.getState().set((state) => ({
+    siteWindowKey: typeof val === "function" ? val(state.siteWindowKey) : val,
+  }));

@@ -19,7 +19,10 @@ import { MediaFolder } from "@open-dream/shared";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentActiveFolder,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useDnDStore } from "@/store/useDnDStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 
@@ -43,12 +46,8 @@ export default function FolderItem({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { upsertMediaFolders } = useContextQueries();
-  const {
-    currentProjectId,
-    currentActiveFolder,
-    setCurrentActiveFolder,
-    currentOpenFolders,
-  } = useCurrentDataStore();
+  const { currentProjectId, currentActiveFolder, currentOpenFolders } =
+    useCurrentDataStore();
   const [tempName, setTempName] = useState<string>(folder.name);
   const inputRef = useRef<HTMLInputElement>(null);
 

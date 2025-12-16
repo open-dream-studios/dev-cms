@@ -1,6 +1,4 @@
 // src/store/currentDataStore.ts
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import {
   Customer,
   Employee,
@@ -15,213 +13,130 @@ import {
   SearchContext,
   GmailRequestType,
 } from "@open-dream/shared";
+import { createStore } from "@/store/createStore";
 
-interface CurrentDataState {
-  currentProject: Project | null;
-  currentProjectId: number | null;
-  setCurrentProjectData: (project: Project | null) => void;
+export const localProductsDataRef = { current: [] as Product[] };
 
-  currentMediaSelected: Media | null;
-  setCurrentMediaSelected: (selected: Media | null) => void;
+export const currentDataInitialState = {
+  currentProject: null as Project | null,
+  currentProjectId: null as number | null,
 
-  currentMediaItemsSelected: Media[];
-  setCurrentMediaItemsSelected: (selected: Media[]) => void;
+  currentMediaSelected: null as Media | null,
+  currentMediaItemsSelected: [] as Media[],
 
-  currentActiveFolder: MediaFolder | null;
-  setCurrentActiveFolder: (
-    updater:
-      | MediaFolder
-      | null
-      | ((prev: MediaFolder | null) => MediaFolder | null)
-  ) => void;
+  currentActiveFolder: null as MediaFolder | null,
+  currentOpenFolders: new Set<number>(),
 
-  currentOpenFolders: Set<number>;
-  setCurrentOpenFolders: (
-    updater: Set<number> | ((prev: Set<number>) => Set<number>)
-  ) => void;
+  currentProduct: null as Product | null,
+  currentProductSerial: null as string | null,
 
-  currentProduct: Product | null;
-  currentProductSerial: string | null;
-  setCurrentProductData: (product: Product | null) => void;
+  originalProductImages: [] as MediaLink[],
+  currentProductImages: [] as MediaLink[],
 
-  originalProductImages: MediaLink[];
-  setOriginalProductImages: (originalProductImages: MediaLink[]) => void;
-  currentProductImages: MediaLink[];
-  setCurrentProductImages: (currentProductImages: MediaLink[]) => void;
+  originalJobImages: [] as MediaLink[],
+  currentJobImages: [] as MediaLink[],
 
-  originalJobImages: MediaLink[];
-  setOriginalJobImages: (originalJobImages: MediaLink[]) => void;
-  currentJobImages: MediaLink[];
-  setCurrentJobImages: (currentJobImages: MediaLink[]) => void;
+  localProductsData: [] as Product[],
+  localProductsDataRef,
 
-  localProductsData: Product[];
-  localProductsDataRef: { current: Product[] };
-  setLocalProductsData: (products: Product[]) => void;
+  selectedProducts: [] as string[],
 
-  selectedProducts: string[];
-  setSelectedProducts: (selectedProducts: string[]) => void;
+  currentCustomer: null as Customer | null,
+  currentCustomerId: null as number | null,
 
-  currentCustomer: Customer | null;
-  currentCustomerId: number | null;
-  setCurrentCustomerData: (customer: Customer | null) => void;
+  currentEmployee: null as Employee | null,
+  currentEmployeeId: null as number | null,
 
-  currentEmployee: Employee | null;
-  currentEmployeeId: number | null;
-  setCurrentEmployeeData: (employee: Employee | null) => void;
+  currentPage: null as ProjectPage | null,
+  currentPageId: null as number | null,
 
-  currentPage: ProjectPage | null;
-  currentPageId: number | null;
-  setCurrentPageData: (page: ProjectPage | null) => void;
+  currentSection: null as Section | null,
+  currentSectionId: null as number | null,
 
-  currentSection: Section | null;
-  currentSectionId: number | null;
-  setCurrentSectionData: (section: Section | null) => void;
+  productFilters: { products: [], jobType: [] } as DataFilters,
 
-  productFilters: DataFilters;
-  setProductFilters: (productFilters: DataFilters) => void;
+  currentCustomerSearchTerm: "",
 
-  currentCustomerSearchTerm: string;
-  setCurrentCustomerSearchTerm: (searchTerm: string) => void;
+  searchContext: null as SearchContext,
 
-  searchContext: SearchContext;
-  setSearchContext: (ctx: SearchContext) => void;
+  selectedGmailTab: "INBOX" as GmailRequestType,
+};
 
-  selectedGmailTab: GmailRequestType;
-  setSelectedGmailTab: (selectedGmailTab: GmailRequestType) => void;
-}
+export const useCurrentDataStore = createStore(currentDataInitialState);
 
-const localProductsDataRef = { current: [] as Product[] };
+/** Project */
+export const setCurrentProjectData = (project: Project | null) =>
+  useCurrentDataStore.getState().set({
+    currentProject: project,
+    currentProjectId: project?.id ?? null,
+  });
 
-// 🔹 wrap with devtools and give it a name
-export const useCurrentDataStore = create<CurrentDataState>()(
-  devtools(
-    (set) => ({
-      currentProject: null,
-      currentProjectId: null,
-      setCurrentProjectData: (project) =>
-        set({
-          currentProject: project,
-          currentProjectId: project?.id ?? null,
-        }),
+/** Media */
+export const setCurrentMediaSelected = (media: Media | null) =>
+  useCurrentDataStore.getState().set({ currentMediaSelected: media });
 
-      currentMediaSelected: null,
-      setCurrentMediaSelected: (selected: Media | null) =>
-        set({
-          currentMediaSelected: selected,
-        }),
+export const setCurrentMediaItemsSelected = (media: Media[]) =>
+  useCurrentDataStore.getState().set({ currentMediaItemsSelected: media });
 
-      currentMediaItemsSelected: [],
-      setCurrentMediaItemsSelected: (selected: Media[]) =>
-        set({
-          currentMediaItemsSelected: selected,
-        }),
+/** Media folders */
+export const setCurrentActiveFolder = (
+  updater:
+    | MediaFolder
+    | null
+    | ((prev: MediaFolder | null) => MediaFolder | null)
+) =>
+  useCurrentDataStore.getState().set((state) => ({
+    currentActiveFolder:
+      typeof updater === "function"
+        ? updater(state.currentActiveFolder)
+        : updater,
+  }));
 
-      currentActiveFolder: null,
-      setCurrentActiveFolder: (
-        updater:
-          | MediaFolder
-          | null
-          | ((prev: MediaFolder | null) => MediaFolder | null)
-      ) =>
-        set((state) => ({
-          currentActiveFolder:
-            typeof updater === "function"
-              ? updater(state.currentActiveFolder)
-              : updater,
-        })),
+export const setCurrentOpenFolders = (
+  updater: Set<number> | ((prev: Set<number>) => Set<number>)
+) =>
+  useCurrentDataStore.getState().set((state) => ({
+    currentOpenFolders:
+      typeof updater === "function"
+        ? updater(state.currentOpenFolders)
+        : updater,
+  }));
 
-      currentOpenFolders: new Set<number>(),
-      setCurrentOpenFolders: (
-        updater: Set<number> | ((prev: Set<number>) => Set<number>)
-      ) =>
-        set((state) => ({
-          currentOpenFolders:
-            typeof updater === "function"
-              ? updater(state.currentOpenFolders)
-              : updater,
-        })),
+/** Product */
+export const setCurrentProductData = (product: Product | null) =>
+  useCurrentDataStore.getState().set({
+    currentProduct: product,
+    currentProductSerial: product?.serial_number ?? null,
+  });
 
-      currentProduct: null,
-      currentProductSerial: null,
-      setCurrentProductData: (product) =>
-        set({
-          currentProduct: product,
-          currentProductSerial: product?.serial_number ?? null,
-        }),
+export const setLocalProductsData = (products: Product[]) => {
+  localProductsDataRef.current = products;
+  useCurrentDataStore.getState().set({ localProductsData: products });
+};
 
-      originalProductImages: [],
-      setOriginalProductImages: (images: MediaLink[]) =>
-        set({ originalProductImages: images }),
+/** Customer */
+export const setCurrentCustomerData = (customer: Customer | null) =>
+  useCurrentDataStore.getState().set({
+    currentCustomer: customer,
+    currentCustomerId: customer?.id ?? null,
+  });
 
-      currentProductImages: [],
-      setCurrentProductImages: (images: MediaLink[]) =>
-        set({ currentProductImages: images }),
+/** Employee */
+export const setCurrentEmployeeData = (employee: Employee | null) =>
+  useCurrentDataStore.getState().set({
+    currentEmployee: employee,
+    currentEmployeeId: employee?.id ?? null,
+  });
 
-      originalJobImages: [],
-      setOriginalJobImages: (images: MediaLink[]) =>
-        set({ originalJobImages: images }),
+/** Page / Section */
+export const setCurrentPageData = (page: ProjectPage | null) =>
+  useCurrentDataStore.getState().set({
+    currentPage: page,
+    currentPageId: page?.id ?? null,
+  });
 
-      currentJobImages: [],
-      setCurrentJobImages: (images: MediaLink[]) =>
-        set({ currentJobImages: images }),
-
-      localProductsData: [],
-      localProductsDataRef,
-      setLocalProductsData: (products: Product[]) => {
-        localProductsDataRef.current = products;
-        set({ localProductsData: products });
-      },
-
-      selectedProducts: [],
-      setSelectedProducts: (products: string[]) =>
-        set({ selectedProducts: products }),
-
-      currentCustomer: null,
-      currentCustomerId: null,
-      setCurrentCustomerData: (customer) =>
-        set({
-          currentCustomer: customer,
-          currentCustomerId: customer?.id ?? null,
-        }),
-
-      currentEmployee: null,
-      currentEmployeeId: null,
-      setCurrentEmployeeData: (employee) =>
-        set({
-          currentEmployee: employee,
-          currentEmployeeId: employee?.id ?? null,
-        }),
-
-      currentPage: null,
-      currentPageId: null,
-      setCurrentPageData: (page) =>
-        set({
-          currentPage: page,
-          currentPageId: page?.id ?? null,
-        }),
-
-      currentSection: null,
-      currentSectionId: null,
-      setCurrentSectionData: (section) =>
-        set({
-          currentSection: section,
-          currentSectionId: section?.id ?? null,
-        }),
-
-      productFilters: { products: [], jobType: [] },
-      setProductFilters: (filters: DataFilters) =>
-        set({ productFilters: filters }),
-
-      currentCustomerSearchTerm: "",
-      setCurrentCustomerSearchTerm: (searchTerm: string) =>
-        set({ currentCustomerSearchTerm: searchTerm }),
-
-      searchContext: null,
-      setSearchContext: (ctx) => set({ searchContext: ctx }),
-
-      selectedGmailTab: "INBOX" as GmailRequestType,
-      setSelectedGmailTab: (tab) => set({ selectedGmailTab: tab }),
-    }),
-    { name: "CurrentDataStore" }
-  )
-);
+export const setCurrentSectionData = (section: Section | null) =>
+  useCurrentDataStore.getState().set({
+    currentSection: section,
+    currentSectionId: section?.id ?? null,
+  });

@@ -5,8 +5,8 @@ import { makeRequest } from "../util/axios";
 import { ThemeType } from "../util/appTheme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { logout } from "@/util/auth";
+import { useUiStore } from "@/store/useUIStore";
 
 export interface User {
   id: string;
@@ -44,10 +44,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
-  const setLeftBarOpen = useLeftBarOpenStore(
-    (state: any) => state.setLeftBarOpen
-  );
-
+  const { setLeftBarOpen } = useUiStore();
   // useEffect(() => {
   //   if (typeof window !== "undefined") {
   //     const storedUser = localStorage.getItem("user");

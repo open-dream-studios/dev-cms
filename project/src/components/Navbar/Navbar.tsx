@@ -3,14 +3,9 @@
 import { useContext, useMemo } from "react";
 import { AuthContext } from "../../contexts/authContext";
 import { HiBars3 } from "react-icons/hi2";
-import {
-  useLeftBarOpenStore,
-  useLeftBarRefStore,
-} from "../../store/useLeftBarOpenStore";
 import { useModal1Store } from "../../store/useModalStore";
 import appDetails from "../../util/appDetails.json";
-import { removeWhiteSpace } from "../../util/functions/Data";
-import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
+import { removeWhiteSpace } from "../../util/functions/Data"; 
 import "./Navbar.css";
 import { IoMdSettings } from "react-icons/io";
 import Settings from "../Settings/Settings";
@@ -19,7 +14,10 @@ import { AiFillAppstore } from "react-icons/ai";
 import { LuBlocks } from "react-icons/lu";
 import UserImage from "../blocks/UserImage";
 import AdminController from "@/screens/AdminHome/AdminControllers/AdminController";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentProjectData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
@@ -28,19 +26,14 @@ import { Media } from "@open-dream/shared";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
+  const { currentProjectId } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const { updatingLock } = useUiStore();
   const { projectsData, media } = useContextQueries();
   const { saveProducts } = useProductFormSubmit();
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
-  const setLeftBarOpen = useLeftBarOpenStore(
-    (state: any) => state.setLeftBarOpen
-  );
-  const leftBarRef = useLeftBarRefStore((state) => state.leftBarRef);
-  const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
+  const { leftBarOpen, setLeftBarOpen, leftBarRef, pageLayoutRef } = useUiStore(); 
   const currentTheme = useCurrentTheme();
 
   const currentProject = useMemo(() => {

@@ -7,8 +7,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { formatPhone } from "@/util/functions/Customers";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { openWindow } from "@/util/functions/Handlers";
-import { useGoogleCurrentDataStore } from "../../_store/useGoogleCurrentDataStore";
-import { useGoogleUIStore } from "../../_store/useGoogleUIStore";
+import { useGoogleUIStore, useGoogleDataStore } from "../../_googleStore";
 import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
 
 const GoogleAdsTopBar = () => {
@@ -20,7 +19,7 @@ const GoogleAdsTopBar = () => {
     setCurrentGoogleAdsRange,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     currentGoogleAdsRange,
-  } = useGoogleCurrentDataStore();
+  } = useGoogleDataStore();
   const { isLoadingGoogleAdsData } = useGoogleUIStore();
   const { runModule } = useContextQueries();
   const { showCampaignPicker, setShowCampaignPicker } = useGoogleUIStore();
@@ -29,6 +28,8 @@ const GoogleAdsTopBar = () => {
   const currentTheme = useCurrentTheme();
   const budgetInputRef = useRef<HTMLInputElement | null>(null);
   const campaignPopupRef = useRef<HTMLDivElement | null>(null);
+
+  const data = googleAdsData.status === "success" ? googleAdsData.data : null;
 
   useOutsideClick(campaignPopupRef, () => setShowCampaignPicker(false));
 
@@ -39,21 +40,21 @@ const GoogleAdsTopBar = () => {
   }, [editingBudget]);
 
   const campaignsList = useMemo(() => {
-    if (!googleAdsData) return [];
-    const c = googleAdsData.campaigns;
+    if (!data) return [];
+    const c = data.campaigns;
     if (Array.isArray(c)) return c;
     if (c && Array.isArray(c.campaigns)) return c.campaigns;
     return [];
-  }, [googleAdsData]);
+  }, [data]);
 
   const activeCampaign = useMemo(() => {
-    if (!googleAdsData) return [];
+    if (!data) return [];
     return (
       campaignsList.find((c) => String(c.id) === String(selectedCampaignId)) ??
-      googleAdsData?.activeCampaign ??
+      data?.activeCampaign ??
       null
     );
-  }, [googleAdsData, campaignsList, selectedCampaignId]);
+  }, [data, campaignsList, selectedCampaignId]);
 
   const displayBudget = activeCampaign?.budget ?? 0;
 
@@ -98,12 +99,12 @@ const GoogleAdsTopBar = () => {
         <div
           onClick={() => {
             if (
-              googleAdsData &&
+              data &&
               selectedCampaignId &&
-              googleAdsData.customerId
+              data.customerId
             ) {
               openWindow(
-                `https://ads.google.com/aw/overview?customerId=${googleAdsData.customerId}#~campaign/id=${selectedCampaignId}`
+                `https://ads.google.com/aw/overview?customerId=${data.customerId}#~campaign/id=${selectedCampaignId}`
               );
             }
           }}
@@ -136,8 +137,8 @@ const GoogleAdsTopBar = () => {
               className="text-[13px] mt-[1px]"
             >
               Account{" "}
-              {googleAdsData && googleAdsData.customerId
-                ? formatPhone(googleAdsData.customerId)
+              {data && data.customerId
+                ? formatPhone(data.customerId)
                 : "..."}
             </div>
           </div>

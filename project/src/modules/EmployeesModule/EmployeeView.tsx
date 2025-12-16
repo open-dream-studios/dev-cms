@@ -12,8 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { AuthContext } from "@/contexts/authContext";
-import { getInnerCardStyle } from "@/styles/themeStyles";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
+import { getInnerCardStyle } from "@/styles/themeStyles"; 
 import {
   EmployeeFormData,
   employeeToForm,
@@ -41,12 +40,11 @@ const EmployeeCard: React.FC = () => {
   const { runModule } = useContextQueries();
   const { currentEmployee, currentProjectId, currentProject } =
     useCurrentDataStore();
-  const { addingEmployee } = useUiStore();
+  const { addingEmployee, leftBarOpen } = useUiStore();
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
   const employeeForm = useEmployeeForm(currentEmployee);
   const { registerForm, unregisterForm } = useFormInstanceStore();
   const { handleSubmit } = employeeForm;
-  const leftBarOpen = useLeftBarOpenStore((s: any) => s.leftBarOpen);
 
   const [popupVisible, setPopupVisible] = useState<boolean>(false);
   const [predictions, setPredictions] = useState<any[]>([]);

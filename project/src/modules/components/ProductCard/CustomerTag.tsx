@@ -5,7 +5,7 @@ import { formatPhone } from "@/util/functions/Customers";
 import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import CustomerSelection from "../Customers/CustomerSelection";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentCustomerData } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/useTheme";
@@ -20,8 +20,7 @@ const CustomerTag = ({
   productCustomer: Customer | null;
   oneSize: boolean;
 }) => {
-  const { currentUser } = useContext(AuthContext);
-  const { setCurrentCustomerData } = useCurrentDataStore();
+  const { currentUser } = useContext(AuthContext); 
   const { screenClick } = useRouting();
   const { screen } = useUiStore();
   const currentTheme = useCurrentTheme();

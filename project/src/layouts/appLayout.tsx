@@ -12,7 +12,6 @@ import LeftBar from "@/components/LeftBar/LeftBar";
 import Modals from "@/modals/Modals";
 import { usePathname, useRouter } from "next/navigation";
 import LandingNav from "@/screens/Landing/LandingNav/LandingNav";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import {
   QueryProvider,
   useContextQueries,
@@ -22,9 +21,12 @@ import LandingPage from "@/screens/Landing/LandingPage/LandingPage";
 import AdminHome from "@/screens/AdminHome/AdminHome";
 import DynamicTitle from "@/components/DynamicTitle";
 import CustomerCalls from "@/modules/CustomerCallsModule/CustomerCalls";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useWebSocketManager } from "@/store/webSocketStore";
-import { useUiStore } from "@/store/useUIStore";
+import {
+  setCurrentProjectData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
+// import { useWebSocketManager } from "@/store/webSocketStore";
+import { resetUIStore, setScreenSize, useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { PageLayout } from "./pageLayout";
 import UploadModal from "@/components/Upload/Upload";
@@ -54,10 +56,7 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   const { init, initialized } = useEnvironmentStore();
-
-  const setLeftBarOpen = useLeftBarOpenStore(
-    (state: any) => state.setLeftBarOpen
-  );
+  const { setLeftBarOpen } = useUiStore();
   useEffect(() => {
     const isDesktop = window.innerWidth > 1024;
     setLeftBarOpen(isDesktop);
@@ -108,11 +107,10 @@ const UnprotectedLayout = () => {
 };
 
 const ProtectedLayout = ({ children }: { children: ReactNode }) => {
-  const { updatingLock, resetUIStore } = useUiStore();
+  const { updatingLock } = useUiStore();
   const { projectsData } = useContextQueries();
-  const { setScreenSize } = useUiStore();
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, setCurrentProjectData } = useCurrentDataStore();
+  const { currentProjectId } = useCurrentDataStore();
   const router = useRouter();
 
   // Reset UI whenever the project changes
@@ -143,7 +141,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
     window.addEventListener("resize", onResize);
     onResize();
     return () => window.removeEventListener("resize", onResize);
-  }, [setScreenSize]);
+  }, []);
 
   if (!currentUser) return;
 

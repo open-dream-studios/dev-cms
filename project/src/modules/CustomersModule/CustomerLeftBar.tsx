@@ -7,7 +7,7 @@ import { customerToForm } from "@/util/schemas/customerSchema";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
 import {
   determineSearchContext,
   runSearchMatch,
@@ -23,8 +23,7 @@ const CustomerLeftBar = () => {
     setSearchContext,
     setCurrentCustomerSearchTerm,
     currentCustomerSearchTerm,
-    currentCustomer,
-    setCurrentCustomerData,
+    currentCustomer, 
   } = useCurrentDataStore();
   const { getForm } = useFormInstanceStore();
   const { screen, setAddingCustomer } = useUiStore();

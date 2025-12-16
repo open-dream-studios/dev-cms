@@ -1,7 +1,7 @@
 // project/src/hooks/useMedia.tsx
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
+import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { Job, Media, MediaLink } from "@open-dream/shared";
 import { ProjectPage } from "@open-dream/shared";
 import { Product } from "@open-dream/shared";
@@ -19,7 +19,7 @@ export type FileImage = {
 
 export function useMedia() {
   const queryClient = useQueryClient();
-  const { setUpdatingLock, setUploadContext } = useUiStore();
+  const { setUpdatingLock } = useUiStore();
   const {
     productsData,
     deleteMedia,

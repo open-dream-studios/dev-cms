@@ -21,12 +21,12 @@ import { useContext, useMemo, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { Media, MediaLink, MediaUsage } from "@open-dream/shared";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { GrRotateRight } from "react-icons/gr";
 import { useMedia } from "@/hooks/useMedia";
+import { useUiStore } from "@/store/useUIStore";
 
 function SortableImage({
   id,
@@ -171,7 +171,7 @@ export default function ImageGallery({
   entityType: MediaUsage;
   onMediaClick: (media: Media) => Promise<void>;
 }) {
-  const { media } = useContextQueries()
+  const { media } = useContextQueries();
   const {
     currentProductImages,
     setCurrentProductImages,
@@ -179,7 +179,7 @@ export default function ImageGallery({
     setCurrentJobImages,
   } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const { leftBarOpen } = useUiStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor),

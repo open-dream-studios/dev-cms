@@ -1,6 +1,6 @@
 // src/modules/UpdatesModule/UpdatesView.tsx
 "use client";
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo } from "react";
 import { useUpdates } from "@/contexts/queryContext/queries/updates";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
@@ -8,6 +8,7 @@ import UpdateCard from "./UpdateCard";
 import { Plus, Check, List, Clock } from "lucide-react";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { AuthContext } from "@/contexts/authContext";
+import { useUpdateStore } from "./_updatesStore";
 
 /**
  * Layout:
@@ -18,6 +19,7 @@ import { AuthContext } from "@/contexts/authContext";
  */
 
 const UpdatesView: React.FC = () => {
+  const { selectedTab } = useUpdateStore()
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProjectId } = useCurrentDataStore();
@@ -81,7 +83,9 @@ const UpdatesView: React.FC = () => {
               <Check size={18} />
             </div>
             <div>
-              <div className="text-[15px] font-semibold">Recent App Updates</div>
+              <div className="text-[15px] font-semibold">
+                Recent App Updates
+              </div>
               <div className="text-[13px] opacity-60">
                 {completed.length} updates
               </div>
@@ -93,9 +97,7 @@ const UpdatesView: React.FC = () => {
               <UpdateCard key={u.id ?? Math.random()} update={u} />
             ))}
             {completed.length === 0 && (
-              <div className="text-[13px] opacity-60">
-                No new updates
-              </div>
+              <div className="text-[13px] opacity-60">No new updates</div>
             )}
           </div>
         </section>

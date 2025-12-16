@@ -42,16 +42,15 @@ import { useWatch } from "react-hook-form";
 import { dateToString, formatDateTime } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useModal1Store, useModal2Store } from "@/store/useModalStore";
-import { useAutoSave } from "@/hooks/useAutoSave";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
+import { useAutoSave } from "@/hooks/useAutoSave"; 
 import AddEmployeeList from "../AddEmployeeList";
 import CircularProgress from "./CircularProgress";
 import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentEmployeeData, setCurrentMediaSelected, useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import ImageGallery from "@/modules/components/ImageGallery";
-import { useUiStore } from "@/store/useUIStore";
+import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { useMedia } from "@/hooks/useMedia";
 
 // ---------- TaskCard ----------
@@ -82,11 +81,10 @@ const TaskCard: React.FC<{
     employees,
     deleteEmployeeAssignment,
   } = useContextQueries();
-  const { screenClick } = useRouting();
-  const { setCurrentEmployeeData } = useCurrentDataStore();
+  const { screenClick } = useRouting(); 
   const currentTheme = useCurrentTheme();
 
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const { leftBarOpen } = useUiStore()
   const modal1 = useModal1Store((state: any) => state.modal1);
   const setModal1 = useModal1Store((state: any) => state.setModal1);
 
@@ -566,12 +564,9 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     upsertMediaLinks,
     deleteMediaLinks,
   } = useContextQueries();
-  const { setUploadContext } = useUiStore();
   const { screenClick } = useRouting();
   const {
-    setCurrentMediaSelected,
     setCurrentJobImages,
-    setCurrentEmployeeData,
     currentJobImages,
   } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
@@ -581,7 +576,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   const setModal1 = useModal1Store((state: any) => state.setModal1);
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const { leftBarOpen } = useUiStore()
   const jobForm = useJobForm();
   const status = useWatch({ control: jobForm.control, name: "status" });
 

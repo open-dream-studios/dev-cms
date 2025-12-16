@@ -7,7 +7,15 @@ import { Screen } from "@open-dream/shared";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useCustomerFormSubmit } from "./forms/useCustomerForm";
 import { useEmployeeFormSubmit } from "./forms/useEmployeeForm";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentActiveFolder,
+  setCurrentCustomerData,
+  setCurrentEmployeeData,
+  setCurrentPageData,
+  setCurrentProductData,
+  setCurrentSectionData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useProductFormSubmit } from "./forms/useProductForm";
 
 interface ScreenHistoryItem {
@@ -44,15 +52,8 @@ export function useRouting() {
   const { history, setHistory, push } = useScreenHistoryStore();
   const { screen, setScreen, setAddingCustomer, setEditingProducts } =
     useUiStore();
-  const {
-    setCurrentSectionData,
-    setCurrentPageData,
-    setSelectedProducts,
-    setCurrentProductData,
-    setCurrentCustomerData,
-    setCurrentEmployeeData,
-    setCurrentActiveFolder,
-  } = useCurrentDataStore();
+  const { setSelectedProducts } =
+    useCurrentDataStore();
 
   const { getForm } = useFormInstanceStore();
   const productForm = getForm("product");

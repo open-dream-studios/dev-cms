@@ -1,11 +1,11 @@
 // project/src/modules/MediaModule/MediaPlayer.tsx
 import { useCurrentTheme } from "@/hooks/useTheme";
-import { useCurrentDataStore } from "@/store/currentDataStore"; 
+import { setCurrentMediaSelected, useCurrentDataStore } from "@/store/currentDataStore"; 
 import React, { useRef, useState } from "react";
 
 const MediaPlayer = () => {
   const currentTheme = useCurrentTheme()
-  const { currentMediaSelected, setCurrentMediaSelected } =
+  const { currentMediaSelected } =
     useCurrentDataStore();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });

@@ -34,10 +34,9 @@ import { IoImagesOutline } from "react-icons/io5";
 import { IoImageOutline } from "react-icons/io5";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import ProductJobs from "./ProductJobs";
-import ProductJobCard from "./ProductJobCard/ProductJobCard";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
+import ProductJobCard from "./ProductJobCard/ProductJobCard"; 
+import { setCurrentMediaSelected, setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
+import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useWatch } from "react-hook-form";
@@ -53,21 +52,18 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { productsData, media, mediaLinks, customers, jobs, jobDefinitions } =
     useContextQueries();
   const { uploadProductImages } = useMedia();
-  const { screen, setUploadContext, addingProduct, setAddingProduct } =
+  const { screen, addingProduct, setAddingProduct, leftBarOpen} =
     useUiStore();
   const {
-    currentProduct,
-    setCurrentProductData,
+    currentProduct, 
     currentProductImages,
     setCurrentProductImages,
     originalProductImages,
     setOriginalProductImages,
     currentMediaSelected,
-    setCurrentMediaSelected,
   } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
   const { screenClick, screenClickAction } = useRouting();
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
 
   const [imageDisplayed, setImageDisplayed] = useState<Media | null>(null);
   const [imageEditorOpen, setImageEditorOpen] = useState<boolean>(false);

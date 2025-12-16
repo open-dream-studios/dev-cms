@@ -9,7 +9,10 @@ import {
 import { Employee, EmployeeInput } from "@open-dream/shared";
 import { SubmitHandler } from "react-hook-form";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentEmployeeData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 
 export function useEmployeeForm(employee?: EmployeeInput | null) {
@@ -23,8 +26,7 @@ export function useEmployeeForm(employee?: EmployeeInput | null) {
 export function useEmployeeFormSubmit() {
   const { upsertEmployee } = useContextQueries();
   const { setAddingEmployee } = useUiStore();
-  const { currentProjectId, currentEmployee, setCurrentEmployeeData } =
-    useCurrentDataStore();
+  const { currentProjectId, currentEmployee } = useCurrentDataStore();
 
   const onEmployeeFormSubmit: SubmitHandler<EmployeeFormData> = async (
     data

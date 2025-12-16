@@ -9,7 +9,7 @@ import { projectSettingsToForm } from "@/util/schemas/projectSettingsSchema";
 import { useContext, useEffect, useMemo } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
+import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Media, Project } from "@open-dream/shared";
@@ -19,7 +19,6 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 const ProjectSettings = () => {
   const { currentProject } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-  const { setUploadContext } = useUiStore();
   const { onProjectSettingsFormSubmit } = useProjectSettingsFormSubmit();
   const projectSettingsForm = useProjectSettingsForm(currentProject);
   const { registerForm, unregisterForm } = useFormInstanceStore();

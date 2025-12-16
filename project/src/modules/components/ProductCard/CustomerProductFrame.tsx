@@ -21,8 +21,7 @@ import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
 import { dateToString } from "@/util/functions/Time";
-import { useAutoSave } from "@/hooks/useAutoSave";
-import { useLeftBarOpenStore } from "@/store/useLeftBarOpenStore";
+import { useAutoSave } from "@/hooks/useAutoSave"; 
 import {
   PriorityBadge,
   StatusBadge,
@@ -30,7 +29,7 @@ import {
 } from "../../CustomerProducts/ProductView/ProductJobCard/Badges";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import RenderedImage from "./RenderedImage";
 import NoProductImage from "./NoProductImage";
@@ -45,7 +44,7 @@ const MiniTaskCard: React.FC<{
   const { currentUser } = React.useContext(AuthContext);
   const { upsertTask } = useContextQueries();
   const currentTheme = useCurrentTheme();
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const { leftBarOpen } = useUiStore()
   const taskForm = useTaskForm();
   const taskStatus = useWatch({ control: taskForm.control, name: "status" });
 
@@ -131,8 +130,7 @@ const CustomerProductFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme();
-  const { setCurrentProductData } = useCurrentDataStore();
+  const currentTheme = useCurrentTheme(); 
   const {
     tasks,
     upsertJob,
@@ -191,7 +189,7 @@ const CustomerProductFrame = ({
     );
   }, [productJob, jobDefinitions]);
 
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
+  const { leftBarOpen } = useUiStore()
 
   useEffect(() => {
     if (productJob?.job_id) {

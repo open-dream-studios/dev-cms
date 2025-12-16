@@ -9,16 +9,11 @@ import {
   useMemo,
   ReactNode,
 } from "react";
-import {
-  useLeftBarOpenStore,
-  useLeftBarRefStore,
-} from "../../store/useLeftBarOpenStore";
 import { useModal2Store } from "../../store/useModalStore";
 import Modal2Continue from "../../modals/Modal2Continue";
 import appDetails from "../../util/appDetails.json";
 import { AuthContext } from "@/contexts/authContext";
 import { LuPanelLeftClose } from "react-icons/lu";
-import { usePageLayoutRefStore } from "@/store/usePageLayoutStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { HiServer, HiViewBoards } from "react-icons/hi";
 import { FaImages } from "react-icons/fa";
@@ -33,6 +28,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { IoMdMail } from "react-icons/io";
+import { useUiStore } from "@/store/useUIStore";
 
 type BoxItem = {
   title: string;
@@ -72,15 +68,15 @@ const LeftBar = () => {
   const { screenClick } = useRouting();
   const modal2 = useModal2Store((state: any) => state.modal2);
   const setModal2 = useModal2Store((state: any) => state.setModal2);
-  const leftBarRef = useRef<HTMLDivElement>(null);
-  const setLeftBarRef = useLeftBarRefStore((state) => state.setLeftBarRef);
-  const leftBarOpen = useLeftBarOpenStore((state: any) => state.leftBarOpen);
-  const setLeftBarOpen = useLeftBarOpenStore(
-    (state: any) => state.setLeftBarOpen
-  );
+  const {
+    leftBarOpen,
+    setLeftBarOpen,
+    leftBarRef,
+    setLeftBarRef,
+    pageLayoutRef,
+  } = useUiStore();
   const [showLeftBar, setShowLeftBar] = useState<boolean>(false);
   const showLeftBarRef = useRef<HTMLDivElement>(null);
-  const pageLayoutRef = usePageLayoutRefStore((state) => state.pageLayoutRef);
   const windowLargeRef = useRef<boolean>(window.innerWidth > 1024);
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
   const currentTheme = useCurrentTheme();

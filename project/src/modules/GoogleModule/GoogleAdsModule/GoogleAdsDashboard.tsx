@@ -9,13 +9,13 @@ import GoogleAdsMetrics from "./components/GoogleAdsMetrics";
 import { useDashboardStore } from "../../../store/useDashboardStore";
 import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
-import { useGoogleCurrentDataStore } from "../_store/useGoogleCurrentDataStore";
-import { useGoogleUIStore } from "../_store/useGoogleUIStore";
+import { useGoogleDataStore, useGoogleUIStore } from "../_googleStore";
+// import { useGoogleUIStore } from "../_store/useGoogleUIStore";
 
 export default function GoogleAdsDashboard() {
   const { projectModules } = useContextQueries();
   const { setGoogleAdsData, selectedCampaignId, setSelectedCampaignId } =
-    useGoogleCurrentDataStore();
+    useGoogleDataStore();
   const { setIsLoadingGoogleAdsData } = useGoogleUIStore();
   const { setLayout, registerModules } = useDashboardStore();
 
@@ -51,7 +51,10 @@ export default function GoogleAdsDashboard() {
         if (cancelToken.cancelled) return;
         setIsLoadingGoogleAdsData(true);
         console.log(res);
-        setGoogleAdsData(res);
+        setGoogleAdsData({
+          status: "success",
+          data: res,
+        });
 
         const incomingActiveCampaignId = savedData.activeCampaign.id;
 
@@ -59,7 +62,11 @@ export default function GoogleAdsDashboard() {
       } catch (err) {
         if (!cancelToken.cancelled) {
           console.error("Failed to fetch Google Ads data:", err);
-          setGoogleAdsData({ ok: false, error: String(err) });
+          // setGoogleAdsData({ ok: false, error: String(err) });
+          setGoogleAdsData({
+            status: "error",
+            error: String(err),
+          });
         }
       } finally {
         if (!cancelToken.cancelled) {

@@ -14,7 +14,7 @@ import SectionsSidebar from "./SectionsSidebar";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import PagesEditorToolbar from "./PagesEditorToolbar";
 import DynamicSectionForm from "./DynamicSectionForm";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentPageData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/formInstanceStore";
 import {
@@ -38,8 +38,7 @@ const ProjectPagesEditor = () => {
     currentProjectId,
     currentProject,
     currentPage,
-    currentSection,
-    setCurrentPageData,
+    currentSection
   } = useCurrentDataStore();
   const {
     projectPages,
