@@ -3,7 +3,7 @@ import { Customer } from "@open-dream/shared";
 import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { customerToForm } from "@/util/schemas/customerSchema";
 import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
 

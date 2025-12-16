@@ -9,7 +9,6 @@ import {
   useMemo,
   ReactNode,
 } from "react";
-import { useModal2Store } from "../../store/useModalStore";
 import Modal2Continue from "../../modals/Modal2Continue";
 import appDetails from "../../util/appDetails.json";
 import { AuthContext } from "@/contexts/authContext";
@@ -66,14 +65,14 @@ const LeftBar = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { hasProjectModule, projectsData, media } = useContextQueries();
   const { screenClick } = useRouting();
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
   const {
     leftBarOpen,
     setLeftBarOpen,
     leftBarRef,
     setLeftBarRef,
     pageLayoutRef,
+    modal2,
+    setModal2,
   } = useUiStore();
   const [showLeftBar, setShowLeftBar] = useState<boolean>(false);
   const showLeftBarRef = useRef<HTMLDivElement>(null);

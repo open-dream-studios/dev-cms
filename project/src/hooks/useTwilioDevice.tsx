@@ -4,7 +4,7 @@ import { Device } from "@twilio/voice-sdk";
 import { makeRequest } from "@/util/axios";
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useWebSocketStore } from "@/store/webSocketStore";
+import { useWebSocketStore } from "@/store/util/webSocketStore";
 
 export function useTwilioDevice() {
   const [device, setDevice] = useState<Device | null>(null);

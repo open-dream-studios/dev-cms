@@ -1,9 +1,10 @@
-"use client";
-import { useEnvironmentStore } from "@/store/useEnvironmentStore";
+// project/src/screens/Landing/LandingPage/LandingPage.tsx
+"use client"; 
 import appDetails from "../../../util/appDetails.json";
+import { useUiStore } from "@/store/useUIStore";
 
 const LandingPage = () => {
-  const { domain } = useEnvironmentStore();
+  const { domain } = useUiStore();
   let landing_hero = appDetails.default_hero;
   const foundProject = appDetails.projects.find(
     (item) => item.domain === domain

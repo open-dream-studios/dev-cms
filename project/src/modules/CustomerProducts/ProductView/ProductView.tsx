@@ -28,17 +28,20 @@ import {
 import CustomerTag from "@/modules/components/ProductCard/CustomerTag";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { useModal1Store } from "@/store/useModalStore";
 import CustomerSelection from "@/modules/components/Customers/CustomerSelection";
 import { IoImagesOutline } from "react-icons/io5";
 import { IoImageOutline } from "react-icons/io5";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import ProductJobs from "./ProductJobs";
-import ProductJobCard from "./ProductJobCard/ProductJobCard"; 
-import { setCurrentMediaSelected, setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
+import ProductJobCard from "./ProductJobCard/ProductJobCard";
+import {
+  setCurrentMediaSelected,
+  setCurrentProductData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useWatch } from "react-hook-form";
 import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/useTheme";
@@ -52,10 +55,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { productsData, media, mediaLinks, customers, jobs, jobDefinitions } =
     useContextQueries();
   const { uploadProductImages } = useMedia();
-  const { screen, addingProduct, setAddingProduct, leftBarOpen} =
-    useUiStore();
   const {
-    currentProduct, 
+    screen,
+    addingProduct,
+    setAddingProduct,
+    leftBarOpen,
+    modal1,
+    setModal1,
+  } = useUiStore();
+  const {
+    currentProduct,
     currentProductImages,
     setCurrentProductImages,
     originalProductImages,
@@ -71,9 +80,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     useState<boolean>(false);
   const [noteEditorOpen, setNoteEditorOpen] = useState<boolean>(false);
   const [editMediaLinks, setEditMediaLinks] = useState<boolean>(false);
-
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   const { onProductFormSubmit } = useProductFormSubmit();
   const productForm = useProductForm(currentProduct);

@@ -2,7 +2,6 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useContext } from "react";
 import { IoMoonOutline } from "react-icons/io5";
@@ -10,12 +9,12 @@ import { LuSun } from "react-icons/lu";
 import UserImage from "../blocks/UserImage";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 const AccountSettings = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
   const { handleThemeChange } = useContextQueries();
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const currentTheme = useCurrentTheme();
 

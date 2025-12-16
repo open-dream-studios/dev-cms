@@ -27,7 +27,6 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { buildFolderTree, MediaFolderNode } from "@/util/functions/Tree";
 import FolderItem from "./FolderItem";
 import { MediaFolder } from "@open-dream/shared";
-import { useModal2Store } from "@/store/useModalStore";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
@@ -35,10 +34,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "@/contexts/authContext";
 import { FaPlus } from "react-icons/fa6";
 import Divider from "@/lib/blocks/Divider";
-import { setCurrentActiveFolder, setCurrentOpenFolders, useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentActiveFolder,
+  setCurrentOpenFolders,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { motion } from "framer-motion";
-import { useDnDStore } from "@/store/useDnDStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 function findNode(
   nodes: MediaFolderNode[],
@@ -57,14 +60,12 @@ function findNode(
 export default function MediaFoldersSidebar() {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme(); 
+  const currentTheme = useCurrentTheme();
   const { mediaFolders, upsertMediaFolders, deleteMediaFolder } =
     useContextQueries();
-  const {
-    currentProjectId,
-    currentActiveFolder,
-    currentOpenFolders,
-  } = useCurrentDataStore();
+  const { hoveredFolder, setHoveredFolder, modal2, setModal2 } = useUiStore();
+  const { currentProjectId, currentActiveFolder, currentOpenFolders } =
+    useCurrentDataStore();
 
   const sensors = useSensors(useSensor(PointerSensor));
   const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
@@ -77,9 +78,6 @@ export default function MediaFoldersSidebar() {
   }, [mediaFolders]);
 
   const folderTree: MediaFolderNode[] = buildFolderTree(localFolders);
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
 
@@ -110,7 +108,10 @@ export default function MediaFoldersSidebar() {
     if (contextMenu?.folderId) {
       await deleteMediaFolder(contextMenu.folderId);
       setContextMenu(null);
-      if (currentActiveFolder && currentActiveFolder.folder_id === contextMenu.folderId) {
+      if (
+        currentActiveFolder &&
+        currentActiveFolder.folder_id === contextMenu.folderId
+      ) {
         setCurrentActiveFolder(null);
       }
       queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
@@ -234,14 +235,18 @@ export default function MediaFoldersSidebar() {
               {
                 folder_id: null,
                 project_idx: currentProjectId,
-                parent_folder_id: currentActiveFolder ? currentActiveFolder.id : null,
+                parent_folder_id: currentActiveFolder
+                  ? currentActiveFolder.id
+                  : null,
                 name: values.name,
                 ordinal: null,
               } as MediaFolder,
             ]);
             if (newIds && newIds.length) {
               if (currentActiveFolder && currentActiveFolder.id) {
-                setCurrentOpenFolders((prev) => new Set(prev).add(currentActiveFolder.id!));
+                setCurrentOpenFolders((prev) =>
+                  new Set(prev).add(currentActiveFolder.id!)
+                );
               }
               newlyAddedFolderRef.current = newIds[0];
             }
@@ -277,8 +282,6 @@ export default function MediaFoldersSidebar() {
   };
 
   const [activeId, setActiveId] = useState<number | null>(null);
-
-  const hoveredFolder = useDnDStore((state) => state.hoveredFolder);
   const isDraggedOver = hoveredFolder === "-1";
 
   useEffect(() => {
@@ -312,7 +315,7 @@ export default function MediaFoldersSidebar() {
         }
       }
 
-      useDnDStore.getState().setHoveredFolder(hovered);
+      setHoveredFolder(hovered);
     }
 
     window.addEventListener("mousemove", handleMove);

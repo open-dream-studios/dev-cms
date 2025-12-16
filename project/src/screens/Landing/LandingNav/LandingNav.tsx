@@ -1,30 +1,26 @@
 "use client";
-import { HiBars3 } from "react-icons/hi2"; 
-import appDetails from "../../../util/appDetails.json";
-import { useModal1Store } from "../../../store/useModalStore";
+import { HiBars3 } from "react-icons/hi2";
+import appDetails from "../../../util/appDetails.json"; 
 import Login from "../Login/Login";
 import { removeWhiteSpace } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/useTheme";
-import { useEnvironmentStore } from "@/store/useEnvironmentStore";
 import { useUiStore } from "@/store/useUIStore";
 
 const LandingNav = () => {
   const currentTheme = useCurrentTheme();
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const { leftBarOpen, setLeftBarOpen, leftBarRef } = useUiStore()
+  const { domain, leftBarOpen, setLeftBarOpen, leftBarRef, modal1, setModal1 } =
+    useUiStore();
 
-  const { domain } = useEnvironmentStore();
-  let landing_title = appDetails.default_title
-  let landing_logo = appDetails.default_logo
-  let app_color = appDetails.default_color
+  let landing_title = appDetails.default_title;
+  let landing_logo = appDetails.default_logo;
+  let app_color = appDetails.default_color;
   const foundProject = appDetails.projects.find(
     (item) => item.domain === domain
   );
   if (foundProject) {
     landing_title = foundProject.landing_title;
-    landing_logo = foundProject.landing_logo
-    app_color = foundProject.app_color
+    landing_logo = foundProject.landing_logo;
+    app_color = foundProject.app_color;
   }
 
   const toggleLeftBar = () => {

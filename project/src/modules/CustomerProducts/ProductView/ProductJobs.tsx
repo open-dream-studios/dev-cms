@@ -5,8 +5,8 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useModal1Store, useModal2Store } from "@/store/useModalStore";
+import { useCurrentDataStore } from "@/store/currentDataStore"; 
+import { useUiStore } from "@/store/useUIStore";
 import { Product, Job, JobDefinition } from "@open-dream/shared";
 import { useContext, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
@@ -26,12 +26,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
     deleteJobDefinition,
     upsertJob,
   } = useContextQueries();
-
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const {  modal1, setModal1, modal2, setModal2 } = useUiStore()
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;

@@ -8,7 +8,7 @@ import { FaPlus } from "react-icons/fa6";
 import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
 import { useUiStore } from "@/store/useUIStore";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { setCurrentEmployeeData, setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useEmployeeFormSubmit } from "@/hooks/forms/useEmployeeForm";
 import { useRouting } from "@/hooks/useRouting";

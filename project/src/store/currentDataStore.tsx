@@ -11,7 +11,6 @@ import {
   Media,
   MediaFolder,
   SearchContext,
-  GmailRequestType,
 } from "@open-dream/shared";
 import { createStore } from "@/store/createStore";
 
@@ -58,27 +57,24 @@ export const currentDataInitialState = {
   currentCustomerSearchTerm: "",
 
   searchContext: null as SearchContext,
-
-  selectedGmailTab: "INBOX" as GmailRequestType,
 };
 
 export const useCurrentDataStore = createStore(currentDataInitialState);
 
-/** Project */
+// Projects
 export const setCurrentProjectData = (project: Project | null) =>
   useCurrentDataStore.getState().set({
     currentProject: project,
     currentProjectId: project?.id ?? null,
   });
 
-/** Media */
+// Media
 export const setCurrentMediaSelected = (media: Media | null) =>
   useCurrentDataStore.getState().set({ currentMediaSelected: media });
 
 export const setCurrentMediaItemsSelected = (media: Media[]) =>
   useCurrentDataStore.getState().set({ currentMediaItemsSelected: media });
 
-/** Media folders */
 export const setCurrentActiveFolder = (
   updater:
     | MediaFolder
@@ -102,7 +98,7 @@ export const setCurrentOpenFolders = (
         : updater,
   }));
 
-/** Product */
+// Products
 export const setCurrentProductData = (product: Product | null) =>
   useCurrentDataStore.getState().set({
     currentProduct: product,
@@ -114,21 +110,21 @@ export const setLocalProductsData = (products: Product[]) => {
   useCurrentDataStore.getState().set({ localProductsData: products });
 };
 
-/** Customer */
+// Customers
 export const setCurrentCustomerData = (customer: Customer | null) =>
   useCurrentDataStore.getState().set({
     currentCustomer: customer,
     currentCustomerId: customer?.id ?? null,
   });
 
-/** Employee */
+// Employees
 export const setCurrentEmployeeData = (employee: Employee | null) =>
   useCurrentDataStore.getState().set({
     currentEmployee: employee,
     currentEmployeeId: employee?.id ?? null,
   });
 
-/** Page / Section */
+// Page / Section
 export const setCurrentPageData = (page: ProjectPage | null) =>
   useCurrentDataStore.getState().set({
     currentPage: page,

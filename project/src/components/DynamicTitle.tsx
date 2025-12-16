@@ -1,46 +1,17 @@
-//  // project/src/components/DynamicTitle.tsx
-// "use client";
-// import { useEffect } from "react";
-// import { useEnvironmentStore } from "@/store/useEnvironmentStore";
-// import appDetails from "../util/appDetails.json"
-
-// export default function DynamicTitle() {
-//   const { domain } = useEnvironmentStore();
-//   let landing_logo = appDetails.default_logo;
-//   let landing_title = appDetails.default_title;
-//   const foundProject = appDetails.projects.find(
-//     (item) => item.domain === domain
-//   );
-//   if (foundProject) {
-//     landing_logo = foundProject.landing_logo;
-//     landing_title = foundProject.landing_title;
-//   }
-
-//   useEffect(() => {
-//     document.title = landing_title;
-//     const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
-//     if (favicon) {
-//       favicon.href = landing_logo || "/favicon.ico";
-//     }
-//   }, [domain, landing_logo, landing_title]);
-
-//   return null;
-// }
-
 // project/src/components/DynamicTitle.tsx
 "use client";
 import { useContext, useEffect, useMemo } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { Media } from "@open-dream/shared";
-import { useEnvironmentStore } from "@/store/useEnvironmentStore";
+import { Media } from "@open-dream/shared"; 
 import appDetails from "../util/appDetails.json";
 import { AuthContext } from "@/contexts/authContext";
+import { useUiStore } from "@/store/useUIStore";
 
 export default function DynamicTitle() {
   const { currentProjectId } = useCurrentDataStore();
   const { projectsData, media } = useContextQueries();
-  const { domain } = useEnvironmentStore();
+  const { domain } = useUiStore();
   const { currentUser } = useContext(AuthContext)
 
   const currentProject = useMemo(() => {

@@ -16,7 +16,7 @@ import PagesEditorToolbar from "./PagesEditorToolbar";
 import DynamicSectionForm from "./DynamicSectionForm";
 import { setCurrentPageData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import {
   usePageForm,
   usePageFormSubmit,

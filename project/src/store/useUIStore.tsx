@@ -9,7 +9,7 @@ import {
   MediaUsage,
 } from "@open-dream/shared";
 import { createStore } from "@/store/createStore";
-import { RefObject } from "react";
+import { ReactNode, RefObject } from "react";
 
 interface UploadContext {
   visible: boolean;
@@ -19,12 +19,61 @@ interface UploadContext {
   onUploaded: (uploads: Media[], files: File[]) => Promise<void>;
 }
 
+export type UIModal = {
+  open: boolean;
+  showClose: boolean;
+  offClickClose: boolean;
+  width: string;
+  maxWidth: string;
+  aspectRatio: string;
+  borderRadius: string;
+  content: ReactNode;
+};
+
+type DragItemSizeObject = {
+  width: number;
+  height: number;
+};
+
 export const uiInitialState = {
+  // Environment
+  domain: null as string | null,
+  environmentInitialized: false,
+
+  // Modals
+  modal1: {
+    open: false,
+    showClose: true,
+    offClickClose: true,
+    width: "w-[100vw] sm:w-[90vw] display-height sm:h-[auto]",
+    maxWidth: "max-w-[1000px] min-h-[655px] sm:min-h-[500px]",
+    aspectRatio: "sm:aspect-[3/3.4] md:aspect-[5/4.5] lg:aspect-[5/3.9]",
+    borderRadius: "rounded-0 sm:rounded-[15px] md:rounded-[20px]",
+    content: null as ReactNode,
+  } as UIModal,
+
+  modal2: {
+    open: false,
+    showClose: false,
+    offClickClose: false,
+    width: "w-[300px]",
+    maxWidth: "max-w-[400px]",
+    aspectRatio: "aspect-[5/2]",
+    borderRadius: "rounded-[12px] md:rounded-[15px]",
+    content: null as ReactNode,
+  } as UIModal,
+
+  // DND
+  draggingItem: null as string | null,
+  hoveredFolder: null as string | null,
+  dragItemSize: null as DragItemSizeObject | null,
+
+  // UI
   pageLayoutRef: null as RefObject<HTMLDivElement> | null,
   updatingLock: false,
   leftBarOpen: false,
   leftBarRef: null as RefObject<HTMLDivElement> | null,
-  
+
   screen: "google-ads" as Screen,
   modals: [] as Modal[],
   sidebar: "none" as UIState["sidebar"],
@@ -62,10 +111,18 @@ export const uiInitialState = {
 
 export const useUiStore = createStore(uiInitialState);
 
+export const initializeEnvironment = (domain: string) =>
+  useUiStore.getState().set({
+    domain,
+    environmentInitialized: true,
+  });
+
 /** Resets UI state but preserves screen size */
 export const resetUIStore = () =>
   useUiStore.getState().set((state) => ({
     ...uiInitialState,
+    domain: state.domain,
+    environmentInitialized: state.environmentInitialized,
     screenWidth: state.screenWidth,
     screenHeight: state.screenHeight,
   }));

@@ -1,8 +1,7 @@
 // project/src/modules/CustomerProducts/ProductView/AddEmployeeList.tsx
-import React, { use } from "react";
+import React from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useModal1Store } from "@/store/useModalStore";
+import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
 import { useContext } from "react";
 import {
   Employee,
@@ -12,15 +11,14 @@ import {
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {
   const { currentUser } = useContext(AuthContext);
   const { currentProject, currentProjectId } = useCurrentDataStore();
   const { addEmployeeAssignment, employees } = useContextQueries();
   const currentTheme = useCurrentTheme();
-
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
+  const {  modal1, setModal1 } = useUiStore()
 
   const handleEmployeeClick = async (employee: Employee) => {
     if (!assignment || !employee?.employee_id || !currentProjectId) return;

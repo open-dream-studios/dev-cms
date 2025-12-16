@@ -8,7 +8,6 @@ import { AuthContext } from "@/contexts/authContext";
 import { toast } from "react-toastify";
 import { IoTrashSharp } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useModal2Store } from "@/store/useModalStore";
 import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { useCurrentDataStore } from "@/store/currentDataStore";
@@ -47,9 +46,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
   const { screenClick } = useRouting();
   const { onProductFormSubmit } = useProductFormSubmit();
   const currentTheme = useCurrentTheme();
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const [showFilterPopup, setShowFilterPopup] = useState<boolean>(false);
   const showFilterPopupRef = useRef<boolean>(false);

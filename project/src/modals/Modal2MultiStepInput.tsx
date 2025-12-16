@@ -2,9 +2,9 @@
 "use client";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../contexts/authContext";
-import { useModal2Store } from "../store/useModalStore";
 import { formatPhone } from "@/util/functions/Customers";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 export type StepConfig = {
   name: string;
@@ -25,9 +25,7 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
 }) => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [stepIndex, setStepIndex] = useState(0);

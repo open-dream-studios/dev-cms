@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import CustomerMiniCard from "../CustomersModule/CustomerMiniCard";
 import { customerToForm } from "@/util/schemas/customerSchema";
 import { useUiStore } from "@/store/useUIStore";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useCustomerFormSubmit } from "@/hooks/forms/useCustomerForm";
 import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
 import {

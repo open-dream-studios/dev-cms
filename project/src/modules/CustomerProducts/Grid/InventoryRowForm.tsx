@@ -11,7 +11,7 @@ import Image from "next/image";
 import { FaPlus } from "react-icons/fa6";
 import { Product, MediaLink } from "@open-dream/shared";
 import { useRouting } from "@/hooks/useRouting";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { DelayType } from "@/hooks/useAutoSave";
 import { useCurrentTheme } from "@/hooks/useTheme";
 

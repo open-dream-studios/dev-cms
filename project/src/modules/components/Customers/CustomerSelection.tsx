@@ -2,13 +2,12 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useModal1Store } from "@/store/useModalStore";
 import { Customer } from "@open-dream/shared";
 import { Product } from "@open-dream/shared";
 import { formatPhone } from "@/util/functions/Customers";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { IoTrashSharp } from "react-icons/io5";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import SearchBar from "../SearchBar";
@@ -18,6 +17,7 @@ import {
   runSearchMatch,
 } from "@/util/functions/Search";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useUiStore } from "@/store/useUIStore";
 
 const CustomerSelectCard = ({
   customer,
@@ -33,9 +33,7 @@ const CustomerSelectCard = ({
   const { getForm } = useFormInstanceStore();
 
   const productForm = getForm("product");
-
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
+  const { modal1, setModal1 } = useUiStore();
 
   const handleSelectCustomer = async (customer: Customer) => {
     if (productForm) {
@@ -177,8 +175,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
 
   const productForm = getForm("product");
 
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
+  const { modal1, setModal1 } = useUiStore();
 
   useEffect(() => {
     if (modal1.open && productForm) {
@@ -211,7 +208,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
     }
   };
 
-  const filteredCustomers = useMemo(() => { 
+  const filteredCustomers = useMemo(() => {
     if (!currentCustomerSearchTerm.trim() || !searchContext) return customers;
     const ctx = searchContext;
     const parsed = ctx.parsed;
@@ -219,7 +216,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
       const schema = ctx.schema(customer);
       const result = runSearchMatch(parsed, schema);
       return result.isMatch;
-    }); 
+    });
     return filtered;
   }, [customers, searchContext, currentCustomerSearchTerm]);
 
@@ -270,7 +267,9 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
             );
           })
         ) : (
-          <div className="mt-[3px] ml-[7px] opacity-[0.4] font-[300] text-[16px]">No Matching Customers</div>
+          <div className="mt-[3px] ml-[7px] opacity-[0.4] font-[300] text-[16px]">
+            No Matching Customers
+          </div>
         )}
       </div>
     </div>

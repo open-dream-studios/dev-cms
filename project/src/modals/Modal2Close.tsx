@@ -1,11 +1,10 @@
 // project/src/modals/Modal2Close.tsx
 "use client";
-import { useModal2Store } from "../store/useModalStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 const Modal2Close = ({ text }: { text: string }) => {
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
   const currentTheme = useCurrentTheme();
 
   return (

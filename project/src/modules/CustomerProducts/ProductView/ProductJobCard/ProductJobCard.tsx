@@ -41,12 +41,15 @@ import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
 import { dateToString, formatDateTime } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal1Store, useModal2Store } from "@/store/useModalStore";
-import { useAutoSave } from "@/hooks/useAutoSave"; 
+import { useAutoSave } from "@/hooks/useAutoSave";
 import AddEmployeeList from "../AddEmployeeList";
 import CircularProgress from "./CircularProgress";
 import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
-import { setCurrentEmployeeData, setCurrentMediaSelected, useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentEmployeeData,
+  setCurrentMediaSelected,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import ImageGallery from "@/modules/components/ImageGallery";
@@ -81,12 +84,10 @@ const TaskCard: React.FC<{
     employees,
     deleteEmployeeAssignment,
   } = useContextQueries();
-  const { screenClick } = useRouting(); 
+  const { screenClick } = useRouting();
   const currentTheme = useCurrentTheme();
 
-  const { leftBarOpen } = useUiStore()
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
+  const { leftBarOpen, modal1, setModal1 } = useUiStore();
 
   const taskForm = useTaskForm();
   const taskStatus = useWatch({ control: taskForm.control, name: "status" });
@@ -565,18 +566,11 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     deleteMediaLinks,
   } = useContextQueries();
   const { screenClick } = useRouting();
-  const {
-    setCurrentJobImages,
-    currentJobImages,
-  } = useCurrentDataStore();
+  const { setCurrentJobImages, currentJobImages } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
   const { saveCurrentJobImages } = useMedia();
 
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
-  const { leftBarOpen } = useUiStore()
+  const { leftBarOpen, modal1, setModal1, modal2, setModal2 } = useUiStore();
   const jobForm = useJobForm();
   const status = useWatch({ control: jobForm.control, name: "status" });
 

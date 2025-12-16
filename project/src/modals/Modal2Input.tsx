@@ -1,11 +1,11 @@
 "use client";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../contexts/authContext";
-import { useModal2Store } from "../store/useModalStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { toast } from "react-toastify";
 import { Product } from "@open-dream/shared";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 type Modal2InputProps = {
   text: string;
@@ -13,8 +13,7 @@ type Modal2InputProps = {
 };
 
 const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
   const { currentUser } = useContext(AuthContext);
   const { productsData } = useContextQueries();
   const currentTheme = useCurrentTheme();

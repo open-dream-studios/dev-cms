@@ -14,6 +14,7 @@ export const useGmailDataStore = createStore({
 });
 
 export const useGmailUIStore = createStore({
+  selectedGmailTab: "INBOX" as GmailRequestType,
   selectedId: null as string | null,
   detail: null as MessageDetail | null,
   search: "",

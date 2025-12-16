@@ -18,7 +18,7 @@ import {
   useCustomerForm,
   useCustomerFormSubmit,
 } from "@/hooks/forms/useCustomerForm";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useOutsideClick } from "@/hooks/useOutsideClick";

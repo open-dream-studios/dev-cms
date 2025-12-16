@@ -10,7 +10,6 @@ import { IoEyeOff } from "react-icons/io5";
 import { IoEye } from "react-icons/io5";
 import appDetails from "../../../util/appDetails.json";
 import animationData from "../../../util/animations/loading-animation-black.json";
-import { useModal1Store, useModal2Store } from "../../../store/useModalStore";
 import TermsDocument from "../../../util/forms/TermsDocument";
 import PrivacyDocument from "../../../util/forms/PrivacyDocument";
 import Modal2Warning from "../../../modals/Modal2Close";
@@ -23,10 +22,10 @@ import { googleSignIn, login, register } from "@/util/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { useCurrentTheme } from "@/hooks/useTheme";
-import { useEnvironmentStore } from "@/store/useEnvironmentStore";
+import { useUiStore } from "@/store/useUIStore";
 
 const LoginSlider = () => {
-  const { domain } = useEnvironmentStore();
+  const { domain } = useUiStore();
   let default_slides = appDetails.default_slides;
   const foundProject = appDetails.projects.find(
     (item) => item.domain === domain
@@ -111,19 +110,15 @@ const LoginSlider = () => {
 };
 
 const Login = () => {
-  const currentTheme = useCurrentTheme();
   const router = useRouter();
+  const currentTheme = useCurrentTheme();
+  const { domain, modal1, setModal1, modal2, setModal2 } = useUiStore();
   const [inputs, setInputs] = useState({
     email: "",
     password: "",
     first_name: "",
     last_name: "",
   });
-
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const [signUpPage, setSignUpPage] = useState<boolean>(false);
   type TermsVisibleType = "terms" | "privacy" | null;
@@ -143,7 +138,6 @@ const Login = () => {
   const passwordVisibleRef = useRef<HTMLDivElement>(null);
   const registerTitleRef = useRef<HTMLParagraphElement>(null);
 
-  const { domain } = useEnvironmentStore();
   let landing_title = appDetails.default_title;
   const foundProject = appDetails.projects.find(
     (item) => item.domain === domain
@@ -288,9 +282,8 @@ const Login = () => {
       const cancelModal = () => {
         setAccessToken("");
         setModal2({
-          ...Object.fromEntries(
-            Object.entries(modal2).filter(([key]) => key !== "content")
-          ),
+          ...modal2,
+          content: null,
           open: false,
         });
       };

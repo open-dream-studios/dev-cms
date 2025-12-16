@@ -26,11 +26,10 @@ import {
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 // import { useWebSocketManager } from "@/store/webSocketStore";
-import { resetUIStore, setScreenSize, useUiStore } from "@/store/useUIStore";
+import { initializeEnvironment, resetUIStore, setScreenSize, useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { PageLayout } from "./pageLayout";
-import UploadModal from "@/components/Upload/Upload";
-import { useEnvironmentStore } from "@/store/useEnvironmentStore";
+import UploadModal from "@/components/Upload/Upload"; 
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -54,9 +53,8 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   const { currentUser, isLoadingCurrentUserData } = useContext(AuthContext);
   const router = useRouter();
   const pathname = usePathname();
-
-  const { init, initialized } = useEnvironmentStore();
-  const { setLeftBarOpen } = useUiStore();
+  
+  const { environmentInitialized, setLeftBarOpen } = useUiStore();
   useEffect(() => {
     const isDesktop = window.innerWidth > 1024;
     setLeftBarOpen(isDesktop);
@@ -77,11 +75,11 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   }, [router, currentUser, isLoadingCurrentUserData, pathname]);
 
   useEffect(() => {
-    if (!initialized) {
-      init(window.location.hostname);
+    if (!environmentInitialized) {
+      initializeEnvironment(window.location.hostname);
     }
-  }, [initialized, init]);
-  if (!initialized) return null;
+  }, [environmentInitialized]);
+  if (!environmentInitialized) return null;
 
   if (isLoadingCurrentUserData) return null;
   if (!currentUser && pathname !== "/") return null;

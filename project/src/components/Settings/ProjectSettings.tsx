@@ -10,7 +10,7 @@ import { useContext, useEffect, useMemo } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Media, Project } from "@open-dream/shared";
 import { getCardStyle } from "@/styles/themeStyles";

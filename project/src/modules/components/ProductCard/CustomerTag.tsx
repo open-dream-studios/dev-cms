@@ -1,5 +1,5 @@
+// project/src/modules/components/ProductCard/CustomerTag.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { useModal1Store } from "@/store/useModalStore";
 import { Customer, Product } from "@open-dream/shared";
 import { formatPhone } from "@/util/functions/Customers";
 import React, { useContext } from "react";
@@ -20,13 +20,10 @@ const CustomerTag = ({
   productCustomer: Customer | null;
   oneSize: boolean;
 }) => {
-  const { currentUser } = useContext(AuthContext); 
+  const { currentUser } = useContext(AuthContext);
   const { screenClick } = useRouting();
-  const { screen } = useUiStore();
+  const { screen, modal1, setModal1 } = useUiStore();
   const currentTheme = useCurrentTheme();
-
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
 
   const handleAddCustomerClick = () => {
     setModal1({
@@ -90,7 +87,8 @@ const CustomerTag = ({
                 : "text-[calc(11.5px+0.15vw)] leading-[calc(13px+0.4vw)]"
             } truncate font-[600]`}
           >
-            {capitalizeFirstLetter(productCustomer.first_name)} {capitalizeFirstLetter(productCustomer.last_name)}
+            {capitalizeFirstLetter(productCustomer.first_name)}{" "}
+            {capitalizeFirstLetter(productCustomer.last_name)}
           </div>
           <div
             style={{

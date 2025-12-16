@@ -23,8 +23,8 @@ import {
   setCurrentActiveFolder,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
-import { useDnDStore } from "@/store/useDnDStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
@@ -48,6 +48,7 @@ export default function FolderItem({
   const { upsertMediaFolders } = useContextQueries();
   const { currentProjectId, currentActiveFolder, currentOpenFolders } =
     useCurrentDataStore();
+  const { hoveredFolder } = useUiStore();
   const [tempName, setTempName] = useState<string>(folder.name);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -116,7 +117,6 @@ export default function FolderItem({
       setRenamingFolder(folder.folder_id);
     }
   };
-  const hoveredFolder = useDnDStore((state) => state.hoveredFolder);
   const isDraggedOver = hoveredFolder === String(folder.id);
 
   const [hovered, setHovered] = useState(false);

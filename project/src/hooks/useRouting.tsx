@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { usePathname, useRouter } from "next/navigation";
 import { useUiStore } from "@/store/useUIStore";
 import { Screen } from "@open-dream/shared";
-import { useFormInstanceStore } from "@/store/formInstanceStore";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useCustomerFormSubmit } from "./forms/useCustomerForm";
 import { useEmployeeFormSubmit } from "./forms/useEmployeeForm";
 import {

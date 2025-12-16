@@ -1,8 +1,7 @@
 // project/src/components/Settings/UserAccess.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useModal1Store } from "@/store/useModalStore";
+import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
 import {  projectRoles, ProjectUser } from "@open-dream/shared";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useContext, useMemo, useState } from "react";

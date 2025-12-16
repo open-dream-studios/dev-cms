@@ -14,9 +14,9 @@ import {
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore";
 import { PageDefinition } from "@open-dream/shared";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 const EditPageDefinitions = () => {
   const { currentUser } = useContext(AuthContext);
@@ -27,9 +27,7 @@ const EditPageDefinitions = () => {
     deletePageDefinition,
     isLoadingPageDefinitions,
   } = useContextQueries();
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const [selectedPage, setSelectedPage] = useState<PageDefinition | null>(null);
   const [editingPage, setEditingPage] = useState<PageDefinition | null>(null);

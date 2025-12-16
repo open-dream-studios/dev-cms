@@ -1,7 +1,7 @@
 // project/src/hooks/useModals.tsx
 "use client";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore";
+import { useUiStore } from "@/store/useUIStore";
 
 export type PopupDisplayItem = {
   type: string;
@@ -10,8 +10,7 @@ export type PopupDisplayItem = {
 };
 
 export function useModals() {
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const promptContinue = async (
     text: string,

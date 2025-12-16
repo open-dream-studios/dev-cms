@@ -1,18 +1,14 @@
 "use client";
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { useModal1Store, useModal2Store } from "../store/useModalStore";
+import React, { useContext, useEffect, useRef, useState } from "react"; 
 import { AuthContext } from "../contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 const Modals = ({ landing }: { landing: boolean }) => {
   const { currentUser } = useContext(AuthContext);
+  const {  modal1, setModal1, modal2, setModal2 } = useUiStore()
   const currentTheme = useCurrentTheme();
-
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
 
   const [showModal1, setShowModal1] = useState<boolean>(false);
   const [showModal2, setShowModal2] = useState<boolean>(false);

@@ -12,7 +12,6 @@ import {
 import { IoClose } from "react-icons/io5";
 import { FiEdit } from "react-icons/fi";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useModal2Store } from "@/store/useModalStore";
 import {
   SectionDefinition,
   FieldDefinition,
@@ -21,6 +20,7 @@ import {
 import SchemaBuilder from "./SchemaBuilder";
 import { toast } from "react-toastify";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 const EditSectionDefinitions = () => {
   const { currentUser } = useContext(AuthContext);
@@ -31,9 +31,7 @@ const EditSectionDefinitions = () => {
     deleteSectionDefinition,
     isLoadingSectionDefinitions,
   } = useContextQueries();
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const [selectedSection, setSelectedSection] =
     useState<SectionDefinition | null>(null);

@@ -21,12 +21,16 @@ import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useMedia } from "@/hooks/useMedia";
-import { useDnDStore } from "@/store/useDnDStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import RenderedImage from "../components/ProductCard/RenderedImage";
 import MediaPlayer from "./MediaPlayer";
-import { setCurrentMediaItemsSelected, setCurrentMediaSelected, useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentMediaItemsSelected,
+  setCurrentMediaSelected,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { GrRotateRight } from "react-icons/gr";
+import { useUiStore } from "@/store/useUIStore";
 
 type SortableMediaItemProps = {
   media: Media;
@@ -55,11 +59,10 @@ function SortableMediaItem({
     disabled,
     animateLayoutChanges: () => false,
   });
+  const { setDragItemSize } = useUiStore();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const {
-    currentMediaItemsSelected,
-  } = useCurrentDataStore();
+  const { currentMediaItemsSelected } = useCurrentDataStore();
   const { handleDeleteMedia, handleRotateMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
@@ -68,7 +71,7 @@ function SortableMediaItem({
   useEffect(() => {
     if (isDragging && nodeRef.current) {
       const rect = nodeRef.current.getBoundingClientRect();
-      useDnDStore.getState().setDragItemSize({
+      setDragItemSize({
         width: rect.width,
         height: rect.height,
       });
@@ -261,9 +264,10 @@ export default function MediaGrid({
     currentMediaItemsSelected,
     currentActiveFolder,
   } = useCurrentDataStore();
+  const { dragItemSize, setDraggingItem, hoveredFolder, setHoveredFolder } =
+    useUiStore();
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [activeMedia, setActiveMedia] = useState<Media | null>(null);
-  const draggedItemSize = useDnDStore((s) => s.dragItemSize);
 
   const originalMediaRef = useRef<Media[]>([]);
   useEffect(() => {
@@ -277,9 +281,8 @@ export default function MediaGrid({
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    const hoveredFolder = useDnDStore.getState().hoveredFolder;
-    useDnDStore.getState().setDraggingItem(null);
-    useDnDStore.getState().setHoveredFolder(null);
+    setDraggingItem(null);
+    setHoveredFolder(null);
 
     if (hoveredFolder) {
       const draggedMediaId = active.id;
@@ -398,8 +401,8 @@ export default function MediaGrid({
             <div
               className="overflow-hidden"
               style={{
-                width: draggedItemSize?.width || 170,
-                height: draggedItemSize?.height || 170,
+                width: dragItemSize?.width || 170,
+                height: dragItemSize?.height || 170,
                 pointerEvents: "none",
               }}
             >

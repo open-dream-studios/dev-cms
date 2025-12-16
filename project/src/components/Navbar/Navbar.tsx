@@ -2,8 +2,7 @@
 "use client";
 import { useContext, useMemo } from "react";
 import { AuthContext } from "../../contexts/authContext";
-import { HiBars3 } from "react-icons/hi2";
-import { useModal1Store } from "../../store/useModalStore";
+import { HiBars3 } from "react-icons/hi2"; 
 import appDetails from "../../util/appDetails.json";
 import { removeWhiteSpace } from "../../util/functions/Data"; 
 import "./Navbar.css";
@@ -31,9 +30,7 @@ const Navbar = () => {
   const { updatingLock } = useUiStore();
   const { projectsData, media } = useContextQueries();
   const { saveProducts } = useProductFormSubmit();
-  const modal1 = useModal1Store((state: any) => state.modal1);
-  const setModal1 = useModal1Store((state: any) => state.setModal1);
-  const { leftBarOpen, setLeftBarOpen, leftBarRef, pageLayoutRef } = useUiStore(); 
+  const { leftBarOpen, setLeftBarOpen, leftBarRef, pageLayoutRef, modal1, setModal1 } = useUiStore(); 
   const currentTheme = useCurrentTheme();
 
   const currentProject = useMemo(() => {

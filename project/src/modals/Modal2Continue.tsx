@@ -2,7 +2,6 @@
 "use client";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "../contexts/authContext";
-import { useModal2Store } from "../store/useModalStore";
 import { PopupDisplayItem } from "@/hooks/useModals";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { useRouting } from "@/hooks/useRouting";
@@ -10,6 +9,7 @@ import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Job, Product } from "@open-dream/shared";
+import { useUiStore } from "@/store/useUIStore";
 
 type Modal2ContinueProps = {
   text: string;
@@ -30,9 +30,7 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
   const { jobs, productsData } = useContextQueries();
   const { screenClick } = useRouting();
   const currentTheme = useCurrentTheme();
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const handleContinue = () => {
     setModal2({ ...modal2, open: false });

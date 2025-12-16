@@ -1,22 +1,25 @@
 // project/src/modules/CustomerCalls/CustomerCalls.tsx
 "use client";
-import { useModal2Store } from "@/store/useModalStore";
 import { useTwilioDevice } from "../../hooks/useTwilioDevice";
 import { RiPhoneFill } from "react-icons/ri";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
-import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { AuthContext } from "@/contexts/authContext"; 
+import { AuthContext } from "@/contexts/authContext";
 import "./CustomerCalls.css";
 import { Customer } from "@open-dream/shared";
 import { normalizeUSNumber } from "@/util/functions/Calls";
-import { formatPhoneNumber } from "@/util/functions/Customers"; 
+import { formatPhoneNumber } from "@/util/functions/Customers";
 import { makeRequest } from "@/util/axios";
-import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
-import { useWebSocketStore } from "@/store/webSocketStore";
+import {
+  setCurrentCustomerData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
+import { useWebSocketStore } from "@/store/util/webSocketStore";
 import { useRouting } from "@/hooks/useRouting";
+import { useUiStore } from "@/store/useUIStore";
 
 const CustomerCalls = () => {
   const { currentUser } = useContext(AuthContext);
@@ -25,21 +28,19 @@ const CustomerCalls = () => {
     setIncoming,
     connection,
     acceptCall,
-    hangupCall, 
+    hangupCall,
     identity,
-    dialing, 
+    dialing,
     startCall,
   } = useTwilioDevice();
   const { projectUsers, customers } = useContextQueries();
-  const { currentProjectId } = useCurrentDataStore(); 
+  const { currentProjectId } = useCurrentDataStore();
 
   const { screenClick } = useRouting();
 
   const [incomingCall, setIncomingCall] = useState<any>(null);
   const [activeCall, setActiveCall] = useState<any>(null);
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const { ws, wsUrl, addMessageListener, send } = useWebSocketStore();
 

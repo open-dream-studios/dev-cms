@@ -5,13 +5,13 @@ import React, { useContext, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MultiStepModalInput, { StepConfig } from "@/modals/Modal2MultiStepInput";
-import { useModal2Store } from "@/store/useModalStore";
 import { IoCloseOutline } from "react-icons/io5";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useQueryClient } from "@tanstack/react-query";
 import { FiEdit } from "react-icons/fi";
 import { setCurrentProjectData } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useUiStore } from "@/store/useUIStore";
 
 const ProjectItem = ({
   project,
@@ -21,10 +21,9 @@ const ProjectItem = ({
   editProjectsMode: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme(); 
+  const currentTheme = useCurrentTheme();
   const { deleteProject } = useContextQueries();
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   const handleProjectClick = () => {
     setCurrentProjectData(project);
@@ -102,9 +101,7 @@ const AdminHome = () => {
   const { projectsData, upsertProject, isLoadingProjects } =
     useContextQueries();
   const [editProjectsMode, setEditProjectsMode] = useState<boolean>(false);
-
-  const modal2 = useModal2Store((state: any) => state.modal2);
-  const setModal2 = useModal2Store((state: any) => state.setModal2);
+  const { modal2, setModal2 } = useUiStore();
 
   if (isLoadingProjects) return null;
 

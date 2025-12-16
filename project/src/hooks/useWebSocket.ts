@@ -95,7 +95,7 @@
 // }
 
 import { useEffect, useRef } from "react";
-import { useWebSocketStore } from "@/store/webSocketStore";
+import { useWebSocketStore } from "@/store/util/webSocketStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type MsgHandler = (ev: MessageEvent) => void;

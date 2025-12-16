@@ -17,8 +17,7 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 import { SkeletonLine } from "@/lib/skeletons/Skeletons";
 import GmailMessageSkeleton from "@/lib/skeletons/GmailMessageSkeleton";
 import { useGmail } from "@/hooks/google/useGmail";
-import { useGmailProfile } from "@/hooks/google/useGmailProfile";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useGmailProfile } from "@/hooks/google/useGmailProfile"; 
 import { openWindow } from "@/util/functions/Handlers";
 import {
   cleanText,
@@ -32,8 +31,8 @@ import { useGmailUIStore } from "./_gmailStore";
 import GmailMessageView from "./GmailMessageView";
 import { useGmailActions } from "./useGmailActions";
 
-const GmailModule: React.FC = () => { 
-  const { selectedGmailTab, setSelectedGmailTab } = useCurrentDataStore();
+const GmailModule = () => { 
+  const { selectedGmailTab, setSelectedGmailTab } = useGmailUIStore();
   const currentTheme = useCurrentTheme();
   const {
     messages,
@@ -306,7 +305,7 @@ export const GmailMiniCardStack = ({
 }: {
   visibleMessages: GmailMessage[];
 }) => {
-  const { selectedGmailTab } = useCurrentDataStore();
+  const { selectedGmailTab } = useGmailUIStore();
   const { isLoading } = useGmail(selectedGmailTab as GmailRequestType);
   const { data: gmailProfile } = useGmailProfile();
   const { setPhotoError } = useGmailUIStore();
