@@ -73,7 +73,6 @@ export const logout = async (
           sameSite: "none",
           path: "/",
           expires: new Date(0),
-          domain: "tannyspaacquisitions.shop",
         },
       },
     ],
