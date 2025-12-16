@@ -119,8 +119,8 @@ export const googleAuthFunction = async (
           value: token,
           options: {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: true,
+            sameSite: "none",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           },
@@ -178,8 +178,8 @@ export const registerFunction = async (
           value: token,
           options: {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            secure: true,
+            sameSite: "none",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           },
@@ -243,8 +243,8 @@ export const loginFunction = async (
         value: token,
         options: {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+          secure: true,
+          sameSite: "none",
           path: "/",
           maxAge: 7 * 24 * 60 * 60 * 1000,
         },

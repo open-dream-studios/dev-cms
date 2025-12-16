@@ -9,6 +9,7 @@ import { useModal1Store } from "../../../store/useModalStore";
 import Login from "../Login/Login";
 import { removeWhiteSpace } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useEnvironmentStore } from "@/store/useEnvironmentStore";
 
 const LandingNav = () => {
   const currentTheme = useCurrentTheme();
@@ -19,6 +20,19 @@ const LandingNav = () => {
     (state: any) => state.setLeftBarOpen
   );
   const leftBarRef = useLeftBarRefStore((state) => state.leftBarRef);
+
+  const { domain } = useEnvironmentStore();
+  let landing_title = appDetails.default_title
+  let landing_logo = appDetails.default_logo
+  let app_color = appDetails.default_color
+  const foundProject = appDetails.projects.find(
+    (item) => item.domain === domain
+  );
+  if (foundProject) {
+    landing_title = foundProject.landing_title;
+    landing_logo = foundProject.landing_logo
+    app_color = foundProject.app_color
+  }
 
   const toggleLeftBar = () => {
     if (leftBarRef && leftBarRef.current) {
@@ -73,7 +87,7 @@ const LandingNav = () => {
           /> */}
           <div className="flex flex-row gap-[5px] items-center">
             <img
-              src={appDetails.default_logo}
+              src={landing_logo}
               alt="logo"
               className="select-none ml-[3px] mt-[-1px] w-[35px] h-[35px] object-cover"
             />
@@ -83,7 +97,7 @@ const LandingNav = () => {
                 color: currentTheme.text_1,
               }}
             >
-              Project CMS
+              {landing_title}
             </p>
           </div>
         </div>
@@ -92,7 +106,7 @@ const LandingNav = () => {
           <div
             onClick={handleSignInClick}
             style={{
-              backgroundColor: "#451D65",
+              backgroundColor: app_color,
             }}
             className="cursor-pointer select-none dim hover:brightness-75 px-[17px] py-[5.5px] text-[14px] font-[600] text-white/90 rounded-[7px]"
           >

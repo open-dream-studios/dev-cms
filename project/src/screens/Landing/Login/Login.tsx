@@ -8,7 +8,7 @@ import { FaFacebook } from "react-icons/fa";
 import { BsQuestion } from "react-icons/bs";
 import { IoEyeOff } from "react-icons/io5";
 import { IoEye } from "react-icons/io5";
-import appDetails from "../../../util/appDetails.json"; 
+import appDetails from "../../../util/appDetails.json";
 import animationData from "../../../util/animations/loading-animation-black.json";
 import { useModal1Store, useModal2Store } from "../../../store/useModalStore";
 import TermsDocument from "../../../util/forms/TermsDocument";
@@ -23,15 +23,19 @@ import { googleSignIn, login, register } from "@/util/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useEnvironmentStore } from "@/store/useEnvironmentStore";
 
 const LoginSlider = () => {
-  const images = [
-    "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img1.png",
-    "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img2.png",
-    "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img3.jpg",
-  ];
+  const { domain } = useEnvironmentStore();
+  let default_slides = appDetails.default_slides;
+  const foundProject = appDetails.projects.find(
+    (item) => item.domain === domain
+  );
+  if (foundProject) {
+    default_slides = foundProject.landing_slides;
+  }
 
-  images.push(images[0]);
+  const slides = [...default_slides, default_slides[0]];
   const [index, setIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
 
@@ -43,7 +47,7 @@ const LoginSlider = () => {
   }, []);
 
   useEffect(() => {
-    if (index === images.length - 1) {
+    if (index === slides.length - 1) {
       setTimeout(() => {
         setIsAnimating(false);
         setIndex(0);
@@ -51,7 +55,7 @@ const LoginSlider = () => {
     } else {
       setIsAnimating(true);
     }
-  }, [index, images.length]);
+  }, [index, slides.length]);
 
   return (
     <div className="relative w-full h-full overflow-hidden">
@@ -66,7 +70,7 @@ const LoginSlider = () => {
         }
         style={{ width: `100%` }}
       >
-        {images.map((src, i) => (
+        {slides.map((src, i) => (
           <img
             key={i}
             src={src}
@@ -106,8 +110,8 @@ const LoginSlider = () => {
   );
 };
 
-const Login = () => { 
-  const currentTheme = useCurrentTheme()
+const Login = () => {
+  const currentTheme = useCurrentTheme();
   const router = useRouter();
   const [inputs, setInputs] = useState({
     email: "",
@@ -138,6 +142,15 @@ const Login = () => {
   const questionButtonRef = useRef<HTMLDivElement>(null);
   const passwordVisibleRef = useRef<HTMLDivElement>(null);
   const registerTitleRef = useRef<HTMLParagraphElement>(null);
+
+  const { domain } = useEnvironmentStore();
+  let landing_title = appDetails.default_title;
+  const foundProject = appDetails.projects.find(
+    (item) => item.domain === domain
+  );
+  if (foundProject) {
+    landing_title = foundProject.landing_title;
+  }
 
   const handleEmailInputChange = (e: any) => {
     if (e.target.value.trim().length > 0 && !passwordVisible) {
@@ -345,14 +358,15 @@ const Login = () => {
                 style={{ color: currentTheme.text_1 }}
                 className="text-center text-[16px] leading-[18px] font-[500]"
               >
-                We sent you an email! 
+                We sent you an email!
               </div>
 
               <div
                 style={{ color: currentTheme.text_3 }}
                 className="text-center font-[400] text-[14px] leading-[19px]"
               >
-                Check your inbox to find your reset code. If you don&apos;t see it, check your spam folder.
+                Check your inbox to find your reset code. If you don&apos;t see
+                it, check your spam folder.
               </div>
 
               <div className="w-[calc(100%-50px)] mx-[25px] mb-[7px] h-[50px] flex flex-row gap-[6px] items-center justify-center">
@@ -743,7 +757,7 @@ const Login = () => {
             color: currentTheme.text_1,
           }}
         >
-          CMS Login
+          {landing_title} Login
         </div>
 
         <div className="flex w-full flex-row gap-[11px] px-[80px] md:px-[40px]">

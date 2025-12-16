@@ -28,7 +28,7 @@ export default function CustomerManager() {
   }, [registerModules, setLayout, updateSection, updateShape]);
   // return <Dashboard minHeight={800} maxHeight={900} gap={0} />;
   return <div className="px-[14px] py-[12px]">
-  <GoogleCalendar />;
+  <GoogleCalendar />
   </div>
   // return <CustomerInteractionTimeline />;
 }

@@ -15,7 +15,7 @@ async function flushTraffic() {
     await insertHourlyTraffic(count);
     await deleteOldTraffic();  
     uniqueIPs = new Set(); 
-    console.log("📊 Hourly traffic saved:", count);
+    // console.log("📊 Hourly traffic saved:", count);
   } catch (err) {
     console.error("❌ Error flushing traffic:", err);
   }

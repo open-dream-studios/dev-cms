@@ -28,6 +28,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { PageLayout } from "./pageLayout";
 import UploadModal from "@/components/Upload/Upload";
+import { useEnvironmentStore } from "@/store/useEnvironmentStore";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -88,6 +89,16 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
 };
 
 const UnprotectedLayout = () => {
+  const { init, initialized } = useEnvironmentStore();
+
+  useEffect(() => {
+    if (!initialized) {
+      init(window.location.hostname);
+    }
+  }, [initialized, init]);
+
+  if (!initialized) return null;
+
   return (
     <>
       <Modals landing={true} />

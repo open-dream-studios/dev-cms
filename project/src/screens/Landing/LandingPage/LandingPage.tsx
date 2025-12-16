@@ -1,7 +1,17 @@
 "use client";
+import { useEnvironmentStore } from "@/store/useEnvironmentStore";
 import appDetails from "../../../util/appDetails.json";
 
 const LandingPage = () => {
+  const { domain } = useEnvironmentStore();
+  let landing_hero = appDetails.default_hero;
+  const foundProject = appDetails.projects.find(
+    (item) => item.domain === domain
+  );
+  if (foundProject) {
+    landing_hero = foundProject.landing_hero;
+  }
+
   return (
     <div className="w-[100% display-height bg-black">
       <div
@@ -14,10 +24,13 @@ const LandingPage = () => {
         className={`absolute left-0 top-[var(--nav-height)] w-[100vw] flex h-[calc(100%-var(--nav-height))] overflow-scroll`}
       >
         <img
-          src="https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img4.jpg"
+          src={landing_hero}
           alt="logo"
-          className="select-none w-[100vw] object-contain"
+          className={`select-none w-[100vw] ${
+            foundProject ? "object-cover" : "object-contain"
+          }`}
         />
+        <div className="absolute top-0 left-0 w-[100%] h-[100%] bg-black/50"></div>
       </div>
     </div>
   );
