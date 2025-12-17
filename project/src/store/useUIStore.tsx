@@ -85,7 +85,7 @@ export const uiInitialState = {
   contextMenu: null as {
     x: number;
     y: number;
-    input: any | null;
+    input: any;
   } | null,
 
   // Products

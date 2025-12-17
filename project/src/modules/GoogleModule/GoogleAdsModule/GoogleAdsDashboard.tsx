@@ -47,14 +47,18 @@ export default function GoogleAdsDashboard() {
     ) => {
       if (!projectModules || projectModules.length === 0) return;
       try {
-        const adsData = savedData;
-        // const res = await runModule("google-ads-api-module", {
-        //   action: "getDashboardData",
-        // });
-        // const adsData = res.data
+        let adsData = null;
+        if (process.env.NODE_ENV === "production") {
+          const res = await runModule("google-ads-api-module", {
+            action: "getDashboardData",
+          });
+          adsData = res.data;
+        } else {
+          adsData = savedData;
+        }
 
         if (cancelToken.cancelled) return;
-        
+
         setIsLoadingGoogleAdsData(true);
         // console.log(adsData);
         if (adsData) {
