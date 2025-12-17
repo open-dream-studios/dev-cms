@@ -26,7 +26,7 @@ import {
   LabelPill,
   SidebarItem,
 } from "./GmailHelpers";
-import { useGmailUIStore } from "./_gmailStore";
+import { useGmailUIStore } from "./_store/gmail.store";
 import GmailMessageView from "./GmailMessageView";
 import { useGmailActions } from "./useGmailActions";
 

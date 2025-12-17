@@ -35,6 +35,7 @@ import {
 import { useRouting } from "@/hooks/useRouting";
 import { PageLayout } from "./pageLayout";
 import UploadModal from "@/components/Upload/Upload";
+import { ContextMenu } from "@/components/ContextMenu";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -59,11 +60,7 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { environmentInitialized, setLeftBarOpen } = useUiStore();
-  // useEffect(() => {
-  //   const isDesktop = window.innerWidth > 1024;
-  //   setLeftBarOpen(isDesktop);
-  // }, [setLeftBarOpen]);
+  const { environmentInitialized } = useUiStore();
 
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ["currentUser"] });
@@ -150,6 +147,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="w-[100vw] display-height">
+      <ContextMenu/>
       {updatingLock && (
         <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
       )}

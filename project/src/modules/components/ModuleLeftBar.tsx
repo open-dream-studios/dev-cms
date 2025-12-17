@@ -2,8 +2,8 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
-import { Customer, Product, Employee } from "@open-dream/shared";
-import React, { use, useContext } from "react";
+import { Product, Employee } from "@open-dream/shared";
+import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard";
 import { employeeToForm } from "@/util/schemas/employeeSchema";
@@ -21,18 +21,15 @@ import ProductMiniCard from "./ProductCard/ProductMiniCard";
 import ProductMiniCardSkeleton from "@/lib/skeletons/ProductMiniCardSkeleton";
 import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
 import SearchBar from "./SearchBar";
-import CustomerLeftBar from "../CustomersModule/CustomerLeftBar";
-import { useContextMenu } from "@/hooks/useContextMenu";
-import { useCustomers } from "@/hooks/useCustomers";
-import ContextMenu from "@/components/Popups/ContextMenu";
+import CustomerLeftBar from "../CustomersModule/CustomerLeftBar"; 
+import { useCustomers } from "@/hooks/useCustomers"; 
 
 const ModuleLeftBar = () => {
   const queryClient = useQueryClient();
   const { currentProject } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const {
-    isLoadingProductsData,
-    deleteEmployee,
+    isLoadingProductsData, 
     employees,
     refetchCustomers,
     runModule,
@@ -45,10 +42,7 @@ const ModuleLeftBar = () => {
   const { setUpdatingLock } = useUiStore();
   const { screen, setAddingEmployee, addingProduct, setAddingProduct } =
     useUiStore();
-  const { handleCustomerClick, handleDeleteCustomer } = useCustomers();
-  const { contextMenu, openContextMenu } = useContextMenu<
-    Customer | Employee
-  >();
+  const { handleCustomerClick } = useCustomers();
   const currentTheme = useCurrentTheme();
 
   const productForm = getForm("product");
@@ -56,16 +50,6 @@ const ModuleLeftBar = () => {
 
   const employeeForm = getForm("employee");
   const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
-
-  const handleDeleteEmployee = async (employee: Employee | null) => {
-    if (!employee || !employee.employee_id) return;
-    await deleteEmployee(employee.employee_id);
-    if (employeeForm) {
-      employeeForm.reset(employeeToForm(null));
-    }
-    setCurrentEmployeeData(null);
-    setAddingEmployee(true);
-  };
 
   const handleEmployeeClick = async (employee: Employee | null) => {
     if (employeeForm && employeeForm.formState.isDirty) {
@@ -138,19 +122,6 @@ const ModuleLeftBar = () => {
       }}
     >
       <div className="flex flex-col px-[15px] pb-[8px]">
-        {contextMenu && screen === "customers" && (
-          <ContextMenu
-            action1Message={"Delete customer"}
-            action1Click={handleDeleteCustomer}
-          />
-        )}
-        {contextMenu && screen === "employees" && (
-          <ContextMenu
-            action1Message={"Delete employee"}
-            action1Click={handleDeleteEmployee}
-          />
-        )}
-
         <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
           <div className="select-none flex flex-row gap-[13.5px] items-center w-[100%]">
             <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
@@ -213,7 +184,6 @@ const ModuleLeftBar = () => {
                       key={index}
                       employee={employee}
                       index={index}
-                      handleContextMenu={(e) => openContextMenu(e, employee)}
                       handleEmployeeClick={handleEmployeeClick}
                     />
                   );

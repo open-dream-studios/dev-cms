@@ -1,6 +1,5 @@
 // project/src/modules/MediaModule/MediaFoldersSidebar.tsx
 "use client";
-
 import { useContext, useEffect, useRef, useState } from "react";
 import {
   DndContext,
@@ -29,8 +28,7 @@ import FolderItem from "./FolderItem";
 import { MediaFolder } from "@open-dream/shared";
 import Modal2MultiStepModalInput, {
   StepConfig,
-} from "@/modals/Modal2MultiStepInput";
-import { useQueryClient } from "@tanstack/react-query";
+} from "@/modals/Modal2MultiStepInput"; 
 import { AuthContext } from "@/contexts/authContext";
 import { FaPlus } from "react-icons/fa6";
 import Divider from "@/lib/blocks/Divider";
@@ -42,6 +40,7 @@ import {
 import { motion } from "framer-motion";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { useUiStore } from "@/store/useUIStore";
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
 
 function findNode(
   nodes: MediaFolderNode[],
@@ -57,11 +56,10 @@ function findNode(
   return null;
 }
 
-export default function MediaFoldersSidebar() {
-  const queryClient = useQueryClient();
+export default function MediaFoldersSidebar() { 
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { mediaFolders, upsertMediaFolders, deleteMediaFolder } =
+  const { mediaFolders, upsertMediaFolders } =
     useContextQueries();
   const { hoveredFolder, setHoveredFolder, modal2, setModal2 } = useUiStore();
   const { currentProjectId, currentActiveFolder, currentOpenFolders } =
@@ -78,48 +76,6 @@ export default function MediaFoldersSidebar() {
   }, [mediaFolders]);
 
   const folderTree: MediaFolderNode[] = buildFolderTree(localFolders);
-
-  const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
-
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    folderId: string | null;
-  } | null>(null);
-
-  useEffect(() => {
-    const handler = () => setContextMenu(null);
-    window.addEventListener("click", handler);
-    return () => window.removeEventListener("click", handler);
-  }, []);
-
-  const handleContextMenu = (e: React.MouseEvent, folderId: string) => {
-    e.preventDefault();
-    setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      folderId,
-    });
-  };
-
-  const handleCloseContextMenu = () => setContextMenu(null);
-
-  const handleDeleteFolder = async () => {
-    if (contextMenu?.folderId) {
-      await deleteMediaFolder(contextMenu.folderId);
-      setContextMenu(null);
-      if (
-        currentActiveFolder &&
-        currentActiveFolder.folder_id === contextMenu.folderId
-      ) {
-        setCurrentActiveFolder(null);
-      }
-      queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
-      queryClient.invalidateQueries({
-        queryKey: ["mediaFolders", currentProjectId],
-      });
-    }
-  };
 
   const toggleFolderOpen = (id: number) => {
     setCurrentOpenFolders((prev) => {
@@ -331,30 +287,6 @@ export default function MediaFoldersSidebar() {
         borderRight: `0.5px solid ${currentTheme.background_2}`,
       }}
     >
-      {contextMenu && (
-        <div
-          className="fixed z-50 bg-white border shadow-lg rounded-md py-1 w-40 animate-fade-in"
-          style={{ top: contextMenu.y, left: contextMenu.x }}
-          onClick={handleCloseContextMenu}
-        >
-          <button
-            onClick={handleDeleteFolder}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 hover:text-red-600"
-          >
-            Delete Folder
-          </button>
-          <button
-            onClick={() => {
-              setRenamingFolder(contextMenu.folderId);
-              setContextMenu(null);
-            }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-          >
-            Rename Folder
-          </button>
-        </div>
-      )}
-
       <motion.div
         data-folders-top={-1}
         className={
@@ -414,9 +346,6 @@ export default function MediaFoldersSidebar() {
                 folder={folder}
                 depth={0}
                 toggleFolderOpen={toggleFolderOpen}
-                onContextMenu={handleContextMenu}
-                renamingFolder={renamingFolder}
-                setRenamingFolder={setRenamingFolder}
               />
             ))}
           </SortableContext>

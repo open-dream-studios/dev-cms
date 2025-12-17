@@ -11,12 +11,10 @@ import { usePathname } from "next/navigation";
 const ProductMiniCard = ({
   product,
   index,
-  // handleContextMenu,
   handleProductClick,
 }: {
   product: Product;
-  index: number;
-  // handleContextMenu: (e: any, product: Product) => void;
+  index: number; 
   handleProductClick: (product: Product) => void;
 }) => {
   const currentTheme = useCurrentTheme();

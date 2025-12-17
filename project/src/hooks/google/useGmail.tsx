@@ -47,7 +47,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { GmailRequestType } from "@open-dream/shared";
 import { useEffect } from "react";
-import { useGmailDataStore } from "@/modules/GoogleModule/GmailModule/_gmailStore";
+import { useGmailDataStore } from "@/modules/GoogleModule/GmailModule/_store/gmail.store";
 
 export function useGmail(label: GmailRequestType, pageSize = 50) {
   const { runModule } = useContextQueries();

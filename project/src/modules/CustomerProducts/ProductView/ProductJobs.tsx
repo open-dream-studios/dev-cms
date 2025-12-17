@@ -5,11 +5,14 @@ import { useCurrentTheme } from "@/hooks/useTheme";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
-import { useCurrentDataStore } from "@/store/currentDataStore"; 
+import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { Product, Job, JobDefinition } from "@open-dream/shared";
-import { useContext, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
+import { createJobDefinitionContextMenu } from "../_actions/customerProducts.actions";
 
 interface ProductJobsProps {
   product: Product | null;
@@ -17,47 +20,14 @@ interface ProductJobsProps {
 }
 
 const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
+  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProject } = useCurrentDataStore();
-  const {
-    upsertJobDefinition,
-    jobDefinitions,
-    deleteJobDefinition,
-    upsertJob,
-  } = useContextQueries();
-  const {  modal1, setModal1, modal2, setModal2 } = useUiStore()
-
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    job_definition_id: string | null;
-  } | null>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const menu = document.getElementById("context-menu");
-      if (menu && !menu.contains(e.target as Node)) {
-        setContextMenu(null);
-      }
-    };
-    window.addEventListener("mousedown", handler);
-    return () => window.removeEventListener("mousedown", handler);
-  }, []);
-
-  const handleContextMenu = (
-    e: React.MouseEvent,
-    job_definition_id: string | null
-  ) => {
-    e.preventDefault();
-    setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      job_definition_id,
-    });
-  };
-
-  const handleCloseContextMenu = () => setContextMenu(null);
+  const { upsertJobDefinition, jobDefinitions, upsertJob } =
+    useContextQueries();
+  const { modal1, setModal1, modal2, setModal2 } = useUiStore();
+  const { openContextMenu } = useContextMenuStore();
 
   const handleAddJobDefinition = async () => {
     const steps: StepConfig[] = [
@@ -116,41 +86,10 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
     });
   };
 
-  const handleDeleteJob = async () => {
-    if (contextMenu && contextMenu.job_definition_id) {
-      await deleteJobDefinition(contextMenu.job_definition_id);
-    }
-  };
-
   if (!currentUser || !currentProject) return null;
 
   return (
     <div className="w-[100%] h-[100%] pl-[50px] lg:pl-[80px] pr-[25px] lg:pr-[55px] pt-[40px] flex flex-col gap-[12px]">
-      {currentUser.admin === 1 && contextMenu && (
-        <div
-          id="context-menu"
-          className="fixed z-50 shadow-lg rounded-md py-1 w-40 animate-fade-in"
-          style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
-            backgroundColor: currentTheme.background_3_2,
-            border: `1px solid ${currentTheme.background_4}`,
-          }}
-        >
-          <button
-            onClick={() => {
-              handleDeleteJob();
-              handleCloseContextMenu();
-            }}
-            style={{
-              backgroundColor: currentTheme.background_3_2,
-            }}
-            className="w-full text-left px-3 py-2 text-sm cursor-pointer hover:brightness-75 dim"
-          >
-            Delete Job
-          </button>
-        </div>
-      )}
       <div className="flex flex-row justify-between w-[100%] pr-[25px] items-center">
         <div className="text-[25px] md:text-[31px] font-[600]">
           {currentProject.short_name} Jobs
@@ -172,9 +111,16 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
           return (
             <div
               key={index}
-              onContextMenu={(e: any) =>
-                handleContextMenu(e, definition.job_definition_id)
-              }
+              onContextMenu={(e) => { 
+                if (currentUser.admin === 1) {
+                  e.preventDefault();
+                  openContextMenu({
+                    position: { x: e.clientX, y: e.clientY },
+                    target: definition,
+                    menu: createJobDefinitionContextMenu(queryClient),
+                  });
+                }
+              }}
               style={{
                 backgroundColor: currentTheme.background_3,
               }}

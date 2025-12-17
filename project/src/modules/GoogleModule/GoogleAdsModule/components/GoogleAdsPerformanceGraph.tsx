@@ -14,7 +14,7 @@ import { AdsTooltip, MetricToggle } from "./components";
 import { formatCurrency, metricOptions } from "./data";
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useGoogleUIStore, useGoogleDataStore } from "../../_googleStore";
+import { useGoogleUIStore, useGoogleDataStore } from "../../_store/google.store";
 import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
 
 const GoogleAdsPerformanceGraph = () => {

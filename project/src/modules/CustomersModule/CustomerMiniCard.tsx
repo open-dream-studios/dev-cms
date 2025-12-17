@@ -7,21 +7,24 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { highlightText, runSearchMatch } from "@/util/functions/Search";
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { createCustomerContextMenu } from "./_actions/customers.actions";
 
 const CustomerMiniCard = ({
   customer,
   index,
-  handleContextMenu,
   handleCustomerClick,
 }: {
   customer: Customer;
   index: number;
-  handleContextMenu: (e: any, customer: Customer) => void;
   handleCustomerClick: (customer: Customer) => void;
 }) => {
+  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentCustomer, searchContext } = useCurrentDataStore();
+  const { openContextMenu } = useContextMenuStore();
 
   let display;
 
@@ -78,7 +81,14 @@ const CustomerMiniCard = ({
   return (
     <div
       key={index}
-      onContextMenu={(e) => handleContextMenu(e, customer)}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        openContextMenu({
+          position: { x: e.clientX, y: e.clientY },
+          target: customer,
+          menu: createCustomerContextMenu(queryClient),
+        });
+      }}
       onClick={() => handleCustomerClick(customer)}
       style={{
         backgroundColor:

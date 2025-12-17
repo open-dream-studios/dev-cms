@@ -1,6 +1,6 @@
 // src/modules/GoogleModule/GmailModule/useGmailActions.ts
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useGmailDataStore, useGmailUIStore } from "./_gmailStore";
+import { useGmailDataStore, useGmailUIStore } from "./_store/gmail.store";
 import { getHeader } from "./GmailHelpers";
 import { GmailMessage, MessageDetail } from "@open-dream/shared";
 

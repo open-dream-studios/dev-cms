@@ -1,4 +1,4 @@
-// src/modules/GoogleModule/GmailModule/_gmailStore.ts
+// src/modules/GoogleModule/GmailModule/_store/gmail.store.ts
 import { createStore } from "@/store/createStore";
 import { GmailRequestType, MessageDetail } from "@open-dream/shared";
 

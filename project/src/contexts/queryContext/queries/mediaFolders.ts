@@ -2,6 +2,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { MediaFolder } from "@open-dream/shared";
+import {
+  deleteMediaFolderApi,
+  fetchMediaFoldersApi,
+  upsertMediaFoldersApi,
+} from "@/api/mediaFolders.api";
 
 export function useMediaFolders(
   isLoggedIn: boolean,
@@ -9,53 +14,41 @@ export function useMediaFolders(
 ) {
   const queryClient = useQueryClient();
 
+  // ---- Query ----
   const {
     data: mediaFolders = [],
     isLoading: isLoadingMediaFolders,
     refetch: refetchMediaFolders,
   } = useQuery<MediaFolder[]>({
     queryKey: ["mediaFolders", currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.get("/api/media/folders", {
-        params: { project_idx: currentProjectId },
-      });
-      return res.data.mediaFolders || [];
-    },
+    queryFn: async () => fetchMediaFoldersApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
+  // ---- Mutations ----
   const upsertMediaFoldersMutation = useMutation({
-    mutationFn: async (data: MediaFolder[]) => {
-      const res = await makeRequest.post("/api/media/folders/upsert", {
-        folders: data,
-        project_idx: currentProjectId,
-      });
-      return res.data.folderIds as number[];
-    },
+    mutationFn: (folders: MediaFolder[]) =>
+      upsertMediaFoldersApi(currentProjectId!, folders),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["mediaFolders", currentProjectId],
       });
     },
   });
-
-  const upsertMediaFolders = async (data: MediaFolder[]) =>
-    upsertMediaFoldersMutation.mutateAsync(data);
 
   const deleteMediaFolderMutation = useMutation({
-    mutationFn: async (folder_id: string) => {
-      await makeRequest.post("/api/media/folders/delete", {
-        project_idx: currentProjectId,
-        folder_id,
-      });
-    },
+    mutationFn: (folderId: string) =>
+      deleteMediaFolderApi(currentProjectId!, folderId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["mediaFolders", currentProjectId],
       });
     },
   });
+
+  const upsertMediaFolders = async (folders: MediaFolder[]) =>
+    upsertMediaFoldersMutation.mutateAsync(folders);
+
   const deleteMediaFolder = async (folder_id: string) =>
     deleteMediaFolderMutation.mutateAsync(folder_id);
 

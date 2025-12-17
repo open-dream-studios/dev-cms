@@ -1,7 +1,11 @@
 // src/context/queryContext/queries/customers.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
-import { Customer, CustomerInput } from "@open-dream/shared";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; 
+import { CustomerInput } from "@open-dream/shared";
+import {
+  deleteCustomerApi,
+  fetchCustomersApi,
+  upsertCustomerApi,
+} from "@/api/customers.api";
 
 export function useCustomers(
   isLoggedIn: boolean,
@@ -15,40 +19,13 @@ export function useCustomers(
     refetch: refetchCustomers,
   } = useQuery({
     queryKey: ["customers", currentProjectId],
-    queryFn: async (): Promise<Customer[]> => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/customers", {
-        project_idx: currentProjectId,
-      });
-
-      const customers: Customer[] = res.data.customers;
-      return customers.sort((a, b) => {
-        const firstNameCompare = a.first_name.localeCompare(
-          b.first_name,
-          undefined,
-          { sensitivity: "base" }
-        );
-        if (firstNameCompare !== 0) return firstNameCompare;
-
-        return a.last_name.localeCompare(b.last_name, undefined, {
-          sensitivity: "base",
-        });
-      });
-    },
+    queryFn: async () => fetchCustomersApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertCustomerMutation = useMutation({
-    mutationFn: async (data: CustomerInput) => {
-      const res = await makeRequest.post("/api/customers/upsert", {
-        ...data,
-        project_idx: currentProjectId,
-      });
-      return {
-        id: res.data.id,
-        customer_id: res.data.customer_id,
-      };
-    },
+    mutationFn: async (customer: CustomerInput) =>
+      upsertCustomerApi(currentProjectId!, customer),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["customers", currentProjectId],
@@ -60,12 +37,8 @@ export function useCustomers(
   });
 
   const deleteCustomerMutation = useMutation({
-    mutationFn: async (customer_id: string) => {
-      await makeRequest.post("/api/customers/delete", {
-        customer_id,
-        project_idx: currentProjectId,
-      });
-    },
+    mutationFn: async (customer_id: string) =>
+      deleteCustomerApi(currentProjectId!, customer_id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["customers", currentProjectId],
@@ -73,8 +46,8 @@ export function useCustomers(
     },
   });
 
-  const upsertCustomer = async (data: CustomerInput) => {
-    return await upsertCustomerMutation.mutateAsync(data);
+  const upsertCustomer = async (customer: CustomerInput) => {
+    return await upsertCustomerMutation.mutateAsync(customer);
   };
 
   const deleteCustomer = async (customer_id: string) => {

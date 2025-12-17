@@ -14,7 +14,10 @@ import SectionsSidebar from "./SectionsSidebar";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import PagesEditorToolbar from "./PagesEditorToolbar";
 import DynamicSectionForm from "./DynamicSectionForm";
-import { setCurrentPageData, useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentPageData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import {
@@ -26,28 +29,18 @@ import {
 import { pageToForm } from "@/util/schemas/projectPageSchema";
 import { sectionToForm } from "@/util/schemas/sectionSchema";
 import { useWatch } from "react-hook-form";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/useTheme"; 
 
 export type ContextInput = ProjectPage | Section | null;
 export type ContextInputType = "page" | "section";
 
 const ProjectPagesEditor = () => {
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser } = useContext(AuthContext); 
   const currentTheme = useCurrentTheme();
-  const {
-    currentProjectId,
-    currentProject,
-    currentPage,
-    currentSection
-  } = useCurrentDataStore();
-  const {
-    projectPages,
-    deleteProjectPage,
-    pageDefinitions,
-    sectionDefinitions,
-    projectSections,
-    deleteSection,
-  } = useContextQueries();
+  const { currentProjectId, currentProject, currentPage, currentSection } =
+    useCurrentDataStore();
+  const { projectPages, pageDefinitions, sectionDefinitions, projectSections } =
+    useContextQueries();
   const {
     editingPage,
     setEditingPage,
@@ -107,73 +100,6 @@ const ProjectPagesEditor = () => {
       sectionForm.reset(sectionToForm(null));
     }
   }, [editingSection, addingSection]);
-
-  const handleDeletePage = async () => {
-    if (!currentProjectId || !contextMenu || !contextMenu.input) return;
-    if (contextMenu.type === "page") {
-      const page = contextMenu.input as ProjectPage;
-      if (page.page_id) {
-        await deleteProjectPage(page.page_id);
-      }
-    }
-  };
-
-  const handleDeleteSection = async () => {
-    if (!currentProjectId || !contextMenu || !contextMenu.input) return;
-    if (contextMenu.type === "section") {
-      const section = contextMenu.input as Section;
-      if (section.section_id) {
-        await deleteSection(section.section_id);
-      }
-    }
-  };
-
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    input: ContextInput;
-    type: ContextInputType;
-  } | null>(null);
-
-  useEffect(() => {
-    const handler = () => setContextMenu(null);
-    window.addEventListener("click", handler);
-    const handler2 = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setContextMenu(null);
-    };
-    window.addEventListener("keydown", handler2);
-    return () => {
-      window.removeEventListener("click", handler);
-      window.removeEventListener("keydown", handler2);
-    };
-  }, []);
-
-  const handleContextMenu = (
-    e: React.MouseEvent,
-    input: ContextInput,
-    type: ContextInputType
-  ) => {
-    e.preventDefault();
-    setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      input,
-      type,
-    });
-  };
-
-  const handleCloseContextMenu = () => setContextMenu(null);
-
-  const handleContextClick = async () => {
-    if (contextMenu) {
-      if (contextMenu.type === "section") {
-        await handleDeleteSection();
-      }
-      if (contextMenu.type === "page") {
-        await handleDeletePage();
-      }
-    }
-  };
 
   const handleAddItemClick = () => {
     if (!currentPage) {
@@ -272,21 +198,6 @@ const ProjectPagesEditor = () => {
           borderRight: `0.5px solid ${currentTheme.background_2}`,
         }}
       >
-        {contextMenu && (
-          <div
-            className="fixed z-50 bg-white border shadow-lg rounded-md py-1 w-40 animate-fade-in"
-            style={{ top: contextMenu.y, left: contextMenu.x }}
-            onContextMenu={handleCloseContextMenu}
-          >
-            <button
-              onClick={handleContextClick}
-              className="cursor-pointer w-full text-left px-3 py-2 text-sm hover:bg-red-50 hover:text-red-600"
-            >
-              {`Delete ${capitalizeFirstLetter(contextMenu.type)}`}
-            </button>
-          </div>
-        )}
-
         <div className="flex flex-row items-center justify-between pt-[12px] pb-[6px]">
           <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
             {(currentPage || editingPage || addingPage) && (
@@ -375,10 +286,7 @@ const ProjectPagesEditor = () => {
               </form>
             )}
             {!editingPage && !addingPage && (
-              <PagesSidebar
-                filteredActivePages={filteredActivePages}
-                handleContextMenu={handleContextMenu}
-              />
+              <PagesSidebar filteredActivePages={filteredActivePages} />
             )}
           </>
         ) : (
@@ -462,7 +370,6 @@ const ProjectPagesEditor = () => {
             ) : (
               <SectionsSidebar
                 filteredActiveSections={filteredActiveSections}
-                handleContextMenu={handleContextMenu}
               />
             )}
           </>

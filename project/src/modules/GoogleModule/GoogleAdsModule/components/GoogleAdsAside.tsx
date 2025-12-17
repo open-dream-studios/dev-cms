@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { formatCurrency, formatInt } from "./data";
 import { Zap } from "lucide-react";
-import { useGoogleDataStore } from "../../_googleStore";
+import { useGoogleDataStore } from "../../_store/google.store";
 
 const GoogleAdsAside = () => {
   const currentTheme = useCurrentTheme();

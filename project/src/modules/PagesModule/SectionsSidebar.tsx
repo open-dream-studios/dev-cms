@@ -19,35 +19,26 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { ContextInput, ContextInputType } from "./PagesEditor";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { createSectionContextMenu } from "./_actions/pages.actions";
 
 interface SectionsSidebarProps {
   filteredActiveSections: Section[];
-  handleContextMenu: (
-    e: React.MouseEvent,
-    input: ContextInput,
-    type: ContextInputType
-  ) => void;
 }
 
 interface SortableSectionItemProps {
   section: Section;
-  handleContextMenu: (
-    e: React.MouseEvent,
-    input: ContextInput,
-    type: ContextInputType
-  ) => void;
 }
 
-const SortableSectionItem = ({
-  section,
-  handleContextMenu,
-}: SortableSectionItemProps) => {
+const SortableSectionItem = ({ section }: SortableSectionItemProps) => {
+  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
+  const { openContextMenu } = useContextMenuStore();
   const { setEditingSection } = useUiStore();
   const {
     attributes,
@@ -79,7 +70,14 @@ const SortableSectionItem = ({
     >
       <div
         onClick={() => setEditingSection(section)}
-        onContextMenu={(e) => handleContextMenu(e, section, "section")}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          openContextMenu({
+            position: { x: e.clientX, y: e.clientY },
+            target: section,
+            menu: createSectionContextMenu(queryClient),
+          });
+        }}
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
         style={{
           color: currentTheme.text_4,
@@ -104,10 +102,7 @@ const SortableSectionItem = ({
   );
 };
 
-const SectionsSidebar = ({
-  filteredActiveSections,
-  handleContextMenu,
-}: SectionsSidebarProps) => {
+const SectionsSidebar = ({ filteredActiveSections }: SectionsSidebarProps) => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentPage, currentSection } =
     useCurrentDataStore();
@@ -165,11 +160,7 @@ const SectionsSidebar = ({
       >
         <div className="h-[100%] overflow-y-scroll flex flex-col gap-[9px]">
           {localSections.map((section: Section) => (
-            <SortableSectionItem
-              key={section.id}
-              section={section}
-              handleContextMenu={handleContextMenu}
-            />
+            <SortableSectionItem key={section.id} section={section} />
           ))}
         </div>
       </SortableContext>

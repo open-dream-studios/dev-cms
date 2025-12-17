@@ -9,7 +9,7 @@ import GoogleAdsMetrics from "./components/GoogleAdsMetrics";
 import { useDashboardStore } from "../../../store/useDashboardStore";
 import { Dashboard } from "@/components/Dashboard/Dashboard";
 import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
-import { useGoogleDataStore, useGoogleUIStore } from "../_googleStore";
+import { useGoogleDataStore, useGoogleUIStore } from "../_store/google.store";
 // import { useGoogleUIStore } from "../_store/useGoogleUIStore";
 
 export default function GoogleAdsDashboard() {

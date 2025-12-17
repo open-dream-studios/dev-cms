@@ -18,36 +18,29 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { ContextInput, ContextInputType } from "./PagesEditor";
-import { setCurrentPageData, useCurrentDataStore } from "@/store/currentDataStore";
+import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
+import {
+  setCurrentPageData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { createPageContextMenu } from "./_actions/pages.actions";
 
 interface PagesSidebarProps {
   filteredActivePages: ProjectPage[];
-  handleContextMenu: (
-    e: React.MouseEvent,
-    input: ContextInput,
-    type: ContextInputType
-  ) => void;
 }
 
 interface SortablePageItemProps {
   page: ProjectPage;
-  handleContextMenu: (
-    e: React.MouseEvent,
-    input: ContextInput,
-    type: ContextInputType
-  ) => void;
 }
 
-const SortablePageItem = ({
-  page,
-  handleContextMenu,
-}: SortablePageItemProps) => {
+const SortablePageItem = ({ page }: SortablePageItemProps) => {
+  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme(); 
+  const currentTheme = useCurrentTheme();
   const { setEditingPage } = useUiStore();
   const {
     attributes,
@@ -67,6 +60,8 @@ const SortablePageItem = ({
     zIndex: isDragging ? 9999 : "auto",
   };
 
+  const { openContextMenu } = useContextMenuStore();
+
   if (!currentUser) return null;
 
   return (
@@ -78,8 +73,15 @@ const SortablePageItem = ({
       className="w-full relative"
     >
       <div
-        onClick={() => setCurrentPageData(page)}
-        onContextMenu={(e) => handleContextMenu(e, page, "page")}
+        onClick={() => setCurrentPageData(page)} 
+        onContextMenu={(e) => {
+          e.preventDefault();
+          openContextMenu({
+            position: { x: e.clientX, y: e.clientY },
+            target: page,
+            menu: createPageContextMenu(queryClient),
+          });
+        }}
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
         style={{
           color: currentTheme.text_4,
@@ -106,10 +108,7 @@ const SortablePageItem = ({
   );
 };
 
-const PagesSidebar = ({
-  filteredActivePages,
-  handleContextMenu,
-}: PagesSidebarProps) => {
+const PagesSidebar = ({ filteredActivePages }: PagesSidebarProps) => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentPage } = useCurrentDataStore();
 
@@ -155,11 +154,7 @@ const PagesSidebar = ({
       >
         <div className="h-[100%] overflow-y-scroll flex flex-col gap-[9px]">
           {localPages.map((page: ProjectPage) => (
-            <SortablePageItem
-              key={page.page_id}
-              page={page}
-              handleContextMenu={handleContextMenu}
-            />
+            <SortablePageItem key={page.page_id} page={page} />
           ))}
         </div>
       </SortableContext>

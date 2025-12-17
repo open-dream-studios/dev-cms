@@ -1,6 +1,6 @@
 // project/src/modules/components/ModuleLeftBar.tsx
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Customer, Employee, Screen } from "@open-dream/shared";
+import { Customer, Screen } from "@open-dream/shared";
 import React, { useEffect, useRef, useState } from "react";
 import CustomerMiniCard from "../CustomersModule/CustomerMiniCard";
 import { customerToForm } from "@/util/schemas/customerSchema";
@@ -13,8 +13,7 @@ import {
   runSearchMatch,
   scrollToItem,
 } from "@/util/functions/Search";
-import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
-import { useContextMenu } from "@/hooks/useContextMenu";
+import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton"; 
 
 const CustomerLeftBar = () => {
   const { customers, isLoadingCustomers } = useContextQueries();
@@ -26,8 +25,7 @@ const CustomerLeftBar = () => {
     currentCustomer, 
   } = useCurrentDataStore();
   const { getForm } = useFormInstanceStore();
-  const { screen, setAddingCustomer } = useUiStore();
-  const { openContextMenu } = useContextMenu<Customer | Employee>();
+  const { screen, setAddingCustomer } = useUiStore(); 
 
   const customerForm = getForm("customer");
   const { onCustomerFormSubmit } = useCustomerFormSubmit();
@@ -136,7 +134,6 @@ const CustomerLeftBar = () => {
                 <CustomerMiniCard
                   customer={customer}
                   index={index}
-                  handleContextMenu={(e) => openContextMenu(e, customer)}
                   handleCustomerClick={handleCustomerClick}
                 />
               </div>

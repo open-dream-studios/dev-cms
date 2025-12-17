@@ -1,4 +1,4 @@
-// project/src/modules/GoogleModule/_googleStore.ts
+// project/src/modules/GoogleModule/_store/google.store.ts
 import { createStore } from "@/store/createStore";
 import { GoogleAdsData, GoogleAdsRange } from "@open-dream/shared";
 

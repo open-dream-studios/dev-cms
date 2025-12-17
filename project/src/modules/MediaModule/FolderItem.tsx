@@ -25,24 +25,23 @@ import {
 } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import { useUiStore } from "@/store/useUIStore";
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { createFolderContextMenu } from "./_actions/media.actions";
+import { useMediaModuleUIStore } from "./_store/media.store";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
   depth: number;
   toggleFolderOpen: (id: number) => void;
-  onContextMenu: (e: React.MouseEvent, folderId: string) => void;
-  renamingFolder: string | null;
-  setRenamingFolder: (folder_id: string | null) => void;
 };
 
 export default function FolderItem({
   folder,
   depth,
   toggleFolderOpen,
-  onContextMenu,
-  renamingFolder,
-  setRenamingFolder,
 }: FolderItemProps) {
+  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { upsertMediaFolders } = useContextQueries();
@@ -51,6 +50,8 @@ export default function FolderItem({
   const { hoveredFolder } = useUiStore();
   const [tempName, setTempName] = useState<string>(folder.name);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { openContextMenu } = useContextMenuStore();
+  const { renamingFolder, setRenamingFolder } = useMediaModuleUIStore();
 
   useEffect(() => {
     if (renamingFolder === folder.folder_id) {
@@ -140,9 +141,12 @@ export default function FolderItem({
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={(e) => {
-          if (folder.folder_id) {
-            onContextMenu(e, folder.folder_id);
-          }
+          e.preventDefault();
+          openContextMenu({
+            position: { x: e.clientX, y: e.clientY },
+            target: folder,
+            menu: createFolderContextMenu(queryClient),
+          });
         }}
         animate={{
           backgroundColor:
@@ -201,9 +205,6 @@ export default function FolderItem({
                 folder={child}
                 depth={depth + 1}
                 toggleFolderOpen={toggleFolderOpen}
-                onContextMenu={onContextMenu}
-                renamingFolder={renamingFolder}
-                setRenamingFolder={setRenamingFolder}
               />
             ))}
           </SortableContext>

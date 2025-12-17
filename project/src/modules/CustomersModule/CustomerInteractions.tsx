@@ -24,7 +24,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentTheme } from "@/hooks/useTheme";
 import Divider from "@/lib/blocks/Divider";
 import GmailMessageView from "../GoogleModule/GmailModule/GmailMessageView";
-import { useGmailUIStore } from "../GoogleModule/GmailModule/_gmailStore";
+import { useGmailUIStore } from "../GoogleModule/GmailModule/_store/gmail.store";
 import { useGmailActions } from "../GoogleModule/GmailModule/useGmailActions";
 import { AuthContext } from "@/contexts/authContext";
 import {

@@ -4,7 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import * as turf from "@turf/turf";
 import { AuthContext } from "@/contexts/authContext";
 import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
-import { useGoogleUIStore } from "../../_googleStore";
+import { useGoogleUIStore } from "../../_store/google.store";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || "";
 

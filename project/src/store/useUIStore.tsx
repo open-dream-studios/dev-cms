@@ -82,12 +82,6 @@ export const uiInitialState = {
   screenWidth: 0,
   screenHeight: 0,
 
-  contextMenu: null as {
-    x: number;
-    y: number;
-    input: any;
-  } | null,
-
   // Products
   inventoryView: false,
   addingProduct: false,

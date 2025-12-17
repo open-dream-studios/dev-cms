@@ -18,7 +18,7 @@ import { AdsTooltip, MetricToggle } from "./components";
 import { formatCurrency, formatInt } from "./data";
 import { Zap } from "lucide-react";
 import { AuthContext } from "@/contexts/authContext";
-import { useGoogleUIStore, useGoogleDataStore } from "../../_googleStore";
+import { useGoogleUIStore, useGoogleDataStore } from "../../_store/google.store";
 import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
 
 const GoogleAdsMetrics = () => {

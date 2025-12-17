@@ -7,7 +7,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { formatPhone } from "@/util/functions/Customers";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { openWindow } from "@/util/functions/Handlers";
-import { useGoogleUIStore, useGoogleDataStore } from "../../_googleStore";
+import { useGoogleUIStore, useGoogleDataStore } from "../../_store/google.store";
 import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";
 
 const GoogleAdsTopBar = () => {

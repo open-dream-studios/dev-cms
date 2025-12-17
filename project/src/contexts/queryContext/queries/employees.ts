@@ -1,12 +1,17 @@
 // src/context/queryContext/queries/employees.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios"; 
+import { makeRequest } from "@/util/axios";
 import {
   Employee,
   EmployeeAssignment,
   EmployeeAssignmentInput,
   EmployeeInput,
 } from "@open-dream/shared";
+import {
+  deleteEmployeeApi,
+  fetchEmployeesApi,
+  upsertEmployeeApi,
+} from "@/api/employees.api";
 
 export function useEmployees(
   isLoggedIn: boolean,
@@ -20,34 +25,13 @@ export function useEmployees(
     refetch: refetchEmployees,
   } = useQuery<Employee[]>({
     queryKey: ["employees", currentProjectId],
-    queryFn: async (): Promise<Employee[]> => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/employees", {
-        project_idx: currentProjectId,
-      });
-
-      const employees: Employee[] = res.data.employees;
-      return employees.sort((a, b) => {
-        const firstNameCompare = a.first_name.localeCompare(
-          b.first_name,
-          undefined,
-          { sensitivity: "base" }
-        );
-        if (firstNameCompare !== 0) return firstNameCompare;
-
-        return a.last_name.localeCompare(b.last_name, undefined, {
-          sensitivity: "base",
-        });
-      });
-    },
+    queryFn: async () => fetchEmployeesApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertEmployeeMutation = useMutation({
-    mutationFn: async (employee: EmployeeInput) => {
-      const res = await makeRequest.post("/api/employees/upsert", employee);
-      return res.data;
-    },
+    mutationFn: async (employee: EmployeeInput) =>
+      upsertEmployeeApi(currentProjectId!, employee),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["employees", currentProjectId],
@@ -64,13 +48,8 @@ export function useEmployees(
   };
 
   const deleteEmployeeMutation = useMutation({
-    mutationFn: async (employee_id: string) => {
-      const res = await makeRequest.post("/api/employees/delete", {
-        employee_id,
-        project_idx: currentProjectId,
-      });
-      return res.data;
-    },
+    mutationFn: async (employee_id: string) =>
+      deleteEmployeeApi(currentProjectId!, employee_id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["employees", currentProjectId],
