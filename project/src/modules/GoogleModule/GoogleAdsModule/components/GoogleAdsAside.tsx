@@ -28,11 +28,9 @@ const GoogleAdsAside = () => {
     setSelectedAdGroupId,
   } = useGoogleDataStore();
 
-  const data = googleAdsData.status === "success" ? googleAdsData.data : null;
-
   const statsForRange = useMemo(() => {
-    if (!data || !data.stats) return [];
-    const stats = data.stats as any[];
+    if (!googleAdsData || !googleAdsData.stats) return [];
+    const stats = googleAdsData.stats as any[];
     let count = 30;
     if (currentGoogleAdsRange === "7d") count = 7;
     if (currentGoogleAdsRange === "30d") count = 30;
@@ -40,7 +38,7 @@ const GoogleAdsAside = () => {
     // if (range === "365d") count = stats.length;
     // always take the last `count` entries
     return stats.slice(Math.max(0, stats.length - count));
-  }, [data, currentGoogleAdsRange]);
+  }, [googleAdsData, currentGoogleAdsRange]);
 
   const aggregated = useMemo(() => {
     const s = statsForRange;
@@ -75,7 +73,7 @@ const GoogleAdsAside = () => {
     };
   }, [statsForRange]);
 
-  const adGroups = data?.adGroups ?? [];
+  const adGroups = googleAdsData?.adGroups ?? [];
 
   return (
     <div>

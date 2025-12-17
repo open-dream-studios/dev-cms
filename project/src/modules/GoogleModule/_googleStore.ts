@@ -1,6 +1,6 @@
 // project/src/modules/GoogleModule/_googleStore.ts
 import { createStore } from "@/store/createStore";
-import { GoogleAdsDataState, GoogleAdsRange } from "@open-dream/shared";
+import { GoogleAdsData, GoogleAdsRange } from "@open-dream/shared";
 
 export const useGoogleUIStore = createStore({
   isLoadingGoogleAdsData: true,
@@ -12,5 +12,5 @@ export const useGoogleDataStore = createStore({
   currentGoogleAdsRange: "7d" as GoogleAdsRange,
   selectedAdGroupId: null as number | null,
   selectedCampaignId: null as number | null,
-  googleAdsData: { status: "idle" } as GoogleAdsDataState,
+  googleAdsData: null as GoogleAdsData | null,
 });

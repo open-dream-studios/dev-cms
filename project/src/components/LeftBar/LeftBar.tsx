@@ -76,7 +76,7 @@ const LeftBar = () => {
   } = useUiStore();
   const [showLeftBar, setShowLeftBar] = useState<boolean>(false);
   const showLeftBarRef = useRef<HTMLDivElement>(null);
-  const windowLargeRef = useRef<boolean>(window.innerWidth > 1024);
+  const windowLargeRef = useRef<boolean | null>(null);
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
   const currentTheme = useCurrentTheme();
 
@@ -156,6 +156,10 @@ const LeftBar = () => {
     leftBarOpenRef.current = leftBarOpen;
   }, [leftBarOpen]);
 
+  useEffect(() => { 
+    setLeftBarOpen(window.innerWidth > 1024);
+  }, [setLeftBarOpen]);
+
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -165,6 +169,7 @@ const LeftBar = () => {
       }
       if (window.innerWidth < 1024 && windowLargeRef.current) {
         windowLargeRef.current = false;
+        console.log(false)
         setLeftBarOpen(false);
       }
     };
@@ -172,6 +177,7 @@ const LeftBar = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [setLeftBarOpen]);
+  
   if (windowWidth === null) return null;
 
   const offsetHeight =

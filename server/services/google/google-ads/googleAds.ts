@@ -116,6 +116,7 @@ async function getNormalizedCampaignDailyCoreStats(
   );
   const rows = raw?.days || raw || [];
   const end = new Date();
+  end.setHours(0, 0, 0, 0);
   const start = new Date();
   start.setDate(end.getDate() - 90);
   const output: any[] = [];
@@ -125,7 +126,7 @@ async function getNormalizedCampaignDailyCoreStats(
   });
   const cur = new Date(start);
   while (cur <= end) {
-    const dateStr = cur.toISOString().slice(0, 10);
+    const dateStr = cur.toLocaleDateString("en-CA");
     const existing = dateMap.get(dateStr);
     output.push({
       date: dateStr,
@@ -178,6 +179,7 @@ export async function getCompleteCampaignData(
   const credentials = params.credentials;
   const campaignId = credentials.campaignId;
   const result = await findActiveCampaignById(credentials, campaignId);
+
   if (!result || !result.activeCampaign) {
     return { ok: false, error: "Campaign not found", campaignId };
   }

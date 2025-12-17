@@ -75,17 +75,17 @@ const LandingLeftBar = () => {
   };
 
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-      if (window.innerWidth > 1024) {
-        setLeftBarOpen(false);
-      }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [setLeftBarOpen]);
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     setWindowWidth(window.innerWidth);
+  //     if (window.innerWidth > 1024) {
+  //       setLeftBarOpen(false);
+  //     }
+  //   };
+  //   handleResize();
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, [setLeftBarOpen]);
   if (windowWidth === null) return null;
 
   const offsetHeight =

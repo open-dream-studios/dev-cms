@@ -13,7 +13,7 @@ import { useGoogleDataStore, useGoogleUIStore } from "../_googleStore";
 // import { useGoogleUIStore } from "../_store/useGoogleUIStore";
 
 export default function GoogleAdsDashboard() {
-  const { projectModules } = useContextQueries();
+  const { projectModules, runModule } = useContextQueries();
   const { setGoogleAdsData, selectedCampaignId, setSelectedCampaignId } =
     useGoogleDataStore();
   const { setIsLoadingGoogleAdsData } = useGoogleUIStore();
@@ -47,26 +47,28 @@ export default function GoogleAdsDashboard() {
     ) => {
       if (!projectModules || projectModules.length === 0) return;
       try {
-        const res = savedData;
+        const adsData = savedData;
+        // const res = await runModule("google-ads-api-module", {
+        //   action: "getDashboardData",
+        // });
+        // const adsData = res.data
+
         if (cancelToken.cancelled) return;
+        
         setIsLoadingGoogleAdsData(true);
-        console.log(res);
-        setGoogleAdsData({
-          status: "success",
-          data: res,
-        });
-
-        const incomingActiveCampaignId = savedData.activeCampaign.id;
-
-        setSelectedCampaignId(incomingActiveCampaignId);
+        // console.log(adsData);
+        if (adsData) {
+          setGoogleAdsData(adsData);
+          let incomingActiveCampaignId = null;
+          if (adsData.activeCampaign) {
+            incomingActiveCampaignId = adsData.activeCampaign.id;
+          }
+          setSelectedCampaignId(incomingActiveCampaignId);
+        }
       } catch (err) {
         if (!cancelToken.cancelled) {
           console.error("Failed to fetch Google Ads data:", err);
-          // setGoogleAdsData({ ok: false, error: String(err) });
-          setGoogleAdsData({
-            status: "error",
-            error: String(err),
-          });
+          setGoogleAdsData(null);
         }
       } finally {
         if (!cancelToken.cancelled) {

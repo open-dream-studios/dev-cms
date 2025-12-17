@@ -9,7 +9,7 @@ import {
   MediaUsage,
 } from "@open-dream/shared";
 import { createStore } from "@/store/createStore";
-import { ReactNode, RefObject } from "react";
+import { ReactNode, RefObject } from "react"; 
 
 interface UploadContext {
   visible: boolean;
@@ -121,6 +121,8 @@ export const initializeEnvironment = (domain: string) =>
 export const resetUIStore = () =>
   useUiStore.getState().set((state) => ({
     ...uiInitialState,
+    leftBarOpen: state.leftBarOpen,
+    leftBarRef: state.leftBarRef,
     domain: state.domain,
     environmentInitialized: state.environmentInitialized,
     screenWidth: state.screenWidth,

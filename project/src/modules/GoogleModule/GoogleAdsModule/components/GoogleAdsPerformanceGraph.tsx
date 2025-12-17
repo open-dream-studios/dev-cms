@@ -31,11 +31,9 @@ const GoogleAdsPerformanceGraph = () => {
   } = useGoogleDataStore();
   const { isLoadingGoogleAdsData } = useGoogleUIStore();
 
-  const data = googleAdsData.status === "success" ? googleAdsData.data : null;
-
   const statsForRange = useMemo(() => {
-    if (!data || !data.stats) return [];
-    const stats = data.stats as any[];
+    if (!googleAdsData || !googleAdsData.stats) return [];
+    const stats = googleAdsData.stats as any[];
     let count = 30;
     if (currentGoogleAdsRange === "7d") count = 7;
     if (currentGoogleAdsRange === "30d") count = 30;
@@ -43,7 +41,7 @@ const GoogleAdsPerformanceGraph = () => {
     // if (range === "365d") count = stats.length;
     // always take the last `count` entries
     return stats.slice(Math.max(0, stats.length - count));
-  }, [data, currentGoogleAdsRange]);
+  }, [googleAdsData, currentGoogleAdsRange]);
 
   const aggregated = useMemo(() => {
     const s = statsForRange;
@@ -114,13 +112,13 @@ const GoogleAdsPerformanceGraph = () => {
   };
 
   useEffect(() => {
-    const adGroups = data?.adGroups ?? [];
+    const adGroups = googleAdsData?.adGroups ?? [];
     if (!selectedAdGroupId && adGroups && adGroups.length > 0)
       setSelectedAdGroupId(adGroups[0].id);
-  }, [selectedAdGroupId, setSelectedAdGroupId, data]);
+  }, [selectedAdGroupId, setSelectedAdGroupId, googleAdsData]);
 
-  const videoRows = data?.keywordData?.terms?.videos ?? [];
-  const imageRows = data?.keywordData?.terms?.images ?? [];
+  const videoRows = googleAdsData?.keywordData?.terms?.videos ?? [];
+  const imageRows = googleAdsData?.keywordData?.terms?.images ?? [];
 
   const topVideos = [...videoRows].sort(
     (a: any, b: any) => (b.impressions || 0) - (a.impressions || 0)

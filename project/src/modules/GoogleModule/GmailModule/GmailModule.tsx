@@ -1,6 +1,5 @@
 // project/src/modules/GoogleModule/GmailModule/GmailModule.tsx
-import React, { useEffect, useMemo } from "react";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import React, { useEffect, useMemo } from "react"; 
 import { GmailMessage, GmailRequestType } from "@open-dream/shared";
 import { motion, AnimatePresence } from "framer-motion";
 import {

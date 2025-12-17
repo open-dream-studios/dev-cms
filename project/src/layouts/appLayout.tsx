@@ -26,10 +26,15 @@ import {
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 // import { useWebSocketManager } from "@/store/webSocketStore";
-import { initializeEnvironment, resetUIStore, setScreenSize, useUiStore } from "@/store/useUIStore";
+import {
+  initializeEnvironment,
+  resetUIStore,
+  setScreenSize,
+  useUiStore,
+} from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { PageLayout } from "./pageLayout";
-import UploadModal from "@/components/Upload/Upload"; 
+import UploadModal from "@/components/Upload/Upload";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -53,12 +58,12 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   const { currentUser, isLoadingCurrentUserData } = useContext(AuthContext);
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const { environmentInitialized, setLeftBarOpen } = useUiStore();
-  useEffect(() => {
-    const isDesktop = window.innerWidth > 1024;
-    setLeftBarOpen(isDesktop);
-  }, [setLeftBarOpen]);
+  // useEffect(() => {
+  //   const isDesktop = window.innerWidth > 1024;
+  //   setLeftBarOpen(isDesktop);
+  // }, [setLeftBarOpen]);
 
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ["currentUser"] });

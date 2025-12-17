@@ -29,8 +29,6 @@ const GoogleAdsTopBar = () => {
   const budgetInputRef = useRef<HTMLInputElement | null>(null);
   const campaignPopupRef = useRef<HTMLDivElement | null>(null);
 
-  const data = googleAdsData.status === "success" ? googleAdsData.data : null;
-
   useOutsideClick(campaignPopupRef, () => setShowCampaignPicker(false));
 
   useEffect(() => {
@@ -40,21 +38,21 @@ const GoogleAdsTopBar = () => {
   }, [editingBudget]);
 
   const campaignsList = useMemo(() => {
-    if (!data) return [];
-    const c = data.campaigns;
+    if (!googleAdsData) return [];
+    const c = googleAdsData.campaigns;
     if (Array.isArray(c)) return c;
     if (c && Array.isArray(c.campaigns)) return c.campaigns;
     return [];
-  }, [data]);
+  }, [googleAdsData]);
 
   const activeCampaign = useMemo(() => {
-    if (!data) return [];
+    if (!googleAdsData) return [];
     return (
       campaignsList.find((c) => String(c.id) === String(selectedCampaignId)) ??
-      data?.activeCampaign ??
+      googleAdsData?.activeCampaign ??
       null
     );
-  }, [data, campaignsList, selectedCampaignId]);
+  }, [googleAdsData, campaignsList, selectedCampaignId]);
 
   const displayBudget = activeCampaign?.budget ?? 0;
 
@@ -99,12 +97,12 @@ const GoogleAdsTopBar = () => {
         <div
           onClick={() => {
             if (
-              data &&
+              googleAdsData &&
               selectedCampaignId &&
-              data.customerId
+              googleAdsData.customerId
             ) {
               openWindow(
-                `https://ads.google.com/aw/overview?customerId=${data.customerId}#~campaign/id=${selectedCampaignId}`
+                `https://ads.google.com/aw/overview?customerId=${googleAdsData.customerId}#~campaign/id=${selectedCampaignId}`
               );
             }
           }}
@@ -137,8 +135,8 @@ const GoogleAdsTopBar = () => {
               className="text-[13px] mt-[1px]"
             >
               Account{" "}
-              {data && data.customerId
-                ? formatPhone(data.customerId)
+              {googleAdsData && googleAdsData.customerId
+                ? formatPhone(googleAdsData.customerId)
                 : "..."}
             </div>
           </div>
