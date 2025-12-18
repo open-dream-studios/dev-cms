@@ -4,7 +4,8 @@ import { useContext } from "react";
 import { useParams } from "next/navigation";
 import { AuthContext } from "@/contexts/authContext";
 import ProductView from "@/modules/CustomerProducts/ProductView/ProductView";
-import ModuleLeftBar from "@/modules/components/ModuleLeftBar";
+import { HomeLayout } from "@/layouts/homeLayout";
+import CustomersProductsModuleLeftBar from "@/modules/CustomerProducts/CustomerProductsModuleLeftBar";
 
 const Product = () => {
   const { currentUser } = useContext(AuthContext);
@@ -14,15 +15,9 @@ const Product = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="w-[100%] h-[100%] flex flex-row">
-      <div className="hidden min-[870px]:block">
-        <ModuleLeftBar />
-      </div>
-
-      <div className="flex-1 w-[100%] max-w-[100%] overflow-x-hidden">
-        <ProductView serialNumber={serialNumber} />
-      </div>
-    </div>
+    <HomeLayout left={<CustomersProductsModuleLeftBar />}>
+      <ProductView serialNumber={serialNumber} />
+    </HomeLayout>
   );
 };
 

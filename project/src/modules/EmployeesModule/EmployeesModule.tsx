@@ -1,12 +1,13 @@
-// project/src/modules/EmployeesModule/EmployeeCatalog.tsx
+// project/src/modules/EmployeesModule/EmployeesModule.tsx
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import EmployeeView from "./EmployeeView";
-import ModuleLeftBar from "../components/ModuleLeftBar";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
+import { HomeLayout } from "@/layouts/homeLayout";
+import EmployeesModuleLeftBar from "./EmployeesModuleLeftBar";
 
-const EmployeeCatalog = () => {
+const EmployeesModule = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentEmployee, currentProjectId } = useCurrentDataStore();
   const { addingEmployee } = useUiStore();
@@ -14,13 +15,10 @@ const EmployeeCatalog = () => {
   if (!currentUser || !currentProjectId) return null;
 
   return (
-    <div className="flex w-full h-[100%]">
-      <ModuleLeftBar />
-      <div className="flex-1">
-        {(currentEmployee || addingEmployee) && <EmployeeView />}
-      </div>
-    </div>
+    <HomeLayout left={<EmployeesModuleLeftBar />}>
+      {(currentEmployee || addingEmployee) && <EmployeeView />}
+    </HomeLayout>
   );
 };
 
-export default EmployeeCatalog;
+export default EmployeesModule;

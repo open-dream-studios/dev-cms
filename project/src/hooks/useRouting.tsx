@@ -4,8 +4,7 @@ import { create } from "zustand";
 import { usePathname, useRouter } from "next/navigation";
 import { useUiStore } from "@/store/useUIStore";
 import { Screen } from "@open-dream/shared";
-import { useFormInstanceStore } from "@/store/util/formInstanceStore"; 
-import { useEmployeeFormSubmit } from "./forms/useEmployeeForm";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";  
 import {
   setCurrentActiveFolder,
   setCurrentCustomerData,
@@ -18,6 +17,7 @@ import {
 import { useProductFormSubmit } from "./forms/useProductForm";
 import { onCustomerFormSubmit } from "@/modules/CustomersModule/_actions/customers.actions";
 import { useQueryClient } from "@tanstack/react-query";
+import { onEmployeeFormSubmit } from "@/modules/EmployeesModule/_actions/employees.actions";
 
 interface ScreenHistoryItem {
   screen: Screen;
@@ -60,8 +60,7 @@ export function useRouting() {
   const productForm = getForm("product");
   const customerForm = getForm("customer");
   const employeeForm = getForm("employee");
-  const { onProductFormSubmit } = useProductFormSubmit();
-  const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
+  const { onProductFormSubmit } = useProductFormSubmit(); 
   const { saveProducts } = useProductFormSubmit();
 
   const goToPrev = async () => {
@@ -174,7 +173,7 @@ export function useRouting() {
       await customerForm.handleSubmit((data) => onCustomerFormSubmit(queryClient, data))();
     }
     if (isEmployeeDirty) {
-      await employeeForm.handleSubmit(onEmployeeFormSubmit)();
+      await employeeForm.handleSubmit((data) => onEmployeeFormSubmit(queryClient, data))();
     }
 
     await saveProducts();

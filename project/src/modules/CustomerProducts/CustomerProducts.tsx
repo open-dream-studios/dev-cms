@@ -9,10 +9,11 @@ import DraggableItems from "./DraggableItems";
 import ProductsHeader from "./ProductsHeader";
 import CustomerProductSkeleton from "../components/ProductCard/CustomerProductSkeleton";
 import ProductView from "./ProductView/ProductView";
-import InventoryGrid from "./Grid/InventoryGrid";
-import ModuleLeftBar from "../components/ModuleLeftBar";
+import InventoryGrid from "./Grid/InventoryGrid"; 
 import { useUiStore } from "@/store/useUIStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
+import { HomeLayout } from "@/layouts/homeLayout";
+import CustomerProductsModuleLeftBar from "./CustomerProductsModuleLeftBar";
 
 const CustomerProducts = () => {
   const { currentUser } = useContext(AuthContext);
@@ -24,12 +25,9 @@ const CustomerProducts = () => {
   return (
     <>
       {addingProduct ? (
-        <div className="w-[100%] h-[100%] flex flex-row overflow-auto">
-          <ModuleLeftBar />
-          <div className="flex justify-center flex-1">
-            <ProductView />
-          </div>
-        </div>
+        <HomeLayout left={<CustomerProductsModuleLeftBar />}>
+          <ProductView />
+        </HomeLayout>
       ) : (
         <>
           {inventoryView === true ? (
@@ -44,7 +42,7 @@ const CustomerProducts = () => {
                   <div className="w-[100%] h-[100%] overflow-y-scroll overflow-x-hidden px-[30px]">
                     {productsData &&
                       filteredProducts(productsData).length > 0 && (
-                        <DraggableItems sheet={false} resetTimer={()=>{}}/>
+                        <DraggableItems sheet={false} resetTimer={() => {}} />
                       )}
                     <div className="h-[60px] w-[100%]" />
                   </div>

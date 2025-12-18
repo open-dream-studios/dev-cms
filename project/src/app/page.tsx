@@ -4,7 +4,7 @@ import React from "react";
 import MediaManager from "@/modules/MediaModule/MediaManager";
 import PagesModule from "@/modules/PagesModule/PagesModule";
 import CustomersModule from "@/modules/CustomersModule/CustomersModule";
-import EmployeeCatalog from "@/modules/EmployeesModule/EmployeeCatalog";
+import EmployeesModule from "@/modules/EmployeesModule/EmployeesModule";
 import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsDashboard from "@/modules/GoogleModule/GoogleAdsModule/GoogleAdsDashboard";
 import GmailModule from "@/modules/GoogleModule/GmailModule/GmailModule";
@@ -18,7 +18,7 @@ const HomePage = () => {
       {screen === "media" && <MediaManager />}
       {screen === "pages" && <PagesModule />}
       {screen === "customers" && <CustomersModule />}
-      {screen === "employees" && <EmployeeCatalog />}
+      {screen === "employees" && <EmployeesModule />}
       {screen === "gmail" && <GmailModule />}
       {screen === "updates" && <UpdatesCatalog />}
     </div>

@@ -6,14 +6,7 @@ import {
   EmployeeFormData,
   employeeToForm,
 } from "@/util/schemas/employeeSchema";
-import { Employee, EmployeeInput } from "@open-dream/shared";
-import { SubmitHandler } from "react-hook-form";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import {
-  setCurrentEmployeeData,
-  useCurrentDataStore,
-} from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
+import { EmployeeInput } from "@open-dream/shared";
 
 export function useEmployeeForm(employee?: EmployeeInput | null) {
   return useForm<EmployeeFormData>({
@@ -21,50 +14,4 @@ export function useEmployeeForm(employee?: EmployeeInput | null) {
     defaultValues: employeeToForm(employee),
     mode: "onChange",
   });
-}
-
-export function useEmployeeFormSubmit() {
-  const { upsertEmployee } = useContextQueries();
-  const { setAddingEmployee } = useUiStore();
-  const { currentProjectId, currentEmployee } = useCurrentDataStore();
-
-  const onEmployeeFormSubmit: SubmitHandler<EmployeeFormData> = async (
-    data
-  ) => {
-    if (!currentProjectId) return;
-
-    const newEmployee: EmployeeInput = {
-      project_idx: currentProjectId,
-      employee_id: currentEmployee?.employee_id ?? null,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      phone: data.phone?.replace(/\D/g, "") ?? null,
-      email: data.email ?? null,
-      address_line1: data.address_line1 ?? null,
-      address_line2: data.address_line2 ?? null,
-      city: data.city ?? null,
-      state: data.state ?? null,
-      zip: data.zip ?? null,
-      position: data.position ?? null,
-      department: data.department ?? null,
-      hire_date: data.hire_date ?? null,
-      termination_date: data.termination_date ?? null,
-      notes: data.notes ?? null,
-    };
-
-    try {
-      const newEmployeeId = await upsertEmployee(newEmployee);
-      if (newEmployeeId) {
-        setCurrentEmployeeData({
-          ...newEmployee,
-          employee_id: newEmployeeId,
-        } as Employee);
-        setAddingEmployee(false);
-      }
-    } catch (err) {
-      console.error("❌ Employee upsert failed in form:", err);
-    }
-  };
-
-  return { onEmployeeFormSubmit };
 }

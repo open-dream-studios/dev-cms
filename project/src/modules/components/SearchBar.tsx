@@ -1,4 +1,4 @@
-// project/src/modules/components/ModuleLeftBar.tsx
+// project/src/modules/components/SearchBar.tsx
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useEffect } from "react";
 import { useCurrentDataStore } from "@/store/currentDataStore";

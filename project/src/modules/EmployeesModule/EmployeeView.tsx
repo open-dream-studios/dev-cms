@@ -1,6 +1,6 @@
 // project/src/modules/EmployeesModule/EmployeeView.tsx
 "use client";
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   User,
   Mail,
@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { AuthContext } from "@/contexts/authContext";
-import { getInnerCardStyle } from "@/styles/themeStyles"; 
+import { getInnerCardStyle } from "@/styles/themeStyles";
 import {
   EmployeeFormData,
   employeeToForm,
@@ -25,23 +25,23 @@ import { v4 as uuidv4 } from "uuid";
 import { Controller } from "react-hook-form";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import {
-  useEmployeeForm,
-  useEmployeeFormSubmit,
-} from "@/hooks/forms/useEmployeeForm";
+import { useEmployeeForm } from "@/hooks/forms/useEmployeeForm";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { onEmployeeFormSubmit } from "./_actions/employees.actions";
+import { useQueryClient } from "@tanstack/react-query";
+import { targetNextRefOnEnter } from "@/util/functions/Forms";
 
-const EmployeeCard: React.FC = () => {
+const EmployeeCard = () => {
+  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { runModule } = useContextQueries();
   const { currentEmployee, currentProjectId, currentProject } =
     useCurrentDataStore();
   const { addingEmployee, leftBarOpen } = useUiStore();
-  const { onEmployeeFormSubmit } = useEmployeeFormSubmit();
   const employeeForm = useEmployeeForm(currentEmployee);
   const { registerForm, unregisterForm } = useFormInstanceStore();
   const { handleSubmit } = employeeForm;
@@ -89,15 +89,6 @@ const EmployeeCard: React.FC = () => {
     }
   }, [addingEmployee]);
 
-  const handleKeyDown =
-    (nextRef: React.RefObject<HTMLElement | null>) =>
-    (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | null>) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        nextRef.current?.focus();
-      }
-    };
-
   useOutsideClick(popupRef, () => setPopupVisible(false));
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimer = () => {
@@ -110,7 +101,7 @@ const EmployeeCard: React.FC = () => {
         return;
       }
       try {
-        if (currentProject) { 
+        if (currentProject) {
           const res = await runModule("google-maps-api-module", {
             requestType: "predictions",
             sessionToken,
@@ -167,7 +158,7 @@ const EmployeeCard: React.FC = () => {
 
   return (
     <form
-      onSubmit={handleSubmit(onEmployeeFormSubmit)}
+      onSubmit={handleSubmit((data) => onEmployeeFormSubmit(queryClient, data))}
       className="rounded-xl relative w-full max-w-[900px]"
       key={currentUser.theme}
       style={{
@@ -180,7 +171,6 @@ const EmployeeCard: React.FC = () => {
           leftBarOpen ? "min-[1024px]:pr-[38px]" : ""
         }`}
       >
-        {/* Header */}
         <div className="flex items-start gap-4">
           <div
             className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0"
@@ -225,7 +215,7 @@ const EmployeeCard: React.FC = () => {
                       employeeForm.register("first_name").ref(el);
                       firstNameRef.current = el;
                     }}
-                    onKeyDown={handleKeyDown(lastNameRef)}
+                    onKeyDown={targetNextRefOnEnter(lastNameRef)}
                     placeholder="First"
                     size={Math.max(
                       employeeForm.watch("first_name")?.length || 0,
@@ -263,7 +253,7 @@ const EmployeeCard: React.FC = () => {
                       employeeForm.register("last_name").ref(el);
                       lastNameRef.current = el;
                     }}
-                    onKeyDown={handleKeyDown(emailRef)}
+                    onKeyDown={targetNextRefOnEnter(emailRef)}
                     placeholder="Last"
                     size={Math.max(
                       employeeForm.watch("last_name")?.length || 0,
@@ -307,7 +297,7 @@ const EmployeeCard: React.FC = () => {
                       employeeForm.register("email").ref(el);
                       emailRef.current = el;
                     }}
-                    onKeyDown={handleKeyDown(phoneRef)}
+                    onKeyDown={targetNextRefOnEnter(phoneRef)}
                     onChange={(e) => {
                       const value = e.target.value
                         .replace(/[^a-z0-9.@-]/gi, "") // allow only alphanumeric + . @ -
@@ -347,7 +337,7 @@ const EmployeeCard: React.FC = () => {
                       <input
                         ref={phoneRef}
                         value={formatPhone(field.value || "")}
-                        onKeyDown={handleKeyDown(positionRef)}
+                        onKeyDown={targetNextRefOnEnter(positionRef)}
                         onChange={(e) => {
                           let raw = e.target.value.replace(/\D/g, "");
                           if (raw.length > 10) raw = raw.slice(0, 10);
@@ -376,7 +366,7 @@ const EmployeeCard: React.FC = () => {
                       employeeForm.register("position").ref(el);
                       positionRef.current = el;
                     }}
-                    onKeyDown={handleKeyDown(departmentRef)}
+                    onKeyDown={targetNextRefOnEnter(departmentRef)}
                     placeholder="Title"
                     size={Math.max(
                       employeeForm.watch("position")?.length || 0,
@@ -410,7 +400,7 @@ const EmployeeCard: React.FC = () => {
                       employeeForm.register("department").ref(el);
                       departmentRef.current = el;
                     }}
-                    onKeyDown={handleKeyDown(addressLine1Ref)}
+                    onKeyDown={targetNextRefOnEnter(addressLine1Ref)}
                     placeholder="Department"
                     size={Math.max(
                       employeeForm.watch("department")?.length || 0,
@@ -445,7 +435,7 @@ const EmployeeCard: React.FC = () => {
                         employeeForm.register("address_line1").ref(el);
                         addressLine1Ref.current = el;
                       }}
-                      onKeyDown={handleKeyDown(addressLine2Ref)}
+                      onKeyDown={targetNextRefOnEnter(addressLine2Ref)}
                       placeholder="Street Address"
                       size={Math.max(
                         employeeForm.watch("address_line1")?.length || 0,
@@ -510,7 +500,7 @@ const EmployeeCard: React.FC = () => {
                       employeeForm.register("address_line2").ref(el);
                       addressLine2Ref.current = el;
                     }}
-                    onKeyDown={handleKeyDown(cityRef)}
+                    onKeyDown={targetNextRefOnEnter(cityRef)}
                     placeholder="Apt, Suite"
                     size={Math.max(
                       employeeForm.watch("address_line2")?.length || 0,
@@ -539,7 +529,7 @@ const EmployeeCard: React.FC = () => {
                         employeeForm.register("city").ref(el);
                         cityRef.current = el;
                       }}
-                      onKeyDown={handleKeyDown(stateRef)}
+                      onKeyDown={targetNextRefOnEnter(stateRef)}
                       placeholder="City"
                       size={Math.max(
                         employeeForm.watch("city")?.length || 0,
@@ -570,7 +560,7 @@ const EmployeeCard: React.FC = () => {
                         employeeForm.register("state").ref(el);
                         stateRef.current = el;
                       }}
-                      onKeyDown={handleKeyDown(zipRef)}
+                      onKeyDown={targetNextRefOnEnter(zipRef)}
                       placeholder="State"
                       size={Math.max(
                         employeeForm.watch("state")?.length || 0,
@@ -601,7 +591,7 @@ const EmployeeCard: React.FC = () => {
                         employeeForm.register("zip").ref(el);
                         zipRef.current = el;
                       }}
-                      onKeyDown={handleKeyDown(notesRef)}
+                      onKeyDown={targetNextRefOnEnter(notesRef)}
                       placeholder="Zip"
                       size={Math.max(employeeForm.watch("zip")?.length || 0, 4)}
                       className="flex-1 bg-transparent outline-none text-[14px] placeholder:opacity-60 w-[100%] truncate"
@@ -712,7 +702,7 @@ const EmployeeCard: React.FC = () => {
   );
 };
 
-const EmployeeView: React.FC = () => {
+const EmployeeView = () => {
   return (
     <div className="w-full h-full px-6 pt-5">
       <EmployeeCard />
