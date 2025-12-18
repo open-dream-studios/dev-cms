@@ -1,7 +1,11 @@
 // src/context/queryContext/queries/projects.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { Project } from "@open-dream/shared";
+import {
+  deleteProjectApi,
+  fetchProjectsApi,
+  upsertProjectApi,
+} from "@/api/projects.api";
 
 export function useProjects(
   isLoggedIn: boolean,
@@ -15,18 +19,12 @@ export function useProjects(
     refetch: refetchProjects,
   } = useQuery<Project[]>({
     queryKey: ["projects"],
-    queryFn: async () => {
-      const res = await makeRequest.get("/api/projects");
-      return res.data.projects;
-    },
+    queryFn: async () => fetchProjectsApi(),
     enabled: isLoggedIn,
   });
 
   const upsertProjectMutation = useMutation({
-    mutationFn: async (project: Project) => {
-      const res = await makeRequest.post("/api/projects/upsert", project);
-      return res.data.project
-    },
+    mutationFn: async (project: Project) => upsertProjectApi(project),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["projects"],
@@ -39,11 +37,7 @@ export function useProjects(
   };
 
   const deleteProjectMutation = useMutation({
-    mutationFn: async (project_id: string) => {
-      await makeRequest.post("/api/projects/delete", {
-        project_id,
-      });
-    },
+    mutationFn: async (project_id: string) => deleteProjectApi(project_id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["projects"],

@@ -1,7 +1,6 @@
 // src/context/queryContext/queries/calls.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
-import { ProjectCall } from "@open-dream/shared";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProjectCallsApi } from "@/api/calls.api";
 
 export function useProjectCalls(
   isLoggedIn: boolean,
@@ -15,14 +14,7 @@ export function useProjectCalls(
     refetch: refetchProjectCalls,
   } = useQuery({
     queryKey: ["projectCalls", currentProjectId],
-    queryFn: async (): Promise<ProjectCall[]> => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/calls", {
-        project_idx: currentProjectId,
-      });
-      console.log(res.data.projectCalls)
-      return res.data.projectCalls;
-    },
+    queryFn: async () => fetchProjectCallsApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 

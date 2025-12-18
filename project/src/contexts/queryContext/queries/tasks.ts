@@ -1,8 +1,11 @@
 // src/context/queryContext/queries/tasks.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { Task } from "@open-dream/shared";
-import { utcToProjectTimezone } from "@/util/functions/Time";
+import {
+  deleteProjectTaskApi,
+  fetchProjectTasksApi,
+  upsertProjectTaskApi,
+} from "@/api/tasks.api";
 
 export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
   const queryClient = useQueryClient();
@@ -13,33 +16,13 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
     refetch: refetchTasks,
   } = useQuery<Task[]>({
     queryKey: ["tasks", currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/tasks", {
-        project_idx: currentProjectId,
-      });
-
-      const tasks: Task[] = (res.data.tasks || []).map((task: Task) => ({
-        ...task,
-        scheduled_start_date: task.scheduled_start_date
-          ? new Date(utcToProjectTimezone(task.scheduled_start_date as string)!)
-          : null,
-      }));
-
-      return tasks;
-    },
+    queryFn: async () => fetchProjectTasksApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertTaskMutation = useMutation({
-    mutationFn: async (task: Task) => {
-      const res = await makeRequest.post("/api/tasks/upsert", {
-        ...task,
-        project_idx: currentProjectId,
-      });
-      return res.data.task; // make sure backend returns full task
-    },
-
+    mutationFn: async (task: Task) =>
+      upsertProjectTaskApi(currentProjectId!, task),
     onMutate: async (updatedTask: Task) => {
       const queryKey = ["tasks", currentProjectId];
       await queryClient.cancelQueries({ queryKey });
@@ -78,12 +61,8 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async (task_id: string) => {
-      await makeRequest.post("/api/tasks/delete", {
-        task_id,
-        project_idx: currentProjectId,
-      });
-    },
+    mutationFn: async (task_id: string) =>
+      deleteProjectTaskApi(currentProjectId!, task_id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", currentProjectId] });
     },

@@ -2,31 +2,30 @@
 import { makeRequest } from "@/util/axios";
 import { JobDefinition } from "@open-dream/shared";
 
-export async function fetchJobDefinitionsApi(projectId: number) {
+export async function fetchJobDefinitionsApi(project_idx: number) {
   const res = await makeRequest.post("/api/jobs/get-definitions", {
-    project_idx: projectId,
+    project_idx,
   });
   return res.data.jobDefinitions || [];
 }
 
 export async function upsertJobDefinitionApi(
-  projectId: number,
+  project_idx: number,
   definition: JobDefinition
 ) {
-  if (!projectId) throw new Error("No project selected");
   const res = await makeRequest.post("/api/jobs/upsert-definition", {
     ...definition,
-    project_idx: projectId,
+    project_idx,
   });
   return res.data;
 }
 
 export async function deleteJobDefinitionApi(
-  projectId: number,
-  definitionId: string
+  project_idx: number,
+  job_definition_id: string
 ) {
   await makeRequest.post("/api/jobs/delete-definition", {
-    job_definition_id: definitionId,
-    project_idx: projectId,
+    job_definition_id,
+    project_idx,
   });
 }

@@ -1,31 +1,31 @@
-// src/api/pages.api.ts
+// src/api/mediaFolders.api.ts
 import { makeRequest } from "@/util/axios";
 import { MediaFolder } from "@open-dream/shared";
 
-export async function fetchMediaFoldersApi(projectId: number) {
+export async function fetchMediaFoldersApi(project_idx: number) {
   const res = await makeRequest.get("/api/media/folders", {
-    params: { project_idx: projectId },
+    params: { project_idx },
   });
-  return res.data.mediaFolders || ([] as MediaFolder[]);
+  return res.data.mediaFolders as MediaFolder[];
 }
 
 export async function upsertMediaFoldersApi(
-  projectId: number,
+  project_idx: number,
   folders: MediaFolder[]
 ) {
   const res = await makeRequest.post("/api/media/folders/upsert", {
     folders,
-    project_idx: projectId,
+    project_idx,
   });
   return res.data.folderIds as number[];
 }
 
 export async function deleteMediaFolderApi(
-  projectId: number,
-  folderId: string
+  project_idx: number,
+  folder_id: string
 ) {
   await makeRequest.post("/api/media/folders/delete", {
-    project_idx: projectId,
-    folder_id: folderId,
+    project_idx,
+    folder_id,
   });
 }

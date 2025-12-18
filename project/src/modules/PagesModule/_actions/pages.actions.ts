@@ -7,6 +7,7 @@ import {
   ProjectPage,
   Section,
 } from "@open-dream/shared";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 
 export const createPageContextMenu = (
   queryClient: QueryClient

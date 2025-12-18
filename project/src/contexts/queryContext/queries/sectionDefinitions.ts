@@ -1,7 +1,11 @@
 // src/context/queryContext/queries/sectionDefinitions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { SectionDefinition } from "@open-dream/shared";
+import {
+  deleteProjectSectionDefinitionsApi,
+  fetchProjectSectionDefinitionsApi,
+  upsertProjectSectionDefinitionsApi,
+} from "@/api/sectionDefinitions.api";
 
 export function useSectionDefinitions(isLoggedIn: boolean) {
   const queryClient = useQueryClient();
@@ -12,30 +16,21 @@ export function useSectionDefinitions(isLoggedIn: boolean) {
     refetch: refetchSectionDefinitions,
   } = useQuery<SectionDefinition[]>({
     queryKey: ["sectionDefinitions"],
-    queryFn: async () => {
-      const res = await makeRequest.post(
-        "/api/sections/section-definitions/get-all"
-      );
-      return res.data.sectionDefinitions;
-    },
+    queryFn: async () => fetchProjectSectionDefinitionsApi(),
     enabled: isLoggedIn,
   });
 
   const upsertSectionDefinitionMutation = useMutation({
-    mutationFn: async (data: SectionDefinition) => {
-      await makeRequest.post("/api/sections/section-definitions/upsert", data);
-    },
+    mutationFn: async (data: SectionDefinition) =>
+      upsertProjectSectionDefinitionsApi(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sectionDefinitions"] });
     },
   });
 
   const deleteSectionDefinitionMutation = useMutation({
-    mutationFn: async (section_definition_id: string) => {
-      await makeRequest.post("/api/sections/section-definitions/delete", {
-        section_definition_id,
-      });
-    },
+    mutationFn: async (section_definition_id: string) =>
+      deleteProjectSectionDefinitionsApi(section_definition_id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sectionDefinitions"] });
     },

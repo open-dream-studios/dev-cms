@@ -1,9 +1,16 @@
 // project/src/contexts/queryContext/queries/moduleFunctions.ts
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { ModuleDefinitionTree } from "@open-dream/shared";
-import { moduleProcessors } from "../../../modules/moduleProcessors";
 import { useProjectModules } from "./projectModules";
+import {
+  fetchModuleDefinitionsApi,
+  runModuleMutationApi,
+} from "@/api/moduleFunctions.api";
+
+export type RunModuleVariables = { identifier: string; body: any };
+export type RunModuleResult =
+  | { ok: true; data: any }
+  | { ok: false; error: string };
 
 export function useModuleFunctions(
   isLoggedIn: boolean,
@@ -21,57 +28,17 @@ export function useModuleFunctions(
     refetch: refetchModuleDefinitionTree,
   } = useQuery<ModuleDefinitionTree>({
     queryKey: ["moduleDefinitions"],
-    queryFn: async () => {
-      const res = await makeRequest.post("/api/modules/definitions");
-      return res.data.moduleDefinitionTree;
-    },
+    queryFn: async () => fetchModuleDefinitionsApi(),
     enabled: isLoggedIn,
   });
-
-  type RunModuleVariables = { identifier: string; body: any };
-  type RunModuleResult = { ok: true; data: any } | { ok: false; error: string };
 
   const runModuleMutation = useMutation<
     RunModuleResult,
     never,
     RunModuleVariables
   >({
-    mutationFn: async ({ identifier, body }) => {
-      if (!currentProjectId) {
-        return { ok: false, error: "No project selected" };
-      }
-
-      const projectModuleIdentifiers = projectModules.map(
-        (m) => m.module_identifier
-      );
-
-      if (!projectModuleIdentifiers.includes(identifier)) {
-        console.warn(`Module "${identifier}" is not installed`);
-        return { ok: false, error: "Module not installed" };
-      }
-
-      const res = await makeRequest
-        .post(`/api/modules/run/${identifier}`, {
-          project_idx: currentProjectId,
-          body,
-        })
-        .catch((err) => {
-          const msg =
-            err?.response?.data?.error || err.message || "Unknown module error";
-
-          return { data: { error: msg }, __error: true as const };
-        });
-
-      if ("__error" in res) {
-        return { ok: false, error: res.data.error };
-      }
-
-      const processor = moduleProcessors[identifier];
-      return {
-        ok: true,
-        data: processor ? processor(res.data) : res.data,
-      };
-    },
+    mutationFn: async ({ identifier, body }) =>
+      runModuleMutationApi(currentProjectId!, identifier, body, projectModules),
   });
 
   const runModule = async (identifier: string, body: any) => {

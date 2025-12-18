@@ -3,6 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import type { Update } from "@open-dream/shared";
 import { UpdateItemForm } from "@/util/schemas/updatesSchema";
+import {
+  addProjectUpdateRequestApi,
+  deleteProjectUpdateApi,
+  fetchProjectUpdatesApi,
+  toggleProjectUpdateApi,
+  upsertProjectUpdateApi,
+} from "@/api/updates.api";
 
 /**
  * Hook that mirrors your employees queries pattern.
@@ -26,46 +33,14 @@ export function useUpdates(
     refetch: refetchUpdates,
   } = useQuery<Update[]>({
     queryKey: ["updates", currentProjectId],
-    queryFn: async (): Promise<Update[]> => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/updates", {
-        project_idx: currentProjectId,
-      });
-      const updates: Update[] = res.data.updates || [];
-
-      const statusOrder: Record<Update["status"], number> = {
-        requested: 0,
-        upcoming: 1,
-        in_progress: 2,
-        completed: 3,
-      };
-      const priorityOrder: Record<Update["priority"], number> = {
-        high: 0,
-        medium: 1,
-        low: 2,
-      };
-
-      return updates.sort((a, b) => {
-        if (statusOrder[a.status] !== statusOrder[b.status]) {
-          return statusOrder[a.status] - statusOrder[b.status];
-        }
-        if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-          return priorityOrder[a.priority] - priorityOrder[b.priority];
-        }
-        return (b.created_at ?? "").localeCompare(a.created_at ?? "");
-      });
-    },
+    queryFn: async (): Promise<Update[]> =>
+      fetchProjectUpdatesApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertMutation = useMutation({
-    mutationFn: async (payload: UpdateItemForm) => {
-      const res = await makeRequest.post("/api/updates/upsert", {
-        ...payload,
-        project_idx: currentProjectId,
-      });
-      return res.data;
-    },
+    mutationFn: async (payload: UpdateItemForm) =>
+      upsertProjectUpdateApi(currentProjectId!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["updates", currentProjectId],
@@ -77,13 +52,8 @@ export function useUpdates(
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (update_id: string) => {
-      const res = await makeRequest.post("/api/updates/delete", {
-        update_id,
-        project_idx: currentProjectId,
-      });
-      return res.data;
-    },
+    mutationFn: async (update_id: string) =>
+      deleteProjectUpdateApi(currentProjectId!, update_id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["updates", currentProjectId],
@@ -101,14 +71,7 @@ export function useUpdates(
     }: {
       update_id: string;
       completed: boolean;
-    }) => {
-      const res = await makeRequest.post("/api/updates/toggleComplete", {
-        update_id,
-        completed,
-        project_idx: currentProjectId,
-      });
-      return res.data;
-    },
+    }) => toggleProjectUpdateApi(currentProjectId!, update_id, completed),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["updates", currentProjectId],
@@ -120,13 +83,8 @@ export function useUpdates(
   });
 
   const addRequestMutation = useMutation({
-    mutationFn: async (payload: Partial<UpdateItemForm>) => {
-      const res = await makeRequest.post("/api/updates/requests/add", {
-        ...payload,
-        project_idx: currentProjectId,
-      });
-      return res.data;
-    },
+    mutationFn: async (payload: Partial<UpdateItemForm>) =>
+      addProjectUpdateRequestApi(currentProjectId!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["updates", currentProjectId],

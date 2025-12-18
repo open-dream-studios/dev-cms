@@ -2,10 +2,10 @@
 import { makeRequest } from "@/util/axios";
 import { Customer, CustomerInput } from "@open-dream/shared";
 
-export async function fetchCustomersApi(projectId: number) {
-  if (!projectId) return [];
+export async function fetchCustomersApi(project_idx: number) {
+  if (!project_idx) return [];
   const res = await makeRequest.post("/api/customers", {
-    project_idx: projectId,
+    project_idx,
   });
   const customers: Customer[] = res.data.customers;
   return customers.sort((a, b) => {
@@ -22,12 +22,12 @@ export async function fetchCustomersApi(projectId: number) {
 }
 
 export async function upsertCustomerApi(
-  projectId: number,
+  project_idx: number,
   customer: CustomerInput
 ) {
   const res = await makeRequest.post("/api/customers/upsert", {
     ...customer,
-    project_idx: projectId,
+    project_idx,
   });
   return {
     id: res.data.id,
@@ -35,9 +35,12 @@ export async function upsertCustomerApi(
   };
 }
 
-export async function deleteCustomerApi(projectId: number, customerId: string) {
+export async function deleteCustomerApi(
+  project_idx: number,
+  customer_id: string
+) {
   await makeRequest.post("/api/customers/delete", {
-    customer_id: customerId,
-    project_idx: projectId,
+    customer_id,
+    project_idx,
   });
 }

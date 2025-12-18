@@ -10,7 +10,7 @@ export * from "./moduleFunctions";
 export * from "./pageDefinitions";
 export * from "./products";
 export * from "./projectModules";
-export * from "./projectPages";
+export * from "./pages";
 export * from "./projects";
 export * from "./projectUsers";
 export * from "./sectionDefinitions";

@@ -150,7 +150,7 @@ export type QueryContextType = {
   reorderProjectPages: (
     parent_page_id: number | null,
     orderedIds: string[]
-  ) => Promise<void>;
+  ) => Promise<any>;
 
   // ---- SECTIONS ----
   sectionDefinitions: SectionDefinition[];

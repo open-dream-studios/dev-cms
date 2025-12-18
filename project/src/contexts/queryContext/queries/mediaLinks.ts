@@ -1,7 +1,11 @@
 // project/src/context/queryContext/queries/mediaLinks.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { MediaLink } from "@open-dream/shared";
+import {
+  deleteMediaLinksApi,
+  fetchMediaLinksApi,
+  upsertMediaLinksApi,
+} from "@/api/mediaLinks.api";
 
 export function useMediaLinks(
   isLoggedIn: boolean,
@@ -15,23 +19,13 @@ export function useMediaLinks(
     refetch: refetchMediaLinks,
   } = useQuery<MediaLink[]>({
     queryKey: ["mediaLinks", currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.get("/api/media/media-links", {
-        params: { project_idx: currentProjectId },
-      });
-      return res.data.mediaLinks || [];
-    },
+    queryFn: async () => fetchMediaLinksApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertMediaLinksMutation = useMutation({
-    mutationFn: async (items: MediaLink[]) => {
-      await makeRequest.post("/api/media/media-links/update", {
-        project_idx: currentProjectId,
-        items,
-      });
-    },
+    mutationFn: async (items: MediaLink[]) =>
+      upsertMediaLinksApi(currentProjectId!, items),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["mediaLinks", currentProjectId],
@@ -44,12 +38,8 @@ export function useMediaLinks(
   };
 
   const deleteMediaLinksMutation = useMutation({
-    mutationFn: async (mediaLinks: MediaLink[]) => {
-      await makeRequest.post("/api/media/media-links/delete", {
-        mediaLinks,
-        project_idx: currentProjectId,
-      });
-    },
+    mutationFn: async (items: MediaLink[]) =>
+      deleteMediaLinksApi(currentProjectId!, items),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["mediaLinks", currentProjectId],
@@ -57,8 +47,8 @@ export function useMediaLinks(
     },
   });
 
-  const deleteMediaLinks = async (mediaLinks: MediaLink[]) => {
-    await deleteMediaLinksMutation.mutateAsync(mediaLinks);
+  const deleteMediaLinks = async (items: MediaLink[]) => {
+    await deleteMediaLinksMutation.mutateAsync(items);
   };
 
   return {

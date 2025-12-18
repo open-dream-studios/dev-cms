@@ -1,7 +1,12 @@
 // src/context/queryContext/queries/media.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { Media } from "@open-dream/shared";
+import {
+  deleteProjectMediaApi,
+  fetchProjectMediaApi,
+  rotateProjectMediaApi,
+  upsertProjectMediaApi,
+} from "@/api/media.api";
 
 export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   const queryClient = useQueryClient();
@@ -12,24 +17,13 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
     refetch: refetchMedia,
   } = useQuery<Media[]>({
     queryKey: ["media", currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.get("/api/media", {
-        params: { project_idx: currentProjectId },
-      });
-      return res.data.media || [];
-    },
+    queryFn: async () => fetchProjectMediaApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertMediaMutation = useMutation({
-    mutationFn: async (items: Media[]) => {
-      const res = await makeRequest.post("/api/media/upsert", {
-        project_idx: currentProjectId,
-        items,
-      });
-      return Array.isArray(res.data.media) ? res.data.media : [];
-    },
+    mutationFn: async (items: Media[]) =>
+      upsertProjectMediaApi(currentProjectId!, items),
 
     // 1. Optimistic update
     onMutate: async (data) => {
@@ -79,12 +73,8 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   };
 
   const deleteMediaMutation = useMutation({
-    mutationFn: async (media_id: string) => {
-      await makeRequest.post("/api/media/delete", {
-        project_idx: currentProjectId,
-        media_id,
-      });
-    },
+    mutationFn: async (media_id: string) =>
+      deleteProjectMediaApi(currentProjectId!, media_id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
     },
@@ -103,15 +93,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
       media_id: string;
       url: string;
       rotations: number;
-    }) => {
-      const res = await makeRequest.post("/api/media/rotate", {
-        project_idx: currentProjectId,
-        media_id,
-        url,
-        rotations,
-      });
-      return res.data;
-    },
+    }) => rotateProjectMediaApi(currentProjectId!, media_id, url, rotations),
     onSuccess: (data, vars) => {
       queryClient.setQueryData(
         ["media", currentProjectId],
@@ -121,7 +103,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
               ? {
                   ...m,
                   version: data.version,
-                  url: data.url, 
+                  url: data.url,
                 }
               : m
           )

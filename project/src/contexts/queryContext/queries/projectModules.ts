@@ -1,7 +1,11 @@
 // src/context/queryContext/queries/projectModules.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { ProjectModule } from "@open-dream/shared";
+import {
+  deleteProjectModuleApi,
+  fetchProjectModulesApi,
+  upsertProjectModuleApi,
+} from "@/api/projectModules.api";
 
 export function useProjectModules(
   isLoggedIn: boolean,
@@ -15,23 +19,13 @@ export function useProjectModules(
     refetch: refetchProjectModules,
   } = useQuery<ProjectModule[]>({
     queryKey: ["projectModules", currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/modules", {
-        project_idx: currentProjectId,
-      });
-      return res.data.modules;
-    },
+    queryFn: async () => fetchProjectModulesApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertProjectModuleMutation = useMutation({
-    mutationFn: async (data: ProjectModule) => {
-      await makeRequest.post("/api/modules/upsert", {
-        ...data,
-        project_idx: currentProjectId,
-      });
-    },
+    mutationFn: async (data: ProjectModule) =>
+      upsertProjectModuleApi(currentProjectId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["projectModules", currentProjectId],
@@ -40,12 +34,8 @@ export function useProjectModules(
   });
 
   const deleteProjectModuleMutation = useMutation({
-    mutationFn: async (module_id: string) => {
-      await makeRequest.post("/api/modules/delete", {
-        module_id,
-        project_idx: currentProjectId,
-      });
-    },
+    mutationFn: async (module_id: string) =>
+      deleteProjectModuleApi(currentProjectId!, module_id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["projectModules", currentProjectId],

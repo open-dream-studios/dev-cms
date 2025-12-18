@@ -1,9 +1,12 @@
 // src/context/queryContext/queries/products.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { Product } from "@open-dream/shared";
 import { RefObject } from "react";
-import { setLocalProductsData } from "@/store/currentDataStore";
+import {
+  deleteProjectProductsApi,
+  fetchProjectProductsApi,
+  upsertProjectProductsApi,
+} from "@/api/products.api";
 
 export function useProducts(
   isLoggedIn: boolean,
@@ -18,30 +21,13 @@ export function useProducts(
     refetch: refetchProductsData,
   } = useQuery<Product[]>({
     queryKey: ["products", currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.get("/api/products", {
-        params: { project_idx: currentProjectId },
-      });
-      const result = res.data.products || [];
-      const sorted = result.sort(
-        (a: Product, b: Product) => (b.ordinal ?? 0) - (a.ordinal ?? 0)
-      );
-      setLocalProductsData(sorted);
-      return sorted;
-    },
+    queryFn: async () => fetchProjectProductsApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertProductsMutation = useMutation({
-    mutationFn: async (products: Product[]) => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/products/upsert", {
-        project_idx: currentProjectId,
-        products,
-      });
-      return res.data.productIds || [];
-    },
+    mutationFn: async (products: Product[]) =>
+      upsertProjectProductsApi(currentProjectId!, products),
     onMutate: async (updatedProducts: Product[]) => {
       const queryKey = ["products"];
       await queryClient.cancelQueries({ queryKey });
@@ -81,13 +67,8 @@ export function useProducts(
     string[],
     DeleteContext
   >({
-    mutationFn: async (product_ids: string[]) => {
-      if (!currentProjectId) return;
-      await makeRequest.post("/api/products/delete", {
-        project_idx: currentProjectId,
-        product_ids,
-      });
-    },
+    mutationFn: async (product_ids: string[]) =>
+      deleteProjectProductsApi(currentProjectId!, product_ids),
     onMutate: async (product_ids: string[]) => {
       const queryKey = ["products", currentProjectId] as const;
       await queryClient.cancelQueries({ queryKey });

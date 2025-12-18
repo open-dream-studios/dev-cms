@@ -1,7 +1,12 @@
 // src/context/queryContext/queries/sections.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { Section } from "@open-dream/shared";
+import {
+  deleteProjectSectionsApi,
+  fetchProjectSectionsApi,
+  reorderProjectSectionsApi,
+  upsertProjectSectionsApi,
+} from "@/api/sections.api";
 
 export function useSections(
   isLoggedIn: boolean,
@@ -16,24 +21,13 @@ export function useSections(
     refetch: refetchSections,
   } = useQuery<Section[]>({
     queryKey: ["sections", currentProjectId, currentPageId],
-    queryFn: async () => {
-      if (!currentProjectId || !currentPageId) return [];
-      const res = await makeRequest.post("/api/sections/get", {
-        project_idx: currentProjectId,
-      });
-      return res.data.sections;
-    },
+    queryFn: async () => fetchProjectSectionsApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId && !!currentPageId,
   });
 
   const upsertSectionMutation = useMutation({
-    mutationFn: async (data: Section) => {
-      const res = await makeRequest.post("/api/sections/upsert", {
-        ...data,
-        project_idx: currentProjectId,
-      });
-      return res.data;
-    },
+    mutationFn: async (data: Section) =>
+      upsertProjectSectionsApi(currentProjectId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["sections", currentProjectId, currentPageId],
@@ -42,12 +36,8 @@ export function useSections(
   });
 
   const deleteSectionMutation = useMutation({
-    mutationFn: async (section_id: string) => {
-      await makeRequest.post("/api/sections/delete", {
-        project_idx: currentProjectId,
-        section_id,
-      });
-    },
+    mutationFn: async (section_id: string) =>
+      deleteProjectSectionsApi(currentProjectId!, section_id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["sections", currentProjectId, currentPageId],
@@ -61,9 +51,7 @@ export function useSections(
       project_page_id: number;
       parent_section_id: number | null;
       orderedIds: string[];
-    }) => {
-      await makeRequest.post("/api/sections/reorder", data);
-    },
+    }) => reorderProjectSectionsApi(data),
     onMutate: async (data) => {
       // optimistic update
       await queryClient.cancelQueries({

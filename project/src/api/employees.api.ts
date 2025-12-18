@@ -2,9 +2,9 @@
 import { makeRequest } from "@/util/axios";
 import { Employee, EmployeeInput } from "@open-dream/shared";
 
-export async function fetchEmployeesApi(projectId: number) {
+export async function fetchEmployeesApi(project_idx: number) {
   const res = await makeRequest.post("/api/employees", {
-    project_idx: projectId,
+    project_idx,
   });
   const employees: Employee[] = res.data.employees;
   return employees.sort((a, b) => {
@@ -22,17 +22,23 @@ export async function fetchEmployeesApi(projectId: number) {
 }
 
 export async function upsertEmployeeApi(
-  projectId: number,
+  project_idx: number,
   employee: EmployeeInput
 ) {
-  const res = await makeRequest.post("/api/employees/upsert", employee);
+  const res = await makeRequest.post("/api/employees/upsert", {
+    ...employee,
+    project_idx,
+  });
   return res.data;
 }
 
-export async function deleteEmployeeApi(projectId: number, employeeId: string) {
+export async function deleteEmployeeApi(
+  project_idx: number,
+  employee_id: string
+) {
   const res = await makeRequest.post("/api/employees/delete", {
-    employee_id: employeeId,
-    project_idx: projectId,
+    employee_id,
+    project_idx,
   });
   return res.data;
 }

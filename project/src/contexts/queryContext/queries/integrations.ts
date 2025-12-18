@@ -1,7 +1,11 @@
 // src/context/queryContext/queries/integrations.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { Integration } from "@open-dream/shared";
+import {
+  deleteProjectIntegrationApi,
+  fetchProjectIntegrationsApi,
+  upsertProjectIntegrationApi,
+} from "@/api/integrations.api";
 
 export function useIntegrations(
   isLoggedIn: boolean,
@@ -14,24 +18,13 @@ export function useIntegrations(
     refetch: refetchIntegrations,
   } = useQuery<Integration[]>({
     queryKey: ["integrations", currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.get("/api/integrations", {
-        params: { project_idx: currentProjectId },
-      });
-      return res.data.integrations || [];
-    },
+    queryFn: async () => fetchProjectIntegrationsApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const upsertIntegrationMutation = useMutation({
-    mutationFn: async (data: Integration) => {
-      const res = await makeRequest.post("/api/integrations/upsert", {
-        ...data,
-        project_idx: currentProjectId,
-      });
-      return res.data
-    },
+    mutationFn: async (integration: Integration) =>
+      upsertProjectIntegrationApi(currentProjectId!, integration),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["integrations", currentProjectId],
@@ -51,12 +44,8 @@ export function useIntegrations(
   };
 
   const deleteIntegrationMutation = useMutation({
-    mutationFn: async (integration_id: string) => {
-      await makeRequest.post("/api/integrations/delete", {
-        integration_id,
-        project_idx: currentProjectId,
-      });
-    },
+    mutationFn: async (integration_id: string) =>
+      deleteProjectIntegrationApi(currentProjectId!, integration_id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
     },

@@ -1,6 +1,5 @@
 // project/src/context/queryContext/queries/mediaFolders.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import { MediaFolder } from "@open-dream/shared";
 import {
   deleteMediaFolderApi,
@@ -14,7 +13,6 @@ export function useMediaFolders(
 ) {
   const queryClient = useQueryClient();
 
-  // ---- Query ----
   const {
     data: mediaFolders = [],
     isLoading: isLoadingMediaFolders,
@@ -25,7 +23,6 @@ export function useMediaFolders(
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  // ---- Mutations ----
   const upsertMediaFoldersMutation = useMutation({
     mutationFn: (folders: MediaFolder[]) =>
       upsertMediaFoldersApi(currentProjectId!, folders),
