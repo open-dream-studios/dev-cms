@@ -1,5 +1,5 @@
 // project/src/modules/MediaModule/MediaPlayer.tsx
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { setCurrentMediaSelected, useCurrentDataStore } from "@/store/currentDataStore"; 
 import React, { useRef, useState } from "react";
 

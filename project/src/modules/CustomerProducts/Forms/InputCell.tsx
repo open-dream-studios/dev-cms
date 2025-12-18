@@ -10,7 +10,7 @@ import {
 } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import { IoClose } from "react-icons/io5";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 const InputCell = <T extends FieldValues>({
   inputType,

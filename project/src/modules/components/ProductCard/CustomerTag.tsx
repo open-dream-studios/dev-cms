@@ -8,7 +8,7 @@ import CustomerSelection from "../Customers/CustomerSelection";
 import { setCurrentCustomerData } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 
 const CustomerTag = ({

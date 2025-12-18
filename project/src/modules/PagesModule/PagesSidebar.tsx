@@ -24,7 +24,7 @@ import {
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { createPageContextMenu } from "./_actions/pages.actions";

@@ -4,7 +4,7 @@ import { AuthContext } from "../contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { toast } from "react-toastify";
 import { Product } from "@open-dream/shared";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 type Modal2InputProps = {

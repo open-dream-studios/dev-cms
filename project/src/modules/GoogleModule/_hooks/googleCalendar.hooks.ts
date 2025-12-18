@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useContextQueries } from "../../contexts/queryContext/queryContext";
+import { useContextQueries } from "../../../contexts/queryContext/queryContext";
 
 export function useGoogleCalendar(calendarId: string, timeMin: string, timeMax: string) {
   const { runModule } = useContextQueries();
@@ -45,4 +45,19 @@ export function useGoogleCalendar(calendarId: string, timeMin: string, timeMax: 
     isFetching: query.isFetching,
     refresh,
   };
+}
+
+export function useCalendarProfile() {
+  const { runModule } = useContextQueries();
+  return useQuery({
+    queryKey: ["calendar-profile"],
+    queryFn: async () => {
+      const res = await runModule("google-calendar-module", {
+        requestType: "GET_PROFILE_WITH_PHOTO",
+      });
+      return res?.data;
+    },
+    staleTime: 1000 * 60 * 60 * 12,
+    gcTime: Infinity,
+  });
 }

@@ -22,7 +22,7 @@ import { AuthContext } from "@/contexts/authContext";
 import { Media, MediaLink, MediaUsage } from "@open-dream/shared";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { GrRotateRight } from "react-icons/gr";
 import { useMedia } from "@/hooks/useMedia";

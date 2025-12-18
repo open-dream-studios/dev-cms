@@ -1,6 +1,6 @@
 // project/src/modules/MediaModule/MediaToolbar.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import CustomButton from "@/lib/blocks/CustomButton";
 import { setCurrentMediaItemsSelected, useCurrentDataStore } from "@/store/currentDataStore";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";

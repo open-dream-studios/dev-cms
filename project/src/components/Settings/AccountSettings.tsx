@@ -8,7 +8,7 @@ import { IoMoonOutline } from "react-icons/io5";
 import { LuSun } from "react-icons/lu";
 import UserImage from "../blocks/UserImage";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const AccountSettings = () => {

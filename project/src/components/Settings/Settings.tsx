@@ -8,7 +8,7 @@ import AccountSettings from "./AccountSettings";
 import ModuleSettings from "./ModuleSettings";
 import ProjectSettings from "./ProjectSettings";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 type SettingsProps = {
   initialPage: SettingsPages | null;

@@ -3,7 +3,7 @@
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext } from "react";
 import { Skeleton } from "../../../components/ui/skeleton";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 const ProductSkeleton = () => {
   const { currentUser } = useContext(AuthContext);

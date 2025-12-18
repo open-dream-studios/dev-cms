@@ -1,6 +1,6 @@
 // ThemeBody.tsx
 "use client";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 export default function ThemeBody({ children }: any) {
   const theme = useCurrentTheme();

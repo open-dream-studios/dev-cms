@@ -3,7 +3,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../contexts/authContext";
 import { formatPhone } from "@/util/functions/Customers";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 export type StepConfig = {

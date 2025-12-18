@@ -2,10 +2,10 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { formatPhone } from "@/util/functions/Customers";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { openWindow } from "@/util/functions/Handlers";
 import { useGoogleUIStore, useGoogleDataStore } from "../../_store/google.store";
 import SmoothSkeleton from "@/lib/skeletons/SmoothSkeleton";

@@ -15,7 +15,7 @@ import { IntegrationFormData } from "@/util/schemas/integrationSchema";
 import { MdChevronLeft } from "react-icons/md";
 import { HiLockClosed } from "react-icons/hi2";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
   cleanModuleIdentifier,
   getModulesStructureKeys,

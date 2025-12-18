@@ -9,7 +9,7 @@ import "../../../components/Calendar/Calendar.css";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { UseFormReturn, Path, useWatch } from "react-hook-form";
 import { Check, Dot } from "lucide-react";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 // ---------- StatusBadge ----------
 export const StatusBadge: React.FC<{

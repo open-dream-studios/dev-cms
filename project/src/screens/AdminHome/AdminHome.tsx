@@ -10,7 +10,7 @@ import Modal2Continue from "@/modals/Modal2Continue";
 import { useQueryClient } from "@tanstack/react-query";
 import { FiEdit } from "react-icons/fi";
 import { setCurrentProjectData } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const ProjectItem = ({

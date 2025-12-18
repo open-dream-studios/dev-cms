@@ -14,25 +14,25 @@ import { v4 as uuidv4 } from "uuid";
 import { Product } from "@open-dream/shared";
 import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame";
 import { getCardStyle } from "@/styles/themeStyles";
-import {
-  useCustomerForm,
-  useCustomerFormSubmit,
-} from "@/hooks/forms/useCustomerForm";
+import { useCustomerForm } from "@/hooks/forms/useCustomerForm";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import CustomerInteractionTimeline from "./CustomerInteractions";
+import { onCustomerFormSubmit } from "./_actions/customers.actions";
+import { useQueryClient } from "@tanstack/react-query";
+import { targetNextRefOnEnter } from "@/util/functions/Forms";
 
 export const CustomerView = () => {
+  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { productsData, runModule } = useContextQueries();
   const { currentProject, currentCustomer, currentProjectId } =
     useCurrentDataStore();
   const { addingCustomer } = useUiStore();
-  const { onCustomerFormSubmit } = useCustomerFormSubmit();
   const customerForm = useCustomerForm(currentCustomer);
   const { registerForm, unregisterForm } = useFormInstanceStore();
   const { handleSubmit } = customerForm;
@@ -72,15 +72,6 @@ export const CustomerView = () => {
       firstNameInputRef.current?.focus();
     }
   }, [addingCustomer]);
-
-  const handleKeyDown =
-    (nextRef: React.RefObject<HTMLElement | null>) =>
-    (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | null>) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        nextRef.current?.focus();
-      }
-    };
 
   const handleSelectAddress = async (prediction: any) => {
     try {
@@ -153,7 +144,9 @@ export const CustomerView = () => {
       className="flex flex-col items-start w-full h-[100%] p-6 overflow-scroll"
     >
       <form
-        onSubmit={handleSubmit(onCustomerFormSubmit)}
+        onSubmit={handleSubmit((data) =>
+          onCustomerFormSubmit(queryClient, data)
+        )}
         className="w-[100%] max-w-[550px] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
         style={getCardStyle(currentUser.theme, currentTheme)}
       >
@@ -191,7 +184,7 @@ export const CustomerView = () => {
                     customerForm.register("first_name").ref(el);
                     firstNameInputRef.current = el;
                   }}
-                  onKeyDown={handleKeyDown(lastNameInputRef)}
+                  onKeyDown={targetNextRefOnEnter(lastNameInputRef)}
                   placeholder="First"
                   size={Math.max(
                     customerForm.watch("first_name")?.length || 0,
@@ -219,7 +212,7 @@ export const CustomerView = () => {
                     customerForm.register("last_name").ref(el);
                     lastNameInputRef.current = el;
                   }}
-                  onKeyDown={handleKeyDown(emailInputRef)}
+                  onKeyDown={targetNextRefOnEnter(emailInputRef)}
                   size={Math.max(
                     customerForm.watch("last_name")?.length || 0,
                     4
@@ -259,7 +252,7 @@ export const CustomerView = () => {
                   customerForm.register("email").ref(el);
                   emailInputRef.current = el;
                 }}
-                onKeyDown={handleKeyDown(phoneInputRef)}
+                onKeyDown={targetNextRefOnEnter(phoneInputRef)}
                 onChange={(e) => {
                   const value = e.target.value
                     .replace(/[^a-z0-9.@-]/gi, "") // allow only alphanumeric + . @ -
@@ -290,7 +283,7 @@ export const CustomerView = () => {
                   <input
                     ref={phoneInputRef}
                     value={formatPhone(field.value || "")}
-                    onKeyDown={handleKeyDown(addressLine1Ref)}
+                    onKeyDown={targetNextRefOnEnter(addressLine1Ref)}
                     onChange={(e) => {
                       let raw = e.target.value.replace(/\D/g, "");
                       if (raw.length > 10) raw = raw.slice(0, 10);

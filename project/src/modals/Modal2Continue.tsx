@@ -6,7 +6,7 @@ import { PopupDisplayItem } from "@/hooks/useModals";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { useRouting } from "@/hooks/useRouting";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Job, Product } from "@open-dream/shared";
 import { useUiStore } from "@/store/useUIStore";

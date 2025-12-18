@@ -6,7 +6,7 @@ import EditModules from "./EditModules";
 import Divider from "@/lib/blocks/Divider";
 import EditPageDefinitions from "./EditPageDefinitions";
 import EditSectionDefinitions from "./EditSectionDefinitions";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 export type Control = "modules" | "pages" | "sections";
 

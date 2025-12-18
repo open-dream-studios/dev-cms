@@ -21,7 +21,7 @@ import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
 import { dateToString } from "@/util/functions/Time";
-import { useAutoSave } from "@/hooks/useAutoSave"; 
+import { useAutoSave } from "@/hooks/util/useAutoSave"; 
 import {
   PriorityBadge,
   StatusBadge,
@@ -30,7 +30,7 @@ import {
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "./RenderedImage";
 import NoProductImage from "./NoProductImage";
 

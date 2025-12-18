@@ -21,7 +21,7 @@ import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useMedia } from "@/hooks/useMedia";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "../components/ProductCard/RenderedImage";
 import MediaPlayer from "./MediaPlayer";
 import {

@@ -1,6 +1,6 @@
 // project/src/modules/CustomerCalls/CustomerCalls.tsx
 "use client";
-import { useTwilioDevice } from "../../hooks/useTwilioDevice";
+import { useTwilioDevice } from "./_hooks/twilio.hooks";
 import { RiPhoneFill } from "react-icons/ri";
 import Modal2MultiStepModalInput, {
   StepConfig,

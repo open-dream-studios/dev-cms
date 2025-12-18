@@ -6,9 +6,8 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import UpdateCard from "./UpdateCard";
 import { Plus, Check, List, Clock } from "lucide-react";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { AuthContext } from "@/contexts/authContext";
-import { useUpdateStore } from "./_updatesStore";
 
 /**
  * Layout:
@@ -19,7 +18,6 @@ import { useUpdateStore } from "./_updatesStore";
  */
 
 const UpdatesView: React.FC = () => {
-  const { selectedTab } = useUpdateStore()
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProjectId } = useCurrentDataStore();

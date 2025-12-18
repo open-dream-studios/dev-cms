@@ -3,7 +3,7 @@
 import { ReactNode, RefObject, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import appDetails from "@/util/appDetails.json"; 
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 export const PageLayout = ({

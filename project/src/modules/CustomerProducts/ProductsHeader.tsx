@@ -18,8 +18,8 @@ import { productFilter, Product } from "@open-dream/shared";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useModals } from "@/hooks/useModals";
 import { getCardStyle } from "@/styles/themeStyles";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 const ProductsHeader = ({ title }: { title: string }) => {
   const { currentUser } = useContext(AuthContext);

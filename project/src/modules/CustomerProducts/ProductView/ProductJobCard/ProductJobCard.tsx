@@ -41,7 +41,7 @@ import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
 import { dateToString, formatDateTime } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useAutoSave } from "@/hooks/useAutoSave";
+import { useAutoSave } from "@/hooks/util/useAutoSave";
 import AddEmployeeList from "../AddEmployeeList";
 import CircularProgress from "./CircularProgress";
 import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
@@ -51,7 +51,7 @@ import {
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import ImageGallery from "@/modules/components/ImageGallery";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { useMedia } from "@/hooks/useMedia";

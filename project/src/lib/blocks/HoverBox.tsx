@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
 import { Screen } from "@open-dream/shared";
 import { useUiStore } from "@/store/useUIStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 type HoverBoxProps = {
   children: ReactNode;

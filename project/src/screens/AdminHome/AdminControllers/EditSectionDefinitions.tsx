@@ -19,7 +19,7 @@ import {
 } from "@open-dream/shared";
 import SchemaBuilder from "./SchemaBuilder";
 import { toast } from "react-toastify";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const EditSectionDefinitions = () => {

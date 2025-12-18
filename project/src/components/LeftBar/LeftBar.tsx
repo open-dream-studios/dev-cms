@@ -25,7 +25,7 @@ import { Media, Screen } from "@open-dream/shared";
 import { BsFillPersonVcardFill } from "react-icons/bs";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { IoMdMail } from "react-icons/io";
 import { useUiStore } from "@/store/useUIStore";
 

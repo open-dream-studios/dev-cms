@@ -25,7 +25,7 @@ import "./Calendar.css";
 import { JobDefinition } from "@open-dream/shared";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { JobFormData } from "@/util/schemas/jobSchema";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 // ---------- ScheduleTimeline ----------

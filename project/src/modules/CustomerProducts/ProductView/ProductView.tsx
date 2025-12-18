@@ -44,7 +44,7 @@ import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useWatch } from "react-hook-form";
 import { useMedia } from "@/hooks/useMedia";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import MediaPlayer from "@/modules/MediaModule/MediaPlayer";
 import ImageGallery from "@/modules/components/ImageGallery";
 import { FiEdit } from "react-icons/fi";

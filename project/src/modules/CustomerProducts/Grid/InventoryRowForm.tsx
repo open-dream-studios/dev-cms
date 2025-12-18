@@ -12,8 +12,8 @@ import { FaPlus } from "react-icons/fa6";
 import { Product, MediaLink } from "@open-dream/shared";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
-import { DelayType } from "@/hooks/useAutoSave";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { DelayType } from "@/hooks/util/useAutoSave";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 type InventoryRowFormProps = {
   resetTimer: (delay: DelayType) => void;

@@ -5,7 +5,7 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaChevronLeft } from "react-icons/fa6";
 import { useState } from "react";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
   cleanModuleIdentifier,
   nodeHasChildren,

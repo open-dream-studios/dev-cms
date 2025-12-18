@@ -1,6 +1,6 @@
 // project/src/modules/components/ProductCard/ProductMiniCard.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentTheme } from "@/hooks/useTheme"; 
+import { useCurrentTheme } from "@/hooks/util/useTheme"; 
 import { Media, MediaLink, Product } from "@open-dream/shared";
 import React, { useContext, useMemo } from "react";
 import NoProductImage from "./NoProductImage";

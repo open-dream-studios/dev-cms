@@ -5,7 +5,7 @@ import appDetails from "../../../util/appDetails.json";
 import { login } from "@/util/auth";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const LandingLeftBar = () => {

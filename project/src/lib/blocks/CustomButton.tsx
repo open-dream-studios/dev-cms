@@ -1,5 +1,5 @@
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import React, { ReactNode, useContext } from "react";
 
 interface CustomButtonProps {

@@ -23,7 +23,7 @@ import {
   setCurrentActiveFolder,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { useQueryClient } from "@tanstack/react-query";

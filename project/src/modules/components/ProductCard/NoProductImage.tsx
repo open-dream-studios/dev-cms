@@ -1,7 +1,7 @@
 // project/src/modules/components/ProductCard/NoProductImage.tsx
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { Media } from "@open-dream/shared";
 import React, { useContext, useMemo } from "react";

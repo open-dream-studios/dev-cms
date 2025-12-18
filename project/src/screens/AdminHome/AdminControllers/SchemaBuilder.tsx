@@ -9,7 +9,7 @@ import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { FaPlus, FaTrash, FaChevronUp, FaChevronDown } from "react-icons/fa6";
 import { FiEdit } from "react-icons/fi";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 type SchemaBuilderProps = {
   value: SectionConfigSchema | null | undefined;

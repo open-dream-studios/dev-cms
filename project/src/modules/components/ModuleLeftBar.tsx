@@ -14,15 +14,15 @@ import { useEmployeeFormSubmit } from "@/hooks/forms/useEmployeeForm";
 import { useRouting } from "@/hooks/useRouting";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { productToForm } from "@/util/schemas/productSchema";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { GoSync } from "react-icons/go";
 import { useQueryClient } from "@tanstack/react-query";
 import ProductMiniCard from "./ProductCard/ProductMiniCard";
 import ProductMiniCardSkeleton from "@/lib/skeletons/ProductMiniCardSkeleton";
 import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
 import SearchBar from "./SearchBar";
-import CustomerLeftBar from "../CustomersModule/CustomerLeftBar"; 
-import { useCustomers } from "@/hooks/useCustomers"; 
+import { handleCustomerClick } from "../CustomersModule/_actions/customers.actions";
+import CustomerCatalog from "../CustomersModule/CustomerCatalog";
 
 const ModuleLeftBar = () => {
   const queryClient = useQueryClient();
@@ -42,7 +42,6 @@ const ModuleLeftBar = () => {
   const { setUpdatingLock } = useUiStore();
   const { screen, setAddingEmployee, addingProduct, setAddingProduct } =
     useUiStore();
-  const { handleCustomerClick } = useCustomers();
   const currentTheme = useCurrentTheme();
 
   const productForm = getForm("product");
@@ -83,7 +82,7 @@ const ModuleLeftBar = () => {
 
   const handlePlusClick = async () => {
     if (screen === "customers") {
-      handleCustomerClick(null);
+      handleCustomerClick(queryClient, null);
     }
     if (screen === "edit-customer-product") {
       handleProductClick(null);
@@ -170,7 +169,7 @@ const ModuleLeftBar = () => {
       </div>
 
       <div className="flex-1 min-h-0 h-[100%]">
-        {screen === "customers" && <CustomerLeftBar />}
+        {screen === "customers" && <CustomerCatalog />}
 
         {screen === "employees" && (
           <div className="w-[100%] h-[100%] px-[15px] pb-[20px] flex flex-col overflow-y-auto gap-[9px]">

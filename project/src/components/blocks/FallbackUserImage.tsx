@@ -1,6 +1,6 @@
 // project/src/components/blocks/FallbackUserImage.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import React, { useContext } from "react";
 
 const FallbackUserImage = () => {

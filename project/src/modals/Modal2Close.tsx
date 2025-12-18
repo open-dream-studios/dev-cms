@@ -1,6 +1,6 @@
 // project/src/modals/Modal2Close.tsx
 "use client";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const Modal2Close = ({ text }: { text: string }) => {

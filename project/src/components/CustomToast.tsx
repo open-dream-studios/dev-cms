@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
 import { PiXCircleThin } from "react-icons/pi";
 import { GoCheckCircle } from "react-icons/go";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 let triggerToast: (message: string, type?: "success" | "error") => void;
 

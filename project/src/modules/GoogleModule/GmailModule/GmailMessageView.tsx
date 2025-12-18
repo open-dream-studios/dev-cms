@@ -2,7 +2,7 @@
 import React from "react";
 import EmailComposer from "./EmailComposer";
 import { useGmailUIStore } from "./_store/gmail.store";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate, getHeader, IconButton } from "./GmailHelpers";
 import { SkeletonLine } from "@/lib/skeletons/Skeletons";

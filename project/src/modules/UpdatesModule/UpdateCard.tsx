@@ -7,7 +7,7 @@ import {
 } from "@/hooks/forms/useUpdatesForm";
 import { UpdateItemForm } from "@/util/schemas/updatesSchema";
 import { Check, Clock, Trash, Edit, ArrowRight } from "lucide-react";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import clsx from "clsx";

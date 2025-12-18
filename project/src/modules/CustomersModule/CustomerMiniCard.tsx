@@ -2,79 +2,34 @@
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { Customer } from "@open-dream/shared";
-import { formatPhone } from "@/util/functions/Customers";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
-import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { highlightText, runSearchMatch } from "@/util/functions/Search";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { useQueryClient } from "@tanstack/react-query";
-import { createCustomerContextMenu } from "./_actions/customers.actions";
+import {
+  createCustomerContextMenu,
+  handleCustomerClick,
+} from "./_actions/customers.actions";
+import { getContactCardSearchDisplay } from "../_util/Search/_actions/search.actions";
 
 const CustomerMiniCard = ({
   customer,
   index,
-  handleCustomerClick,
 }: {
   customer: Customer;
   index: number;
-  handleCustomerClick: (customer: Customer) => void;
 }) => {
   const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { currentCustomer, searchContext } = useCurrentDataStore();
+  const { currentCustomer } = useCurrentDataStore();
   const { openContextMenu } = useContextMenuStore();
 
-  let display;
-
-  if (!searchContext) {
-    display = {
-      first: capitalizeFirstLetter(customer.first_name),
-      last: capitalizeFirstLetter(customer.last_name),
-      email: customer.email ?? "",
-      phone: formatPhone(customer.phone ?? ""),
-    };
-  } else {
-    const schema = searchContext.schema(customer);
-    const result = runSearchMatch(searchContext.parsed, schema);
-
-    const highlight = (text: string, key: string) =>
-      highlightText(text, result.matched[key] ?? [], () => ({
-        backgroundColor: "rgba(180,215,255,0.7)",
-        color:
-          currentUser?.theme === "dark"
-            ? currentTheme.background_2
-            : currentTheme.text_3,
-      }));
-
-    const nameFirst = highlight(
-      capitalizeFirstLetter(customer.first_name),
-      "first"
-    );
-    const nameLast = highlight(
-      capitalizeFirstLetter(customer.last_name),
-      "last"
-    );
-    const email = highlight(customer.email ?? "", "email");
-    const phone = highlight(formatPhone(customer.phone ?? ""), "phone");
-
-    display = {
-      first:
-        searchContext.type === "name"
-          ? nameFirst
-          : capitalizeFirstLetter(customer.first_name),
-      last:
-        searchContext.type === "name"
-          ? nameLast
-          : capitalizeFirstLetter(customer.last_name),
-      email: searchContext.type === "email" ? email : customer.email ?? "",
-      phone:
-        searchContext.type === "phone"
-          ? phone
-          : formatPhone(customer.phone ?? ""),
-    };
-  }
+  const display = getContactCardSearchDisplay(
+    customer,
+    currentUser,
+    currentTheme
+  );
 
   if (!currentUser) return null;
 
@@ -89,7 +44,7 @@ const CustomerMiniCard = ({
           menu: createCustomerContextMenu(queryClient),
         });
       }}
-      onClick={() => handleCustomerClick(customer)}
+      onClick={() => handleCustomerClick(queryClient, customer)}
       style={{
         backgroundColor:
           currentCustomer &&

@@ -4,7 +4,7 @@ import { AuthContext } from "@/contexts/authContext";
 import { formatPhone } from "@/util/functions/Customers";
 import { Employee } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { createEmployeeContextMenu } from "./_actions/employees.actions";
 import { useQueryClient } from "@tanstack/react-query";

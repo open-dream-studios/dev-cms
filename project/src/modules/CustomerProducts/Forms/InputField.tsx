@@ -12,7 +12,7 @@ import DatePicker from "react-datepicker";
 import { IoClose } from "react-icons/io5";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { formatDropdownOption } from "@/util/functions/UI";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 const InputField = <T extends FieldValues>({
   inputType,

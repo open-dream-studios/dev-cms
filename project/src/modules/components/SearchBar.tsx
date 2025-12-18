@@ -2,7 +2,7 @@
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useEffect } from "react";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { Search } from "lucide-react";
 
 const SearchBar = () => {

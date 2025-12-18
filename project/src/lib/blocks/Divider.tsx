@@ -1,6 +1,6 @@
 // project/src/lib/blocks/Divider.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContext } from "react";
 
 const Divider = ({ width, mb }: { width?: string; mb?: number }) => {

@@ -1,5 +1,5 @@
 // project/src/lib/skeletons/GmailMessageSkeleton.tsx
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import React from "react";
 import { SkeletonLine } from "./Skeletons";
 

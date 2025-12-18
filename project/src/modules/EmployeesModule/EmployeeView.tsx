@@ -30,9 +30,9 @@ import {
   useEmployeeFormSubmit,
 } from "@/hooks/forms/useEmployeeForm";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 const EmployeeCard: React.FC = () => {
   const { currentUser } = useContext(AuthContext);

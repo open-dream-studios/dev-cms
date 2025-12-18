@@ -8,9 +8,9 @@ import DraggableItems from "../DraggableItems";
 import { Product } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
-import { useAutoSave } from "@/hooks/useAutoSave";
+import { useAutoSave } from "@/hooks/util/useAutoSave";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 export type InventoryDataItem = {
   title: string;

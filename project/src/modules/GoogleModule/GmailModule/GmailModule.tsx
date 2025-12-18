@@ -12,11 +12,11 @@ import {
   Plus,
 } from "lucide-react";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { SkeletonLine } from "@/lib/skeletons/Skeletons";
 import GmailMessageSkeleton from "@/lib/skeletons/GmailMessageSkeleton";
-import { useGmail } from "@/hooks/google/useGmail";
-import { useGmailProfile } from "@/hooks/google/useGmailProfile"; 
+import { useGmail } from "@/modules/GoogleModule/_hooks/gmail.hooks";
+import { useGmailProfile } from "@/modules/GoogleModule/_hooks/gmail.hooks"; 
 import { openWindow } from "@/util/functions/Handlers";
 import {
   cleanText,

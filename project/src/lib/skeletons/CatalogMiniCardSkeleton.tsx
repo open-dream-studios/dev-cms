@@ -1,6 +1,6 @@
 // project/src/lib/skeletons/CatalogMiniCardSkeleton.tsx
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import React from "react";
 
 const CatalogMiniCardSkeleton = () => {

@@ -22,8 +22,8 @@ import { getInnerCardStyle } from "@/styles/themeStyles";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Calendar.css";
-import { useCurrentTheme } from "@/hooks/useTheme";
-import { useGoogleCalendar } from "@/hooks/google/useGoogleCalendar";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { useGoogleCalendar } from "@/modules/GoogleModule/_hooks/googleCalendar.hooks";
 import {
   dateToIndex,
   timeToPct,

@@ -3,10 +3,10 @@
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useRef, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { useMedia } from "@/hooks/useMedia";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 interface UploadProps {
   handleFiles: (files: File[]) => void;

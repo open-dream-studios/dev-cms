@@ -1,5 +1,5 @@
 // project/src/modules/DashboardModule/components/GoogleAdsAside.tsx
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import React, { useMemo } from "react";
 import {
   LineChart,

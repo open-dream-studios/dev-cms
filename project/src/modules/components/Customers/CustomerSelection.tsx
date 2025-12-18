@@ -4,20 +4,18 @@ import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Customer } from "@open-dream/shared";
 import { Product } from "@open-dream/shared";
-import { formatPhone } from "@/util/functions/Customers";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { IoTrashSharp } from "react-icons/io5";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
-import { capitalizeFirstLetter } from "@/util/functions/Data";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import SearchBar from "../SearchBar";
 import {
   determineSearchContext,
-  highlightText,
   runSearchMatch,
 } from "@/util/functions/Search";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
+import { getContactCardSearchDisplay } from "@/modules/_util/Search/_actions/search.actions";
 
 const CustomerSelectCard = ({
   customer,
@@ -28,7 +26,6 @@ const CustomerSelectCard = ({
 }) => {
   const currentTheme = useCurrentTheme();
   const { upsertProducts } = useContextQueries();
-  const { searchContext } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
   const { getForm } = useFormInstanceStore();
 
@@ -55,55 +52,11 @@ const CustomerSelectCard = ({
 
   if (!currentUser) return null;
 
-  let display;
-
-  if (!searchContext) {
-    display = {
-      first: capitalizeFirstLetter(customer.first_name),
-      last: capitalizeFirstLetter(customer.last_name),
-      email: customer.email ?? "",
-      phone: formatPhone(customer.phone ?? ""),
-    };
-  } else {
-    const schema = searchContext.schema(customer);
-    const result = runSearchMatch(searchContext.parsed, schema);
-
-    const highlight = (text: string, key: string) =>
-      highlightText(text, result.matched[key] ?? [], () => ({
-        backgroundColor: "rgba(180,215,255,0.7)",
-        color:
-          currentUser?.theme === "dark"
-            ? currentTheme.background_2
-            : currentTheme.text_4,
-      }));
-
-    const nameFirst = highlight(
-      capitalizeFirstLetter(customer.first_name),
-      "first"
-    );
-    const nameLast = highlight(
-      capitalizeFirstLetter(customer.last_name),
-      "last"
-    );
-    const email = highlight(customer.email ?? "", "email");
-    const phone = highlight(formatPhone(customer.phone ?? ""), "phone");
-
-    display = {
-      first:
-        searchContext.type === "name"
-          ? nameFirst
-          : capitalizeFirstLetter(customer.first_name),
-      last:
-        searchContext.type === "name"
-          ? nameLast
-          : capitalizeFirstLetter(customer.last_name),
-      email: searchContext.type === "email" ? email : customer.email ?? "",
-      phone:
-        searchContext.type === "phone"
-          ? phone
-          : formatPhone(customer.phone ?? ""),
-    };
-  }
+  const display = getContactCardSearchDisplay(
+    customer,
+    currentUser,
+    currentTheme
+  );
 
   return (
     <div

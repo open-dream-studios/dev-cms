@@ -34,8 +34,8 @@ import { useUiStore } from "@/store/useUIStore";
 import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { setLocalProductsData, useCurrentDataStore } from "@/store/currentDataStore";
-import { DelayType } from "@/hooks/useAutoSave";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { DelayType } from "@/hooks/util/useAutoSave";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 function SortableItem({
   resetTimer,

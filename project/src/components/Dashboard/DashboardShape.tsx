@@ -1,7 +1,7 @@
 // src/components/Dashboard/ModuleShape.tsx
 import React from "react";
 import { ShapeConfig } from "@/types/dashboard";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { DashboardSlot } from "./DashboardSlot";
 
 interface Props {

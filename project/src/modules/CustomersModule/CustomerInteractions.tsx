@@ -19,9 +19,9 @@ import {
 import { motion } from "framer-motion";
 import { GmailMessage, ProjectCall } from "@open-dream/shared";
 import { dateToString } from "@/util/functions/Time";
-import { useGmailByEmail } from "@/hooks/google/useGmailByEmail";
+import { useGmailByEmail } from "@/modules/GoogleModule/_hooks/gmail.hooks";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import Divider from "@/lib/blocks/Divider";
 import GmailMessageView from "../GoogleModule/GmailModule/GmailMessageView";
 import { useGmailUIStore } from "../GoogleModule/GmailModule/_store/gmail.store";

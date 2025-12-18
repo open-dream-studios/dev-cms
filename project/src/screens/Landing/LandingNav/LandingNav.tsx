@@ -3,7 +3,7 @@ import { HiBars3 } from "react-icons/hi2";
 import appDetails from "../../../util/appDetails.json"; 
 import Login from "../Login/Login";
 import { removeWhiteSpace } from "@/util/functions/Data";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const LandingNav = () => {

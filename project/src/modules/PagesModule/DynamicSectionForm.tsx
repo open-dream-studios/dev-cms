@@ -2,7 +2,7 @@
 import React, { useContext } from "react";
 import { FieldDefinition } from "@open-dream/shared";
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 type Props = {
   fields: FieldDefinition[];

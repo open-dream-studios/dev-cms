@@ -1,4 +1,4 @@
-// project/src/modules/UpdatesModule/_store.ts
+// project/src/modules/UpdatesModule/_store/updates.store.ts
 import { createStore } from "@/store/createStore";
 
 export const updateState = {

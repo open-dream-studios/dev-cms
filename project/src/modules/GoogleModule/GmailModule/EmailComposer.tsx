@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { IoClose } from "react-icons/io5";
 import { Paperclip, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 interface EmailComposerProps {
   mode: "reply" | "compose";

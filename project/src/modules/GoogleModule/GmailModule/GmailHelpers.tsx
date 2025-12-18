@@ -1,4 +1,4 @@
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { GmailMessage, MessageDetail } from "@open-dream/shared";
 
 // project/src/modules/GoogleModule/GmailModule/GmailHelpers.tsx

@@ -10,7 +10,7 @@ import {
   Task,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const AddEmployeeList = ({ assignment }: { assignment: Job | Task | null }) => {

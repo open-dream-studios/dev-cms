@@ -15,7 +15,7 @@ import {
   getClearanceFromRole,
   getRoleFromClearance,
 } from "@/util/functions/Users";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);

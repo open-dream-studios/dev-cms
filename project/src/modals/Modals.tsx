@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react"; 
 import { AuthContext } from "../contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const Modals = ({ landing }: { landing: boolean }) => {

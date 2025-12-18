@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { googleSignIn, login, register } from "@/util/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
-import { useCurrentTheme } from "@/hooks/useTheme";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 
 const LoginSlider = () => {
