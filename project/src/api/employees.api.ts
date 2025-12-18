@@ -1,8 +1,14 @@
 // src/api/employees.api.ts
 import { makeRequest } from "@/util/axios";
-import { Employee, EmployeeInput } from "@open-dream/shared";
+import {
+  Employee,
+  EmployeeAssignment,
+  EmployeeAssignmentInput,
+  EmployeeInput,
+} from "@open-dream/shared";
 
 export async function fetchEmployeesApi(project_idx: number) {
+  if (!project_idx) return [];
   const res = await makeRequest.post("/api/employees", {
     project_idx,
   });
@@ -25,6 +31,7 @@ export async function upsertEmployeeApi(
   project_idx: number,
   employee: EmployeeInput
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/employees/upsert", {
     ...employee,
     project_idx,
@@ -36,8 +43,41 @@ export async function deleteEmployeeApi(
   project_idx: number,
   employee_id: string
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/employees/delete", {
     employee_id,
+    project_idx,
+  });
+  return res.data;
+}
+
+export async function fetchEmployeeAssignmentsApi(project_idx: number) {
+  if (!project_idx) return [];
+  const res = await makeRequest.post("/api/employees/assignments/get", {
+    project_idx,
+  });
+  return (res.data.employeeAssignments || []) as EmployeeAssignment[];
+}
+
+export async function upsertEmployeeAssignmentApi(
+  project_idx: number,
+  assignment: EmployeeAssignmentInput
+) {
+  if (!project_idx) return null;
+  const res = await makeRequest.post("/api/employees/assignments/add", {
+    ...assignment,
+    project_idx,
+  });
+  return res.data;
+}
+
+export async function deleteEmployeeAssignmentApi(
+  project_idx: number,
+  id: number
+) {
+  if (!project_idx) return null;
+  const res = await makeRequest.post("/api/employees/assignments/delete", {
+    id,
     project_idx,
   });
   return res.data;

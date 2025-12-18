@@ -51,7 +51,7 @@ export function useSections(
       project_page_id: number;
       parent_section_id: number | null;
       orderedIds: string[];
-    }) => reorderProjectSectionsApi(data),
+    }) => reorderProjectSectionsApi(currentProjectId!, data),
     onMutate: async (data) => {
       // optimistic update
       await queryClient.cancelQueries({

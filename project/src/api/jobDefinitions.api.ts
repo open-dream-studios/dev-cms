@@ -3,6 +3,7 @@ import { makeRequest } from "@/util/axios";
 import { JobDefinition } from "@open-dream/shared";
 
 export async function fetchJobDefinitionsApi(project_idx: number) {
+  if (!project_idx) return [];
   const res = await makeRequest.post("/api/jobs/get-definitions", {
     project_idx,
   });
@@ -13,6 +14,7 @@ export async function upsertJobDefinitionApi(
   project_idx: number,
   definition: JobDefinition
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/jobs/upsert-definition", {
     ...definition,
     project_idx,
@@ -24,6 +26,7 @@ export async function deleteJobDefinitionApi(
   project_idx: number,
   job_definition_id: string
 ) {
+  if (!project_idx) return null;
   await makeRequest.post("/api/jobs/delete-definition", {
     job_definition_id,
     project_idx,

@@ -9,8 +9,11 @@ import {
 } from "@open-dream/shared";
 import {
   deleteEmployeeApi,
+  deleteEmployeeAssignmentApi,
+  fetchEmployeeAssignmentsApi,
   fetchEmployeesApi,
   upsertEmployeeApi,
+  upsertEmployeeAssignmentApi,
 } from "@/api/employees.api";
 
 export function useEmployees(
@@ -70,24 +73,13 @@ export function useEmployees(
     refetch: refetchEmployeeAssignments,
   } = useQuery<EmployeeAssignment[]>({
     queryKey: ["employeeAssignments", currentProjectId],
-    queryFn: async () => {
-      if (!currentProjectId) return [];
-      const res = await makeRequest.post("/api/employees/assignments/get", {
-        project_idx: currentProjectId,
-      });
-      return res.data.employeeAssignments || [];
-    },
+    queryFn: async () => fetchEmployeeAssignmentsApi(currentProjectId!),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
   const addEmployeeAssignmentMutation = useMutation({
-    mutationFn: async (assignment: EmployeeAssignmentInput) => {
-      const res = await makeRequest.post(
-        "/api/employees/assignments/add",
-        assignment
-      );
-      return res.data;
-    },
+    mutationFn: async (assignment: EmployeeAssignmentInput) =>
+      upsertEmployeeAssignmentApi(currentProjectId!, assignment),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["employeeAssignments", currentProjectId],
@@ -99,13 +91,8 @@ export function useEmployees(
   });
 
   const deleteEmployeeAssignmentMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await makeRequest.post("/api/employees/assignments/delete", {
-        id,
-        project_idx: currentProjectId,
-      });
-      return res.data;
-    },
+    mutationFn: async (id: number) =>
+      deleteEmployeeAssignmentApi(currentProjectId!, id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["employeeAssignments", currentProjectId],

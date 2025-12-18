@@ -25,6 +25,7 @@ export async function upsertCustomerApi(
   project_idx: number,
   customer: CustomerInput
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/customers/upsert", {
     ...customer,
     project_idx,
@@ -39,6 +40,7 @@ export async function deleteCustomerApi(
   project_idx: number,
   customer_id: string
 ) {
+  if (!project_idx) return null;
   await makeRequest.post("/api/customers/delete", {
     customer_id,
     project_idx,

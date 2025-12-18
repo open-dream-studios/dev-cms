@@ -3,6 +3,7 @@ import { makeRequest } from "@/util/axios";
 import { Media } from "@open-dream/shared";
 
 export async function fetchProjectMediaApi(project_idx: number) {
+  if (!project_idx) return [];
   const res = await makeRequest.get("/api/media", {
     params: { project_idx },
   });
@@ -13,6 +14,7 @@ export async function upsertProjectMediaApi(
   project_idx: number,
   items: Media[]
 ) {
+  if (!project_idx) return [];
   const res = await makeRequest.post("/api/media/upsert", {
     project_idx,
     items,
@@ -24,6 +26,7 @@ export async function deleteProjectMediaApi(
   project_idx: number,
   media_id: string
 ) {
+  if (!project_idx) return;
   await makeRequest.post("/api/media/delete", {
     project_idx,
     media_id,
@@ -36,6 +39,7 @@ export async function rotateProjectMediaApi(
   url: string,
   rotations: number
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/media/rotate", {
     project_idx,
     media_id,

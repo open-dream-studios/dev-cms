@@ -178,7 +178,7 @@ export type QueryContextType = {
   upsertCustomer: (data: CustomerInput) => Promise<{
     id: number;
     customer_id: string;
-  }>;
+  } | null>;
   deleteCustomer: (customer_id: string) => Promise<void>;
 
   // ---- Job Definitions ----

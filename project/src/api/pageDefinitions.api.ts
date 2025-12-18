@@ -4,7 +4,7 @@ import { PageDefinition } from "@open-dream/shared";
 
 export async function fetchProjectPageDefinitionsApi() {
   const res = await makeRequest.post("/api/pages/page-definitions/get-all");
-  return res.data.pageDefinitions as PageDefinition[];
+  return (res.data.pageDefinitions || []) as PageDefinition[];
 }
 
 export async function upsertProjectPageDefinitionApi(

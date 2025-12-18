@@ -6,7 +6,7 @@ import { ProjectModule } from "@open-dream/shared";
 
 export async function fetchModuleDefinitionsApi() {
   const res = await makeRequest.post("/api/modules/definitions");
-  return res.data.moduleDefinitionTree;
+  return res.data.moduleDefinitionTree || {};
 }
 
 export async function runModuleMutationApi(

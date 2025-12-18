@@ -109,7 +109,7 @@ export const runModuleFunction = async (
     return { success: false, message: "Required keys not found" };
   }
 
-  return await run({
+  const result = await run({
     connection,
     project_idx,
     identifier,
@@ -117,4 +117,10 @@ export const runModuleFunction = async (
     body,
     decryptedKeys,
   });
+
+  if (result && typeof result === "object" && "status" in result) {
+    const { status, ...rest } = result;
+    return rest;
+  }
+  return result;
 };

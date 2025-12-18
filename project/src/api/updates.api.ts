@@ -37,6 +37,7 @@ export async function upsertProjectUpdateApi(
   project_idx: number,
   payload: UpdateItemForm
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/updates/upsert", {
     ...payload,
     project_idx,
@@ -48,6 +49,7 @@ export async function deleteProjectUpdateApi(
   project_idx: number,
   update_id: string
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/updates/delete", {
     update_id,
     project_idx,
@@ -60,6 +62,7 @@ export async function toggleProjectUpdateApi(
   update_id: string,
   completed: boolean
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/updates/toggleComplete", {
     update_id,
     completed,
@@ -72,6 +75,7 @@ export async function addProjectUpdateRequestApi(
   project_idx: number,
   payload: Partial<UpdateItemForm>
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/updates/requests/add", {
     ...payload,
     project_idx,

@@ -4,6 +4,7 @@ import { makeRequest } from "@/util/axios";
 import { Product } from "@open-dream/shared";
 
 export async function fetchProjectProductsApi(project_idx: number) {
+  if (!project_idx) return [];
   const { setLocalProductsData } = useCurrentDataStore.getState();
   const res = await makeRequest.get("/api/products", {
     params: { project_idx },
@@ -20,6 +21,7 @@ export async function upsertProjectProductsApi(
   project_idx: number,
   products: Product[]
 ) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/products/upsert", {
     project_idx,
     products,
@@ -31,6 +33,7 @@ export async function deleteProjectProductsApi(
   project_idx: number,
   product_ids: string[]
 ) {
+  if (!project_idx) return null;
   await makeRequest.post("/api/products/delete", {
     project_idx,
     product_ids,

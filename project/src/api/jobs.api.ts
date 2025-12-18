@@ -4,6 +4,7 @@ import { utcToLocal, utcToProjectTimezone } from "@/util/functions/Time";
 import { Job } from "@open-dream/shared";
 
 export async function fetchProjectJobsApi(project_idx: number) {
+  if (!project_idx) return [];
   const res = await makeRequest.post("/api/jobs", {
     project_idx,
   });
@@ -25,6 +26,7 @@ export async function fetchProjectJobsApi(project_idx: number) {
 }
 
 export async function upsertProjectJobApi(project_idx: number, job: Job) {
+  if (!project_idx) return null;
   const res = await makeRequest.post("/api/jobs/upsert", {
     ...job,
     project_idx,
@@ -33,6 +35,7 @@ export async function upsertProjectJobApi(project_idx: number, job: Job) {
 }
 
 export async function deleteProjectJobApi(project_idx: number, job_id: string) {
+  if (!project_idx) return null;
   await makeRequest.post("/api/jobs/delete", {
     job_id,
     project_idx,
