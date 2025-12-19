@@ -9,11 +9,12 @@ import { productToForm } from "@/util/schemas/productSchema";
 import { InventoryDataItem } from "./InventoryGrid";
 import Image from "next/image";
 import { FaPlus } from "react-icons/fa6";
-import { Product, MediaLink } from "@open-dream/shared";
+import { Product, MediaLink, Media } from "@open-dream/shared";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { DelayType } from "@/hooks/util/useAutoSave";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 
 type InventoryRowFormProps = {
   resetTimer: (delay: DelayType) => void;
@@ -27,7 +28,7 @@ const InventoryRowForm = ({
 }: InventoryRowFormProps) => {
   const { currentUser } = useContext(AuthContext);
   const { screenClick } = useRouting();
-  const { productsData, mediaLinks } = useContextQueries();
+  const { productsData, mediaLinks, media } = useContextQueries();
   const currentTheme = useCurrentTheme();
 
   const formKey = `product-${product.serial_number}`;
@@ -71,13 +72,17 @@ const InventoryRowForm = ({
     }
   };
 
-  const itemImage = useMemo(() => {
+  const itemMedia = useMemo(() => {
     const mediaLinksFound = mediaLinks.filter(
       (m: MediaLink) =>
         m.entity_type === "product" && m.entity_id === product.id
     );
-    return mediaLinksFound.length > 0 ? mediaLinksFound[0] : null;
-  }, [product, mediaLinks]);
+    if (mediaLinksFound.length) {
+      return media.find((m: Media) => m.id === mediaLinksFound[0].media_id);
+    } else {
+      return null;
+    }
+  }, [product, mediaLinks, media]);
 
   if (!currentUser) return null;
 
@@ -97,26 +102,10 @@ const InventoryRowForm = ({
           className="cursor-pointer dim hover:brightness-75"
         >
           <div className="relative w-[42px] h-[42px]">
-            {itemImage ? (
-              <>
-                {/\.(mp4|mov)$/i.test(itemImage.url) ? (
-                  <video
-                    src={itemImage.url}
-                    className="object-cover w-[42px] h-[42px] rounded-[5px]"
-                    playsInline
-                    muted
-                    loop
-                  />
-                ) : (
-                  <Image
-                    src={itemImage.url}
-                    alt="image"
-                    width={42}
-                    height={42}
-                    className="object-cover w-[42px] h-[42px] rounded-[5px]"
-                  />
-                )}
-              </>
+            {itemMedia ? (
+              <div className="rounded-[4px] overflow-hidden">
+                <RenderedImage media={itemMedia} rounded={true} />
+              </div>
             ) : (
               <div
                 style={{
