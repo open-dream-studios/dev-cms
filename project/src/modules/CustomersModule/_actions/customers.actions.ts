@@ -7,8 +7,7 @@ import {
   ContextMenuDefinition,
   Customer,
   CustomerInput,
-} from "@open-dream/shared";
-import { QueryClient } from "@tanstack/react-query";
+} from "@open-dream/shared"; 
 import { deleteCustomerApi, upsertCustomerApi } from "@/api/customers.api";
 import { useUiStore } from "@/store/useUIStore";
 import {
@@ -16,26 +15,23 @@ import {
   customerToForm,
 } from "@/util/schemas/customerSchema";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
+import { queryClient } from "@/lib/queryClient";
 
-export const createCustomerContextMenu = (
-  queryClient: QueryClient
-): ContextMenuDefinition<Customer> => ({
-  items: [
-    {
-      id: "delete-customer",
-      label: "Delete Customer",
-      danger: true,
-      onClick: async (customer) => {
-        await handleDeleteCustomer(queryClient, customer.customer_id);
+export const createCustomerContextMenu =
+  (): ContextMenuDefinition<Customer> => ({
+    items: [
+      {
+        id: "delete-customer",
+        label: "Delete Customer",
+        danger: true,
+        onClick: async (customer) => {
+          await handleDeleteCustomer(customer.customer_id);
+        },
       },
-    },
-  ],
-});
+    ],
+  });
 
-export const handleDeleteCustomer = async (
-  queryClient: QueryClient,
-  customer_id: string | null
-) => {
+export const handleDeleteCustomer = async (customer_id: string | null) => {
   const { currentProjectId } = useCurrentDataStore.getState();
   const { setAddingCustomer } = useUiStore.getState();
   if (!currentProjectId || !customer_id) return;
@@ -53,16 +49,13 @@ export const handleDeleteCustomer = async (
   setAddingCustomer(true);
 };
 
-export const handleCustomerClick = async (
-  queryClient: QueryClient,
-  customer: Customer | null
-) => {
+export const handleCustomerClick = async (customer: Customer | null) => {
   const { getForm } = useFormInstanceStore.getState();
   const { setAddingCustomer } = useUiStore.getState();
   const customerForm = getForm("customer");
   if (customerForm?.formState.isDirty) {
     await customerForm.handleSubmit((data) =>
-      onCustomerFormSubmit(queryClient, data)
+      onCustomerFormSubmit(data)
     )();
   }
   setCurrentCustomerData(customer);
@@ -73,7 +66,6 @@ export const handleCustomerClick = async (
 };
 
 export async function onCustomerFormSubmit(
-  queryClient: QueryClient,
   data: CustomerFormData
 ): Promise<void> {
   const { currentProjectId, currentCustomer } = useCurrentDataStore.getState();

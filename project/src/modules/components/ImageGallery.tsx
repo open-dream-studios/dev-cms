@@ -25,8 +25,8 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { GrRotateRight } from "react-icons/gr";
-import { useMedia } from "@/hooks/useMedia";
 import { useUiStore } from "@/store/useUIStore";
+import { handleRotateMedia } from "../MediaModule/_actions/media.actions";
 
 function SortableImage({
   id,
@@ -58,7 +58,6 @@ function SortableImage({
     transition,
     isDragging,
   } = useSortable({ id });
-  const { handleRotateMedia } = useMedia();
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),

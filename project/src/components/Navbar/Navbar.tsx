@@ -18,18 +18,17 @@ import {
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useRouting } from "@/hooks/useRouting";
-import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { useRouting } from "@/hooks/useRouting"; 
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { Media } from "@open-dream/shared";
+import { saveProducts } from "@/modules/CustomerProducts/_actions/customerProducts.actions";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const { updatingLock } = useUiStore();
-  const { projectsData, media } = useContextQueries();
-  const { saveProducts } = useProductFormSubmit();
+  const { projectsData, media } = useContextQueries(); 
   const { leftBarOpen, setLeftBarOpen, leftBarRef, pageLayoutRef, modal1, setModal1 } = useUiStore(); 
   const currentTheme = useCurrentTheme();
 

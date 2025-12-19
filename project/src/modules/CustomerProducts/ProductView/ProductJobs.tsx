@@ -8,8 +8,7 @@ import Modal2MultiStepModalInput, {
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
-import { Product, Job, JobDefinition } from "@open-dream/shared";
-import { useQueryClient } from "@tanstack/react-query";
+import { Product, Job, JobDefinition } from "@open-dream/shared"; 
 import { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { createJobDefinitionContextMenu } from "../_actions/customerProducts.actions";
@@ -20,7 +19,6 @@ interface ProductJobsProps {
 }
 
 const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
-  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProject } = useCurrentDataStore();
@@ -117,7 +115,7 @@ const ProductJobs = ({ product, customerId }: ProductJobsProps) => {
                   openContextMenu({
                     position: { x: e.clientX, y: e.clientY },
                     target: definition,
-                    menu: createJobDefinitionContextMenu(queryClient),
+                    menu: createJobDefinitionContextMenu(),
                   });
                 }
               }}

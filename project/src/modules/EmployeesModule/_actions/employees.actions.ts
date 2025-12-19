@@ -7,8 +7,7 @@ import {
   ContextMenuDefinition,
   Employee,
   EmployeeInput,
-} from "@open-dream/shared";
-import { QueryClient } from "@tanstack/react-query";
+} from "@open-dream/shared"; 
 import { deleteEmployeeApi, upsertEmployeeApi } from "@/api/employees.api";
 import { useUiStore } from "@/store/useUIStore";
 import {
@@ -16,26 +15,23 @@ import {
   employeeToForm,
 } from "@/util/schemas/employeeSchema";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
+import { queryClient } from "@/lib/queryClient";
 
-export const createEmployeeContextMenu = (
-  queryClient: QueryClient
-): ContextMenuDefinition<Employee> => ({
-  items: [
-    {
-      id: "delete-employee",
-      label: "Delete Employee",
-      danger: true,
-      onClick: async (employee) => {
-        await handleDeleteEmployee(queryClient, employee.employee_id);
+export const createEmployeeContextMenu =
+  (): ContextMenuDefinition<Employee> => ({
+    items: [
+      {
+        id: "delete-employee",
+        label: "Delete Employee",
+        danger: true,
+        onClick: async (employee) => {
+          await handleDeleteEmployee(employee.employee_id);
+        },
       },
-    },
-  ],
-});
+    ],
+  });
 
-export const handleDeleteEmployee = async (
-  queryClient: QueryClient,
-  employee_id: string | null
-) => {
+export const handleDeleteEmployee = async (employee_id: string | null) => {
   const { currentProjectId } = useCurrentDataStore.getState();
   const { setAddingEmployee } = useUiStore.getState();
   if (!currentProjectId || !employee_id) return;
@@ -53,16 +49,13 @@ export const handleDeleteEmployee = async (
   setAddingEmployee(true);
 };
 
-export const handleEmployeeClick = async (
-  queryClient: QueryClient,
-  employee: Employee | null
-) => {
+export const handleEmployeeClick = async (employee: Employee | null) => {
   const { getForm } = useFormInstanceStore.getState();
   const { setAddingEmployee } = useUiStore.getState();
   const employeeForm = getForm("employee");
   if (employeeForm && employeeForm.formState.isDirty) {
     await employeeForm.handleSubmit((data) =>
-      onEmployeeFormSubmit(queryClient, data)
+      onEmployeeFormSubmit(data)
     )();
   }
   setCurrentEmployeeData(employee);
@@ -73,7 +66,6 @@ export const handleEmployeeClick = async (
 };
 
 export async function onEmployeeFormSubmit(
-  queryClient: QueryClient,
   data: EmployeeFormData
 ): Promise<void> {
   const { currentProjectId, currentEmployee } = useCurrentDataStore.getState();

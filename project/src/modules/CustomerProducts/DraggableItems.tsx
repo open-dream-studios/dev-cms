@@ -30,12 +30,12 @@ import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame
 import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@open-dream/shared";
 import InventoryRow from "./Grid/InventoryRow";
-import { useUiStore } from "@/store/useUIStore";
-import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { useUiStore } from "@/store/useUIStore"; 
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { setLocalProductsData, useCurrentDataStore } from "@/store/currentDataStore";
 import { DelayType } from "@/hooks/util/useAutoSave";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { saveProducts } from "./_actions/customerProducts.actions";
 
 function SortableItem({
   resetTimer,
@@ -52,8 +52,7 @@ function SortableItem({
 }) {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { editingProducts } = useUiStore();
-  const { saveProducts } = useProductFormSubmit();
+  const { editingProducts } = useUiStore(); 
   const { deleteProducts } = useContextQueries();
   const { inventoryView } = useUiStore();
 
@@ -147,8 +146,7 @@ const DraggableItems = ({
     useSensor(TouchSensor),
     useSensor(PointerSensor)
   );
-  const { localProductsData } = useCurrentDataStore();
-  const { saveProducts } = useProductFormSubmit();
+  const { localProductsData } = useCurrentDataStore(); 
   const { filteredProducts } = useDataFilters();
   const containerRef = useRef<HTMLDivElement | null>(null);
 

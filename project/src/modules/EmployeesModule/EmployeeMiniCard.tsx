@@ -6,19 +6,15 @@ import { Employee } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
-import { createEmployeeContextMenu } from "./_actions/employees.actions";
-import { useQueryClient } from "@tanstack/react-query";
+import { createEmployeeContextMenu, handleEmployeeClick } from "./_actions/employees.actions";
 
 const EmployeeMiniCard = ({
   employee,
   index,
-  handleEmployeeClick,
 }: {
   employee: Employee;
   index: number;
-  handleEmployeeClick: (employee: Employee) => void;
 }) => {
-  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentEmployee } = useCurrentDataStore();
@@ -34,7 +30,7 @@ const EmployeeMiniCard = ({
         openContextMenu({
           position: { x: e.clientX, y: e.clientY },
           target: employee,
-          menu: createEmployeeContextMenu(queryClient),
+          menu: createEmployeeContextMenu(),
         });
       }}
       onClick={() => handleEmployeeClick(employee)}

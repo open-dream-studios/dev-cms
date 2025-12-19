@@ -5,8 +5,8 @@ import React, { useContext, useRef, useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
-import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { handleFileProcessing } from "@/modules/MediaModule/_actions/media.actions";
 
 interface UploadProps {
   handleFiles: (files: File[]) => void;
@@ -15,7 +15,6 @@ interface UploadProps {
 
 function UploadModal() {
   const { currentUser } = useContext(AuthContext);
-  const { handleFileProcessing } = useMedia();
   const { uploadContext } = useUiStore();
   const uploadPopupRef = useRef<HTMLDivElement | null>(null);
   const currentTheme = useCurrentTheme();

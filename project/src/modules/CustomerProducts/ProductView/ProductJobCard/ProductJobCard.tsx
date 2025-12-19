@@ -54,7 +54,7 @@ import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import ImageGallery from "@/modules/components/ImageGallery";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
-import { useMedia } from "@/hooks/useMedia";
+import { saveCurrentJobImages } from "@/modules/MediaModule/_actions/media.actions";
 
 // ---------- TaskCard ----------
 const TaskCard: React.FC<{
@@ -568,7 +568,6 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   const { screenClick } = useRouting();
   const { setCurrentJobImages, currentJobImages } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
-  const { saveCurrentJobImages } = useMedia();
 
   const { leftBarOpen, modal1, setModal1, modal2, setModal2 } = useUiStore();
   const jobForm = useJobForm();

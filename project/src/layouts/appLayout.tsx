@@ -1,11 +1,7 @@
 // project/src/layouts/appLayout.tsx
 "use client";
-import { ReactNode, useContext, useEffect, useRef, useState } from "react";
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { ReactNode, useContext, useEffect, useRef } from "react";
+import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { AuthContext, AuthContextProvider } from "@/contexts/authContext";
 import Navbar from "@/components/Navbar/Navbar";
 import LeftBar from "@/components/LeftBar/LeftBar";
@@ -36,9 +32,10 @@ import { useRouting } from "@/hooks/useRouting";
 import { PageLayout } from "./pageLayout";
 import UploadModal from "@/components/Upload/Upload";
 import { ContextMenu } from "@/components/ContextMenu";
+import { queryClient } from "@/lib/queryClient";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  // const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -55,7 +52,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
 const AppRoot = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
-  const queryClientRef = useRef(queryClient);
   const { currentUser, isLoadingCurrentUserData } = useContext(AuthContext);
   const router = useRouter();
   const pathname = usePathname();
@@ -65,10 +61,6 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ["currentUser"] });
   }, []);
-
-  useEffect(() => {
-    queryClientRef.current = queryClient;
-  }, [queryClient]);
 
   useEffect(() => {
     if (!isLoadingCurrentUserData && !currentUser && pathname !== "/") {
@@ -147,7 +139,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="w-[100vw] display-height">
-      <ContextMenu/>
+      <ContextMenu />
       {updatingLock && (
         <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
       )}

@@ -20,15 +20,13 @@ import { usePageForm, useSectionForm } from "@/hooks/forms/usePageForm";
 import { pageToForm } from "@/util/schemas/projectPageSchema";
 import { sectionToForm } from "@/util/schemas/sectionSchema";
 import { useWatch } from "react-hook-form";
-import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCurrentTheme } from "@/hooks/util/useTheme"; 
 import {
   onPageFormSubmit,
   onSectionFormSubmit,
 } from "./_actions/pages.actions";
 
-const PagesModuleLeftBar = () => {
-  const queryClient = useQueryClient();
+const PagesModuleLeftBar = () => { 
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentPage, currentSection, currentProjectId } =
@@ -77,7 +75,7 @@ const PagesModuleLeftBar = () => {
   };
 
   const handleBackClick = () => {
-    setCurrentSectionData(null)
+    setCurrentSectionData(null);
     if (currentPage) {
       if (addingSection) {
         setAddingSection(false);
@@ -174,9 +172,7 @@ const PagesModuleLeftBar = () => {
         <>
           {(editingPage || addingPage) && (
             <form
-              onSubmit={pageForm.handleSubmit((data) =>
-                onPageFormSubmit(queryClient, data)
-              )}
+              onSubmit={pageForm.handleSubmit(onPageFormSubmit)}
               className="w-[100%] rounded-[8px] p-[15px] flex flex-col gap-[10px]"
               style={{
                 backgroundColor: currentTheme.background_1_2,
@@ -233,9 +229,7 @@ const PagesModuleLeftBar = () => {
         <>
           {addingSection || editingSection ? (
             <form
-              onSubmit={sectionForm.handleSubmit((data) =>
-                onSectionFormSubmit(queryClient, data, projectSections)
-              )}
+              onSubmit={sectionForm.handleSubmit(onSectionFormSubmit)}
               style={{
                 backgroundColor: currentTheme.background_1_2,
               }}

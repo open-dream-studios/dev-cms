@@ -26,8 +26,7 @@ import {
 } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { useContextMenuStore } from "@/store/util/contextMenuStore";
-import { useQueryClient } from "@tanstack/react-query";
+import { useContextMenuStore } from "@/store/util/contextMenuStore"; 
 import { createPageContextMenu } from "./_actions/pages.actions";
 
 interface PagesSidebarProps {
@@ -38,8 +37,7 @@ interface SortablePageItemProps {
   page: ProjectPage;
 }
 
-const SortablePageItem = ({ page }: SortablePageItemProps) => {
-  const queryClient = useQueryClient();
+const SortablePageItem = ({ page }: SortablePageItemProps) => { 
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { setEditingPage } = useUiStore();
@@ -83,7 +81,7 @@ const SortablePageItem = ({ page }: SortablePageItemProps) => {
           openContextMenu({
             position: { x: e.clientX, y: e.clientY },
             target: page,
-            menu: createPageContextMenu(queryClient),
+            menu: createPageContextMenu(),
           });
         }}
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"

@@ -12,18 +12,17 @@ import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useRouting } from "@/hooks/useRouting";
-import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { useRouting } from "@/hooks/useRouting"; 
 import { productFilter, Product } from "@open-dream/shared";
 import { productToForm } from "@/util/schemas/productSchema";
-import { useModals } from "@/hooks/useModals";
 import { getCardStyle } from "@/styles/themeStyles";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { promptContinue } from "@/modals/_actions/modals.actions";
+import { onProductFormSubmit, saveProducts } from "./_actions/customerProducts.actions";
 
 const ProductsHeader = ({ title }: { title: string }) => {
-  const { currentUser } = useContext(AuthContext);
-  const { saveProducts } = useProductFormSubmit();
+  const { currentUser } = useContext(AuthContext); 
   const {
     productFilters,
     setProductFilters,
@@ -41,10 +40,8 @@ const ProductsHeader = ({ title }: { title: string }) => {
     inventoryView,
     setInventoryView,
   } = useUiStore();
-  const { promptContinue } = useModals();
   const { deleteProducts, hasProjectModule, runModule } = useContextQueries();
-  const { screenClick } = useRouting();
-  const { onProductFormSubmit } = useProductFormSubmit();
+  const { screenClick } = useRouting(); 
   const currentTheme = useCurrentTheme();
   const { modal2, setModal2 } = useUiStore();
 

@@ -11,13 +11,13 @@ import {
   setCurrentProductData,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
-import { useRouting } from "@/hooks/useRouting";
-import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { useRouting } from "@/hooks/useRouting"; 
 import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import ProductMiniCard from "../components/ProductCard/ProductMiniCard";
 import ProductMiniCardSkeleton from "@/lib/skeletons/ProductMiniCardSkeleton";
 import { homeLayoutLeftBarTopHeight } from "@/layouts/homeLayout";
+import { onProductFormSubmit } from "./_actions/customerProducts.actions";
 
 const CustomerProductsModuleLeftBar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -28,8 +28,7 @@ const CustomerProductsModuleLeftBar = () => {
   const { screen, setAddingProduct } = useUiStore();
   const currentTheme = useCurrentTheme();
 
-  const productForm = getForm("product");
-  const { onProductFormSubmit } = useProductFormSubmit();
+  const productForm = getForm("product"); 
 
   const handleProductClick = async (product: Product | null) => {
     if (productForm && productForm.formState.isDirty) {

@@ -13,11 +13,10 @@ import {
   setCurrentProductData,
   setCurrentSectionData,
   useCurrentDataStore,
-} from "@/store/currentDataStore";
-import { useProductFormSubmit } from "./forms/useProductForm";
+} from "@/store/currentDataStore"; 
 import { onCustomerFormSubmit } from "@/modules/CustomersModule/_actions/customers.actions";
-import { useQueryClient } from "@tanstack/react-query";
 import { onEmployeeFormSubmit } from "@/modules/EmployeesModule/_actions/employees.actions";
+import { onProductFormSubmit, saveProducts } from "@/modules/CustomerProducts/_actions/customerProducts.actions";
 
 interface ScreenHistoryItem {
   screen: Screen;
@@ -46,8 +45,7 @@ export const useScreenHistoryStore = create<ScreenHistoryState>((set, get) => ({
   },
 }));
 
-export function useRouting() {
-  const queryClient = useQueryClient()
+export function useRouting() { 
   const pathname = usePathname();
   const router = useRouter();
   const { history, setHistory, push } = useScreenHistoryStore();
@@ -59,9 +57,7 @@ export function useRouting() {
   const { getForm } = useFormInstanceStore();
   const productForm = getForm("product");
   const customerForm = getForm("customer");
-  const employeeForm = getForm("employee");
-  const { onProductFormSubmit } = useProductFormSubmit(); 
-  const { saveProducts } = useProductFormSubmit();
+  const employeeForm = getForm("employee"); 
 
   const goToPrev = async () => {
     if (history.length >= 2) {
@@ -170,10 +166,10 @@ export function useRouting() {
       await productForm.handleSubmit(onProductFormSubmit)();
     }
     if (isCustomerDirty) {
-      await customerForm.handleSubmit((data) => onCustomerFormSubmit(queryClient, data))();
+      await customerForm.handleSubmit(onCustomerFormSubmit)();
     }
     if (isEmployeeDirty) {
-      await employeeForm.handleSubmit((data) => onEmployeeFormSubmit(queryClient, data))();
+      await employeeForm.handleSubmit(onEmployeeFormSubmit)();
     }
 
     await saveProducts();

@@ -6,38 +6,15 @@ import { Employee } from "@open-dream/shared";
 import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import EmployeeMiniCard from "../EmployeesModule/EmployeeMiniCard";
-import { employeeToForm } from "@/util/schemas/employeeSchema";
-import { useUiStore } from "@/store/useUIStore";
-import { useFormInstanceStore } from "@/store/util/formInstanceStore";
-import { setCurrentEmployeeData } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
 import { homeLayoutLeftBarTopHeight } from "@/layouts/homeLayout";
-import { onEmployeeFormSubmit } from "./_actions/employees.actions";
-import { useQueryClient } from "@tanstack/react-query";
+import { handleEmployeeClick } from "./_actions/employees.actions";
 
 const EmployeesModuleLeftBar = () => {
-  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const { employees, isLoadingEmployees } = useContextQueries();
-  const { getForm } = useFormInstanceStore();
-  const { setAddingEmployee } = useUiStore();
   const currentTheme = useCurrentTheme();
-
-  const employeeForm = getForm("employee");
-
-  const handleEmployeeClick = async (employee: Employee | null) => {
-    if (employeeForm && employeeForm.formState.isDirty) {
-      await employeeForm.handleSubmit((data) =>
-        onEmployeeFormSubmit(queryClient, data)
-      )();
-    }
-    setCurrentEmployeeData(employee);
-    setAddingEmployee(!employee);
-    if (employeeForm && !employee) {
-      employeeForm.reset(employeeToForm(null));
-    }
-  };
 
   if (!currentUser) return null;
 
@@ -85,7 +62,6 @@ const EmployeesModuleLeftBar = () => {
                     key={index}
                     employee={employee}
                     index={index}
-                    handleEmployeeClick={handleEmployeeClick}
                   />
                 );
               })}

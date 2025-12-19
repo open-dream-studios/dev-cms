@@ -68,7 +68,7 @@ const CustomersModuleLeftBar = () => {
             </div>
 
             <div
-              onClick={() => handleCustomerClick(queryClient, null)}
+              onClick={() => handleCustomerClick(null)}
               className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
               style={{
                 backgroundColor: currentTheme.background_1_2,

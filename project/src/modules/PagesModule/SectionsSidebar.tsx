@@ -22,8 +22,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { setCurrentSectionData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { useContextMenuStore } from "@/store/util/contextMenuStore";
-import { useQueryClient } from "@tanstack/react-query";
+import { useContextMenuStore } from "@/store/util/contextMenuStore"; 
 import { createSectionContextMenu } from "./_actions/pages.actions";
 
 interface SectionsSidebarProps {
@@ -35,7 +34,6 @@ interface SortableSectionItemProps {
 }
 
 const SortableSectionItem = ({ section }: SortableSectionItemProps) => {
-  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { openContextMenu } = useContextMenuStore();
@@ -78,7 +76,7 @@ const SortableSectionItem = ({ section }: SortableSectionItemProps) => {
           openContextMenu({
             position: { x: e.clientX, y: e.clientY },
             target: section,
-            menu: createSectionContextMenu(queryClient),
+            menu: createSectionContextMenu(),
           });
         }}
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"

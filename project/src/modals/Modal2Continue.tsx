@@ -2,7 +2,6 @@
 "use client";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "../contexts/authContext";
-import { PopupDisplayItem } from "@/hooks/useModals";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { useRouting } from "@/hooks/useRouting";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
@@ -10,6 +9,7 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Job, Product } from "@open-dream/shared";
 import { useUiStore } from "@/store/useUIStore";
+import { PopupDisplayItem } from "./_actions/modals.actions";
 
 type Modal2ContinueProps = {
   text: string;

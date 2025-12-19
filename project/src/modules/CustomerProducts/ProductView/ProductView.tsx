@@ -12,10 +12,7 @@ import {
   FaPlus,
 } from "react-icons/fa6";
 import { ProductFormData, productToForm } from "@/util/schemas/productSchema";
-import {
-  useProductForm,
-  useProductFormSubmit,
-} from "@/hooks/forms/useProductForm";
+import { useProductForm } from "@/hooks/forms/useProductForm";
 import ProductInputField from "../Forms/InputField";
 import {
   Media,
@@ -43,18 +40,18 @@ import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useWatch } from "react-hook-form";
-import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import MediaPlayer from "@/modules/MediaModule/MediaPlayer";
 import ImageGallery from "@/modules/components/ImageGallery";
 import { FiEdit } from "react-icons/fi";
+import { uploadProductImages } from "@/modules/MediaModule/_actions/media.actions";
+import { onProductFormSubmit } from "../_actions/customerProducts.actions";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
   const { history } = useRouting();
   const { productsData, media, mediaLinks, customers, jobs, jobDefinitions } =
     useContextQueries();
-  const { uploadProductImages } = useMedia();
   const {
     screen,
     addingProduct,
@@ -81,7 +78,6 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const [noteEditorOpen, setNoteEditorOpen] = useState<boolean>(false);
   const [editMediaLinks, setEditMediaLinks] = useState<boolean>(false);
 
-  const { onProductFormSubmit } = useProductFormSubmit();
   const productForm = useProductForm(currentProduct);
   const { registerForm, unregisterForm } = useFormInstanceStore();
   const { handleSubmit } = productForm;

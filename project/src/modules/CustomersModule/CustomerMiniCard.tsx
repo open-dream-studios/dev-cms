@@ -19,7 +19,6 @@ const CustomerMiniCard = ({
   customer: Customer;
   index: number;
 }) => {
-  const queryClient = useQueryClient();
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentCustomer } = useCurrentDataStore();
@@ -41,10 +40,10 @@ const CustomerMiniCard = ({
         openContextMenu({
           position: { x: e.clientX, y: e.clientY },
           target: customer,
-          menu: createCustomerContextMenu(queryClient),
+          menu: createCustomerContextMenu(),
         });
       }}
-      onClick={() => handleCustomerClick(queryClient, customer)}
+      onClick={() => handleCustomerClick(customer)}
       style={{
         backgroundColor:
           currentCustomer &&

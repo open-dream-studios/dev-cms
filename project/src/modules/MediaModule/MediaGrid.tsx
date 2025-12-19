@@ -20,7 +20,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useMedia } from "@/hooks/useMedia";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "../components/ProductCard/RenderedImage";
 import MediaPlayer from "./MediaPlayer";
@@ -31,6 +30,7 @@ import {
 } from "@/store/currentDataStore";
 import { GrRotateRight } from "react-icons/gr";
 import { useUiStore } from "@/store/useUIStore";
+import { handleDeleteMedia, handleRotateMedia } from "./_actions/media.actions";
 
 type SortableMediaItemProps = {
   media: Media;
@@ -63,7 +63,6 @@ function SortableMediaItem({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentMediaItemsSelected } = useCurrentDataStore();
-  const { handleDeleteMedia, handleRotateMedia } = useMedia();
   const [showNotAllowed, setShowNotAllowed] = useState(false);
   const dragTimer = useRef<NodeJS.Timeout | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);

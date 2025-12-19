@@ -145,7 +145,7 @@ export default function FolderItem({
           openContextMenu({
             position: { x: e.clientX, y: e.clientY },
             target: folder,
-            menu: createFolderContextMenu(queryClient),
+            menu: createFolderContextMenu(),
           });
         }}
         animate={{

@@ -158,7 +158,7 @@ const EmployeeCard = () => {
 
   return (
     <form
-      onSubmit={handleSubmit((data) => onEmployeeFormSubmit(queryClient, data))}
+      onSubmit={handleSubmit(onEmployeeFormSubmit)}
       className="rounded-xl relative w-full max-w-[900px]"
       key={currentUser.theme}
       style={{

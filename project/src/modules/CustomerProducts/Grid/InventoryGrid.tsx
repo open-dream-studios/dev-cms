@@ -8,9 +8,9 @@ import DraggableItems from "../DraggableItems";
 import { Product } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
-import { useAutoSave } from "@/hooks/util/useAutoSave";
-import { useProductFormSubmit } from "@/hooks/forms/useProductForm";
+import { useAutoSave } from "@/hooks/util/useAutoSave"; 
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { saveProducts } from "../_actions/customerProducts.actions";
 
 export type InventoryDataItem = {
   title: string;
@@ -107,8 +107,7 @@ const InventoryGrid = () => {
   const { productsData, hasProjectModule } = useContextQueries();
   const { localProductsData, selectedProducts, setSelectedProducts } =
     useCurrentDataStore();
-  const { filteredProducts } = useDataFilters();
-  const { saveProducts } = useProductFormSubmit();
+  const { filteredProducts } = useDataFilters(); 
 
   const { resetTimer } = useAutoSave({
     onSave: async () => {

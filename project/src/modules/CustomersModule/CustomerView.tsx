@@ -21,12 +21,10 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import CustomerInteractionTimeline from "./CustomerInteractions";
-import { onCustomerFormSubmit } from "./_actions/customers.actions";
-import { useQueryClient } from "@tanstack/react-query";
+import { onCustomerFormSubmit } from "./_actions/customers.actions"; 
 import { targetNextRefOnEnter } from "@/util/functions/Forms";
 
-export const CustomerView = () => {
-  const queryClient = useQueryClient();
+export const CustomerView = () => { 
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { productsData, runModule } = useContextQueries();
@@ -145,7 +143,7 @@ export const CustomerView = () => {
     >
       <form
         onSubmit={handleSubmit((data) =>
-          onCustomerFormSubmit(queryClient, data)
+          onCustomerFormSubmit(data)
         )}
         className="w-[100%] max-w-[550px] rounded-[30px] shadow-lg py-[22.5px] px-[28px] flex flex-col gap-4"
         style={getCardStyle(currentUser.theme, currentTheme)}

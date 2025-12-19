@@ -5,7 +5,6 @@ import {
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 import { deleteProjectPageApi, upsertProjectPageApi } from "@/api/pages.api";
-import { QueryClient } from "@tanstack/react-query";
 import {
   ContextMenuDefinition,
   ProjectPage,
@@ -18,26 +17,23 @@ import {
 import { setSiteWindowKey, useUiStore } from "@/store/useUIStore";
 import { ProjectPageFormData } from "@/util/schemas/projectPageSchema";
 import { SectionFormData } from "@/util/schemas/sectionSchema";
+import { queryClient } from "@/lib/queryClient";
 
-export const createPageContextMenu = (
-  queryClient: QueryClient
-): ContextMenuDefinition<ProjectPage> => ({
-  items: [
-    {
-      id: "delete-page",
-      label: "Delete Page",
-      danger: true,
-      onClick: async (page) => {
-        await handleDeletePage(queryClient, page.page_id);
+export const createPageContextMenu =
+  (): ContextMenuDefinition<ProjectPage> => ({
+    items: [
+      {
+        id: "delete-page",
+        label: "Delete Page",
+        danger: true,
+        onClick: async (page) => {
+          await handleDeletePage(page.page_id);
+        },
       },
-    },
-  ],
-});
+    ],
+  });
 
-export const handleDeletePage = async (
-  queryClient: QueryClient,
-  page_id: string | null
-) => {
+export const handleDeletePage = async (page_id: string | null) => {
   const { currentProjectId } = useCurrentDataStore.getState();
   if (!currentProjectId || !page_id) return;
   await deleteProjectPageApi(currentProjectId, page_id);
@@ -46,25 +42,20 @@ export const handleDeletePage = async (
   });
 };
 
-export const createSectionContextMenu = (
-  queryClient: QueryClient
-): ContextMenuDefinition<Section> => ({
+export const createSectionContextMenu = (): ContextMenuDefinition<Section> => ({
   items: [
     {
       id: "delete-section",
       label: "Delete Section",
       danger: true,
       onClick: async (section) => {
-        await handleDeleteSection(queryClient, section.section_id);
+        await handleDeleteSection(section.section_id);
       },
     },
   ],
 });
 
-export const handleDeleteSection = async (
-  queryClient: QueryClient,
-  section_id: string | null
-) => {
+export const handleDeleteSection = async (section_id: string | null) => {
   const { currentProjectId } = useCurrentDataStore.getState();
   if (!currentProjectId || !section_id) return;
   await deleteProjectSectionsApi(currentProjectId, section_id);
@@ -74,7 +65,6 @@ export const handleDeleteSection = async (
 };
 
 export async function onPageFormSubmit(
-  queryClient: QueryClient,
   data: ProjectPageFormData
 ): Promise<void> {
   const { currentProjectId } = useCurrentDataStore.getState();
@@ -114,17 +104,18 @@ export async function onPageFormSubmit(
 }
 
 export async function onSectionFormSubmit(
-  queryClient: QueryClient,
-  data: SectionFormData,
-  projectSections: Section[]
+  data: SectionFormData
 ): Promise<void> {
   const { currentProjectId, currentPage, currentSection } =
     useCurrentDataStore.getState();
   const { addingSection, setAddingSection, editingSection, setEditingSection } =
     useUiStore.getState();
-
   if (!currentProjectId) return;
-
+  const projectSections = queryClient.getQueryData<Section[]>([
+    "sections",
+    currentProjectId,
+  ]);
+  if (!projectSections) return;
   const filteredActiveSections =
     currentSection === null
       ? projectSections.filter((p: Section) => p.parent_section_id === null)
