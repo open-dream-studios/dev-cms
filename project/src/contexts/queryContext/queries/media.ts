@@ -1,4 +1,4 @@
-// src/context/queryContext/queries/media.ts
+// project/src/context/queryContext/queries/media.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Media } from "@open-dream/shared";
 import {

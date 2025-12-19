@@ -1,17 +1,14 @@
 // src/modules/UpdatesModule/UpdateCard.tsx
 "use client";
 import React, { useEffect } from "react";
-import {
-  useUpdatesForm,
-  useUpdatesFormSubmit,
-} from "@/hooks/forms/useUpdatesForm";
+import { useUpdatesForm } from "@/hooks/forms/useUpdatesForm";
 import { UpdateItemForm } from "@/util/schemas/updatesSchema";
 import { Check, Clock, Trash, Edit, ArrowRight } from "lucide-react";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import clsx from "clsx";
-import { useCurrentDataStore } from "@/store/currentDataStore"; 
+import { useCurrentDataStore } from "@/store/currentDataStore";
 import { SubmitHandler } from "react-hook-form";
 import { UpdateBase } from "@open-dream/shared";
 
@@ -46,7 +43,6 @@ const UpdateCard: React.FC<Props> = ({ update = null, showAsNew = false }) => {
   const { setAddingUpdate } = useUiStore();
   const form = useUpdatesForm(update ?? null);
   const { handleSubmit, register, watch, reset, formState } = form;
-  const { onUpdatesFormSubmit } = useUpdatesFormSubmit();
 
   const isEditing =
     showAsNew || (update && watch("id") !== null && formState.isDirty);
@@ -181,7 +177,9 @@ const UpdateCard: React.FC<Props> = ({ update = null, showAsNew = false }) => {
                 </button>
 
                 <button
-                  onClick={() => update.update_id && deleteUpdate(update.update_id)}
+                  onClick={() =>
+                    update.update_id && deleteUpdate(update.update_id)
+                  }
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-red-500 hover:brightness-90"
                 >
                   <Trash size={16} />

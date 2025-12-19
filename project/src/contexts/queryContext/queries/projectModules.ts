@@ -1,4 +1,4 @@
-// src/context/queryContext/queries/projectModules.ts
+// project/src/context/queryContext/queries/projectModules.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProjectModule } from "@open-dream/shared";
 import {

@@ -1,6 +1,5 @@
-// src/context/queryContext/queries/updates.ts
+// project/src/context/queryContext/queries/updates.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeRequest } from "@/util/axios";
 import type { Update } from "@open-dream/shared";
 import { UpdateItemForm } from "@/util/schemas/updatesSchema";
 import {
@@ -38,7 +37,7 @@ export function useUpdates(
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  const upsertMutation = useMutation({
+  const upsertUpdateMutation = useMutation({
     mutationFn: async (payload: UpdateItemForm) =>
       upsertProjectUpdateApi(currentProjectId!, payload),
     onSuccess: () => {
@@ -51,7 +50,7 @@ export function useUpdates(
     },
   });
 
-  const deleteMutation = useMutation({
+  const deleteUpdateMutation = useMutation({
     mutationFn: async (update_id: string) =>
       deleteProjectUpdateApi(currentProjectId!, update_id),
     onSuccess: () => {
@@ -96,12 +95,12 @@ export function useUpdates(
   });
 
   const upsertUpdate = async (payload: UpdateItemForm) => {
-    const res = await upsertMutation.mutateAsync(payload);
+    const res = await upsertUpdateMutation.mutateAsync(payload);
     return res;
   };
 
   const deleteUpdate = async (update_id: string) => {
-    await deleteMutation.mutateAsync(update_id);
+    await deleteUpdateMutation.mutateAsync(update_id);
   };
 
   const toggleComplete = async (update_id: string, completed: boolean) => {

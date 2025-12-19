@@ -134,7 +134,7 @@ export const toggleCompleteFunction = async (
     project_idx,
   ]);
 
-  return { update_id, status, completed_at };
+  return { update_id, update_status: status, completed_at };
 };
 
 // -------------------------

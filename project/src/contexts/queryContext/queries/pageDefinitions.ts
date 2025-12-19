@@ -1,4 +1,4 @@
-// src/context/queryContext/queries/pageDefinitions.ts
+// project/src/context/queryContext/queries/pageDefinitions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageDefinition } from "@open-dream/shared";
 import {

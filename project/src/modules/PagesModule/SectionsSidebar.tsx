@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentSectionData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
@@ -69,7 +69,10 @@ const SortableSectionItem = ({ section }: SortableSectionItemProps) => {
       className="w-full relative"
     >
       <div
-        onClick={() => setEditingSection(section)}
+        onClick={() => {
+          setEditingSection(section)
+          setCurrentSectionData(section)
+        }}
         onContextMenu={(e) => {
           e.preventDefault();
           openContextMenu({

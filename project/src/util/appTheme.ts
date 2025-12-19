@@ -1,4 +1,4 @@
-// project/src/util/theme.ts
+// project/src/util/appTheme.ts
 export type ThemeType = "light" | "dark";
 export type AppTheme = ReturnType<typeof makeTheme>;
 

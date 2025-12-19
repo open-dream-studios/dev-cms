@@ -8,7 +8,7 @@ export const CustomerSchema = z.object({
   last_name: z.string().min(1, "Last name required"),
   email: z
     .string()
-    .or(z.literal("")) // allow empty string
+    .or(z.literal(""))
     .optional()
     .nullable(),
   phone: z

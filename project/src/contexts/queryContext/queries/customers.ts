@@ -1,4 +1,4 @@
-// src/context/queryContext/queries/customers.ts
+// project/src/context/queryContext/queries/customers.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; 
 import { CustomerInput } from "@open-dream/shared";
 import {

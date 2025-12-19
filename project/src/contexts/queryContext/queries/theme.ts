@@ -1,4 +1,4 @@
-// src/context/queryContext/queries/useTheme.ts
+// project/src/context/queryContext/queries/useTheme.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { User as FirebaseUser } from "firebase/auth";

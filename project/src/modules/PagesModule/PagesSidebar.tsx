@@ -18,9 +18,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import {
   setCurrentPageData,
+  setCurrentSectionData,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
@@ -73,7 +74,10 @@ const SortablePageItem = ({ page }: SortablePageItemProps) => {
       className="w-full relative"
     >
       <div
-        onClick={() => setCurrentPageData(page)} 
+        onClick={() => {
+          setCurrentPageData(page);
+          setCurrentSectionData(null);
+        }}
         onContextMenu={(e) => {
           e.preventDefault();
           openContextMenu({

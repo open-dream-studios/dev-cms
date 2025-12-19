@@ -33,7 +33,7 @@ export async function deleteProjectProductsApi(
   project_idx: number,
   product_ids: string[]
 ) {
-  if (!project_idx) return null;
+  if (!project_idx) return;
   await makeRequest.post("/api/products/delete", {
     project_idx,
     product_ids,

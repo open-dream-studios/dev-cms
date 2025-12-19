@@ -69,7 +69,7 @@ export type QueryContextType = {
   isLoadingProductsData: boolean;
   refetchProductsData: () => Promise<QueryObserverResult<Product[], Error>>;
   upsertProducts: (updatedProducts: Product[]) => Promise<number[]>;
-  deleteProducts: (product_ids: string[]) => void;
+  deleteProducts: (product_ids: string[]) => Promise<void>;
 
   // ---- Projects ----
   projectsData: Project[];

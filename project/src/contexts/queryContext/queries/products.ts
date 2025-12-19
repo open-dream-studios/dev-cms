@@ -1,4 +1,4 @@
-// src/context/queryContext/queries/products.ts
+// project/src/context/queryContext/queries/products.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Product } from "@open-dream/shared";
 import { RefObject } from "react";

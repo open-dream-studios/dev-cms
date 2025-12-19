@@ -1,4 +1,4 @@
-// src/context/queryContext/queries/sections.ts
+// project/src/context/queryContext/queries/sections.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Section } from "@open-dream/shared";
 import {
