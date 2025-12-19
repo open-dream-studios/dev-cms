@@ -7,22 +7,20 @@ import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { productToForm } from "@/util/schemas/productSchema";
 import { InventoryDataItem } from "./InventoryGrid";
-import Image from "next/image";
 import { FaPlus } from "react-icons/fa6";
 import { Product, MediaLink, Media } from "@open-dream/shared";
 import { useRouting } from "@/hooks/useRouting";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
-import { DelayType } from "@/hooks/util/useAutoSave";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
+import { useTimer } from "@/store/util/useTimer";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type InventoryRowFormProps = {
-  resetTimer: (delay: DelayType) => void;
   product: Product;
   inventoryDataLayout: InventoryDataItem[];
 };
 const InventoryRowForm = ({
-  resetTimer,
   product,
   inventoryDataLayout,
 }: InventoryRowFormProps) => {
@@ -30,6 +28,7 @@ const InventoryRowForm = ({
   const { screenClick } = useRouting();
   const { productsData, mediaLinks, media } = useContextQueries();
   const currentTheme = useCurrentTheme();
+  const { currentProjectId } = useCurrentDataStore();
 
   const formKey = `product-${product.serial_number}`;
   const { registerForm, unregisterForm } = useFormInstanceStore();
@@ -42,14 +41,15 @@ const InventoryRowForm = ({
   }, [formKey, productForm, registerForm, unregisterForm]);
 
   useEffect(() => {
-    const subscription = productForm.watch(() => {
+    const subscription = productForm.watch((values, { name, type }) => {
+      if (type !== "change") return;
       const dirty = Object.keys(productForm.formState.dirtyFields).length > 0;
       if (dirty) {
-        resetTimer("slow");
+        useTimer.getState().resetTimer(`customer-products-table`, "slow");
       }
     });
     return () => subscription.unsubscribe();
-  }, [productForm, resetTimer]);
+  }, [productForm]);
 
   useEffect(() => {
     if (product.serial_number) {

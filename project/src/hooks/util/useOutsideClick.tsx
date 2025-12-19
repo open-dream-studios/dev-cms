@@ -1,4 +1,4 @@
-// src/hooks/useOutsideClick.ts
+// project/src/hooks/util/useOutsideClick.ts
 import { useEffect } from "react";
 
 export function useOutsideClick<T extends HTMLElement>(

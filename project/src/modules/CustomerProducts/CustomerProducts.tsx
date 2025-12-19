@@ -42,7 +42,7 @@ const CustomerProducts = () => {
                   <div className="w-[100%] h-[100%] overflow-y-scroll overflow-x-hidden px-[30px]">
                     {productsData &&
                       filteredProducts(productsData).length > 0 && (
-                        <DraggableItems sheet={false} resetTimer={() => {}} />
+                        <DraggableItems sheet={false} />
                       )}
                     <div className="h-[60px] w-[100%]" />
                   </div>

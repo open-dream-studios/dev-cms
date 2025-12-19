@@ -21,7 +21,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting"; 
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { Media } from "@open-dream/shared";
-import { saveProducts } from "@/modules/CustomerProducts/_actions/customerProducts.actions";
+import { saveProducts } from "@/modules/CustomerProducts/_actions/products.actions";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);

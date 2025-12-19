@@ -15,10 +15,9 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 export const StatusBadge: React.FC<{
   form: UseFormReturn<JobFormData> | null;
   matchedDefinition: JobDefinition | null;
-  cancelTimer: () => void;
   callSubmitForm: () => void;
   oneSize: boolean;
-}> = ({ form, matchedDefinition, cancelTimer, callSubmitForm, oneSize }) => {
+}> = ({ form, matchedDefinition, callSubmitForm, oneSize }) => {
   const currentTheme = useCurrentTheme();
   const status = useWatch({ control: form?.control, name: "status" });
   const mapping: Record<string, { color: string; label: string }> = {
@@ -81,7 +80,6 @@ export const StatusBadge: React.FC<{
       <select
         {...form.register("status", {
           onChange: async () => {
-            cancelTimer();
             await callSubmitForm();
           },
         })}
@@ -130,10 +128,9 @@ export const StatusBadge: React.FC<{
 export const TaskStatusBadge: React.FC<{
   form: UseFormReturn<TaskFormData> | null;
   matchedDefinition: JobDefinition | null;
-  cancelTimer: () => void;
   callSubmitForm: () => void;
   oneSize: boolean;
-}> = ({ form, matchedDefinition, cancelTimer, callSubmitForm, oneSize }) => {
+}> = ({ form, matchedDefinition, callSubmitForm, oneSize }) => {
   const currentTheme = useCurrentTheme();
   const status = useWatch({ control: form?.control, name: "status" });
   const mapping: Record<string, { color: string; label: string }> = {
@@ -183,7 +180,6 @@ export const TaskStatusBadge: React.FC<{
       <select
         {...form.register("status", {
           onChange: async () => {
-            cancelTimer();
             await callSubmitForm();
           },
         })}
@@ -219,12 +215,10 @@ export type PriorityBadgeForm = {
 
 export const PriorityBadge = <T extends PriorityBadgeForm>({
   form,
-  cancelTimer,
   callSubmitForm,
   oneSize,
 }: {
   form: UseFormReturn<T> | null;
-  cancelTimer: () => void;
   callSubmitForm: () => void;
   oneSize: boolean;
 }) => {
@@ -264,7 +258,6 @@ export const PriorityBadge = <T extends PriorityBadgeForm>({
       <select
         {...form.register("priority" as Path<T>, {
           onChange: async () => {
-            cancelTimer();
             await callSubmitForm();
           },
         })}

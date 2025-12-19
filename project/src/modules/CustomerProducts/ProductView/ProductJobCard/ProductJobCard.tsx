@@ -41,7 +41,6 @@ import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
 import { dateToString, formatDateTime } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
-import { useAutoSave } from "@/hooks/util/useAutoSave";
 import AddEmployeeList from "../AddEmployeeList";
 import CircularProgress from "./CircularProgress";
 import { PriorityBadge, StatusBadge, TaskStatusBadge } from "./Badges";
@@ -55,6 +54,7 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import ImageGallery from "@/modules/components/ImageGallery";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { saveCurrentJobImages } from "@/modules/MediaModule/_actions/media.actions";
+import { useTimer } from "@/store/util/useTimer";
 
 // ---------- TaskCard ----------
 const TaskCard: React.FC<{
@@ -86,6 +86,7 @@ const TaskCard: React.FC<{
   } = useContextQueries();
   const { screenClick } = useRouting();
   const currentTheme = useCurrentTheme();
+  const { cancelTimer } = useTimer();
 
   const { leftBarOpen, modal1, setModal1 } = useUiStore();
 
@@ -124,24 +125,37 @@ const TaskCard: React.FC<{
     [productJob, task, upsertTask]
   );
 
-  const { resetTimer, cancelTimer } = useAutoSave({
-    onSave: async () => {
-      await callSubmitForm();
-    },
-  });
-
   const callSubmitForm = useCallback(() => {
+    useTimer.getState().cancelTimer(`task-${task.task_id}`);
     taskForm.handleSubmit(onFormSubmitButton)(); // no await
-  }, [taskForm, onFormSubmitButton]);
+  }, [taskForm, onFormSubmitButton, task]);
+
+  useEffect(() => {
+    if (!task || !task.task_id) return;
+    const manager = useTimer.getState();
+    manager.createTimer(`task-${task.task_id}`, {
+      onSave: async () => {
+        await callSubmitForm();
+      },
+      fastDelay: 300,
+      slowDelay: 2500,
+    });
+
+    return () => {
+      manager.cancelTimer(`task-${task.task_id}`);
+      manager.removeTimer(`task-${task.task_id}`);
+    };
+  }, [callSubmitForm, task]);
 
   useEffect(() => {
     const subscription = taskForm.watch((values, { name, type }) => {
+      if (type !== "change") return;
       if (name === "task" || name === "description") {
-        resetTimer("slow");
+        useTimer.getState().resetTimer(`task-${task.task_id}`, "slow");
       }
     });
     return () => subscription.unsubscribe();
-  }, [taskForm, resetTimer]);
+  }, [taskForm, task]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -226,7 +240,6 @@ const TaskCard: React.FC<{
                 <div className="flex flex-col gap-[4px]">
                   <PriorityBadge
                     form={taskForm}
-                    cancelTimer={cancelTimer}
                     callSubmitForm={callSubmitForm}
                     oneSize={true}
                   />
@@ -236,7 +249,6 @@ const TaskCard: React.FC<{
                   <TaskStatusBadge
                     form={taskForm}
                     matchedDefinition={matchedDefinition}
-                    cancelTimer={cancelTimer}
                     callSubmitForm={callSubmitForm}
                     oneSize={true}
                   />
@@ -325,11 +337,7 @@ const TaskCard: React.FC<{
               style={{ backgroundColor: currentTheme.background_2 }}
             >
               <textarea
-                {...taskForm.register("description", {
-                  onChange: (e) => {
-                    resetTimer("slow");
-                  },
-                })}
+                {...taskForm.register("description", {})}
                 className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] leading-[16px] opacity-[0.7] outline-none border-none resize-none px-3 py-[6.7px]"
                 placeholder="Description..."
               />
@@ -366,7 +374,7 @@ const TaskCard: React.FC<{
                       const dateTime = new Date(date);
                       dateTime.setHours(12, 0, 0, 0);
                       taskForm.setValue("scheduled_start_date", dateTime);
-                      cancelTimer();
+                      cancelTimer(`task-${task.task_id}`);
                       await callSubmitForm();
                     }}
                     className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
@@ -514,7 +522,6 @@ const TaskCard: React.FC<{
               </div>
               <PriorityBadge
                 form={taskForm}
-                cancelTimer={cancelTimer}
                 callSubmitForm={callSubmitForm}
                 oneSize={true}
               />
@@ -527,7 +534,6 @@ const TaskCard: React.FC<{
               <TaskStatusBadge
                 form={taskForm}
                 matchedDefinition={matchedDefinition}
-                cancelTimer={cancelTimer}
                 callSubmitForm={callSubmitForm}
                 oneSize={true}
               />
@@ -640,16 +646,40 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   );
 
   const callSubmitForm = useCallback(async () => {
+    if (!productJob) return;
+    useTimer.getState().cancelTimer(`job-${productJob.job_id}`);
     await jobForm.handleSubmit(onFormSubmitButton, (errors) => {
       console.error("Submit blocked by validation errors:", errors);
     })();
-  }, [jobForm, onFormSubmitButton]);
+  }, [jobForm, onFormSubmitButton, productJob]);
 
-  const { resetTimer, cancelTimer } = useAutoSave({
-    onSave: async () => {
-      await callSubmitForm();
-    },
-  });
+  useEffect(() => {
+    if (!productJob || !productJob.job_id) return;
+    const manager = useTimer.getState();
+    manager.createTimer(`job-${productJob.job_id}`, {
+      onSave: async () => {
+        await callSubmitForm();
+      },
+      fastDelay: 300,
+      slowDelay: 2500,
+    });
+
+    return () => {
+      manager.cancelTimer(`job-${productJob.job_id}`);
+      manager.removeTimer(`job-${productJob.job_id}`);
+    };
+  }, [callSubmitForm, productJob]);
+
+  useEffect(() => {
+    if (!productJob || !productJob.job_id) return;
+    const subscription = jobForm.watch((values, { name, type }) => {
+      if (type !== "change") return;
+      if (name === "notes") {
+        useTimer.getState().resetTimer(`job-${productJob.job_id}`, "slow");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [jobForm, productJob]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -659,15 +689,6 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [callSubmitForm]);
-
-  useEffect(() => {
-    const subscription = jobForm.watch((values, { name, type }) => {
-      if (name === "valuation" || name === "notes") {
-        resetTimer("slow");
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [jobForm, resetTimer]);
 
   const jobTasks = useMemo(() => {
     if (!productJob) return [];
@@ -857,7 +878,6 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                 </div>
                 <PriorityBadge
                   form={jobForm}
-                  cancelTimer={cancelTimer}
                   callSubmitForm={callSubmitForm}
                   oneSize={true}
                 />
@@ -876,7 +896,6 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
               <StatusBadge
                 form={jobForm}
                 matchedDefinition={matchedDefinition}
-                cancelTimer={cancelTimer}
                 callSubmitForm={callSubmitForm}
                 oneSize={true}
               />
@@ -980,7 +999,6 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                       jobForm.setValue("notes", e.target.value, {
                         shouldDirty: true,
                       });
-                      resetTimer("slow");
                     }}
                     className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] opacity-[0.95] outline-none border-none resize-none bg-transparent px-3 py-2 rounded-[7px]"
                     placeholder="Details..."
@@ -1190,10 +1208,8 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
           <div ref={calendarContainerRef} className="w-[100%]">
             <ScheduleTimeline
               form={jobForm}
-              matchedDefinition={matchedDefinition}
-              cancelTimer={cancelTimer}
               callSubmitForm={callSubmitForm}
-              calendarContainerRef={calendarContainerRef}
+              productJob={productJob}
             />
           </div>
         </div>

@@ -11,13 +11,16 @@ import {
   setCurrentProductData,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
-import { useRouting } from "@/hooks/useRouting"; 
+import { useRouting } from "@/hooks/useRouting";
 import { productToForm } from "@/util/schemas/productSchema";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import ProductMiniCard from "../components/ProductCard/ProductMiniCard";
 import ProductMiniCardSkeleton from "@/lib/skeletons/ProductMiniCardSkeleton";
 import { homeLayoutLeftBarTopHeight } from "@/layouts/homeLayout";
-import { onProductFormSubmit } from "./_actions/customerProducts.actions";
+import {
+  haveImagesChanged,
+  onProductFormSubmit,
+} from "./_actions/products.actions";
 
 const CustomerProductsModuleLeftBar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -28,10 +31,10 @@ const CustomerProductsModuleLeftBar = () => {
   const { screen, setAddingProduct } = useUiStore();
   const currentTheme = useCurrentTheme();
 
-  const productForm = getForm("product"); 
+  const productForm = getForm("product");
 
   const handleProductClick = async (product: Product | null) => {
-    if (productForm && productForm.formState.isDirty) {
+    if (productForm && (productForm.formState.isDirty || haveImagesChanged())) {
       await productForm.handleSubmit(onProductFormSubmit)();
     }
     if (product) {

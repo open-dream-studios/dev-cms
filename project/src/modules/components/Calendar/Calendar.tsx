@@ -22,30 +22,28 @@ import { getInnerCardStyle } from "@/styles/themeStyles";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Calendar.css";
-import { JobDefinition } from "@open-dream/shared";
+import { Job } from "@open-dream/shared";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { JobFormData } from "@/util/schemas/jobSchema";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
+import { useTimer } from "@/store/util/useTimer";
 
 // ---------- ScheduleTimeline ----------
 type ScheduleTimelineProps = {
   form: UseFormReturn<JobFormData> | null;
-  matchedDefinition: JobDefinition;
-  cancelTimer: () => void;
-  callSubmitForm: () => void;
-  calendarContainerRef: React.RefObject<HTMLDivElement | null>;
+  callSubmitForm: () => void; 
+  productJob: Job;
 };
 
 export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   form,
-  matchedDefinition,
-  cancelTimer,
   callSubmitForm,
-  calendarContainerRef,
+  productJob,
 }) => {
   const { currentUser } = React.useContext(AuthContext);
   const currentTheme = useCurrentTheme();
+  const { cancelTimer } = useTimer()
 
   const DAY_START_HOUR = 7;
   const DAY_END_HOUR = 22;
@@ -511,7 +509,7 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     if (!form) return;
     form.setValue("scheduled_start_date", sN);
     form.setValue("completed_date", eN);
-    cancelTimer();
+    cancelTimer(`job-${productJob.job_id}`);
     await callSubmitForm();
   };
 

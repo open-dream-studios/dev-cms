@@ -11,7 +11,7 @@ import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { Product, Job, JobDefinition } from "@open-dream/shared"; 
 import { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
-import { createJobDefinitionContextMenu } from "../_actions/customerProducts.actions";
+import { createJobDefinitionContextMenu } from "../_actions/products.actions";
 
 interface ProductJobsProps {
   product: Product | null;

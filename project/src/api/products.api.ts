@@ -1,11 +1,10 @@
 // src/api/products.api.ts
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setLocalProductsData } from "@/store/currentDataStore";
 import { makeRequest } from "@/util/axios";
 import { Product } from "@open-dream/shared";
 
 export async function fetchProjectProductsApi(project_idx: number) {
   if (!project_idx) return [];
-  const { setLocalProductsData } = useCurrentDataStore.getState();
   const res = await makeRequest.get("/api/products", {
     params: { project_idx },
   });

@@ -45,7 +45,7 @@ import MediaPlayer from "@/modules/MediaModule/MediaPlayer";
 import ImageGallery from "@/modules/components/ImageGallery";
 import { FiEdit } from "react-icons/fi";
 import { uploadProductImages } from "@/modules/MediaModule/_actions/media.actions";
-import { onProductFormSubmit } from "../_actions/customerProducts.actions";
+import { haveImagesChanged, onProductFormSubmit } from "../_actions/products.actions";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -246,12 +246,8 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     setAddingProduct(false);
   };
 
-  const imagesChanged =
-    JSON.stringify(currentProductImages) !==
-    JSON.stringify(originalProductImages);
-
   const handleCancelFormChanges = () => {
-    if (imagesChanged && originalProductImages) {
+    if (haveImagesChanged() && originalProductImages) {
       setCurrentProductImages(originalProductImages);
     }
     if (
@@ -877,7 +873,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             </div>
 
             <div className="flex flex-row gap-[16px] mt-[0.5px]">
-              {(productForm.formState.isDirty || imagesChanged) && (
+              {(productForm.formState.isDirty || haveImagesChanged()) && (
                 <button
                   type="submit"
                   className="mt-[12px] cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold"
@@ -889,7 +885,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                 </button>
               )}
 
-              {(productForm.formState.isDirty || imagesChanged) && (
+              {(productForm.formState.isDirty || haveImagesChanged()) && (
                 <div
                   onClick={handleCancelFormChanges}
                   className="mt-[12px] cursor-pointer dim hover:brightness-75 w-[200px] h-[40px] rounded-[8px] text-white font-semibold flex items-center justify-center"

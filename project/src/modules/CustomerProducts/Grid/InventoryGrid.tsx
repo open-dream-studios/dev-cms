@@ -3,14 +3,14 @@
 import ProductsHeader from "../ProductsHeader";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import DraggableItems from "../DraggableItems";
 import { Product } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
-import { useAutoSave } from "@/hooks/util/useAutoSave"; 
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { saveProducts } from "../_actions/customerProducts.actions";
+import { saveProducts } from "../_actions/products.actions";
+import { useTimer } from "@/store/util/useTimer";
 
 export type InventoryDataItem = {
   title: string;
@@ -102,18 +102,28 @@ export const inventoryDataLayout: InventoryDataItem[] = [
 
 const InventoryGrid = () => {
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
   const { currentProjectId } = useCurrentDataStore();
   const { productsData, hasProjectModule } = useContextQueries();
   const { localProductsData, selectedProducts, setSelectedProducts } =
     useCurrentDataStore();
-  const { filteredProducts } = useDataFilters(); 
+  const { filteredProducts } = useDataFilters();
 
-  const { resetTimer } = useAutoSave({
-    onSave: async () => {
-      await saveProducts();
-    },
-  });
+  useEffect(() => { 
+    const manager = useTimer.getState();
+    manager.createTimer(`customer-products-table`, {
+      onSave: async () => {
+        await saveProducts();
+      },
+      fastDelay: 300,
+      slowDelay: 2500,
+    });
+
+    return () => {
+      manager.cancelTimer(`customer-products-table`);
+      manager.removeTimer(`customer-products-table`);
+    };
+  }, []);
 
   const selectAllProducts = () => {
     if (productsData && filteredProducts(productsData).length > 0) {
@@ -183,7 +193,7 @@ const InventoryGrid = () => {
               <div className="w-[100%] h-[100%] overflow-y-scroll">
                 {localProductsData &&
                   filteredProducts(localProductsData).length > 0 && (
-                    <DraggableItems sheet={true} resetTimer={resetTimer} />
+                    <DraggableItems sheet={true} />
                   )}
                 <div className="h-[60px] w-[100%]" />
               </div>

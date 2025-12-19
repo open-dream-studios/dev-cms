@@ -16,7 +16,7 @@ import {
 } from "@/store/currentDataStore"; 
 import { onCustomerFormSubmit } from "@/modules/CustomersModule/_actions/customers.actions";
 import { onEmployeeFormSubmit } from "@/modules/EmployeesModule/_actions/employees.actions";
-import { onProductFormSubmit, saveProducts } from "@/modules/CustomerProducts/_actions/customerProducts.actions";
+import { onProductFormSubmit, saveProducts } from "@/modules/CustomerProducts/_actions/products.actions";
 
 interface ScreenHistoryItem {
   screen: Screen;

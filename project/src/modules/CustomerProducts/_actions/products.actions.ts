@@ -15,6 +15,7 @@ import { ProductFormData } from "../ProductView/ProductView";
 import { upsertProjectProductsApi } from "@/api/products.api";
 import { saveCurrentProductImages } from "@/modules/MediaModule/_actions/media.actions";
 import { queryClient } from "@/lib/queryClient";
+import { useTimer } from "@/store/util/useTimer";
 
 export const createJobDefinitionContextMenu =
   (): ContextMenuDefinition<JobDefinition> => ({
@@ -41,9 +42,18 @@ export const handleDeleteJobDefinition = async (
   });
 };
 
+export const haveImagesChanged = () => {
+  const { currentProductImages, originalProductImages } =
+    useCurrentDataStore.getState();
+  return (
+    JSON.stringify(currentProductImages) !==
+    JSON.stringify(originalProductImages)
+  );
+};
+
 export async function onProductFormSubmit(
   data: ProductFormData
-): Promise<void> {
+): Promise<void> { 
   const { currentProjectId } = useCurrentDataStore.getState();
   const { addingProduct, setAddingProduct } = useUiStore.getState();
   const { resetForms } = useFormInstanceStore.getState();
@@ -97,7 +107,7 @@ export async function onProductFormSubmit(
       queryKey: ["products", currentProjectId],
     });
     resetForms("product");
-    setAddingProduct(false);
+    setAddingProduct(false); 
     if (productIds && productIds.length) {
       await saveCurrentProductImages(productIds[0]);
     }
@@ -158,7 +168,7 @@ export const saveProducts = async () => {
     queryClient.invalidateQueries({
       queryKey: ["products", currentProjectId],
     });
-    // cancelTimer()
+    useTimer.getState().cancelTimer("customer-products-table");
   } catch (err) {
     toast.error("Failed to update products");
   } finally {

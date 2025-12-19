@@ -19,7 +19,7 @@ import { getCardStyle } from "@/styles/themeStyles";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { promptContinue } from "@/modals/_actions/modals.actions";
-import { onProductFormSubmit, saveProducts } from "./_actions/customerProducts.actions";
+import { onProductFormSubmit, saveProducts } from "./_actions/products.actions";
 
 const ProductsHeader = ({ title }: { title: string }) => {
   const { currentUser } = useContext(AuthContext); 

@@ -20,8 +20,7 @@ import "../../components/Calendar/Calendar.css";
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
-import { dateToString } from "@/util/functions/Time";
-import { useAutoSave } from "@/hooks/util/useAutoSave"; 
+import { dateToString } from "@/util/functions/Time"; 
 import {
   PriorityBadge,
   StatusBadge,
@@ -29,10 +28,11 @@ import {
 } from "../../CustomerProducts/ProductView/ProductJobCard/Badges";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
-import { setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentProductData } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "./RenderedImage";
-import NoProductImage from "./NoProductImage";
+import NoProductImage from "./NoProductImage"; 
+import { useTimer } from "@/store/util/useTimer";
 
 // ---------- TaskCard ----------
 const MiniTaskCard: React.FC<{
@@ -66,6 +66,7 @@ const MiniTaskCard: React.FC<{
   };
 
   const callSubmitForm = async () => {
+    useTimer.getState().cancelTimer(`task-${task.task_id}`)
     await taskForm.handleSubmit(onFormSubmitButton)();
   };
 
@@ -105,7 +106,6 @@ const MiniTaskCard: React.FC<{
             <TaskStatusBadge
               form={taskForm}
               matchedDefinition={matchedDefinition}
-              cancelTimer={() => {}}
               callSubmitForm={callSubmitForm}
               oneSize={false}
             />
@@ -197,24 +197,13 @@ const CustomerProductFrame = ({
     }
   }, [productJob?.job_id, jobForm, productJob]);
 
-  const { resetTimer, cancelTimer } = useAutoSave({
-    onSave: async () => {
-      await callSubmitForm();
-    },
-  });
   const callSubmitForm = async () => {
+    if (!productJob) return
+    useTimer.getState().cancelTimer(`job-${productJob.job_id}`)
     await jobForm.handleSubmit(onFormSubmitButton, (errors) => {
       console.error("Submit blocked by validation errors:", errors);
     })();
   };
-  useEffect(() => {
-    const subscription = jobForm.watch((values, { name, type }) => {
-      if (name === "valuation" || name === "notes") {
-        resetTimer("slow");
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [jobForm, resetTimer]);
 
   const jobTasks = useMemo(() => {
     if (!productJob) return [];
@@ -340,7 +329,6 @@ const CustomerProductFrame = ({
                     <div className="max-[800px]:w-[100%] max-[800px]:flex max-[800px]:justify-start min-[800px]:flex min-[800px]:flex-1 min-[800px]:justify-end">
                       <PriorityBadge
                         form={jobForm}
-                        cancelTimer={cancelTimer}
                         callSubmitForm={callSubmitForm}
                         oneSize={false}
                       />
@@ -350,7 +338,6 @@ const CustomerProductFrame = ({
                   <StatusBadge
                     form={jobForm}
                     matchedDefinition={matchedDefinition}
-                    cancelTimer={cancelTimer}
                     callSubmitForm={callSubmitForm}
                     oneSize={false}
                   />

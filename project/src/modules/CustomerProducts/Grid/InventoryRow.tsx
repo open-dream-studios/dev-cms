@@ -10,16 +10,13 @@ import { FaCheck } from "react-icons/fa6";
 import { Product } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useDataFilters } from "@/hooks/useDataFilters";
-import { DelayType } from "@/hooks/util/useAutoSave";
+import { useDataFilters } from "@/hooks/useDataFilters"; 
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 
 const InventoryRow = ({
-  resetTimer,
   index,
   product,
-}: {
-  resetTimer: (delay: DelayType) => void;
+}: { 
   index: number;
   product: Product;
 }) => {
@@ -98,7 +95,6 @@ const InventoryRow = ({
       <InventoryRowForm
         product={product}
         inventoryDataLayout={inventoryDataLayout}
-        resetTimer={resetTimer}
       />
     </div>
   );

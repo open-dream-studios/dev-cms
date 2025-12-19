@@ -30,21 +30,21 @@ import CustomerProductFrame from "../components/ProductCard/CustomerProductFrame
 import { IoCloseOutline } from "react-icons/io5";
 import { Product } from "@open-dream/shared";
 import InventoryRow from "./Grid/InventoryRow";
-import { useUiStore } from "@/store/useUIStore"; 
+import { useUiStore } from "@/store/useUIStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
-import { setLocalProductsData, useCurrentDataStore } from "@/store/currentDataStore";
-import { DelayType } from "@/hooks/util/useAutoSave";
+import {
+  setLocalProductsData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { saveProducts } from "./_actions/customerProducts.actions";
+import { saveProducts } from "./_actions/products.actions";
 
 function SortableItem({
-  resetTimer,
   id,
   product,
   index,
   sheet,
 }: {
-  resetTimer: (delay: DelayType) => void;
   id: string;
   product: Product;
   index: number;
@@ -52,7 +52,7 @@ function SortableItem({
 }) {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { editingProducts } = useUiStore(); 
+  const { editingProducts } = useUiStore();
   const { deleteProducts } = useContextQueries();
   const { inventoryView } = useUiStore();
 
@@ -114,11 +114,7 @@ function SortableItem({
 
         <div className="dim cursor-pointer hover:brightness-[86%] h-[100%]">
           {sheet ? (
-            <InventoryRow
-              index={index}
-              product={product}
-              resetTimer={resetTimer}
-            />
+            <InventoryRow index={index} product={product} />
           ) : (
             <div
               key={product.serial_number}
@@ -133,20 +129,14 @@ function SortableItem({
   );
 }
 
-const DraggableItems = ({
-  sheet,
-  resetTimer,
-}: {
-  sheet: boolean;
-  resetTimer: (delay: DelayType) => void;
-}) => {
+const DraggableItems = ({ sheet }: { sheet: boolean }) => {
   const { currentUser } = useContext(AuthContext);
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor),
     useSensor(PointerSensor)
   );
-  const { localProductsData } = useCurrentDataStore(); 
+  const { localProductsData } = useCurrentDataStore();
   const { filteredProducts } = useDataFilters();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -197,7 +187,6 @@ const DraggableItems = ({
                 product={product}
                 index={index}
                 sheet={sheet}
-                resetTimer={resetTimer}
               />
             ))}
           </div>
@@ -225,7 +214,6 @@ const DraggableItems = ({
               product={product}
               index={index}
               sheet={sheet}
-              resetTimer={resetTimer}
             />
           ))}
         </div>
