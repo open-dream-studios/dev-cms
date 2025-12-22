@@ -15,6 +15,7 @@ interface UploadFileOptions {
   filePath: string;
   key: string;
   contentType?: string;
+  tags?: Record<string, string>;
 }
 
 export async function getSignedS3Url(
@@ -44,6 +45,13 @@ export function extractS3KeyFromUrl(url: string) {
   return decodeURIComponent(u.pathname.slice(1));
 }
 
+function serializeS3Tags(tags?: Record<string, string>) {
+  if (!tags || Object.keys(tags).length === 0) return undefined;
+  return Object.entries(tags)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+}
+
 export function buildS3Key({
   projectId,
   ext,
@@ -65,7 +73,7 @@ export function buildS3Key({
 }
 
 export async function uploadFileToS3(
-  { filePath, key, contentType }: UploadFileOptions,
+  { filePath, key, contentType, tags }: UploadFileOptions,
   clientAccount: ModuleDecryptedKeys | null
 ): Promise<{
   Bucket: string;
@@ -125,6 +133,7 @@ export async function uploadFileToS3(
     Key: key,
     Body: fileStream,
     ContentType: contentType,
+    Tagging: serializeS3Tags(tags),
   };
 
   const uploader = new Upload({

@@ -13,6 +13,7 @@ import {
   getContentTypeAndExt,
   normalizeRotations,
 } from "../../functions/media.js";
+import { GetObjectTaggingCommand, S3Client } from "@aws-sdk/client-s3";
 
 export const signPrivateMedia = async (project_idx: number, rows: any[]) => {
   const decryptedKeys = await getDecryptedIntegrationsFunction(
@@ -93,7 +94,8 @@ export const signCallRecordings = async (project_idx: number, rows: any[]) => {
     !decryptedKeys.AWS_REGION ||
     !decryptedKeys.AWS_ACCESS_KEY_ID ||
     !decryptedKeys.AWS_SECRET_ACCESS_KEY
-  ) return rows;
+  )
+    return rows;
 
   const bucket = decryptedKeys.AWS_S3_MEDIA_BUCKET;
 
@@ -108,9 +110,7 @@ export const signCallRecordings = async (project_idx: number, rows: any[]) => {
     }
 
     // Case 2: https://bucket.s3.region.amazonaws.com/key
-    else if (
-      call.recording_url.includes(`${bucket}.s3.`)
-    ) {
+    else if (call.recording_url.includes(`${bucket}.s3.`)) {
       const url = new URL(call.recording_url);
       s3Key = url.pathname.substring(1); // remove leading slash
     }
@@ -194,12 +194,35 @@ export async function rotateImageFromUrl(
     []
   );
   if (!decryptedKeys) return null;
+  const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } =
+    decryptedKeys;
+  if (!AWS_REGION || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) return null;
+
+  const s3Client = new S3Client({
+    region: AWS_REGION,
+    credentials: {
+      accessKeyId: AWS_ACCESS_KEY_ID,
+      secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    },
+  });
+
+  const { TagSet } = await s3Client.send(
+    new GetObjectTaggingCommand({
+      Bucket: decryptedKeys.AWS_S3_MEDIA_BUCKET!,
+      Key: key,
+    })
+  );
+
+  const existingTags = Object.fromEntries(
+    (TagSet ?? []).map((t: any) => [t.Key, t.Value])
+  );
 
   const uploadResult = await uploadFileToS3(
     {
       filePath: tmpOutput,
       key,
       contentType: mimeType,
+      tags: existingTags,
     },
     decryptedKeys
   );

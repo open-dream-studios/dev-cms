@@ -12,7 +12,7 @@ import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useRouting } from "@/hooks/useRouting"; 
+import { useRouting } from "@/hooks/useRouting";
 import { productFilter, Product } from "@open-dream/shared";
 import { productToForm } from "@/util/schemas/productSchema";
 import { getCardStyle } from "@/styles/themeStyles";
@@ -22,7 +22,7 @@ import { promptContinue } from "@/modals/_actions/modals.actions";
 import { onProductFormSubmit, saveProducts } from "./_actions/products.actions";
 
 const ProductsHeader = ({ title }: { title: string }) => {
-  const { currentUser } = useContext(AuthContext); 
+  const { currentUser } = useContext(AuthContext);
   const {
     productFilters,
     setProductFilters,
@@ -41,7 +41,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
     setInventoryView,
   } = useUiStore();
   const { deleteProducts, hasProjectModule, runModule } = useContextQueries();
-  const { screenClick } = useRouting(); 
+  const { screenClick } = useRouting();
   const currentTheme = useCurrentTheme();
   const { modal2, setModal2 } = useUiStore();
 
@@ -80,7 +80,12 @@ const ProductsHeader = ({ title }: { title: string }) => {
     setUpdatingLock(true);
     try {
       if (currentProject) {
-        await runModule("customer-products-wix-sync-module", {});
+        const res = await runModule("customer-products-wix-sync-module", {});
+        if (res.ok) {
+          toast.success("Updated Wix Collection");
+        } else {
+          toast.error("Wix sync failed");
+        }
       }
     } catch (e) {
       toast.error("Wix sync failed");
