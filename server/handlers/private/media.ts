@@ -6,6 +6,8 @@ import {
   uploadFileToS3,
   extractS3KeyFromUrl,
   getSignedS3Url,
+  getS3Client,
+  getDecryptedAWSKeys,
 } from "../../services/aws/S3.js";
 import sharp from "sharp";
 import path from "path";
@@ -13,7 +15,7 @@ import {
   getContentTypeAndExt,
   normalizeRotations,
 } from "../../functions/media.js";
-import { GetObjectTaggingCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectTaggingCommand } from "@aws-sdk/client-s3";
 
 export const signPrivateMedia = async (project_idx: number, rows: any[]) => {
   const decryptedKeys = await getDecryptedIntegrationsFunction(
@@ -183,32 +185,18 @@ export async function rotateImageFromUrl(
   await sharp(tmpInput).rotate(angle).toFormat(outputFormat).toFile(tmpOutput);
   const key = extractS3KeyFromUrl(imageUrl);
 
-  const decryptedKeys = await getDecryptedIntegrationsFunction(
-    project_idx,
-    [
-      "AWS_REGION",
-      "AWS_S3_MEDIA_BUCKET",
-      "AWS_ACCESS_KEY_ID",
-      "AWS_SECRET_ACCESS_KEY",
-    ],
-    []
-  );
-  if (!decryptedKeys) return null;
-  const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } =
-    decryptedKeys;
-  if (!AWS_REGION || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) return null;
+  const s3Client = await getS3Client(project_idx);
+  if (!s3Client) return null;
 
-  const s3Client = new S3Client({
-    region: AWS_REGION,
-    credentials: {
-      accessKeyId: AWS_ACCESS_KEY_ID,
-      secretAccessKey: AWS_SECRET_ACCESS_KEY,
-    },
-  });
+  const decryptedKeys = await getDecryptedAWSKeys(project_idx);
+  if (!decryptedKeys) return null;
+
+  const { AWS_S3_MEDIA_BUCKET } = decryptedKeys;
+  if (!AWS_S3_MEDIA_BUCKET) return null;
 
   const { TagSet } = await s3Client.send(
     new GetObjectTaggingCommand({
-      Bucket: decryptedKeys.AWS_S3_MEDIA_BUCKET!,
+      Bucket: AWS_S3_MEDIA_BUCKET,
       Key: key,
     })
   );
@@ -224,7 +212,11 @@ export async function rotateImageFromUrl(
       contentType: mimeType,
       tags: existingTags,
     },
-    decryptedKeys
+    project_idx
   );
-  return uploadResult.Location;
+  if (uploadResult) {
+    return uploadResult.Location;
+  } else {
+    return null;
+  }
 }

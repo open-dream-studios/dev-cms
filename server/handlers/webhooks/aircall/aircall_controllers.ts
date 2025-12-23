@@ -161,21 +161,6 @@ async function onRecordingReady(connection: PoolConnection, data: any) {
     fs.writeFileSync(filePath, audioBuffer);
     // console.log("✅ Recording downloaded:", filePath);
 
-    // HERE I COPIED LOGIC OVER
-    const requiredKeys = [
-      "AWS_REGION",
-      "AWS_S3_MEDIA_BUCKET",
-      "AWS_ACCESS_KEY_ID",
-      "AWS_SECRET_ACCESS_KEY",
-    ];
-    const decryptedKeys = await getDecryptedIntegrationsFunction(
-      project_idx,
-      requiredKeys,
-      []
-    );
-    if (!decryptedKeys)
-      return { success: false, message: "Required keys not found" };
-
     const finalMeta = {
       ext: "mp3",
       mimeType: "audio/mpeg",
@@ -194,7 +179,7 @@ async function onRecordingReady(connection: PoolConnection, data: any) {
         key: s3Key,
         contentType: finalMeta.mimeType,
       },
-      decryptedKeys
+      project_idx
     );
     // console.log(uploadResult);
     const transcription = await transcribeAudio(filePath);

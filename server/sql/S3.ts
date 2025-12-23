@@ -1,15 +1,11 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import path from "path";
 import fs from "fs";
+import { getS3Client } from "../services/aws/S3.js";
 
 export async function uploadToS3(localFile: string) {
-  const s3 = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    },
-  });
+  const s3Client = await getS3Client(null)
+  if (!s3Client) return null
 
   const bucket = process.env.AWS_S3_BUCKET;
   const name = path.basename(localFile);
@@ -19,7 +15,7 @@ export async function uploadToS3(localFile: string) {
   const stream = fs.createReadStream(localFile);
   const weekly = new Date().getDay() === 0;
 
-  await s3.send(
+  await s3Client.send(
     new PutObjectCommand({
       Bucket: bucket,
       Key: key,

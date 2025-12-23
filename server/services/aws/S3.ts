@@ -10,6 +10,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { ModuleDecryptedKeys } from "@open-dream/shared";
 import fs from "fs";
 import { randomUUID } from "crypto";
+import { getDecryptedIntegrationsFunction } from "../../handlers/integrations/integrations_repositories.js";
 
 interface UploadFileOptions {
   filePath: string;
@@ -17,6 +18,43 @@ interface UploadFileOptions {
   contentType?: string;
   tags?: Record<string, string>;
 }
+
+export const getS3Client = async (project_idx: number | null) => {
+  let decryptedKeys;
+  if (!project_idx) {
+    // Open Dream AWS access
+    decryptedKeys = {
+      AWS_REGION: process.env.AWS_REGION,
+      AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+      AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    };
+  } else {
+    // Project AWS access
+    decryptedKeys = await getDecryptedIntegrationsFunction(
+      project_idx,
+      [
+        "AWS_REGION",
+        "AWS_S3_MEDIA_BUCKET",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+      ],
+      []
+    );
+  }
+
+  if (!decryptedKeys) return null;
+  const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } =
+    decryptedKeys;
+  if (!AWS_REGION || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) return null;
+
+  return new S3Client({
+    region: AWS_REGION,
+    credentials: {
+      accessKeyId: AWS_ACCESS_KEY_ID,
+      secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    },
+  });
+};
 
 export async function getSignedS3Url(
   key: string,
@@ -72,59 +110,63 @@ export function buildS3Key({
   return key;
 }
 
+export const getDecryptedAWSKeys = async (project_idx: number) => {
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    project_idx,
+    [
+      "AWS_REGION",
+      "AWS_S3_MEDIA_BUCKET",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+    ],
+    []
+  );
+  if (!decryptedKeys) return null;
+  const {
+    AWS_REGION,
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_S3_MEDIA_BUCKET,
+  } = decryptedKeys;
+  if (
+    !AWS_REGION ||
+    !AWS_ACCESS_KEY_ID ||
+    !AWS_SECRET_ACCESS_KEY ||
+    !AWS_S3_MEDIA_BUCKET
+  ) {
+    return null;
+  } else {
+    return decryptedKeys;
+  }
+};
+
 export async function uploadFileToS3(
   { filePath, key, contentType, tags }: UploadFileOptions,
-  clientAccount: ModuleDecryptedKeys | null
+  project_idx: number | null
 ): Promise<{
   Bucket: string;
   Key: string;
   Location: string | null;
   ETag?: string;
   ContentLength: number;
-}> {
-  let AWS_REGION = null;
-  let AWS_S3_MEDIA_BUCKET = null;
-  let AWS_ACCESS_KEY_ID = null;
-  let AWS_SECRET_ACCESS_KEY = null;
-
-  if (!clientAccount) {
-    AWS_REGION = process.env.AWS_REGION;
-    AWS_S3_MEDIA_BUCKET = process.env.AWS_S3_MEDIA_BUCKET;
-    AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
-    AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
+} | null> {
+  let decryptedKeys;
+  if (project_idx) {
+    decryptedKeys = await getDecryptedAWSKeys(project_idx);
   } else {
-    AWS_REGION = clientAccount.AWS_REGION;
-    AWS_S3_MEDIA_BUCKET = clientAccount.AWS_S3_MEDIA_BUCKET;
-    AWS_ACCESS_KEY_ID = clientAccount.AWS_ACCESS_KEY_ID;
-    AWS_SECRET_ACCESS_KEY = clientAccount.AWS_SECRET_ACCESS_KEY;
+    decryptedKeys = {
+      AWS_S3_MEDIA_BUCKET: process.env.AWS_S3_MEDIA_BUCKET,
+      AWS_REGION: process.env.AWS_REGION,
+    };
   }
+  if (!decryptedKeys) return null;
 
-  if (
-    !AWS_S3_MEDIA_BUCKET ||
-    !AWS_REGION ||
-    !AWS_ACCESS_KEY_ID ||
-    !AWS_SECRET_ACCESS_KEY
-  ) {
-    throw new Error("Missing S3 config");
-  }
+  const { AWS_S3_MEDIA_BUCKET, AWS_REGION } = decryptedKeys;
+  if (!AWS_S3_MEDIA_BUCKET || !AWS_REGION) return null;
 
-  AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID?.trim();
-  AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY?.trim();
-  AWS_REGION = AWS_REGION?.trim();
-  AWS_S3_MEDIA_BUCKET = AWS_S3_MEDIA_BUCKET?.trim();
+  const s3Client = await getS3Client(project_idx);
+  if (!s3Client) return null;
 
-  const s3Config: S3ClientConfig = {
-    region: AWS_REGION!,
-    ...(AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
-      ? {
-          credentials: {
-            accessKeyId: AWS_ACCESS_KEY_ID,
-            secretAccessKey: AWS_SECRET_ACCESS_KEY,
-          },
-        }
-      : {}),
-  };
-  const s3Client = new S3Client(s3Config);
   const fileStream = fs.createReadStream(filePath);
   const fileSize = (await fs.promises.stat(filePath)).size;
 

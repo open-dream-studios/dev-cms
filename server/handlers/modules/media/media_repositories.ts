@@ -14,7 +14,6 @@ import path from "path";
 import { compressImage } from "../../../functions/media.js";
 import mime from "mime-types";
 import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
-import { getDecryptedIntegrationsFunction } from "../../integrations/integrations_repositories.js";
 import { fileTypeFromFile } from "file-type";
 import {
   getSignedMediaUrl,
@@ -449,20 +448,6 @@ export async function uploadMediaFunction(
   const allSupportedExts = [...supportedImageExts, ...supportedVideoExts];
   const results: any[] = [];
 
-  const requiredKeys = [
-    "AWS_REGION",
-    "AWS_S3_MEDIA_BUCKET",
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
-  ];
-  const decryptedKeys = await getDecryptedIntegrationsFunction(
-    project_idx,
-    requiredKeys,
-    []
-  );
-  if (!decryptedKeys)
-    return { success: false, message: "Required keys not found" };
-
   for (const file of files) {
     const origPath = file.path;
     const origName = file.originalname || path.basename(origPath);
@@ -578,8 +563,9 @@ export async function uploadMediaFunction(
           visibility: "public",
         },
       },
-      decryptedKeys
+      project_idx
     );
+    if (!uploadResult) return { success: false };
 
     // Remove local files (both original and compressed) unless they are the same path
     try {
