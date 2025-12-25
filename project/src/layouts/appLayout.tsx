@@ -33,6 +33,7 @@ import { PageLayout } from "./pageLayout";
 import UploadModal from "@/components/Upload/Upload";
 import { ContextMenu } from "@/components/ContextMenu";
 import { queryClient } from "@/lib/queryClient";
+import CustomerPortal from "@/modules/CustomerPortal/CustomerPortal";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   // const [queryClient] = useState(() => new QueryClient());
@@ -120,7 +121,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
     if (projectsData.length === 1) {
       setCurrentProjectData(projectsData[0]);
     }
-  }, [projectsData, setCurrentProjectData]);
+  }, [projectsData]);
 
   useEffect(() => {
     if (!currentProjectId) {
@@ -153,7 +154,8 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
         </>
       ) : (
         <PageLayout leftbar={false}>
-          <AdminHome />
+          {/* <AdminHome /> */}
+          <CustomerPortal/>
         </PageLayout>
       )}
     </div>

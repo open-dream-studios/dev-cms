@@ -54,13 +54,13 @@ export const googleAuthFunction = async (
 ) => {
   const decodedToken = await admin.auth().verifyIdToken(idToken);
   const { email, name = "", picture = "", uid } = decodedToken;
-  const validEmails = await getValidEmails(connection);
-  if (!validEmails.includes(email))
-    return {
-      status: 401,
-      success: "false",
-      message: "Unauthorized gmail, please ask host for permission",
-    };
+  // const validEmails = await getValidEmails(connection);
+  // if (!validEmails.includes(email))
+  //   return {
+  //     status: 401,
+  //     success: "false",
+  //     message: "Unauthorized gmail, please ask host for permission",
+  //   };
 
   if (!email)
     return {
@@ -141,14 +141,14 @@ export const registerFunction = async (
   reqBody: any
 ) => {
   const { email, password, first_name, last_name } = reqBody;
-  const validEmails = await getValidEmails(connection);
-  if (!validEmails.includes(email)) {
-    return {
-      status: 401,
-      success: "false",
-      message: "Unauthorized gmail, please ask host for permission",
-    };
-  }
+  // const validEmails = await getValidEmails(connection);
+  // if (!validEmails.includes(email)) {
+  //   return {
+  //     status: 401,
+  //     success: "false",
+  //     message: "Unauthorized gmail, please ask host for permission",
+  //   };
+  // }
   const user = await getUserFunction(connection, email);
   if (user)
     return { status: 400, success: false, message: "User already exists!" };
@@ -202,14 +202,14 @@ export const loginFunction = async (
   reqBody: any
 ) => {
   const { email, password } = reqBody;
-  const validEmails = await getValidEmails(connection);
-  if (!validEmails.includes(email)) {
-    return {
-      status: 401,
-      success: false,
-      message: "Unauthorized email, please ask host for permission",
-    };
-  }
+  // const validEmails = await getValidEmails(connection);
+  // if (!validEmails.includes(email)) {
+  //   return {
+  //     status: 401,
+  //     success: false,
+  //     message: "Unauthorized email, please ask host for permission",
+  //   };
+  // }
   const user = await getUserFunction(connection, email);
   if (!user)
     return {

@@ -1,13 +1,8 @@
 // server/handlers/auth/auth_controllers.js
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
-import { db } from "../../connection/connect.js";
 import dotenv from "dotenv";
 import {
   checkCodeFunction,
-  createUniqueUserId,
-  getValidEmails,
   googleAuthFunction,
   loginFunction,
   passwordResetFunction,
