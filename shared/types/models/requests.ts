@@ -1,6 +1,6 @@
 // shared/types/models/requests.ts
 export interface JwtPayload {
-  id: string;
+  user_id: string;
   email: string;
   admin?: number;
 }

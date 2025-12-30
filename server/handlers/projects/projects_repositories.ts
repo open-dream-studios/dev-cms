@@ -7,6 +7,9 @@ import type {
   ResultSetHeader,
 } from "mysql2/promise";
 import { Project } from "@open-dream/shared";
+import crypto from "crypto";
+import { sendInviteEmail } from "../../util/email.js";
+import { changeToHTTPSDomain } from "../../functions/data.js";
 
 // ---------- PROJECT FUNCTIONS ----------
 export const getGlobalAdminEmails = async (connection: PoolConnection) => {
@@ -142,18 +145,39 @@ export const getAllUserRolesFunction = async (): Promise<any[]> => {
   return rows;
 };
 
+// export const upsertProjectUserFunction = async (
+//   connection: PoolConnection,
+//   reqBody: any
+// ) => {
+//   const { email, project_idx, clearance } = reqBody;
+//   const query = `
+//       INSERT INTO project_users (email, project_idx, clearance)
+//       VALUES (?, ?, ?)
+//       ON DUPLICATE KEY UPDATE clearance = VALUES(clearance)
+//     `;
+//   const values = [email, project_idx, clearance];
+//   await connection.query(query, values);
+//   return { success: true };
+// };
+
 export const upsertProjectUserFunction = async (
   connection: PoolConnection,
-  reqBody: any
+  {
+    email,
+    project_idx,
+    clearance,
+  }: {
+    email: string;
+    project_idx: number;
+    clearance: number;
+  }
 ) => {
-  const { email, project_idx, clearance } = reqBody;
   const query = `
-      INSERT INTO project_users (email, project_idx, clearance)
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE clearance = VALUES(clearance)
-    `;
-  const values = [email, project_idx, clearance];
-  await connection.query(query, values);
+    INSERT INTO project_users (email, project_idx, clearance)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE clearance = VALUES(clearance)
+  `;
+  await connection.query(query, [email, project_idx, clearance]);
   return { success: true };
 };
 
@@ -165,4 +189,94 @@ export const deleteProjectUserFunction = async (
   const q = `DELETE FROM project_users WHERE email = ? AND project_idx = ?`;
   await connection.query(q, [email, project_idx]);
   return { success: true };
+};
+
+export const inviteProjectUserFunction = async (
+  connection: PoolConnection,
+  {
+    email,
+    project_idx,
+    clearance,
+    invitedBy,
+    invitedByEmail,
+  }: {
+    email: string;
+    project_idx: number;
+    clearance: number;
+    invitedBy: string;
+    invitedByEmail: string;
+  }
+) => {
+  if (email === invitedByEmail) {
+    return { success: false, message: "Cannot invite yourself" };
+  }
+
+  const [projects] = await connection.query<RowDataPacket[]>(
+    `SELECT * FROM projects WHERE id = ?`,
+    [project_idx]
+  );
+
+  if (!projects.length) {
+    return { success: false, message: "Project not found" };
+  }
+
+  // 1. Check if user exists
+  const [users] = await connection.query<RowDataPacket[]>(
+    `SELECT type FROM users WHERE email = ?`,
+    [email]
+  );
+
+  const isInternal = users.length && users[0].type === "internal";
+
+  if (isInternal) {
+    // 🔑 SINGLE SOURCE OF TRUTH
+    await upsertProjectUserFunction(connection, {
+      email,
+      project_idx,
+      clearance,
+    });
+
+    return { success: true, invited: false };
+  }
+
+  // 2. External → create / refresh invitation
+  const token = crypto.randomBytes(32).toString("hex");
+
+  await connection.query(
+    `
+    INSERT INTO project_invitations (
+    email,
+    project_idx,
+    clearance,
+    token,
+    created_by,
+    expires_at
+  )
+  VALUES (?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))
+  ON DUPLICATE KEY UPDATE
+    clearance = VALUES(clearance),
+    token = VALUES(token),
+    expires_at = DATE_ADD(NOW(), INTERVAL 7 DAY),
+    created_by = VALUES(created_by),
+    updated_at = NOW()
+  `,
+    [email, project_idx, clearance, token, invitedBy]
+  );
+
+  const projectName = projects[0].name;
+  let domain = changeToHTTPSDomain(projects[0].domain);
+
+  if (!projectName || !domain) {
+    return { success: false, message: "Project information incomplete" };
+  }
+  
+  domain = "http://localhost:3000";
+
+  await sendInviteEmail({
+    to: email,
+    projectName: projects[0].name, 
+    inviteUrl: `${domain}?token=${token}`,
+  });
+
+  return { success: true, invited: true };
 };

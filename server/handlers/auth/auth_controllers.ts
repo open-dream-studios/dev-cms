@@ -2,6 +2,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import {
+  acceptProjectInviteAfterAuth,
   checkCodeFunction,
   googleAuthFunction,
   loginFunction,
@@ -22,9 +23,9 @@ export const googleAuth = async (
   res: Response,
   connection: PoolConnection
 ) => {
-  const { idToken } = req.body;
+  const { idToken, invite_token } = req.body;
   if (!idToken) throw new Error("No idToken provided");
-  return await googleAuthFunction(connection, idToken);
+  return await googleAuthFunction(connection, idToken, invite_token);
 };
 
 export const register = async (
@@ -124,7 +125,7 @@ export const getCurrentUser = async (
     });
   });
   const q = "SELECT * FROM users WHERE user_id = ?";
-  const [rows] = await connection.query<RowDataPacket[]>(q, [userInfo.id]);
+  const [rows] = await connection.query<RowDataPacket[]>(q, [userInfo.user_id]);
   if (!rows.length) return null;
   const { password, password_reset, password_reset_timestamp, ...user } =
     rows[0];
@@ -152,7 +153,7 @@ export const updateCurrentUser = async (
   const updates = Object.entries(req.body)
     .map(([key]) => `\`${key}\` = ?`)
     .join(", ");
-  const values = [...Object.values(req.body), userInfo.id];
+  const values = [...Object.values(req.body), userInfo.user_id];
 
   const q = `UPDATE users SET ${updates} WHERE user_id = ?`;
   const [result] = await connection.query<ResultSetHeader>(q, values);
@@ -162,4 +163,27 @@ export const updateCurrentUser = async (
   }
 
   return { success: false, message: "No user updated" };
+};
+
+export const acceptInvite = async (
+  req: Request,
+  res: Response,
+  connection: PoolConnection
+) => {
+  const { token } = req.body;
+  const user = req.user;
+  if (!user || !user.user_id || !user.email) {
+    return { status: 401, success: false, message: "Unauthorized" };
+  }
+  if (!token) {
+    return { status: 400, success: false, message: "Missing invite token" };
+  }
+  await acceptProjectInviteAfterAuth(connection, {
+    token,
+    user: {
+      user_id: user.user_id,
+      email: user.email,
+    },
+  });
+  return { status: 200, success: true };
 };

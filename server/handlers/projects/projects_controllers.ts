@@ -4,6 +4,7 @@ import {
   deleteProjectUserFunction,
   getAllUserRolesFunction,
   getAssignedProjectsFunction,
+  inviteProjectUserFunction,
   upsertProjectFunction,
   upsertProjectUserFunction,
 } from "./projects_repositories.js";
@@ -51,9 +52,20 @@ export const upsertProjectUser = async (
   connection: PoolConnection
 ) => {
   const { email, project_idx, clearance } = req.body;
-  if (!email || !project_idx || !clearance)
+  const invitedBy = req.user?.user_id;
+  const invitedByEmail = req.user?.email;
+
+  if (!email || !project_idx || !clearance || !invitedBy || !invitedByEmail) {
     throw new Error("Missing required fields");
-  return await upsertProjectUserFunction(connection, req.body);
+  }
+
+  return await inviteProjectUserFunction(connection, {
+    email,
+    project_idx,
+    clearance,
+    invitedBy,
+    invitedByEmail,
+  });
 };
 
 export const deleteProjectUser = async (

@@ -110,6 +110,7 @@ const LoginSlider = () => {
 };
 
 const Login = () => {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const currentTheme = useCurrentTheme();
   const { domain, modal1, setModal1, modal2, setModal2 } = useUiStore();
@@ -637,14 +638,13 @@ const Login = () => {
           playAnimation1();
           try {
             setContinueDisabled(true);
-            const success = await register(inputs);
+            const success = await register(router, inputs);
             if (success) {
               setModal1({
                 ...modal1,
                 open: false,
               });
-              router.push("/");
-              window.location.href = "/";
+              await queryClient.refetchQueries({ queryKey: ["currentUser"] });
             }
           } finally {
             if (animationInstance) {
@@ -667,8 +667,7 @@ const Login = () => {
                 ...modal1,
                 open: false,
               });
-              router.push("/");
-              window.location.href = "/";
+              await queryClient.refetchQueries({ queryKey: ["currentUser"] });
             }
           } finally {
             if (animationInstance) {
@@ -762,8 +761,7 @@ const Login = () => {
                 open: false,
               });
               if (success) {
-                router.push("/");
-                window.location.href = "/";
+                await queryClient.refetchQueries({ queryKey: ["currentUser"] });
               }
             }}
             className="relative h-[50px] md:h-[46px] lg:h-[50px] w-full cursor-pointer select-none rounded-[12px] overflow-hidden"

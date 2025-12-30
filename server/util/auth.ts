@@ -1,6 +1,6 @@
 // server/util/auth.js
 import jwt from "jsonwebtoken";
-import type { Request, Response, NextFunction } from "express"; 
+import type { Request, Response, NextFunction } from "express";
 import type { JwtPayload } from "@open-dream/shared";
 
 export const authenticateUser = (
@@ -22,7 +22,10 @@ export const authenticateUser = (
       process.env.JWT_SECRET as string
     ) as JwtPayload;
     req.user = {
-      id: typeof decoded.id === "string" ? Number(decoded.id) : decoded.id,
+      user_id:
+        typeof decoded.user_id === "string"
+          ? decoded.user_id
+          : String(decoded.user_id),
       email: decoded.email,
       admin: Boolean(decoded.admin),
     };

@@ -1,15 +1,12 @@
 // server/handlers/auth/auth_repositories.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import * as nodemailer from "nodemailer";
-import { db } from "../../connection/connect.js";
 import { generateId } from "../../functions/data.js";
 import dotenv from "dotenv";
 import admin from "../../connection/firebaseAdmin.js";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import sgMail from "@sendgrid/mail";
-dotenv.config();
-sgMail.setApiKey(process.env.SENDGRID_EMAIL_API_KEY!);
+import { upsertProjectUserFunction } from "../../handlers/projects/projects_repositories.js";
+import { sendEmail } from "../../util/email.js";
 
 const checkUserIdUnique = async (
   connection: PoolConnection,
@@ -30,7 +27,7 @@ export const createUniqueUserId = async (connection: PoolConnection) => {
     userId = generateId(15);
     isUnique = await checkUserIdUnique(connection, userId);
   }
-  return userId;
+  return userId as string;
 };
 
 export const getValidEmails = async (connection: PoolConnection) => {
@@ -50,7 +47,8 @@ export const getUserFunction = async (
 
 export const googleAuthFunction = async (
   connection: PoolConnection,
-  idToken: any
+  idToken: any,
+  invite_token: string
 ) => {
   const decodedToken = await admin.auth().verifyIdToken(idToken);
   const { email, name = "", picture = "", uid } = decodedToken;
@@ -74,8 +72,24 @@ export const googleAuthFunction = async (
   let last_name = rest.join(" ") || null;
 
   if (user) {
+    if (user.auth_provider !== "google") {
+      return {
+        status: 401,
+        success: "false",
+        message: `Please log in using ${user.auth_provider}`,
+      };
+    }
+    if (invite_token) {
+      await acceptProjectInviteAfterAuth(connection, {
+        token: invite_token,
+        user: {
+          user_id: user.user_id,
+          email,
+        },
+      });
+    }
     const token = jwt.sign(
-      { id: user.user_id, email: user.email, admin: user.admin },
+      { user_id: user.user_id, email: user.email, admin: user.admin },
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
@@ -104,14 +118,24 @@ export const googleAuthFunction = async (
     (user_id, email, first_name, last_name, profile_img_src, auth_provider)
     VALUES (?)
   `;
-  console.log(email, first_name);
+
   const values = [newUserId, email, first_name, last_name, picture, "google"];
   const [result] = await connection.query<ResultSetHeader>(insertQuery, [
     values,
   ]);
   if (result.affectedRows > 0) {
+    if (invite_token) {
+      await acceptProjectInviteAfterAuth(connection, {
+        token: invite_token,
+        user: {
+          user_id: newUserId,
+          email,
+        },
+      });
+    }
+
     const token = jwt.sign(
-      { id: newUserId, email, admin: 0 },
+      { user_id: newUserId, email, admin: 0 },
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
@@ -140,68 +164,71 @@ export const registerFunction = async (
   connection: PoolConnection,
   reqBody: any
 ) => {
-  const { email, password, first_name, last_name } = reqBody;
-  // const validEmails = await getValidEmails(connection);
-  // if (!validEmails.includes(email)) {
-  //   return {
-  //     status: 401,
-  //     success: "false",
-  //     message: "Unauthorized gmail, please ask host for permission",
-  //   };
-  // }
-  const user = await getUserFunction(connection, email);
-  if (user)
-    return { status: 400, success: false, message: "User already exists!" };
+  const { email, password, first_name, last_name, invite_token } = reqBody;
+
+  // 1. Prevent duplicate users
+  const existing = await getUserFunction(connection, email);
+  if (existing) {
+    await connection.rollback();
+    return { status: 400, success: false, message: "User already exists" };
+  }
+
+  // 2. Create user
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync(password, salt);
   const newUserId = await createUniqueUserId(connection);
 
-  const q1 =
-    "INSERT INTO users (`user_id`,`email`,`password`,`first_name`,`last_name`,`profile_img_src`) VALUE (?)";
-  const values1 = [
-    newUserId,
-    email,
-    hashedPassword,
-    first_name,
-    last_name,
-    null,
-  ];
+  await connection.query(
+    `
+      INSERT INTO users 
+      (user_id, email, password, first_name, last_name, profile_img_src)
+      VALUES (?, ?, ?, ?, ?, NULL)
+      `,
+    [newUserId, email, hashedPassword, first_name, last_name]
+  );
 
-  const [result] = await connection.query<ResultSetHeader>(q1, [values1]);
-  if (result.affectedRows > 0) {
-    const token = jwt.sign(
-      { id: newUserId, email, admin: 0 },
-      process.env.JWT_SECRET!,
-      {
-        expiresIn: "7d",
-      }
-    );
-    return {
-      message: "Registration successful",
-      status: 200,
-      cookies: [
-        {
-          name: "accessToken",
-          value: token,
-          options: {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-          },
-        },
-      ],
-    };
+  // 3. Accept invitation if token exists
+  if (invite_token) {
+    await acceptProjectInviteAfterAuth(connection, {
+      token: invite_token,
+      user: {
+        user_id: newUserId,
+        email,
+      },
+    });
   }
-  return null;
+
+  // 4. Issue auth token
+  const jwtToken = jwt.sign(
+    { user_id: newUserId, email, admin: 0 },
+    process.env.JWT_SECRET!,
+    { expiresIn: "7d" }
+  );
+
+  return {
+    status: 200,
+    message: "Registration successful",
+    cookies: [
+      {
+        name: "accessToken",
+        value: jwtToken,
+        options: {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          path: "/",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        },
+      },
+    ],
+  };
 };
 
 export const loginFunction = async (
   connection: PoolConnection,
   reqBody: any
 ) => {
-  const { email, password } = reqBody;
+  const { email, password, invite_token } = reqBody;
   // const validEmails = await getValidEmails(connection);
   // if (!validEmails.includes(email)) {
   //   return {
@@ -218,25 +245,11 @@ export const loginFunction = async (
       message: "Login failed",
     };
 
-  if (user.auth_provider === "google") {
+  if (user.auth_provider !== "local") {
     return {
       status: 401,
       success: false,
-      message: "Please log in using Google",
-    };
-  }
-  if (user.auth_provider === "facebook") {
-    return {
-      status: 401,
-      success: false,
-      message: "Please log in using Facebook",
-    };
-  }
-  if (user.auth_provider === "discord") {
-    return {
-      status: 401,
-      success: false,
-      message: "Please log in using Discord",
+      message: `Please log in using ${user.auth_provider}`,
     };
   }
 
@@ -249,8 +262,18 @@ export const loginFunction = async (
     };
   }
 
+  if (invite_token) {
+    await acceptProjectInviteAfterAuth(connection, {
+      token: invite_token,
+      user: {
+        user_id: user.user_id,
+        email,
+      },
+    });
+  }
+
   const token = jwt.sign(
-    { id: user.user_id, email: user.email, admin: user.admin },
+    { user_id: user.user_id, email: user.email, admin: user.admin },
     process.env.JWT_SECRET!,
     {
       expiresIn: "7d",
@@ -296,19 +319,19 @@ export const sendCodeFunction = async (
 
   if (result.affectedRows > 0) {
     try {
-      await sgMail.send({
+      await sendEmail({
         to: email,
-        from: process.env.NODE_MAILER_ORIGIN!,
         subject: "Password Reset Code",
+        html: `<p>Your password reset code is: ${resetCode}</p>`,
         text: `Your password reset code is: ${resetCode}`,
       });
       return { status: 200, success: true, message: "Email sent successfully" };
     } catch (error) {
-      console.error("SendGrid error:", error);
+      console.error("Email send error:", error);
       return {
         status: 500,
         success: false,
-        message: "SendGrid failed to send email",
+        message: "Email failed to send",
       };
     }
   } else {
@@ -342,7 +365,7 @@ export const checkCodeFunction = async (
       isWithinOneHour(currentTime, user.password_reset_timestamp)
     ) {
       const token = jwt.sign(
-        { id: user.user_id, email: user.email, admin: user.admin },
+        { user_id: user.user_id, email: user.email, admin: user.admin },
         process.env.JWT_SECRET!,
         {
           expiresIn: "7d",
@@ -407,4 +430,77 @@ export const passwordResetFunction = async (
       message: "Error updating user password",
     };
   }
+};
+
+export const acceptProjectInviteAfterAuth = async (
+  connection: PoolConnection,
+  {
+    token,
+    user,
+  }: {
+    token: string;
+    user: { user_id: string; email: string };
+  }
+) => {
+  // 1. Lock invitation
+  const [rows] = await connection.query<RowDataPacket[]>(
+    `
+    SELECT *
+    FROM project_invitations
+    WHERE token = ?
+    FOR UPDATE
+    `,
+    [token]
+  );
+
+  if (!rows.length) {
+    throw new Error("Invalid invitation token");
+  }
+
+  const invite = rows[0];
+
+  // 2. Validate state
+  if (invite.expires_at < new Date()) {
+    throw new Error("Invitation expired");
+  }
+
+  if (invite.accepted_at) {
+    // idempotent success
+    return;
+  }
+
+  // 3. Email must match
+  if (invite.email.toLowerCase() !== user.email.toLowerCase()) {
+    throw new Error("Invitation email does not match registered email");
+  }
+
+  // 4. Flip user to internal (one-way)
+  await connection.query(
+    `
+    UPDATE users
+    SET type = 'internal'
+    WHERE user_id = ?
+    `,
+    [user.user_id]
+  );
+
+  // 5. Ensure project membership (idempotent)
+  await connection.query(
+    `
+    INSERT INTO project_users (email, project_idx, clearance)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE clearance = VALUES(clearance)
+    `,
+    [invite.email, invite.project_idx, invite.clearance]
+  );
+
+  // 6. Mark invitation accepted
+  await connection.query(
+    `
+    UPDATE project_invitations
+    SET accepted_at = NOW()
+    WHERE id = ?
+    `,
+    [invite.id]
+  );
 };

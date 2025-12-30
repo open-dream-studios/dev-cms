@@ -34,6 +34,7 @@ import UploadModal from "@/components/Upload/Upload";
 import { ContextMenu } from "@/components/ContextMenu";
 import { queryClient } from "@/lib/queryClient";
 import CustomerPortal from "@/modules/CustomerPortal/CustomerPortal";
+import { makeRequest } from "@/util/axios";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   // const [queryClient] = useState(() => new QueryClient());
@@ -52,32 +53,50 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 }
 
 const AppRoot = ({ children }: { children: ReactNode }) => {
-  const queryClient = useQueryClient();
   const { currentUser, isLoadingCurrentUserData } = useContext(AuthContext);
   const router = useRouter();
   const pathname = usePathname();
-
   const { environmentInitialized } = useUiStore();
 
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-  }, []);
-
-  useEffect(() => {
-    if (!isLoadingCurrentUserData && !currentUser && pathname !== "/") {
-      router.push("/");
-    }
-  }, [router, currentUser, isLoadingCurrentUserData, pathname]);
-
+  // Init environment
   useEffect(() => {
     if (!environmentInitialized) {
       initializeEnvironment(window.location.hostname);
     }
   }, [environmentInitialized]);
-  if (!environmentInitialized) return null;
 
-  if (isLoadingCurrentUserData) return null;
-  if (!currentUser && pathname !== "/") return null;
+  // 🔑 Invite acceptance logic (THE ONLY PLACE)
+  const inviteHandledRef = useRef(false);
+  useEffect(() => {
+    const inviteUser = async () => {
+      if (isLoadingCurrentUserData) return;
+      if (!currentUser) return;
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      if (!token) return;
+      if (inviteHandledRef.current) return;
+      inviteHandledRef.current = true;
+      const res = await makeRequest.post("/api/auth/accept-invite", { token });
+      if (res.data.success) {
+        router.replace(pathname);
+        await queryClient.invalidateQueries({
+          predicate: () => true, 
+        });
+      }
+    };
+    inviteUser();
+  }, [currentUser, isLoadingCurrentUserData, pathname, router]);
+
+  // Guard: block protected routes if logged out
+  useEffect(() => {
+    if (isLoadingCurrentUserData) return;
+    const isPublicPath = pathname === "/";
+    if (!currentUser && !isPublicPath) {
+      router.replace("/");
+    }
+  }, [currentUser, isLoadingCurrentUserData, pathname, router]);
+
+  if (!environmentInitialized) return null;
 
   return currentUser ? (
     <ProtectedLayout>
@@ -138,26 +157,36 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
 
   if (!currentUser) return;
 
+  if (currentUser.type === "internal") {
+    return (
+      <div className="w-[100vw] display-height">
+        <ContextMenu />
+        {updatingLock && (
+          <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
+        )}
+        <Modals landing={false} />
+        <UploadModal />
+        <Navbar />
+        {currentProjectId ? (
+          <>
+            <LeftBar />
+            <PageLayout leftbar={true}>{children}</PageLayout>
+          </>
+        ) : (
+          <PageLayout leftbar={false}>
+            <AdminHome />
+          </PageLayout>
+        )}
+      </div>
+    );
+  }
   return (
-    <div className="w-[100vw] display-height">
-      <ContextMenu />
-      {updatingLock && (
-        <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
-      )}
-      <Modals landing={false} />
-      <UploadModal />
+    <>
       <Navbar />
-      {currentProjectId ? (
-        <>
-          <LeftBar />
-          <PageLayout leftbar={true}>{children}</PageLayout>
-        </>
-      ) : (
-        <PageLayout leftbar={false}>
-          {/* <AdminHome /> */}
-          <CustomerPortal/>
-        </PageLayout>
-      )}
-    </div>
+      <Modals landing={false} />
+      <PageLayout leftbar={false}>
+        <CustomerPortal />;
+      </PageLayout>
+    </>
   );
 };

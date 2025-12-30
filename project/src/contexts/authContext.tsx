@@ -3,7 +3,7 @@
 import { createContext, ReactNode } from "react";
 import { makeRequest } from "../util/axios";
 import { ThemeType } from "../util/appTheme";
-import { useQuery, useQueryClient } from "@tanstack/react-query"; 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { logout } from "@/util/auth";
 import { useUiStore } from "@/store/useUIStore";
 
@@ -19,6 +19,7 @@ export interface User {
   auth_provider: string;
   created_at: string;
   admin?: number;
+  type: "internal" | "external";
 }
 
 interface AuthContextType {
@@ -39,7 +40,7 @@ interface AuthContextProviderProps {
 
 export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   const queryClient = useQueryClient();
-  const { setLeftBarOpen,  modal1, setModal1, modal2, setModal2 } = useUiStore();
+  const { setLeftBarOpen, modal1, setModal1, modal2, setModal2 } = useUiStore();
   // useEffect(() => {
   //   if (typeof window !== "undefined") {
   //     const storedUser = localStorage.getItem("user");
@@ -58,7 +59,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     useQuery<User | null>({
       queryKey: ["currentUser"],
       queryFn: async () => {
-        const res = await makeRequest.get("/api/auth/current-user");
+        const res = await makeRequest.get("/api/auth/me");
         return res.data && Object.keys(res.data).length ? res.data : null;
       },
       staleTime: 1000 * 60 * 5,
@@ -68,11 +69,10 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   const currentUser = currentUserData ?? null;
 
   const handleLogout = async () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user");
-      localStorage.removeItem("accessToken");
-    }
-    queryClient.clear();
+    // if (typeof window !== "undefined") {
+    //   localStorage.removeItem("user");
+    //   localStorage.removeItem("accessToken");
+    // }
     setModal1({
       ...modal1,
       open: false,
@@ -86,6 +86,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     if (success) {
       window.location.reload();
     }
+    queryClient.clear();
   };
 
   return (

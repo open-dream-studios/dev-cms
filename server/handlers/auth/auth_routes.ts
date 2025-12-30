@@ -9,10 +9,12 @@ import {
   checkCode,
   passwordReset,
   getCurrentUser,
-  updateCurrentUser
+  updateCurrentUser,
+  acceptInvite,
 } from "./auth_controllers.js";
-import { rateLimiter } from "../../connection/middlewares.js"
+import { rateLimiter } from "../../connection/middlewares.js";
 import { transactionHandler } from "../../util/handlerWrappers.js";
+import { authenticateUser } from "../../util/auth.js";
 
 const router = express.Router();
 
@@ -25,7 +27,13 @@ router.post("/send-code", rateLimiter, transactionHandler(sendCode));
 router.post("/check-code", rateLimiter, transactionHandler(checkCode));
 router.post("/password-reset", rateLimiter, transactionHandler(passwordReset));
 
-router.get("/current-user", transactionHandler(getCurrentUser));
+router.get("/me", transactionHandler(getCurrentUser));
 router.put("/update-current-user", transactionHandler(updateCurrentUser));
+
+router.post(
+  "/accept-invite",
+  authenticateUser,
+  transactionHandler(acceptInvite)
+);
 
 export default router;

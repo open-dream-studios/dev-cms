@@ -181,3 +181,18 @@ export function isValidPhone10(phone: string | null): boolean {
   const digits = phone.replace(/\D/g, "");
   return digits.length === 10;
 }
+
+export function changeToHTTPSDomain(domain: string): string {
+  if (!domain) return domain;
+
+  // Trim whitespace just in case
+  const trimmed = domain.trim();
+
+  // If it already starts with http:// or https://, normalize to https://
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/^http:\/\//i, "https://");
+  }
+
+  // Otherwise, add https://
+  return `https://${trimmed}`;
+}

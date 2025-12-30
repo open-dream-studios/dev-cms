@@ -19,9 +19,12 @@ export type RegisterInputs = {
 
 export const login = async (inputs: LoginInputs) => {
   try {
+    const params = new URLSearchParams(window.location.search);
+    const invite_token = params.get("token");
+
     const res = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`,
-      inputs,
+      { ...inputs, invite_token },
       { withCredentials: true }
     );
     const success = res.status === 200;
@@ -46,11 +49,14 @@ export const logout = async () => {
   }
 };
 
-export const register = async (inputs: RegisterInputs) => {
+export const register = async (router: any, inputs: RegisterInputs) => {
   try {
+    const params = new URLSearchParams(window.location.search);
+    const invite_token = params.get("token");
+
     const res = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`,
-      inputs,
+      { ...inputs, invite_token },
       { withCredentials: true }
     );
     const success = res.status === 200;
@@ -67,6 +73,9 @@ export const register = async (inputs: RegisterInputs) => {
 
 export const googleSignIn = async () => {
   try {
+    const params = new URLSearchParams(window.location.search);
+    const invite_token = params.get("token");
+
     const googleAccount = await signInWithPopup(
       auth,
       provider.setCustomParameters({ prompt: "select_account" })
@@ -77,7 +86,7 @@ export const googleSignIn = async () => {
 
     const res = await axios.post(
       process.env.NEXT_PUBLIC_BACKEND_URL + "/api/auth/google",
-      { idToken },
+      { idToken, invite_token },
       {
         withCredentials: true,
       }
@@ -87,7 +96,13 @@ export const googleSignIn = async () => {
       toast.error(res.data.message);
     }
     return success;
-  } catch (error) {
+  } catch (error: any) {
+    if (
+      error?.code === "auth/popup-closed-by-user" ||
+      error?.code === "auth/cancelled-popup-request"
+    ) {
+      return false;
+    }
     toast.error("Google auth failed");
     console.error("Google auth failed:", error);
     return false;
