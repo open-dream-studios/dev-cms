@@ -4,7 +4,7 @@ import { MediaLink } from "@open-dream/shared";
 
 export async function fetchMediaLinksApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.get("/api/media/media-links", {
+  const res = await makeRequest.get("/media/media-links", {
     params: { project_idx },
   });
   return res.data.mediaLinks as MediaLink[];
@@ -15,7 +15,7 @@ export async function upsertMediaLinksApi(
   items: MediaLink[]
 ) {
   if (!project_idx) return null;
-  await makeRequest.post("/api/media/media-links/update", {
+  await makeRequest.post("/media/media-links/update", {
     project_idx,
     items,
   });
@@ -26,7 +26,7 @@ export async function deleteMediaLinksApi(
   items: MediaLink[]
 ) {
   if (!project_idx) return null;
-  await makeRequest.post("/api/media/media-links/delete", {
+  await makeRequest.post("/media/media-links/delete", {
     mediaLinks: items,
     project_idx,
   });

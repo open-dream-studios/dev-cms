@@ -1,6 +1,7 @@
+// project/src/modules/CustomerPortal/CustomerPortal.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { motion } from "framer-motion";
 import {
   MessageCircle,
@@ -14,6 +15,9 @@ import {
   Droplets,
   Activity,
 } from "lucide-react";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { Message, MessageInput } from "@open-dream/shared";
+import { AuthContext } from "@/contexts/authContext";
 
 // -----------------------------------------------------------------------------
 // Fake Data Models
@@ -38,12 +42,12 @@ type Job = {
   notes?: string;
 };
 
-type Message = {
-  id: string;
-  sender: "customer" | "company";
-  content: string;
-  timestamp: string;
-};
+// type Message = {
+//   id: string;
+//   sender: "customer" | "company";
+//   content: string;
+//   timestamp: string;
+// };
 
 const tubs: Tub[] = [
   {
@@ -86,20 +90,21 @@ const jobs: Job[] = [
   },
 ];
 
-const initialMessages: Message[] = [
-  {
-    id: "m1",
-    sender: "company",
-    content: "Hi Joey! We completed your monthly service. Everything looks great 👍",
-    timestamp: "09:12 AM",
-  },
-  {
-    id: "m2",
-    sender: "customer",
-    content: "Awesome, thank you! One tub felt slightly cooler though.",
-    timestamp: "09:18 AM",
-  },
-];
+// const initialMessages: Message[] = [
+//   {
+//     id: "m1",
+//     sender: "company",
+//     content:
+//       "Hi Joey! We completed your monthly service. Everything looks great 👍",
+//     timestamp: "09:12 AM",
+//   },
+//   {
+//     id: "m2",
+//     sender: "customer",
+//     content: "Awesome, thank you! One tub felt slightly cooler though.",
+//     timestamp: "09:18 AM",
+//   },
+// ];
 
 // -----------------------------------------------------------------------------
 // Small UI helpers
@@ -124,26 +129,38 @@ const StatusBadge = ({ status }: { status: TubStatus }) => {
 // -----------------------------------------------------------------------------
 
 export default function CustomerPortal() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { currentUser } = useContext(AuthContext);
+  const { upsertMessage, messagesData } = useContextQueries();
+  const [messages, setMessages] = useState<Message[]>(messagesData);
   const [draft, setDraft] = useState("");
 
   const sendMessage = () => {
     if (!draft.trim()) return;
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: String(Date.now()),
-        sender: "customer",
-        content: draft,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ]);
+    // setMessages((prev) => [
+    //   ...prev,
+    //   {
+    //     id: String(Date.now()),
+    //     sender: "customer",
+    //     content: draft,
+    //     timestamp: new Date().toLocaleTimeString([], {
+    //       hour: "2-digit",
+    //       minute: "2-digit",
+    //     }),
+    //   },
+    // ]);
     setDraft("");
   };
+
+  const handleTestMessage = async () => {
+    console.log(messagesData);
+    // await upsertMessage({
+    //   user_to: null,
+    //   message_text: "Test message from Customer Portal UI",
+    // });
+  };
+
+  if (!currentUser) return null;
 
   return (
     <div className="min-h-screen bg-[#0b1220] text-slate-100 p-6">
@@ -151,7 +168,9 @@ export default function CustomerPortal() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Customer Portal</h1>
+            <h1 onClick={handleTestMessage} className="text-2xl font-bold">
+              Customer Portal
+            </h1>
             <p className="text-slate-400 text-sm">
               Monitor your tubs, services, and communicate with our team
             </p>
@@ -250,15 +269,15 @@ export default function CustomerPortal() {
                   key={m.id}
                   className={`max-w-[75%] p-3 rounded-xl text-sm $
                     ${
-                      m.sender === "customer"
+                      m.user_from === currentUser.user_id
                         ? "ml-auto bg-cyan-500/20"
                         : "bg-white/10"
                     }
                   `}
                 >
-                  <div>{m.content}</div>
+                  <div>{m.message_text}</div>
                   <div className="text-[10px] text-slate-400 mt-1 text-right">
-                    {m.timestamp}
+                    {m.created_at}
                   </div>
                 </div>
               ))}

@@ -7,19 +7,20 @@ import {
   toggleComplete,
   addRequest,
 } from "./updates_controllers.js";
-
 import { authenticateUser } from "../../../util/auth.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
 import {
   errorHandler,
   transactionHandler,
 } from "../../../util/handlerWrappers.js";
+import { verifyVercelProxy } from "../../../util/verifyProxy.js";
 
 const router = express.Router();
 
 // GET LIST
 router.post(
   "/",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(1), // viewer+
   errorHandler(getUpdates)
@@ -28,6 +29,7 @@ router.post(
 // UPSERT
 router.post(
   "/upsert",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(5), // editor+ (modify updates)
   transactionHandler(upsertUpdate)
@@ -36,6 +38,7 @@ router.post(
 // DELETE
 router.post(
   "/delete",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(5), // editor+
   transactionHandler(deleteUpdate)
@@ -44,6 +47,7 @@ router.post(
 // TOGGLE COMPLETE
 router.post(
   "/toggleComplete",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(5),
   transactionHandler(toggleComplete)
@@ -52,6 +56,7 @@ router.post(
 // ADD REQUEST (same as upsert but simplified)
 router.post(
   "/requests/add",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(1), // viewer+ can request
   transactionHandler(addRequest)

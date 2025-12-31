@@ -8,6 +8,7 @@ import {
   getModulesStructureKeys,
 } from "../../functions/modules.js";
 import { sanitizeJsonLikeString } from "../../functions/data.js";
+import { ulid } from "ulid";
 
 // ---------- INTEGRATION FUNCTIONS ----------
 export const getIntegrationsFunction = async (
@@ -79,13 +80,7 @@ export const upsertIntegrationFunction = async (
 
   const normalizedValue = sanitizeJsonLikeString(integration_value);
   const encryptedValue = encrypt(normalizedValue);
-  const finalIntegrationId =
-    integration_id && integration_id.trim() !== ""
-      ? integration_id
-      : "I-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalIntegrationId = integration_id?.trim() || `INT-${ulid()}`;
 
   const query = `
       INSERT INTO project_integrations (

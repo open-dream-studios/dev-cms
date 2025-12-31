@@ -15,6 +15,9 @@ const __dirname = path.dirname(__filename);
 
 // INSTRUCTIONS
 // Run command
+// node --loader ts-node/esm sql/sql_backup.ts
+
+// ZIP COMMANDS
 // gunzip backup-cms-2025-11-05T22-52-00.sql.gz
 
 // (You can rezip with)

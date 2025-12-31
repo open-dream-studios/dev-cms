@@ -22,11 +22,11 @@ export const login = async (inputs: LoginInputs) => {
     const params = new URLSearchParams(window.location.search);
     const invite_token = params.get("token");
 
-    const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`,
-      { ...inputs, invite_token },
-      { withCredentials: true }
-    );
+    const res = await makeRequest.post("/auth/login", {
+      ...inputs,
+      invite_token,
+    });
+
     const success = res.status === 200;
     if (!success) {
       toast.error(res.data.message);
@@ -41,7 +41,7 @@ export const login = async (inputs: LoginInputs) => {
 
 export const logout = async () => {
   try {
-    const res = await makeRequest.post("/api/auth/logout");
+    const res = await makeRequest.post("/auth/logout");
     return res.status === 200;
   } catch (err) {
     console.error("Login failed", err);
@@ -54,11 +54,11 @@ export const register = async (router: any, inputs: RegisterInputs) => {
     const params = new URLSearchParams(window.location.search);
     const invite_token = params.get("token");
 
-    const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`,
-      { ...inputs, invite_token },
-      { withCredentials: true }
-    );
+    const res = await makeRequest.post("/auth/register", {
+      ...inputs,
+      invite_token,
+    });
+
     const success = res.status === 200;
     if (!success) {
       toast.error(res.data.message);
@@ -84,13 +84,11 @@ export const googleSignIn = async () => {
     const user = googleAccount.user;
     const idToken = await user.getIdToken();
 
-    const res = await axios.post(
-      process.env.NEXT_PUBLIC_BACKEND_URL + "/api/auth/google",
-      { idToken, invite_token },
-      {
-        withCredentials: true,
-      }
-    );
+    const res = await makeRequest.post("/auth/google", {
+      idToken,
+      invite_token,
+    });
+
     const success = res.status === 200;
     if (!success) {
       toast.error(res.data.message);

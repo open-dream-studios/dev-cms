@@ -187,7 +187,7 @@ const Login = () => {
           return;
         }
         try {
-          const response = await makeRequest.post("/api/auth/send-code", {
+          const response = await makeRequest.post("/auth/send-code", {
             email: forgotPasswordEmail.trim().toLowerCase(),
           });
           const responseData = response.data;
@@ -217,7 +217,7 @@ const Login = () => {
 
       const executeCodeEntered = async () => {
         try {
-          const response = await makeRequest.post("/api/auth/check-code", {
+          const response = await makeRequest.post("/auth/check-code", {
             email: forgotPasswordEmail.trim().toLowerCase(),
             code: codeInput.join(""),
           });
@@ -250,7 +250,7 @@ const Login = () => {
 
       const confirmNewPassword = async () => {
         try {
-          const response = await makeRequest.post("/api/auth/password-reset", {
+          const response = await makeRequest.post("/auth/password-reset", {
             email: forgotPasswordEmail.trim().toLowerCase(),
             password: updatedPassword,
             accessToken: accessToken,

@@ -7,6 +7,7 @@ import type {
   RowDataPacket,
   PoolConnection,
 } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // ---------- JOB FUNCTIONS ----------
 export const getJobsFunction = async (project_idx: number): Promise<Job[]> => {
@@ -39,13 +40,7 @@ export const upsertJobFunction = async (
     notes,
   } = reqBody;
 
-  const finalJobId =
-    job_id && job_id.trim() !== ""
-      ? job_id
-      : "J-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalJobId = job_id?.trim() || `JOB-${ulid()}`;
 
   const query = `
       INSERT INTO jobs (

@@ -1,6 +1,7 @@
 import { db } from "../../../connection/connect.js";
 import type { Update } from "@open-dream/shared";
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // -------------------------
 // GET UPDATES
@@ -40,13 +41,7 @@ export const upsertUpdateFunction = async (
     completed_at,
   } = body;
 
-  const finalUpdateId =
-    update_id && update_id.trim() !== ""
-      ? update_id
-      : "UPD-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalUpdateId = update_id?.trim() || `UPD-${ulid()}`;
 
   const query = `
     INSERT INTO updates (
@@ -146,10 +141,7 @@ export const addRequestFunction = async (
   body: any
 ) => {
   const { title, description, requested_by, priority } = body;
-  const update_id =
-    "UPD-" +
-    Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join("");
-
+  const update_id = `UPD-${ulid()}`;
   const query = `
     INSERT INTO updates (
       update_id,

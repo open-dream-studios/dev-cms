@@ -22,7 +22,7 @@ import { handleCalleeRinging, handleRecordingCompleted } from "./zoom_webhooks.j
 // app.use(express.json())
 
 // Move this line to after the zoom routes
-// app.use("/api/calls/zoom", zoomRoutes);
+// app.use("/calls/zoom", zoomRoutes);
 // app.use(express.urlencoded({ extended: false }));
 
 

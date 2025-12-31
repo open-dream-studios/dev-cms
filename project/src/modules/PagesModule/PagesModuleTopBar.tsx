@@ -21,7 +21,7 @@ const PagesModuleTopBar = () => {
 
   const handleGetDataClick = async () => {
     if (!currentProject) return;
-    const res = await makeRequest.post("/api/pages/get-data", {
+    const res = await makeRequest.post("/pages/get-data", {
       domain: currentProject.domain,
       slug: currentPage ? currentPage.slug : "/",
     });

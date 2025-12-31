@@ -5,7 +5,7 @@ import { Task } from "@open-dream/shared";
 
 export async function fetchProjectTasksApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.post("/api/tasks", {
+  const res = await makeRequest.post("/tasks", {
     project_idx,
   });
 
@@ -21,7 +21,7 @@ export async function fetchProjectTasksApi(project_idx: number) {
 
 export async function upsertProjectTaskApi(project_idx: number, task: Task) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/tasks/upsert", {
+  const res = await makeRequest.post("/tasks/upsert", {
     ...task,
     project_idx,
   });
@@ -33,7 +33,7 @@ export async function deleteProjectTaskApi(
   task_id: string
 ) {
   if (!project_idx) return null;
-  await makeRequest.post("/api/tasks/delete", {
+  await makeRequest.post("/tasks/delete", {
     task_id,
     project_idx,
   });

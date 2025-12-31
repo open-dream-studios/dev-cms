@@ -14,7 +14,7 @@ export function useTheme(currentUser: User | null) {
     { previousUser: FirebaseUser | null }
   >({
     mutationFn: async (newTheme) => {
-      await makeRequest.put("/api/auth/update-current-user", {
+      await makeRequest.put("/auth/update-current-user", {
         theme: newTheme,
       });
     },

@@ -100,7 +100,7 @@ export const handleFileProcessing = async (
     images.forEach((fileImage) => {
       formData.append("files", fileImage.file, fileImage.name);
     });
-    const response = await makeRequest.post("/api/media/upload", formData, {
+    const response = await makeRequest.post("/media/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     if (response.status === 200) {

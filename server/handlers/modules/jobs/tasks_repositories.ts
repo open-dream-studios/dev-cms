@@ -6,6 +6,7 @@ import type {
   PoolConnection,
   ResultSetHeader,
 } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // ---------- TASK FUNCTIONS ----------
 export const getTasksFunction = async (
@@ -38,13 +39,7 @@ export const upsertTaskFunction = async (
     description,
   } = reqBody;
 
-  const finalTaskId =
-    task_id && task_id.trim() !== ""
-      ? task_id
-      : "T-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalTaskId = task_id?.trim() || `TASK-${ulid()}`;
 
   const query = `
       INSERT INTO tasks (

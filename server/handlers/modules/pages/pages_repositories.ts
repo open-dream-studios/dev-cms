@@ -7,6 +7,7 @@ import {
   reorderOrdinals,
 } from "../../../lib/ordinals.js";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // ---------- PAGE FUNCTIONS ----------
 export const getPagesFunction = async (
@@ -60,13 +61,7 @@ export const upsertPageFunction = async (
     });
     if (finalOrdinal == null) return { success: false, page_id: null };
   }
-  const finalPageId =
-    page_id && page_id.trim() !== ""
-      ? page_id
-      : "P-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalPageId = page_id?.trim() || `PAGE-${ulid()}`;
 
   const query = `
       INSERT INTO project_pages (
@@ -188,13 +183,7 @@ export const upsertPageDefinitionFunction = async (
     config_schema,
   } = reqBody;
 
-  const finalPageDefinitionId =
-    page_definition_id && page_definition_id.trim() !== ""
-      ? page_definition_id
-      : "PD-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalPageDefinitionId = page_definition_id?.trim() || `PAGEDEF-${ulid()}`;
 
   const query = `
     INSERT INTO page_definitions (

@@ -4,7 +4,7 @@ import { Section } from "@open-dream/shared";
 
 export async function fetchProjectSectionsApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.post("/api/sections/get", {
+  const res = await makeRequest.post("/sections/get", {
     project_idx,
   });
   return res.data.sections as Section[];
@@ -15,7 +15,7 @@ export async function upsertProjectSectionsApi(
   data: Section
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/sections/upsert", {
+  const res = await makeRequest.post("/sections/upsert", {
     ...data,
     project_idx,
   });
@@ -27,7 +27,7 @@ export async function deleteProjectSectionsApi(
   section_id: string
 ) {
   if (!project_idx) return null;
-  await makeRequest.post("/api/sections/delete", {
+  await makeRequest.post("/sections/delete", {
     project_idx,
     section_id,
   });
@@ -38,5 +38,5 @@ export async function reorderProjectSectionsApi(
   data: any
 ) {
   if (!project_idx) return null;
-  await makeRequest.post("/api/sections/reorder", { ...data, project_idx });
+  await makeRequest.post("/sections/reorder", { ...data, project_idx });
 }

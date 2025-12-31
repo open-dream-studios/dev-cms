@@ -8,6 +8,7 @@ import type {
   PoolConnection,
   ResultSetHeader,
 } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // ---------- PRODUCTS FUNCTIONS ----------
 export const getProductsFunction = async (
@@ -40,13 +41,7 @@ export const upsertProductsFunction = async (
   const product_ids: string[] = [];
 
   const values = products.flatMap((p, i) => {
-    const finalProductId =
-      p.product_id && p.product_id.trim() !== ""
-        ? p.product_id
-        : "P-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+    const finalProductId = p.product_id?.trim() || `PROD-${ulid()}`;
     product_ids.push(finalProductId);
 
     const serialNumber =

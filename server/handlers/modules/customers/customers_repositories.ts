@@ -6,6 +6,7 @@ import type {
   PoolConnection,
   ResultSetHeader,
 } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // ---------- CUSTOMER FUNCTIONS ----------
 export const getCustomersFunction = async (
@@ -41,13 +42,7 @@ export const upsertCustomerFunction = async (
     notes,
   } = reqBody;
 
-  const finalCustomerId =
-    customer_id && customer_id.trim() !== ""
-      ? customer_id
-      : "C-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalCustomerId = customer_id?.trim() || `CUST-${ulid()}`;
 
   const query = `
     INSERT INTO customers (

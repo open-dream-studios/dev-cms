@@ -5,7 +5,7 @@ import { Update } from "@open-dream/shared";
 
 export async function fetchProjectUpdatesApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.post("/api/updates", {
+  const res = await makeRequest.post("/updates", {
     project_idx,
   });
   const updates: Update[] = res.data.updates || [];
@@ -38,7 +38,7 @@ export async function upsertProjectUpdateApi(
   payload: UpdateItemForm
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/updates/upsert", {
+  const res = await makeRequest.post("/updates/upsert", {
     ...payload,
     project_idx,
   });
@@ -50,7 +50,7 @@ export async function deleteProjectUpdateApi(
   update_id: string
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/updates/delete", {
+  const res = await makeRequest.post("/updates/delete", {
     update_id,
     project_idx,
   });
@@ -63,7 +63,7 @@ export async function toggleProjectUpdateApi(
   completed: boolean
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/updates/toggleComplete", {
+  const res = await makeRequest.post("/updates/toggleComplete", {
     update_id,
     completed,
     project_idx,
@@ -76,7 +76,7 @@ export async function addProjectUpdateRequestApi(
   payload: Partial<UpdateItemForm>
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/updates/requests/add", {
+  const res = await makeRequest.post("/updates/requests/add", {
     ...payload,
     project_idx,
   });

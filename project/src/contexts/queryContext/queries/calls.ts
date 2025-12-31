@@ -20,7 +20,7 @@ export function useProjectCalls(
 
   // const upsertProjectCallMutation = useMutation({
   //   mutationFn: async (data: ProjectCall) => {
-  //     const res = await makeRequest.post("/api/projectCalls/upsert", {
+  //     const res = await makeRequest.post("/projectCalls/upsert", {
   //       ...data,
   //       project_idx: currentProjectId,
   //     });
@@ -41,7 +41,7 @@ export function useProjectCalls(
 
   // const deleteProjectCallMutation = useMutation({
   //   mutationFn: async (projectCall_id: string) => {
-  //     await makeRequest.post("/api/projectCalls/delete", {
+  //     await makeRequest.post("/projectCalls/delete", {
   //       projectCall_id,
   //       project_idx: currentProjectId,
   //     });

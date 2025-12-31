@@ -54,11 +54,14 @@ import {
   EmployeeInput,
   ModuleDefinitionTree,
   ProjectCall,
+  Message,
+  MessageInput,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
 import { useUpdates } from "./queries/updates";
 import { useProjectCalls } from "./queries/calls";
+import { useMessages } from "./queries/messages";
 
 export type QueryContextType = {
   handleThemeChange: () => void;
@@ -225,6 +228,13 @@ export type QueryContextType = {
   projectCalls: ProjectCall[];
   isLoadingProjectCalls: boolean;
   refetchProjectCalls: () => Promise<any>;
+
+  // Messages
+  messagesData: Message[];
+  isLoadingMessages: boolean;
+  refetchMessages: () => Promise<any>;
+  upsertMessage: (message: MessageInput) => Promise<void>;
+  deleteMessage: (message_id: string) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -377,6 +387,14 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const { projectCalls, isLoadingProjectCalls, refetchProjectCalls } =
     useProjectCalls(isLoggedIn, currentProjectId);
 
+  const {
+    messagesData,
+    isLoadingMessages,
+    refetchMessages,
+    upsertMessage,
+    deleteMessage,
+  } = useMessages(isLoggedIn);
+
   return (
     <QueryContext.Provider
       value={{
@@ -488,6 +506,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         projectCalls,
         isLoadingProjectCalls,
         refetchProjectCalls,
+        messagesData,
+        isLoadingMessages,
+        refetchMessages,
+        upsertMessage,
+        deleteMessage,
       }}
     >
       {children}

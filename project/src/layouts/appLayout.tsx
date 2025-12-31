@@ -1,7 +1,7 @@
 // project/src/layouts/appLayout.tsx
 "use client";
-import { ReactNode, useContext, useEffect, useRef } from "react";
-import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { ReactNode, useContext, useEffect } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthContext, AuthContextProvider } from "@/contexts/authContext";
 import Navbar from "@/components/Navbar/Navbar";
 import LeftBar from "@/components/LeftBar/LeftBar";
@@ -34,7 +34,8 @@ import UploadModal from "@/components/Upload/Upload";
 import { ContextMenu } from "@/components/ContextMenu";
 import { queryClient } from "@/lib/queryClient";
 import CustomerPortal from "@/modules/CustomerPortal/CustomerPortal";
-import { makeRequest } from "@/util/axios";
+import { useAppInitialization } from "@/hooks/useAppInitialization";
+import NoProjects from "@/screens/NoProjects";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   // const [queryClient] = useState(() => new QueryClient());
@@ -65,27 +66,8 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
     }
   }, [environmentInitialized]);
 
-  // 🔑 Invite acceptance logic (THE ONLY PLACE)
-  const inviteHandledRef = useRef(false);
-  useEffect(() => {
-    const inviteUser = async () => {
-      if (isLoadingCurrentUserData) return;
-      if (!currentUser) return;
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get("token");
-      if (!token) return;
-      if (inviteHandledRef.current) return;
-      inviteHandledRef.current = true;
-      const res = await makeRequest.post("/api/auth/accept-invite", { token });
-      if (res.data.success) {
-        router.replace(pathname);
-        await queryClient.invalidateQueries({
-          predicate: () => true, 
-        });
-      }
-    };
-    inviteUser();
-  }, [currentUser, isLoadingCurrentUserData, pathname, router]);
+  // Request invitation acceptance IF logged in
+  useAppInitialization({ currentUser, isLoadingCurrentUserData });
 
   // Guard: block protected routes if logged out
   useEffect(() => {
@@ -96,7 +78,7 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
     }
   }, [currentUser, isLoadingCurrentUserData, pathname, router]);
 
-  if (!environmentInitialized) return null;
+  if (!environmentInitialized || isLoadingCurrentUserData) return null;
 
   return currentUser ? (
     <ProtectedLayout>
@@ -160,14 +142,16 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   if (currentUser.type === "internal") {
     return (
       <div className="w-[100vw] display-height">
+        <Navbar />
         <ContextMenu />
         {updatingLock && (
           <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
         )}
         <Modals landing={false} />
         <UploadModal />
-        <Navbar />
-        {currentProjectId ? (
+        {projectsData.length === 0 ? (
+          <NoProjects />
+        ) : currentProjectId ? (
           <>
             <LeftBar />
             <PageLayout leftbar={true}>{children}</PageLayout>

@@ -11,23 +11,27 @@ import {
   errorHandler,
   transactionHandler,
 } from "../../../util/handlerWrappers.js";
+import { verifyVercelProxy } from "../../../util/verifyProxy.js";
 
 const router = express.Router();
 
 router.get(
   "/",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(1),
   errorHandler(getProducts)
 );
 router.post(
   "/upsert",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(upsertProducts)
 );
 router.post(
   "/delete",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(deleteProducts)

@@ -4,7 +4,7 @@ import { ProjectPage } from "@open-dream/shared";
 
 export async function fetchProjectPagesApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.post("/api/pages/get", {
+  const res = await makeRequest.post("/pages/get", {
     project_idx,
   });
   return res.data.pages as ProjectPage[];
@@ -15,7 +15,7 @@ export async function upsertProjectPageApi(
   page: ProjectPage
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/pages/upsert", {
+  const res = await makeRequest.post("/pages/upsert", {
     ...page,
     project_idx,
   });
@@ -28,7 +28,7 @@ export async function deleteProjectPageApi(
   page_id: string
 ) {
   if (!project_idx) return;
-  await makeRequest.post("/api/pages/delete", {
+  await makeRequest.post("/pages/delete", {
     project_idx,
     page_id,
   });
@@ -42,7 +42,7 @@ export async function reorderProjectPagesApi(
   }
 ) {
   if (!project_idx) return null;
-  await makeRequest.post("/api/pages/reorder", {
+  await makeRequest.post("/pages/reorder", {
     project_idx,
     ...data,
   });

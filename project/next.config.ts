@@ -1,3 +1,4 @@
+// project/next.config.ts
 import path from "path";
 import type { NextConfig } from "next";
 
@@ -15,16 +16,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "*.s3.*.amazonaws.com" },
     ],
-  },
-
-  async rewrites() {
-    const backend = process.env.NEXT_PUBLIC_BACKEND_URL;
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${backend}/api/:path*`,
-      },
-    ];
   },
 
   experimental: { 

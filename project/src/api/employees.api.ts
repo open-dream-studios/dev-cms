@@ -9,7 +9,7 @@ import {
 
 export async function fetchEmployeesApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.post("/api/employees", {
+  const res = await makeRequest.post("/employees", {
     project_idx,
   });
   const employees: Employee[] = res.data.employees;
@@ -32,7 +32,7 @@ export async function upsertEmployeeApi(
   employee: EmployeeInput
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/employees/upsert", {
+  const res = await makeRequest.post("/employees/upsert", {
     ...employee,
     project_idx,
   });
@@ -44,7 +44,7 @@ export async function deleteEmployeeApi(
   employee_id: string
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/employees/delete", {
+  const res = await makeRequest.post("/employees/delete", {
     employee_id,
     project_idx,
   });
@@ -53,7 +53,7 @@ export async function deleteEmployeeApi(
 
 export async function fetchEmployeeAssignmentsApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.post("/api/employees/assignments/get", {
+  const res = await makeRequest.post("/employees/assignments/get", {
     project_idx,
   });
   return (res.data.employeeAssignments || []) as EmployeeAssignment[];
@@ -64,7 +64,7 @@ export async function upsertEmployeeAssignmentApi(
   assignment: EmployeeAssignmentInput
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/employees/assignments/add", {
+  const res = await makeRequest.post("/employees/assignments/add", {
     ...assignment,
     project_idx,
   });
@@ -76,7 +76,7 @@ export async function deleteEmployeeAssignmentApi(
   id: number
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/employees/assignments/delete", {
+  const res = await makeRequest.post("/employees/assignments/delete", {
     id,
     project_idx,
   });

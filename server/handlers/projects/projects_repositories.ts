@@ -10,6 +10,7 @@ import { Project } from "@open-dream/shared";
 import crypto from "crypto";
 import { sendInviteEmail } from "../../util/email.js";
 import { changeToHTTPSDomain } from "../../functions/data.js";
+import { ulid } from "ulid";
 
 // ---------- PROJECT FUNCTIONS ----------
 export const getGlobalAdminEmails = async (connection: PoolConnection) => {
@@ -70,13 +71,7 @@ export const upsertProjectFunction = async (
     logo_media_id,
   } = reqBody;
 
-  const finalProjectId =
-    project_id && project_id.trim() !== ""
-      ? project_id
-      : "PROJ-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalProjectId = project_id?.trim() || `PROJ-${ulid()}`;
 
   const query = `
       INSERT INTO projects (
@@ -269,12 +264,12 @@ export const inviteProjectUserFunction = async (
   if (!projectName || !domain) {
     return { success: false, message: "Project information incomplete" };
   }
-  
+
   domain = "http://localhost:3000";
 
   await sendInviteEmail({
     to: email,
-    projectName: projects[0].name, 
+    projectName: projects[0].name,
     inviteUrl: `${domain}?token=${token}`,
   });
 

@@ -37,6 +37,7 @@ import { errorMiddleware } from "./middleware/errorMiddleware.js";
 import aircallRoutes from "./handlers/webhooks/aircall/aircall_routes.js";
 import updatesRoutes from "./handlers/modules/updates/updates_routes.js";
 import wixRoutes from "./handlers/webhooks/wix/wix_routes.js"
+import messagesRoutes from "./handlers/public/messages/messages_routes.js";
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -119,6 +120,10 @@ app.use("/api/calls", callRoutes);
 app.use("/api/calls/aircall", aircallRoutes);
 app.use("/api/updates", updatesRoutes);
 app.use("/api/wix", wixRoutes);
+
+// Public Routes
+app.use("/api/public/messages", messagesRoutes);
+
 
 // WebSocket
 const wss = new WebSocketServer({ server });

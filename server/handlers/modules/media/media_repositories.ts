@@ -20,6 +20,7 @@ import {
   rotateImageFromUrl,
   signPrivateMedia,
 } from "../../private/media.js";
+import { ulid } from "ulid";
 
 // ---------- MEDIA FOLDER FUNCTIONS ----------
 export const getMediaFoldersFunction = async (
@@ -55,13 +56,7 @@ export const upsertMediaFoldersFunction = async (
   const folderIds = [];
   for (let i = 0; i < folders.length; i++) {
     const f = folders[i];
-    const finalFolderId =
-      f.folder_id && f.folder_id.trim() !== ""
-        ? f.folder_id
-        : "F-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+    const finalFolderId = f.folder_id?.trim() || `FOLDER-${ulid()}`;
     folderIds.push(finalFolderId);
     let finalOrdinal = f.ordinal;
     if (f.ordinal === null) {
@@ -177,13 +172,7 @@ export const upsertMediaFunction = async (
   });
   for (let i = 0; i < items.length; i++) {
     const m = items[i];
-    const finalMediaId =
-      m.media_id && m.media_id.trim() !== ""
-        ? m.media_id
-        : "MEDIA-" +
-          Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-            ""
-          );
+    const finalMediaId = m.media_id?.trim() || `MEDIA-${ulid()}`;
     let finalOrdinal = m.ordinal;
     let existingRow = null;
     if (m.media_id) {

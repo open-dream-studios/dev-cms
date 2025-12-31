@@ -5,7 +5,7 @@ import { makeRequest } from "@/util/axios";
 import { ProjectModule } from "@open-dream/shared";
 
 export async function fetchModuleDefinitionsApi() {
-  const res = await makeRequest.post("/api/modules/definitions");
+  const res = await makeRequest.post("/modules/definitions");
   return res.data.moduleDefinitionTree || {};
 }
 

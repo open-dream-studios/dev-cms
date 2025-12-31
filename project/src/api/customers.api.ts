@@ -4,7 +4,7 @@ import { Customer, CustomerInput } from "@open-dream/shared";
 
 export async function fetchCustomersApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.post("/api/customers", {
+  const res = await makeRequest.post("/customers", {
     project_idx,
   });
   const customers: Customer[] = res.data.customers;
@@ -26,7 +26,7 @@ export async function upsertCustomerApi(
   customer: CustomerInput
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/customers/upsert", {
+  const res = await makeRequest.post("/customers/upsert", {
     ...customer,
     project_idx,
   });
@@ -41,7 +41,7 @@ export async function deleteCustomerApi(
   customer_id: string
 ) {
   if (!project_idx) return null;
-  await makeRequest.post("/api/customers/delete", {
+  await makeRequest.post("/customers/delete", {
     customer_id,
     project_idx,
   });

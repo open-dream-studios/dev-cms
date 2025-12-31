@@ -2,6 +2,7 @@
 import { db } from "../../../connection/connect.js";
 import type { Employee, EmployeeAssignment } from "@open-dream/shared";
 import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // ---------- EMPLOYEE FUNCTIONS ----------
 export const getEmployeesFunction = async (
@@ -41,13 +42,7 @@ export const upsertEmployeeFunction = async (
     notes,
   } = reqBody;
 
-  const finalEmployeeId =
-    employee_id && employee_id.trim() !== ""
-      ? employee_id
-      : "E-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalEmployeeId = employee_id?.trim() || `EMP-${ulid()}`;
 
   const query = `
       INSERT INTO employees (

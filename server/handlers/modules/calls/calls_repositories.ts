@@ -7,6 +7,7 @@ import type {
   ResultSetHeader,
 } from "mysql2/promise";
 import { signCallRecordings } from "../../../handlers/private/media.js";
+import { ulid } from "ulid";
 
 // ---------- CALL FUNCTIONS ----------
 export const getCallsByProjectFunction = async (
@@ -50,13 +51,7 @@ export const upsertCallFunction = async (
     aircall_direct_link,
   } = reqBody;
 
-  const finalCallId =
-    call_id && call_id.trim() !== ""
-      ? call_id
-      : "CALL-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalCallId = call_id?.trim() || `CALL-${ulid()}`;
 
   const query = `
     INSERT INTO calls (

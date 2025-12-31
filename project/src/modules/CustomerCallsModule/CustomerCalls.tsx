@@ -63,7 +63,7 @@ const CustomerCalls = () => {
     // notify server to reject Twilio leg
     if (incoming?.parameters?.CallSid) {
       try {
-        await makeRequest.post("/api/voice/decline", {
+        await makeRequest.post("/voice/decline", {
           projectId: currentProjectId,
         });
       } catch (err) {
@@ -171,7 +171,7 @@ const CustomerCalls = () => {
   const handleHangup = async () => {
     setActiveCall(null);
     try {
-      await makeRequest.post("/api/voice/decline", {
+      await makeRequest.post("/voice/decline", {
         projectId: currentProjectId,
       });
     } catch (err) {

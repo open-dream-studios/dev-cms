@@ -5,7 +5,7 @@ import { Product } from "@open-dream/shared";
 
 export async function fetchProjectProductsApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.get("/api/products", {
+  const res = await makeRequest.get("/products", {
     params: { project_idx },
   });
   const result = res.data.products || [];
@@ -21,7 +21,7 @@ export async function upsertProjectProductsApi(
   products: Product[]
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/products/upsert", {
+  const res = await makeRequest.post("/products/upsert", {
     project_idx,
     products,
   });
@@ -33,7 +33,7 @@ export async function deleteProjectProductsApi(
   product_ids: string[]
 ) {
   if (!project_idx) return;
-  await makeRequest.post("/api/products/delete", {
+  await makeRequest.post("/products/delete", {
     project_idx,
     product_ids,
   });

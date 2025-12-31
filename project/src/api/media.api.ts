@@ -4,7 +4,7 @@ import { Media } from "@open-dream/shared";
 
 export async function fetchProjectMediaApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.get("/api/media", {
+  const res = await makeRequest.get("/media", {
     params: { project_idx },
   });
   return res.data.media as Media[];
@@ -15,7 +15,7 @@ export async function upsertProjectMediaApi(
   items: Media[]
 ) {
   if (!project_idx) return [];
-  const res = await makeRequest.post("/api/media/upsert", {
+  const res = await makeRequest.post("/media/upsert", {
     project_idx,
     items,
   });
@@ -27,7 +27,7 @@ export async function deleteProjectMediaApi(
   media_id: string
 ) {
   if (!project_idx) return;
-  await makeRequest.post("/api/media/delete", {
+  await makeRequest.post("/media/delete", {
     project_idx,
     media_id,
   });
@@ -40,7 +40,7 @@ export async function rotateProjectMediaApi(
   rotations: number
 ) {
   if (!project_idx) return null;
-  const res = await makeRequest.post("/api/media/rotate", {
+  const res = await makeRequest.post("/media/rotate", {
     project_idx,
     media_id,
     url,

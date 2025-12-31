@@ -1,34 +1,11 @@
 // server/handlers/auth/auth_repositories.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { generateId } from "../../functions/data.js";
-import dotenv from "dotenv";
+import { generateId } from "../../functions/data.js"; 
 import admin from "../../connection/firebaseAdmin.js";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { upsertProjectUserFunction } from "../../handlers/projects/projects_repositories.js";
 import { sendEmail } from "../../util/email.js";
-
-const checkUserIdUnique = async (
-  connection: PoolConnection,
-  userId: string
-) => {
-  const q = `
-    SELECT * FROM users
-    WHERE user_id = ?
-  `;
-  const [rows] = await connection.query<RowDataPacket[]>(q, [userId]);
-  return rows.length === 0;
-};
-
-export const createUniqueUserId = async (connection: PoolConnection) => {
-  let userId;
-  let isUnique = false;
-  while (!isUnique) {
-    userId = generateId(15);
-    isUnique = await checkUserIdUnique(connection, userId);
-  }
-  return userId as string;
-};
+import { ulid } from "ulid";
 
 export const getValidEmails = async (connection: PoolConnection) => {
   const q = "SELECT email FROM project_users";
@@ -112,7 +89,7 @@ export const googleAuthFunction = async (
     };
   }
   // Otherwise create a new user
-  const newUserId = await createUniqueUserId(connection);
+  const newUserId = `USER-${ulid()}`;
   const insertQuery = `
     INSERT INTO users 
     (user_id, email, first_name, last_name, profile_img_src, auth_provider)
@@ -176,7 +153,7 @@ export const registerFunction = async (
   // 2. Create user
   const salt = bcrypt.genSaltSync(10);
   const hashedPassword = bcrypt.hashSync(password, salt);
-  const newUserId = await createUniqueUserId(connection);
+  const newUserId = `USER-${ulid()}`;
 
   await connection.query(
     `

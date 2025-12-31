@@ -12,12 +12,14 @@ import {
   errorHandler,
   transactionHandler,
 } from "../../util/handlerWrappers.js";
+import { verifyVercelProxy } from "../../util/verifyProxy.js";
 
 const router = express.Router();
 
 // ---- INTEGRATIONS ----
 router.get(
   "/",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(8), // owner+
   errorHandler(getIntegrations)
@@ -25,6 +27,7 @@ router.get(
 
 router.post(
   "/upsert",
+  verifyVercelProxy,
   authenticateUser,
   requireAdmin, // admin
   transactionHandler(upsertIntegration)
@@ -32,6 +35,7 @@ router.post(
 
 router.post(
   "/delete",
+  verifyVercelProxy,
   authenticateUser,
   requireAdmin, // admin
   transactionHandler(deleteIntegration)

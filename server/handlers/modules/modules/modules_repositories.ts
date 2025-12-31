@@ -8,6 +8,7 @@ import {
   loadModuleConfig,
 } from "../../../functions/modules.js";
 import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
+import { ulid } from "ulid";
 
 // ---------- MODULE FUNCTIONS ----------
 export const getModulesFunction = async (
@@ -38,13 +39,7 @@ export const upsertModuleFunction = async (
 ) => {
   const { module_id, module_identifier, settings } = reqBody;
 
-  const finalModuleId =
-    module_id && module_id.trim() !== ""
-      ? module_id
-      : "M-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalModuleId = module_id?.trim() || `MOD-${ulid()}`;
 
   const query = `
       INSERT IGNORE INTO project_modules (

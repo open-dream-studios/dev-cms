@@ -3,6 +3,7 @@ import { Section, SectionDefinition } from "@open-dream/shared";
 import { db } from "../../../connection/connect.js";
 import { deleteAndReindex, reorderOrdinals } from "../../../lib/ordinals.js";
 import { PoolConnection, RowDataPacket, ResultSetHeader } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // ---------- SECTION FUNCTIONS ----------
 export const getSectionsFunction = async (
@@ -40,13 +41,7 @@ export const upsertSectionFunction = async (
     ordinal,
   } = reqBody;
 
-  const finalSectionId =
-    section_id && section_id.trim() !== ""
-      ? section_id
-      : "PS-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+  const finalSectionId = section_id?.trim() || `SEC-${ulid()}`;
 
   const query = `
       INSERT INTO project_sections (
@@ -159,12 +154,7 @@ export const upsertSectionDefinitionFunction = async (
   } = reqBody;
 
   const finalSectionDefinitionId =
-    section_definition_id && section_definition_id.trim() !== ""
-      ? section_definition_id
-      : "PSD-" +
-        Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join(
-          ""
-        );
+    section_definition_id?.trim() || `SECDEF-${ulid()}`;
 
   const query = `
       INSERT INTO section_definitions (

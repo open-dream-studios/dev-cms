@@ -20,30 +20,35 @@ import {
   errorHandler,
   transactionHandler,
 } from "../../../util/handlerWrappers.js";
+import { verifyVercelProxy } from "../../../util/verifyProxy.js";
 
 const router = express.Router();
 
 // ---- MEDIA ----
 router.get(
   "/",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(1),
   errorHandler(getMedia)
 );
 router.post(
   "/upsert",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(upsertMedia)
 );
 router.post(
   "/delete",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(deleteMedia)
 );
 router.post(
   "/rotate",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(rotateMedia)
@@ -52,18 +57,21 @@ router.post(
 // ---- MEDIA FOLDERS ----
 router.get(
   "/folders",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(1),
   errorHandler(getMediaFolders)
 );
 router.post(
   "/folders/upsert",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(upsertMediaFolders)
 );
 router.post(
   "/folders/delete",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(deleteMediaFolder)
@@ -72,24 +80,32 @@ router.post(
 // ---- MEDIA LINKS ----
 router.get(
   "/media-links",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(1),
   errorHandler(getMediaLinks)
 );
 router.post(
   "/media-links/update",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(upsertMediaLinks)
 );
 router.post(
   "/media-links/delete",
+  verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(deleteMediaLinks)
 );
 
 // ---- IMAGES ----
-router.post("/upload", upload.array("files"), transactionHandler(uploadMedia));
+router.post(
+  "/upload",
+  upload.array("files"),
+  verifyVercelProxy,
+  transactionHandler(uploadMedia)
+);
 
 export default router;

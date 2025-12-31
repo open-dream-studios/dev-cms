@@ -13,7 +13,7 @@ export const handleUpdateUser = (queryClient: QueryClient) => {
 //     const updatedUser = await queryClient.fetchQuery({
 //       queryKey: ["currentUser"],
 //       queryFn: async () => {
-//         const res = await makeRequest.get("/api/users/current");
+//         const res = await makeRequest.get("/users/current");
 //         return res.data;
 //       },
 //     });
