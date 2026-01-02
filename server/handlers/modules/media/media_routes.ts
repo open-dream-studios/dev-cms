@@ -25,7 +25,7 @@ import { verifyVercelProxy } from "../../../util/verifyProxy.js";
 const router = express.Router();
 
 // ---- MEDIA ----
-router.get(
+router.post(
   "/",
   verifyVercelProxy,
   authenticateUser,
@@ -55,7 +55,7 @@ router.post(
 );
 
 // ---- MEDIA FOLDERS ----
-router.get(
+router.post(
   "/folders",
   verifyVercelProxy,
   authenticateUser,
@@ -78,7 +78,7 @@ router.post(
 );
 
 // ---- MEDIA LINKS ----
-router.get(
+router.post(
   "/media-links",
   verifyVercelProxy,
   authenticateUser,

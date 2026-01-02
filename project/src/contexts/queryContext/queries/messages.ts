@@ -1,56 +1,82 @@
 // project/src/context/queryContext/queries/messages.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageInput } from "@open-dream/shared";
 import {
-  fetchMessagesApi,
+  useQuery,
+  useMutation,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { Conversation, MessageInput } from "@open-dream/shared";
+import {
+  fetchConversationsApi,
+  fetchMessagesByConversationApi,
   upsertMessageApi,
   deleteMessageApi,
 } from "@/api/messages.api";
 
-export function useMessages(isLoggedIn: boolean) {
+/* ---------------------------------------------
+   CONVERSATIONS LIST
+--------------------------------------------- */
+
+export function useConversations(isLoggedIn: boolean) {
+  return useQuery<Conversation[]>({
+    queryKey: ["conversations"],
+    queryFn: fetchConversationsApi,
+    enabled: isLoggedIn,
+  });
+}
+
+/* ---------------------------------------------
+   MESSAGES (PER CONVERSATION)
+--------------------------------------------- */
+
+export function useConversationMessages(
+  conversation_id: string | null,
+  isLoggedIn: boolean
+) {
   const queryClient = useQueryClient();
 
-  const {
-    data: messagesData = [],
-    isLoading: isLoadingMessages,
-    refetch: refetchMessages,
-  } = useQuery({
-    queryKey: ["messages"],
-    queryFn: async () => fetchMessagesApi(),
-    enabled: isLoggedIn,
+  const messagesQuery = useInfiniteQuery({
+    queryKey: ["messages", conversation_id],
+    enabled: isLoggedIn && !!conversation_id,
+    queryFn: ({ pageParam }) =>
+      fetchMessagesByConversationApi({
+        conversation_id: conversation_id!,
+        cursor: pageParam,
+        limit: 50,
+      }),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: null as string | null,
   });
 
   const upsertMessageMutation = useMutation({
-    mutationFn: async (message: MessageInput) => upsertMessageApi(message),
+    mutationFn: (message: MessageInput) => upsertMessageApi(message),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["messages"],
+        queryKey: ["messages", conversation_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["conversations"],
       });
     },
   });
 
   const deleteMessageMutation = useMutation({
-    mutationFn: async (message_id: string) => deleteMessageApi(message_id),
+    mutationFn: deleteMessageApi,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["messages"],
+        queryKey: ["messages", conversation_id],
       });
     },
   });
 
-  const upsertMessage = async (message: MessageInput) => {
-    await upsertMessageMutation.mutateAsync(message);
-  };
-
-  const deleteMessage = async (message_id: string) => {
-    await deleteMessageMutation.mutateAsync(message_id);
-  };
-
   return {
-    messagesData,
-    isLoadingMessages,
-    refetchMessages,
-    upsertMessage,
-    deleteMessage,
+    messages: messagesQuery.data?.pages.flatMap((p) => p.messages) ?? [],
+    fetchNextPage: messagesQuery.fetchNextPage,
+    hasMore: messagesQuery.hasNextPage,
+    isFetchingMore: messagesQuery.isFetchingNextPage,
+    isLoading: messagesQuery.isLoading,
+
+    upsertMessage: upsertMessageMutation.mutateAsync,
+    deleteMessage: deleteMessageMutation.mutateAsync,
   };
 }

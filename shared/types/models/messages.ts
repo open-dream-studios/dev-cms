@@ -11,7 +11,17 @@ export type Message = {
 };
 
 export type MessageInput = {
-  message_id?: string;
-  user_to: string | null;
+  message_id?: string;       
+  conversation_id: string;  
+  user_to?: string | null;
   message_text: string;
+};
+
+export type Conversation = {
+  conversation_id: string;  
+  project_idx: number;
+  participant_ids: string[] 
+  title: string | null;      
+  last_message: string | null;
+  last_message_at: string | null;
 };

@@ -102,7 +102,7 @@ const UnprotectedLayout = () => {
 
 const ProtectedLayout = ({ children }: { children: ReactNode }) => {
   const { updatingLock } = useUiStore();
-  const { projectsData } = useContextQueries();
+  const { projectsData, isLoadingProjects } = useContextQueries();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
   const router = useRouter();
@@ -137,7 +137,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  if (!currentUser) return;
+  if (!currentUser || isLoadingProjects) return null;
 
   if (currentUser.type === "internal") {
     return (
@@ -169,7 +169,7 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
       <Navbar />
       <Modals landing={false} />
       <PageLayout leftbar={false}>
-        <CustomerPortal />;
+        <CustomerPortal />
       </PageLayout>
     </>
   );

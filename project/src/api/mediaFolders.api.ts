@@ -4,8 +4,8 @@ import { MediaFolder } from "@open-dream/shared";
 
 export async function fetchMediaFoldersApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.get("/media/folders", {
-    params: { project_idx },
+  const res = await makeRequest.post("/media/folders", {
+    project_idx,
   });
   return res.data.mediaFolders as MediaFolder[];
 }

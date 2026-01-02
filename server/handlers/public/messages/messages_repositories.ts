@@ -1,32 +1,88 @@
 // server/handlers/public/messages/messages_repositories.ts
-import { db } from "../../../connection/connect.js";
-import type { Message } from "@open-dream/shared";
-import type {
-  RowDataPacket,
-  PoolConnection,
-  ResultSetHeader,
-} from "mysql2/promise";
+import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { ulid } from "ulid";
 
-// ---------- MESSAGE FUNCTIONS ----------
-export const getMessagesFunction = async (
+/* -------------------------------
+   CONVERSATIONS
+-------------------------------- */
+
+export const getConversationsFunction = async (
+  connection: PoolConnection,
   project_idx: number,
   user_id: string
-): Promise<Message[]> => {
+) => {
   const q = `
-    SELECT *
-    FROM messages
-    WHERE project_idx = ?
-      AND (user_from = ? OR user_to = ?)
-    ORDER BY created_at ASC
+    SELECT
+      c.conversation_id,
+      c.project_idx,
+      c.title,
+      m.message_text AS last_message,
+      m.created_at AS last_message_at
+    FROM conversations c
+    JOIN conversation_participants p
+      ON p.conversation_id = c.conversation_id
+    LEFT JOIN conversation_messages m
+      ON m.id = (
+        SELECT id
+        FROM conversation_messages
+        WHERE conversation_id = c.conversation_id
+        ORDER BY created_at DESC
+        LIMIT 1
+      )
+    WHERE p.user_id = ?
+      AND c.project_idx = ?
+    ORDER BY m.created_at DESC;
   `;
 
-  const [rows] = await db
-    .promise()
-    .query<(Message & RowDataPacket)[]>(q, [project_idx, user_id, user_id]);
+  const [rows] = await connection.query<RowDataPacket[]>(q, [
+    user_id,
+    project_idx,
+  ]);
 
   return rows;
 };
+
+/* -------------------------------
+   PAGINATED MESSAGES
+-------------------------------- */
+
+export const getMessagesByConversationFunction = async (
+  connection: PoolConnection,
+  project_idx: number,
+  conversation_id: string,
+  cursor: string | null,
+  limit: number
+) => {
+  const q = `
+    SELECT *
+    FROM conversation_messages
+    WHERE conversation_id = ?
+      AND project_idx = ?
+      ${cursor ? "AND created_at < ?" : ""}
+    ORDER BY created_at DESC
+    LIMIT ?
+  `;
+
+  const params = cursor
+    ? [conversation_id, project_idx, cursor, limit + 1]
+    : [conversation_id, project_idx, limit + 1];
+
+  const [rows] = await connection.query<RowDataPacket[]>(q, params);
+
+  const hasMore = rows.length > limit;
+  const messages = hasMore ? rows.slice(0, limit) : rows;
+
+  return {
+    messages: messages.reverse(),
+    nextCursor: hasMore
+      ? messages[0].created_at
+      : null,
+  };
+};
+
+/* -------------------------------
+   UPSERT MESSAGE
+-------------------------------- */
 
 export const upsertMessageFunction = async (
   connection: PoolConnection,
@@ -34,65 +90,57 @@ export const upsertMessageFunction = async (
   user_id: string,
   reqBody: any
 ) => {
-  const { message_id, user_to, message_text } = reqBody;
+  const { conversation_id, user_to = null, message_text } = reqBody;
 
-  if (!message_text) return { success: false, message: "No text provided" };
+  if (!conversation_id || !message_text?.trim())
+    throw new Error("Invalid message");
 
-  const finalMessageId = message_id?.trim() || `MSG-${ulid()}`;
+  const message_id = `MSG-${ulid()}`;
 
-  const q = `
-    SELECT 1 FROM users
-    WHERE user_id = ? AND project_idx = ?
-    INSERT INTO messages (
+  await connection.query(
+    `
+    INSERT INTO conversation_messages (
       message_id,
+      conversation_id,
       project_idx,
       user_from,
       user_to,
       message_text
     )
-    VALUES (?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      message_text = IF(user_from = VALUES(user_from), VALUES(message_text), message_text),
-      updated_at = IF(user_from = VALUES(user_from), NOW(), updated_at)
-  `;
+    VALUES (?, ?, ?, ?, ?, ?)
+  `,
+    [
+      message_id,
+      conversation_id,
+      project_idx,
+      user_id,
+      user_to,
+      message_text,
+    ]
+  );
 
-  const values = [
-    user_to,
-    project_idx,
-    finalMessageId,
-    project_idx,
-    user_id,
-    user_to,
-    message_text,
-    user_id,
-  ];
-
-  const [result] = await connection.query<ResultSetHeader>(q, values);
-
-  if (message_id && result.affectedRows === 0) {
-    throw new Error("Not authorized to update message");
-  }
-
-  return {
-    success: true,
-    message_id: finalMessageId,
-    inserted: result.insertId && result.insertId > 0,
-  };
+  return { success: true, message_id };
 };
+
+/* -------------------------------
+   DELETE
+-------------------------------- */
 
 export const deleteMessageFunction = async (
   connection: PoolConnection,
   project_idx: number,
   message_id: string,
   user_id: string
-): Promise<{ success: true }> => {
-  const q = `
-    DELETE FROM messages
+) => {
+  await connection.query(
+    `
+    DELETE FROM conversation_messages
     WHERE message_id = ?
       AND project_idx = ?
       AND user_from = ?
-  `;
+  `,
+    [message_id, project_idx, user_id]
+  );
 
-  await connection.query(q, [message_id, project_idx, user_id]);
   return { success: true };
 };

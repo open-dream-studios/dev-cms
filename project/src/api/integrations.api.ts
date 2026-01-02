@@ -4,8 +4,8 @@ import { Integration } from "@open-dream/shared";
 
 export async function fetchProjectIntegrationsApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.get("/integrations", {
-    params: { project_idx },
+  const res = await makeRequest.post("/integrations", {
+    project_idx,
   });
   return res.data.integrations || ([] as Integration[]);
 }

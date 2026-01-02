@@ -5,14 +5,13 @@ import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import CustomerInteractionTimeline from "./CustomerInteractions";
 import GoogleCalendar from "../components/Calendar/GoogleCalendar";
+import MessagesApp from "../MessagesModule/MessagesApp";
 
 export default function CustomerManager() {
   const { projectCalls } = useContextQueries();
 
   const { setLayout, registerModules, updateSection, updateShape } =
     useDashboardStore();
-
-  console.log(projectCalls);
 
   useEffect(() => {
     registerModules({
@@ -27,8 +26,11 @@ export default function CustomerManager() {
     updateShape("top-shape", { bg: true });
   }, [registerModules, setLayout, updateSection, updateShape]);
   // return <Dashboard minHeight={800} maxHeight={900} gap={0} />;
-  return <div className="px-[14px] py-[12px]">
-  <GoogleCalendar />
-  </div>
+  return (
+    <div className="w-[100%] h-[100%]">
+      {/* <div className="px-[14px] py-[12px] "><GoogleCalendar /></div> */}
+      <MessagesApp />
+    </div>
+  );
   // return <CustomerInteractionTimeline />;
 }

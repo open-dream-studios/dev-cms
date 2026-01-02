@@ -4,8 +4,8 @@ import { MediaLink } from "@open-dream/shared";
 
 export async function fetchMediaLinksApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.get("/media/media-links", {
-    params: { project_idx },
+  const res = await makeRequest.post("/media/media-links", {
+    project_idx,
   });
   return res.data.mediaLinks as MediaLink[];
 }

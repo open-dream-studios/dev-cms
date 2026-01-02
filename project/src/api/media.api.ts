@@ -4,8 +4,8 @@ import { Media } from "@open-dream/shared";
 
 export async function fetchProjectMediaApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.get("/media", {
-    params: { project_idx },
+  const res = await makeRequest.post("/media", {
+    project_idx,
   });
   return res.data.media as Media[];
 }

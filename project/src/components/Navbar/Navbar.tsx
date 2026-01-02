@@ -2,9 +2,9 @@
 "use client";
 import { useContext, useMemo } from "react";
 import { AuthContext } from "../../contexts/authContext";
-import { HiBars3 } from "react-icons/hi2"; 
+import { HiBars3 } from "react-icons/hi2";
 import appDetails from "../../util/appDetails.json";
-import { removeWhiteSpace } from "../../util/functions/Data"; 
+import { removeWhiteSpace } from "../../util/functions/Data";
 import "./Navbar.css";
 import { IoMdSettings } from "react-icons/io";
 import Settings from "../Settings/Settings";
@@ -18,7 +18,7 @@ import {
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useRouting } from "@/hooks/useRouting"; 
+import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { Media } from "@open-dream/shared";
 import { saveProducts } from "@/modules/CustomerProducts/_actions/products.actions";
@@ -28,8 +28,15 @@ const Navbar = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const { updatingLock } = useUiStore();
-  const { projectsData, media } = useContextQueries(); 
-  const { leftBarOpen, setLeftBarOpen, leftBarRef, pageLayoutRef, modal1, setModal1 } = useUiStore(); 
+  const { projectsData, media } = useContextQueries();
+  const {
+    leftBarOpen,
+    setLeftBarOpen,
+    leftBarRef,
+    pageLayoutRef,
+    modal1,
+    setModal1,
+  } = useUiStore();
   const currentTheme = useCurrentTheme();
 
   const currentProject = useMemo(() => {
@@ -117,8 +124,11 @@ const Navbar = () => {
       );
       return foundMedia && foundMedia.url ? foundMedia.url : null;
     }
+    if (currentUser && currentUser.type === "external") {
+      return "https://tsa-cms-data.s3.us-east-2.amazonaws.com/prod/PROJ-90959de1e1d/media/4afc238c-254f-41b1-879e-fb9aa756599f.webp?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA4YT55LARAP7DXTFI%2F20260101%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20260101T043910Z&X-Amz-Expires=3600&X-Amz-Signature=c05e002cc81625cbac57992ce105835ba11f3661efb21bbd0f7ce8dd3c0c6d78&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject";
+    }
     return null;
-  }, [currentProject, media]);
+  }, [currentProject, media, currentUser]);
 
   if (!currentUser) return null;
 
@@ -129,7 +139,10 @@ const Navbar = () => {
           "--nav-height": `${appDetails.nav_height}px`,
           "--left-bar-width": removeWhiteSpace(appDetails.left_bar_width),
           "--nav-ml": appDetails.left_bar_width,
-          backgroundColor: currentTheme.background_1,
+          backgroundColor:
+            currentUser.type === "internal"
+              ? currentTheme.background_1
+              : "#0b1220",
           borderBottom: `0.5px solid ${currentTheme.background_2}`,
         } as React.CSSProperties
       }
@@ -174,10 +187,18 @@ const Navbar = () => {
               }}
             >
               <p className="hidden sm:block">
-                {currentProject ? currentProject.short_name : "Project CMS"}
+                {currentProject
+                  ? currentProject.short_name
+                  : currentUser.type === "internal"
+                  ? "Project CMS"
+                  : "Customer Portal"}
               </p>
               <p className="block sm:hidden">
-                {currentProject ? currentProject.short_name : "CMS"}
+                {currentProject
+                  ? currentProject.short_name
+                  : currentUser.type === "internal"
+                  ? "CMS"
+                  : "Portal"}
               </p>
             </div>
           </div>
@@ -268,7 +289,7 @@ const Navbar = () => {
             onClick={handleProfileClick}
             className="dim cursor-pointer flex flex-row w-fit max-w-[250px] pr-[10px] h-[42px] hover:brightness-75 rounded-[4.5px]"
             style={{
-              backgroundColor: currentTheme.background_2,
+              backgroundColor: currentUser.type === "internal" ? currentTheme.background_2 : "#1A2643",
             }}
           >
             <div className="ml-[3px] mr-[5px] aspect-[1/1] h-[100%] p-[6px]">

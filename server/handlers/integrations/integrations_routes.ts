@@ -17,7 +17,7 @@ import { verifyVercelProxy } from "../../util/verifyProxy.js";
 const router = express.Router();
 
 // ---- INTEGRATIONS ----
-router.get(
+router.post(
   "/",
   verifyVercelProxy,
   authenticateUser,

@@ -29,7 +29,7 @@ export async function runModuleMutationApi(
   }
 
   const res = await makeRequest
-    .post(`/api/modules/run/${identifier}`, {
+    .post(`/modules/run/${identifier}`, {
       project_idx,
       body,
     })

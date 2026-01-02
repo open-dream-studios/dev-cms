@@ -5,8 +5,8 @@ import { Product } from "@open-dream/shared";
 
 export async function fetchProjectProductsApi(project_idx: number) {
   if (!project_idx) return [];
-  const res = await makeRequest.get("/products", {
-    params: { project_idx },
+  const res = await makeRequest.post("/products", {
+    project_idx,
   });
   const result = res.data.products || [];
   const sorted = result.sort(
