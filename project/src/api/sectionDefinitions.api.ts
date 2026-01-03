@@ -1,4 +1,4 @@
-// src/api/sectionDefinitions.api.ts
+// project/src/api/sectionDefinitions.api.ts
 import { makeRequest } from "@/util/axios";
 import { SectionDefinition } from "@open-dream/shared";
 

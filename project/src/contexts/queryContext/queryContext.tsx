@@ -54,13 +54,20 @@ import {
   EmployeeInput,
   ModuleDefinitionTree,
   ProjectCall,
-  Message,
-  MessageInput,
+  Lead,
+  LeadInput,
+  Action,
+  ActionInput,
+  ActionDefinition,
+  ActionDefinitionInput,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
 import { useUpdates } from "./queries/updates";
 import { useProjectCalls } from "./queries/calls";
+import { useLeads } from "./queries/leads";
+import { useActions } from "./queries/actions";
+import { useActionDefinitions } from "./queries/actionDefinitions";
 // import { useMessages } from "./queries/messages";
 
 export type QueryContextType = {
@@ -235,6 +242,27 @@ export type QueryContextType = {
   // refetchMessages: () => Promise<any>;
   // upsertMessage: (message: MessageInput) => Promise<void>;
   // deleteMessage: (message_id: string) => Promise<void>;
+
+  // Leads
+  leads: Lead[];
+  isLoadingLeads: boolean;
+  refetchLeads: () => Promise<any>;
+  upsertLead: (lead: LeadInput) => Promise<void>;
+  deleteLead: (lead_id: string) => Promise<void>;
+
+  actions: Action[];
+  isLoadingActions: boolean;
+  refetchActions: () => Promise<any>;
+  upsertAction: (action: ActionInput) => Promise<void>;
+  deleteAction: (action_id: string) => Promise<void>;
+
+  actionDefinitions: ActionDefinition[];
+  isLoadingActionDefinitions: boolean;
+  refetchActionDefinitions: () => Promise<any>;
+  upsertActionDefinition: (
+    actionDefinition: ActionDefinitionInput
+  ) => Promise<void>;
+  deleteActionDefinition: (action_definition_id: string) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -395,6 +423,25 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   //   deleteMessage,
   // } = useMessages(isLoggedIn);
 
+  const { leads, isLoadingLeads, refetchLeads, upsertLead, deleteLead } =
+    useLeads(isLoggedIn, currentProjectId);
+
+  const {
+    actionsData,
+    isLoadingActions,
+    refetchActions,
+    upsertAction,
+    deleteAction,
+  } = useActions(isLoggedIn, currentProjectId);
+
+  const {
+    actionDefinitionsData,
+    isLoadingActionDefinitions,
+    refetchActionDefinitions,
+    upsertActionDefinition,
+    deleteActionDefinition,
+  } = useActionDefinitions(isLoggedIn, currentProjectId);
+
   return (
     <QueryContext.Provider
       value={{
@@ -511,6 +558,21 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         // refetchMessages,
         // upsertMessage,
         // deleteMessage,
+        leads,
+        isLoadingLeads,
+        refetchLeads,
+        upsertLead,
+        deleteLead,
+        actions: actionsData ?? [],
+        isLoadingActions,
+        refetchActions,
+        upsertAction,
+        deleteAction,
+        actionDefinitions: actionDefinitionsData ?? [],
+        isLoadingActionDefinitions,
+        refetchActionDefinitions,
+        upsertActionDefinition,
+        deleteActionDefinition,
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-// src/api/products.api.ts
+// project/src/api/products.api.ts
 import { setLocalProductsData } from "@/store/currentDataStore";
 import { makeRequest } from "@/util/axios";
 import { Product } from "@open-dream/shared";

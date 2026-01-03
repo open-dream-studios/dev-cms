@@ -1,4 +1,4 @@
-// src/api/customers.api.ts
+// project/src/api/customers.api.ts
 import { makeRequest } from "@/util/axios";
 import { Customer, CustomerInput } from "@open-dream/shared";
 

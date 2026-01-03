@@ -1,4 +1,4 @@
-// src/api/sections.api.ts
+// project/src/api/sections.api.ts
 import { makeRequest } from "@/util/axios";
 import { Section } from "@open-dream/shared";
 

@@ -18,5 +18,7 @@ export * from "./types/models/updates"
 export * from "./types/models/calls"
 export * from "./types/models/ui"
 export * from "./types/models/messages"
+export * from "./types/models/leads"
+export * from "./types/models/actions"
 
 // export * from "./definitions/google";

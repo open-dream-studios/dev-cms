@@ -1,4 +1,4 @@
-// src/api/updates.api.ts
+// project/src/api/updates.api.ts
 import { makeRequest } from "@/util/axios";
 import { UpdateItemForm } from "@/util/schemas/updatesSchema";
 import { Update } from "@open-dream/shared";

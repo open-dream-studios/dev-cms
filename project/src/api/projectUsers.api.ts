@@ -1,4 +1,4 @@
-// src/api/projectUsers.api.ts
+// project/src/api/projectUsers.api.ts
 import { makeRequest } from "@/util/axios";
 import { ProjectUser } from "@open-dream/shared";
 

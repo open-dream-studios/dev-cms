@@ -211,7 +211,7 @@ export default function CustomerPortal() {
         </section>
 
         {/* Chat */}
-        < MiniChat />
+        <MiniChat />
       </div>
     </div>
   );

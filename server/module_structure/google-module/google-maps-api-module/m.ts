@@ -36,6 +36,7 @@ export const run = async ({
         body.place_id,
         body.sessionToken
       );
+
     return null;
   } catch (e) {
     console.error(e);

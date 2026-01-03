@@ -1,4 +1,4 @@
-// src/api/projectModules.api.ts
+// project/src/api/projectModules.api.ts
 import { makeRequest } from "@/util/axios";
 import { ProjectModule } from "@open-dream/shared";
 

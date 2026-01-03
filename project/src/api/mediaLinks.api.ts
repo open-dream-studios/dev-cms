@@ -1,4 +1,4 @@
-// src/api/mediaLinks.api.ts
+// project/src/api/mediaLinks.api.ts
 import { makeRequest } from "@/util/axios";
 import { MediaLink } from "@open-dream/shared";
 

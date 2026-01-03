@@ -1,4 +1,4 @@
-// src/api/pageDefinitions.api.ts
+// project/src/api/pageDefinitions.api.ts
 import { makeRequest } from "@/util/axios";
 import { PageDefinition } from "@open-dream/shared";
 

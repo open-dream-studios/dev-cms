@@ -1,4 +1,4 @@
-// src/api/integrations.api.ts
+// project/src/api/integrations.api.ts
 import { makeRequest } from "@/util/axios";
 import { Integration } from "@open-dream/shared";
 

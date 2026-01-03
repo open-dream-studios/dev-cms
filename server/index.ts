@@ -29,6 +29,7 @@ import customerRoutes from "./handlers/modules/customers/customers_routes.js";
 import jobRoutes from "./handlers/modules/jobs/jobs_routes.js";
 import callRoutes from "./handlers/modules/calls/calls_routes.js";
 import taskRoutes from "./handlers/modules/jobs/tasks_routes.js";
+import actionRoutes from "./handlers/modules/actions/actions_routes.js";
 import employeeRoutes from "./handlers/modules/employees/employees_routes.js";
 import { WebSocketServer } from "ws";
 import { handleTwilioStream } from "./handlers/modules/calls-old/twilio/twilio.js";
@@ -36,8 +37,9 @@ import { initCallState } from "./handlers/modules/calls-old/twilio/callState.js"
 import { errorMiddleware } from "./middleware/errorMiddleware.js";
 import aircallRoutes from "./handlers/webhooks/aircall/aircall_routes.js";
 import updatesRoutes from "./handlers/modules/updates/updates_routes.js";
-import wixRoutes from "./handlers/webhooks/wix/wix_routes.js"
+import wixRoutes from "./handlers/webhooks/wix/wix_routes.js";
 import messagesRoutes from "./handlers/public/messages/messages_routes.js";
+import leadRoutes from "./handlers/modules/leads/leads_routes.js";
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -46,11 +48,17 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import(path.join(__dirname, "sql/sql_backup_schedule.js"));
+// Import scheduled tasks
+import(path.join(__dirname, "util/schedules/sql_backup_schedule.js"));
+import(path.join(__dirname, "util/schedules/scraper_schedule.js"));
 
 const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 8080;
+
+export const IS_PRODUCTION =
+  process.env.NODE_ENV === "production" ||
+  process.env.RAILWAY_ENVIRONMENT === "production";
 
 const isLocalHttps = process.env.LOCAL_DEV_HTTPS === "true";
 let server;
@@ -114,16 +122,17 @@ app.use("/api/sections", sectionRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/actions", actionRoutes);
 app.use("/api/employees", employeeRoutes);
 // app.use("/api/voice", callRoutes);
 app.use("/api/calls", callRoutes);
 app.use("/api/calls/aircall", aircallRoutes);
 app.use("/api/updates", updatesRoutes);
 app.use("/api/wix", wixRoutes);
+app.use("/api/leads", leadRoutes);
 
 // Public Routes
 app.use("/api/public/messages", messagesRoutes);
-
 
 // WebSocket
 const wss = new WebSocketServer({ server });
