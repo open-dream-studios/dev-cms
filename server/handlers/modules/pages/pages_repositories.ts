@@ -179,12 +179,33 @@ export const upsertPageDefinitionFunction = async (
     parent_page_definition_id,
     identifier,
     type,
-    description, 
+    description,
     allowed_sections,
     config_schema,
   } = reqBody;
 
-  const finalPageDefinitionId = page_definition_id?.trim() || `PAGEDEF-${ulid()}`;
+  const [rows] = await connection.query<any[]>(
+    `
+    SELECT *
+    FROM page_definitions
+    WHERE identifier = ?
+    LIMIT 1
+    `,
+    [identifier]
+  );
+
+  if (
+    rows.length > 0 &&
+    (!page_definition_id || page_definition_id === rows[0].page_definition_id)
+  ) {
+    return {
+      success: false,
+      message: "Identifier already exists",
+    };
+  }
+
+  const finalPageDefinitionId =
+    page_definition_id?.trim() || `PAGEDEF-${ulid()}`;
 
   const query = `
     INSERT INTO page_definitions (
@@ -208,7 +229,7 @@ export const upsertPageDefinitionFunction = async (
 
   const values = [
     finalPageDefinitionId,
-    parent_page_definition_id, 
+    parent_page_definition_id,
     identifier,
     type,
     description,

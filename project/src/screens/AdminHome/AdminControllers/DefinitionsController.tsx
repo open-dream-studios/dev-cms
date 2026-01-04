@@ -1,6 +1,6 @@
 // project/src/screens/AdminHome/AdminControllers/DefinitionsController.tsx
 "use client";
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import {
   FaChevronLeft,
@@ -16,7 +16,7 @@ import {
   useAdminControllersUIStore,
 } from "./_store/adminControllers.store";
 import {
-  definitionAdapters, 
+  definitionAdapters,
   handleAdminControllerBackClick,
   handleCancelAdminControllerForm,
   handleDefinitionClick,
@@ -34,9 +34,13 @@ const DefinitionsController = ({ control }: { control: DefinitionControl }) => {
   const adapter = definitionAdapters[control];
   const form = adapter.useForm();
   const { definitions, isLoading } = adapter.useDefinitions();
-
-  const { showForm, editingDefinition, selectedDefinition } =
-    useAdminControllersUIStore();
+  const selectedDefinition = useAdminControllersUIStore(
+    (state) => state.selectedDefinition
+  );
+  const showForm = useAdminControllersUIStore((state) => state.showForm);
+  const editingDefinition = useAdminControllersUIStore(
+    (state) => state.editingDefinition
+  );
 
   const filteredDefinitions = useMemo(() => {
     return definitions.filter((def: DefinitionItem) =>

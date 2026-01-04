@@ -156,6 +156,27 @@ export const upsertSectionDefinitionFunction = async (
     config_schema,
   } = reqBody;
 
+  const [rows] = await connection.query<any[]>(
+    `
+    SELECT *
+    FROM section_definitions
+    WHERE identifier = ?
+    LIMIT 1
+    `,
+    [identifier]
+  );
+
+  if (
+    rows.length > 0 &&
+    (!section_definition_id ||
+      section_definition_id === rows[0].section_definition_id)
+  ) {
+    return {
+      success: false,
+      message: "Identifier already exists",
+    };
+  }
+
   const finalSectionDefinitionId =
     section_definition_id?.trim() || `SECDEF-${ulid()}`;
 

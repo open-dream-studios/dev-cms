@@ -124,6 +124,27 @@ export const upsertJobDefinitionFunction = async (
     throw new Error("Action definition requires identifier");
   }
 
+  const [rows] = await connection.query<any[]>(
+    `
+    SELECT id
+    FROM job_definitions
+    WHERE project_idx = ?
+      AND identifier = ?
+    LIMIT 1
+    `,
+    [project_idx, identifier]
+  );
+
+  if (
+    rows.length > 0 &&
+    (!job_definition_id || job_definition_id === rows[0].job_definition_id)
+  ) {
+    return {
+      success: false,
+      message: "Identifier already exists",
+    };
+  }
+
   const finalJobDefinitionId = job_definition_id?.trim() || `JOBDEF-${ulid()}`;
 
   const query = `

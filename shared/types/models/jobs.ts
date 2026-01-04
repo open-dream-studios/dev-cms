@@ -1,7 +1,7 @@
 // shared/types/models/jobs.ts
 export type JobDefinitionBase = {
   project_idx: number;
-  parent_job_definition_id: string | null;
+  parent_job_definition_id: number | null;
   identifier: string;
   type: string | null;
   description: string | null;

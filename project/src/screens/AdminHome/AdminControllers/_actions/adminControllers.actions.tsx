@@ -42,7 +42,7 @@ import {
   deleteProjectSectionDefinitionsApi,
   upsertProjectSectionDefinitionsApi,
 } from "@/api/sectionDefinitions.api";
-import { upsertActionDefinitionApi } from "@/api/actionDefinitions.api";
+import { deleteActionDefinitionApi, upsertActionDefinitionApi } from "@/api/actionDefinitions.api";
 import { queryClient } from "@/lib/queryClient";
 
 export type TypedDefinitionAdapter<
@@ -165,7 +165,7 @@ export const onJobDefinitionSubmit = async (
 
   const parentId =
     selectedDefinition && isJobDefinition(selectedDefinition)
-      ? selectedDefinition.job_definition_id
+      ? selectedDefinition.id
       : null;
 
   const jobDefinitionId =
@@ -203,7 +203,7 @@ export const onActionDefinitionSubmit = async (
 
   const parentId =
     selectedDefinition && isActionDefinition(selectedDefinition)
-      ? selectedDefinition.action_definition_id
+      ? selectedDefinition.id
       : null;
 
   const actionDefinitionId =
@@ -241,7 +241,7 @@ export const onPageDefinitionSubmit = async (
 
   const parentId =
     selectedDefinition && isPageDefinition(selectedDefinition)
-      ? selectedDefinition.page_definition_id
+      ? selectedDefinition.id
       : null;
 
   const pageDefinitionId =
@@ -285,7 +285,7 @@ export const onSectionDefinitionSubmit = async (
 
   const parentId =
     selectedDefinition && isSectionDefinition(selectedDefinition)
-      ? selectedDefinition.section_definition_id
+      ? selectedDefinition.id
       : null;
 
   const sectionDefinitionId =
@@ -356,7 +356,7 @@ const executeDeleteJobDefinition = async (definition: JobDefinition) => {
 const executeDeleteActionDefinition = async (definition: ActionDefinition) => {
   const { currentProjectId } = useCurrentDataStore.getState();
   if (!currentProjectId || !definition.action_definition_id) return;
-  await deleteJobDefinitionApi(
+  await deleteActionDefinitionApi(
     currentProjectId,
     definition.action_definition_id
   );
@@ -401,9 +401,7 @@ export const handleAdminControllerBackClick = (form: UseFormReturn<any>) => {
 };
 
 export const handleDefinitionClick = (definition: DefinitionItem) => {
-  const { selectedDefinition, setSelectedDefinition } =
-    useAdminControllersUIStore.getState();
-  if (selectedDefinition === null) setSelectedDefinition(definition);
+  useAdminControllersUIStore.getState().setSelectedDefinition(definition);
 };
 
 export const handleEditDefinitionClick = (
@@ -418,8 +416,8 @@ export const handleEditDefinitionClick = (
   if (isPageDefinition(definition)) {
     setAllowedSections(definition.allowed_sections || []);
   }
-  resetDefinitionDisplayForm(form, definition);
   setShowForm(true);
+  resetDefinitionDisplayForm(form, definition);
 };
 
 export const handleShowDefinitionForm = (form: UseFormReturn<any>) => {
@@ -440,11 +438,31 @@ export const definitionAdapters = {
     },
     submit: onJobDefinitionSubmit,
     delete: handleDeleteDefinition,
-    isParent: (child: any, parent: any) => {
+    isParent: (child, parent) => {
       if (!parent) return child.parent_job_definition_id === null;
       return (
-        isJobDefinition(parent) &&
-        child.parent_job_definition_id === parent.job_definition_id
+        isJobDefinition(parent) && child.parent_job_definition_id === parent.id
+      );
+    },
+  }),
+
+  actions: defineAdapter<ActionDefinitionFormData, ActionDefinition>({
+    useForm: useActionDefinitionsForm,
+    useDefinitions: () => {
+      const { actionDefinitions, isLoadingActionDefinitions } =
+        useContextQueries();
+      return {
+        definitions: actionDefinitions,
+        isLoading: isLoadingActionDefinitions,
+      };
+    },
+    submit: onActionDefinitionSubmit,
+    delete: handleDeleteDefinition,
+    isParent: (child, parent) => {
+      if (!parent) return child.parent_action_definition_id === null;
+      return (
+        isActionDefinition(parent) &&
+        child.parent_action_definition_id === parent.id
       );
     },
   }),
@@ -460,7 +478,13 @@ export const definitionAdapters = {
     },
     submit: onPageDefinitionSubmit,
     delete: handleDeleteDefinition,
-    isParent: () => true,
+    isParent: (child, parent) => {
+      if (!parent) return child.parent_page_definition_id === null;
+      return (
+        isPageDefinition(parent) &&
+        child.parent_page_definition_id === parent.id
+      );
+    },
   }),
 
   sections: defineAdapter<SectionDefinitionFormData, SectionDefinition>({
@@ -475,21 +499,13 @@ export const definitionAdapters = {
     },
     submit: onSectionDefinitionSubmit,
     delete: handleDeleteDefinition,
-    isParent: () => true,
-  }),
+    isParent: (child, parent) => {
+      if (!parent) return child.parent_section_definition_id === null;
 
-  actions: defineAdapter<ActionDefinitionFormData, ActionDefinition>({
-    useForm: useActionDefinitionsForm,
-    useDefinitions: () => {
-      const { actionDefinitions, isLoadingActionDefinitions } =
-        useContextQueries();
-      return {
-        definitions: actionDefinitions,
-        isLoading: isLoadingActionDefinitions,
-      };
+      return (
+        isSectionDefinition(parent) &&
+        child.parent_section_definition_id === parent.id
+      );
     },
-    submit: onActionDefinitionSubmit,
-    delete: handleDeleteDefinition,
-    isParent: () => true,
   }),
 } as const;

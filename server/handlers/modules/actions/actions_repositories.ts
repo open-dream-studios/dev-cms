@@ -95,9 +95,7 @@ export const deleteActionFunction = async (
 };
 
 // ---------- ACTION DEFINITION FUNCTIONS ----------
-export const getActionDefinitionsFunction = async (
-  project_idx: number
-) => {
+export const getActionDefinitionsFunction = async (project_idx: number) => {
   const q = `
     SELECT *
     FROM action_definitions
@@ -119,29 +117,53 @@ export const upsertActionDefinitionFunction = async (
 ) => {
   const {
     action_definition_id,
-    idenfitier,
+    parent_action_definition_id,
+    identifier,
     type,
     description,
   } = reqBody;
 
-  if (!idenfitier) {
-    throw new Error("Action definition requires idenfitier");
+  if (!identifier) {
+    throw new Error("Action definition requires identifier");
   }
 
-  const finalDefinitionId =
-    action_definition_id?.trim() || `ACTDEF-${ulid()}`;
+  const [rows] = await connection.query<any[]>(
+    `
+    SELECT *
+    FROM action_definitions
+    WHERE project_idx = ?
+      AND identifier = ?
+    LIMIT 1
+    `,
+    [project_idx, identifier]
+  );
+
+  if (
+    rows.length > 0 &&
+    (!action_definition_id ||
+      action_definition_id === rows[0].action_definition_id)
+  ) {
+    return {
+      success: false,
+      message: "Identifier already exists",
+    };
+  }
+
+  const finalDefinitionId = action_definition_id?.trim() || `ACTDEF-${ulid()}`;
 
   const query = `
     INSERT INTO action_definitions (
       action_definition_id,
+      parent_action_definition_id,
       project_idx,
-      idenfitier,
+      identifier,
       type,
       description
     )
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
-      idenfitier = VALUES(idenfitier),
+      parent_action_definition_id = VALUES(parent_action_definition_id),
+      identifier = VALUES(identifier),
       type = VALUES(type),
       description = VALUES(description),
       updated_at = NOW()
@@ -149,8 +171,9 @@ export const upsertActionDefinitionFunction = async (
 
   const values = [
     finalDefinitionId,
+    parent_action_definition_id,
     project_idx,
-    idenfitier,
+    identifier,
     type,
     description || null,
   ];

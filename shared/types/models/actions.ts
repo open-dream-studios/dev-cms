@@ -1,7 +1,7 @@
 // shared/types/models/actions.ts
 export type ActionDefinitionBase = {
   project_idx: number;
-  parent_action_definition_id: string | null;
+  parent_action_definition_id: number | null;
   identifier: string;
   type: string | null;
   description: string | null;
