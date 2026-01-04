@@ -1,6 +1,6 @@
 // project/src/context/queryContext/queries/sectionDefinitions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { SectionDefinition } from "@open-dream/shared";
+import { SectionDefinition, SectionDefinitionInput } from "@open-dream/shared";
 import {
   deleteProjectSectionDefinitionsApi,
   fetchProjectSectionDefinitionsApi,
@@ -21,7 +21,7 @@ export function useSectionDefinitions(isLoggedIn: boolean) {
   });
 
   const upsertSectionDefinitionMutation = useMutation({
-    mutationFn: async (data: SectionDefinition) =>
+    mutationFn: async (data: SectionDefinitionInput) =>
       upsertProjectSectionDefinitionsApi(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sectionDefinitions"] });
@@ -40,7 +40,7 @@ export function useSectionDefinitions(isLoggedIn: boolean) {
     sectionDefinitions,
     isLoadingSectionDefinitions,
     refetchSectionDefinitions,
-    upsertSectionDefinition: (data: SectionDefinition) =>
+    upsertSectionDefinition: (data: SectionDefinitionInput) =>
       upsertSectionDefinitionMutation.mutateAsync(data),
     deleteSectionDefinition: (section_definition_id: string) =>
       deleteSectionDefinitionMutation.mutateAsync(section_definition_id),

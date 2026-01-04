@@ -1,4 +1,23 @@
 // shared/types/models/jobs.ts
+export type JobDefinitionBase = {
+  project_idx: number;
+  parent_job_definition_id: string | null;
+  identifier: string;
+  type: string | null;
+  description: string | null;
+};
+
+export interface JobDefinition extends JobDefinitionBase {
+  id: number;
+  job_definition_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobDefinitionInput extends JobDefinitionBase {
+  job_definition_id: string | null;
+}
+
 export type JobStatusOption =
   | "waiting_diagnosis"
   | "waiting_work"
@@ -26,13 +45,6 @@ export type Job = {
   completed_date: string | Date | null;
   notes: string | null;
   updated_at?: string | Date | null;
-};
-
-export type JobDefinition = {
-  id?: number;
-  job_definition_id: string | null;
-  type: string;
-  description: string | null;
 };
 
 export type TaskStatusOption =

@@ -1,6 +1,6 @@
 // project/src/context/queryContext/queries/pageDefinitions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { PageDefinition } from "@open-dream/shared";
+import { PageDefinition, PageDefinitionInput } from "@open-dream/shared";
 import {
   deleteProjectPageDefinitionApi,
   fetchProjectPageDefinitionsApi,
@@ -20,7 +20,7 @@ export function usePageDefinitions(isLoggedIn: boolean) {
   });
 
   const upsertPageDefinitionMutation = useMutation({
-    mutationFn: async (definition: PageDefinition) =>
+    mutationFn: async (definition: PageDefinitionInput) =>
       upsertProjectPageDefinitionApi(definition),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pageDefinitions"] });
@@ -40,7 +40,7 @@ export function usePageDefinitions(isLoggedIn: boolean) {
     pageDefinitions,
     isLoadingPageDefinitions,
     refetchPageDefinitions,
-    upsertPageDefinition: (data: PageDefinition) =>
+    upsertPageDefinition: (data: PageDefinitionInput) =>
       upsertPageDefinitionMutation.mutateAsync(data),
     deletePageDefinition: (page_definition_id: string) =>
       deletePageDefinitionMutation.mutateAsync(page_definition_id),

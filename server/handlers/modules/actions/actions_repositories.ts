@@ -119,13 +119,13 @@ export const upsertActionDefinitionFunction = async (
 ) => {
   const {
     action_definition_id,
-    tag,
-    title,
+    idenfitier,
+    type,
     description,
   } = reqBody;
 
-  if (!tag) {
-    throw new Error("Action definition requires tag");
+  if (!idenfitier) {
+    throw new Error("Action definition requires idenfitier");
   }
 
   const finalDefinitionId =
@@ -135,14 +135,14 @@ export const upsertActionDefinitionFunction = async (
     INSERT INTO action_definitions (
       action_definition_id,
       project_idx,
-      tag,
-      title,
+      idenfitier,
+      type,
       description
     )
     VALUES (?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
-      tag = VALUES(tag),
-      title = VALUES(title),
+      idenfitier = VALUES(idenfitier),
+      type = VALUES(type),
       description = VALUES(description),
       updated_at = NOW()
   `;
@@ -150,8 +150,8 @@ export const upsertActionDefinitionFunction = async (
   const values = [
     finalDefinitionId,
     project_idx,
-    tag,
-    title || null,
+    idenfitier,
+    type,
     description || null,
   ];
 

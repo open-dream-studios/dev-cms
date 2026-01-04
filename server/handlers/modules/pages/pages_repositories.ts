@@ -176,9 +176,10 @@ export const upsertPageDefinitionFunction = async (
 ) => {
   const {
     page_definition_id,
-    identifier,
-    name,
     parent_page_definition_id,
+    identifier,
+    type,
+    description, 
     allowed_sections,
     config_schema,
   } = reqBody;
@@ -188,26 +189,29 @@ export const upsertPageDefinitionFunction = async (
   const query = `
     INSERT INTO page_definitions (
       page_definition_id,
-      identifier,
-      name,
       parent_page_definition_id,
+      identifier,
+      type,
+      description,
       allowed_sections,
       config_schema
     )
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
-      identifier = VALUES(identifier),
-      name = VALUES(name),
       parent_page_definition_id = VALUES(parent_page_definition_id),
+      identifier = VALUES(identifier),
+      type = VALUES(type),
+      description = VALUES(description),
       allowed_sections = VALUES(allowed_sections),
       config_schema = VALUES(config_schema)
   `;
 
   const values = [
     finalPageDefinitionId,
+    parent_page_definition_id, 
     identifier,
-    name,
-    parent_page_definition_id,
+    type,
+    description,
     JSON.stringify(allowed_sections || []),
     JSON.stringify(config_schema || {}),
   ];

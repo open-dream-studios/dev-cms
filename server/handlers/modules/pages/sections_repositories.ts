@@ -121,7 +121,9 @@ export const reorderSectionsFunction = async (
 // ---------- SECTION DEFINITION FUNCTIONS ----------
 export const getSectionDefinitionsFunction = async () => {
   const q = `SELECT * FROM section_definitions`;
-  const [rows] = await db.promise().query<RowDataPacket[]>(q, []);
+  const [rows] = await db
+    .promise()
+    .query<(SectionDefinition & RowDataPacket)[]>(q, []);
 
   const sectionDefinitions = rows.map(
     (r) =>
@@ -146,9 +148,10 @@ export const upsertSectionDefinitionFunction = async (
 ) => {
   const {
     section_definition_id,
-    name,
-    identifier,
     parent_section_definition_id,
+    identifier,
+    type,
+    description,
     allowed_elements,
     config_schema,
   } = reqBody;
@@ -159,26 +162,29 @@ export const upsertSectionDefinitionFunction = async (
   const query = `
       INSERT INTO section_definitions (
         section_definition_id,
-        name,
-        identifier,
         parent_section_definition_id,
+        identifier,
+        type, 
+        description,
         allowed_elements,
         config_schema
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
-        name = VALUES(name),
-        identifier = VALUES(identifier),
         parent_section_definition_id = VALUES(parent_section_definition_id),
+        identifier = VALUES(identifier),
+        type = VALUES(type),
+        description = VALUES(description),
         allowed_elements = VALUES(allowed_elements),
         config_schema = VALUES(config_schema)
     `;
 
   const values = [
     finalSectionDefinitionId,
-    name,
-    identifier,
     parent_section_definition_id,
+    identifier,
+    type,
+    description,
     JSON.stringify(allowed_elements || []),
     JSON.stringify(config_schema || {}),
   ];

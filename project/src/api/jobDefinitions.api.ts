@@ -1,6 +1,6 @@
 // project/src/api/jobDefinitions.api.ts
 import { makeRequest } from "@/util/axios";
-import { JobDefinition } from "@open-dream/shared";
+import { JobDefinitionInput } from "@open-dream/shared";
 
 export async function fetchJobDefinitionsApi(project_idx: number) {
   if (!project_idx) return [];
@@ -10,14 +10,9 @@ export async function fetchJobDefinitionsApi(project_idx: number) {
   return res.data.jobDefinitions || [];
 }
 
-export async function upsertJobDefinitionApi(
-  project_idx: number,
-  definition: JobDefinition
-) {
-  if (!project_idx) return null;
+export async function upsertJobDefinitionApi(definition: JobDefinitionInput) {
   const res = await makeRequest.post("/jobs/upsert-definition", {
     ...definition,
-    project_idx,
   });
   return res.data;
 }

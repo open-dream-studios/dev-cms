@@ -1,4 +1,4 @@
-// project/src/screens/AdminHome/AdminControl/EditModules/EditModules.tsx
+// project/src/screens/AdminHome/AdminControllers/EditModules.tsx
 "use client";
 import { useContext, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";

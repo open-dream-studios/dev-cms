@@ -3,10 +3,7 @@ import { db } from "../../../connection/connect.js";
 import crypto from "crypto";
 import { storeStringAsUTC } from "../../../functions/data.js";
 import { Job, JobDefinition } from "@open-dream/shared";
-import type {
-  RowDataPacket,
-  PoolConnection,
-} from "mysql2/promise";
+import type { RowDataPacket, PoolConnection } from "mysql2/promise";
 import { ulid } from "ulid";
 
 // ---------- JOB FUNCTIONS ----------
@@ -115,29 +112,45 @@ export const upsertJobDefinitionFunction = async (
   project_idx: number,
   reqBody: any
 ) => {
-  const { job_definition_id, type, description } = reqBody;
+  const {
+    job_definition_id,
+    parent_job_definition_id,
+    identifier,
+    type,
+    description,
+  } = reqBody;
 
-  const finalDefinitionId =
-    job_definition_id && job_definition_id.trim() !== ""
-      ? job_definition_id
-      : crypto.randomBytes(8).toString("hex");
+  if (!identifier) {
+    throw new Error("Action definition requires identifier");
+  }
+
+  const finalJobDefinitionId = job_definition_id?.trim() || `JOBDEF-${ulid()}`;
 
   const query = `
-      INSERT INTO job_definitions (job_definition_id, project_idx, type, description)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO job_definitions (job_definition_id, parent_job_definition_id, project_idx, identifier, type, description)
+      VALUES (?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
+        parent_job_definition_id = VALUES(parent_job_definition_id),
+        identifier = VALUES(identifier),
         type = VALUES(type),
         description = VALUES(description),
         updated_at = NOW()
     `;
 
-  const values = [finalDefinitionId, project_idx, type, description || null];
+  const values = [
+    finalJobDefinitionId,
+    parent_job_definition_id,
+    project_idx,
+    identifier,
+    type,
+    description || null,
+  ];
 
   const [result] = await connection.query(query, values);
 
   return {
     success: true,
-    definition_id: finalDefinitionId,
+    definition_id: finalJobDefinitionId,
   };
 };
 

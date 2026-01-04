@@ -1,6 +1,6 @@
 // project/src/context/queryContext/queries/jobDefinitions.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; 
-import { JobDefinition } from "@open-dream/shared";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { JobDefinition, JobDefinitionInput } from "@open-dream/shared";
 import {
   deleteJobDefinitionApi,
   fetchJobDefinitionsApi,
@@ -24,8 +24,8 @@ export function useJobDefinitions(
   });
 
   const upsertJobDefinitionMutation = useMutation({
-    mutationFn: async (definition: JobDefinition) =>
-      upsertJobDefinitionApi(currentProjectId!, definition),
+    mutationFn: async (definition: JobDefinitionInput) =>
+      upsertJobDefinitionApi(definition),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["jobDefinitions", currentProjectId],
@@ -49,7 +49,7 @@ export function useJobDefinitions(
     },
   });
 
-  const upsertJobDefinition = async (definition: JobDefinition) => {
+  const upsertJobDefinition = async (definition: JobDefinitionInput) => {
     return await upsertJobDefinitionMutation.mutateAsync(definition);
   };
 

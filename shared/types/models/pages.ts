@@ -1,13 +1,24 @@
 // shared/types/models/pages.ts
-export type PageDefinition = {
-  id?: number;
-  page_definition_id: string;
-  name: string;
-  identifier: string;
+export type PageDefinitionBase = {
+  project_idx: number;
   parent_page_definition_id: number | null;
+  identifier: string;
+  type: string | null;
+  description: string | null;
   allowed_sections: string[];
   config_schema: Record<string, any>;
 };
+
+export interface PageDefinition extends PageDefinitionBase {
+  id: number;
+  page_definition_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PageDefinitionInput extends PageDefinitionBase {
+  page_definition_id: string | null;
+}
 
 export type ProjectPage = {
   id?: number;
@@ -28,15 +39,26 @@ export type ProjectPage = {
   created_at?: string;
 };
 
-export type SectionDefinition = {
-  id?: number;
-  section_definition_id: string | null;
-  name: string;
-  identifier: string;
+export type SectionDefinitionBase = {
+  project_idx: number;
   parent_section_definition_id: number | null;
+  identifier: string;
+  type: string | null;
+  description: string | null;
   allowed_elements: string[];
   config_schema: Record<string, any>;
 };
+
+export interface SectionDefinition extends SectionDefinitionBase {
+  id: number;
+  section_definition_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SectionDefinitionInput extends SectionDefinitionBase {
+  section_definition_id: string | null;
+}
 
 export type Section = {
   id?: number;

@@ -60,6 +60,9 @@ import {
   ActionInput,
   ActionDefinition,
   ActionDefinitionInput,
+  JobDefinitionInput,
+  PageDefinitionInput,
+  SectionDefinitionInput,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
@@ -148,7 +151,7 @@ export type QueryContextType = {
   pageDefinitions: PageDefinition[];
   isLoadingPageDefinitions: boolean;
   refetchPageDefinitions: () => Promise<any>;
-  upsertPageDefinition: (data: PageDefinition) => Promise<void>;
+  upsertPageDefinition: (data: PageDefinitionInput) => Promise<void>;
   deletePageDefinition: (page_definition_id: string) => Promise<void>;
 
   // ---- Project Pages ----
@@ -166,7 +169,7 @@ export type QueryContextType = {
   sectionDefinitions: SectionDefinition[];
   isLoadingSectionDefinitions: boolean;
   refetchSectionDefinitions: () => Promise<any>;
-  upsertSectionDefinition: (data: SectionDefinition) => Promise<void>;
+  upsertSectionDefinition: (data: SectionDefinitionInput) => Promise<void>;
   deleteSectionDefinition: (section_definition_id: string) => Promise<void>;
 
   projectSections: Section[];
@@ -195,7 +198,7 @@ export type QueryContextType = {
   jobDefinitions: JobDefinition[];
   isLoadingJobDefinitions: boolean;
   refetchJobDefinitions: () => Promise<any>;
-  upsertJobDefinition: (definition: JobDefinition) => Promise<any>;
+  upsertJobDefinition: (definition: JobDefinitionInput) => Promise<any>;
   deleteJobDefinition: (definition_id: string) => Promise<void>;
 
   // ---- Jobs ----

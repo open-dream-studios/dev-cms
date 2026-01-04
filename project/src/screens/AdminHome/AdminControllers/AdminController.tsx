@@ -4,17 +4,27 @@ import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useState } from "react";
 import EditModules from "./EditModules";
 import Divider from "@/lib/blocks/Divider";
-import EditPageDefinitions from "./EditPageDefinitions";
-import EditSectionDefinitions from "./EditSectionDefinitions";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import DefinitionsController from "./DefinitionsController";
+import { resetDefinitionDisplay } from "./_actions/adminControllers.actions";
 
-export type Control = "modules" | "pages" | "sections";
+export type AdminControl =
+  | "modules"
+  | "pages"
+  | "sections"
+  | "jobs"
+  | "actions";
 
 const AdminController = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
 
-  const [controlActive, setControlActive] = useState<Control>("modules");
+  const [controlActive, setControlActive] = useState<AdminControl>("modules");
+
+  const handleControlClick = (control: AdminControl) => {
+    setControlActive(control);
+    resetDefinitionDisplay();
+  };
 
   if (!currentUser) return null;
 
@@ -28,10 +38,10 @@ const AdminController = () => {
           style={{
             backgroundColor: currentTheme.header_1_1,
           }}
-          className="flex w-[290px] pl-1 h-8 rounded-[18px] flex-row items-center"
+          className="flex w-[384px] pl-1 h-8 rounded-[18px] flex-row items-center"
         >
           <div
-            onClick={() => setControlActive("modules")}
+            onClick={() => handleControlClick("modules")}
             style={{
               backgroundColor:
                 controlActive === "modules"
@@ -43,7 +53,7 @@ const AdminController = () => {
             Modules
           </div>
           <div
-            onClick={() => setControlActive("pages")}
+            onClick={() => handleControlClick("pages")}
             style={{
               backgroundColor:
                 controlActive === "pages"
@@ -55,7 +65,7 @@ const AdminController = () => {
             Pages
           </div>
           <div
-            onClick={() => setControlActive("sections")}
+            onClick={() => handleControlClick("sections")}
             style={{
               backgroundColor:
                 controlActive === "sections"
@@ -66,15 +76,29 @@ const AdminController = () => {
           >
             Sections
           </div>
+          <div
+            onClick={() => handleControlClick("jobs")}
+            style={{
+              backgroundColor:
+                controlActive === "jobs"
+                  ? currentTheme.header_1_2
+                  : "transparent",
+            }}
+            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-medium rounded-[18px]"
+          >
+            Jobs
+          </div>
         </div>
       </div>
 
       <Divider mb={10} />
 
       <div className="flex-1">
-        {controlActive === "modules" && <EditModules />}
-        {controlActive === "pages" && <EditPageDefinitions />}
-        {controlActive === "sections" && <EditSectionDefinitions />}
+        {controlActive === "modules" ? (
+          <EditModules />
+        ) : (
+          <DefinitionsController control={controlActive} />
+        )}
       </div>
     </div>
   );

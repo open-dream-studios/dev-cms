@@ -4,13 +4,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   PageDefinitionSchema,
   PageDefinitionFormData,
+  SectionDefinitionFormData,
+  SectionDefinitionSchema,
 } from "@/util/schemas/pageDefinitionsSchema";
 
 export function usePageDefinitionsForm(defaultValues?: Partial<PageDefinitionFormData>) {
   return useForm<PageDefinitionFormData>({
     resolver: zodResolver(PageDefinitionSchema),
     defaultValues: {
-      name: defaultValues?.name || "",
+      type: defaultValues?.type || "",
+      description: null,
+      identifier: defaultValues?.identifier || "",
+      allowed_sections: defaultValues?.allowed_sections || [],
+    },
+  });
+}
+
+export function useSectionDefinitionsForm(defaultValues?: Partial<SectionDefinitionFormData>) {
+  return useForm<SectionDefinitionFormData>({
+    resolver: zodResolver(SectionDefinitionSchema),
+    defaultValues: {
+      type: defaultValues?.type || "",
+      description: null,
       identifier: defaultValues?.identifier || "",
       allowed_sections: defaultValues?.allowed_sections || [],
     },

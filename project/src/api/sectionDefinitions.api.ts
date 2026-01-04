@@ -1,6 +1,6 @@
 // project/src/api/sectionDefinitions.api.ts
 import { makeRequest } from "@/util/axios";
-import { SectionDefinition } from "@open-dream/shared";
+import { SectionDefinition, SectionDefinitionInput } from "@open-dream/shared";
 
 export async function fetchProjectSectionDefinitionsApi() {
   const res = await makeRequest.post(
@@ -10,7 +10,7 @@ export async function fetchProjectSectionDefinitionsApi() {
 }
 
 export async function upsertProjectSectionDefinitionsApi(
-  data: SectionDefinition
+  data: SectionDefinitionInput
 ) {
   await makeRequest.post("/sections/section-definitions/upsert", data);
 }

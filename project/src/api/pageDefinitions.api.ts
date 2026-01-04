@@ -1,6 +1,6 @@
 // project/src/api/pageDefinitions.api.ts
 import { makeRequest } from "@/util/axios";
-import { PageDefinition } from "@open-dream/shared";
+import { PageDefinition, PageDefinitionInput } from "@open-dream/shared";
 
 export async function fetchProjectPageDefinitionsApi() {
   const res = await makeRequest.post("/pages/page-definitions/get-all");
@@ -8,7 +8,7 @@ export async function fetchProjectPageDefinitionsApi() {
 }
 
 export async function upsertProjectPageDefinitionApi(
-  definition: PageDefinition
+  definition: PageDefinitionInput
 ) {
   await makeRequest.post("/pages/page-definitions/upsert", definition);
 }
