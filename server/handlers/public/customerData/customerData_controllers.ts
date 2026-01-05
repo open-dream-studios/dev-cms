@@ -12,7 +12,6 @@ export const getCustomerData = async (
   const project_idx = await getProjectFromRequest(req, connection);
   const user_id = req.user?.user_id;
   const user_email = req.user?.email;
-  console.log(project_idx, user_id, user_email)
   if (!project_idx || !user_id || !user_email) throw new Error("Missing auth");
 
   const customerData = await getCustomerDataFunction(

@@ -107,7 +107,9 @@ export const getScheduleAvailability = async (
   res: Response,
   connection: PoolConnection
 ) => {
+  console.log("getting availability")
   const { date } = req.query;
+  console.log(date)
 
   if (!date || typeof date !== "string") {
     throw new Error("date query param required (YYYY-MM-DD)");
@@ -115,6 +117,8 @@ export const getScheduleAvailability = async (
 
   const projectDomain = getProjectDomainFromWixRequest(req);
   const project_idx = await getProjectIdByDomain(connection, projectDomain);
+
+  console.log(projectDomain, project_idx)
 
   const REQUIRED_KEYS = [
     "GOOGLE_CLIENT_SECRET_OBJECT",
