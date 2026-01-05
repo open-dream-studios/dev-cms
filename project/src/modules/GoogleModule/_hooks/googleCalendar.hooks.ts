@@ -1,7 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContextQueries } from "../../../contexts/queryContext/queryContext";
 
-export function useGoogleCalendar(calendarId: string, timeMin: string, timeMax: string) {
+export function useGoogleCalendar(
+  calendarId: string,
+  timeMin: string,
+  timeMax: string
+) {
   const { runModule } = useContextQueries();
   const queryClient = useQueryClient();
 
@@ -16,7 +20,6 @@ export function useGoogleCalendar(calendarId: string, timeMin: string, timeMax: 
       do {
         const res = await runModule("google-calendar-module", {
           requestType: "LIST_EVENTS",
-          calendarId,
           pageToken,
           timeMin,
           timeMax,
@@ -24,20 +27,24 @@ export function useGoogleCalendar(calendarId: string, timeMin: string, timeMax: 
           singleEvents: true,
           orderBy: "startTime",
         });
+        console.log(res.data.events)
 
         const events = res?.data?.events ?? [];
         allEvents.push(...events);
 
         pageToken = res?.data?.nextPageToken ?? null;
       } while (pageToken);
-
+      console.log(allEvents)
       return allEvents;
     },
     staleTime: 1000 * 60 * 3,
   });
 
   const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: ["calendar-range", calendarId] });
+    queryClient.invalidateQueries({
+      queryKey: ["calendar-range", calendarId],
+      exact: false,
+    });
 
   return {
     events: query.data ?? [],

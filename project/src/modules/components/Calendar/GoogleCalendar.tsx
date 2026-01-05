@@ -30,6 +30,8 @@ import {
   weekIndexOffsetForDate,
 } from "./CalendarHelpers";
 import { useUiStore } from "@/store/useUIStore";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { createCalendarEvent } from "@/modules/GoogleModule/_actions/googleCalendar.actions";
 
 export const DAY_START_HOUR = 0;
 export const DAY_END_HOUR = 24;
@@ -43,10 +45,15 @@ export const SNAP_DEBOUNCE = 80; // ms
 export const GoogleCalendar = () => {
   const { currentUser } = React.useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { leftBarOpen} = useUiStore()
+  const { leftBarOpen } = useUiStore();
   const [isMini, setIsMini] = useState<boolean>(true);
   const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(false);
   const [googleEvents, setGoogleEvents] = useState<any[]>([]);
+  const { runModule } = useContextQueries();
+
+  const testCalendar = async () => {
+    await createCalendarEvent({ runModule, refresh });
+  };
 
   const [rangeStart, setRangeStart] = useState(() => {
     const d = new Date();
@@ -93,14 +100,31 @@ export const GoogleCalendar = () => {
   useEffect(() => {
     if (!events || events.length === 0) return;
 
+    // const normalized = events.map((ev: any) => {
+    //   const start = new Date(ev.start.dateTime || ev.start.date);
+    //   const end = new Date(ev.end.dateTime || ev.end.date);
+
+    //   return {
+    //     id: ev.id,
+    //     title: ev.summary || "(no title)",
+    //     colorId: ev.colorId,
+    //     start,
+    //     end,
+    //     startIndex: dateToIndex(start),
+    //     endIndex: dateToIndex(end),
+    //     topPct: timeToPct(start),
+    //     heightPct: timeToPct(end) - timeToPct(start),
+    //   };
+    // });
+
     const normalized = events.map((ev: any) => {
       const start = new Date(ev.start.dateTime || ev.start.date);
       const end = new Date(ev.end.dateTime || ev.end.date);
 
       return {
         id: ev.id,
+        raw: ev,
         title: ev.summary || "(no title)",
-        colorId: ev.colorId,
         start,
         end,
         startIndex: dateToIndex(start),
@@ -111,7 +135,7 @@ export const GoogleCalendar = () => {
     });
 
     setGoogleEvents(normalized);
-  }, [events, dateToIndex]);
+  }, [events]);
 
   // const dateStartString = useMemo(
   //   () => new Date(new Date().getTime() - 4 * 60 * 60 * 1000).toISOString(),
@@ -627,6 +651,10 @@ export const GoogleCalendar = () => {
         } gap-3 ${!calendarCollapsed && "mb-2"}`}
       >
         <div className="flex items-start pt-[6px] pl-[2px] gap-2">
+          <div
+            className="w-[20px] h-[20px] bg-red-400 cursor-pointer"
+            onClick={testCalendar}
+          ></div>
           <button
             onClick={handleGotoScheduleWeek}
             className="cursor-pointer hover:brightness-[85%] dim flex items-center gap-2 px-2 py-1 rounded-md hover:opacity-90 active:scale-95"
@@ -1008,12 +1036,12 @@ export const GoogleCalendar = () => {
                             return (
                               <div
                                 key={ev.id + "-" + idx}
-                                className="absolute rounded-md text-[10px] p-1 text-white overflow-hidden"
+                                className="absolute rounded-[4px] text-[10px] px-1 pb-[2px] pt-[2.2px] text-white overflow-hidden"
                                 style={{
                                   top: `${top}%`,
                                   height: `${height}%`,
-                                  left: "4px",
-                                  right: "4px",
+                                  left: "1px",
+                                  right: "1px",
                                   backgroundColor: "rgba(234, 88, 12, 0.65)", // orange-ish default
                                 }}
                               >

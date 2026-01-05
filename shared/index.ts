@@ -23,5 +23,6 @@ export * from "./types/models/public/messages"
 export * from "./types/models/public/customerData"
 export * from "./types/models/public/schedule"
 export * from "./types/models/users"
+export * from "./types/models/schedule"
 
 // export * from "./definitions/google";

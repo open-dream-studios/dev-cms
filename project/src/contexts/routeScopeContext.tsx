@@ -3,9 +3,9 @@
 
 import { createContext, ReactNode, useContext } from "react";
 
-export type RouteScope = "public" | "protected";
+export type RouteScope = "public" | "private";
 
-const RouteScopeContext = createContext<RouteScope>("public");
+const RouteScopeContext = createContext<RouteScope>("private");
 
 export const RouteScopeProvider = ({
   scope,

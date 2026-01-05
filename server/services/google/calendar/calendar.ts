@@ -51,7 +51,8 @@ export interface CalendarPageOptions {
   singleEvents?: boolean;
   orderBy?: "startTime" | "updated" | string;
   showDeleted?: boolean;
-  q?: string; // free text search
+  q?: string;
+  privateExtendedProperty?: string[];
 }
 
 export async function fetchCalendarPage(
@@ -69,6 +70,7 @@ export async function fetchCalendarPage(
     orderBy = "startTime",
     showDeleted = false,
     q,
+    privateExtendedProperty,
   } = options;
 
   const calendar = await getCalendarClient(
@@ -86,6 +88,7 @@ export async function fetchCalendarPage(
     timeMax,
     showDeleted,
     q,
+    privateExtendedProperty,
   });
 
   return {
@@ -136,7 +139,7 @@ export async function createEvent(
   const res = await calendar.events.insert({
     calendarId,
     requestBody: event,
-    sendUpdates: "all",
+    sendUpdates: "none",
   });
 
   return res.data;
@@ -161,7 +164,7 @@ export async function updateEvent(
     calendarId,
     eventId,
     requestBody: event,
-    sendUpdates: "all",
+    sendUpdates: "none",
   });
 
   return res.data;
@@ -174,8 +177,7 @@ export async function deleteEvent(
   GOOGLE_CLIENT_SECRET_OBJECT: string,
   GOOGLE_REFRESH_TOKEN_OBJECT: string,
   calendarId: string,
-  eventId: string,
-  sendNotifications = false
+  eventId: string
 ) {
   const calendar = await getCalendarClient(
     GOOGLE_CLIENT_SECRET_OBJECT,
@@ -185,7 +187,7 @@ export async function deleteEvent(
   await calendar.events.delete({
     calendarId,
     eventId,
-    sendUpdates: sendNotifications ? "all" : "none",
+    sendUpdates: "none",
   });
 }
 
@@ -221,7 +223,7 @@ export async function eventsByAttendee(
     for (const ev of page.events) {
       const attendees = ev.attendees || [];
       const isMatch =
-        (ev.organizer?.email === attendeeEmail) ||
+        ev.organizer?.email === attendeeEmail ||
         attendees.some((a) => a?.email === attendeeEmail);
       if (isMatch) results.push(ev);
       if (results.length >= pageSize) break;

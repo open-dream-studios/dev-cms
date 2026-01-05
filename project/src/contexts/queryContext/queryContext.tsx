@@ -65,6 +65,8 @@ import {
   SectionDefinitionInput,
   CustomerData,
   emptyCustomerData,
+  ScheduleRequest,
+  ScheduleRequestInput,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
@@ -74,6 +76,7 @@ import { useLeads } from "./queries/leads";
 import { useActions } from "./queries/actions";
 import { useActionDefinitions } from "./queries/actionDefinitions";
 import { useCustomerData } from "./queries/public/customerData";
+import { useScheduleRequests } from "./queries/public/scheduleRequests";
 // import { useMessages } from "./queries/messages";
 
 export type QueryContextType = {
@@ -278,6 +281,13 @@ export type QueryContextType = {
   customerProducts: any;
   customerJobs: any;
   customerSchedule: any;
+
+  // Schedule Requests
+  scheduleRequests: ScheduleRequest[];
+  isLoadingScheduleRequests: boolean;
+  refetchScheduleRequests: () => Promise<any>;
+  upsertScheduleRequest: (scheduleRequest: ScheduleRequestInput) => Promise<void>;
+  deleteScheduleRequest: (schedule_request_id: string) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -467,6 +477,14 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     customerSchedule,
   } = useCustomerData(isLoggedIn);
 
+  const {
+    scheduleRequests,
+    isLoadingScheduleRequests,
+    refetchScheduleRequests,
+    upsertScheduleRequest,
+    deleteScheduleRequest,
+  } = useScheduleRequests(isLoggedIn);
+
   return (
     <QueryContext.Provider
       value={{
@@ -606,6 +624,11 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         customerProducts,
         customerJobs,
         customerSchedule,
+        scheduleRequests,
+        isLoadingScheduleRequests,
+        refetchScheduleRequests,
+        upsertScheduleRequest,
+        deleteScheduleRequest,
       }}
     >
       {children}

@@ -50,13 +50,13 @@ export default function CustomerManager() {
   //   console.log(leads);
   // }, [leads]);
 
-  useEffect(() => {
-    console.log(actions);
-  }, [actions]);
+  // useEffect(() => {
+  //   console.log(actions);
+  // }, [actions]);
 
-  useEffect(() => {
-    console.log(actionDefinitions);
-  }, [actionDefinitions]);
+  // useEffect(() => {
+  //   console.log(actionDefinitions);
+  // }, [actionDefinitions]);
 
   const handleLeadClick = async () => {
     // await upsertLead({
@@ -102,11 +102,11 @@ export default function CustomerManager() {
 
   return (
     <div className="w-[100%] h-[100%]">
-      <div
+      {/* <div
         className="w-[20px] h-[20px] bg-red-400 cursor-pointer"
         onClick={handleLeadClick}
-      ></div>
-      {/* <div className="px-[14px] py-[12px] "><GoogleCalendar /></div> */}
+      ></div> */}
+      <div className="px-[14px] py-[12px] "><GoogleCalendar /></div>
       {/* <MessagesApp /> */}
     </div>
   );

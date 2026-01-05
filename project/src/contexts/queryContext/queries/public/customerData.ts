@@ -1,6 +1,6 @@
 // project/src/context/queryContext/queries/public/customerData.ts
 import { useQuery } from "@tanstack/react-query";
-import { fetchCustomerDataApi } from "@/api/public/customerData";
+import { fetchCustomerDataApi } from "@/api/public/customerData.api";
 import { CustomerData } from "@open-dream/shared";
 
 export function useCustomerData(isLoggedIn: boolean) {

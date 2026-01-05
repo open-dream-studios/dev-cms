@@ -81,26 +81,13 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
 
   if (!environmentInitialized || isLoadingCurrentUserData) return null;
 
-  // return currentUser ? (
-  //   <ProtectedLayout>
-  //     {children}
-  //     <CustomerCalls />
-  //   </ProtectedLayout>
-  // ) : (
-  //   <UnprotectedLayout />
-  // );
-
   return currentUser ? (
-    <RouteScopeProvider scope="protected">
-      <ProtectedLayout>
-        {children}
-        <CustomerCalls />
-      </ProtectedLayout>
-    </RouteScopeProvider>
+    <ProtectedLayout>
+      {children}
+      <CustomerCalls />
+    </ProtectedLayout>
   ) : (
-    <RouteScopeProvider scope="public">
-      <UnprotectedLayout />
-    </RouteScopeProvider>
+    <UnprotectedLayout />
   );
 };
 
@@ -155,36 +142,38 @@ const ProtectedLayout = ({ children }: { children: ReactNode }) => {
 
   if (currentUser.type === "internal") {
     return (
-      <div className="w-[100vw] display-height">
-        <Navbar />
-        <ContextMenu />
-        {updatingLock && (
-          <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
-        )}
-        <Modals landing={false} />
-        <UploadModal />
-        {projectsData.length === 0 ? (
-          <NoProjects />
-        ) : currentProjectId ? (
-          <>
-            <LeftBar />
-            <PageLayout leftbar={true}>{children}</PageLayout>
-          </>
-        ) : (
-          <PageLayout leftbar={false}>
-            <AdminHome />
-          </PageLayout>
-        )}
-      </div>
+      <RouteScopeProvider scope="private">
+        <div className="w-[100vw] display-height">
+          <Navbar />
+          <ContextMenu />
+          {updatingLock && (
+            <div className="z-[999] absolute left-0 top-0 w-[100vw] display-height" />
+          )}
+          <Modals landing={false} />
+          <UploadModal />
+          {projectsData.length === 0 ? (
+            <NoProjects />
+          ) : currentProjectId ? (
+            <>
+              <LeftBar />
+              <PageLayout leftbar={true}>{children}</PageLayout>
+            </>
+          ) : (
+            <PageLayout leftbar={false}>
+              <AdminHome />
+            </PageLayout>
+          )}
+        </div>
+      </RouteScopeProvider>
     );
   }
   return (
-    <>
+    <RouteScopeProvider scope="public">
       <Navbar />
       <Modals landing={false} />
       <PageLayout leftbar={false}>
         <CustomerPortal />
       </PageLayout>
-    </>
+    </RouteScopeProvider>
   );
 };
