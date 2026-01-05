@@ -10,7 +10,7 @@ import {
 import { authenticateUser } from "../../../util/auth.js";
 import { transactionHandler } from "../../../util/handlerWrappers.js";
 import { verifyVercelProxy } from "../../../util/verifyProxy.js";
-import { verifyPublicApiKey } from "../../../util/verifyPublicApiKey.js";
+import { verifyWixRequest } from "../../../util/verifyWixRequest.js";
 
 const router = express.Router();
 
@@ -39,13 +39,13 @@ router.post(
 // WIX
 router.post(
   "/wix-request",
-  verifyPublicApiKey,
+  verifyWixRequest,
   transactionHandler(createScheduleRequest)
 );
 
 router.get(
   "/wix-availability-request",
-  verifyPublicApiKey,
+  verifyWixRequest,
   transactionHandler(getScheduleAvailability)
 );
 

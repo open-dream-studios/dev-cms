@@ -9,6 +9,8 @@ import type { Request, Response } from "express";
 import { getProjectFromRequest } from "../../../util/verifyProxy.js";
 import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
 import { fetchCalendarPage } from "../../../services/google/calendar/calendar.js";
+import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
+import { getProjectIdByDomain } from "../../../handlers/projects/projects_repositories.js";
 
 // ---------- SCHEDULE REQUEST CONTROLLERS ----------
 
@@ -64,7 +66,6 @@ export const createScheduleRequest = async (
   connection: PoolConnection
 ) => {
   const {
-    project_domain,
     source_type,
     request_type,
     proposed_start,
@@ -74,23 +75,14 @@ export const createScheduleRequest = async (
     metadata,
   } = req.body;
 
-  if (!project_domain || !source_type || !request_type) {
+  if (!source_type || !request_type) {
     throw new Error("Missing required fields");
   }
 
-  // Resolve project
-  const [rows] = await connection.query<RowDataPacket[]>(
-    `SELECT id FROM projects WHERE domain = ? LIMIT 1`,
-    [project_domain]
-  );
+  const projectDomain = getProjectDomainFromWixRequest(req);
+  const project_idx = await getProjectIdByDomain(connection, projectDomain);
 
-  if (!rows.length) {
-    throw new Error("Invalid project");
-  }
-
-  const project_idx = rows[0].id;
-
-  return await upsertScheduleRequestFunction(
+  await upsertScheduleRequestFunction(
     connection,
     project_idx,
     {
@@ -104,15 +96,11 @@ export const createScheduleRequest = async (
         metadata,
       }),
     },
-    null // no user_id for public
+    null
   );
-};
 
-const PROJECT_IDX = 25;
-const REQUIRED_KEYS = [
-  "GOOGLE_CLIENT_SECRET_OBJECT",
-  "GOOGLE_REFRESH_TOKEN_OBJECT",
-];
+  return res.status(200).json({ success: true });
+};
 
 export const getScheduleAvailability = async (
   req: Request,
@@ -125,9 +113,15 @@ export const getScheduleAvailability = async (
     throw new Error("date query param required (YYYY-MM-DD)");
   }
 
-  // Resolve Google credentials
+  const projectDomain = getProjectDomainFromWixRequest(req);
+  const project_idx = await getProjectIdByDomain(connection, projectDomain);
+
+  const REQUIRED_KEYS = [
+    "GOOGLE_CLIENT_SECRET_OBJECT",
+    "GOOGLE_REFRESH_TOKEN_OBJECT",
+  ];
   const decryptedKeys = await getDecryptedIntegrationsFunction(
-    PROJECT_IDX,
+    project_idx,
     REQUIRED_KEYS,
     REQUIRED_KEYS
   );

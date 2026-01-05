@@ -57,6 +57,21 @@ export const getProjectByIdFunction = async (
   return rows;
 };
 
+
+export async function getProjectIdByDomain(
+  connection: PoolConnection,
+  domain: string
+): Promise<number> {
+  const [rows] = await connection.query<RowDataPacket[]>(
+    `SELECT id FROM projects WHERE domain = ? LIMIT 1`,
+    [domain]
+  );
+  if (!rows.length) {
+    throw new Error("Invalid project domain");
+  }
+  return rows[0].id;
+}
+
 export const upsertProjectFunction = async (
   connection: PoolConnection,
   reqBody: any
