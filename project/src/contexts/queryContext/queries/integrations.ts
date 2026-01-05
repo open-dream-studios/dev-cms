@@ -6,12 +6,16 @@ import {
   fetchProjectIntegrationsApi,
   upsertProjectIntegrationApi,
 } from "@/api/integrations.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useIntegrations(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
+
   const {
     data: integrations = [],
     isLoading: isLoadingIntegrations,
@@ -19,7 +23,7 @@ export function useIntegrations(
   } = useQuery<Integration[]>({
     queryKey: ["integrations", currentProjectId],
     queryFn: async () => fetchProjectIntegrationsApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic,
   });
 
   const upsertIntegrationMutation = useMutation({

@@ -7,6 +7,7 @@ import {
   reorderProjectSectionsApi,
   upsertProjectSectionsApi,
 } from "@/api/sections.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useSections(
   isLoggedIn: boolean,
@@ -14,6 +15,8 @@ export function useSections(
   currentPageId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: projectSections = [],
@@ -22,7 +25,7 @@ export function useSections(
   } = useQuery<Section[]>({
     queryKey: ["sections", currentProjectId, currentPageId],
     queryFn: async () => fetchProjectSectionsApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId && !!currentPageId,
+    enabled: isLoggedIn && !!currentProjectId && !!currentPageId && !isPublic
   });
 
   const upsertSectionMutation = useMutation({

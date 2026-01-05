@@ -7,6 +7,7 @@ import {
   fetchProjectProductsApi,
   upsertProjectProductsApi,
 } from "@/api/products.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useProducts(
   isLoggedIn: boolean,
@@ -14,6 +15,8 @@ export function useProducts(
   isOptimisticUpdate: RefObject<boolean>
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: productsData,
@@ -22,7 +25,7 @@ export function useProducts(
   } = useQuery<Product[]>({
     queryKey: ["products", currentProjectId],
     queryFn: async () => fetchProjectProductsApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertProductsMutation = useMutation({

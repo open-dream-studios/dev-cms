@@ -6,12 +6,15 @@ import {
   fetchProjectUsersApi,
   upsertProjectUserApi,
 } from "@/api/projectUsers.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useProjectUsers(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: projectUsersData,
@@ -20,7 +23,7 @@ export function useProjectUsers(
   } = useQuery<ProjectUser[]>({
     queryKey: ["projectUsers"],
     queryFn: async () => fetchProjectUsersApi(),
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && !isPublic
   });
 
   const upsertProjectUserMutation = useMutation({

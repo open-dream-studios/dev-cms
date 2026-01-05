@@ -6,6 +6,7 @@ import {
   fetchModuleDefinitionsApi,
   runModuleMutationApi,
 } from "@/api/moduleFunctions.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export type RunModuleVariables = { identifier: string; body: any };
 export type RunModuleResult =
@@ -17,6 +18,9 @@ export function useModuleFunctions(
   currentProjectId: number | null
 ) {
   const { projectModules } = useProjectModules(isLoggedIn, currentProjectId);
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
+
   const {
     data: moduleDefinitionTree = {
       name: "",
@@ -29,7 +33,7 @@ export function useModuleFunctions(
   } = useQuery<ModuleDefinitionTree>({
     queryKey: ["moduleDefinitions"],
     queryFn: async () => fetchModuleDefinitionsApi(),
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && !isPublic
   });
 
   const runModuleMutation = useMutation<

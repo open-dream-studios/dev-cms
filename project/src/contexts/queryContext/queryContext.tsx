@@ -63,6 +63,8 @@ import {
   JobDefinitionInput,
   PageDefinitionInput,
   SectionDefinitionInput,
+  CustomerData,
+  emptyCustomerData,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useTheme } from "./queries/theme";
@@ -71,6 +73,7 @@ import { useProjectCalls } from "./queries/calls";
 import { useLeads } from "./queries/leads";
 import { useActions } from "./queries/actions";
 import { useActionDefinitions } from "./queries/actionDefinitions";
+import { useCustomerData } from "./queries/public/customerData";
 // import { useMessages } from "./queries/messages";
 
 export type QueryContextType = {
@@ -239,13 +242,6 @@ export type QueryContextType = {
   isLoadingProjectCalls: boolean;
   refetchProjectCalls: () => Promise<any>;
 
-  // Messages
-  // messagesData: Message[];
-  // isLoadingMessages: boolean;
-  // refetchMessages: () => Promise<any>;
-  // upsertMessage: (message: MessageInput) => Promise<void>;
-  // deleteMessage: (message_id: string) => Promise<void>;
-
   // Leads
   leads: Lead[];
   isLoadingLeads: boolean;
@@ -266,6 +262,22 @@ export type QueryContextType = {
     actionDefinition: ActionDefinitionInput
   ) => Promise<void>;
   deleteActionDefinition: (action_definition_id: string) => Promise<void>;
+
+  // Messages
+  // messagesData: Message[];
+  // isLoadingMessages: boolean;
+  // refetchMessages: () => Promise<any>;
+  // upsertMessage: (message: MessageInput) => Promise<void>;
+  // deleteMessage: (message_id: string) => Promise<void>;
+
+  // Customer Data
+  customerData: CustomerData;
+  isLoadingCustomerData: boolean;
+  refetchCustomerData: () => Promise<any>;
+  customerInfo: any;
+  customerProducts: any;
+  customerJobs: any;
+  customerSchedule: any;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -445,6 +457,16 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     deleteActionDefinition,
   } = useActionDefinitions(isLoggedIn, currentProjectId);
 
+  const {
+    CustomerDataResult,
+    isLoadingCustomerData,
+    refetchCustomerData,
+    customerInfo,
+    customerProducts,
+    customerJobs,
+    customerSchedule,
+  } = useCustomerData(isLoggedIn);
+
   return (
     <QueryContext.Provider
       value={{
@@ -556,11 +578,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         projectCalls,
         isLoadingProjectCalls,
         refetchProjectCalls,
-        // messagesData,
-        // isLoadingMessages,
-        // refetchMessages,
-        // upsertMessage,
-        // deleteMessage,
         leads,
         isLoadingLeads,
         refetchLeads,
@@ -576,6 +593,19 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchActionDefinitions,
         upsertActionDefinition,
         deleteActionDefinition,
+
+        // messagesData,
+        // isLoadingMessages,
+        // refetchMessages,
+        // upsertMessage,
+        // deleteMessage,
+        customerData: CustomerDataResult ?? emptyCustomerData,
+        isLoadingCustomerData,
+        refetchCustomerData,
+        customerInfo,
+        customerProducts,
+        customerJobs,
+        customerSchedule,
       }}
     >
       {children}

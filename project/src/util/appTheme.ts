@@ -1,5 +1,4 @@
 // project/src/util/appTheme.ts
-export type ThemeType = "light" | "dark";
 export type AppTheme = ReturnType<typeof makeTheme>;
 
 const c = (light: string, dark: string) => [light, dark] as const;

@@ -51,7 +51,7 @@ export const googleAuthFunction = async (
   if (user) {
     if (user.auth_provider !== "google") {
       return {
-        status: 401,
+        status: 402,
         success: "false",
         message: `Please log in using ${user.auth_provider}`,
       };
@@ -70,6 +70,7 @@ export const googleAuthFunction = async (
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
+   
     return {
       status: 200,
       message: "Google login successful",
@@ -89,6 +90,7 @@ export const googleAuthFunction = async (
     };
   }
   // Otherwise create a new user
+
   const newUserId = `USER-${ulid()}`;
   const insertQuery = `
     INSERT INTO users 

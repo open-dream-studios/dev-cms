@@ -1,10 +1,9 @@
 // project/src/modules/_util/Search/_actions/search.actions.ts
-import { Customer } from "@open-dream/shared";
+import { Customer, User } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { formatPhone } from "@/util/functions/Customers";
 import { highlightText, runSearchMatch } from "@/util/functions/Search";
-import { User } from "@/contexts/authContext";
 import { AppTheme } from "@/util/appTheme";
 
 export type ContactCardDisplay = {

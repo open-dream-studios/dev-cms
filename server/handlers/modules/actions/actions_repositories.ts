@@ -141,7 +141,7 @@ export const upsertActionDefinitionFunction = async (
   if (
     rows.length > 0 &&
     (!action_definition_id ||
-      action_definition_id === rows[0].action_definition_id)
+      action_definition_id !== rows[0].action_definition_id)
   ) {
     return {
       success: false,

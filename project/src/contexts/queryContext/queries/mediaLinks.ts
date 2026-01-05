@@ -6,12 +6,15 @@ import {
   fetchMediaLinksApi,
   upsertMediaLinksApi,
 } from "@/api/mediaLinks.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useMediaLinks(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: mediaLinks = [],
@@ -20,7 +23,7 @@ export function useMediaLinks(
   } = useQuery<MediaLink[]>({
     queryKey: ["mediaLinks", currentProjectId],
     queryFn: async () => fetchMediaLinksApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertMediaLinksMutation = useMutation({

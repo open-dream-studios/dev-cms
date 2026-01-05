@@ -1,17 +1,13 @@
 // project/src/context/queryContext/queries/leads.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LeadInput } from "@open-dream/shared";
-import {
-  fetchLeadsApi,
-  upsertLeadApi,
-  deleteLeadApi,
-} from "@/api/leads.api";
+import { fetchLeadsApi, upsertLeadApi, deleteLeadApi } from "@/api/leads.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
-export function useLeads(
-  isLoggedIn: boolean,
-  currentProjectId: number | null
-) {
+export function useLeads(isLoggedIn: boolean, currentProjectId: number | null) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: leads = [],
@@ -20,7 +16,7 @@ export function useLeads(
   } = useQuery({
     queryKey: ["leads", currentProjectId],
     queryFn: async () => fetchLeadsApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertLeadMutation = useMutation({

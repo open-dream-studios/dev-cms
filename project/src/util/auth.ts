@@ -95,14 +95,18 @@ export const googleSignIn = async () => {
     }
     return success;
   } catch (error: any) {
-    if (
+    if (error.status === 402) {
+      toast.error("User already exists with another sign in method");
+      return false;
+    } else if (
       error?.code === "auth/popup-closed-by-user" ||
       error?.code === "auth/cancelled-popup-request"
     ) {
       return false;
+    } else {
+      toast.error("Google auth failed");
+      console.error("Google auth failed:", error);
+      return false;
     }
-    toast.error("Google auth failed");
-    console.error("Google auth failed:", error);
-    return false;
   }
 };

@@ -10,7 +10,7 @@ import { AuthContext } from "@/contexts/authContext";
 import {
   useConversations,
   useConversationMessages,
-} from "@/contexts/queryContext/queries/messages";
+} from "@/contexts/queryContext/queries/public/messages";
 import { formatDateTime } from "@/util/functions/Time";
 import { useMessagesDataStore } from "./_store/messages.store";
 import { FullChat } from "./FullChat";

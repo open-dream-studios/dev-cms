@@ -2,25 +2,10 @@
 "use client";
 import { createContext, ReactNode } from "react";
 import { makeRequest } from "../util/axios";
-import { ThemeType } from "../util/appTheme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { logout } from "@/util/auth";
 import { useUiStore } from "@/store/useUIStore";
-
-export interface User {
-  id: string;
-  user_id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  profile_img_src: string | null;
-  theme: ThemeType;
-  credits: string;
-  auth_provider: string;
-  created_at: string;
-  admin?: number;
-  type: "internal" | "external";
-}
+import { User } from "@open-dream/shared";
 
 interface AuthContextType {
   currentUser: User | null;

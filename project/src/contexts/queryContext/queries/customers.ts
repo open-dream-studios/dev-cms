@@ -1,17 +1,20 @@
 // project/src/context/queryContext/queries/customers.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CustomerInput } from "@open-dream/shared";
 import {
   deleteCustomerApi,
   fetchCustomersApi,
   upsertCustomerApi,
 } from "@/api/customers.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useCustomers(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: customers = [],
@@ -20,7 +23,7 @@ export function useCustomers(
   } = useQuery({
     queryKey: ["customers", currentProjectId],
     queryFn: async () => fetchCustomersApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertCustomerMutation = useMutation({

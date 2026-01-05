@@ -13,5 +13,6 @@ export const useAdminControllersUIStore = createStore({
   showForm: false,
   selectedDefinition: null as DefinitionItem | null,
   editingDefinition: null as DefinitionItem | null,
-  allowedSections: [] as | any[]
+  allowedSections: [] as | any[],
+  newSection: "" as string
 });

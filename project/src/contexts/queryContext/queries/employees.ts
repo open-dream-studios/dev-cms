@@ -14,12 +14,15 @@ import {
   upsertEmployeeApi,
   upsertEmployeeAssignmentApi,
 } from "@/api/employees.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useEmployees(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: employeesData,
@@ -28,7 +31,7 @@ export function useEmployees(
   } = useQuery<Employee[]>({
     queryKey: ["employees", currentProjectId],
     queryFn: async () => fetchEmployeesApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertEmployeeMutation = useMutation({

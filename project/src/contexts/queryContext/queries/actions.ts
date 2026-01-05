@@ -6,12 +6,15 @@ import {
   fetchProjectActionsApi,
   upsertProjectActionApi,
 } from "@/api/actions.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useActions(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: actionsData,
@@ -20,7 +23,7 @@ export function useActions(
   } = useQuery<Action[]>({
     queryKey: ["actions", currentProjectId],
     queryFn: async () => fetchProjectActionsApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertActionMutation = useMutation({

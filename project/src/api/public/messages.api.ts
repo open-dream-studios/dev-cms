@@ -1,4 +1,4 @@
-// project/src/api/messages.api.ts
+// project/src/api/public/messages.api.ts
 import { makeRequest } from "@/util/axios";
 import { utcToLocal } from "@/util/functions/Time";
 import { Conversation, Message, MessageInput } from "@open-dream/shared";

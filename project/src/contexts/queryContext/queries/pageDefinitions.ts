@@ -6,9 +6,13 @@ import {
   fetchProjectPageDefinitionsApi,
   upsertProjectPageDefinitionApi,
 } from "@/api/pageDefinitions.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function usePageDefinitions(isLoggedIn: boolean) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
+
   const {
     data: pageDefinitions = [],
     isLoading: isLoadingPageDefinitions,
@@ -16,7 +20,7 @@ export function usePageDefinitions(isLoggedIn: boolean) {
   } = useQuery<PageDefinition[]>({
     queryKey: ["pageDefinitions"],
     queryFn: async () => fetchProjectPageDefinitionsApi(),
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && !isPublic
   });
 
   const upsertPageDefinitionMutation = useMutation({

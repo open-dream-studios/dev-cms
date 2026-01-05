@@ -25,6 +25,7 @@ export default function CustomerManager() {
     actionDefinitions,
     upsertActionDefinition,
     deleteActionDefinition,
+    customerData
   } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
 
@@ -95,7 +96,8 @@ export default function CustomerManager() {
     //   description: null,
     // } as ActionInput);
 
-    await deleteAction("TASK-01KE2MNN7TFQYP2X3J6ESKH1TV")
+    // await deleteAction("TASK-01KE2MNN7TFQYP2X3J6ESKH1TV")
+    console.log(customerData)
   };
 
   return (

@@ -1,4 +1,4 @@
-// project/src/context/queryContext/queries/messages.ts
+// project/src/context/queryContext/queries/public/messages.ts
 import {
   useQuery,
   useMutation,
@@ -11,11 +11,7 @@ import {
   fetchMessagesByConversationApi,
   upsertMessageApi,
   deleteMessageApi,
-} from "@/api/messages.api";
-
-/* ---------------------------------------------
-   CONVERSATIONS LIST
---------------------------------------------- */
+} from "@/api/public/messages.api";
 
 export function useConversations(isLoggedIn: boolean) {
   return useQuery<Conversation[]>({
@@ -24,10 +20,6 @@ export function useConversations(isLoggedIn: boolean) {
     enabled: isLoggedIn,
   });
 }
-
-/* ---------------------------------------------
-   MESSAGES (PER CONVERSATION)
---------------------------------------------- */
 
 export function useConversationMessages(
   conversation_id: string | null,

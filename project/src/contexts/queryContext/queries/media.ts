@@ -7,9 +7,12 @@ import {
   rotateProjectMediaApi,
   upsertProjectMediaApi,
 } from "@/api/media.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: media = [],
@@ -18,7 +21,7 @@ export function useMedia(isLoggedIn: boolean, currentProjectId: number | null) {
   } = useQuery<Media[]>({
     queryKey: ["media", currentProjectId],
     queryFn: async () => fetchProjectMediaApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertMediaMutation = useMutation({

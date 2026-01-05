@@ -6,9 +6,12 @@ import {
   fetchProjectTasksApi,
   upsertProjectTaskApi,
 } from "@/api/tasks.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: tasksData,
@@ -17,7 +20,7 @@ export function useTasks(isLoggedIn: boolean, currentProjectId: number | null) {
   } = useQuery<Task[]>({
     queryKey: ["tasks", currentProjectId],
     queryFn: async () => fetchProjectTasksApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertTaskMutation = useMutation({

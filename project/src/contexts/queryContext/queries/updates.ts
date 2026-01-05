@@ -9,6 +9,7 @@ import {
   toggleProjectUpdateApi,
   upsertProjectUpdateApi,
 } from "@/api/updates.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 /**
  * Hook that mirrors your employees queries pattern.
@@ -25,6 +26,8 @@ export function useUpdates(
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: updatesData,
@@ -34,7 +37,7 @@ export function useUpdates(
     queryKey: ["updates", currentProjectId],
     queryFn: async (): Promise<Update[]> =>
       fetchProjectUpdatesApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertUpdateMutation = useMutation({

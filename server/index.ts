@@ -40,6 +40,7 @@ import updatesRoutes from "./handlers/modules/updates/updates_routes.js";
 import wixRoutes from "./handlers/webhooks/wix/wix_routes.js";
 import messagesRoutes from "./handlers/public/messages/messages_routes.js";
 import leadRoutes from "./handlers/modules/leads/leads_routes.js";
+import customerDataRoutes from "./handlers/public/customerData/customerData_routes.js"
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -133,6 +134,7 @@ app.use("/api/leads", leadRoutes);
 
 // Public Routes
 app.use("/api/public/messages", messagesRoutes);
+app.use("/api/public/customer-data", customerDataRoutes);
 
 // WebSocket
 const wss = new WebSocketServer({ server });

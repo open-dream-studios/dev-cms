@@ -6,9 +6,12 @@ import {
   fetchProjectSectionDefinitionsApi,
   upsertProjectSectionDefinitionsApi,
 } from "@/api/sectionDefinitions.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useSectionDefinitions(isLoggedIn: boolean) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: sectionDefinitions = [],
@@ -17,7 +20,7 @@ export function useSectionDefinitions(isLoggedIn: boolean) {
   } = useQuery<SectionDefinition[]>({
     queryKey: ["sectionDefinitions"],
     queryFn: async () => fetchProjectSectionDefinitionsApi(),
-    enabled: isLoggedIn,
+    enabled: isLoggedIn && !isPublic
   });
 
   const upsertSectionDefinitionMutation = useMutation({

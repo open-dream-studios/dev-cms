@@ -137,7 +137,7 @@ export const upsertJobDefinitionFunction = async (
 
   if (
     rows.length > 0 &&
-    (!job_definition_id || job_definition_id === rows[0].job_definition_id)
+    (!job_definition_id || job_definition_id !== rows[0].job_definition_id)
   ) {
     return {
       success: false,

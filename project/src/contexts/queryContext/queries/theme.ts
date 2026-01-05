@@ -2,8 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { User as FirebaseUser } from "firebase/auth";
-import { ThemeType } from "@/util/appTheme";
-import { User } from "@/contexts/authContext";
+import { ThemeType, User } from "@open-dream/shared";
 
 export function useTheme(currentUser: User | null) {
   const queryClient = useQueryClient();

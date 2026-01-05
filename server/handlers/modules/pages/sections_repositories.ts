@@ -169,7 +169,7 @@ export const upsertSectionDefinitionFunction = async (
   if (
     rows.length > 0 &&
     (!section_definition_id ||
-      section_definition_id === rows[0].section_definition_id)
+      section_definition_id !== rows[0].section_definition_id)
   ) {
     return {
       success: false,

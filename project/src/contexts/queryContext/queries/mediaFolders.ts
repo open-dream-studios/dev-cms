@@ -6,12 +6,15 @@ import {
   fetchMediaFoldersApi,
   upsertMediaFoldersApi,
 } from "@/api/mediaFolders.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useMediaFolders(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: mediaFolders = [],
@@ -20,7 +23,7 @@ export function useMediaFolders(
   } = useQuery<MediaFolder[]>({
     queryKey: ["mediaFolders", currentProjectId],
     queryFn: async () => fetchMediaFoldersApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertMediaFoldersMutation = useMutation({

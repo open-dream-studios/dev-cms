@@ -6,12 +6,15 @@ import {
   fetchProjectModulesApi,
   upsertProjectModuleApi,
 } from "@/api/projectModules.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useProjectModules(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: projectModules = [],
@@ -20,7 +23,7 @@ export function useProjectModules(
   } = useQuery<ProjectModule[]>({
     queryKey: ["projectModules", currentProjectId],
     queryFn: async () => fetchProjectModulesApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertProjectModuleMutation = useMutation({

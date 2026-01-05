@@ -2,10 +2,6 @@
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { ulid } from "ulid";
 
-/* -------------------------------
-   CONVERSATIONS
--------------------------------- */
-
 export const getConversationsFunction = async (
   connection: PoolConnection,
   project_idx: number,

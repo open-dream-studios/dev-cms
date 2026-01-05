@@ -196,7 +196,7 @@ export const upsertPageDefinitionFunction = async (
 
   if (
     rows.length > 0 &&
-    (!page_definition_id || page_definition_id === rows[0].page_definition_id)
+    (!page_definition_id || page_definition_id !== rows[0].page_definition_id)
   ) {
     return {
       success: false,

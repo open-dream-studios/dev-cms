@@ -6,12 +6,15 @@ import {
   fetchJobDefinitionsApi,
   upsertJobDefinitionApi,
 } from "@/api/jobDefinitions.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useJobDefinitions(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: jobDefinitionsData,
@@ -20,7 +23,7 @@ export function useJobDefinitions(
   } = useQuery<JobDefinition[]>({
     queryKey: ["jobDefinitions", currentProjectId],
     queryFn: async () => fetchJobDefinitionsApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertJobDefinitionMutation = useMutation({

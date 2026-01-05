@@ -7,12 +7,15 @@ import {
   deleteProjectPageApi,
   reorderProjectPagesApi,
 } from "@/api/pages.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useProjectPages(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: projectPages = [],
@@ -21,7 +24,7 @@ export function useProjectPages(
   } = useQuery<ProjectPage[]>({
     queryKey: ["projectPages", currentProjectId],
     queryFn: () => fetchProjectPagesApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   const upsertProjectPageMutation = useMutation({
@@ -92,6 +95,6 @@ export function useProjectPages(
     refetchProjectPages,
     upsertProjectPage: upsertProjectPageMutation.mutateAsync,
     deleteProjectPage: deleteProjectPageMutation.mutateAsync,
-    reorderProjectPages
+    reorderProjectPages,
   };
 }

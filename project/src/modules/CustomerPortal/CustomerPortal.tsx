@@ -1,7 +1,7 @@
 // project/src/modules/CustomerPortal/CustomerPortal.tsx
 "use client";
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   MessageCircle,
@@ -105,7 +105,7 @@ const StatusBadge = ({ status }: { status: TubStatus }) => {
 
 export default function CustomerPortal() {
   const { currentUser } = useContext(AuthContext);
-  // const { upsertMessage, messagesData } = useContextQueries();
+  const { customerData } = useContextQueries();
   const [draft, setDraft] = useState("");
 
   const sendMessage = async () => {
@@ -116,6 +116,11 @@ export default function CustomerPortal() {
     // });
     setDraft("");
   };
+
+  useEffect(()=>{
+    console.log(customerData)
+  },[customerData])
+
 
   if (!currentUser) return null;
 

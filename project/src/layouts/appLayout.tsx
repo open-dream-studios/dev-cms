@@ -36,6 +36,7 @@ import { queryClient } from "@/lib/queryClient";
 import CustomerPortal from "@/modules/CustomerPortal/CustomerPortal";
 import { useAppInitialization } from "@/hooks/useAppInitialization";
 import NoProjects from "@/screens/NoProjects";
+import { RouteScopeProvider } from "@/contexts/routeScopeContext";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   // const [queryClient] = useState(() => new QueryClient());
@@ -80,13 +81,26 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
 
   if (!environmentInitialized || isLoadingCurrentUserData) return null;
 
+  // return currentUser ? (
+  //   <ProtectedLayout>
+  //     {children}
+  //     <CustomerCalls />
+  //   </ProtectedLayout>
+  // ) : (
+  //   <UnprotectedLayout />
+  // );
+
   return currentUser ? (
-    <ProtectedLayout>
-      {children}
-      <CustomerCalls />
-    </ProtectedLayout>
+    <RouteScopeProvider scope="protected">
+      <ProtectedLayout>
+        {children}
+        <CustomerCalls />
+      </ProtectedLayout>
+    </RouteScopeProvider>
   ) : (
-    <UnprotectedLayout />
+    <RouteScopeProvider scope="public">
+      <UnprotectedLayout />
+    </RouteScopeProvider>
   );
 };
 

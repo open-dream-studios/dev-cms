@@ -23,6 +23,7 @@ import {
   handleDeleteDefinition,
   handleEditDefinitionClick,
   handleShowDefinitionForm,
+  isPageDefinition,
 } from "./_actions/adminControllers.actions";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 
@@ -34,19 +35,32 @@ const DefinitionsController = ({ control }: { control: DefinitionControl }) => {
   const adapter = definitionAdapters[control];
   const form = adapter.useForm();
   const { definitions, isLoading } = adapter.useDefinitions();
-  const selectedDefinition = useAdminControllersUIStore(
-    (state) => state.selectedDefinition
-  );
-  const showForm = useAdminControllersUIStore((state) => state.showForm);
-  const editingDefinition = useAdminControllersUIStore(
-    (state) => state.editingDefinition
-  );
+  const {
+    selectedDefinition,
+    showForm,
+    editingDefinition,
+    allowedSections,
+    setAllowedSections,
+    newSection,
+    setNewSection,
+  } = useAdminControllersUIStore();
 
   const filteredDefinitions = useMemo(() => {
     return definitions.filter((def: DefinitionItem) =>
       adapter.isParent(def, selectedDefinition)
     );
   }, [definitions, selectedDefinition, adapter]);
+
+  const handleAddSection = () => {
+    if (newSection.trim() && !allowedSections.includes(newSection.trim())) {
+      setAllowedSections([...allowedSections, newSection.trim()]);
+      setNewSection("");
+    }
+  };
+
+  const handleDeleteSection = (key: string) => {
+    setAllowedSections(allowedSections.filter((s) => s !== key));
+  };
 
   if (!currentUser) return null;
 
@@ -64,7 +78,7 @@ const DefinitionsController = ({ control }: { control: DefinitionControl }) => {
             <FaChevronLeft size={22} color={currentTheme.text_3} />
           </div>
         )}
-         
+
         <h2 className="text-[24px] ml-[4px] font-bold mt-[-5px] mr-[14px]">
           {selectedDefinition
             ? selectedDefinition.type
@@ -131,6 +145,55 @@ const DefinitionsController = ({ control }: { control: DefinitionControl }) => {
               placeholder="Description..."
               className="input outline-none px-2 py-1 w-full mt-2"
             />
+
+            {editingDefinition && isPageDefinition(editingDefinition) && (
+              <div className="mt-4 px-2">
+                <p className="font-semibold text-[17px] mb-[6px]">
+                  Allowed Sections
+                </p>
+                {allowedSections.length > 0 && (
+                  <div className="flex flex-wrap gap-2 my-1">
+                    {allowedSections.map((s) => (
+                      <div
+                        key={s}
+                        className="flex items-center gap-2 px-3 py-1 mt-[3px] mb-[1px] rounded-full text-sm"
+                        style={{
+                          backgroundColor: currentTheme.background_2_selected,
+                          color: currentTheme.text_4,
+                        }}
+                      >
+                        {s}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSection(s)}
+                          className="ml-1 text-xs hover:brightness-75 dim cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    value={newSection}
+                    onChange={(e) => setNewSection(e.target.value)}
+                    placeholder="Add a section..."
+                    className="outline-none input py-[6px] rounded-[5px] text-[14px] flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSection}
+                    style={{
+                      backgroundColor: currentTheme.background_2_2,
+                    }}
+                    className="hover:brightness-90 dim cursor-pointer w-[80px] rounded-full h-[30px] text-sm"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

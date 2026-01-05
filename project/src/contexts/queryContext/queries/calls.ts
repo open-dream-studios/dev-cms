@@ -1,12 +1,15 @@
 // project/src/context/queryContext/queries/calls.ts
 import { useQuery } from "@tanstack/react-query";
 import { fetchProjectCallsApi } from "@/api/calls.api";
+import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useProjectCalls(
   isLoggedIn: boolean,
   currentProjectId: number | null
 ) {
   // const queryClient = useQueryClient();
+  const routeScope = useRouteScope();
+  const isPublic = routeScope === "public";
 
   const {
     data: projectCalls = [],
@@ -15,7 +18,7 @@ export function useProjectCalls(
   } = useQuery({
     queryKey: ["projectCalls", currentProjectId],
     queryFn: async () => fetchProjectCallsApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !isPublic
   });
 
   // const upsertProjectCallMutation = useMutation({

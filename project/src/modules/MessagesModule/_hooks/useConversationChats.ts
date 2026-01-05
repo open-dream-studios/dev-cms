@@ -2,7 +2,7 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContext, useEffect, useState } from "react";
 import { useMessagesDataStore } from "../_store/messages.store";
-import { useConversationMessages, useConversations } from "@/contexts/queryContext/queries/messages";
+import { useConversationMessages, useConversations } from "@/contexts/queryContext/queries/public/messages";
 
 export function useConversationChat() {
   const { currentUser } = useContext(AuthContext);
