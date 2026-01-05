@@ -54,8 +54,8 @@ export const getProjectFromRequest = async (
   `;
   const [rows] = await connection.query<RowDataPacket[]>(q);
   if (domain === "localhost") return 25;
-  const project = rows.find((proj) => proj.domain === changeToHTTPSDomain(domain));
-  // console.log(rows, domain);
+  const project = rows.find((proj) => changeToHTTPSDomain(proj.domain) === changeToHTTPSDomain(domain));
+  console.log(rows, domain);
   if (!project?.id) return null;
   return project.id;
 };

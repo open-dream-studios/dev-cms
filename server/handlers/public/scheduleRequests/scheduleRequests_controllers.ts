@@ -11,6 +11,7 @@ import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations
 import { fetchCalendarPage } from "../../../services/google/calendar/calendar.js";
 import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
 import { getProjectIdByDomain } from "../../../handlers/projects/projects_repositories.js";
+import { changeToHTTPSDomain } from "functions/data.js";
 
 // ---------- SCHEDULE REQUEST CONTROLLERS ----------
 
@@ -107,16 +108,16 @@ export const getScheduleAvailability = async (
   res: Response,
   connection: PoolConnection
 ) => {
-  console.log("getting availability")
   const { date } = req.query;
-  console.log(date)
 
   if (!date || typeof date !== "string") {
     throw new Error("date query param required (YYYY-MM-DD)");
   }
+  console.log(date)
 
   const projectDomain = getProjectDomainFromWixRequest(req);
-  const project_idx = await getProjectIdByDomain(connection, projectDomain);
+  console.log(projectDomain, changeToHTTPSDomain(projectDomain))
+  const project_idx = await getProjectIdByDomain(connection, changeToHTTPSDomain(projectDomain));
 
   console.log(projectDomain, project_idx)
 
