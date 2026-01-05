@@ -41,6 +41,9 @@ export const upsertScheduleRequestFunction = async (
     proposed_location,
     status,
     ai_reasoning,
+    event_title,
+    event_description,
+    metadata,
   } = reqBody;
 
   if (!source_type|| !request_type) {
@@ -49,7 +52,7 @@ export const upsertScheduleRequestFunction = async (
 
   let finalSourceType = source_type
   if (!user_id) {
-    finalSourceType = "customer"
+    finalSourceType = "public"
   }
 
   const source_user_id = assign_source_user_id ? user_id : null;
@@ -71,9 +74,12 @@ export const upsertScheduleRequestFunction = async (
       proposed_end,
       proposed_location,
       status,
-      ai_reasoning
+      ai_reasoning,
+      event_title,
+      event_description,
+      metadata
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       customer_id = VALUES(customer_id),
       job_id = VALUES(job_id),
@@ -86,6 +92,9 @@ export const upsertScheduleRequestFunction = async (
       proposed_location = VALUES(proposed_location),
       status = VALUES(status),
       ai_reasoning = VALUES(ai_reasoning),
+      event_title = VALUES(event_title),
+      event_description = VALUES(event_description),
+      metadata = VALUES(metadata),
       updated_at = NOW(),
       resolved_at = IF(
         VALUES(status) IN ('approved','rejected'),
@@ -108,6 +117,9 @@ export const upsertScheduleRequestFunction = async (
     proposed_location ?? null,
     status ?? "pending",
     ai_reasoning ?? null,
+    event_title,
+    event_description,
+    metadata
   ];
 
   const [result] = await connection.query<ResultSetHeader>(query, values);
