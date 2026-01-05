@@ -11,7 +11,7 @@ import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations
 import { fetchCalendarPage } from "../../../services/google/calendar/calendar.js";
 import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
 import { getProjectIdByDomain } from "../../../handlers/projects/projects_repositories.js";
-import { changeToHTTPSDomain } from "functions/data.js";
+import { changeToHTTPSDomain } from "../../../functions/data.js";
 
 // ---------- SCHEDULE REQUEST CONTROLLERS ----------
 
