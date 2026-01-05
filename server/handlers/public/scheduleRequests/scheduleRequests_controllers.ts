@@ -11,6 +11,7 @@ import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations
 import { fetchCalendarPage } from "../../../services/google/calendar/calendar.js";
 import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
 import { getProjectIdByDomain } from "../../../handlers/projects/projects_repositories.js";
+import { ScheduleRequest } from "@open-dream/shared";
 
 // ---------- SCHEDULE REQUEST CONTROLLERS ----------
 
@@ -71,7 +72,8 @@ export const createScheduleRequest = async (
     proposed_start,
     proposed_end,
     proposed_location,
-    customer,
+    event_title,
+    event_description,
     metadata,
   } = req.body;
 
@@ -93,15 +95,17 @@ export const createScheduleRequest = async (
       proposed_start,
       proposed_end,
       proposed_location,
-      ai_reasoning: JSON.stringify({
-        customer,
+      ai_reasoning: null,
+      event_title,
+      event_description,
+      metadata: JSON.stringify({
         metadata,
       }),
     },
     null
   );
 
-  return { success: true }
+  return { success: true };
 };
 
 export const getScheduleAvailability = async (
