@@ -81,7 +81,7 @@ export const createScheduleRequest = async (
   }
 
   const projectDomain = getProjectDomainFromWixRequest(req);
-  const project_idx = await getProjectIdByDomain(connection, projectDomain);
+  const project_idx = await getProjectIdByDomain(projectDomain);
 
   if (!project_idx) throw new Error("Missing required fields");
 
@@ -102,7 +102,7 @@ export const createScheduleRequest = async (
     null
   );
 
-  return res.status(200).json({ success: true });
+  return { success: true }
 };
 
 export const getScheduleAvailability = async (
@@ -117,9 +117,8 @@ export const getScheduleAvailability = async (
   }
 
   const projectDomain = getProjectDomainFromWixRequest(req);
-  const project_idx = await getProjectIdByDomain(connection, projectDomain);
+  const project_idx = await getProjectIdByDomain(projectDomain);
 
-  console.log(projectDomain, project_idx)
   if (!project_idx) throw new Error("Missing required fields");
 
   const REQUIRED_KEYS = [

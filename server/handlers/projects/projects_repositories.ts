@@ -58,28 +58,21 @@ export const getProjectByIdFunction = async (
 };
 
 export async function getProjectIdByDomain(
-  connection: PoolConnection,
   domain: string
 ): Promise<number | null> {
   if (!domain) return null;
-
   const normalizedInput = changeToHTTPSDomain(domain);
-
   const projects = await getProjectsFunction();
   if (!projects.length) {
     return null;
   }
-
   for (const project of projects) {
     if (!project.domain) continue;
-
     const normalizedProjectDomain = changeToHTTPSDomain(project.domain);
-
     if (normalizedProjectDomain === normalizedInput && project.id) {
       return project.id;
     }
   }
-
   return null;
 }
 
