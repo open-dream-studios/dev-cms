@@ -37,8 +37,8 @@ export const getAssignedProjectsFunction = async (
 
 export const getProjectsFunction = async (): Promise<Project[]> => {
   const q = `
-    SELECT p.* 
-    FROM projects p
+    SELECT * 
+    FROM projects
   `;
   const [rows] = await db.promise().query<(Project & RowDataPacket)[]>(q, []);
   return rows;
@@ -57,19 +57,30 @@ export const getProjectByIdFunction = async (
   return rows;
 };
 
-
 export async function getProjectIdByDomain(
   connection: PoolConnection,
   domain: string
-): Promise<number> {
-  const [rows] = await connection.query<RowDataPacket[]>(
-    `SELECT id FROM projects WHERE domain = ? LIMIT 1`,
-    [domain]
-  );
-  if (!rows.length) {
-    throw new Error("Invalid project domain");
+): Promise<number | null> {
+  if (!domain) return null;
+
+  const normalizedInput = changeToHTTPSDomain(domain);
+
+  const projects = await getProjectsFunction();
+  if (!projects.length) {
+    return null;
   }
-  return rows[0].id;
+
+  for (const project of projects) {
+    if (!project.domain) continue;
+
+    const normalizedProjectDomain = changeToHTTPSDomain(project.domain);
+
+    if (normalizedProjectDomain === normalizedInput && project.id) {
+      return project.id;
+    }
+  }
+
+  return null;
 }
 
 export const upsertProjectFunction = async (

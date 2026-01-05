@@ -83,6 +83,8 @@ export const createScheduleRequest = async (
   const projectDomain = getProjectDomainFromWixRequest(req);
   const project_idx = await getProjectIdByDomain(connection, projectDomain);
 
+  if (!project_idx) throw new Error("Missing required fields");
+
   await upsertScheduleRequestFunction(
     connection,
     project_idx,
@@ -113,13 +115,12 @@ export const getScheduleAvailability = async (
   if (!date || typeof date !== "string") {
     throw new Error("date query param required (YYYY-MM-DD)");
   }
-  console.log(date)
 
   const projectDomain = getProjectDomainFromWixRequest(req);
-  console.log(projectDomain, changeToHTTPSDomain(projectDomain))
-  const project_idx = await getProjectIdByDomain(connection, changeToHTTPSDomain(projectDomain));
+  const project_idx = await getProjectIdByDomain(connection, projectDomain);
 
   console.log(projectDomain, project_idx)
+  if (!project_idx) throw new Error("Missing required fields");
 
   const REQUIRED_KEYS = [
     "GOOGLE_CLIENT_SECRET_OBJECT",
