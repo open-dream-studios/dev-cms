@@ -11,6 +11,9 @@ import {
   eventsByAttendee,
 } from "../../../services/google/calendar/calendar.js";
 import { getGoogleProfile } from "../../../services/google/google.js";
+import type {
+  GoogleCalendarRequest,
+} from "@open-dream/shared";
 
 export const keys = {
   GOOGLE_CLIENT_SECRET_OBJECT: true,

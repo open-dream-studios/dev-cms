@@ -1,133 +1,59 @@
 // project/src/modules/GoogleModule/_actions/googleCalendar.actions.ts
-
-function buildLocalDate(
-  year: number,
-  month: number,
-  day: number,
-  hour: number,
-  minute = 0
-) {
-  return new Date(year, month - 1, day, hour, minute, 0, 0);
-}
-
-function buildCalendarEvent({
-  title,
-  description,
-  location,
-  start,
-  end,
-  customerId,
-  customerEmail,
-}: {
-  title: string;
-  description?: string;
-  location?: string;
-  start: Date;
-  end: Date;
-  customerId: string;
-  customerEmail: string;
-}) {
-  return {
-    summary: title,
-    description,
-    location,
-    start: {
-      dateTime: start.toISOString(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    },
-    end: {
-      dateTime: end.toISOString(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    },
-    extendedProperties: {
-      private: {
-        customerId,
-        customerEmail,
-      },
-    },
-    reminders: { useDefault: true },
-  };
-}
-
-type CalendarEventUpdates = {
-  title?: string;
-  description?: string;
-  location?: string;
-  start?: Date;
-  end?: Date;
-  customerId?: string;
-  customerEmail?: string;
-};
-
-function buildUpdatedGoogleEvent(
-  existingEvent: any,
-  updates: CalendarEventUpdates
-) {
-  return {
-    ...existingEvent,
-
-    summary: updates.title ?? existingEvent.summary,
-    description: updates.description ?? existingEvent.description,
-    location: updates.location ?? existingEvent.location,
-    start: updates.start
-      ? {
-          dateTime: updates.start.toISOString(),
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        }
-      : existingEvent.start,
-
-    end: updates.end
-      ? {
-          dateTime: updates.end.toISOString(),
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        }
-      : existingEvent.end,
-
-    extendedProperties: {
-      private: {
-        ...(existingEvent.extendedProperties?.private ?? {}),
-        ...(updates.customerId && { customerId: updates.customerId }),
-        ...(updates.customerEmail && { customerEmail: updates.customerEmail }),
-      },
-    },
-  };
-}
+import type {
+  CalendarEventUpdates,
+  GoogleCalendarDeleteEventRequest,
+  GoogleCalendarUpdateEventRequest,
+  LocalDateTimeInput,
+  ScheduleRequest,
+} from "@open-dream/shared";
+import type { GoogleCalendarCreateEventRequest } from "@open-dream/shared";
+import {
+  buildCalendarEvent,
+  buildLocalDate,
+  buildUpdatedGoogleEvent,
+  scheduleRequestToCalendarEvent,
+} from "../_helpers/googleCalendar.helpers";
 
 export const createCalendarEvent = async ({
   runModule,
   refresh,
+  start,
+  end,
+  title,
+  description,
+  location,
+  customerId,
+  customerEmail,
 }: {
   runModule: (identifier: string, body: any) => void;
   refresh: () => void;
+  start: LocalDateTimeInput;
+  end: LocalDateTimeInput;
+  title: string;
+  description?: string;
+  location?: string;
+  customerId: string;
+  customerEmail: string;
 }) => {
-  const start = buildLocalDate(
-    2026, // year
-    1, // month
-    6, // day
-    14, // hour
-    0 // minute
-  );
-
-  const end = buildLocalDate(
-    2026, // year
-    1, // month
-    6, // day
-    15, // hour
-    0 // minute
-  );
+  const startDate = buildLocalDate(start);
+  const endDate = buildLocalDate(end);
 
   const event = buildCalendarEvent({
-    title: "Test Job",
-    start,
-    end,
-    customerId: "1234",
-    customerEmail: "customer@email.com",
+    title,
+    description,
+    location,
+    start: startDate,
+    end: endDate,
+    customerId,
+    customerEmail,
   });
 
-  await runModule("google-calendar-module", {
+  const request: GoogleCalendarCreateEventRequest = {
     requestType: "CREATE_EVENT",
     event,
-  });
+  };
+
+  await runModule("google-calendar-module", request);
   refresh();
 };
 
@@ -144,13 +70,14 @@ export const updateCalendarEvent = async ({
   runModule: (identifier: string, body: any) => void;
   refresh: () => void;
 }) => {
-  const event = buildUpdatedGoogleEvent(existingEvent, updates);
+  const event = buildUpdatedGoogleEvent({ existingEvent, updates });
 
-  await runModule("google-calendar-module", {
+  const request: GoogleCalendarUpdateEventRequest = {
     requestType: "UPDATE_EVENT",
     eventId,
     event,
-  });
+  };
+  await runModule("google-calendar-module", request);
   refresh();
 };
 
@@ -166,14 +93,26 @@ export const deleteCalendarEvent = async ({
   refresh: () => void;
 }) => {
   if (!eventId) throw new Error("Event ID is required");
-
-  await runModule("google-calendar-module", {
+  const request: GoogleCalendarDeleteEventRequest = {
     requestType: "DELETE_EVENT",
     eventId,
     sendNotifications: false,
-  });
+  };
+  await runModule("google-calendar-module", request);
   setGoogleEvents((prev) => prev.filter((e) => e.id !== eventId));
   refresh();
+};
+
+export const createFromSchedule = async (
+  schedule: ScheduleRequest,
+  runModule: (identifier: string, body: any) => void
+) => {
+  const event = scheduleRequestToCalendarEvent(schedule);
+  const request: GoogleCalendarCreateEventRequest = {
+    requestType: "CREATE_EVENT",
+    event,
+  };
+  return await runModule("google-calendar-module", request);
 };
 
 const executeCommand = async () => {

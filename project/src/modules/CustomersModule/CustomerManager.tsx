@@ -12,6 +12,7 @@ import {
   LeadInput,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useScheduleRequests } from "@/contexts/queryContext/queries/public/scheduleRequests";
 
 export default function CustomerManager() {
   const {
@@ -25,7 +26,9 @@ export default function CustomerManager() {
     actionDefinitions,
     upsertActionDefinition,
     deleteActionDefinition,
-    customerData
+    customerData,
+    scheduleRequests, 
+    upsertScheduleRequest
   } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
 

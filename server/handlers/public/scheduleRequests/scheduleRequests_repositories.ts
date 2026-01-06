@@ -1,4 +1,5 @@
 // server/handlers/public/scheduleRequests/scheduleRequests_repositories.ts
+import { normalizeToMySQLDatetime } from "../../../functions/time.js";
 import { db } from "../../../connection/connect.js";
 import type {
   RowDataPacket,
@@ -46,13 +47,13 @@ export const upsertScheduleRequestFunction = async (
     metadata,
   } = reqBody;
 
-  if (!source_type|| !request_type) {
+  if (!source_type || !request_type) {
     throw new Error("source_type and request_type are required");
   }
 
-  let finalSourceType = source_type
+  let finalSourceType = source_type;
   if (!user_id) {
-    finalSourceType = "public"
+    finalSourceType = "public";
   }
 
   const source_user_id = assign_source_user_id ? user_id : null;
@@ -112,14 +113,14 @@ export const upsertScheduleRequestFunction = async (
     source_user_id ?? null,
     request_type,
     calendar_event_id ?? null,
-    proposed_start ?? null,
-    proposed_end ?? null,
+    normalizeToMySQLDatetime(proposed_start),
+    normalizeToMySQLDatetime(proposed_end),
     proposed_location ?? null,
     status ?? "pending",
     ai_reasoning ?? null,
     event_title,
     event_description,
-    metadata
+    metadata,
   ];
 
   const [result] = await connection.query<ResultSetHeader>(query, values);

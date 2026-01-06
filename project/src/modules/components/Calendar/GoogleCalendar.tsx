@@ -31,7 +31,10 @@ import {
 } from "./CalendarHelpers";
 import { useUiStore } from "@/store/useUIStore";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { createCalendarEvent } from "@/modules/GoogleModule/_actions/googleCalendar.actions";
+import { createFromSchedule } from "@/modules/GoogleModule/_actions/googleCalendar.actions";
+import { ScheduleRequest } from "@open-dream/shared";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { buildLocalDate } from "@/modules/GoogleModule/_helpers/googleCalendar.helpers";
 
 export const DAY_START_HOUR = 0;
 export const DAY_END_HOUR = 24;
@@ -49,10 +52,59 @@ export const GoogleCalendar = () => {
   const [isMini, setIsMini] = useState<boolean>(true);
   const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(false);
   const [googleEvents, setGoogleEvents] = useState<any[]>([]);
-  const { runModule } = useContextQueries();
+  const {
+    runModule,
+    scheduleRequests,
+    upsertScheduleRequest,
+    deleteScheduleRequest,
+  } = useContextQueries();
+  const { currentProjectId } = useCurrentDataStore();
 
   const testCalendar = async () => {
-    await createCalendarEvent({ runModule, refresh });
+    if (!currentProjectId) return;
+    const startDate = buildLocalDate({
+      year: 2026,
+      month: 1,
+      day: 6,
+      hour: 14,
+    });
+    const endDate = buildLocalDate({
+      year: 2026,
+      month: 1,
+      day: 6,
+      hour: 15,
+    });
+    const proposed_start = startDate.toISOString();
+    const proposed_end = endDate.toISOString();
+
+    await upsertScheduleRequest({
+      schedule_request_id: null,
+      project_idx: currentProjectId,
+      customer_id: null,
+      job_id: null,
+      source_type: "internal",
+      source_user_id: null,
+      request_type: "create",
+      calendar_event_id: null,
+      proposed_start,
+      proposed_end,
+      proposed_location: "123 Test St, Boston MA",
+      status: "pending",
+      ai_reasoning: null,
+      event_title: "Test Calendar Event",
+      event_description: "Testing schedule → calendar pipeline",
+      metadata: JSON.stringify({ test: true }),
+    });
+
+    console.log(scheduleRequests)
+    if (!scheduleRequests.length) return;
+    const scheduleRequestItem: ScheduleRequest = scheduleRequests[0];
+    if (!scheduleRequestItem.schedule_request_id) return;
+    console.log(scheduleRequestItem)
+
+    // const success = await createFromSchedule(scheduleRequestItem, runModule);
+    // console.log(success)
+    // await deleteScheduleRequest(scheduleRequestItem.schedule_request_id);
   };
 
   const [rangeStart, setRangeStart] = useState(() => {
