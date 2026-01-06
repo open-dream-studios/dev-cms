@@ -4,18 +4,20 @@ export function normalizeToMySQLDatetime(
 ): string | null {
   if (!input) return null;
 
-  const date =
-    input instanceof Date
-      ? input
-      : new Date(input);
+  // If string without timezone → treat as already-local
+  if (typeof input === "string" && !input.endsWith("Z")) {
+    return input
+      .replace("T", " ")
+      .split(".")[0];
+  }
 
-  if (isNaN(date.getTime())) {
+  // Date object → extract LOCAL components (no UTC shift)
+  const d = new Date(input);
+  if (isNaN(d.getTime())) {
     throw new Error(`Invalid date input: ${input}`);
   }
 
-  return date
-    .toISOString()
-    .replace("T", " ")
-    .replace("Z", "")
-    .split(".")[0];
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
