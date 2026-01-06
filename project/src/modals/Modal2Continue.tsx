@@ -89,7 +89,10 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
 
   if (!currentUser) return null;
   return (
-    <div className="py-[14px] w-full h-full flex items-center justify-center flex-col">
+    <div
+      data-modal-2-continue
+      className="py-[14px] w-full h-full flex items-center justify-center flex-col"
+    >
       <div
         style={{ color: currentTheme.text_1 }}
         className="text-center px-[20px] font-[500]"

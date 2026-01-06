@@ -102,3 +102,45 @@ export type GoogleCalendarRequest =
   | GoogleCalendarGetEventRequest
   | GoogleCalendarGetEventsByCustomerRequest
   | GoogleCalendarProfileRequest;
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  startIndex: number;
+  endIndex: number;
+  topPct: number;
+  heightPct: number;
+  raw: GoogleCalendarEventRaw;
+}
+
+export interface GoogleCalendarEventRaw {
+  id: string;
+  summary?: string;
+  description?: string;
+  location?: string;
+  start: {
+    date?: string;
+    dateTime?: string;
+    timeZone?: string;
+  };
+  end: {
+    date?: string;
+    dateTime?: string;
+    timeZone?: string;
+  };
+  status: "confirmed" | "cancelled" | string;
+  htmlLink?: string;
+  created?: string;
+  updated?: string;
+  organizer?: {
+    email?: string;
+    displayName?: string;
+    self?: boolean;
+  };
+  creator?: {
+    email?: string;
+  };
+  [key: string]: any; 
+}

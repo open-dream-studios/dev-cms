@@ -1,10 +1,11 @@
-// project/src/modules/GoogleModule/_actions/googleCalendar.actions.ts
+// project/src/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendar.actions.ts
 import type {
   CalendarEventUpdates,
   GoogleCalendarDeleteEventRequest,
   GoogleCalendarUpdateEventRequest,
   LocalDateTimeInput,
   ScheduleRequest,
+  ScheduleRequestInput,
 } from "@open-dream/shared";
 import type { GoogleCalendarCreateEventRequest } from "@open-dream/shared";
 import {
@@ -13,6 +14,11 @@ import {
   buildUpdatedGoogleEvent,
   scheduleRequestToCalendarEvent,
 } from "../_helpers/googleCalendar.helpers";
+import { upsertScheduleRequestApi } from "@/api/public/scheduleRequests.api";
+import {
+  defaultNewEvent,
+  useGoogleCalendarUIStore,
+} from "../_store/googleCalendar.store";
 
 export const createCalendarEvent = async ({
   runModule,
@@ -25,7 +31,7 @@ export const createCalendarEvent = async ({
   customerId,
   customerEmail,
 }: {
-  runModule: (identifier: string, body: any) => void;
+  runModule: (identifier: string, body: any) => any;
   refresh: () => void;
   start: LocalDateTimeInput;
   end: LocalDateTimeInput;
@@ -53,8 +59,9 @@ export const createCalendarEvent = async ({
     event,
   };
 
-  await runModule("google-calendar-module", request);
+  const res = await runModule("google-calendar-module", request);
   refresh();
+  return res;
 };
 
 export const updateCalendarEvent = async ({
@@ -67,7 +74,7 @@ export const updateCalendarEvent = async ({
   eventId: string;
   existingEvent: any;
   updates: CalendarEventUpdates;
-  runModule: (identifier: string, body: any) => void;
+  runModule: (identifier: string, body: any) => any;
   refresh: () => void;
 }) => {
   const event = buildUpdatedGoogleEvent({ existingEvent, updates });
@@ -77,8 +84,9 @@ export const updateCalendarEvent = async ({
     eventId,
     event,
   };
-  await runModule("google-calendar-module", request);
+  const res = await runModule("google-calendar-module", request);
   refresh();
+  return res;
 };
 
 export const deleteCalendarEvent = async ({
@@ -88,9 +96,9 @@ export const deleteCalendarEvent = async ({
   refresh,
 }: {
   eventId: string;
-  runModule: (identifier: string, body: any) => void;
-  setGoogleEvents: React.Dispatch<React.SetStateAction<any[]>>;
+  runModule: (identifier: string, body: any) => any;
   refresh: () => void;
+  setGoogleEvents: React.Dispatch<React.SetStateAction<any[]>>;
 }) => {
   if (!eventId) throw new Error("Event ID is required");
   const request: GoogleCalendarDeleteEventRequest = {
@@ -105,7 +113,7 @@ export const deleteCalendarEvent = async ({
 
 export const createFromSchedule = async (
   schedule: ScheduleRequest,
-  runModule: (identifier: string, body: any) => void
+  runModule: (identifier: string, body: any) => any
 ) => {
   const event = scheduleRequestToCalendarEvent(schedule);
   const request: GoogleCalendarCreateEventRequest = {
@@ -133,4 +141,36 @@ const executeCommand = async () => {
   // await deleteCalendarEvent({
   //   eventId: googleEventFromQuery.id,
   // });
+};
+
+export const approveAndCreateScheduleEvent = async (
+  scheduleRequestItem: ScheduleRequest,
+  runModule: (identifier: string, body: any) => any,
+  refresh: () => void
+) => {
+  const success = await createFromSchedule(scheduleRequestItem, runModule);
+  refresh();
+  if (!success.ok) return;
+  await upsertScheduleRequestApi({
+    ...scheduleRequestItem,
+    status: "approved",
+    calendar_event_id: success?.event?.id ?? null,
+  } as ScheduleRequestInput);
+};
+
+export const resetInputUI = (unselect: boolean) => {
+  const {
+    setEditingCalendarEvent,
+    setNewEventDetails,
+    setSelectedCalendarEvent,
+    setNewScheduleEventStart,
+    setNewScheduleEventEnd,
+  } = useGoogleCalendarUIStore.getState();
+  setEditingCalendarEvent(null);
+  setNewEventDetails(defaultNewEvent);
+  setNewScheduleEventStart(null);
+  setNewScheduleEventEnd(null);
+  if (unselect) {
+    setSelectedCalendarEvent(null);
+  }
 };

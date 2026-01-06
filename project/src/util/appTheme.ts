@@ -86,6 +86,10 @@ const themeColors = {
   gmail_button_1: c("#E6E6E6", "#252525"),
   skeleton_background_1: c("#E0E0E0", "#1E1E1E"),
   gmail_detail_background_1: c("#FFFFFF", "#1A1A1A"),
+
+  // google_calendar_event: c("rgba(224, 82, 14, 1)", "rgba(224, 82, 14, 1)"),
+  google_calendar_event: c("#2FA9DB", "#2FA9DB"),
+  new_google_calendar_event: c("#1fbf6a", "#1fbf6a")
 } as const;
 
 export const appTextSizes = {

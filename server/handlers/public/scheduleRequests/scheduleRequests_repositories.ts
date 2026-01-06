@@ -61,6 +61,13 @@ export const upsertScheduleRequestFunction = async (
   const finalScheduleRequestId =
     schedule_request_id?.trim() || `SREQ-${ulid()}`;
 
+  const normalizedMetadata =
+    metadata == null
+      ? null
+      : typeof metadata === "string"
+      ? metadata
+      : JSON.stringify(metadata);
+
   const query = `
     INSERT INTO schedule_requests (
       schedule_request_id,
@@ -120,7 +127,7 @@ export const upsertScheduleRequestFunction = async (
     ai_reasoning ?? null,
     event_title,
     event_description,
-    metadata,
+    normalizedMetadata,
   ];
 
   const [result] = await connection.query<ResultSetHeader>(query, values);

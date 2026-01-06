@@ -1,5 +1,6 @@
+// project/src/GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks.ts
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useContextQueries } from "../../../contexts/queryContext/queryContext";
+import { useContextQueries } from "../../../../contexts/queryContext/queryContext";
 
 export function useGoogleCalendar(
   calendarId: string,
@@ -27,7 +28,6 @@ export function useGoogleCalendar(
           singleEvents: true,
           orderBy: "startTime",
         });
-        console.log(res.data.events)
 
         const events = res?.data?.events ?? [];
         allEvents.push(...events);

@@ -184,11 +184,18 @@ export async function deleteEvent(
     GOOGLE_REFRESH_TOKEN_OBJECT
   );
 
-  await calendar.events.delete({
-    calendarId,
-    eventId,
-    sendUpdates: "none",
-  });
+  try {
+    await calendar.events.delete({
+      calendarId,
+      eventId,
+      sendUpdates: "none",
+    });
+  } catch (err: any) {
+    if (err?.code === 410 || err?.status === 410) {
+      return;
+    }
+    throw err;
+  }
 }
 
 /**

@@ -4,7 +4,6 @@ import { useDashboardStore } from "@/store/useDashboardStore";
 import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import CustomerInteractionTimeline from "./CustomerInteractions";
-import GoogleCalendar from "../components/Calendar/GoogleCalendar";
 import MessagesApp from "../MessagesModule/MessagesApp";
 import {
   ActionDefinitionInput,
@@ -13,6 +12,7 @@ import {
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useScheduleRequests } from "@/contexts/queryContext/queries/public/scheduleRequests";
+import GoogleCalendarDisplay from "../GoogleModule/GoogleCalendarModule/GoogleCalendarDisplay";
 
 export default function CustomerManager() {
   const {
@@ -109,7 +109,7 @@ export default function CustomerManager() {
         className="w-[20px] h-[20px] bg-red-400 cursor-pointer"
         onClick={handleLeadClick}
       ></div> */}
-      <div className="px-[14px] py-[12px] "><GoogleCalendar /></div>
+      <div className="px-[14px] py-[12px] "><GoogleCalendarDisplay /></div>
       {/* <MessagesApp /> */}
     </div>
   );

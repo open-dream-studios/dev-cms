@@ -8,8 +8,8 @@ import "../styles/globals.css";
 import ThemeBody from "@/util/wrappers/ThemeBody";
 
 export const metadata: Metadata = {
-  title: "Project CMS",
-  description: "Project CMS",
+  title: "CMS",
+  description: "CMS",
   icons: {
     icon: "/favicon.ico",
   },
