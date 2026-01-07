@@ -18,7 +18,6 @@ export const getScheduleRequestsFunction = async (project_idx: number) => {
   `;
 
   const [rows] = await db.promise().query<RowDataPacket[]>(q, [project_idx]);
-  console.log(rows)
   return rows;
 };
 

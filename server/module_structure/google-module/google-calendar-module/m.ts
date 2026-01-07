@@ -18,11 +18,8 @@ import type {
 export const keys = {
   GOOGLE_CLIENT_SECRET_OBJECT: true,
   GOOGLE_REFRESH_TOKEN_OBJECT: true,
+  GOOGLE_CALENDAR_ID: true
 };
-
-export function resolveCalendarId(project_idx: number) {
-  return "715279f46fc8a42c8780b44ae152f224e106d4ba155b1d7734e334c368a3b2ea@group.calendar.google.com";
-}
 
 export const run = async ({
   connection,
@@ -34,11 +31,9 @@ export const run = async ({
 }: ModuleFunctionInputs) => {
   try {
     const { requestType } = body;
-
-    const { GOOGLE_CLIENT_SECRET_OBJECT, GOOGLE_REFRESH_TOKEN_OBJECT } =
+    const { GOOGLE_CLIENT_SECRET_OBJECT, GOOGLE_REFRESH_TOKEN_OBJECT, GOOGLE_CALENDAR_ID } =
       decryptedKeys;
-
-    if (!GOOGLE_CLIENT_SECRET_OBJECT || !GOOGLE_REFRESH_TOKEN_OBJECT) {
+    if (!GOOGLE_CLIENT_SECRET_OBJECT || !GOOGLE_REFRESH_TOKEN_OBJECT || !GOOGLE_CALENDAR_ID) {
       return { success: false };
     }
 
@@ -61,7 +56,7 @@ export const run = async ({
     }
 
     // list events from a calendar (paginated)
-    const calendarId = resolveCalendarId(project_idx);
+    const calendarId = GOOGLE_CALENDAR_ID;
     if (requestType === "LIST_EVENTS") {
       const {
         pageToken = null,
@@ -92,7 +87,7 @@ export const run = async ({
     // get single event
     if (requestType === "GET_EVENT") {
       const { eventId } = body;
-      const calendarId = resolveCalendarId(project_idx);
+      const calendarId = GOOGLE_CALENDAR_ID;
       if (!eventId) return { success: false, error: "eventId is required" };
       const event = await getEvent(
         GOOGLE_CLIENT_SECRET_OBJECT,
@@ -106,7 +101,7 @@ export const run = async ({
     // create event
     if (requestType === "CREATE_EVENT") {
       const { event } = body;
-      const calendarId = resolveCalendarId(project_idx);
+      const calendarId = GOOGLE_CALENDAR_ID;
       if (!event) return { success: false, error: "event body required" };
 
       const created = await createEvent(
@@ -124,7 +119,7 @@ export const run = async ({
       const { eventId, event } = body;
       if (!eventId || !event)
         return { success: false, error: "eventId and event required" };
-      const calendarId = resolveCalendarId(project_idx);
+      const calendarId = GOOGLE_CALENDAR_ID;
 
       const existing = await getEvent(
         GOOGLE_CLIENT_SECRET_OBJECT,
@@ -158,7 +153,7 @@ export const run = async ({
     // delete event
     if (requestType === "DELETE_EVENT") {
       const { eventId } = body;
-      const calendarId = resolveCalendarId(project_idx);
+      const calendarId = GOOGLE_CALENDAR_ID;
       if (!eventId) return { success: false, error: "eventId required" };
       await deleteEvent(
         GOOGLE_CLIENT_SECRET_OBJECT,
@@ -176,7 +171,7 @@ export const run = async ({
         return { success: false, error: "customerId required" };
       }
 
-      const calendarId = resolveCalendarId(project_idx);
+      const calendarId = GOOGLE_CALENDAR_ID;
 
       const res = await fetchCalendarPage(
         GOOGLE_CLIENT_SECRET_OBJECT,

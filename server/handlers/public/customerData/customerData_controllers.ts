@@ -10,7 +10,6 @@ export const getCustomerData = async (
   connection: PoolConnection
 ) => {
   const project_idx = await getProjectFromRequest(req, connection);
-  console.log(project_idx)
   const user_id = req.user?.user_id;
   const user_email = req.user?.email;
   if (!project_idx || !user_id || !user_email) throw new Error("Missing auth");
