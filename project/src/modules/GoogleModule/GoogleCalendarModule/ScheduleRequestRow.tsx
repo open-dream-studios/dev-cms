@@ -151,7 +151,7 @@ const ScheduleRequestRow = ({
         <div className="flex-1 min-w-0">
           <div className="text-[14px] font-[500] truncate">
             <span>{request.event_title || "Untitled Event"}</span>
-            {/* {request.metadata<div>{request.event_title}</div>} */}
+            {request?.metadata?.customer?.name && <div>{request.event_title}</div>}
           </div>
           <div className="text-[12px] opacity-[0.55] truncate">
             {start}

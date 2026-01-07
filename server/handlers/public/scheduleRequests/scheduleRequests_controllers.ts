@@ -22,7 +22,16 @@ export const getScheduleRequests = async (
 ) => {
   const project_idx = await getProjectFromRequest(req, connection);
   const requests = await getScheduleRequestsFunction(project_idx);
-  return { success: true, schedule_requests: requests };
+  const parsed = requests.map((r: any) => ({
+    ...r,
+    metadata:
+      r.metadata == null
+        ? null
+        : typeof r.metadata === "string"
+        ? JSON.parse(r.metadata) 
+        : r.metadata,
+  }));
+  return { success: true, schedule_requests: parsed };
 };
 
 export const upsertScheduleRequest = async (

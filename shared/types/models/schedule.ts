@@ -12,8 +12,11 @@ export interface ScheduleRequestBase {
   status?: "pending" | "approved" | "rejected"; // default pending
   ai_reasoning?: string | null;
   event_title: string | null;
-  event_description: string | null;
-  metadata: string| null;
+  event_description: string | null; 
+  metadata: {
+    customer?: any;
+    product?: any
+  } | null;
 }
 
 // Row as stored in DB (includes PK and timestamps)
