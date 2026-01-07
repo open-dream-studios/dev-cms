@@ -142,7 +142,7 @@ export default function CustomerManager() {
   }
 
   return (
-    <div className="w-[100%] h-[100%] flex flex-col gap-[13px] px-[14px] py-[12px]">
+    <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
       <GoogleCalendarDisplay events={events} refreshCalendar={refresh} />
       <ScheduleRequestsPanel events={events} refreshCalendar={refresh} />
     </div>

@@ -1,7 +1,11 @@
 // project/src/modules/GoogleModule/GoogleCalendarModule/ScheduleRequestRow.tsx
 import React, { JSX, useContext } from "react";
 import { Calendar, Clock, Check, X, Brain, MapPin } from "lucide-react";
-import { GoogleCalendarEventRaw, ScheduleRequest, ScheduleRequestInput } from "@open-dream/shared";
+import {
+  GoogleCalendarEventRaw,
+  ScheduleRequest,
+  ScheduleRequestInput,
+} from "@open-dream/shared";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
@@ -53,11 +57,11 @@ export const sourceBackgrounds: Record<string, string> = {
 const ScheduleRequestRow = ({
   request,
   refreshCalendar,
-  events
+  events,
 }: {
   request: ScheduleRequest;
   refreshCalendar: () => void;
-  events: GoogleCalendarEventRaw[]
+  events: GoogleCalendarEventRaw[];
 }) => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
@@ -146,7 +150,8 @@ const ScheduleRequestRow = ({
 
         <div className="flex-1 min-w-0">
           <div className="text-[14px] font-[500] truncate">
-            {request.event_title || "Untitled Event"}
+            <span>{request.event_title || "Untitled Event"}</span>
+            {/* {request.metadata<div>{request.event_title}</div>} */}
           </div>
           <div className="text-[12px] opacity-[0.55] truncate">
             {start}

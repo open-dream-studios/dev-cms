@@ -98,9 +98,7 @@ export const createScheduleRequest = async (
       ai_reasoning: null,
       event_title,
       event_description,
-      metadata: JSON.stringify({
-        metadata,
-      }),
+      metadata,
     },
     null
   );
@@ -125,6 +123,7 @@ export const getScheduleAvailability = async (
   if (!project_idx) throw new Error("Missing required fields");
 
   const REQUIRED_KEYS = [
+    "GOOGLE_CALENDAR_ID",
     "GOOGLE_CLIENT_SECRET_OBJECT",
     "GOOGLE_REFRESH_TOKEN_OBJECT",
   ];
@@ -138,21 +137,25 @@ export const getScheduleAvailability = async (
     throw new Error("Required Google keys not found");
   }
 
-  const { GOOGLE_CLIENT_SECRET_OBJECT, GOOGLE_REFRESH_TOKEN_OBJECT } =
-    decryptedKeys;
+  const {
+    GOOGLE_CALENDAR_ID,
+    GOOGLE_CLIENT_SECRET_OBJECT,
+    GOOGLE_REFRESH_TOKEN_OBJECT,
+  } = decryptedKeys;
 
   // Build day window
   const timeMin = new Date(`${date}T00:00:00`).toISOString();
   const timeMax = new Date(`${date}T23:59:59`).toISOString();
 
-  // Fetch events
-  const calendarId =
-    "715279f46fc8a42c8780b44ae152f224e106d4ba155b1d7734e334c368a3b2ea@group.calendar.google.com";
-
-  if (!GOOGLE_CLIENT_SECRET_OBJECT || !GOOGLE_REFRESH_TOKEN_OBJECT)
+  if (
+    !GOOGLE_CLIENT_SECRET_OBJECT ||
+    !GOOGLE_REFRESH_TOKEN_OBJECT ||
+    !GOOGLE_CALENDAR_ID
+  )
     return {
       busy: [],
     };
+  const calendarId = GOOGLE_CALENDAR_ID;
 
   const page = await fetchCalendarPage(
     GOOGLE_CLIENT_SECRET_OBJECT,
