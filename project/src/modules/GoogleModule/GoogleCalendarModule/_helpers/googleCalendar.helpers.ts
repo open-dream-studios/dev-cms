@@ -150,6 +150,7 @@ export function scheduleRequestToCalendarEvent(
     extendedProperties: {
       private: {
         customerId: schedule.customer_id ?? undefined,
+        scheduleRequestId: schedule.schedule_request_id
       },
     },
     reminders: { useDefault: true },

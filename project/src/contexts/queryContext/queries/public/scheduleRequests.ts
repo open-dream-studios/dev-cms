@@ -16,7 +16,7 @@ export function useScheduleRequests(
     isLoading: isLoadingScheduleRequests,
     refetch: refetchScheduleRequests,
   } = useQuery({
-    queryKey: ["schedule_requests"],
+    queryKey: ["schedule-requests"],
     queryFn: async () => fetchScheduleRequestsApi(),
     enabled: isLoggedIn
   });
@@ -26,7 +26,7 @@ export function useScheduleRequests(
       upsertScheduleRequestApi(request),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["schedule_requests"],
+        queryKey: ["schedule-requests"],
       });
     },
     onError: (error) => {
@@ -39,7 +39,7 @@ export function useScheduleRequests(
       deleteScheduleRequestApi(schedule_request_id),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["schedule_requests"],
+        queryKey: ["schedule-requests"],
       });
     },
   });

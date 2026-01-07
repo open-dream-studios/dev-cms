@@ -1,12 +1,15 @@
 // project/src/modules/GoogleModule/GoogleCalendarModule/ScheduleRequestRow.tsx
-import React, { JSX, useContext, useState } from "react";
+import React, { JSX, useContext } from "react";
 import { Calendar, Clock, Check, X, Brain, MapPin } from "lucide-react";
-import { ScheduleRequest, ScheduleRequestInput } from "@open-dream/shared";
+import { GoogleCalendarEventRaw, ScheduleRequest, ScheduleRequestInput } from "@open-dream/shared";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { MdOutlineRefresh } from "react-icons/md";
+import { formatDateTime } from "@/util/functions/Time";
+import { approveAndCreateScheduleEvent } from "./_actions/googleCalendar.actions";
+import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
 
 export const statusColors = {
   approved: "rgba(52, 211, 153, 0.22)",
@@ -47,17 +50,35 @@ export const sourceBackgrounds: Record<string, string> = {
   public: "rgba(16, 185, 129, 0.22)",
 };
 
-const ScheduleRequestRow = ({ request }: { request: ScheduleRequest }) => {
+const ScheduleRequestRow = ({
+  request,
+  refreshCalendar,
+  events
+}: {
+  request: ScheduleRequest;
+  refreshCalendar: () => void;
+  events: GoogleCalendarEventRaw[]
+}) => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const [open, setOpen] = useState(false);
-  const { upsertScheduleRequest } = useContextQueries();
+  const { selectedScheduleRequest, setSelectedScheduleRequest } =
+    useGoogleCalendarUIStore();
+  const { upsertScheduleRequest, runModule } = useContextQueries();
+
+  const isOpen =
+    selectedScheduleRequest &&
+    selectedScheduleRequest.schedule_request_id === request.schedule_request_id;
 
   const onApprove = async () => {
-    await upsertScheduleRequest({
-      ...request,
-      status: "approved",
-    } as ScheduleRequestInput);
+    const result = await approveAndCreateScheduleEvent(
+      request,
+      runModule,
+      refreshCalendar,
+      events
+    );
+    if (result) {
+      setSelectedScheduleRequest(null);
+    }
   };
 
   const onReject = async () => {
@@ -65,6 +86,7 @@ const ScheduleRequestRow = ({ request }: { request: ScheduleRequest }) => {
       ...request,
       status: "rejected",
     } as ScheduleRequestInput);
+    setSelectedScheduleRequest(null);
   };
 
   const onReset = async () => {
@@ -72,32 +94,45 @@ const ScheduleRequestRow = ({ request }: { request: ScheduleRequest }) => {
       ...request,
       status: "pending",
     } as ScheduleRequestInput);
+    setSelectedScheduleRequest({ ...request, status: "pending" });
   };
 
   if (!currentUser) return null;
 
   const start = request.proposed_start
-    ? new Date(request.proposed_start)
-        .toLocaleString()
-        .replace(",", "")
-        .replace(":00 ", " ")
+    ? formatDateTime(request.proposed_start)
     : "No start time";
 
   const end = request.proposed_end
-    ? new Date(request.proposed_end)
-        .toLocaleString()
-        .replace(",", "")
-        .replace(":00 ", " ")
+    ? formatDateTime(request.proposed_end)
     : null;
+
+  const onRequestClick = () => {
+    if (
+      selectedScheduleRequest &&
+      selectedScheduleRequest.schedule_request_id ===
+        request.schedule_request_id
+    ) {
+      setSelectedScheduleRequest(null);
+    } else {
+      setSelectedScheduleRequest(request);
+    }
+  };
 
   return (
     <div
-      className="rounded-xl transition-all duration-200"
+      className={`${
+        selectedScheduleRequest &&
+        selectedScheduleRequest.schedule_request_id &&
+        selectedScheduleRequest.schedule_request_id !==
+          request.schedule_request_id &&
+        "opacity-[0.3]"
+      } group rounded-xl transition-all duration-200`}
       style={getInnerCardStyle(currentUser.theme, currentTheme)}
     >
       <div
-        className="flex items-center gap-[14px] px-3 py-[9px] cursor-pointer hover:brightness-[96%]"
-        onClick={() => setOpen((p) => !p)}
+        className="flex items-center gap-[14px] px-3 py-[9px] cursor-pointer group-hover:brightness-75 dim"
+        onClick={onRequestClick}
       >
         <div
           className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
@@ -106,7 +141,7 @@ const ScheduleRequestRow = ({ request }: { request: ScheduleRequest }) => {
             color: sourceIconColors[request.source_type],
           }}
         >
-          {sourceIcons[request.source_type]}
+          {sourceIcons["customer"]}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -119,14 +154,14 @@ const ScheduleRequestRow = ({ request }: { request: ScheduleRequest }) => {
           </div>
         </div>
 
-        {open && request.status !== "pending" && (
+        {isOpen && request.status !== "pending" && (
           <div
             className="h-[24px] w-[24px] mr-[-8px] rounded-full flex items-center justify-center text-[12px] font-[500] cursor-pointer hover:brightness-92 dim"
             style={{
               background: "#333",
             }}
             onClick={(e) => {
-              e.stopPropagation()
+              e.stopPropagation();
               onReset();
             }}
           >
@@ -134,7 +169,7 @@ const ScheduleRequestRow = ({ request }: { request: ScheduleRequest }) => {
           </div>
         )}
 
-        {((!open && request.status === "pending") ||
+        {((!isOpen && request.status === "pending") ||
           request.status === "approved" ||
           request.status === "rejected") && (
           <div
@@ -148,7 +183,7 @@ const ScheduleRequestRow = ({ request }: { request: ScheduleRequest }) => {
           </div>
         )}
 
-        {open && request.status === "pending" && (
+        {isOpen && request.status === "pending" && (
           <div
             className="flex gap-[6px] ml-[6px]"
             onClick={(e) => e.stopPropagation()}
@@ -181,7 +216,7 @@ const ScheduleRequestRow = ({ request }: { request: ScheduleRequest }) => {
       </div>
 
       {/* EXPANDED CONTENT */}
-      {open && (
+      {isOpen && (
         <div
           className="px-4 pb-3 pt-2 text-[13px] leading-[18px] opacity-[0.8]"
           style={{ borderTop: `1px solid ${currentTheme.background_3}` }}

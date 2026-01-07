@@ -1,5 +1,5 @@
 // project/src/modules/CustomersModule/CustomerManager.tsx
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDashboardStore } from "@/store/useDashboardStore";
 import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
@@ -14,6 +14,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useScheduleRequests } from "@/contexts/queryContext/queries/public/scheduleRequests";
 import GoogleCalendarDisplay from "../GoogleModule/GoogleCalendarModule/GoogleCalendarDisplay";
 import { ScheduleRequestsPanel } from "../GoogleModule/GoogleCalendarModule/ScheduleRequestsPanel";
+import { useGoogleCalendar } from "../GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks";
 
 export default function CustomerManager() {
   const {
@@ -104,10 +105,46 @@ export default function CustomerManager() {
     console.log(customerData);
   };
 
+  const [rangeStart, setRangeStart] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 14);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const [rangeEnd, setRangeEnd] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 14);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  });
+
+  const { events, isLoading, isFetching, refresh } = useGoogleCalendar(
+    "primary",
+    rangeStart.toISOString(),
+    rangeEnd.toISOString()
+  );
+
+  function loadMorePast() {
+    setRangeStart((prev) => {
+      const newStart = new Date(prev);
+      newStart.setDate(newStart.getDate() - 7);
+      return newStart;
+    });
+  }
+
+  function loadMoreFuture() {
+    setRangeEnd((prev) => {
+      const newEnd = new Date(prev);
+      newEnd.setDate(newEnd.getDate() + 7);
+      return newEnd;
+    });
+  }
+
   return (
     <div className="w-[100%] h-[100%] flex flex-col gap-[13px] px-[14px] py-[12px]">
-      <GoogleCalendarDisplay />
-      <ScheduleRequestsPanel />
+      <GoogleCalendarDisplay events={events} refreshCalendar={refresh} />
+      <ScheduleRequestsPanel events={events} refreshCalendar={refresh} />
     </div>
   );
   // return <CustomerInteractionTimeline />;

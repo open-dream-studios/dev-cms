@@ -21,23 +21,13 @@ import { getInnerCardStyle } from "@/styles/themeStyles";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../components/Calendar/Calendar.css";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { useGoogleCalendar } from "@/modules/GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks";
 import {
   dateToIndex,
   timeToPct,
   weekIndexOffsetForDate,
 } from "./_helpers/googleCalendar.helpers";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import {
-  approveAndCreateScheduleEvent,
-  resetInputUI,
-} from "@/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendar.actions";
-import {
-  CalendarEvent,
-  GoogleCalendarEventRaw,
-  ScheduleRequestInput,
-} from "@open-dream/shared";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { resetInputUI } from "@/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendar.actions";
+import { CalendarEvent, GoogleCalendarEventRaw } from "@open-dream/shared";
 import GoogleCalendarFooter from "./GoogleCalendarFooter";
 import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
 import clsx from "clsx";
@@ -52,7 +42,13 @@ export const CENTER_INDEX = Math.floor(BUFFER_DAYS / 2); // index for "today" we
 export const SNAP_DEBOUNCE = 80; // ms
 
 // ---------- GoogleCalendarDisplay ----------
-export const GoogleCalendarDisplay = () => {
+export const GoogleCalendarDisplay = ({
+  events,
+  refreshCalendar,
+}: {
+  events: GoogleCalendarEventRaw[];
+  refreshCalendar: () => void;
+}) => {
   const { currentUser } = React.useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const [isMini, setIsMini] = useState<boolean>(true);
@@ -68,6 +64,7 @@ export const GoogleCalendarDisplay = () => {
     editingCalendarEvent,
     calendarCollapsed,
     setCalendarCollapsed,
+    selectedScheduleRequest,
   } = useGoogleCalendarUIStore();
 
   const handleCalendarItemClick = (event: CalendarEvent) => {
@@ -76,47 +73,11 @@ export const GoogleCalendarDisplay = () => {
     resetInputUI(false);
   };
 
-  const [rangeStart, setRangeStart] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 14);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
-
-  const [rangeEnd, setRangeEnd] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 14);
-    d.setHours(23, 59, 59, 999);
-    return d;
-  });
-
-  const { events, isLoading, isFetching, refresh } = useGoogleCalendar(
-    "primary",
-    rangeStart.toISOString(),
-    rangeEnd.toISOString()
-  );
-
   const effectiveStart = useMemo(() => new Date(), []);
   const effectiveEnd = useMemo(
     () => new Date(new Date().getTime() + 4 * 60 * 60 * 1000),
     []
   );
-
-  function loadMorePast() {
-    setRangeStart((prev) => {
-      const newStart = new Date(prev);
-      newStart.setDate(newStart.getDate() - 7);
-      return newStart;
-    });
-  }
-
-  function loadMoreFuture() {
-    setRangeEnd((prev) => {
-      const newEnd = new Date(prev);
-      newEnd.setDate(newEnd.getDate() + 7);
-      return newEnd;
-    });
-  }
 
   useEffect(() => {
     if (!events || events.length === 0) return;
@@ -1071,6 +1032,73 @@ export const GoogleCalendarDisplay = () => {
                               </div>
                             );
                           })()}
+
+                        {selectedScheduleRequest &&
+                          selectedScheduleRequest.status === "pending" &&
+                          selectedScheduleRequest.proposed_start &&
+                          selectedScheduleRequest.proposed_end &&
+                          (() => {
+                            const day = daysArray[idx];
+
+                            const selectedScheduleRequestProposedStart =
+                              new Date(selectedScheduleRequest.proposed_start);
+                            const selectedScheduleRequestProposedEnd = new Date(
+                              selectedScheduleRequest.proposed_end
+                            );
+
+                            // Start/end of this day
+                            const dayStart = new Date(day);
+                            dayStart.setHours(DAY_START_HOUR, 0, 0, 0);
+                            const dayEnd = new Date(day);
+                            dayEnd.setHours(DAY_END_HOUR, 0, 0, 0);
+
+                            // Overlap of the scheduled event with this day
+                            const overlapStart = new Date(
+                              Math.max(
+                                selectedScheduleRequestProposedStart.getTime(),
+                                dayStart.getTime()
+                              )
+                            );
+                            const overlapEnd = new Date(
+                              Math.min(
+                                selectedScheduleRequestProposedEnd.getTime(),
+                                dayEnd.getTime()
+                              )
+                            );
+
+                            if (overlapEnd <= overlapStart) return null;
+
+                            const topPct = timeToPct(overlapStart);
+                            const heightPct = timeToPct(overlapEnd) - topPct;
+
+                            return (
+                              <div
+                                key={"scheduled-" + idx}
+                                className="mt-[1px] absolute rounded-[3px] text-[10px] px-1 pb-[2px] pt-[1.5px] text-white overflow-hidden cursor-pointer hover:brightness-[84%] dim"
+                                style={{
+                                  top: `${topPct}%`,
+                                  height: `calc(${heightPct}% - 1px)`,
+                                  left: "0.5px",
+                                  right: "0.5px",
+                                  backgroundColor:
+                                    currentTheme.new_google_calendar_event,
+                                }}
+                              >
+                                {idx ===
+                                  dateToIndex(
+                                    selectedScheduleRequestProposedStart
+                                  ) && (
+                                  <div>
+                                    {selectedScheduleRequest.event_title &&
+                                    selectedScheduleRequest.event_title.trim()
+                                      .length > 0
+                                      ? selectedScheduleRequest.event_title
+                                      : "Schedule Request"}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                       </div>
                     );
                   })}
@@ -1083,7 +1111,7 @@ export const GoogleCalendarDisplay = () => {
 
       {!calendarCollapsed && (
         <GoogleCalendarFooter
-          refresh={refresh}
+          refreshCalendar={refreshCalendar}
           setGoogleEvents={setGoogleEvents}
         />
       )}

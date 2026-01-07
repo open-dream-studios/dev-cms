@@ -332,10 +332,10 @@ const SelectedCalendarEventCard = () => {
 };
 
 const GoogleCalendarFooter = ({
-  refresh,
+  refreshCalendar,
   setGoogleEvents,
 }: {
-  refresh: () => void;
+  refreshCalendar: () => void;
   setGoogleEvents: React.Dispatch<React.SetStateAction<any[]>>;
 }) => {
   const { currentUser } = useContext(AuthContext);
@@ -386,7 +386,7 @@ const GoogleCalendarFooter = ({
 
     const res = await createCalendarEvent({
       runModule,
-      refresh,
+      refresh: refreshCalendar,
       start: dateToLocalDateTimeInput(newScheduleEventStart),
       end: dateToLocalDateTimeInput(newScheduleEventEnd),
       title: title.trim().length > 0 ? title : "New Event",
@@ -414,7 +414,7 @@ const GoogleCalendarFooter = ({
         await deleteCalendarEvent({
           eventId: selectedCalendarEvent.id,
           runModule,
-          refresh,
+          refresh: refreshCalendar,
           setGoogleEvents,
         });
         resetInputUI(true);
@@ -441,7 +441,7 @@ const GoogleCalendarFooter = ({
         end: newScheduleEventEnd,
       },
       runModule,
-      refresh,
+      refresh: refreshCalendar,
     });
 
     if (res.ok) {

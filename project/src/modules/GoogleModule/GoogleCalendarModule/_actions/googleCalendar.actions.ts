@@ -2,6 +2,7 @@
 import type {
   CalendarEventUpdates,
   GoogleCalendarDeleteEventRequest,
+  GoogleCalendarEventRaw,
   GoogleCalendarUpdateEventRequest,
   LocalDateTimeInput,
   ScheduleRequest,
@@ -19,6 +20,8 @@ import {
   defaultNewEvent,
   useGoogleCalendarUIStore,
 } from "../_store/googleCalendar.store";
+import { toast } from "react-toastify";
+import { queryClient } from "@/lib/queryClient";
 
 export const createCalendarEvent = async ({
   runModule,
@@ -123,39 +126,54 @@ export const createFromSchedule = async (
   return await runModule("google-calendar-module", request);
 };
 
-const executeCommand = async () => {
-  // if (!googleEvents.length) return;
-  // const googleEventFromQuery = googleEvents[0];
-  // createCalendarEvent(runModule)
-  // await updateCalendarEvent({
-  //   eventId: googleEventFromQuery.id,
-  //   existingEvent: googleEventFromQuery.raw,
-  //   updates: {
-  //     title: "Updated Job",
-  //     start: buildLocalDate(2026, 1, 6, 16, 0),
-  //     end: buildLocalDate(2026, 1, 6, 17, 30),
-  //     customerId: "1235",
-  //     customerEmail: "testcustomer@gmail.com"
-  //   },
-  // });
-  // await deleteCalendarEvent({
-  //   eventId: googleEventFromQuery.id,
-  // });
-};
-
 export const approveAndCreateScheduleEvent = async (
   scheduleRequestItem: ScheduleRequest,
   runModule: (identifier: string, body: any) => any,
-  refresh: () => void
+  refresh: () => void,
+  events: GoogleCalendarEventRaw[]
 ) => {
+  if (scheduleRequestItem.calendar_event_id) {
+    const exactMatch = events.find((e) => {
+      const ext = e.extendedProperties?.private;
+      if (!ext) return false;
+      if (
+        !scheduleRequestItem.proposed_start ||
+        !scheduleRequestItem.proposed_end
+      )
+        return false;
+
+      const matchesId =
+        ext.scheduleRequestId === scheduleRequestItem.schedule_request_id;
+      const matchesStart =
+        new Date(e.start?.dateTime || "").getTime() ===
+        new Date(scheduleRequestItem.proposed_start).getTime();
+      const matchesEnd =
+        new Date(e.end?.dateTime || "").getTime() ===
+        new Date(scheduleRequestItem.proposed_end).getTime();
+
+      return matchesId && matchesStart && matchesEnd;
+    });
+
+    if (exactMatch) {
+      toast.warn("Event already exists in calendar");
+      return false;
+    }
+  }
   const success = await createFromSchedule(scheduleRequestItem, runModule);
   refresh();
-  if (!success.ok) return;
+  if (!success.ok || !success.data.event || !success.data.event.id)
+    return false;
+  const calendarEventId = success.data.event.id;
+  toast.success("Calendar updated");
   await upsertScheduleRequestApi({
     ...scheduleRequestItem,
     status: "approved",
-    calendar_event_id: success?.event?.id ?? null,
+    calendar_event_id: calendarEventId,
   } as ScheduleRequestInput);
+  queryClient.invalidateQueries({
+    queryKey: ["schedule-requests"],
+  });
+  return true;
 };
 
 export const resetInputUI = (unselect: boolean) => {

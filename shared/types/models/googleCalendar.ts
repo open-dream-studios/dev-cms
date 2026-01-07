@@ -25,6 +25,7 @@ export interface GoogleCalendarEventInput {
     private?: {
       customerId?: string;
       customerEmail?: string;
+      scheduleRequestId?: string;
     };
   };
   reminders?: {
@@ -142,5 +143,5 @@ export interface GoogleCalendarEventRaw {
   creator?: {
     email?: string;
   };
-  [key: string]: any; 
+  [key: string]: any;
 }

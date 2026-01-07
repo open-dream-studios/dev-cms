@@ -1,6 +1,7 @@
 // project/src/GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks.ts
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContextQueries } from "../../../../contexts/queryContext/queryContext";
+import { GoogleCalendarEventRaw } from "@open-dream/shared";
 
 export function useGoogleCalendar(
   calendarId: string,
@@ -15,7 +16,7 @@ export function useGoogleCalendar(
     queryFn: async () => {
       // Fetch ALL events inside this time range.
       // We must loop Google pagination manually.
-      const allEvents: any[] = [];
+      const allEvents: GoogleCalendarEventRaw[] = [];
       let pageToken: string | null = null;
 
       do {
@@ -47,7 +48,7 @@ export function useGoogleCalendar(
     });
 
   return {
-    events: query.data ?? [],
+    events: (query.data ?? []) as GoogleCalendarEventRaw[],
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     refresh,

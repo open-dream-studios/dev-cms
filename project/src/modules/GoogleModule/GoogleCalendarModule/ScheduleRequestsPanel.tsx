@@ -8,11 +8,16 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Bell } from "lucide-react";
-import { ScheduleRequest, ScheduleRequestInput } from "@open-dream/shared";
-import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
+import { GoogleCalendarEventRaw, ScheduleRequest, ScheduleRequestInput } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 
-export const ScheduleRequestsPanel = () => {
+export const ScheduleRequestsPanel = ({
+  events,
+  refreshCalendar,
+}: {
+  events: GoogleCalendarEventRaw[];
+  refreshCalendar: () => void;
+}) => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { scheduleRequests, upsertScheduleRequest } = useContextQueries();
@@ -92,7 +97,7 @@ export const ScheduleRequestsPanel = () => {
         <div className="flex items-center gap-[8px]">
           <div
             onClick={() => setViewAll((prev) => !prev)}
-            className="cursor-pointer hover:brightness-90 dim px-[10px] h-[26px] rounded-full flex items-center text-[12.5px] font-[500]"
+            className="select-none cursor-pointer hover:brightness-90 dim px-[10px] h-[26px] rounded-full flex items-center text-[12.5px] font-[500]"
             style={{
               background: viewAll ? statusColors.pending : "#282828",
               border: viewAll
@@ -105,7 +110,7 @@ export const ScheduleRequestsPanel = () => {
           </div>
 
           <div
-            className="px-[10px] h-[26px] rounded-full flex items-center text-[12.5px] font-[500]"
+            className="select-none px-[10px] h-[26px] rounded-full flex items-center text-[12.5px] font-[500]"
             style={{
               background:
                 nonApprovedRequests.length > 0
@@ -121,7 +126,7 @@ export const ScheduleRequestsPanel = () => {
           </div>
 
           <div
-            className="relative w-[28px] h-[28px] rounded-full flex items-center justify-center"
+            className="select-none relative w-[28px] h-[28px] rounded-full flex items-center justify-center"
             style={{
               background:
                 nonApprovedRequests.length > 0
@@ -144,11 +149,16 @@ export const ScheduleRequestsPanel = () => {
       <div className="flex-1 min-h-0">
         <div className="h-[100%] flex flex-col overflow-y-auto gap-[8px]">
           {scheduleRequests
-            .filter((request: ScheduleRequest) =>
-              viewAll ? request : request.status === "pending"
+            .filter((request) =>
+              viewAll ? true : request.status === "pending"
             )
             .map((req) => (
-              <ScheduleRequestRow key={req.schedule_request_id} request={req} />
+              <ScheduleRequestRow
+                key={req.schedule_request_id}
+                request={req}
+                refreshCalendar={refreshCalendar}
+                events={events}
+              />
             ))}
         </div>
       </div>
