@@ -658,8 +658,11 @@ export const GoogleCalendarDisplay = ({
               className="w-[32px] h-[32px] brightness-110"
               src="https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/google-calendar.png"
             />
-            <div className="mt-[0.5px] text-[24px] font-[100] leading-[30px]">
-              <span className="font-[500]">Google</span> Calendar
+            <div className="mt-[0.5px] text-[24px] leading-[30px] flex flex-row gap-[6px]">
+              <span className="font-[500] hidden min-[750px]:flex min-[1000px]:hidden min-[1280px]:flex">
+                Google
+              </span>
+              <span className="font-[100]">Calendar</span>
             </div>
           </div>
 

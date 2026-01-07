@@ -2,6 +2,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { changeToHTTPSDomain } from "../functions/data.js";
 import { PoolConnection, RowDataPacket } from "mysql2/promise";
+import dotenv from "dotenv";
+dotenv.config()
 
 export function verifyVercelProxy(
   req: Request,
@@ -66,6 +68,8 @@ export const getProjectFromRequest = async (
 ) => {
   const domain = req.headers["x-project-domain"]?.toString().toLowerCase();
   console.log("DOMAIN", domain);
+  console.log(process.env.NODE_ENV, process.env.NODE_ENV === "local")
+  if (process.env.NODE_ENV !== "production") return 25;
   if (!domain) return null;
   if (
     !ALLOWED_HOSTNAMES.has(domain) &&
