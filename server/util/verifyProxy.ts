@@ -48,8 +48,8 @@ export const getProjectFromRequest = async (
   console.log("HOST", host)
   if (!host) return null;
   const domain = host.toString().split(":")[0].toLowerCase();
-  console.log("HAS", ALLOWED_HOSTNAMES.has(domain))
-  if (!ALLOWED_HOSTNAMES.has(domain)) return null;
+  if (!ALLOWED_HOSTNAMES.has(domain) && !ALLOWED_HOSTNAMES.has(changeToHTTPSDomain(domain))) return null;
+  console.log("HAS", domain, ALLOWED_HOSTNAMES, ALLOWED_HOSTNAMES.has(changeToHTTPSDomain(domain)))
   const q = `
     SELECT id, domain
     FROM projects
