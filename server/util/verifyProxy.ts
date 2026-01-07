@@ -73,11 +73,11 @@ export const getProjectFromRequest = async (
   )
     return null;
   const [rows] = await connection.query<RowDataPacket[]>(`
-    SELECT id, domain FROM projects
+    SELECT id, backend_domain FROM projects
   `);
   console.log("querying...")
   const project = rows.find(
-    (proj) => changeToHTTPSDomain(proj.domain) === changeToHTTPSDomain(domain)
+    (proj) => changeToHTTPSDomain(proj.backend_domain) === changeToHTTPSDomain(domain)
   );
   console.log("PROJECT_ID -> ", project?.id)
   return project?.id ?? null;
