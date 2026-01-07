@@ -14,7 +14,7 @@ export const getScheduleRequestsFunction = async (project_idx: number) => {
     SELECT *
     FROM schedule_requests
     WHERE project_idx = ?
-    ORDER BY created_at DESC
+    ORDER BY proposed_start DESC
   `;
 
   const [rows] = await db.promise().query<RowDataPacket[]>(q, [project_idx]);
@@ -104,11 +104,11 @@ export const upsertScheduleRequestFunction = async (
       event_description = VALUES(event_description),
       metadata = VALUES(metadata),
       updated_at = NOW(),
-      resolved_at = IF(
-        VALUES(status) IN ('approved','rejected'),
-        NOW(),
-        resolved_at
-      )
+      resolved_at = CASE
+        WHEN VALUES(status) = 'pending' THEN NULL
+        WHEN VALUES(status) IN ('approved','rejected') THEN NOW()
+        ELSE resolved_at
+      END
   `;
 
   const values = [

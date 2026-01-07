@@ -87,35 +87,35 @@ export const StatusBadge: React.FC<{
           oneSize ? "py-2 text-sm" : "py-[3%] text-[calc(10px+0.2vw)]"
         } brightness-[140%] pl-[17%] pr-[4%] rounded-full ml-[-20%] cursor-pointer outline-none border-none`}
       >
-        {matchedDefinition.type.toLowerCase() === "service" && (
+        {matchedDefinition.type && matchedDefinition.type.toLowerCase() === "service" && (
           <option value="waiting_diagnosis">
             {mapping["waiting_diagnosis"].label}
           </option>
         )}
         <option value="waiting_work">{mapping["waiting_work"].label}</option>
         <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
-        {matchedDefinition.type.toLowerCase() !== "sale" && (
+        {matchedDefinition.type && matchedDefinition.type.toLowerCase() !== "sale" && (
           <option value="waiting_customer">
             {mapping["waiting_customer"].label}
           </option>
         )}
-        {matchedDefinition.type.toLowerCase() === "sale" && (
+        {matchedDefinition.type && matchedDefinition.type.toLowerCase() === "sale" && (
           <option value="waiting_listing">
             {mapping["waiting_listing"].label}
           </option>
         )}
-        {matchedDefinition.type.toLowerCase() === "sale" && (
+        {matchedDefinition.type && matchedDefinition.type.toLowerCase() === "sale" && (
           <option value="listed">{mapping["listed"].label}</option>
         )}
-        {matchedDefinition.type.toLowerCase() !== "service" && (
+        {matchedDefinition.type && matchedDefinition.type.toLowerCase() !== "service" && (
           <option value="waiting_delivery">
             {mapping["waiting_delivery"].label}
           </option>
         )}
-        {matchedDefinition.type.toLowerCase() !== "service" && (
+        {matchedDefinition.type && matchedDefinition.type.toLowerCase() !== "service" && (
           <option value="delivered">{mapping["delivered"].label}</option>
         )}
-        {matchedDefinition.type.toLowerCase() === "service" && (
+        {matchedDefinition.type && matchedDefinition.type.toLowerCase() === "service" && (
           <option value="complete">{mapping["complete"].label}</option>
         )}
         <option value="cancelled">{mapping["cancelled"].label}</option>
@@ -191,7 +191,7 @@ export const TaskStatusBadge: React.FC<{
       >
         <option value="waiting_work">{mapping["waiting_work"].label}</option>
         <option value="waiting_parts">{mapping["waiting_parts"].label}</option>
-        {matchedDefinition.type.toLowerCase() === "service" && (
+        {matchedDefinition.type && matchedDefinition.type.toLowerCase() === "service" && (
           <option value="waiting_customer">
             {mapping["waiting_customer"].label}
           </option>

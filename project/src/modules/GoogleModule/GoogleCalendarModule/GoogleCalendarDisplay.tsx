@@ -28,7 +28,10 @@ import {
   weekIndexOffsetForDate,
 } from "./_helpers/googleCalendar.helpers";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { approveAndCreateScheduleEvent, resetInputUI } from "@/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendar.actions";
+import {
+  approveAndCreateScheduleEvent,
+  resetInputUI,
+} from "@/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendar.actions";
 import {
   CalendarEvent,
   GoogleCalendarEventRaw,
@@ -38,6 +41,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import GoogleCalendarFooter from "./GoogleCalendarFooter";
 import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
 import clsx from "clsx";
+import { openWindow } from "@/util/functions/Handlers";
 
 export const DAY_START_HOUR = 6;
 export const DAY_END_HOUR = 22;
@@ -52,12 +56,8 @@ export const GoogleCalendarDisplay = () => {
   const { currentUser } = React.useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const [isMini, setIsMini] = useState<boolean>(true);
-  const [calendarCollapsed, setCalendarCollapsed] = useState<boolean>(false);
   const [googleEvents, setGoogleEvents] = useState<CalendarEvent[]>([]);
 
-  const { scheduleRequests, upsertScheduleRequest, runModule } =
-    useContextQueries();
-  const { currentProjectId } = useCurrentDataStore();
   const {
     newScheduleEventStart,
     newScheduleEventEnd,
@@ -65,52 +65,15 @@ export const GoogleCalendarDisplay = () => {
     setSelectedCalendarEvent,
     newEventDetails,
     setIsCreatingEvent,
-    editingCalendarEvent
+    editingCalendarEvent,
+    calendarCollapsed,
+    setCalendarCollapsed,
   } = useGoogleCalendarUIStore();
 
   const handleCalendarItemClick = (event: CalendarEvent) => {
     setSelectedCalendarEvent(event);
     setIsCreatingEvent(false);
-    resetInputUI(false)
-  };
-
-  const testCalendar = async () => {
-    if (!currentProjectId) return;
-    // const start = {
-    //   year: 2026,
-    //   month: 1,
-    //   day: 6,
-    //   hour: 14,
-    // } as LocalDateTimeInput;
-    // const end = {
-    //   year: 2026,
-    //   month: 1,
-    //   day: 6,
-    //   hour: 15,
-    // } as LocalDateTimeInput;
-    if (!newScheduleEventStart || !newScheduleEventEnd) return;
-    await upsertScheduleRequest({
-      schedule_request_id: null,
-      project_idx: currentProjectId,
-      customer_id: null,
-      job_id: null,
-      source_type: "internal",
-      source_user_id: null,
-      request_type: "create",
-      calendar_event_id: null,
-      proposed_start: newScheduleEventStart.toISOString(),
-      proposed_end: newScheduleEventEnd.toISOString(),
-      proposed_location: "123 Test St, Boston MA",
-      status: "pending",
-      ai_reasoning: null,
-      event_title: "Test Calendar Event",
-      event_description: "Testing schedule → calendar pipeline",
-      metadata: JSON.stringify({ test: true }),
-    } as ScheduleRequestInput);
-
-    if (!scheduleRequests.length) return;
-    const scheduleRequest = scheduleRequests[0];
-    await approveAndCreateScheduleEvent(scheduleRequest, runModule, refresh);
+    resetInputUI(false);
   };
 
   const [rangeStart, setRangeStart] = useState(() => {
@@ -182,16 +145,16 @@ export const GoogleCalendarDisplay = () => {
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement; 
+      const target = e.target as HTMLElement;
       if (
         !selectedCalendarEvent ||
-        editingCalendarEvent || 
+        editingCalendarEvent ||
         target.closest("[data-calendar-event]") ||
         target.closest("[data-calendar-event-card]") ||
         target.closest("[data-modal-2-continue]") ||
         target.closest("[ data-edit-event-button]") ||
-        target.closest("[data-delete-event-button]") || 
-        target.closest("[data-calendar-create-button]") 
+        target.closest("[data-delete-event-button]") ||
+        target.closest("[data-calendar-create-button]")
       )
         return;
       setSelectedCalendarEvent(null);
@@ -695,7 +658,14 @@ export const GoogleCalendarDisplay = () => {
   return (
     <motion.div
       initial={false}
-      className={`GoogleCalendar w-[100%] rounded-xl px-[14px] py-[9px] bg-opacity-80`}
+      className={`${
+        calendarCollapsed && "cursor-pointer hover:brightness-80 dim"
+      } GoogleCalendar w-[100%] rounded-xl px-[14px] py-[9px] bg-opacity-80`}
+      onClick={() => {
+        if (calendarCollapsed) {
+          setCalendarCollapsed(false);
+        }
+      }}
       style={
         {
           ...getInnerCardStyle?.(currentUser.theme, currentTheme),
@@ -707,19 +677,32 @@ export const GoogleCalendarDisplay = () => {
       }
     >
       {/* Header */}
-      {!calendarCollapsed && (
-        <div className="mt-[4px] mb-3 pr-[2px] text-xs opacity-70 flex items-center justify-between gap-2">
-          <div className="flex flex-row items-center gap-[8px]">
-            <div className="mt-[-3px] h-[32px] relative flex flex-row gap-[8px]">
-              <img
-                className="w-[32px] h-[32px] brightness-110"
-                src="https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/google-calendar.png"
-              />
-              <div className="mt-[0.5px] text-[25px] font-[100] leading-[30px]">
-                <span className="font-[500]">Google</span> Calendar
-              </div>
+      <div
+        className={`${
+          calendarCollapsed ? "mb-1" : "mb-3"
+        } mt-[4px] pr-[2px] text-xs opacity-70 flex items-center justify-between gap-2`}
+      >
+        <div className="flex flex-row items-center gap-[8px]">
+          <div
+            onClick={() => {
+              if (!calendarCollapsed) {
+                openWindow("https://calendar.google.com/calendar/u/0/r");
+              }
+            }}
+            className={`${
+              !calendarCollapsed && "cursor-pointer hover:brightness-75 dim"
+            } select-none mt-[-3px] h-[32px] relative flex flex-row gap-[9px]`}
+          >
+            <img
+              className="w-[32px] h-[32px] brightness-110"
+              src="https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/google-calendar.png"
+            />
+            <div className="mt-[0.5px] text-[24px] font-[100] leading-[30px]">
+              <span className="font-[500]">Google</span> Calendar
             </div>
+          </div>
 
+          {!calendarCollapsed && (
             <div className="flex flex-row gap-[8px] ml-[7px]">
               <button
                 onClick={handlePrevWeek}
@@ -739,36 +722,43 @@ export const GoogleCalendarDisplay = () => {
                 <ChevronRight size={16} />
               </button>
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="flex flex-row gap-[5px]">
+        <div className="flex flex-row gap-[5px]">
+          {!calendarCollapsed && (
             <button
               onClick={() => {
-                if (calendarCollapsed) {
-                  setCalendarCollapsed(false);
-                } else {
-                  setIsMini((prev) => !prev);
-                }
+                setIsMini((prev) => !prev);
               }}
               className="cursor-pointer hover:brightness-75 dim px-2 py-1 rounded-md bg-[#292929]"
               title={isMini ? "Expand" : "Collapse"}
             >
               {isMini ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
             </button>
-            <button
-              onClick={() => setCalendarCollapsed((prev) => !prev)}
-              className="cursor-pointer hover:brightness-90 dim px-2 py-1 rounded-md bg-[#292929]"
-              title="Collapse"
-            >
-              {calendarCollapsed ? (
-                <ChevronDown size={16} className="opacity-[0.7]" />
-              ) : (
-                <ChevronUp size={16} className="opacity-[0.7]" />
-              )}
-            </button>
-          </div>
+          )}
+          <button
+            onClick={() => {
+              if (!calendarCollapsed) {
+                setCalendarCollapsed(!calendarCollapsed);
+              }
+            }}
+            className={`${
+              !calendarCollapsed && "cursor-pointer hover:brightness-90 dim"
+            } px-2 py-1 rounded-md bg-[#292929]`}
+            title={calendarCollapsed ? "Expand" : "Collapse"}
+            style={{
+              transform: calendarCollapsed ? "rotate(270deg)" : "none",
+            }}
+          >
+            {calendarCollapsed ? (
+              <ChevronDown size={16} className="opacity-[0.7]" />
+            ) : (
+              <ChevronUp size={16} className="opacity-[0.7]" />
+            )}
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Calendar area */}
       <div
@@ -990,8 +980,12 @@ export const GoogleCalendarDisplay = () => {
 
                             const top = isStartDay ? ev.topPct : 0;
                             const height = isEndDay ? ev.heightPct : 100 - top;
-                            
-                            if (editingCalendarEvent && editingCalendarEvent.id === ev.id) return null
+
+                            if (
+                              editingCalendarEvent &&
+                              editingCalendarEvent.id === ev.id
+                            )
+                              return null;
 
                             return (
                               <div
@@ -1087,10 +1081,12 @@ export const GoogleCalendarDisplay = () => {
         </div>
       </div>
 
-      <GoogleCalendarFooter
-        refresh={refresh}
-        setGoogleEvents={setGoogleEvents}
-      />
+      {!calendarCollapsed && (
+        <GoogleCalendarFooter
+          refresh={refresh}
+          setGoogleEvents={setGoogleEvents}
+        />
+      )}
     </motion.div>
   );
 };

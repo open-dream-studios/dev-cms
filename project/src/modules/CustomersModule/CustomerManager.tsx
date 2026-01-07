@@ -13,6 +13,7 @@ import {
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useScheduleRequests } from "@/contexts/queryContext/queries/public/scheduleRequests";
 import GoogleCalendarDisplay from "../GoogleModule/GoogleCalendarModule/GoogleCalendarDisplay";
+import { ScheduleRequestsPanel } from "../GoogleModule/GoogleCalendarModule/ScheduleRequestsPanel";
 
 export default function CustomerManager() {
   const {
@@ -27,8 +28,8 @@ export default function CustomerManager() {
     upsertActionDefinition,
     deleteActionDefinition,
     customerData,
-    scheduleRequests, 
-    upsertScheduleRequest
+    scheduleRequests,
+    upsertScheduleRequest,
   } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
 
@@ -100,17 +101,13 @@ export default function CustomerManager() {
     // } as ActionInput);
 
     // await deleteAction("TASK-01KE2MNN7TFQYP2X3J6ESKH1TV")
-    console.log(customerData)
+    console.log(customerData);
   };
 
   return (
-    <div className="w-[100%] h-[100%]">
-      {/* <div
-        className="w-[20px] h-[20px] bg-red-400 cursor-pointer"
-        onClick={handleLeadClick}
-      ></div> */}
-      <div className="px-[14px] py-[12px] "><GoogleCalendarDisplay /></div>
-      {/* <MessagesApp /> */}
+    <div className="w-[100%] h-[100%] flex flex-col gap-[13px] px-[14px] py-[12px]">
+      <GoogleCalendarDisplay />
+      <ScheduleRequestsPanel />
     </div>
   );
   // return <CustomerInteractionTimeline />;
