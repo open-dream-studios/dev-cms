@@ -24,6 +24,7 @@ async function proxy(req: NextRequest) {
 
   const headers: Record<string, string> = {
     "x-vercel-proxy-secret": PROXY_SECRET,
+    "x-project-domain": req.headers.get("host") || "",
   };
 
   const cookie = req.headers.get("cookie");

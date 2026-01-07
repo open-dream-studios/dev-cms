@@ -14,15 +14,11 @@ export function verifyVercelProxy(
   if (process.env.NODE_ENV !== "production") {
     if (secret === process.env.INTERNAL_PROXY_SECRET) {
       return next();
-    } 
+    }
     return res.status(403).json({ error: "Forbidden (dev)" });
   }
 
-  if (
-    !secret ||
-    secret !== process.env.INTERNAL_PROXY_SECRET ||
-    !vercelId
-  ) {
+  if (!secret || secret !== process.env.INTERNAL_PROXY_SECRET || !vercelId) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
@@ -40,26 +36,49 @@ const ALLOWED_HOSTNAMES = new Set(
     .filter(Boolean)
 );
 
+// export const getProjectFromRequest = async (
+//   req: Request,
+//   connection: PoolConnection
+// ) => {
+//   const host = req.headers["x-forwarded-host"] ?? req.headers.host;
+//   console.log("HOST", host)
+//   if (!host) return null;
+//   const domain = host.toString().split(":")[0].toLowerCase();
+//   if (!ALLOWED_HOSTNAMES.has(domain) && !ALLOWED_HOSTNAMES.has(changeToHTTPSDomain(domain))) return null;
+//   console.log("HAS", domain, ALLOWED_HOSTNAMES, ALLOWED_HOSTNAMES.has(changeToHTTPSDomain(domain)))
+//   const q = `
+//     SELECT id, domain
+//     FROM projects
+//   `;
+//   const [rows] = await connection.query<RowDataPacket[]>(q);
+//   console.log("DOMAIN", domain)
+//   if (domain === "localhost") return 25;
+//   const project = rows.find((proj) => changeToHTTPSDomain(proj.domain) === changeToHTTPSDomain(domain));
+//   console.log(rows, domain);
+//   console.log(project)
+//   if (!project?.id) return null;
+//   return project.id;
+// };
+
 export const getProjectFromRequest = async (
   req: Request,
   connection: PoolConnection
 ) => {
-  const host = req.headers["x-forwarded-host"] ?? req.headers.host;
-  console.log("HOST", host)
-  if (!host) return null;
-  const domain = host.toString().split(":")[0].toLowerCase();
-  if (!ALLOWED_HOSTNAMES.has(domain) && !ALLOWED_HOSTNAMES.has(changeToHTTPSDomain(domain))) return null;
-  console.log("HAS", domain, ALLOWED_HOSTNAMES, ALLOWED_HOSTNAMES.has(changeToHTTPSDomain(domain)))
-  const q = `
-    SELECT id, domain
-    FROM projects
-  `;
-  const [rows] = await connection.query<RowDataPacket[]>(q);
-  console.log("DOMAIN", domain)
-  if (domain === "localhost") return 25;
-  const project = rows.find((proj) => changeToHTTPSDomain(proj.domain) === changeToHTTPSDomain(domain));
-  console.log(rows, domain);
-  console.log(project)
-  if (!project?.id) return null;
-  return project.id;
+  const domain = req.headers["x-project-domain"]?.toString().toLowerCase();
+  console.log("DOMAIN", domain);
+  if (!domain) return null;
+  if (
+    !ALLOWED_HOSTNAMES.has(domain) &&
+    !ALLOWED_HOSTNAMES.has(changeToHTTPSDomain(domain))
+  )
+    return null;
+  const [rows] = await connection.query<RowDataPacket[]>(`
+    SELECT id, domain FROM projects
+  `);
+  console.log("querying...")
+  const project = rows.find(
+    (proj) => changeToHTTPSDomain(proj.domain) === changeToHTTPSDomain(domain)
+  );
+  console.log("PROJECT_ID -> ", project?.id)
+  return project?.id ?? null;
 };
