@@ -45,17 +45,21 @@ export const getProjectFromRequest = async (
   connection: PoolConnection
 ) => {
   const host = req.headers["x-forwarded-host"] ?? req.headers.host;
+  console.log("HOST", host)
   if (!host) return null;
   const domain = host.toString().split(":")[0].toLowerCase();
+  console.log("HAS", ALLOWED_HOSTNAMES.has(domain))
   if (!ALLOWED_HOSTNAMES.has(domain)) return null;
   const q = `
     SELECT id, domain
     FROM projects
   `;
   const [rows] = await connection.query<RowDataPacket[]>(q);
+  console.log("DOMAIN", domain)
   if (domain === "localhost") return 25;
   const project = rows.find((proj) => changeToHTTPSDomain(proj.domain) === changeToHTTPSDomain(domain));
   console.log(rows, domain);
+  console.log(project)
   if (!project?.id) return null;
   return project.id;
 };
