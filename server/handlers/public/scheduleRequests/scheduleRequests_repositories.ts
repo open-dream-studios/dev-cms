@@ -44,7 +44,62 @@ export const upsertScheduleRequestFunction = async (
     event_title,
     event_description,
     metadata,
+    options,
   } = reqBody;
+
+  if (options?.confirmationSent) {
+    const { schedule_request_id } = reqBody;
+    if (!schedule_request_id) {
+      throw new Error(
+        "schedule_request_id is required to mark confirmation sent"
+      );
+    }
+    const q = `
+      UPDATE schedule_requests
+      SET confirmation_sent_at = NOW()
+      WHERE schedule_request_id = ?
+        AND project_idx = ?
+    `;
+    await connection.query(q, [schedule_request_id, project_idx]);
+    return {
+      success: true,
+      schedule_request_id,
+    };
+  }
+
+  if (options?.reschedule) {
+    const {
+      schedule_request_id,
+      proposed_reschedule_start,
+      proposed_reschedule_end,
+    } = reqBody;
+
+    if (!schedule_request_id) {
+      throw new Error("schedule_request_id is required to add a reschedule");
+    }
+
+    const q = `
+        UPDATE schedule_requests
+        SET
+          proposed_reschedule_start = ?,
+          proposed_reschedule_end = ?,
+          confirmation_sent_at = NOW()
+        WHERE schedule_request_id = ?
+          AND project_idx = ?
+      `;
+
+    await connection.query(q, [
+      normalizeToMySQLDatetime(proposed_reschedule_start),
+      normalizeToMySQLDatetime(proposed_reschedule_end),
+      schedule_request_id,
+      project_idx,
+    ]);
+
+    return {
+      success: true,
+      schedule_request_id,
+    };
+  }
 
   if (!source_type || !request_type) {
     throw new Error("source_type and request_type are required");
