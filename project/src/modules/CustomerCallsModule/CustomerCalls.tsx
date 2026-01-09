@@ -314,7 +314,7 @@ const CustomerCalls = () => {
                 <div
                   onClick={async () => {
                     await screenClick("customers", "/");
-                    setCurrentCustomerData(matchedCustomer);
+                    setCurrentCustomerData(matchedCustomer, true);
                   }}
                   className="cursor-pointer w-fit hover:brightness-75 dim text-[13px] px-[18px] py-[4px] rounded-full bg-white/6 text-white/80 font-medium"
                 >
@@ -437,7 +437,7 @@ const CustomerCalls = () => {
                 <div
                   onClick={async () => {
                     await screenClick("customers", "/");
-                    setCurrentCustomerData(matchedCustomer);
+                    setCurrentCustomerData(matchedCustomer, true);
                   }}
                   className="cursor-pointer w-fit hover:brightness-75 dim text-[13px] px-[18px] py-[4px] rounded-full bg-white/6 text-white/80 font-medium"
                 >

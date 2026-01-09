@@ -12,10 +12,10 @@ export interface ScheduleRequestBase {
   status?: "pending" | "approved" | "rejected"; // default pending
   ai_reasoning?: string | null;
   event_title: string | null;
-  event_description: string | null; 
+  event_description: string | null;
   metadata: {
     customer?: any;
-    product?: any
+    product?: any;
   } | null;
 }
 
@@ -23,9 +23,12 @@ export interface ScheduleRequestBase {
 export interface ScheduleRequest extends ScheduleRequestBase {
   id: number;
   schedule_request_id: string;
-  created_at: string; // ISO string
-  updated_at: string; // ISO string
-  resolved_at?: string | null; // ISO string
+  created_at: string;
+  updated_at: string;
+  resolved_at?: string | null;
+  confirmation_sent_at?: string | null;
+  proposed_reschedule_start?: string | null;
+  proposed_reschedule_end?: string | null;
 }
 
 // Input for creating/upserting

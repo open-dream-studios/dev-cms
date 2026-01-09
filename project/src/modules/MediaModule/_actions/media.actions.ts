@@ -16,7 +16,7 @@ import { getCurrentTimestamp } from "@/util/functions/Data";
 import { makeRequest } from "@/util/axios";
 import { deleteMediaLinksApi, upsertMediaLinksApi } from "@/api/mediaLinks.api";
 import { deleteProjectMediaApi, rotateProjectMediaApi } from "@/api/media.api";
-import { showRotatedToast } from "@/util/functions/UI";
+import { showSuccessToast } from "@/util/functions/UI";
 import { PopupDisplayItem, promptContinue } from "@/modals/_actions/modals.actions";
 import { queryClient } from "@/lib/queryClient";
 
@@ -331,7 +331,7 @@ export const handleRotateMedia = async (
   try {
     setUpdatingLock(true);
     await rotateProjectMediaApi(currentProjectId, media_id, url, rotations);
-    showRotatedToast("rotate-success");
+    showSuccessToast("rotate-success", "Image rotated");
     queryClient.invalidateQueries({
       queryKey: ["media", currentProjectId],
     });

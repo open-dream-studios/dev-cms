@@ -1,9 +1,9 @@
 // src/modules/GoogleModule/GmailModule/_store/gmail.store.ts
 import { createStore } from "@/store/createStore";
-import { GmailRequestType, MessageDetail } from "@open-dream/shared";
+import { GmailLabel, MessageDetail } from "@open-dream/shared";
 
 export const useGmailDataStore = createStore({
-  label: null as GmailRequestType | null,
+  label: null as GmailLabel | null,
   messages: [] as any[],
   hasNextPage: false,
   isLoading: false,
@@ -14,7 +14,7 @@ export const useGmailDataStore = createStore({
 });
 
 export const useGmailUIStore = createStore({
-  selectedGmailTab: "INBOX" as GmailRequestType,
+  selectedGmailTab: "INBOX" as GmailLabel,
   selectedId: null as string | null,
   detail: null as MessageDetail | null,
   search: "",

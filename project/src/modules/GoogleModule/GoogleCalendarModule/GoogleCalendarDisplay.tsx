@@ -32,6 +32,7 @@ import GoogleCalendarFooter from "./GoogleCalendarFooter";
 import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
 import clsx from "clsx";
 import { openWindow } from "@/util/functions/Handlers";
+import { nanoid } from "nanoid";
 
 export const DAY_START_HOUR = 6;
 export const DAY_END_HOUR = 22;
@@ -65,6 +66,9 @@ export const GoogleCalendarDisplay = ({
     calendarCollapsed,
     setCalendarCollapsed,
     selectedScheduleRequest,
+    showReschedule,
+    rescheduleStart,
+    rescheduleEnd,
   } = useGoogleCalendarUIStore();
 
   const handleCalendarItemClick = (event: CalendarEvent) => {
@@ -1012,7 +1016,7 @@ export const GoogleCalendarDisplay = ({
 
                             return (
                               <div
-                                key={"scheduled-" + idx}
+                                key={`scheduled-${idx}-${nanoid()}`}
                                 className="mt-[1px] absolute rounded-[3px] text-[10px] px-1 pb-[2px] pt-[1.5px] text-white overflow-hidden cursor-pointer hover:brightness-[84%] dim"
                                 style={{
                                   top: `${topPct}%`,
@@ -1043,11 +1047,55 @@ export const GoogleCalendarDisplay = ({
                           (() => {
                             const day = daysArray[idx];
 
-                            const selectedScheduleRequestProposedStart =
-                              new Date(selectedScheduleRequest.proposed_start);
-                            const selectedScheduleRequestProposedEnd = new Date(
+                            let selectedScheduleRequestProposedStart = null;
+                            let selectedScheduleRequestProposedEnd = null;
+                            let isReschedule = false;
+                            if (
+                              selectedScheduleRequest.proposed_start &&
                               selectedScheduleRequest.proposed_end
-                            );
+                            ) {
+                              if (
+                                showReschedule &&
+                                rescheduleStart &&
+                                rescheduleEnd
+                              ) {
+                                selectedScheduleRequestProposedStart = new Date(
+                                  rescheduleStart
+                                );
+                                selectedScheduleRequestProposedEnd = new Date(
+                                  rescheduleEnd
+                                );
+                                isReschedule = true;
+                              } else {
+                                if (
+                                  selectedScheduleRequest.proposed_reschedule_start &&
+                                  selectedScheduleRequest.proposed_reschedule_end
+                                ) {
+                                  selectedScheduleRequestProposedStart =
+                                    new Date(
+                                      selectedScheduleRequest.proposed_reschedule_start
+                                    );
+                                  selectedScheduleRequestProposedEnd = new Date(
+                                    selectedScheduleRequest.proposed_reschedule_end
+                                  );
+                                  isReschedule = true;
+                                } else {
+                                  selectedScheduleRequestProposedStart =
+                                    new Date(
+                                      selectedScheduleRequest.proposed_start
+                                    );
+                                  selectedScheduleRequestProposedEnd = new Date(
+                                    selectedScheduleRequest.proposed_end
+                                  );
+                                }
+                              }
+                            }
+
+                            if (
+                              !selectedScheduleRequestProposedStart ||
+                              !selectedScheduleRequestProposedEnd
+                            )
+                              return null;
 
                             // Start/end of this day
                             const dayStart = new Date(day);
@@ -1083,8 +1131,9 @@ export const GoogleCalendarDisplay = ({
                                   height: `calc(${heightPct}% - 1px)`,
                                   left: "0.5px",
                                   right: "0.5px",
-                                  backgroundColor:
-                                    currentTheme.new_google_calendar_event,
+                                  backgroundColor: isReschedule
+                                    ? currentTheme.rescheduled_google_calendar_event
+                                    : currentTheme.new_google_calendar_event,
                                 }}
                               >
                                 {idx ===

@@ -3,20 +3,14 @@ import { IoClose } from "react-icons/io5";
 import { Paperclip, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { EmailPayload } from "@open-dream/shared";
 
 interface EmailComposerProps {
   mode: "reply" | "compose";
   initialTo?: string;
   initialSubject?: string;
   initialBody?: string;
-  onSend: (payload: {
-    to: string[];
-    cc?: string[];
-    bcc?: string[];
-    subject: string;
-    body: string;
-    attachments: File[];
-  }) => void;
+  onSend: (payload: EmailPayload) => void;
   onClose: () => void;
 }
 

@@ -2,6 +2,7 @@
 import type { ModuleFunctionInputs } from "@open-dream/shared";
 import {
   fetchGmailPage,
+  fetchGmailSearchPage,
   getGmailClient,
 } from "../../../services/google/gmail/gmail.js";
 import { getGoogleProfile } from "../../../services/google/google.js";
@@ -274,19 +275,56 @@ export const run = async ({
       };
     }
 
+    // // ----------------------------
+    // // GET PAGINATED LIST (INBOX, SENT, etc.)
+    // // ----------------------------
+    // return await fetchGmailPage(
+    //   GOOGLE_CLIENT_SECRET_OBJECT,
+    //   GOOGLE_REFRESH_TOKEN_OBJECT,
+    //   {
+    //     label: requestType,
+    //     pageToken: pageToken ?? null,
+    //     pageSize: 50,
+    //     format: "metadata",
+    //   }
+    // );
+
     // ----------------------------
-    // GET PAGINATED LIST (INBOX, SENT, etc.)
+    // SEARCH (GMAIL-STYLE)
     // ----------------------------
-    return await fetchGmailPage(
-      GOOGLE_CLIENT_SECRET_OBJECT,
-      GOOGLE_REFRESH_TOKEN_OBJECT,
-      {
-        label: requestType,
-        pageToken: pageToken ?? null,
-        pageSize: 50,
-        format: "metadata",
-      }
-    );
+    if (typeof requestType === "object" && requestType.type === "SEARCH") {
+      const scopedQuery = requestType.label
+        ? `in:${requestType.label.toLowerCase()} ${requestType.query}`
+        : requestType.query;
+
+      return await fetchGmailSearchPage(
+        GOOGLE_CLIENT_SECRET_OBJECT,
+        GOOGLE_REFRESH_TOKEN_OBJECT,
+        {
+          query: scopedQuery,
+          pageToken: pageToken ?? null,
+          pageSize: body.pageSize ?? 50,
+          format: "metadata",
+        }
+      );
+    }
+
+    // ----------------------------
+    // LABEL LIST (INBOX, SENT, etc.)
+    // ----------------------------
+
+    if (requestType.type === "LIST") {
+      return await fetchGmailPage(
+        GOOGLE_CLIENT_SECRET_OBJECT,
+        GOOGLE_REFRESH_TOKEN_OBJECT,
+        {
+          label: requestType.label,
+          pageToken: pageToken ?? null,
+          pageSize: body.pageSize ?? 50,
+          format: "metadata",
+        }
+      );
+    }
   } catch (err: any) {
     console.error(err);
     return { ok: false, error: err.message };

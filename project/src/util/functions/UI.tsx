@@ -10,16 +10,16 @@ export const formatDropdownOption = (option: string) => {
     .join(" ");
 };
 
-export const showRotatedToast = (ID: string) => {
+export const showSuccessToast = (ID: string, message: string) => {
   if (toast.isActive(ID)) {
     toast.update(ID, {
-      render: "Image rotated",
+      render: message,
       type: "success",
       autoClose: 3000,
       progress: 0,
     });
   } else {
-    toast.success("Image rotated", {
+    toast.success(message, {
       toastId: ID,
       autoClose: 3000,
     });

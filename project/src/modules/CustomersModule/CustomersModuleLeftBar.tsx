@@ -2,10 +2,13 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useUiStore } from "@/store/useUIStore";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentCustomerData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { GoSync } from "react-icons/go";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +16,7 @@ import SearchBar from "../components/SearchBar";
 import { handleCustomerClick } from "../CustomersModule/_actions/customers.actions";
 import { homeLayoutLeftBarTopHeight } from "@/layouts/homeLayout";
 import CustomerCatalog from "./CustomerCatalog";
+import { motion } from "framer-motion";
 
 const CustomersModuleLeftBar = () => {
   const queryClient = useQueryClient();
@@ -20,7 +24,7 @@ const CustomersModuleLeftBar = () => {
   const { currentUser } = useContext(AuthContext);
   const { refetchCustomers, runModule } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
-  const { setUpdatingLock } = useUiStore();
+  const { setUpdatingLock, setAddingCustomer } = useUiStore();
   const currentTheme = useCurrentTheme();
 
   const handleCustomerSync = async () => {
@@ -35,6 +39,8 @@ const CustomersModuleLeftBar = () => {
     }
   };
 
+  const [isHoveredOver, setIsHoveredOver] = useState(false);
+
   if (!currentUser) return null;
 
   return (
@@ -44,18 +50,35 @@ const CustomersModuleLeftBar = () => {
         borderRight: `0.5px solid ${currentTheme.background_2}`,
       }}
     >
-      <div className="flex flex-col px-[15px] pb-[8px]">
-        <div
-          className="flex flex-row items-center justify-between pt-[12px] pb-[6px]"
-          style={{
-            height: homeLayoutLeftBarTopHeight,
+      <div className="flex flex-col pb-[8px]">
+        <motion.div
+          className={
+            "group px-[15px] flex flex-row items-center justify-between pt-[12px] pb-[6px] h-[61px] cursor-pointer"
+          }
+          // style={{
+          //   height: homeLayoutLeftBarTopHeight,
+          // }}
+          animate={{
+            backgroundColor: isHoveredOver
+              ? currentTheme.background_2
+              : currentTheme.background_1,
           }}
+          onHoverStart={() => setIsHoveredOver(true)}
+          onHoverEnd={() => setIsHoveredOver(false)}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          <div className="select-none flex flex-row gap-[13.5px] items-center w-[100%]">
-            <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
+          <div className="flex flex-row justify-between items-center w-[100%]">
+            <p
+              onClick={() => {
+                setCurrentCustomerData(null, false)
+                setAddingCustomer(false)
+                }}
+              className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]"
+            >
               Customers
             </p>
           </div>
+
           <div className="flex flex-row gap-[6px]">
             <div
               onClick={handleCustomerSync}
@@ -77,10 +100,13 @@ const CustomersModuleLeftBar = () => {
               <FaPlus size={12} />
             </div>
           </div>
-        </div>
-        <Divider />
-        <div className="mt-[8px] h-[26px]">
-          <SearchBar />
+        </motion.div>
+
+        <div className="px-[15px] mt-[-1px]">
+          <Divider />
+          <div className="mt-[8px] h-[26px]">
+            <SearchBar />
+          </div>
         </div>
       </div>
 

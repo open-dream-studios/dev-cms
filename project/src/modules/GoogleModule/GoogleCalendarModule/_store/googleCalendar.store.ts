@@ -24,4 +24,7 @@ export const useGoogleCalendarUIStore = createStore({
   newEventDetails: defaultNewEvent as NewEvent,
   editingCalendarEvent: null as CalendarEvent | null,
   selectedScheduleRequest: null as ScheduleRequest | null,
+  showReschedule: false,
+  rescheduleStart: null as Date | null,
+  rescheduleEnd: null as Date | null,
 });

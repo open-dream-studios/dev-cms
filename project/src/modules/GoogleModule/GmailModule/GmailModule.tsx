@@ -1,5 +1,5 @@
 // project/src/modules/GoogleModule/GmailModule/GmailModule.tsx
-import React, { useEffect, useMemo } from "react"; 
+import React, { useEffect, useMemo } from "react";
 import { GmailMessage, GmailRequestType } from "@open-dream/shared";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,7 +16,7 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { SkeletonLine } from "@/lib/skeletons/Skeletons";
 import GmailMessageSkeleton from "@/lib/skeletons/GmailMessageSkeleton";
 import { useGmail } from "@/modules/GoogleModule/_hooks/gmail.hooks";
-import { useGmailProfile } from "@/modules/GoogleModule/_hooks/gmail.hooks"; 
+import { useGmailProfile } from "@/modules/GoogleModule/_hooks/gmail.hooks";
 import { openWindow } from "@/util/functions/Handlers";
 import {
   cleanText,
@@ -30,19 +30,9 @@ import { useGmailUIStore } from "./_store/gmail.store";
 import GmailMessageView from "./GmailMessageView";
 import { useGmailActions } from "./useGmailActions";
 
-const GmailModule = () => { 
+const GmailModule = () => {
   const { selectedGmailTab, setSelectedGmailTab } = useGmailUIStore();
   const currentTheme = useCurrentTheme();
-  const {
-    messages,
-    fetchNextPage,
-    hasNextPage,
-    isLoading,
-    isFetching,
-    isFetchingNextPage,
-    refresh,
-  } = useGmail(selectedGmailTab as GmailRequestType);
-  const { data: gmailProfile, isLoading: profileLoading } = useGmailProfile();
   const {
     search,
     setSearch,
@@ -52,21 +42,34 @@ const GmailModule = () => {
     setPhotoError,
   } = useGmailUIStore();
 
+  const gmailRequest: GmailRequestType = search
+    ? {
+        type: "SEARCH",
+        query: search,
+        label: selectedGmailTab,
+      }
+    : {
+        type: "LIST",
+        label: selectedGmailTab,
+      };
+
+  const {
+    messages,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    refresh,
+  } = useGmail(gmailRequest as GmailRequestType);
+  const { data: gmailProfile, isLoading: profileLoading } = useGmailProfile();
+
+  const isInitialLoad = isLoading && messages.length === 0;
+  const isSearching = isFetching && !isFetchingNextPage;
+
   useEffect(() => {
     setPhotoError(false);
   }, [gmailProfile?.photo, setPhotoError]);
-
-  // compute filtered messages client-side by search
-  const visibleMessages = useMemo(() => {
-    if (!search) return messages;
-    const q = search.toLowerCase();
-    return messages.filter((m) => {
-      const subject = getHeader(m, "Subject").toLowerCase();
-      const from = getHeader(m, "From").toLowerCase();
-      const snippet = (cleanText(m.snippet ?? "") || "").toLowerCase();
-      return subject.includes(q) || from.includes(q) || snippet.includes(q);
-    });
-  }, [messages, search]);
 
   const resetReply = () => {
     setIsReplying(false);
@@ -208,9 +211,9 @@ const GmailModule = () => {
         <div className="flex flex-col gap-[8px] items-center p-3 border-b border-white/6">
           <div className="flex flex-row justify-between w-[100%] items-center px-[5px]">
             <div className="text-lg font-semibold">
-              {selectedGmailTab
+              {typeof selectedGmailTab === "string"
                 ? capitalizeFirstLetter(selectedGmailTab.toLowerCase())
-                : ""}
+                : "Search"}
             </div>
             {gmailProfile && !profileLoading ? (
               <div
@@ -267,7 +270,7 @@ const GmailModule = () => {
         </div>
 
         <div className="flex-1 overflow-auto p-4 space-y-3">
-          {(isLoading || isFetching) && (
+          {(isInitialLoad || isSearching) && (
             <div className="space-y-3">
               {[...Array(6)].map((_, i) => (
                 <GmailMessageSkeleton key={i} />
@@ -275,11 +278,13 @@ const GmailModule = () => {
             </div>
           )}
 
-          {!(isLoading || isFetching) && visibleMessages.length === 0 && (
+          {!(isLoading || isFetching) && messages.length === 0 && (
             <div className="text-center text-white/40 mt-10">No messages</div>
           )}
 
-          <GmailMiniCardStack visibleMessages={visibleMessages} />
+          {messages.length > 0 && !isSearching && (
+            <GmailMiniCardStack visibleMessages={messages} />
+          )}
 
           {isFetchingNextPage && (
             <div className="text-center text-white/50 py-4">Loading more…</div>
@@ -304,8 +309,6 @@ export const GmailMiniCardStack = ({
 }: {
   visibleMessages: GmailMessage[];
 }) => {
-  const { selectedGmailTab } = useGmailUIStore();
-  const { isLoading } = useGmail(selectedGmailTab as GmailRequestType);
   const { data: gmailProfile } = useGmailProfile();
   const { setPhotoError } = useGmailUIStore();
 
@@ -315,10 +318,9 @@ export const GmailMiniCardStack = ({
 
   return (
     <AnimatePresence initial={false} mode="popLayout">
-      {!isLoading &&
-        visibleMessages.map((m, index) => {
-          return <GmailMiniCard key={index} m={m} />;
-        })}
+      {visibleMessages.map((m, index) => {
+        return <GmailMiniCard key={index} m={m} />;
+      })}
     </AnimatePresence>
   );
 };

@@ -7,7 +7,9 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate, getHeader, IconButton } from "./GmailHelpers";
 import { SkeletonLine } from "@/lib/skeletons/Skeletons";
 import DOMPurify from "dompurify";
-import { useGmailActions } from "./useGmailActions"; 
+import { EmailPayload } from "@open-dream/shared";
+
+import { useSendGmailEmail } from "./_hooks/gmail.hooks";
 
 const GmailMessageView = () => {
   const {
@@ -21,7 +23,8 @@ const GmailMessageView = () => {
     setIsReplying,
   } = useGmailUIStore();
   const currentTheme = useCurrentTheme();
-  const { sendEmail, replyToEmail } = useGmailActions();
+  // const { sendEmail, replyToEmail } = useGmailActions();
+  const { sendNewEmail, replyToEmail } = useSendGmailEmail();
 
   function openReply() {
     setIsReplying(true);
@@ -181,21 +184,8 @@ const GmailMessageView = () => {
           <EmailComposer
             mode="compose"
             onClose={() => setIsComposing(false)}
-            onSend={(payload) => {
-              sendEmail({
-                to: Array.isArray(payload.to)
-                  ? payload.to.join(",")
-                  : payload.to,
-                subject: payload.subject,
-                body: payload.body,
-                attachments: payload.attachments,
-                cc: Array.isArray(payload.cc)
-                  ? payload.cc.join(",")
-                  : payload.cc,
-                bcc: Array.isArray(payload.bcc)
-                  ? payload.bcc.join(",")
-                  : payload.bcc,
-              });
+            onSend={(payload: EmailPayload) => {
+              sendNewEmail(payload);
               setIsComposing(false);
             }}
           />
@@ -205,18 +195,8 @@ const GmailMessageView = () => {
             initialTo={getHeader(detail, "From")}
             initialSubject={`Re: ${getHeader(detail, "Subject")}`}
             onClose={() => setIsReplying(false)}
-            onSend={(payload) => {
-              replyToEmail({
-                message: detail,
-                replyBody: payload.body,
-                attachments: payload.attachments,
-                cc: Array.isArray(payload.cc)
-                  ? payload.cc.join(",")
-                  : payload.cc,
-                bcc: Array.isArray(payload.bcc)
-                  ? payload.bcc.join(",")
-                  : payload.bcc,
-              });
+            onSend={(payload: EmailPayload) => {
+              replyToEmail(detail, payload);
               setIsReplying(false);
             }}
           />

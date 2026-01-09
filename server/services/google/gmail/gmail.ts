@@ -1,9 +1,6 @@
 // service/services/google/gmail/gmail.ts
 import { google, gmail_v1 } from "googleapis";
-import fs from "fs";
-import path from "path";
-import { AuthoirizeOAuth2Client } from "../google.js";
-import { GmailFetchOptions } from "@open-dream/shared";
+import { AuthoirizeOAuth2Client } from "../google.js"; 
 
 /**
  * Returned shape from fetchGmailMessages
@@ -29,6 +26,14 @@ export type FetchResult = {
 
 export interface GmailPageOptions {
   label: string;
+  pageToken?: string | null;
+  pageSize?: number;
+  format?: gmail_v1.Params$Resource$Users$Messages$Get["format"];
+  userId?: string;
+}
+
+export interface GmailSearchOptions {
+  query: string;
   pageToken?: string | null;
   pageSize?: number;
   format?: gmail_v1.Params$Resource$Users$Messages$Get["format"];
@@ -95,6 +100,68 @@ export async function fetchGmailPage(
           if (name) acc[name] = h.value ?? "";
           return acc;
         }, {}),
+      };
+    })
+  );
+
+  return {
+    messages: detailed,
+    nextPageToken: listRes.data.nextPageToken ?? null,
+    resultSizeEstimate: listRes.data.resultSizeEstimate,
+  };
+}
+
+export async function fetchGmailSearchPage(
+  GOOGLE_CLIENT_SECRET_OBJECT: string,
+  GOOGLE_CLIENT_REFRESH_OBJECT: string,
+  options: GmailSearchOptions
+) {
+  const {
+    query,
+    pageToken = null,
+    pageSize = 50,
+    format = "metadata",
+    userId = "me",
+  } = options;
+
+  if (!query) throw new Error("Search query is required");
+
+  const gmail = await getGmailClient(
+    GOOGLE_CLIENT_SECRET_OBJECT,
+    GOOGLE_CLIENT_REFRESH_OBJECT
+  );
+
+  // 🔥 THIS IS EXACTLY HOW GMAIL WEB SEARCHES
+  const listRes = await gmail.users.messages.list({
+    userId,
+    q: query,
+    maxResults: pageSize,
+    pageToken: pageToken ?? undefined,
+  });
+
+  const messages = listRes.data.messages || [];
+
+  const detailed = await Promise.all(
+    messages.map(async (m) => {
+      const data = await gmail.users.messages.get({
+        userId,
+        id: m.id!,
+        format,
+      });
+
+      return {
+        id: m.id!,
+        threadId: data.data.threadId,
+        snippet: data.data.snippet,
+        internalDate: data.data.internalDate,
+        labelIds: data.data.labelIds || [],
+        headers: (data.data.payload?.headers || []).reduce<Record<string, string>>(
+          (acc, h) => {
+            if (h.name) acc[h.name] = h.value ?? "";
+            return acc;
+          },
+          {}
+        ),
       };
     })
   );

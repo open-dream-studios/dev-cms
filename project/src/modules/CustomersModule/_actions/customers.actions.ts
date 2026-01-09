@@ -45,7 +45,7 @@ export const handleDeleteCustomer = async (customer_id: string | null) => {
   queryClient.invalidateQueries({
     queryKey: ["customers", currentProjectId],
   });
-  setCurrentCustomerData(null);
+  setCurrentCustomerData(null, false);
   setAddingCustomer(true);
 };
 
@@ -58,7 +58,7 @@ export const handleCustomerClick = async (customer: Customer | null) => {
       onCustomerFormSubmit(data)
     )();
   }
-  setCurrentCustomerData(customer);
+  setCurrentCustomerData(customer, false);
   setAddingCustomer(!customer);
   if (!customer && customerForm) {
     customerForm.reset(customerToForm(null));
@@ -98,7 +98,7 @@ export async function onCustomerFormSubmit(
         ...newCustomer,
         id,
         customer_id,
-      } as Customer);
+      } as Customer, false);
       setAddingCustomer(false);
     }
   } catch (err) {

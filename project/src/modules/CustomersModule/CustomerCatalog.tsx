@@ -2,15 +2,15 @@
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Customer, Screen } from "@open-dream/shared";
 import React, { useEffect, useRef, useState } from "react";
-import CustomerMiniCard from "../CustomersModule/CustomerMiniCard"; 
-import { useUiStore } from "@/store/useUIStore"; 
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import CustomerMiniCard from "../CustomersModule/CustomerMiniCard";
+import { useUiStore } from "@/store/useUIStore";
+import { triggerCustomerScrollRef, useCurrentDataStore } from "@/store/currentDataStore";
 import {
   determineSearchContext,
   runSearchMatch,
   scrollToItem,
 } from "@/util/functions/Search";
-import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton"; 
+import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
 
 const CustomerCatalog = () => {
   const { customers, isLoadingCustomers } = useContextQueries();
@@ -19,9 +19,9 @@ const CustomerCatalog = () => {
     setSearchContext,
     setCurrentCustomerSearchTerm,
     currentCustomerSearchTerm,
-    currentCustomer, 
-  } = useCurrentDataStore(); 
-  const { screen } = useUiStore(); 
+    currentCustomer,
+  } = useCurrentDataStore();
+  const { screen } = useUiStore();
 
   const itemRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
   const customerScrollRef = React.useRef<HTMLDivElement | null>(null);
@@ -30,10 +30,11 @@ const CustomerCatalog = () => {
 
   const lastScreenRef = useRef<Screen | null>(null);
   useEffect(() => {
-    const last = lastScreenRef.current;
-    const isRealNavigationIntoCustomers =
-      last !== "customers" && screen === "customers";
-    if (isRealNavigationIntoCustomers && currentCustomer) {
+    // const last = lastScreenRef.current;
+    // const isRealNavigationIntoCustomers =
+    //   last !== "customers" && screen === "customers";
+    if (!triggerCustomerScrollRef.current) return;
+    if (currentCustomer) {
       setIgnoreNextSearch(true);
       setSearchContext(null);
       setCurrentCustomerSearchTerm("");
@@ -76,7 +77,6 @@ const CustomerCatalog = () => {
     if (ctx.bestMatch) {
       scrollToItem(ctx.bestMatch.customer_id, itemRefs, customerScrollRef, 106);
     }
-
     setSearchContext(ctx);
   }, [
     currentCustomerSearchTerm,
@@ -113,10 +113,7 @@ const CustomerCatalog = () => {
                   itemRefs.current[customer.customer_id] = el;
                 }}
               >
-                <CustomerMiniCard
-                  customer={customer}
-                  index={index}
-                />
+                <CustomerMiniCard customer={customer} index={index} />
               </div>
             );
           })}

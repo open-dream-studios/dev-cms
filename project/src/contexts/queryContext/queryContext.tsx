@@ -288,6 +288,8 @@ export type QueryContextType = {
   refetchScheduleRequests: () => Promise<any>;
   upsertScheduleRequest: (scheduleRequest: ScheduleRequestInput) => Promise<void>;
   deleteScheduleRequest: (schedule_request_id: string) => Promise<void>;
+  markConfirmationSent: (schedule_request_id: string) => Promise<void>;
+  rescheduleScheduleRequest: (request: ScheduleRequestInput) => Promise<void>;
 };
 
 const QueryContext = createContext<QueryContextType | undefined>(undefined);
@@ -483,6 +485,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     refetchScheduleRequests,
     upsertScheduleRequest,
     deleteScheduleRequest,
+    markConfirmationSent,
+    rescheduleScheduleRequest
   } = useScheduleRequests(isLoggedIn);
 
   return (
@@ -629,6 +633,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchScheduleRequests,
         upsertScheduleRequest,
         deleteScheduleRequest,
+        markConfirmationSent,
+        rescheduleScheduleRequest
       }}
     >
       {children}

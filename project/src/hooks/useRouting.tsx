@@ -6,8 +6,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { Screen } from "@open-dream/shared";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";  
 import {
-  setCurrentActiveFolder,
-  setCurrentCustomerData,
+  setCurrentActiveFolder, 
   setCurrentEmployeeData,
   setCurrentPageData,
   setCurrentProductData,
@@ -113,9 +112,6 @@ export function useRouting() {
     updateHistory(newScreen, newPage);
     if (newPage === "/products") {
       setCurrentProductData(null);
-    }
-    if (newScreen === "customers" && screen === "customers") {
-      setCurrentCustomerData(null);
     }
     if (newScreen === "media" && screen === "media") {
       setCurrentActiveFolder(null);

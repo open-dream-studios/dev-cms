@@ -23,7 +23,7 @@ import HoverBox from "@/lib/blocks/HoverBox";
 import { IoPersonSharp } from "react-icons/io5";
 import { Media, Screen } from "@open-dream/shared";
 import { BsFillPersonVcardFill } from "react-icons/bs";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { IoMdMail } from "react-icons/io";
@@ -156,7 +156,7 @@ const LeftBar = () => {
     leftBarOpenRef.current = leftBarOpen;
   }, [leftBarOpen]);
 
-  useEffect(() => { 
+  useEffect(() => {
     setLeftBarOpen(window.innerWidth > 1024);
   }, [setLeftBarOpen]);
 
@@ -169,7 +169,7 @@ const LeftBar = () => {
       }
       if (window.innerWidth < 1024 && windowLargeRef.current) {
         windowLargeRef.current = false;
-        console.log(false)
+        console.log(false);
         setLeftBarOpen(false);
       }
     };
@@ -177,7 +177,7 @@ const LeftBar = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [setLeftBarOpen]);
-  
+
   if (windowWidth === null) return null;
 
   const offsetHeight =
@@ -275,7 +275,10 @@ const LeftBar = () => {
       title: "Customers",
       icon: <IoPersonSharp className="brightness-75 mt-[1px]" size={16} />,
       pages: ["customers" as Screen],
-      onClick: () => handleTabClick("customers"),
+      onClick: () => {
+        setCurrentCustomerData(null, false);
+        handleTabClick("customers");
+      },
     });
   }
 

@@ -13,6 +13,7 @@ import {
   SearchContext,
 } from "@open-dream/shared";
 import { createStore } from "@/store/createStore";
+import { createRef } from "react";
 
 export const localProductsDataRef = { current: [] as Product[] };
 
@@ -111,11 +112,19 @@ export const setLocalProductsData = (products: Product[]) => {
 };
 
 // Customers
-export const setCurrentCustomerData = (customer: Customer | null) =>
+export const triggerCustomerScrollRef = createRef<boolean>();
+triggerCustomerScrollRef.current = false;
+
+export const setCurrentCustomerData = (
+  customer: Customer | null,
+  triggerScroll: boolean
+) => {
   useCurrentDataStore.getState().set({
     currentCustomer: customer,
     currentCustomerId: customer?.id ?? null,
   });
+  triggerCustomerScrollRef.current = triggerScroll;
+};
 
 // Employees
 export const setCurrentEmployeeData = (employee: Employee | null) =>

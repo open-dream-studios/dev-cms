@@ -3,6 +3,7 @@
   "left_bar_full": false,
   "left_bar_width": "150px + 6vw",
   "nav_height": 70,
+  "admin_email": "opendreamstudios@gmail.com",
   "default_color": "#451D65",
   "default_title": "CMS",
   "default_logo": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/logo.png",

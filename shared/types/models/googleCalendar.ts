@@ -24,8 +24,15 @@ export interface GoogleCalendarEventInput {
   extendedProperties?: {
     private?: {
       customerId?: string;
-      customerEmail?: string;
       scheduleRequestId?: string;
+      customerEmail?: string;
+      customerName?: string;
+      customerPhone?: string;
+      customerAddress?: string;
+      customerProductMake?: string;
+      customerProductModel?: string;
+      customerProductYear?: string;
+      eventDescription?: string;
     };
   };
   reminders?: {

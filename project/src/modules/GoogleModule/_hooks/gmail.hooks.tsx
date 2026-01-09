@@ -10,17 +10,80 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { GmailRequestType } from "@open-dream/shared";
 import { useGmailDataStore } from "@/modules/GoogleModule/GmailModule/_store/gmail.store";
 
-export function useGmail(label: GmailRequestType, pageSize = 50) {
+// export function useGmail(label: GmailRequestType, pageSize = 50) {
+//   const { runModule } = useContextQueries();
+//   const queryClient = useQueryClient();
+
+//   const query = useInfiniteQuery({
+//     queryKey: ["gmail", label, pageSize],
+//     initialPageParam: null,
+//     queryFn: async ({ pageParam = null }) => {
+//       const res = await runModule("google-gmail-module", {
+//         requestType: label,
+//         pageToken: pageParam,
+//         pageSize,
+//       });
+
+//       return {
+//         messages: res?.data?.messages ?? [],
+//         nextPageToken: res?.data?.nextPageToken ?? null,
+//       };
+//     },
+//     getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,
+//     staleTime: 1000 * 60 * 3,
+//     gcTime: 1000 * 60 * 60,
+//   });
+
+//   const refresh = () => {
+//     queryClient.invalidateQueries({ queryKey: ["gmail", label] });
+//   };
+
+//   useEffect(() => {
+//     useGmailDataStore.getState().set({
+//       label,
+//       messages: query.data?.pages.flatMap((p) => p.messages) ?? [],
+//       hasNextPage: Boolean(query.hasNextPage),
+//       isLoading: query.isLoading,
+//       isFetching: query.isFetching,
+//       isFetchingNextPage: query.isFetchingNextPage,
+//       fetchNextPage: query.fetchNextPage,
+//       refresh,
+//     });
+//   }, [
+//     label,
+//     query.data,
+//     query.hasNextPage,
+//     query.isLoading,
+//     query.isFetching,
+//     query.isFetchingNextPage,
+//     query.fetchNextPage,
+//   ]);
+
+//   return {
+//     messages: query.data?.pages.flatMap((p) => p.messages) ?? [],
+//     fetchNextPage: query.fetchNextPage,
+//     hasNextPage: query.hasNextPage,
+//     isLoading: query.isLoading,
+//     isFetching: query.isFetching,
+//     isFetchingNextPage: query.isFetchingNextPage,
+//     refresh,
+//   };
+// }
+
+export function useGmail(
+  label: GmailRequestType,
+  pageSize = 50
+) {
   const { runModule } = useContextQueries();
-  const queryClient = useQueryClient();
 
   const query = useInfiniteQuery({
-    queryKey: ["gmail", label],
+    queryKey: ["gmail", label, pageSize],
     initialPageParam: null,
-    queryFn: async ({ pageParam = null }) => {
+
+    queryFn: async ({ pageParam }) => {
       const res = await runModule("google-gmail-module", {
         requestType: label,
-        pageToken: pageParam,
+        pageToken: pageParam ?? undefined,
         pageSize,
       });
 
@@ -29,44 +92,22 @@ export function useGmail(label: GmailRequestType, pageSize = 50) {
         nextPageToken: res?.data?.nextPageToken ?? null,
       };
     },
-    getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,
+
+    getNextPageParam: (lastPage) =>
+      lastPage.nextPageToken ?? undefined,
+
     staleTime: 1000 * 60 * 3,
     gcTime: 1000 * 60 * 60,
   });
-
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["gmail", label] });
-  };
-
-  useEffect(() => {
-    useGmailDataStore.getState().set({
-      label,
-      messages: query.data?.pages.flatMap((p) => p.messages) ?? [],
-      hasNextPage: Boolean(query.hasNextPage),
-      isLoading: query.isLoading,
-      isFetching: query.isFetching,
-      isFetchingNextPage: query.isFetchingNextPage,
-      fetchNextPage: query.fetchNextPage,
-      refresh,
-    });
-  }, [
-    label,
-    query.data,
-    query.hasNextPage,
-    query.isLoading,
-    query.isFetching,
-    query.isFetchingNextPage,
-    query.fetchNextPage,
-  ]);
 
   return {
     messages: query.data?.pages.flatMap((p) => p.messages) ?? [],
     fetchNextPage: query.fetchNextPage,
     hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
-    isFetchingNextPage: query.isFetchingNextPage,
-    refresh,
+    refresh: query.refetch,
   };
 }
 

@@ -25,3 +25,25 @@ export async function deleteScheduleRequestApi(schedule_request_id: string) {
     schedule_request_id,
   });
 }
+
+export async function markScheduleRequestConfirmationSentApi(
+  schedule_request_id: string
+) {
+  await makeRequest.post("/public/schedule-request/upsert", {
+    schedule_request_id,
+    options: {
+      confirmationSent: true,
+    },
+  });
+}
+
+export async function rescheduleScheduleRequestApi(
+  request: ScheduleRequestInput
+) {
+  await makeRequest.post("/public/schedule-request/upsert", {
+    ...request,
+    options: {
+      reschedule: true,
+    },
+  });
+}

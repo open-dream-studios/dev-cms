@@ -2,7 +2,7 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useUiStore } from "@/store/useUIStore";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import {
   defaultNewEvent,
@@ -15,10 +15,15 @@ import { X, Pencil } from "lucide-react";
 import {
   createCalendarEvent,
   deleteCalendarEvent,
+  handleEndChange,
+  handleStartChange,
   resetInputUI,
   updateCalendarEvent,
 } from "./_actions/googleCalendar.actions";
-import { dateToLocalDateTimeInput } from "./_helpers/googleCalendar.helpers";
+import {
+  dateToLocalDateTimeInput,
+  ensureDefaultTime,
+} from "./_helpers/googleCalendar.helpers";
 import { IoTrashSharp } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { promptContinue } from "@/modals/_actions/modals.actions";
@@ -34,82 +39,11 @@ const CalendarSelection = () => {
     setNewScheduleEventEnd,
   } = useGoogleCalendarUIStore();
 
-  const ensureDefaultTime = (
-    date: Date | null,
-    {
-      isEnd,
-      start,
-    }: {
-      isEnd: boolean;
-      start: Date | null;
-    }
-  ): Date | null => {
-    if (!date) return null;
-
-    const d = new Date(date);
-
-    // END time logic
-    if (isEnd) {
-      // If start exists AND same calendar day → 1 hour after start
-      if (
-        start &&
-        start.getFullYear() === d.getFullYear() &&
-        start.getMonth() === d.getMonth() &&
-        start.getDate() === d.getDate()
-      ) {
-        const end = new Date(start);
-        end.setHours(end.getHours() + 1);
-        return end;
-      }
-
-      // Otherwise default end = 8:30 AM
-      d.setHours(8, 30, 0, 0);
-      return d;
-    }
-
-    // START time logic → always 8:00 AM
-    d.setHours(8, 0, 0, 0);
+  const openAtEightAM = (() => {
+    const d = new Date();
+    d.setHours(8, 45, 0, 0);
     return d;
-  };
-
-  const handleStartChange = (date: Date | null, preserveTime = true) => {
-    if (!date) return;
-
-    let nextStart: Date;
-
-    if (!newScheduleEventStart) {
-      // First-time selection → apply default 8:00 AM
-      nextStart = ensureDefaultTime(date, { isEnd: false, start: null })!;
-    } else if (preserveTime) {
-      // Preserve previous time when changing date
-      nextStart = new Date(date);
-      nextStart.setHours(
-        newScheduleEventStart.getHours(),
-        newScheduleEventStart.getMinutes(),
-        0,
-        0
-      );
-    } else {
-      // Just use picked time (time picker)
-      nextStart = new Date(date);
-    }
-
-    setNewScheduleEventStart(nextStart);
-
-    // If end not set → create it
-    if (!newScheduleEventEnd) {
-      setNewScheduleEventEnd(
-        ensureDefaultTime(nextStart, { isEnd: true, start: nextStart })
-      );
-      return;
-    }
-
-    // If end exists but is before start → move it 1 hour after start
-    // if (newScheduleEventEnd.getTime() <= nextStart.getTime()) {
-    setNewScheduleEventEnd(
-      ensureDefaultTime(nextStart, { isEnd: true, start: nextStart })
-    );
-  };
+  })();
 
   if (!currentUser) return null;
   return (
@@ -131,7 +65,7 @@ const CalendarSelection = () => {
         <div className="w-[100px] relative">
           <DatePicker
             selected={newScheduleEventStart}
-            onChange={(date) => handleStartChange(date, true)}
+            onChange={(date) => handleStartChange(date, false)}
             popperPlacement="bottom-start"
             portalId="calendar-portal"
             className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
@@ -156,10 +90,11 @@ const CalendarSelection = () => {
           <DatePicker
             selected={newScheduleEventStart}
             portalId="calendar-portal"
-            onChange={(date) => handleStartChange(date, false)}
+            onChange={(date) => handleStartChange(date, true)}
             showTimeSelect
             showTimeSelectOnly
             timeIntervals={15}
+            openToDate={openAtEightAM}
             timeCaption="Time"
             dateFormat="hh:mm aa"
             className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
@@ -191,14 +126,7 @@ const CalendarSelection = () => {
           <DatePicker
             portalId="calendar-portal"
             selected={newScheduleEventEnd}
-            onChange={(date) =>
-              setNewScheduleEventEnd(
-                ensureDefaultTime(date, {
-                  isEnd: true,
-                  start: newScheduleEventStart,
-                })
-              )
-            }
+            onChange={(date) => handleEndChange(date, false)}
             className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
               currentUser.theme === "dark"
                 ? "text-white border-[#3d3d3d] border-[1px]"
@@ -221,11 +149,12 @@ const CalendarSelection = () => {
             portalId="calendar-portal"
             selected={newScheduleEventEnd}
             onChange={(date) => {
-              if (date) setNewScheduleEventEnd(date);
+              handleEndChange(date, true);
             }}
             showTimeSelect
             showTimeSelectOnly
             timeIntervals={15}
+            openToDate={openAtEightAM}
             timeCaption="Time"
             dateFormat="hh:mm aa"
             className={`w-full outline-none rounded-md px-2 py-1 text-[13px] ${
@@ -477,10 +406,11 @@ const GoogleCalendarFooter = ({
           onClick={() => {
             if (showCalendarInputs) {
               setIsCreatingEvent(false);
+              resetInputUI(false);
             } else {
+              resetInputUI(true);
               setIsCreatingEvent(true);
             }
-            resetInputUI(true);
           }}
           className={`select-none h-[36px] pl-[13px] pr-[16px] rounded-[8px] flex items-center gap-2 cursor-pointer hover:brightness-90 dim ${
             !isCreatingEvent && "shadow-md"

@@ -89,7 +89,8 @@ const themeColors = {
 
   // google_calendar_event: c("rgba(224, 82, 14, 1)", "rgba(224, 82, 14, 1)"),
   google_calendar_event: c("#2FA9DB", "#2FA9DB"),
-  new_google_calendar_event: c("#1fbf6a", "#1fbf6a")
+  new_google_calendar_event: c("#1fbf6a", "#1fbf6a"),
+  rescheduled_google_calendar_event: c("#7B5CFF", "#7B5CFF")
 } as const;
 
 export const appTextSizes = {

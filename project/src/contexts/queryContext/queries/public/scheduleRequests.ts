@@ -4,11 +4,11 @@ import {
   fetchScheduleRequestsApi,
   upsertScheduleRequestApi,
   deleteScheduleRequestApi,
-} from "@/api/public/scheduleRequests.api"; 
+  markScheduleRequestConfirmationSentApi,
+  rescheduleScheduleRequestApi,
+} from "@/api/public/scheduleRequests.api";
 
-export function useScheduleRequests(
-  isLoggedIn: boolean,
-) {
+export function useScheduleRequests(isLoggedIn: boolean) {
   const queryClient = useQueryClient();
 
   const {
@@ -18,7 +18,7 @@ export function useScheduleRequests(
   } = useQuery({
     queryKey: ["schedule-requests"],
     queryFn: async () => fetchScheduleRequestsApi(),
-    enabled: isLoggedIn
+    enabled: isLoggedIn,
   });
 
   const upsertMutation = useMutation({
@@ -44,6 +44,22 @@ export function useScheduleRequests(
     },
   });
 
+  const markConfirmationSentMutation = useMutation({
+    mutationFn: async (schedule_request_id: string) =>
+      markScheduleRequestConfirmationSentApi(schedule_request_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedule-requests"] });
+    },
+  });
+
+  const rescheduleScheduleRequestMutation = useMutation({
+    mutationFn: async (request: ScheduleRequestInput) =>
+      rescheduleScheduleRequestApi(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedule-requests"] });
+    },
+  });
+
   const upsertScheduleRequest = async (request: ScheduleRequestInput) => {
     await upsertMutation.mutateAsync(request);
   };
@@ -52,11 +68,21 @@ export function useScheduleRequests(
     await deleteMutation.mutateAsync(schedule_request_id);
   };
 
+  const markConfirmationSent = async (schedule_request_id: string) => {
+    await markConfirmationSentMutation.mutateAsync(schedule_request_id);
+  };
+
+  const rescheduleScheduleRequest = async (request: ScheduleRequestInput) => {
+    await rescheduleScheduleRequestMutation.mutateAsync(request);
+  };
+
   return {
     scheduleRequests,
     isLoadingScheduleRequests,
     refetchScheduleRequests,
     upsertScheduleRequest,
     deleteScheduleRequest,
+    markConfirmationSent,
+    rescheduleScheduleRequest,
   };
 }

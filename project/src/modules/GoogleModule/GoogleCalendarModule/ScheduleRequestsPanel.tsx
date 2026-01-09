@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { getCardStyle } from "@/styles/themeStyles";
 import ScheduleRequestRow, {
   statusColors,
@@ -8,8 +8,13 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Bell } from "lucide-react";
-import { GoogleCalendarEventRaw, ScheduleRequest, ScheduleRequestInput } from "@open-dream/shared";
+import {
+  GoogleCalendarEventRaw,
+  ScheduleRequest,
+  ScheduleRequestInput,
+} from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
 
 export const ScheduleRequestsPanel = ({
   events,
@@ -22,6 +27,8 @@ export const ScheduleRequestsPanel = ({
   const currentTheme = useCurrentTheme();
   const { scheduleRequests, upsertScheduleRequest } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
+  const { selectedScheduleRequest, setSelectedScheduleRequest } =
+    useGoogleCalendarUIStore();
 
   const [viewAll, setViewAll] = useState<boolean>(false);
 
@@ -30,6 +37,27 @@ export const ScheduleRequestsPanel = ({
       (request: ScheduleRequest) => request.status === "pending"
     );
   }, [scheduleRequests]);
+
+  useEffect(() => {
+    if (selectedScheduleRequest) {
+      const refreshedRequest = scheduleRequests.find(
+        (request: ScheduleRequest) =>
+          request.schedule_request_id ===
+          selectedScheduleRequest.schedule_request_id
+      );
+      if (
+        refreshedRequest &&
+        JSON.stringify(refreshedRequest) !==
+          JSON.stringify(selectedScheduleRequest)
+      ) {
+        setSelectedScheduleRequest(refreshedRequest);
+      }
+    }
+  }, [scheduleRequests, selectedScheduleRequest]);
+
+  useEffect(()=>{
+    setSelectedScheduleRequest(null)
+  },[])
 
   const createRequest = async () => {
     if (!currentProjectId) return;
@@ -67,7 +95,6 @@ export const ScheduleRequestsPanel = ({
       event_description: "Testing schedule → calendar pipeline",
       metadata: JSON.stringify({ test: true }),
     } as ScheduleRequestInput);
-    console.log("test");
 
     if (!scheduleRequests.length) return;
     const scheduleRequest = scheduleRequests[0];
@@ -84,7 +111,7 @@ export const ScheduleRequestsPanel = ({
       <div className="flex items-center justify-between px-1 pb-2">
         <div className="flex flex-col">
           <div
-            onClick={createRequest}
+            // onClick={createRequest}
             className="text-[21px] font-[600] tracking-tight"
           >
             Schedule Requests
