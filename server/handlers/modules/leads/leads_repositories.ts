@@ -17,7 +17,7 @@ export const getLeadsFunction = async (
     FROM leads l
     JOIN customers c ON c.customer_id = l.customer_id
     WHERE c.project_idx = ?
-    ORDER BY l.created_at ASC
+    ORDER BY l.created_at DESC
   `;
 
   const [rows] = await db
@@ -48,19 +48,19 @@ export const upsertLeadFunction = async (
   }
 
   // ---- ENFORCE LEAD RULES ----
-  if (lead_type === "product" && !product_id) {
-    throw new Error("Product leads require product_id");
-  }
+  // if (lead_type === "product" && !product_id) {
+  //   throw new Error("Product leads require product_id");
+  // }
 
-  if (
-    lead_type === "service" &&
-    !product_id &&
-    !job_definition_id
-  ) {
-    throw new Error(
-      "Service leads require product_id or job_definition_id"
-    );
-  }
+  // if (
+  //   lead_type === "service" &&
+  //   !product_id &&
+  //   !job_definition_id
+  // ) {
+  //   throw new Error(
+  //     "Service leads require product_id or job_definition_id"
+  //   );
+  // }
 
   const finalLeadId =
     typeof lead_id === "string" && lead_id.trim()
@@ -81,6 +81,7 @@ export const upsertLeadFunction = async (
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
+      customer_id = VALUES(customer_id),
       lead_type = VALUES(lead_type),
       product_id = VALUES(product_id),
       job_definition_id = VALUES(job_definition_id),
