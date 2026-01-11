@@ -4,12 +4,18 @@ import { Customer, Product } from "@open-dream/shared";
 import { formatPhone } from "@/util/functions/Customers";
 import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
-import CustomerSelection from "../Customers/CustomerSelection";
+import CustomerSelection from "../../_util/Selection/CustomerSelection";
 import { setCurrentCustomerData } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
+import {
+  onClearProductCustomer,
+  onSelectProductCustomer,
+} from "@/modules/CustomerProducts/_actions/products.actions";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
+import { useWatch } from "react-hook-form";
 
 const CustomerTag = ({
   product,
@@ -24,8 +30,13 @@ const CustomerTag = ({
   const { screenClick } = useRouting();
   const { screen, modal1, setModal1 } = useUiStore();
   const currentTheme = useCurrentTheme();
+  const { getForm } = useFormInstanceStore();
+
+  const productForm = getForm("product");
 
   const handleAddCustomerClick = () => {
+    if (!productForm) return;
+    if (!product) return;
     setModal1({
       ...modal1,
       open: !modal1.open,
@@ -35,7 +46,15 @@ const CustomerTag = ({
       maxWidth: "md:max-w-[1000px]",
       aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
       borderRadius: "rounded-[15px] md:rounded-[20px]",
-      content: <CustomerSelection product={product} />,
+      content: (
+        <CustomerSelection
+          onSelect={(customer: Customer) =>
+            onSelectProductCustomer(customer, product)
+          }
+          onClear={() => onClearProductCustomer()}
+          clearable={!!productForm.getValues("customer_id")}
+        />
+      ),
     });
   };
 

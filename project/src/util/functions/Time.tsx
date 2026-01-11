@@ -33,7 +33,7 @@ export function dateToString(date: Date | string | null) {
 }
 
 // Format JavaScript date, from format:  Fri Sep 19 2025 17:18:52 GMT-0400 (Eastern Daylight Time) -> Updated 3:23 PM 3/5/25
-export function formatDateTime(date: string | Date | null): string {
+export function formatTimeDate(date: string | Date | null): string {
   if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;
   const time = d.toLocaleTimeString("en-US", {
@@ -47,4 +47,20 @@ export function formatDateTime(date: string | Date | null): string {
     year: "2-digit",
   });
   return `${time} ${day}`;
+}
+
+export function formatDateTime(date: string | Date | null): string {
+  if (!date) return "-";
+  const d = typeof date === "string" ? new Date(date) : date;
+  const time = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const day = d.toLocaleDateString("en-US", {
+    month: "numeric",
+    day: "numeric",
+    year: "2-digit",
+  });
+  return `${day} ${time}`;
 }

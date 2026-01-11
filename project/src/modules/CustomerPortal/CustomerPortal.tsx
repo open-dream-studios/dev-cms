@@ -18,7 +18,7 @@ import {
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Message } from "@open-dream/shared";
 import { AuthContext } from "@/contexts/authContext";
-import { formatDateTime } from "@/util/functions/Time";
+import { formatTimeDate } from "@/util/functions/Time";
 import { MiniChat } from "../MessagesModule/MiniChat";
 
 // -----------------------------------------------------------------------------

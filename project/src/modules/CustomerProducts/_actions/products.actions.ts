@@ -2,6 +2,7 @@
 import { deleteJobDefinitionApi } from "@/api/jobDefinitions.api";
 import {
   ContextMenuDefinition,
+  Customer,
   JobDefinition,
   MediaLink,
   Product,
@@ -53,7 +54,7 @@ export const haveImagesChanged = () => {
 
 export async function onProductFormSubmit(
   data: ProductFormData
-): Promise<void> { 
+): Promise<void> {
   const { currentProjectId } = useCurrentDataStore.getState();
   const { addingProduct, setAddingProduct } = useUiStore.getState();
   const { resetForms } = useFormInstanceStore.getState();
@@ -107,7 +108,7 @@ export async function onProductFormSubmit(
       queryKey: ["products", currentProjectId],
     });
     resetForms("product");
-    setAddingProduct(false); 
+    setAddingProduct(false);
     if (productIds && productIds.length) {
       await saveCurrentProductImages(productIds[0]);
     }
@@ -173,5 +174,47 @@ export const saveProducts = async () => {
     toast.error("Failed to update products");
   } finally {
     setUpdatingLock(false);
+  }
+};
+
+export const onClearProductCustomer = () => {
+  const { modal1, setModal1 } = useUiStore.getState();
+  const { getForm } = useFormInstanceStore.getState();
+  const productForm = getForm("product");
+  if (productForm) {
+    productForm.setValue("customer_id", null, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setModal1({ ...modal1, open: false });
+  }
+};
+
+export const onSelectProductCustomer = async (
+  customer: Customer,
+  product: Product
+) => {
+  const { modal1, setModal1 } = useUiStore.getState();
+  const { getForm } = useFormInstanceStore.getState();
+  const productForm = getForm("product");
+  const { currentProjectId } = useCurrentDataStore.getState();
+  if (!currentProjectId) return;
+  if (productForm) {
+    productForm.setValue("customer_id", customer.id, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setModal1({ ...modal1, open: false });
+  } else if (product && customer.id) {
+    await upsertProjectProductsApi(currentProjectId, [
+      {
+        ...product,
+        customer_id: customer.id,
+      },
+    ]);
+    setModal1({ ...modal1, open: false });
+    queryClient.invalidateQueries({
+      queryKey: ["products", currentProjectId],
+    });
   }
 };

@@ -11,7 +11,7 @@ import {
   useConversations,
   useConversationMessages,
 } from "@/contexts/queryContext/queries/public/messages";
-import { formatDateTime } from "@/util/functions/Time";
+import { formatTimeDate } from "@/util/functions/Time";
 import { useMessagesDataStore } from "./_store/messages.store";
 import { FullChat } from "./FullChat";
 
@@ -75,7 +75,7 @@ export default function MessagesApp() {
                   </div>
                   {c.last_message_at && (
                     <div className="text-[11px] text-slate-400 shrink-0">
-                      {formatDateTime(c.last_message_at)}
+                      {formatTimeDate(c.last_message_at)}
                     </div>
                   )}
                 </div>
@@ -210,7 +210,7 @@ export default function MessagesApp() {
 //                       : "text-slate-400"
 //                   }`}
 //             >
-//               {formatDateTime(m.created_at)}
+//               {formatTimeDate(m.created_at)}
 //             </div>
 //           </div>
 //         ))}

@@ -250,7 +250,7 @@ export default function CustomerInteractionTimeline() {
                 </>
               ) : (
                 <>
-                  {emailsInbox.length ? (
+                  {emailsInbox && emailsInbox.length ? (
                     <>
                       {emailTypeSelected === "inbox"
                         ? emailsInbox.map(

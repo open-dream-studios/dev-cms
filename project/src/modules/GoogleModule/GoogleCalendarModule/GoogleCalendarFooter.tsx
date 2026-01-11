@@ -21,8 +21,7 @@ import {
   updateCalendarEvent,
 } from "./_actions/googleCalendar.actions";
 import {
-  dateToLocalDateTimeInput,
-  ensureDefaultTime,
+  dateToLocalDateTimeInput, 
 } from "./_helpers/googleCalendar.helpers";
 import { IoTrashSharp } from "react-icons/io5";
 import { toast } from "react-toastify";

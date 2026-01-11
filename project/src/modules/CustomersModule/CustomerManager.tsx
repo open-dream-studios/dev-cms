@@ -13,7 +13,7 @@ import {
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useScheduleRequests } from "@/contexts/queryContext/queries/public/scheduleRequests";
 import GoogleCalendarDisplay from "../GoogleModule/GoogleCalendarModule/GoogleCalendarDisplay";
-import { ScheduleRequestsPanel } from "../GoogleModule/GoogleCalendarModule/ScheduleRequestsPanel";
+import { CustomerDataManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerDataManager";
 import { useGoogleCalendar } from "../GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks";
 
 export default function CustomerManager() {
@@ -64,17 +64,17 @@ export default function CustomerManager() {
   // }, [actionDefinitions]);
 
   const handleLeadClick = async () => {
-    // await upsertLead({
-    //   lead_id: null,
-    //   project_idx: currentProjectId,
-    //   customer_id: "C-3460280222",
-    //   lead_type: "product",
-    //   product_id: "P-1586806747",
-    //   job_definition_id: null,
-    //   status: "new",
-    //   notes: null,
-    //   source: null,
-    // } as LeadInput);
+    await upsertLead({
+      lead_id: null,
+      project_idx: currentProjectId,
+      customer_id: "C-3460280222",
+      lead_type: "product",
+      product_id: "P-1586806747",
+      job_definition_id: null,
+      status: "new",
+      notes: null,
+      source: null,
+    } as LeadInput);
     // await deleteLead("LEAD-01KE15V5VHN3RM4CZC0909SR5V");
 
     // await upsertActionDefinition({
@@ -143,8 +143,14 @@ export default function CustomerManager() {
 
   return (
     <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
+      {/* <div
+        onClick={() => {
+          handleLeadClick();
+        }}
+        className="w-[100%] h-[50px] bg-red-400"
+      ></div> */}
       <GoogleCalendarDisplay events={events} refreshCalendar={refresh} />
-      <ScheduleRequestsPanel events={events} refreshCalendar={refresh} />
+      <CustomerDataManager events={events} refreshCalendar={refresh} />
     </div>
   );
   // return <CustomerInteractionTimeline />;

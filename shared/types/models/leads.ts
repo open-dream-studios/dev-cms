@@ -1,6 +1,7 @@
 // shared/types/models/lead.ts
 
 export type LeadType = "product" | "service";
+export const leadTypes: LeadType[] = ["product", "service"]
 
 export type LeadStatus =
   | "new"

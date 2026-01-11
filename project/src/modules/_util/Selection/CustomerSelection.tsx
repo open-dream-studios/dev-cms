@@ -1,54 +1,28 @@
-// project/modules/components/Customers/CustomerSelection.tsx
+// project/modules/_util/Selection/CustomerSelection.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Customer } from "@open-dream/shared";
-import { Product } from "@open-dream/shared";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { IoTrashSharp } from "react-icons/io5";
-import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import SearchBar from "../SearchBar";
+import SearchBar from "../../components/SearchBar";
 import {
   determineSearchContext,
   runSearchMatch,
 } from "@/util/functions/Search";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
 import { getContactCardSearchDisplay } from "@/modules/_util/Search/_actions/search.actions";
 
 const CustomerSelectCard = ({
   customer,
-  product,
+  onSelect,
 }: {
   customer: Customer;
-  product: Product | null;
+  onSelect: (customer: Customer) => void;
 }) => {
   const currentTheme = useCurrentTheme();
-  const { upsertProducts } = useContextQueries();
   const { currentUser } = useContext(AuthContext);
-  const { getForm } = useFormInstanceStore();
-
-  const productForm = getForm("product");
-  const { modal1, setModal1 } = useUiStore();
-
-  const handleSelectCustomer = async (customer: Customer) => {
-    if (productForm) {
-      productForm.setValue("customer_id", customer.id, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setModal1({ ...modal1, open: false });
-    } else if (product && customer.id) {
-      await upsertProducts([
-        {
-          ...product,
-          customer_id: customer.id,
-        },
-      ]);
-      setModal1({ ...modal1, open: false });
-    }
-  };
 
   if (!currentUser) return null;
 
@@ -63,7 +37,7 @@ const CustomerSelectCard = ({
       style={{
         backgroundColor: currentTheme.background_3,
       }}
-      onClick={() => handleSelectCustomer(customer)}
+      onClick={() => onSelect(customer)}
       className="cursor-pointer hover:brightness-[86%] dim px-[18px] py-[5px] w-[100%] min-h-[60px] rounded-[12px] flex flex-row items-center"
     >
       <div className="w-[100%] h-[100%] items-center flex flex-row gap-[10px]">
@@ -114,28 +88,20 @@ const CustomerSelectCard = ({
     </div>
   );
 };
-const CustomerSelection = ({ product }: { product: Product | null }) => {
+const CustomerSelection = ({
+  onSelect,
+  onClear,
+  clearable,
+}: {
+  onSelect: (customer: Customer) => void;
+  onClear: () => void;
+  clearable: boolean;
+}) => {
   const { currentUser } = useContext(AuthContext);
   const { customers } = useContextQueries();
-  const { getForm } = useFormInstanceStore();
   const currentTheme = useCurrentTheme();
   const { searchContext, setSearchContext, currentCustomerSearchTerm } =
     useCurrentDataStore();
-
-  const [initialCustomerId, setInitialCustomerId] = useState<number | null>(
-    null
-  );
-
-  const productForm = getForm("product");
-
-  const { modal1, setModal1 } = useUiStore();
-
-  useEffect(() => {
-    if (modal1.open && productForm) {
-      const currentId = productForm.getValues("customer_id");
-      setInitialCustomerId(currentId ?? null);
-    }
-  }, [modal1.open, productForm]);
 
   useEffect(() => {
     if (!currentCustomerSearchTerm.trim()) {
@@ -151,16 +117,6 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
     setSearchContext(ctx);
   }, [currentCustomerSearchTerm, customers, setSearchContext]);
 
-  const handleRemoveCustomer = () => {
-    if (productForm) {
-      productForm.setValue("customer_id", null, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setModal1({ ...modal1, open: false });
-    }
-  };
-
   const filteredCustomers = useMemo(() => {
     if (!currentCustomerSearchTerm.trim() || !searchContext) return customers;
     const ctx = searchContext;
@@ -175,8 +131,6 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
 
   if (!currentUser) return null;
 
-  const shouldShowRemove = !!initialCustomerId;
-
   return (
     <div className="w-[100%] h-[100%] pl-[50px] lg:pl-[80px] pr-[25px] lg:pr-[55px] pt-[40px] flex flex-col gap-[12px]">
       <div className="flex flex-row justify-between w-[100%] pr-[25px] items-center">
@@ -188,12 +142,12 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
             <SearchBar />
           </div>
         </div>
-        {shouldShowRemove && (
+        {clearable && (
           <div
             style={{
               backgroundColor: currentTheme.background_3,
             }}
-            onClick={handleRemoveCustomer}
+            onClick={onClear}
             className="w-auto flex flex-row gap-[7px] px-[16px] h-[37px] rounded-full cursor-pointer hover:brightness-75 dim items-center justify-center"
           >
             <p
@@ -215,7 +169,7 @@ const CustomerSelection = ({ product }: { product: Product | null }) => {
               <CustomerSelectCard
                 key={index}
                 customer={customer}
-                product={product}
+                onSelect={onSelect}
               />
             );
           })

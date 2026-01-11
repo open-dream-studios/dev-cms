@@ -3,7 +3,7 @@
 
 import { Send, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { formatDateTime } from "@/util/functions/Time";
+import { formatTimeDate } from "@/util/functions/Time";
 import { ChatMessages } from "./ChatMessages";
 import { useConversationChat } from "./_hooks/useConversationChats";
 
@@ -74,7 +74,7 @@ export function FullChat() {
                   : "text-slate-400"
               }`}
             >
-              {formatDateTime(m.created_at)}
+              {formatTimeDate(m.created_at)}
             </div>
           </div>
         )}

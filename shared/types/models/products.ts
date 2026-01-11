@@ -1,6 +1,6 @@
 // shared/types/models/products.ts
 export type Product = {
-  id: number;
+  id?: number;
   product_id: string | null;
   serial_number: string | null;
   project_idx: number;

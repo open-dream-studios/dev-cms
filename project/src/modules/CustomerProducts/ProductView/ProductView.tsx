@@ -25,7 +25,7 @@ import {
 import CustomerTag from "@/modules/components/ProductCard/CustomerTag";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import CustomerSelection from "@/modules/components/Customers/CustomerSelection";
+import CustomerSelection from "@/modules/_util/Selection/CustomerSelection";
 import { IoImagesOutline } from "react-icons/io5";
 import { IoImageOutline } from "react-icons/io5";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
@@ -45,7 +45,12 @@ import MediaPlayer from "@/modules/MediaModule/MediaPlayer";
 import ImageGallery from "@/modules/components/ImageGallery";
 import { FiEdit } from "react-icons/fi";
 import { uploadProductImages } from "@/modules/MediaModule/_actions/media.actions";
-import { haveImagesChanged, onProductFormSubmit } from "../_actions/products.actions";
+import {
+  haveImagesChanged,
+  onClearProductCustomer,
+  onProductFormSubmit,
+  onSelectProductCustomer,
+} from "../_actions/products.actions";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -296,6 +301,29 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         await uploadProductImages(uploads, serialNumber ?? null);
         setImageEditorOpen(true);
       },
+    });
+  };
+
+  const handleEditCustomerClick = () => { 
+    if (!matchedProduct) return;
+    setModal1({
+      ...modal1,
+      open: !modal1.open,
+      showClose: true,
+      offClickClose: true,
+      width: "w-[90vw] md:w-[80vw]",
+      maxWidth: "md:max-w-[1000px]",
+      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+      borderRadius: "rounded-[15px] md:rounded-[20px]",
+      content: (
+        <CustomerSelection
+          onSelect={(customer: Customer) =>
+            onSelectProductCustomer(customer, matchedProduct)
+          }
+          onClear={() => onClearProductCustomer()}
+          clearable={!!customerId}
+        />
+      ),
     });
   };
 
@@ -807,24 +835,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
 
                         {matchedCustomer && (
                           <div
-                            onClick={() => {
-                              setModal1({
-                                ...modal1,
-                                open: !modal1.open,
-                                showClose: true,
-                                offClickClose: true,
-                                width: "w-[90vw] md:w-[80vw]",
-                                maxWidth: "md:max-w-[1000px]",
-                                aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
-                                borderRadius:
-                                  "rounded-[15px] md:rounded-[20px]",
-                                content: (
-                                  <CustomerSelection
-                                    product={matchedProduct ?? null}
-                                  />
-                                ),
-                              });
-                            }}
+                            onClick={handleEditCustomerClick}
                             className="h-[100%] px-[1px] flex items-center cursor-pointer hover:brightness-75 dim"
                           >
                             <BsThreeDotsVertical

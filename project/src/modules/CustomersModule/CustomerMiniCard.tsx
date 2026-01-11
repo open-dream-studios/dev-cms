@@ -5,7 +5,6 @@ import { Customer } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   createCustomerContextMenu,
   handleCustomerClick,

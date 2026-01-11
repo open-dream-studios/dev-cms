@@ -39,7 +39,7 @@ import { FiEdit } from "react-icons/fi";
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
-import { dateToString, formatDateTime } from "@/util/functions/Time";
+import { dateToString, formatTimeDate } from "@/util/functions/Time";
 import Modal2Continue from "@/modals/Modal2Continue";
 import AddEmployeeList from "../AddEmployeeList";
 import CircularProgress from "./CircularProgress";
@@ -980,7 +980,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                       className="font-semibold opacity-[0.85]"
                       style={{ color: currentTheme.text_1 }}
                     >
-                      {formatDateTime(productJob.updated_at)}
+                      {formatTimeDate(productJob.updated_at)}
                     </div>
                   </div>
                 )}

@@ -1,7 +1,7 @@
 import { MessageCircle, Send } from "lucide-react";
 import { useConversationChat } from "./_hooks/useConversationChats";
 import { ChatMessages } from "./ChatMessages";
-import { formatDateTime } from "@/util/functions/Time";
+import { formatTimeDate } from "@/util/functions/Time";
 
 export function MiniChat() {
   const {
@@ -43,7 +43,7 @@ export function MiniChat() {
           >
             <div>{m.message_text}</div>
             <div className="text-[10px] text-slate-400 mt-1 text-right">
-              {formatDateTime(m.created_at)}
+              {formatTimeDate(m.created_at)}
             </div>
           </div>
         )}

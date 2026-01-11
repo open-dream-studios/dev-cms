@@ -1,4 +1,4 @@
-// project/src/modules/GoogleModule/GoogleCalendarModule/ScheduleRequestRow.tsx
+// project/src/modules/GoogleModule/GoogleCalendarModule/CustomerDataManager/ScheduleRequestRow.tsx
 import React, { JSX, useCallback, useContext, useMemo } from "react";
 import { Calendar, Clock, Check, X, Brain, MapPin } from "lucide-react";
 import {
@@ -13,27 +13,27 @@ import { AuthContext } from "@/contexts/authContext";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { MdOutlineRefresh, MdSchedule } from "react-icons/md";
-import { dateToString, formatDateTime } from "@/util/functions/Time";
-import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
+import { dateToString, formatTimeDate } from "@/util/functions/Time";
+import { useGoogleCalendarUIStore } from "../_store/googleCalendar.store";
 import { formatPhoneNumber, parseUSAddress } from "@/util/functions/Customers";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import {
   setCurrentCustomerData,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
-import { useSendGmailEmail } from "../GmailModule/_hooks/gmail.hooks";
-import { bookingConfirmationEmail } from "../GmailModule/_templates/booking.template";
+import { useSendGmailEmail } from "../../GmailModule/_hooks/gmail.hooks";
+import { bookingConfirmationEmail } from "../../GmailModule/_templates/booking.template";
 import {
   approveAndCreateScheduleEvent,
   handleRescheduleEndChange,
   handleRescheduleStartChange,
-} from "./_actions/googleCalendar.actions";
+} from "../_actions/googleCalendar.actions";
 import { promptContinue } from "@/modals/_actions/modals.actions";
 import { showSuccessToast } from "@/util/functions/UI";
 import DatePicker from "react-datepicker";
-import "../../components/Calendar/Calendar.css";
-import appDetails from "../../../util/appDetails.json";
-import { rescheduleConfirmationEmail } from "../GmailModule/_templates/reschedule.template";
+import "../../../components/Calendar/Calendar.css";
+import appDetails from "../../../../util/appDetails.json";
+import { rescheduleConfirmationEmail } from "../../GmailModule/_templates/reschedule.template";
 import { toast } from "react-toastify";
 
 export const statusColors = {
@@ -250,7 +250,6 @@ const ScheduleRequestRow = ({
     if (!customerEmail) return;
     const address = customer?.address;
     const location = address;
-
     const start = requestProposedStart ? new Date(requestProposedStart) : null;
     const date = start
       ? start.toLocaleDateString("en-US", {
@@ -305,19 +304,19 @@ const ScheduleRequestRow = ({
   if (!currentUser) return null;
 
   const proposedStart = request.proposed_start
-    ? formatDateTime(request.proposed_start)
+    ? formatTimeDate(request.proposed_start)
     : "No start time";
 
   const proposedEnd = request.proposed_end
-    ? formatDateTime(request.proposed_end)
+    ? formatTimeDate(request.proposed_end)
     : null;
 
   const proposedRescheduleStart = request.proposed_reschedule_start
-    ? formatDateTime(request.proposed_reschedule_start)
+    ? formatTimeDate(request.proposed_reschedule_start)
     : "No start time";
 
   const proposedRescheduleEnd = request.proposed_reschedule_end
-    ? formatDateTime(request.proposed_reschedule_end)
+    ? formatTimeDate(request.proposed_reschedule_end)
     : null;
 
   const onRequestClick = () => {
@@ -856,12 +855,12 @@ const ScheduleRequestRow = ({
           <div className="mt-3 flex gap-[16px] opacity-[0.4] text-[11.5px]">
             <div>
               Created:{" "}
-              {formatDateTime(new Date(request.created_at).toLocaleString())}
+              {formatTimeDate(new Date(request.created_at).toLocaleString())}
             </div>
             {request.resolved_at && (
               <div>
                 Resolved:{" "}
-                {formatDateTime(new Date(request.resolved_at).toLocaleString())}
+                {formatTimeDate(new Date(request.resolved_at).toLocaleString())}
               </div>
             )}
           </div>
