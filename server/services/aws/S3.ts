@@ -158,8 +158,7 @@ export async function uploadFileToS3(
       AWS_S3_MEDIA_BUCKET: process.env.AWS_S3_MEDIA_BUCKET,
       AWS_REGION: process.env.AWS_REGION,
     };
-  }
-  console.log(decryptedKeys)
+  } 
   if (!decryptedKeys) return null;
 
   const { AWS_S3_MEDIA_BUCKET, AWS_REGION } = decryptedKeys;
