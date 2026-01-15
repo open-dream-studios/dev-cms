@@ -8,7 +8,7 @@ import {
   MediaLink,
   Product,
   ProjectPage,
-} from "@open-dream/shared"; 
+} from "@open-dream/shared";
 import { useMediaModuleUIStore } from "../_store/media.store";
 import { deleteMediaFolderApi } from "@/api/mediaFolders.api";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
@@ -17,7 +17,10 @@ import { makeRequest } from "@/util/axios";
 import { deleteMediaLinksApi, upsertMediaLinksApi } from "@/api/mediaLinks.api";
 import { deleteProjectMediaApi, rotateProjectMediaApi } from "@/api/media.api";
 import { showSuccessToast } from "@/util/functions/UI";
-import { PopupDisplayItem, promptContinue } from "@/modals/_actions/modals.actions";
+import {
+  PopupDisplayItem,
+  promptContinue,
+} from "@/modals/_actions/modals.actions";
 import { queryClient } from "@/lib/queryClient";
 
 export type FileImage = {
@@ -100,9 +103,7 @@ export const handleFileProcessing = async (
     images.forEach((fileImage) => {
       formData.append("files", fileImage.file, fileImage.name);
     });
-    const response = await makeRequest.post("/media/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const response = await makeRequest.post("/media/upload", formData);
     if (response.status === 200) {
       return response.data.media;
     } else {

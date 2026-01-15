@@ -118,7 +118,7 @@ export function sanitizeJsonLikeString(value: any): any {
     (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
     (trimmed.startsWith("[") && trimmed.endsWith("]"));
 
-  if (!looksLikeJsonObject) return value;
+  if (!looksLikeJsonObject) return trimmed;
 
   // If it's already valid JSON → return it unchanged
   try {

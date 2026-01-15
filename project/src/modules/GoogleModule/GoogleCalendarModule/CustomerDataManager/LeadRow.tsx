@@ -97,6 +97,10 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
     control: leadForm.control,
     name: "product_id",
   });
+  const lead_notes = useWatch({
+    control: leadForm.control,
+    name: "notes",
+  });
 
   const isEditingOrAdding = !!(
     isAddingLead ||
@@ -140,13 +144,32 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
   };
 
   const onSelectCustomer = (customer: Customer) => {
-    leadForm.setValue("customer_id", customer.customer_id);
+    leadForm.setValue("customer_id", customer.customer_id, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
     setModal1({ ...modal1, open: false });
   };
 
-  const handleLeadClick = () => {
+  const handleLeadClick = async () => {
     if (isAddingLead) return;
     if (editingLead) {
+      setEditingLead(null);
+      const { dirtyFields } = leadForm.formState;
+      if (Object.keys(dirtyFields).length > 0 && currentProjectId) {
+        const formInput = {
+          lead_id: lead && lead.lead_id ? lead.lead_id : null,
+          project_idx: currentProjectId,
+          customer_id: lead_customer_id,
+          product_id: lead_product_id,
+          job_definition_id: lead_job_definition_id,
+          lead_type: lead_type,
+          notes: lead_notes,
+          status: lead_status,
+          source: null,
+        } as LeadInput;
+        await saveForm(formInput);
+      }
       handleCancelForm();
     } else {
       setEditingLead(lead);
@@ -154,22 +177,34 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
   };
 
   const onSelectJobDefinition = (jobDefinition: JobDefinition) => {
-    leadForm.setValue("job_definition_id", jobDefinition.job_definition_id);
+    leadForm.setValue("job_definition_id", jobDefinition.job_definition_id, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
     setModal1({ ...modal1, open: false });
   };
 
   const onClearJobDefinition = () => {
-    leadForm.setValue("job_definition_id", null);
+    leadForm.setValue("job_definition_id", null, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
     setModal1({ ...modal1, open: false });
   };
 
   const onSelectProduct = (product: Product) => {
-    leadForm.setValue("product_id", product.product_id);
+    leadForm.setValue("product_id", product.product_id, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
     setModal1({ ...modal1, open: false });
   };
 
   const onClearProduct = () => {
-    leadForm.setValue("product_id", null);
+    leadForm.setValue("product_id", null, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
     setModal1({ ...modal1, open: false });
   };
 
@@ -260,7 +295,7 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
 
   const onFormSubmitButton = async (data: LeadFormData) => {
     if (!currentProjectId) return;
-    await upsertLead({
+    const formInput = {
       lead_id: lead && lead.lead_id ? lead.lead_id : null,
       project_idx: currentProjectId,
       customer_id: data.customer_id,
@@ -270,7 +305,12 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
       notes: data.notes,
       status: data.status,
       source: null,
-    } as LeadInput);
+    } as LeadInput;
+    await saveForm(formInput);
+  };
+
+  const saveForm = async (formInput: LeadInput) => {
+    await upsertLead(formInput);
     setEditingLead(null);
     setIsAddingLead(false);
   };
@@ -402,8 +442,14 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
                 <select
                   {...leadForm.register("lead_type", {
                     onChange: (e) => {
-                      leadForm.setValue("product_id", null);
-                      leadForm.setValue("job_definition_id", null);
+                      leadForm.setValue("product_id", null, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      });
+                      leadForm.setValue("job_definition_id", null, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      });
                     },
                   })}
                   className="absolute inset-0 opacity-0 cursor-pointer"
