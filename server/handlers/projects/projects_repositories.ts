@@ -280,8 +280,7 @@ export const inviteProjectUserFunction = async (
   const project = await getProjectByIdFunction(project_idx);
   if (!project || !project.name || !project.backend_domain) {
     return { success: false, message: "Project information incomplete" };
-  }
-
+  } 
   let backend_domain = changeToHTTPSDomain(project.backend_domain);
   await sendInviteEmail({
     to: email,
