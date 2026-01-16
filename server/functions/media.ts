@@ -36,7 +36,7 @@ export function getContentTypeAndExt(filename: string) {
  *
  * If the file is already webp and maxWidth/quality wouldn't change, it can short-circuit.
  */
-export async function compressImage({
+export async function compressImageV1({
   inputPath,
   maxWidth = 1200,
   quality = 90,
@@ -190,6 +190,172 @@ export async function compressImage({
     width: outWidth,
     height: outHeight,
     size: outStats.size,
+    ext: finalExt,
+    mimeType: `image/${finalExt}`,
+    transformed: true,
+  };
+}
+
+type CompressionLevel = "minimal" | "balanced" | "aggressive";
+
+export async function compressImage({
+  inputPath,
+  compressionLevel = "balanced",
+  convertToWebp = true,
+  targetSizeKB = 700,
+}: {
+  inputPath: string;
+  compressionLevel: CompressionLevel;
+  convertToWebp: boolean;
+  targetSizeKB?: number;
+}) {
+  const origStats = await fsp.stat(inputPath);
+  const origMeta = await sharp(inputPath).metadata();
+
+  const width = origMeta.width ?? null;
+  const height = origMeta.height ?? null;
+
+  const inputExt =
+    origMeta.format || path.extname(inputPath).slice(1).toLowerCase();
+
+  const finalExt = convertToWebp ? "webp" : inputExt;
+  const targetBytes = targetSizeKB * 1024;
+
+  const outputPath = path.join(
+    path.dirname(inputPath),
+    `${path.basename(
+      inputPath,
+      path.extname(inputPath)
+    )}-compressed.${finalExt}`
+  );
+
+  const HARD_MIN_QUALITY = 45;
+  const MIN_WIDTH = 720;
+  const RESIZE_STEP = 0.85;
+  const SEARCH_EFFORT = 2;
+
+  const PRESETS = {
+    minimal: { start: 92, min: 82, step: 2, effort: 4 },
+    balanced: { start: 85, min: 70, step: 4, effort: 4 },
+    aggressive: { start: 75, min: 55, step: 6, effort: 5 },
+  } as const;
+
+  const preset = PRESETS[compressionLevel];
+
+  let bestPath: string | null = null;
+  let bestSize = Infinity;
+
+  // ----------------------------
+  // PASS 1: QUALITY ONLY
+  // ----------------------------
+  let low = HARD_MIN_QUALITY;
+  let high = preset.start;
+
+  while (low <= high) {
+    const q = Math.floor((low + high) / 2);
+    const attemptPath = outputPath.replace(/\.webp$/, `-q${q}.webp`);
+
+    await sharp(inputPath)
+      .rotate()
+      .webp({
+        quality: q,
+        effort: SEARCH_EFFORT,
+        smartSubsample: true,
+      })
+      .toFile(attemptPath);
+
+    const { size } = await fsp.stat(attemptPath);
+
+    if (size <= targetBytes) {
+      // ✅ this quality fits → try HIGHER quality
+      bestSize = size;
+      bestPath = attemptPath;
+      low = q + 1;
+    } else {
+      // ❌ too big → need MORE compression
+      high = q - 1;
+    }
+  }
+
+  // ----------------------------
+  // PASS 2: ITERATIVE RESIZE + QUALITY
+  // ----------------------------
+  if (width && height) {
+    let currentWidth = width;
+    let currentHeight = height;
+
+    while (bestSize > targetBytes && currentWidth > MIN_WIDTH) {
+      currentWidth = Math.floor(currentWidth * RESIZE_STEP);
+      currentHeight = Math.floor(currentHeight * RESIZE_STEP);
+
+      const resizeAttemptPath = outputPath.replace(
+        /\.webp$/,
+        `-resize-${currentWidth}.webp`
+      );
+
+      await sharp(inputPath)
+        .rotate()
+        .resize({
+          width: currentWidth,
+          height: currentHeight,
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({
+          quality: preset.min,
+          effort: preset.effort,
+          smartSubsample: true,
+        })
+        .toFile(resizeAttemptPath);
+
+      const { size } = await fsp.stat(resizeAttemptPath);
+
+      if (size < bestSize) {
+        bestSize = size;
+        bestPath = resizeAttemptPath;
+      }
+
+      if (size <= targetBytes) break;
+    }
+  }
+
+  // ----------------------------
+  // HARD GUARANTEE
+  // ----------------------------
+  if (!bestPath || bestSize >= origStats.size) {
+    return {
+      outputPath: inputPath,
+      width,
+      height,
+      size: origStats.size,
+      ext: inputExt,
+      mimeType: mime.lookup(inputExt) || "application/octet-stream",
+      transformed: false,
+    };
+  }
+
+  const finalQuality = Number(bestPath.match(/-q(\d+)/)?.[1] ?? preset.min);
+  await sharp(bestPath)
+    .rotate()
+    .webp({
+      quality: finalQuality,
+      effort: preset.effort, // full quality
+      smartSubsample: true,
+    })
+    .toFile(outputPath);
+  const { size } = await fsp.stat(outputPath);
+  bestSize = size;
+  bestPath = outputPath;
+
+  const finalMeta = await sharp(outputPath)
+    .metadata()
+    .catch(() => ({} as sharp.Metadata));
+
+  return {
+    outputPath,
+    width: finalMeta.width ?? width,
+    height: finalMeta.height ?? height,
+    size: bestSize,
     ext: finalExt,
     mimeType: `image/${finalExt}`,
     transformed: true,

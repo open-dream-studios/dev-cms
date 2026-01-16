@@ -101,7 +101,7 @@ export type QueryContextType = {
   projectUsers: ProjectUser[];
   isLoadingProjectUsers: boolean;
   refetchProjectUsers: () => void;
-  upsertProjectUser: (projectUser: ProjectUser) => Promise<void>;
+  upsertProjectUser: (projectUser: ProjectUser) => Promise<any>;
   deleteProjectUser: (projectUser: ProjectUser) => Promise<void>;
 
   // ---- Project Modules ----

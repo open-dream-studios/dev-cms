@@ -44,9 +44,9 @@ export const getProjectsFunction = async (): Promise<Project[]> => {
   return rows;
 };
 
-export const getProjectByIdFunction = async (
+export const getProjectByProjectIdFunction = async (
   projectId: string
-): Promise<Project[]> => {
+): Promise<Project | null> => {
   const q = `
     SELECT * FROM projects 
     WHERE project_id = ?
@@ -54,7 +54,20 @@ export const getProjectByIdFunction = async (
   const [rows] = await db
     .promise()
     .query<(Project & RowDataPacket)[]>(q, [projectId]);
-  return rows;
+  if (!rows.length) return null;
+  return rows[0];
+};
+
+export const getProjectByIdFunction = async (
+  id: number
+): Promise<Project | null> => {
+  const q = `
+    SELECT * FROM projects 
+    WHERE id = ?
+  `;
+  const [rows] = await db.promise().query<(Project & RowDataPacket)[]>(q, [id]);
+  if (!rows.length) return null;
+  return rows[0];
 };
 
 export async function getProjectIdByDomain(
@@ -225,15 +238,6 @@ export const inviteProjectUserFunction = async (
     return { success: false, message: "Cannot invite yourself" };
   }
 
-  const [projects] = await connection.query<RowDataPacket[]>(
-    `SELECT * FROM projects WHERE id = ?`,
-    [project_idx]
-  );
-
-  if (!projects.length) {
-    return { success: false, message: "Project not found" };
-  }
-
   // 1. Check if user exists
   const [users] = await connection.query<RowDataPacket[]>(
     `SELECT type FROM users WHERE email = ?`,
@@ -243,19 +247,16 @@ export const inviteProjectUserFunction = async (
   const isInternal = users.length && users[0].type === "internal";
 
   if (isInternal) {
-    // 🔑 SINGLE SOURCE OF TRUTH
     await upsertProjectUserFunction(connection, {
       email,
       project_idx,
       clearance,
     });
-
     return { success: true, invited: false };
   }
 
   // 2. External → create / refresh invitation
   const token = crypto.randomBytes(32).toString("hex");
-
   await connection.query(
     `
     INSERT INTO project_invitations (
@@ -276,21 +277,16 @@ export const inviteProjectUserFunction = async (
   `,
     [email, project_idx, clearance, token, invitedBy]
   );
-
-  const projectName = projects[0].name;
-  let domain = changeToHTTPSDomain(projects[0].domain);
-
-  if (!projectName || !domain) {
+  const project = await getProjectByIdFunction(project_idx);
+  if (!project || !project.name || !project.backend_domain) {
     return { success: false, message: "Project information incomplete" };
   }
 
-  domain = "http://localhost:3000";
-
+  let backend_domain = changeToHTTPSDomain(project.backend_domain);
   await sendInviteEmail({
     to: email,
-    projectName: projects[0].name,
-    inviteUrl: `${domain}?token=${token}`,
+    projectName: project.name,
+    inviteUrl: `${backend_domain}?token=${token}`,
   });
-
   return { success: true, invited: true };
 };

@@ -1,8 +1,8 @@
 // project/src/components/Settings/UserAccess.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { useContextQueries } from "@/contexts/queryContext/queryContext"; 
-import {  projectRoles, ProjectUser } from "@open-dream/shared";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { projectRoles, ProjectUser } from "@open-dream/shared";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { useContext, useMemo, useState } from "react";
 import { FaPlus, FaRegCircleCheck } from "react-icons/fa6";
@@ -16,6 +16,7 @@ import {
   getRoleFromClearance,
 } from "@/util/functions/Users";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { toast } from "react-toastify";
 
 const UserAccess = () => {
   const { currentUser } = useContext(AuthContext);
@@ -42,11 +43,14 @@ const UserAccess = () => {
 
   const onSubmit = async (data: ProjectUserFormData) => {
     if (!currentProject) return;
-    await upsertProjectUser({
+    const res = await upsertProjectUser({
       email: data.email,
       clearance: getClearanceFromRole(data.role),
       project_idx: currentProject.id,
     } as ProjectUser);
+    if (res.success && res.invited) {
+      toast.success(`Sent invite email to ${data.email}`);
+    }
     setShowAddProjectInput(false);
   };
 
@@ -100,7 +104,9 @@ const UserAccess = () => {
                   className="select-none dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
                     backgroundColor: currentTheme.background_1_2,
-                    border: editListMode ? "1px solid " + currentTheme.text_3 : "none",
+                    border: editListMode
+                      ? "1px solid " + currentTheme.text_3
+                      : "none",
                   }}
                 >
                   <FiEdit size={16} />

@@ -481,8 +481,7 @@ export async function uploadMediaFunction(
       try {
         const compressed = await compressImage({
           inputPath: origPath,
-          maxWidth: 1200,
-          quality: 90,
+          compressionLevel: "minimal",
           convertToWebp: true,
         });
 

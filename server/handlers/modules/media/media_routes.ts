@@ -104,7 +104,7 @@ router.post(
 router.post(
   "/upload",
   upload.array("files"),
-  verifyVercelProxy,
+  // verifyVercelProxy,
   transactionHandler(uploadMedia)
 );
 
