@@ -21,3 +21,37 @@ export type ContextMenuState<T = unknown> = {
   target: T;
   menu: ContextMenuDefinition<T>;
 };
+
+export type Screen =
+  | "none"
+  | "dashboard"
+  | "add-product"
+  | "edit-product"
+  | "products"
+  | "products-table"
+  | "media"
+  | "pages"
+  | "settings"
+  | "customers"
+  | "customer-products"
+  | "edit-customer-product"
+  | "tasks"
+  | "employees"
+  | "gmail"
+  | "google-ads"
+  | "updates";
+
+export type Modal =
+  | { type: "mediaUpload" }
+  | { type: "confirmDelete"; payload: { id: string } }
+  | { type: "custom"; content: React.ReactNode };
+
+export type UIState = {
+  screen: Screen;
+  modals: Modal[];
+  sidebar: "none" | "mediaFolders" | "settings";
+  setScreen: (s: Screen) => void;
+  pushModal: (m: Modal) => void;
+  popModal: () => void;
+  setSidebar: (s: UIState["sidebar"]) => void;
+};

@@ -17,16 +17,16 @@ import {
   setCurrentProjectData,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore";
-import { useRouting } from "@/hooks/useRouting";
+import { useUiStore } from "@/store/useUIStore"; 
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { Media } from "@open-dream/shared";
 import { saveProducts } from "@/modules/CustomerProducts/_actions/products.actions";
+import { useModules } from "@/modules/_hooks/modules.hooks";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
-  const { screenClick } = useRouting();
+  const { handleLogoClick } = useModules();
   const { updatingLock } = useUiStore();
   const { projectsData, media } = useContextQueries();
   const {
@@ -111,10 +111,6 @@ const Navbar = () => {
       borderRadius: "rounded-[15px] md:rounded-[20px]",
       content: <AdminController />,
     });
-  };
-
-  const handleLogoClick = () => {
-    screenClick("dashboard", null);
   };
 
   const currentLogo = useMemo(() => {
@@ -289,7 +285,10 @@ const Navbar = () => {
             onClick={handleProfileClick}
             className="dim cursor-pointer flex flex-row w-fit max-w-[250px] pr-[10px] h-[42px] hover:brightness-75 rounded-[4.5px]"
             style={{
-              backgroundColor: currentUser.type === "internal" ? currentTheme.background_2 : "#1A2643",
+              backgroundColor:
+                currentUser.type === "internal"
+                  ? currentTheme.background_2
+                  : "#1A2643",
             }}
           >
             <div className="ml-[3px] mr-[5px] aspect-[1/1] h-[100%] p-[6px]">

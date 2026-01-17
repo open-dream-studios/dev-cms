@@ -37,6 +37,7 @@ import CustomerPortal from "@/modules/CustomerPortal/CustomerPortal";
 import { useAppInitialization } from "@/hooks/useAppInitialization";
 import NoProjects from "@/screens/NoProjects";
 import { RouteScopeProvider } from "@/contexts/routeScopeContext";
+import { normalizeDomain } from "@/util/functions/Application";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   // const [queryClient] = useState(() => new QueryClient());
@@ -63,7 +64,8 @@ const AppRoot = ({ children }: { children: ReactNode }) => {
   // Init environment
   useEffect(() => {
     if (!environmentInitialized) {
-      initializeEnvironment(window.location.hostname);
+      const cleanDomain = normalizeDomain(window.location.hostname);
+      initializeEnvironment(cleanDomain);
     }
   }, [environmentInitialized]);
 

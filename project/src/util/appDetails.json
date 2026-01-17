@@ -6,8 +6,10 @@
   "admin_email": "opendreamstudios@gmail.com",
   "default_color": "#451D65",
   "default_title": "CMS",
+  "default_landing_color": "#000000",
   "default_logo": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/logo.png",
   "default_hero": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img4.jpg",
+  "default_landing_hero_style": "object-contain",
   "default_slides": [
     "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img1.png",
     "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/img2.png",
@@ -16,15 +18,38 @@
   "projects": [
     {
       "brand": "TSA",
+      "darken_landing": true,
+      "landing_color": "#000000",
       "domain": "tannyspaacquisitions.shop",
       "app_color": "#50A1CD",
       "landing_title": "TSA Portal",
       "landing_logo": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/projects/tsa/logo.png",
-      "landing_hero": "https://static.wixstatic.com/media/591e05_1778099a5e8f44cfae54657f43f447c4~mv2.png/v1/fill/w_647,h_1024,al_c,q_90,enc_avif,quality_auto/591e05_1778099a5e8f44cfae54657f43f447c4~mv2.png",
+      "landing_hero_sm": "https://static.wixstatic.com/media/591e05_1778099a5e8f44cfae54657f43f447c4~mv2.png/v1/fill/w_647,h_1024,al_c,q_90,enc_avif,quality_auto/591e05_1778099a5e8f44cfae54657f43f447c4~mv2.png",
+      "landing_hero_md": "https://static.wixstatic.com/media/591e05_1778099a5e8f44cfae54657f43f447c4~mv2.png/v1/fill/w_647,h_1024,al_c,q_90,enc_avif,quality_auto/591e05_1778099a5e8f44cfae54657f43f447c4~mv2.png",
+      "landing_hero_lg": "https://static.wixstatic.com/media/591e05_1778099a5e8f44cfae54657f43f447c4~mv2.png/v1/fill/w_647,h_1024,al_c,q_90,enc_avif,quality_auto/591e05_1778099a5e8f44cfae54657f43f447c4~mv2.png",
+      "landing_hero_style": "object-cover",
       "landing_slides": [
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/projects/tsa/slide1.png",
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/projects/tsa/slide2.png",
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/projects/tsa/slide3.png"
+      ]
+    },
+    {
+      "brand": "Tri Cities",
+      "darken_landing": false,
+      "landing_color": "#181717",
+      "domain": "tricitiesremodeling.shop",
+      "app_color": "#50A1CD",
+      "landing_title": "Tri Cities Remodeling",
+      "landing_logo": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/logo.png",
+      "landing_hero_sm": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/TC_SMALL_V2.png",
+      "landing_hero_md": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/TC_MED.png",
+      "landing_hero_lg": "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/TC_LARGE.png",
+      "landing_hero_style": "object-cover",
+      "landing_slides": [
+        "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/1.jpeg",
+        "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/2.jpeg",
+        "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/3.jpeg"
       ]
     }
   ]

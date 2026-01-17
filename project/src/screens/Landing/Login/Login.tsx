@@ -1,3 +1,4 @@
+// project/src/screens/Landing/Login/Login.tsx
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -139,12 +140,12 @@ const Login = () => {
   const passwordVisibleRef = useRef<HTMLDivElement>(null);
   const registerTitleRef = useRef<HTMLParagraphElement>(null);
 
-  let landing_title = appDetails.default_title;
+  let brand = appDetails.default_title;
   const foundProject = appDetails.projects.find(
     (item) => item.domain === domain
   );
   if (foundProject) {
-    landing_title = foundProject.landing_title;
+    brand = foundProject.brand;
   }
 
   const handleEmailInputChange = (e: any) => {
@@ -749,7 +750,7 @@ const Login = () => {
             color: currentTheme.text_1,
           }}
         >
-          {landing_title} Login
+          {brand} Login
         </div>
 
         <div className="flex w-full flex-row gap-[11px] px-[80px] md:px-[40px]">

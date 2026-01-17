@@ -8,28 +8,23 @@ import {
   useContext,
   useMemo,
   ReactNode,
+  useCallback,
 } from "react";
 import Modal2Continue from "../../modals/Modal2Continue";
 import appDetails from "../../util/appDetails.json";
 import { AuthContext } from "@/contexts/authContext";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { HiServer, HiViewBoards } from "react-icons/hi";
-import { FaImages } from "react-icons/fa";
-import ProductsDataIcon from "@/lib/icons/ProductsDataIcon";
 import Divider from "@/lib/blocks/Divider";
-import { FaPollH } from "react-icons/fa";
 import HoverBox from "@/lib/blocks/HoverBox";
-import { IoPersonSharp } from "react-icons/io5";
 import { Media, Screen } from "@open-dream/shared";
-import { BsFillPersonVcardFill } from "react-icons/bs";
-import { setCurrentCustomerData, useCurrentDataStore } from "@/store/currentDataStore";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { IoMdMail } from "react-icons/io";
 import { useUiStore } from "@/store/useUIStore";
+import { useModules } from "@/modules/_hooks/modules.hooks";
 
-type BoxItem = {
+export type BoxItem = {
   title: string;
   icon: ReactNode;
   pages: Screen[];
@@ -63,14 +58,13 @@ const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
 const LeftBar = () => {
   const { currentUser, handleLogout } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
-  const { hasProjectModule, projectsData, media } = useContextQueries();
+  const { projectsData, media } = useContextQueries();
   const { screenClick } = useRouting();
   const {
     leftBarOpen,
     setLeftBarOpen,
     leftBarRef,
-    setLeftBarRef,
-    pageLayoutRef,
+    setLeftBarRef, 
     modal2,
     setModal2,
   } = useUiStore();
@@ -79,6 +73,7 @@ const LeftBar = () => {
   const windowLargeRef = useRef<boolean | null>(null);
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
   const currentTheme = useCurrentTheme();
+  const { handleLogoClick, clickableModules, closeLeftBar } = useModules()
 
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
@@ -128,28 +123,6 @@ const LeftBar = () => {
       });
     }
   }, [showLeftBar]);
-
-  const closeLeftBar = () => {
-    if (leftBarRef && leftBarRef.current) {
-      leftBarRef.current.style.transition = "right 0.3s ease-in-out";
-    }
-    setLeftBarOpen(false);
-    setTimeout(() => {
-      if (leftBarRef && leftBarRef.current) {
-        leftBarRef.current.style.transition = "none";
-      }
-    }, 300);
-
-    if (pageLayoutRef && pageLayoutRef.current) {
-      pageLayoutRef.current.style.transition =
-        "width 0.3s ease-in-out, left 0.3s ease-in-out";
-    }
-    setTimeout(() => {
-      if (pageLayoutRef && pageLayoutRef.current) {
-        pageLayoutRef.current.style.transition = "none";
-      }
-    }, 300);
-  };
 
   const leftBarOpenRef = useRef(leftBarOpen);
   useEffect(() => {
@@ -210,15 +183,6 @@ const LeftBar = () => {
     });
   };
 
-  const handleTabClick = (tab: Screen) => {
-    if (windowWidth && windowWidth < 1024) {
-      closeLeftBar();
-    }
-    screenClick(tab, null);
-  };
-
-  if (!currentUser) return null;
-
   const renderModule = (item: BoxItem, withClose: boolean = false) => {
     return (
       <div className="w-[100%] flex flex-row-reverse justify-end items-center mb-[11px]">
@@ -243,133 +207,7 @@ const LeftBar = () => {
     );
   };
 
-  // Gather all available modules in order
-  const displayedModules: BoxItem[] = [];
-
-  if (hasProjectModule("google-ads-api-module")) {
-    displayedModules.push({
-      title: "Dashboard",
-      icon: (
-        <HiServer
-          size={15}
-          color={currentTheme.text_3}
-          className="w-[17px] h-[17px] brightness-75"
-        />
-      ),
-      pages: ["google-ads" as Screen],
-      onClick: () => handleTabClick("google-ads"),
-    });
-  }
-
-  if (hasProjectModule("customer-products-module")) {
-    displayedModules.push({
-      title: "Inventory",
-      icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-      pages: ["customer-products" as Screen, "edit-customer-product" as Screen],
-      onClick: () => handleTabClick("customer-products"),
-    });
-  }
-
-  if (hasProjectModule("customers-module")) {
-    displayedModules.push({
-      title: "Customers",
-      icon: <IoPersonSharp className="brightness-75 mt-[1px]" size={16} />,
-      pages: ["customers" as Screen],
-      onClick: () => {
-        setCurrentCustomerData(null, false);
-        handleTabClick("customers");
-      },
-    });
-  }
-
-  if (hasProjectModule("google-gmail-module")) {
-    displayedModules.push({
-      title: "Gmail",
-      icon: <IoMdMail className="brightness-75 mt-[-1.25px]" size={18} />,
-      pages: ["gmail" as Screen],
-      onClick: () => handleTabClick("gmail"),
-    });
-  }
-
-  if (hasProjectModule("pages-module")) {
-    displayedModules.push({
-      title: "Website",
-      icon: <FaPollH className="brightness-75 mt-[1px]" size={16} />,
-      pages: ["pages" as Screen],
-      onClick: () => handleTabClick("pages"),
-    });
-  }
-
-  if (
-    hasProjectModule("media-module") &&
-    hasProjectModule("global-media-module")
-  ) {
-    displayedModules.push({
-      title: "Media",
-      icon: <FaImages className="w-[17px] h-[17px] brightness-75" />,
-      pages: ["media" as Screen],
-      onClick: () => handleTabClick("media"),
-    });
-  }
-
-  if (hasProjectModule("products-module")) {
-    displayedModules.push(
-      {
-        title: "Products",
-        icon: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-        pages: ["products" as Screen],
-        onClick: () => handleTabClick("products"),
-      },
-      {
-        title: "Data",
-        icon: (
-          <div
-            className={`${
-              currentUser.theme === "dark" ? "opacity-[70%]" : "opacity-[80%]"
-            } mt-[2.85px]`}
-          >
-            <ProductsDataIcon size={22} />
-          </div>
-        ),
-        pages: ["products-table" as Screen],
-        onClick: () => handleTabClick("products-table"),
-      }
-    );
-  }
-
-  if (hasProjectModule("employees-module")) {
-    displayedModules.push({
-      title: "Employees",
-      icon: (
-        <div
-          className={`${
-            currentUser.theme === "dark" ? "opacity-[65%]" : "opacity-[80%]"
-          } mt-[-1.8px] mr-[2px]`}
-        >
-          <BsFillPersonVcardFill size={20} />
-        </div>
-      ),
-      pages: ["employees" as Screen],
-      onClick: () => handleTabClick("employees"),
-    });
-  }
-
-  if (hasProjectModule("tasks-module")) {
-    displayedModules.push({
-      title: "Tasks",
-      icon: (
-        <div
-          className={`${
-            currentUser.theme === "dark" ? "opacity-[65%]" : "opacity-[80%]"
-          } mt-[2.85px]`}
-        >
-          <ProductsDataIcon size={22} />
-        </div>
-      ),
-      pages: ["tasks" as Screen],
-      onClick: () => handleTabClick("tasks"),
-    });
-  }
+  if (!currentUser) return null;
 
   return (
     <div className="display-height">
@@ -401,7 +239,7 @@ const LeftBar = () => {
             className="relative w-[100%] h-[100%] px-[20px] pt-[8.8px] items-start flex flex-col"
           >
             <div
-              onClick={() => handleTabClick("dashboard")}
+              onClick={() => handleLogoClick()}
               className="flex lg:hidden flex-row mt-[22px] gap-[5px] mb-[18px] items-center cursor-pointer dim hover:brightness-75 pr-[6px]"
             >
               <img
@@ -421,11 +259,11 @@ const LeftBar = () => {
             </div>
 
             <div className="w-[100%] flex flex-row-reverse justify-end items-center mt-[2px]">
-              {displayedModules.length > 0 &&
-                renderModule(displayedModules[0], true)}
+              {clickableModules.length > 0 &&
+                renderModule(clickableModules[0], true)}
             </div>
 
-            {displayedModules.slice(1).map((m, i) => (
+            {clickableModules.slice(1).map((m, i) => (
               <BoxSection key={i} items={[m]} />
             ))}
           </div>

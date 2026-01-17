@@ -43,7 +43,7 @@ export function useDataFilters() {
       const resultSet = new Set<Product>();
       const addProductsByType = (type: string) => {
         const definition = jobDefinitions.find(
-          (def: JobDefinition) => def.type.toLowerCase() === type.toLowerCase()
+          (def: JobDefinition) => def.type && def.type.toLowerCase() === type.toLowerCase()
         );
         if (!definition?.id) return;
         const filtered = products.filter((product: Product) => {

@@ -68,13 +68,16 @@ export const uiInitialState = {
   hoveredFolder: null as string | null,
   dragItemSize: null as DragItemSizeObject | null,
 
+  // Landing
+  landingImageLoaded: false, 
+
   // UI
   pageLayoutRef: null as RefObject<HTMLDivElement> | null,
   updatingLock: false,
   leftBarOpen: false,
   leftBarRef: null as RefObject<HTMLDivElement> | null,
 
-  screen: "google-ads" as Screen,
+  screen: "none" as Screen,
   modals: [] as Modal[],
   sidebar: "none" as UIState["sidebar"],
   uploadContext: null as UploadContext | null,

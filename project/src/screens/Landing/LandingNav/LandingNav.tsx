@@ -1,6 +1,6 @@
-"use client";
-import { HiBars3 } from "react-icons/hi2";
-import appDetails from "../../../util/appDetails.json"; 
+// project/src/screens/landing/LandingNav/LandingNav.tsx
+"use client"; 
+import appDetails from "../../../util/appDetails.json";
 import Login from "../Login/Login";
 import { removeWhiteSpace } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
@@ -8,19 +8,30 @@ import { useUiStore } from "@/store/useUIStore";
 
 const LandingNav = () => {
   const currentTheme = useCurrentTheme();
-  const { domain, leftBarOpen, setLeftBarOpen, leftBarRef, modal1, setModal1 } =
-    useUiStore();
+  const {
+    domain,
+    leftBarOpen,
+    setLeftBarOpen,
+    leftBarRef,
+    modal1,
+    setModal1,
+    landingImageLoaded,
+  } = useUiStore();
 
   let landing_title = appDetails.default_title;
   let landing_logo = appDetails.default_logo;
   let app_color = appDetails.default_color;
+  let nav_color = appDetails.default_landing_color;
+
   const foundProject = appDetails.projects.find(
     (item) => item.domain === domain
   );
+
   if (foundProject) {
     landing_title = foundProject.landing_title;
     landing_logo = foundProject.landing_logo;
     app_color = foundProject.app_color;
+    nav_color = foundProject.landing_color;
   }
 
   const toggleLeftBar = () => {
@@ -55,7 +66,10 @@ const LandingNav = () => {
           "--nav-height": `${appDetails.nav_height}px`,
           "--left-bar-width": removeWhiteSpace(appDetails.left_bar_width),
           "--nav-ml": appDetails.left_bar_width,
-          backgroundColor: "black",
+          backgroundColor: nav_color,
+          opacity: landingImageLoaded ? 1 : 0,
+          transition: "opacity 200ms ease, background-color 200ms ease",
+          pointerEvents: landingImageLoaded ? "auto" : "none",
         } as React.CSSProperties
       }
       className={`fixed z-[900] ${
@@ -66,14 +80,6 @@ const LandingNav = () => {
     >
       <div className="w-[100%] h-[100%] absolute flex justify-between items-center">
         <div className="flex flex-row items-center px-[18px]">
-          {/* <HiBars3
-            onClick={() => {
-              toggleLeftBar();
-            }}
-            className="w-[30px] dim cursor-pointer lg:hidden hover:brightness-75"
-            color={currentTheme.text_1}
-            fontSize={29}
-          /> */}
           <div className="flex flex-row gap-[5px] items-center">
             <img
               src={landing_logo}

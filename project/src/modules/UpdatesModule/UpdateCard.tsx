@@ -1,6 +1,6 @@
 // src/modules/UpdatesModule/UpdateCard.tsx
 "use client";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { useUpdatesForm } from "@/hooks/forms/useUpdatesForm";
 import { UpdateItemForm } from "@/util/schemas/updatesSchema";
 import { Check, Clock, Trash, Edit, ArrowRight } from "lucide-react";
@@ -11,6 +11,7 @@ import clsx from "clsx";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { SubmitHandler } from "react-hook-form";
 import { UpdateBase } from "@open-dream/shared";
+import { AuthContext } from "@/contexts/authContext";
 
 /**
  * Props:
@@ -36,6 +37,7 @@ const priorityColor = (p: string) => {
 };
 
 const UpdateCard: React.FC<Props> = ({ update = null, showAsNew = false }) => {
+  const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProjectId } = useCurrentDataStore();
   const { addRequest, upsertUpdate, deleteUpdate, toggleComplete } =
@@ -111,6 +113,8 @@ const UpdateCard: React.FC<Props> = ({ update = null, showAsNew = false }) => {
       console.error("Add request failed", err);
     }
   };
+  
+  if (!currentUser) return null
 
   return (
     <div
@@ -145,46 +149,48 @@ const UpdateCard: React.FC<Props> = ({ update = null, showAsNew = false }) => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleToggleCompleted(update)}
-                  title={
-                    update.status === "completed"
-                      ? "Mark as not completed"
-                      : "Mark as completed"
-                  }
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-md"
-                  style={{
-                    background:
+              {currentUser.admin && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleToggleCompleted(update)}
+                    title={
                       update.status === "completed"
-                        ? "rgba(34,197,94,0.12)"
-                        : currentTheme.background_2,
-                    color: currentTheme.text_2,
-                  }}
-                >
-                  <Check size={16} />
-                </button>
+                        ? "Mark as not completed"
+                        : "Mark as completed"
+                    }
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-md"
+                    style={{
+                      background:
+                        update.status === "completed"
+                          ? "rgba(34,197,94,0.12)"
+                          : currentTheme.background_2,
+                      color: currentTheme.text_2,
+                    }}
+                  >
+                    <Check size={16} />
+                  </button>
 
-                <button
-                  onClick={() => {
-                    reset(update);
-                    // set addingUpdate true so the UI knows an edit form is open if needed
-                    if (setAddingUpdate) setAddingUpdate(true);
-                  }}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-md"
-                >
-                  <Edit size={16} />
-                </button>
+                  <button
+                    onClick={() => {
+                      reset(update);
+                      // set addingUpdate true so the UI knows an edit form is open if needed
+                      if (setAddingUpdate) setAddingUpdate(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-md"
+                  >
+                    <Edit size={16} />
+                  </button>
 
-                <button
-                  onClick={() =>
-                    update.update_id && deleteUpdate(update.update_id)
-                  }
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-red-500 hover:brightness-90"
-                >
-                  <Trash size={16} />
-                </button>
-              </div>
+                  <button
+                    onClick={() =>
+                      update.update_id && deleteUpdate(update.update_id)
+                    }
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-red-500 hover:brightness-90"
+                  >
+                    <Trash size={16} />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="mt-3 text-[12.5px] opacity-75">
