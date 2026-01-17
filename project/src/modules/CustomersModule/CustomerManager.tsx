@@ -31,6 +31,7 @@ export default function CustomerManager() {
     customerData,
     scheduleRequests,
     upsertScheduleRequest,
+    hasProjectModule,
   } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
 
@@ -143,14 +144,13 @@ export default function CustomerManager() {
 
   return (
     <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
-      {/* <div
-        onClick={() => {
-          handleLeadClick();
-        }}
-        className="w-[100%] h-[50px] bg-red-400"
-      ></div> */}
-      <GoogleCalendarDisplay events={events} refreshCalendar={refresh} />
-      <CustomerDataManager events={events} refreshCalendar={refresh} />
+      {hasProjectModule("google-calendar-module") && (
+        <GoogleCalendarDisplay events={events} refreshCalendar={refresh} />
+      )}
+      {(hasProjectModule("customer-schedule-requests-module") ||
+        hasProjectModule("customer-leads-module")) && (
+        <CustomerDataManager events={events} refreshCalendar={refresh} />
+      )}
     </div>
   );
   // return <CustomerInteractionTimeline />;

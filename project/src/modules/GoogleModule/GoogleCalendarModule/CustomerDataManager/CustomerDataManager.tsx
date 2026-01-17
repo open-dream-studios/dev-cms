@@ -28,7 +28,7 @@ export const CustomerDataManager = ({
 }) => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { scheduleRequests, leads } = useContextQueries();
+  const { scheduleRequests, leads, hasProjectModule } = useContextQueries();
   const { selectedScheduleRequest, setSelectedScheduleRequest } =
     useGoogleCalendarUIStore();
   const {
@@ -92,40 +92,44 @@ export const CustomerDataManager = ({
             color: currentTheme.text_2,
           }}
         >
-          <div
-            onClick={() => setActiveTab("schedule")}
-            className="cursor-pointer select-none flex flex-col"
-          >
+          {hasProjectModule("customer-schedule-requests-module") && (
             <div
-              className={`text-[21px] font-[600] tracking-tight dim ${
-                activeTab !== "schedule"
-                  ? "brightness-60  hover:brightness-50"
-                  : "brightness-98"
-              } cursor-pointer`}
+              onClick={() => setActiveTab("schedule")}
+              className="cursor-pointer select-none flex flex-col"
             >
-              Schedule Requests
+              <div
+                className={`text-[21px] font-[600] tracking-tight dim ${
+                  activeTab !== "schedule"
+                    ? "brightness-60  hover:brightness-50"
+                    : "brightness-98"
+                } cursor-pointer`}
+              >
+                Schedule Requests
+              </div>
             </div>
-          </div>
+          )}
 
           <div
             className="h-[28px] w-[1px] mt-[2px]"
             style={{ background: currentTheme.background_3 }}
           />
 
-          <div
-            onClick={() => setActiveTab("leads")}
-            className="cursor-pointer select-none flex flex-col"
-          >
+          {hasProjectModule("customer-leads-module") && (
             <div
-              className={`text-[21px] font-[600] tracking-tight dim ${
-                activeTab !== "leads"
-                  ? "brightness-60 hover:brightness-50"
-                  : "brightness-98"
-              } cursor-pointer`}
+              onClick={() => setActiveTab("leads")}
+              className="cursor-pointer select-none flex flex-col"
             >
-              Leads
+              <div
+                className={`text-[21px] font-[600] tracking-tight dim ${
+                  activeTab !== "leads"
+                    ? "brightness-60 hover:brightness-50"
+                    : "brightness-98"
+                } cursor-pointer`}
+              >
+                Leads
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {activeTab === "leads" && !isAddingLead && (

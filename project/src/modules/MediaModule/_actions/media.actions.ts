@@ -23,7 +23,6 @@ import {
 } from "@/modals/_actions/modals.actions";
 import { queryClient } from "@/lib/queryClient";
 import axios from "axios";
-import { BACKEND_URL } from "@/util/config";
 
 export type FileImage = {
   name: string;
@@ -104,9 +103,8 @@ export const handleFileProcessing = async (
     formData.append("folder_id", String(folder_id));
     images.forEach((fileImage) => {
       formData.append("files", fileImage.file, fileImage.name);
-    });
-    // const response = await makeRequest.post("/media/upload", formData);
-    const response = await axios.post(`${BACKEND_URL}/api/media/upload`, formData, {
+    }); 
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/media/upload`, formData, {
       withCredentials: true,
     });
 

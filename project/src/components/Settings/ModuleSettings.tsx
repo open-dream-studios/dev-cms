@@ -381,7 +381,10 @@ const ModuleSettings = () => {
                   </p>
                   <div className="flex gap-[11px]">
                     <div
-                      onClick={(e) => handleDeleteProjectModule(m.name)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteProjectModule(m.name);
+                      }}
                       className="flex items-center justify-center w-[33px] h-[33px] rounded-full dim cursor-pointer"
                       style={{
                         backgroundColor: currentTheme.background_2_selected,

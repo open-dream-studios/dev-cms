@@ -1,12 +1,10 @@
-import { BACKEND_URL } from "../config";
-
 export async function fetchInventory() {
-  const res = await fetch(`${BACKEND_URL}/google/inventory`);
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/google/inventory`);
   return res.json();
 }
 
 export async function updateRow(rowIndex: any, rowData: any) {
-  const res = await fetch(`${BACKEND_URL}/google/update-row`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/google/update-row`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ rowIndex, rowData }),
@@ -15,7 +13,7 @@ export async function updateRow(rowIndex: any, rowData: any) {
 }
 
 export async function updateCell(row: number, column: number, value: any) {
-  const res = await fetch(`${BACKEND_URL}/google/update`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/google/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ row, column, value }),
@@ -24,7 +22,7 @@ export async function updateCell(row: number, column: number, value: any) {
 }
 
 export async function setNotes(row: number, value: any) {
-  const res = await fetch(`${BACKEND_URL}/google/set-notes`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/google/set-notes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ row, value }),
@@ -33,7 +31,7 @@ export async function setNotes(row: number, value: any) {
 }
 
 export async function getNotes(row: number) {
-  const res = await fetch(`${BACKEND_URL}/google/get-notes`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/google/get-notes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ row }),
