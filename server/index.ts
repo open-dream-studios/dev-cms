@@ -42,6 +42,12 @@ import messagesRoutes from "./handlers/public/messages/messages_routes.js";
 import leadRoutes from "./handlers/modules/leads/leads_routes.js";
 import customerDataRoutes from "./handlers/public/customerData/customerData_routes.js"
 import scheduleRequestRoutes from "./handlers/public/scheduleRequests/scheduleRequests_routes.js"
+import estimationFactDefinitionRoutes from "./handlers/modules/estimations/facts/fact_definitions_routes.js"
+import estimationRuntimeRoutes from "./handlers/modules/estimations/runtime/runtime_routes.js"
+import estimationGraphRoutes from "./handlers/modules/estimations/graphs/graphs/graph_routes.js"
+import estimationGraphEdgesRoutes from "./handlers/modules/estimations/graphs/graph_edges/graph_edge_routes.js"
+import estimationGraphNodesRoutes from "./handlers/modules/estimations/graphs/graph_nodes/graph_node_routes.js"
+
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -155,6 +161,18 @@ app.use("/api/leads", leadRoutes);
 app.use("/api/public/messages", messagesRoutes);
 app.use("/api/public/customer-data", customerDataRoutes);
 app.use("/api/public/schedule-request", scheduleRequestRoutes);
+
+// Estimations
+app.use("/api/estimations/fact-definitions", estimationFactDefinitionRoutes);
+app.use("/api/estimations/runtime", estimationRuntimeRoutes);
+app.use("/api/estimations/graphs", estimationGraphRoutes);
+app.use("/api/estimations/graph-edges", estimationGraphEdgesRoutes);
+app.use("/api/estimations/graph-nodes", estimationGraphNodesRoutes);
+
+
+
+
+
 
 // WebSocket
 const wss = new WebSocketServer({ server });

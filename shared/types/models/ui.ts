@@ -39,7 +39,9 @@ export type Screen =
   | "employees"
   | "gmail"
   | "google-ads"
-  | "updates";
+  | "updates"
+  | "estimations"
+  | "estimations-builder";
 
 export type Modal =
   | { type: "mediaUpload" }

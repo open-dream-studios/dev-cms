@@ -11,21 +11,25 @@ import { ReactNode } from "react";
 import { Screen, User } from "@open-dream/shared";
 
 export type AccessibleModule = {
-  key: Screen
-  title: string
-  pages: Screen[]
-}
+  key: Screen;
+  title: string;
+  pages: Screen[];
+};
 
 export const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
   "google-ads": <HiServer />,
   customers: <IoPersonSharp />,
-  "customer-products": <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+  "customer-products": (
+    <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
+  ),
   "products-table": <ProductsDataIcon size={22} />,
   gmail: <IoMdMail />,
   pages: <FaPollH />,
   media: <FaImages />,
   employees: <BsFillPersonVcardFill />,
   tasks: <ProductsDataIcon size={22} />,
+  "estimations":  <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+  "estimations-builder":  <ProductsDataIcon size={22} />,
 };
 
 export const buildAccessibleModules = (
@@ -115,6 +119,22 @@ export const buildAccessibleModules = (
       key: "tasks",
       title: "Tasks",
       pages: ["tasks"],
+    });
+  }
+
+  if (hasProjectModule("estimations-module")) {
+    modules.push({
+      key: "estimations",
+      title: "Estimations",
+      pages: ["estimations"],
+    });
+  }
+
+  if (hasProjectModule("estimations-module")) {
+    modules.push({
+      key: "estimations-builder",
+      title: "Builder",
+      pages: ["estimations-builder"],
     });
   }
 

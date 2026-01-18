@@ -24,5 +24,6 @@ export * from "./types/models/public/schedule"
 export * from "./types/models/users"
 export * from "./types/models/schedule"
 export * from "./types/models/googleCalendar"
+export * from "./types/models/estimations"
 
 // export * from "./definitions/google";

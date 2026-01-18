@@ -9,6 +9,8 @@ import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsDashboard from "@/modules/GoogleModule/GoogleAdsModule/GoogleAdsDashboard";
 import GmailModule from "@/modules/GoogleModule/GmailModule/GmailModule";
 import UpdatesCatalog from "@/modules/UpdatesModule/UpdatesCatalog";
+import DecisionGraphBuilder from "@/modules/EstimationModule/EstimationBuilder/DecisionGraphBuilder";
+import EstimationLauncher from "@/modules/EstimationModule/EstimationRuntime/EstimationLaunch";
 
 const HomePage = () => {
   const { screen } = useUiStore();
@@ -21,6 +23,8 @@ const HomePage = () => {
       {screen === "employees" && <EmployeesModule />}
       {screen === "gmail" && <GmailModule />}
       {screen === "updates" && <UpdatesCatalog />}
+      {screen === "estimations-builder" && <DecisionGraphBuilder />}
+      {screen === "estimations" && <EstimationLauncher />}
     </div>
   );
 };
