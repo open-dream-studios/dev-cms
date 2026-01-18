@@ -16,7 +16,7 @@ const CustomersModule = () => {
   if (!currentUser || !currentProjectId) return null;
 
   return (
-    <HomeLayout left={<CustomersModuleLeftBar />}>
+    <HomeLayout left={<CustomersModuleLeftBar/>}>
       {addingCustomer || currentCustomer ? (
         <CustomerView />
       ) : (

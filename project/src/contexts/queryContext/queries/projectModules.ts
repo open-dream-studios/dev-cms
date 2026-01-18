@@ -7,6 +7,7 @@ import {
   upsertProjectModuleApi,
 } from "@/api/projectModules.api";
 import { useRouteScope } from "@/contexts/routeScopeContext";
+import { useCallback } from "react";
 
 export function useProjectModules(
   isLoggedIn: boolean,
@@ -23,7 +24,7 @@ export function useProjectModules(
   } = useQuery<ProjectModule[]>({
     queryKey: ["projectModules", currentProjectId],
     queryFn: async () => fetchProjectModulesApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId && !isPublic
+    enabled: isLoggedIn && !!currentProjectId && !isPublic,
   });
 
   const upsertProjectModuleMutation = useMutation({
@@ -46,9 +47,11 @@ export function useProjectModules(
     },
   });
 
-  const hasProjectModule = (identifier: string): boolean => {
-    return projectModules?.some((pm) => pm.module_identifier === identifier);
-  };
+  const hasProjectModule = useCallback(
+    (identifier: string) =>
+      projectModules.some((pm) => pm.module_identifier === identifier),
+    [projectModules]
+  );
 
   const upsertProjectModule = async (projectModule: ProjectModule) => {
     await upsertProjectModuleMutation.mutateAsync(projectModule);

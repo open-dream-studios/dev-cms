@@ -4,7 +4,10 @@ import { Customer, Screen } from "@open-dream/shared";
 import React, { useEffect, useRef, useState } from "react";
 import CustomerMiniCard from "../CustomersModule/CustomerMiniCard";
 import { useUiStore } from "@/store/useUIStore";
-import { triggerCustomerScrollRef, useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  triggerCustomerScrollRef,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import {
   determineSearchContext,
   runSearchMatch,
@@ -25,17 +28,15 @@ const CustomerCatalog = () => {
 
   const itemRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
   const customerScrollRef = React.useRef<HTMLDivElement | null>(null);
-  const [ignoreNextSearch, setIgnoreNextSearch] = useState(false);
+  const ignoreNextSearchRef = useRef(false);
   const [pendingScroll, setPendingScroll] = useState(false);
 
   const lastScreenRef = useRef<Screen | null>(null);
+
   useEffect(() => {
-    // const last = lastScreenRef.current;
-    // const isRealNavigationIntoCustomers =
-    //   last !== "customers" && screen === "customers";
     if (!triggerCustomerScrollRef.current) return;
     if (currentCustomer) {
-      setIgnoreNextSearch(true);
+      ignoreNextSearchRef.current = true;
       setSearchContext(null);
       setCurrentCustomerSearchTerm("");
       setPendingScroll(true);
@@ -61,15 +62,12 @@ const CustomerCatalog = () => {
   }, [pendingScroll, customers, currentCustomer]);
 
   useEffect(() => {
-    if (ignoreNextSearch) {
-      setIgnoreNextSearch(false);
-      return;
-    }
-    if (!currentCustomerSearchTerm.trim()) {
-      setSearchContext(null);
+    if (ignoreNextSearchRef.current) {
+      ignoreNextSearchRef.current = false;
       return;
     }
     if (!customers.length) return;
+    if (!currentCustomerSearchTerm.trim()) return;
     const ctx = determineSearchContext(
       currentCustomerSearchTerm.trim(),
       customers
@@ -78,12 +76,7 @@ const CustomerCatalog = () => {
       scrollToItem(ctx.bestMatch.customer_id, itemRefs, customerScrollRef, 106);
     }
     setSearchContext(ctx);
-  }, [
-    currentCustomerSearchTerm,
-    customers,
-    setSearchContext,
-    ignoreNextSearch,
-  ]);
+  }, [currentCustomerSearchTerm, customers, setSearchContext]);
 
   const filteredCustomers = React.useMemo(() => {
     if (!currentCustomerSearchTerm.trim() || !searchContext) return customers;

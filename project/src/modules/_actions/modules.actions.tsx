@@ -56,14 +56,6 @@ export const buildAccessibleModules = (
     });
   }
 
-  if (hasProjectModule("customer-products-module")) {
-    modules.push({
-      key: "customer-products",
-      title: "Inventory",
-      pages: ["customer-products", "edit-customer-product"],
-    });
-  }
-
   if (hasProjectModule("customers-module")) {
     modules.push({
       key: "customers",
@@ -72,27 +64,11 @@ export const buildAccessibleModules = (
     });
   }
 
-  if (hasProjectModule("google-ads-api-module")) {
+  if (hasProjectModule("customer-products-module")) {
     modules.push({
-      key: "google-ads",
-      title: "Google Ads",
-      pages: ["google-ads"],
-    });
-  }
-
-  if (hasProjectModule("google-gmail-module")) {
-    modules.push({
-      key: "gmail",
-      title: "Gmail",
-      pages: ["gmail"],
-    });
-  }
-
-  if (hasProjectModule("pages-module")) {
-    modules.push({
-      key: "pages",
-      title: "Website",
-      pages: ["pages"],
+      key: "customer-products",
+      title: "Inventory",
+      pages: ["customer-products", "edit-customer-product"],
     });
   }
 
@@ -104,6 +80,14 @@ export const buildAccessibleModules = (
       key: "media",
       title: "Media",
       pages: ["media"],
+    });
+  }
+
+  if (hasProjectModule("pages-module")) {
+    modules.push({
+      key: "pages",
+      title: "Website",
+      pages: ["pages"],
     });
   }
 
@@ -135,6 +119,22 @@ export const buildAccessibleModules = (
       key: "tasks",
       title: "Tasks",
       pages: ["tasks"],
+    });
+  }
+
+  if (hasProjectModule("google-gmail-module")) {
+    modules.push({
+      key: "gmail",
+      title: "Gmail",
+      pages: ["gmail"],
+    });
+  }
+
+  if (hasProjectModule("google-ads-api-module")) {
+    modules.push({
+      key: "google-ads",
+      title: "Google Ads",
+      pages: ["google-ads"],
     });
   }
 

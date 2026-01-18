@@ -1,21 +1,27 @@
 // project/src/hooks/useRouting.tsx
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { create } from "zustand";
 import { usePathname, useRouter } from "next/navigation";
 import { useUiStore } from "@/store/useUIStore";
 import { Screen } from "@open-dream/shared";
-import { useFormInstanceStore } from "@/store/util/formInstanceStore";  
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import {
-  setCurrentActiveFolder, 
+  setCurrentActiveFolder,
   setCurrentEmployeeData,
   setCurrentPageData,
   setCurrentProductData,
   setCurrentSectionData,
   useCurrentDataStore,
-} from "@/store/currentDataStore"; 
+} from "@/store/currentDataStore";
 import { onCustomerFormSubmit } from "@/modules/CustomersModule/_actions/customers.actions";
 import { onEmployeeFormSubmit } from "@/modules/EmployeesModule/_actions/employees.actions";
-import { onProductFormSubmit, saveProducts } from "@/modules/CustomerProducts/_actions/products.actions";
+import {
+  onProductFormSubmit,
+  saveProducts,
+} from "@/modules/CustomerProducts/_actions/products.actions";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { AuthContext } from "@/contexts/authContext";
+import { buildAccessibleModules } from "@/modules/_actions/modules.actions";
 
 interface ScreenHistoryItem {
   screen: Screen;
@@ -44,19 +50,18 @@ export const useScreenHistoryStore = create<ScreenHistoryState>((set, get) => ({
   },
 }));
 
-export function useRouting() { 
+export function useRouting() {
   const pathname = usePathname();
   const router = useRouter();
   const { history, setHistory, push } = useScreenHistoryStore();
   const { screen, setScreen, setAddingCustomer, setEditingProducts } =
     useUiStore();
-  const { setSelectedProducts } =
-    useCurrentDataStore();
+  const { setSelectedProducts } = useCurrentDataStore();
 
   const { getForm } = useFormInstanceStore();
   const productForm = getForm("product");
   const customerForm = getForm("customer");
-  const employeeForm = getForm("employee"); 
+  const employeeForm = getForm("employee");
 
   const goToPrev = async () => {
     if (history.length >= 2) {

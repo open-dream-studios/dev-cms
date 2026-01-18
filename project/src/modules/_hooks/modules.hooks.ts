@@ -14,7 +14,8 @@ import { Screen } from "@open-dream/shared";
 
 export function useModules() {
   const { currentUser } = useContext(AuthContext);
-  const { hasProjectModule } = useContextQueries();
+  const { hasProjectModule, projectModules, isLoadingProjectModules } =
+    useContextQueries();
   const { setLeftBarOpen, leftBarRef, pageLayoutRef } = useUiStore();
   const { screenClick } = useRouting();
   const { windowWidth } = useUI();
@@ -39,6 +40,28 @@ export function useModules() {
       }
     }, 300);
   }, []);
+
+  const didBootstrapRef = useRef(false);
+  useEffect(() => {
+    if (didBootstrapRef.current) {
+      console.log("already bootstrapped");
+      return;
+    }
+    if (!currentUser) return;
+    if (isLoadingProjectModules) return;
+    if (!projectModules.length) return;
+    const modules = buildAccessibleModules(hasProjectModule, currentUser);
+    if (!modules.length) return;
+    didBootstrapRef.current = true;
+    console.log("BOOTSTRAP → selecting first module:", modules[0].key);
+    screenClick(modules[0].key, null);
+  }, [
+    currentUser,
+    projectModules.length,
+    isLoadingProjectModules,
+    hasProjectModule,
+    screenClick,
+  ]);
 
   const handleTabClick = useCallback(
     (tab: Screen) => {
@@ -66,14 +89,6 @@ export function useModules() {
     if (!clickableModules || !clickableModules.length) return;
     await handleTabClick(clickableModules[0].key);
   };
-
-  const didAutoSelectRef = useRef(false);
-  useEffect(() => {
-    if (didAutoSelectRef.current) return;
-    if (!clickableModules.length) return;
-    didAutoSelectRef.current = true;
-    handleTabClick(clickableModules[0].key);
-  }, [clickableModules, handleTabClick]);
 
   return {
     handleTabClick,
