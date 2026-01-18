@@ -68,7 +68,10 @@ export default function DecisionGraphBuilder() {
       config: {
         prompt: label,
         input_type: "text",
+        required: false, 
+        select_mode: "single",
         produces_facts: [],
+        options: [],
       },
       position: { x: 100, y: 100 },
     };

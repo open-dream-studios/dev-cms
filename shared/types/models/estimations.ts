@@ -1,4 +1,3 @@
-
 // shared/types/models/estimation.ts
 export type EstimationGraphType = "decision" | "pricing";
 export type EstimationGraphStatus = "draft" | "published" | "archived";
@@ -32,18 +31,29 @@ export type EstimationFactDefinition = {
 
 export type ProducesFact = {
   fact_key: string;
-  value: any; // can be "{{answer}}" or constant
+  value: any; 
 };
 
+export type SelectOption = {
+  id: string;  
+  label: string;
+  value: string;
+  visibility_rules?: any; 
+};
+
+
+export type SelectMode = "single" | "multi";
 export type QuestionNodeConfig = {
   prompt: string;
   input_type: "text" | "number" | "boolean" | "select";
-  options?: { label: string; value: string }[];
+  required: boolean;  
+  select_mode?: SelectMode;
+  options?: SelectOption[];
   produces_facts: ProducesFact[];
   validation_rules?: any;
   visibility_rules?: any;
-};
-
+}; 
+     
 export type CostNodeConfig = {
   applies_if: any;
   cost_range: { min: any; max: any };
@@ -61,7 +71,7 @@ export type EstimationGraphNode = {
   position: any | null;
   created_at: string;
   updated_at: string;
-};
+}; 
 
 export type EstimationGraphEdge = {
   id: number;
@@ -72,4 +82,18 @@ export type EstimationGraphEdge = {
   edge_condition: any;
   created_at: string;
   updated_at: string;
+}; 
+
+export type EstimationRunStatus = "in_progress" | "completed" | "abandoned";
+
+export type EstimationRun = {
+  id: number;
+  estimate_run_id: string;
+  project_idx: number;
+  decision_graph_idx: number;
+  pricing_graph_idx: number;
+  status: EstimationRunStatus;
+  created_at: string | Date | null;
+  updated_at: string | Date | null;
 };
+

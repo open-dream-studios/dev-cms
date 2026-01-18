@@ -122,6 +122,8 @@ export const insertAnswerAndFacts = async (
     [`ANS-${ulid()}`, batch_id, run.id, node.id, JSON.stringify(answer)]
   );
 
+  await touchRunUpdatedAt(connection, estimate_run_id);
+
   // 2) load current facts (needed for value_expr)
   const [factRows] = await connection.query<any[]>(
     `
@@ -193,15 +195,51 @@ export const insertAnswerAndFacts = async (
 
 export const getRunMeta = async (estimate_run_id: string) => {
   const [rows] = await db.promise().query<any[]>(
-    `
-    SELECT id, project_idx, decision_graph_idx, pricing_graph_idx
-    FROM estimation_runs
-    WHERE estimate_run_id = ?
-    LIMIT 1
+    `SELECT id, project_idx, decision_graph_idx, pricing_graph_idx
+      FROM estimation_runs
+      WHERE estimate_run_id = ?
+      LIMIT 1
     `,
     [estimate_run_id]
   );
 
   if (!rows.length) throw new Error("Run not found");
   return rows[0];
+};
+
+export const listEstimationRuns = async (
+  connection: PoolConnection,
+  project_idx: number,
+  decision_graph_idx: number,
+) => {
+  const [rows] = await connection.query<any[]>(
+    `
+    SELECT
+      estimate_run_id,
+      created_at,
+      updated_at
+    FROM estimation_runs
+    WHERE project_idx = ?
+      AND decision_graph_idx = ?
+    ORDER BY updated_at DESC
+    `,
+    [project_idx, decision_graph_idx]
+  );
+
+  return rows;
+};
+
+export const touchRunUpdatedAt = async (
+  connection: PoolConnection,
+  estimate_run_id: string
+) => {
+  await connection.query(
+    `
+    UPDATE estimation_runs
+    SET updated_at = NOW()
+    WHERE estimate_run_id = ?
+    LIMIT 1
+    `,
+    [estimate_run_id]
+  );
 };

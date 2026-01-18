@@ -4,7 +4,9 @@ import {
   startEstimationRun,
   getEstimationState,
   answerNode,
-  goBackOneStep
+  goBackOneStep,
+  listRuns,
+  resumeEstimationRun
 } from "./runtime_controllers.js";
 import { authenticateUser } from "../../../../util/auth.js";
 import { checkProjectPermission } from "../../../../util/permissions.js";
@@ -44,5 +46,23 @@ router.post(
   checkProjectPermission(2),
   transactionHandler(goBackOneStep)
 );
+
+router.post(
+  "/runs",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(listRuns)
+);
+
+
+router.post(
+  "/resume",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(resumeEstimationRun)
+);
+
 
 export default router;

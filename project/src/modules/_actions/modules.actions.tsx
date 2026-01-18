@@ -28,8 +28,8 @@ export const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
   media: <FaImages />,
   employees: <BsFillPersonVcardFill />,
   tasks: <ProductsDataIcon size={22} />,
-  "estimations":  <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
-  "estimations-builder":  <ProductsDataIcon size={22} />,
+  estimations: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+  "estimations-builder": <ProductsDataIcon size={22} />,
 };
 
 export const buildAccessibleModules = (
@@ -40,11 +40,19 @@ export const buildAccessibleModules = (
 
   const modules: AccessibleModule[] = [];
 
-  if (hasProjectModule("google-ads-api-module")) {
+  if (hasProjectModule("estimations-module")) {
     modules.push({
-      key: "google-ads",
-      title: "Dashboard",
-      pages: ["google-ads"],
+      key: "estimations",
+      title: "Estimations",
+      pages: ["estimations"],
+    });
+  }
+
+  if (hasProjectModule("estimations-module")) {
+    modules.push({
+      key: "estimations-builder",
+      title: "Builder",
+      pages: ["estimations-builder"],
     });
   }
 
@@ -61,6 +69,14 @@ export const buildAccessibleModules = (
       key: "customers",
       title: "Customers",
       pages: ["customers"],
+    });
+  }
+
+  if (hasProjectModule("google-ads-api-module")) {
+    modules.push({
+      key: "google-ads",
+      title: "Google Ads",
+      pages: ["google-ads"],
     });
   }
 
@@ -119,22 +135,6 @@ export const buildAccessibleModules = (
       key: "tasks",
       title: "Tasks",
       pages: ["tasks"],
-    });
-  }
-
-  if (hasProjectModule("estimations-module")) {
-    modules.push({
-      key: "estimations",
-      title: "Estimations",
-      pages: ["estimations"],
-    });
-  }
-
-  if (hasProjectModule("estimations-module")) {
-    modules.push({
-      key: "estimations-builder",
-      title: "Builder",
-      pages: ["estimations-builder"],
     });
   }
 

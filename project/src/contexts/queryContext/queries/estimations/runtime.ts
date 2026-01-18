@@ -5,11 +5,21 @@ import {
   fetchRuntimeStateApi,
   answerNodeApi,
   goBackApi,
+  resumeRuntimeApi,
+  fetchRunsApi,
 } from "@/api/estimations/runtime.api";
 
 export function useEstimationRuntime(enabled: boolean) {
+  const runs = useMutation({
+    mutationFn: fetchRunsApi,  
+  });
+
   const startRun = useMutation({
     mutationFn: startRuntimeApi,
+  });
+
+  const resumeRun = useMutation({
+    mutationFn: resumeRuntimeApi,
   });
 
   const stateQuery = useMutation({
@@ -25,7 +35,9 @@ export function useEstimationRuntime(enabled: boolean) {
   });
 
   return {
+    runs,
     startRun,
+    resumeRun,
     fetchState: stateQuery,
     answerNode,
     goBack,

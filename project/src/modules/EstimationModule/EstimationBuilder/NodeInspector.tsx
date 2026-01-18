@@ -41,13 +41,20 @@ export default function NodeInspector({
   const submit = handleSubmit(async (data) => {
     const produces_facts = JSON.parse(data.produces_facts_json || "[]");
     const visibility_rules = JSON.parse(data.visibility_rules_json || "{}");
+    const options =
+      data.input_type === "select"
+        ? JSON.parse(data.options_json || "[]")
+        : undefined;
 
     const nextConfig = {
       ...(node.config ?? {}),
       prompt: data.prompt,
       input_type: data.input_type,
+      required: !!data.required,
       produces_facts,
       visibility_rules,
+      options,
+      select_mode: data.input_type === "select" ? data.select_mode : undefined,
     };
 
     // label is stored at row-level, not in config
@@ -100,6 +107,12 @@ export default function NodeInspector({
           <div className="text-xs text-red-500">{errors.prompt.message}</div>
         )}
 
+        <label className="text-xs opacity-70">Required</label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" {...register("required")} />
+          <span>Required</span>
+        </label>
+
         <label className="text-xs opacity-70">Input Type</label>
         <Controller
           control={control}
@@ -117,6 +130,36 @@ export default function NodeInspector({
             </select>
           )}
         />
+
+        {watch("input_type") === "select" && (
+          <>
+            <label className="text-xs opacity-70">Select Mode</label>
+            <Controller
+              control={control}
+              name="select_mode"
+              render={({ field }) => (
+                <select
+                  className="border rounded-md px-2 py-2 text-sm"
+                  value={field.value ?? "single"}
+                  onChange={field.onChange}
+                >
+                  <option value="single">single</option>
+                  <option value="multi">multi</option>
+                </select>
+              )}
+            />
+
+            <label className="text-xs opacity-70">options (JSON array)</label>
+            <textarea
+              {...register("options_json")}
+              className="border rounded-md px-2 py-2 font-mono text-xs h-[160px]"
+              spellCheck={false}
+              placeholder={`[
+                { "id": "opt_1", "label": "Yes", "value": "yes", "visibility_rules": {} }
+              ]`}
+            />
+          </>
+        )}
 
         <div className="text-xs opacity-60">
           available fact_keys: <span className="font-mono">{previewFacts}</span>
