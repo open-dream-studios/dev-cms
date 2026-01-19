@@ -55,6 +55,11 @@ import ImageGallery from "@/modules/components/ImageGallery";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { saveCurrentJobImages } from "@/modules/MediaModule/_actions/media.actions";
 import { useTimer } from "@/store/util/useTimer";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
+import {
+  onTaskSubmitFromValues,
+  onJobSubmitFromValues,
+} from "../../_actions/jobs.actions";
 
 // ---------- TaskCard ----------
 const TaskCard: React.FC<{
@@ -87,12 +92,25 @@ const TaskCard: React.FC<{
   const { screenClick } = useRouting();
   const currentTheme = useCurrentTheme();
   const { cancelTimer } = useTimer();
+  const isResettingRef = useRef(false);
 
   const { leftBarOpen, modal1, setModal1 } = useUiStore();
 
   const taskForm = useTaskForm();
-  const taskStatus = useWatch({ control: taskForm.control, name: "status" });
 
+  useEffect(() => {
+    if (!task.task_id) return;
+    useFormInstanceStore
+      .getState()
+      .registerForm(`task-${task.task_id}`, taskForm, async () => {
+        await taskForm.handleSubmit(onFormSubmitButton)();
+      });
+    return () => {
+      useFormInstanceStore.getState().unregisterForm(`task-${task.task_id}`);
+    };
+  }, [task.task_id]);
+
+  const taskStatus = useWatch({ control: taskForm.control, name: "status" });
   const scheduled_start_date = useWatch({
     control: taskForm.control,
     name: "scheduled_start_date",
@@ -107,34 +125,40 @@ const TaskCard: React.FC<{
       currentValues.status === task.status &&
       currentValues.priority === task.priority;
     if (!isSame) {
+      isResettingRef.current = true;
       taskForm.reset(task as TaskFormData);
+      queueMicrotask(() => {
+        isResettingRef.current = false;
+      });
     }
   }, [taskForm, task]);
 
   const onFormSubmitButton = useCallback(
     async (data: TaskFormData) => {
-      if (!productJob) return;
-      const submitValue = {
-        ...data,
+      if (!productJob || !productJob.id || !task.task_id) return;
+      await onTaskSubmitFromValues(data, {
         task_id: task.task_id,
         job_id: productJob.id,
-        scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
-      } as Task;
-      await upsertTask(submitValue);
+        upsertTask,
+      });
     },
-    [productJob, task, upsertTask]
+    [productJob, task.task_id, upsertTask]
   );
 
   const callSubmitForm = useCallback(() => {
+    if (!taskForm.formState.isDirty) return;
     useTimer.getState().cancelTimer(`task-${task.task_id}`);
-    taskForm.handleSubmit(onFormSubmitButton)(); // no await
+    taskForm.handleSubmit(onFormSubmitButton)();
   }, [taskForm, onFormSubmitButton, task]);
 
   useEffect(() => {
-    if (!task || !task.task_id) return;
+    if (!task?.task_id) return;
+    const id = `task-${task.task_id}`;
     const manager = useTimer.getState();
-    manager.createTimer(`task-${task.task_id}`, {
+    if (manager.getTimer(id)) return;
+    manager.createTimer(id, {
       onSave: async () => {
+        if (isResettingRef.current) return;
         await callSubmitForm();
       },
       fastDelay: 300,
@@ -142,10 +166,9 @@ const TaskCard: React.FC<{
     });
 
     return () => {
-      manager.cancelTimer(`task-${task.task_id}`);
-      manager.removeTimer(`task-${task.task_id}`);
+      manager.removeTimer(id);
     };
-  }, [callSubmitForm, task]);
+  }, [task?.task_id]);
 
   useEffect(() => {
     const subscription = taskForm.watch((values, { name, type }) => {
@@ -575,8 +598,30 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   const { setCurrentJobImages, currentJobImages } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
 
+  const isResettingRef = useRef(false);
+
   const { leftBarOpen, modal1, setModal1, modal2, setModal2 } = useUiStore();
+
   const jobForm = useJobForm();
+
+  useEffect(() => {
+    if (!productJob?.job_id) return;
+    useFormInstanceStore
+      .getState()
+      .registerForm(`job-${productJob.job_id}`, jobForm);
+
+    return () => {
+      useFormInstanceStore
+        .getState()
+        .unregisterForm(`job-${productJob.job_id}`);
+    };
+  }, [productJob?.job_id]);
+
+  const notesReg = jobForm.register("notes");
+  const valuationReg = jobForm.register("valuation", {
+    required: "Price is required",
+    setValueAs: (v) => (v === "" ? null : String(v)),
+  });
   const status = useWatch({ control: jobForm.control, name: "status" });
 
   // This replaces your old reset effect
@@ -596,6 +641,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
       current.priority === productJob.priority;
 
     if (!isSame) {
+      isResettingRef.current = true;
       jobForm.reset({
         ...productJob,
         valuation: productJob.valuation?.toString() ?? null,
@@ -606,43 +652,27 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
           ? new Date(productJob.completed_date)
           : null,
       });
+      queueMicrotask(() => {
+        isResettingRef.current = false;
+      });
     }
   }, [productJob, jobForm]);
 
   const onFormSubmitButton = useCallback(
     async (data: JobFormData) => {
-      console.log("saving");
-      if (!matchedDefinition || !productJob) return null;
+      if (!productJob || !productJob.job_id || !matchedDefinition) return;
 
-      const safeValuation = (() => {
-        if (!data.valuation) return 0;
-        const num = parseFloat(data.valuation);
-        return isNaN(num) ? 0 : num;
-      })();
+      const matchedCustomerId = matchedProduct?.customer_id ?? null;
 
-      const matchedCustomer =
-        matchedProduct && matchedProduct.customer_id
-          ? customers.find(
-              (customer: Customer) => customer.id === matchedProduct.customer_id
-            )
-          : null;
-
-      const submitValue = {
-        ...data,
-        scheduled_start_date: dateToString(data.scheduled_start_date ?? null),
-        completed_date: dateToString(data.completed_date ?? null),
-        valuation: safeValuation,
+      await onJobSubmitFromValues(data, {
         job_id: productJob.job_id,
-        job_definition_id: matchedDefinition.id,
-        product_id: matchedProduct?.id ?? null,
-        customer_id: matchedCustomer?.id ?? null,
-      } as Job;
-
-      console.log("upserting", submitValue);
-
-      await upsertJob(submitValue);
+        matchedDefinitionId: matchedDefinition.id,
+        productId: matchedProduct?.id ?? null,
+        customer_id: matchedCustomerId,
+        upsertJob,
+      });
     },
-    [matchedDefinition, productJob, matchedProduct, customers, upsertJob]
+    [productJob, matchedDefinition, matchedProduct, upsertJob]
   );
 
   const callSubmitForm = useCallback(async () => {
@@ -654,38 +684,35 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
   }, [jobForm, onFormSubmitButton, productJob]);
 
   useEffect(() => {
-    if (!productJob || !productJob.job_id) return;
-    const manager = useTimer.getState();
-    manager.createTimer(`job-${productJob.job_id}`, {
-      onSave: async () => {
-        await callSubmitForm();
-      },
-      fastDelay: 300,
-      slowDelay: 2500,
-    });
-
+    if (!productJob?.job_id) return;
+    useFormInstanceStore
+      .getState()
+      .registerForm(`job-${productJob.job_id}`, jobForm, async () => {
+        await jobForm.handleSubmit(onFormSubmitButton)();
+      });
     return () => {
-      manager.cancelTimer(`job-${productJob.job_id}`);
-      manager.removeTimer(`job-${productJob.job_id}`);
+      useFormInstanceStore
+        .getState()
+        .unregisterForm(`job-${productJob.job_id}`);
     };
-  }, [callSubmitForm, productJob]);
+  }, [productJob?.job_id, callSubmitForm]);
 
   useEffect(() => {
-    if (!productJob || !productJob.job_id) return;
-    const subscription = jobForm.watch((values, { name, type }) => {
+    if (!productJob) return;
+    const sub = jobForm.watch((_, { name, type }) => {
+      if (isResettingRef.current) return;
       if (type !== "change") return;
-      if (name === "notes") {
+      if (name === "notes" || name === "valuation") {
         useTimer.getState().resetTimer(`job-${productJob.job_id}`, "slow");
       }
     });
-    return () => subscription.unsubscribe();
+    return () => sub.unsubscribe();
   }, [jobForm, productJob]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
       callSubmitForm();
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [callSubmitForm]);
@@ -931,10 +958,7 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
             >
               <p className="opacity-[0.65] font-[500] text-[15px]">$</p>
               <input
-                {...jobForm.register("valuation", {
-                  required: "Price is required",
-                  setValueAs: (v) => (v === "" ? null : String(v)), // always string or null
-                })}
+                {...valuationReg}
                 inputMode="decimal"
                 type="text"
                 pattern="^\d+(\.\d{0,2})?$"
@@ -948,6 +972,12 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                     value = parts[0] + "." + parts[1];
                   }
                   e.currentTarget.value = value;
+                }}
+                onChange={(e) => {
+                  valuationReg.onChange(e);
+                  useTimer
+                    .getState()
+                    .resetTimer(`job-${productJob!.job_id}`, "slow");
                 }}
                 className="w-[100%] border-none outline-none text-[15px] font-[500] opacity-[0.7] input rounded-[7px] pr-[10px] py-[4px] truncate"
               />
@@ -994,11 +1024,12 @@ const ProductJobCard: React.FC<ProductJobProps> = ({
                   style={{ backgroundColor: currentTheme.background_2 }}
                 >
                   <textarea
-                    {...jobForm.register("notes")}
+                    {...notesReg}
                     onChange={(e) => {
-                      jobForm.setValue("notes", e.target.value, {
-                        shouldDirty: true,
-                      });
+                      notesReg.onChange(e);
+                      useTimer
+                        .getState()
+                        .resetTimer(`job-${productJob!.job_id}`, "slow");
                     }}
                     className="hide-scrollbar w-[calc(100%-30px)] h-[100%] text-[14px] opacity-[0.95] outline-none border-none resize-none bg-transparent px-3 py-2 rounded-[7px]"
                     placeholder="Details..."

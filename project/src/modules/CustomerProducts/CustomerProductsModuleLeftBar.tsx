@@ -28,7 +28,7 @@ const CustomerProductsModuleLeftBar = () => {
   const { localProductsData } = useCurrentDataStore();
   const { screenClick } = useRouting();
   const { getForm } = useFormInstanceStore();
-  const { screen, setAddingProduct } = useUiStore();
+  const { setAddingProduct } = useUiStore();
   const currentTheme = useCurrentTheme();
 
   const productForm = getForm("product");
@@ -37,13 +37,20 @@ const CustomerProductsModuleLeftBar = () => {
     if (productForm && (productForm.formState.isDirty || haveImagesChanged())) {
       await productForm.handleSubmit(onProductFormSubmit)();
     }
+
+    await useFormInstanceStore.getState().flushDirtyForms("task-");
+    await useFormInstanceStore.getState().flushDirtyForms("job-");
+
     if (product) {
       await screenClick(
-        "edit-customer-product",
+        "customer-products",
         `/products/${product.serial_number}`
       );
     } else {
-      await screenClick("customer-products", `/products`);
+      await screenClick(
+        "customer-products",
+        `/products`
+      );
     }
     setCurrentProductData(product);
     setAddingProduct(!product);
@@ -53,9 +60,7 @@ const CustomerProductsModuleLeftBar = () => {
   };
 
   const handlePlusClick = async () => {
-    if (screen === "edit-customer-product") {
-      handleProductClick(null);
-    }
+    handleProductClick(null);
   };
 
   if (!currentUser) return null;

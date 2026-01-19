@@ -68,7 +68,7 @@ export const buildAccessibleModules = (
     modules.push({
       key: "customer-products",
       title: "Inventory",
-      pages: ["customer-products", "edit-customer-product"],
+      pages: ["customer-products"],
     });
   }
 

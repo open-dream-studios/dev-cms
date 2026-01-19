@@ -149,8 +149,8 @@ const ProductsHeader = ({ title }: { title: string }) => {
   const handleAddRow = () => {
     setEditingProducts(false);
     if (!inventoryView) {
-      screenClick("customer-products", "/products");
       setAddingProduct(true);
+      screenClick("customer-products", "/products");
     } else {
       setModal2({
         ...modal2,

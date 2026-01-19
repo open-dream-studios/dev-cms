@@ -34,7 +34,6 @@ export type Screen =
   | "settings"
   | "customers"
   | "customer-products"
-  | "edit-customer-product"
   | "tasks"
   | "employees"
   | "gmail"

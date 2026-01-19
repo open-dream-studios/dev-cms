@@ -1,4 +1,4 @@
-// project/src/modules/CustomerProducts/_actions/customerProducts.actions.ts
+// project/src/modules/CustomerProducts/_actions/products.actions.ts
 import { deleteJobDefinitionApi } from "@/api/jobDefinitions.api";
 import {
   ContextMenuDefinition,
@@ -7,16 +7,23 @@ import {
   MediaLink,
   Product,
 } from "@open-dream/shared";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentProductData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { getNextOrdinal } from "@/util/functions/Data";
 import { toast } from "react-toastify";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { ProductFormData } from "../ProductView/ProductView";
-import { upsertProjectProductsApi } from "@/api/products.api";
+import {
+  deleteProjectProductsApi,
+  upsertProjectProductsApi,
+} from "@/api/products.api";
 import { saveCurrentProductImages } from "@/modules/MediaModule/_actions/media.actions";
 import { queryClient } from "@/lib/queryClient";
 import { useTimer } from "@/store/util/useTimer";
+import { productToForm } from "@/util/schemas/productSchema";
 
 export const createJobDefinitionContextMenu =
   (): ContextMenuDefinition<JobDefinition> => ({
@@ -31,6 +38,30 @@ export const createJobDefinitionContextMenu =
       },
     ],
   });
+
+export const createProductContextMenu = (): ContextMenuDefinition<Product> => ({
+  items: [
+    {
+      id: "delete-product",
+      label: "Delete Product",
+      danger: true,
+      onClick: async (product) => {
+        if (!product.product_id) return;
+        handleDeleteProduct(product.product_id);
+      },
+    },
+  ],
+});
+
+const handleDeleteProduct = async (product_id: string) => {
+  const { currentProjectId } = useCurrentDataStore.getState();
+  if (!currentProjectId) return;
+  await deleteProjectProductsApi(currentProjectId, [product_id]);
+  queryClient.invalidateQueries({
+    queryKey: ["products", currentProjectId],
+  });
+  setCurrentProductData(null);
+};
 
 export const handleDeleteJobDefinition = async (
   job_definition_id: string | null
@@ -137,7 +168,8 @@ export const getProductsToUpdate = (): Product[] => {
     const originalOrdinal = originalOrdinals.get(p.serial_number);
     return originalOrdinal !== undefined && originalOrdinal !== p.ordinal;
   });
-  const dirtyProducts = dirtyForms.map(({ data }) => {
+  const dirtyProducts = dirtyForms.map(({ stored }) => {
+    const data = stored.form.getValues();
     const product = localProducts.find(
       (p) => p.serial_number === data.serial_number
     );

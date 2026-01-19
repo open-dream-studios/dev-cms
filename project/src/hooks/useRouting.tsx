@@ -1,5 +1,5 @@
 // project/src/hooks/useRouting.tsx
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { create } from "zustand";
 import { usePathname, useRouter } from "next/navigation";
 import { useUiStore } from "@/store/useUIStore";
@@ -19,9 +19,6 @@ import {
   onProductFormSubmit,
   saveProducts,
 } from "@/modules/CustomerProducts/_actions/products.actions";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { AuthContext } from "@/contexts/authContext";
-import { buildAccessibleModules } from "@/modules/_actions/modules.actions";
 
 interface ScreenHistoryItem {
   screen: Screen;
@@ -81,14 +78,7 @@ export function useRouting() {
     if (history.length === 0) {
       const dividedPath = pathname.split("/").filter((item) => item.length > 0);
       let adjustScreen = null;
-      if (dividedPath.length === 2 && dividedPath[0] === "products") {
-        adjustScreen = "edit-customer-product";
-      }
-      if (
-        dividedPath.length === 1 &&
-        dividedPath[0] === "products" &&
-        screen !== "customer-products"
-      ) {
+      if (dividedPath.length >= 1 && dividedPath[0] === "products") {
         adjustScreen = "customer-products";
       }
       if (adjustScreen) {
@@ -172,6 +162,9 @@ export function useRouting() {
     if (isEmployeeDirty) {
       await employeeForm.handleSubmit(onEmployeeFormSubmit)();
     }
+
+    await useFormInstanceStore.getState().flushDirtyForms("task-");
+    await useFormInstanceStore.getState().flushDirtyForms("job-");
 
     await saveProducts();
     await screenClickAction(newScreen, newPage);

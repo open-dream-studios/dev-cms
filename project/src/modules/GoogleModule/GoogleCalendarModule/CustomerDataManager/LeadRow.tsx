@@ -136,7 +136,7 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
     } else {
       if (lead_type === "product" && matchedProduct) {
         await screenClick(
-          "edit-customer-product",
+          "customer-products",
           `/products/${matchedProduct.serial_number}`
         );
       }

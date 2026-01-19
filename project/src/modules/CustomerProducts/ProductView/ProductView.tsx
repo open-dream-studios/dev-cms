@@ -29,7 +29,6 @@ import CustomerSelection from "@/modules/_util/Selection/CustomerSelection";
 import { IoImagesOutline } from "react-icons/io5";
 import { IoImageOutline } from "react-icons/io5";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
-import ProductJobs from "./ProductJobs";
 import ProductJobCard from "./ProductJobCard/ProductJobCard";
 import {
   setCurrentMediaSelected,
@@ -51,20 +50,21 @@ import {
   onProductFormSubmit,
   onSelectProductCustomer,
 } from "../_actions/products.actions";
+import JobDefinitionSelection from "@/modules/_util/Selection/JobDefinitionSelection";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
-  const { history } = useRouting();
-  const { productsData, media, mediaLinks, customers, jobs, jobDefinitions } =
-    useContextQueries();
   const {
-    screen,
-    addingProduct,
-    setAddingProduct,
-    leftBarOpen,
-    modal1,
-    setModal1,
-  } = useUiStore();
+    upsertJob,
+    productsData,
+    media,
+    mediaLinks,
+    customers,
+    jobs,
+    jobDefinitions,
+  } = useContextQueries();
+  const { addingProduct, setAddingProduct, leftBarOpen, modal1, setModal1 } =
+    useUiStore();
   const {
     currentProduct,
     currentProductImages,
@@ -130,16 +130,16 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     return jobs.filter((job: Job) => job.product_id === matchedProduct.id);
   }, [jobs, matchedProduct]);
 
-  useEffect(() => {
-    if (
-      serialNumber &&
-      screen !== "edit-customer-product" &&
-      history &&
-      history.length === 0
-    ) {
-      screenClick("edit-customer-product", `/products/${serialNumber}`);
-    }
-  }, [serialNumber, screen, history, screenClick]);
+  // useEffect(() => {
+  //   if (
+  //     serialNumber &&
+  //     !editingProduct &&
+  //     history &&
+  //     history.length === 0
+  //   ) {
+  //     screenClick("customer-products", `/products/${serialNumber}`);
+  //   }
+  // }, [serialNumber, screen, history, screenClick]);
 
   useEffect(() => {
     if (!addingProduct && serialNumber && productsData?.length) {
@@ -147,7 +147,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
         (product: Product) => product.serial_number === serialNumber
       );
       if (!matchedProduct) {
-        console.warn("No product found for serial number:", serialNumber);
+        productForm.reset(productToForm(null));
         return;
       }
       const formDefaults: Partial<ProductFormData> = {
@@ -240,9 +240,9 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   }, [media, currentProductImages]);
 
   const handleBackButton = async () => {
-    await screenClick("customer-products", "/products");
-    setCurrentProductData(null);
     setAddingProduct(false);
+    setCurrentProductData(null);
+    await screenClick("customer-products", "/products");
   };
 
   const handleProductsClick = async () => {
@@ -264,6 +264,25 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   };
 
+  const onSelectJobDefinition = async (definition: JobDefinition) => {
+    if (!matchedProduct || !definition.id) return;
+    await upsertJob({
+      job_id: null,
+      job_definition_id: definition.id,
+      product_id: matchedProduct.id,
+      customer_id: customerId,
+      status: "waiting_work",
+      priority: "medium",
+      scheduled_start_date: null,
+      completed_date: null,
+      notes: null,
+    } as Job);
+    setModal1({
+      ...modal1,
+      open: false,
+    });
+  };
+
   const handleAddJobClick = () => {
     setModal1({
       ...modal1,
@@ -275,9 +294,10 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
       borderRadius: "rounded-[15px] md:rounded-[20px]",
       content: (
-        <ProductJobs
-          product={matchedProduct ?? null}
-          customerId={customerId ?? null}
+        <JobDefinitionSelection
+          onSelect={onSelectJobDefinition}
+          onClear={() => {}}
+          clearable={false}
         />
       ),
     });
@@ -286,7 +306,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const handleFormSubmit = async (data: ProductFormData) => {
     await onProductFormSubmit(data);
     await screenClickAction(
-      "edit-customer-product",
+      "customer-products",
       `/products/${data.serial_number}`
     );
   };
@@ -304,7 +324,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     });
   };
 
-  const handleEditCustomerClick = () => { 
+  const handleEditCustomerClick = () => {
     if (!matchedProduct) return;
     setModal1({
       ...modal1,
@@ -335,11 +355,27 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     );
     if (!productExists) {
       return (
-        <div
-          className="text-center text-xl py-20"
-          style={{ color: currentTheme.text_1 }}
-        >
-          No product found for serial number: <strong>{serialNumber}</strong>
+        <div className="w-[100%] justify-center items-center flex gap-[20px] flex-row mt-20">
+          <div
+            onClick={handleBackButton}
+            style={{
+              backgroundColor: currentTheme.background_2,
+            }}
+            className="w-[35px] h-[35px] rounded-[20px] flex items-center justify-center pr-[2px] pb-[1px] dim hover:brightness-75 cursor-pointer"
+          >
+            <FaChevronLeft
+              size={17}
+              className="opacity-[0.6]"
+              color={currentTheme.text_1}
+            />
+          </div>
+
+          <div
+            className="text-center text-xl"
+            style={{ color: currentTheme.text_1 }}
+          >
+            No product found for serial number: <strong>{serialNumber}</strong>
+          </div>
         </div>
       );
     }
@@ -940,11 +976,11 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
             );
           })}
 
-        {screen === "edit-customer-product" && matchedProduct && (
-          <div className="w-[100%] mt-[12px] flex justify-end">
+        {matchedProduct && (
+          <div className="w-[100%] mt-[13px] flex justify-center">
             <div
               style={getInnerCardStyle(currentUser.theme, currentTheme)}
-              className="cursor-pointer hover:brightness-90 dim py-[6px] pl-[16px] pr-[20px] rounded-[10px] flex items-center justify-center gap-[8px] flex-row"
+              className="cursor-pointer hover:brightness-90 dim py-[6px] pl-[30px] pr-[32px] rounded-[12px] flex items-center justify-center gap-[8px] flex-row"
               onClick={handleAddJobClick}
             >
               <div

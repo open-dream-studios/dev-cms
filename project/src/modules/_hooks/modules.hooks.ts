@@ -44,7 +44,6 @@ export function useModules() {
   const didBootstrapRef = useRef(false);
   useEffect(() => {
     if (didBootstrapRef.current) {
-      console.log("already bootstrapped");
       return;
     }
     if (!currentUser) return;
@@ -53,7 +52,6 @@ export function useModules() {
     const modules = buildAccessibleModules(hasProjectModule, currentUser);
     if (!modules.length) return;
     didBootstrapRef.current = true;
-    console.log("BOOTSTRAP → selecting first module:", modules[0].key);
     screenClick(modules[0].key, null);
   }, [
     currentUser,

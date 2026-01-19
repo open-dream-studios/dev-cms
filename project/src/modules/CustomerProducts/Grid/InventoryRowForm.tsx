@@ -66,7 +66,7 @@ const InventoryRowForm = ({
     );
     if (existingProduct) {
       await screenClick(
-        "edit-customer-product",
+        "customer-products",
         `/products/${existingProduct.serial_number}`
       );
     }

@@ -148,7 +148,7 @@ const CustomerProductFrame = ({
 
   const handleClick = async () => {
     await screenClick(
-      "edit-customer-product",
+      "customer-products",
       `/products/${product.serial_number}`
     );
     setCurrentProductData(product);

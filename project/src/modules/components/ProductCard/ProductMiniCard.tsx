@@ -1,12 +1,14 @@
 // project/src/modules/components/ProductCard/ProductMiniCard.tsx
 import { AuthContext } from "@/contexts/authContext";
-import { useCurrentTheme } from "@/hooks/util/useTheme"; 
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { Media, MediaLink, Product } from "@open-dream/shared";
 import React, { useContext, useMemo } from "react";
 import NoProductImage from "./NoProductImage";
 import RenderedImage from "./RenderedImage";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { usePathname } from "next/navigation";
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
+import { createProductContextMenu } from "@/modules/CustomerProducts/_actions/products.actions";
 
 const ProductMiniCard = ({
   product,
@@ -14,13 +16,14 @@ const ProductMiniCard = ({
   handleProductClick,
 }: {
   product: Product;
-  index: number; 
+  index: number;
   handleProductClick: (product: Product) => void;
 }) => {
   const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
   const { mediaLinks, media } = useContextQueries();
-  const pathname = usePathname()
+  const pathname = usePathname();
+    const { openContextMenu } = useContextMenuStore();
 
   const foundLinks = mediaLinks.filter(
     (mediaLink: MediaLink) =>
@@ -43,6 +46,14 @@ const ProductMiniCard = ({
   return (
     <div
       key={index}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        openContextMenu({
+          position: { x: e.clientX, y: e.clientY },
+          target: product,
+          menu: createProductContextMenu(),
+        });
+      }}
       style={{
         background:
           currentUser.theme === "dark"
