@@ -10,6 +10,7 @@ export type RuntimeState = {
   chunk_nodes: EstimationGraphNode[];
   chunk_answers: Record<string, any>;
   completed: boolean;
+  run_status: "in_progress" | "completed";
   is_first_chunk: boolean;
   can_go_back: boolean;
 };
@@ -72,6 +73,7 @@ export async function fetchRunsApi(payload: {
   const runs: EstimationRun[] = (res.data.runs || []).map(
     (run: EstimationRun) => ({
       ...run,
+      run_status: run.status,
       created_at: run.created_at
         ? new Date(utcToLocal(run.created_at as string)!)
         : null,
@@ -82,4 +84,23 @@ export async function fetchRunsApi(payload: {
   );
 
   return runs as EstimationRun[];
+}
+
+export type EstimationCostBreakdownItem = {
+  category: string;
+  label: string;
+  min_cost: number;
+  max_cost: number;
+  explanation: string[];
+};
+
+export async function getBreakDownApi(payload: {
+  estimate_run_id: string;
+  project_idx: number;
+}) {
+  const res = await makeRequest.post("/estimations/runtime/breakdown", payload);
+
+  return res.data as {
+    breakdown: EstimationCostBreakdownItem[];
+  };
 }

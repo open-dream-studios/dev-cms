@@ -12,8 +12,10 @@ function evalRule(rule: any, facts: Record<string, any>) {
   if (!rule) return true;
 
   // support AND/OR
-  if (Array.isArray(rule.and)) return rule.and.every((r: any) => evalRule(r, facts));
-  if (Array.isArray(rule.or)) return rule.or.some((r: any) => evalRule(r, facts));
+  if (Array.isArray(rule.and))
+    return rule.and.every((r: any) => evalRule(r, facts));
+  if (Array.isArray(rule.or))
+    return rule.or.some((r: any) => evalRule(r, facts));
 
   const factVal = facts?.[rule.fact];
 
@@ -40,13 +42,24 @@ function evalRule(rule: any, facts: Record<string, any>) {
   }
 }
 
-export default function QuestionRenderer({ node, value, facts, onChange }: Props) {
+export default function QuestionRenderer({
+  node,
+  value,
+  facts,
+  onChange,
+}: Props) {
   const { prompt, input_type } = node.config ?? {};
 
   // select config
-  const select_mode = (node.config?.select_mode ?? "single") as "single" | "multi";
-  const options = Array.isArray(node.config?.options) ? node.config.options : [];
-  const visibleOptions = options.filter((opt: any) => evalRule(opt?.visibility_rules, facts));
+  const select_mode = (node.config?.select_mode ?? "single") as
+    | "single"
+    | "multi";
+  const options = Array.isArray(node.config?.options)
+    ? node.config.options
+    : [];
+  const visibleOptions = options.filter((opt: any) =>
+    evalRule(opt?.visibility_rules, facts)
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -65,7 +78,9 @@ export default function QuestionRenderer({ node, value, facts, onChange }: Props
           type="number"
           className="border rounded-md px-3 py-2"
           value={value ?? ""}
-          onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+          onChange={(e) =>
+            onChange(e.target.value === "" ? null : Number(e.target.value))
+          }
         />
       )}
 
@@ -73,7 +88,9 @@ export default function QuestionRenderer({ node, value, facts, onChange }: Props
         <select
           className="border rounded-md px-3 py-2"
           value={value === true ? "true" : value === false ? "false" : ""}
-          onChange={(e) => onChange(e.target.value === "" ? null : e.target.value === "true")}
+          onChange={(e) =>
+            onChange(e.target.value === "" ? null : e.target.value === "true")
+          }
         >
           <option value="">Select…</option>
           <option value="true">Yes</option>
@@ -89,7 +106,10 @@ export default function QuestionRenderer({ node, value, facts, onChange }: Props
         >
           <option value="">Select…</option>
           {visibleOptions.map((opt: any) => (
-            <option key={opt.id} value={opt.value}>
+            <option
+              key={`${node.node_id}-${opt.value ?? opt.label}`}
+              value={opt.value ?? opt.label}
+            >
               {opt.label}
             </option>
           ))}
@@ -107,7 +127,10 @@ export default function QuestionRenderer({ node, value, facts, onChange }: Props
             const checked = arr.includes(opt.value);
 
             return (
-              <label key={opt.id} className="flex items-center gap-2 text-sm">
+              <label
+                key={`${node.node_id}-${opt.value ?? opt.label}`}
+                className="flex items-center gap-2 text-sm"
+              >
                 <input
                   type="checkbox"
                   checked={checked}

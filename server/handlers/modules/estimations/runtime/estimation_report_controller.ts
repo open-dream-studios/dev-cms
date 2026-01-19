@@ -8,15 +8,25 @@ export const getEstimateReport = async (
   _: any,
   connection: PoolConnection
 ) => {
-  const { estimate_run_idx } = req.body;
-
-  if (!estimate_run_idx) {
-    throw new Error("Missing estimate_run_idx");
+  const { estimate_run_id } = req.body;
+  if (!estimate_run_id) {
+    throw new Error("Missing estimate_run_id");
   }
+
+  const [[run]] = await connection.query<any[]>(
+    `
+    SELECT id
+    FROM estimation_runs
+    WHERE estimate_run_id = ?
+    `,
+    [estimate_run_id]
+  );
+
+  if (!run) throw new Error("Run not found");
 
   const report = await buildEstimationReport(
     connection,
-    estimate_run_idx
+    run.id
   );
 
   return { success: true, report };

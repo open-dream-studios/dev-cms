@@ -7,6 +7,7 @@ import type { EstimationGraphNode } from "@open-dream/shared";
 import QuestionRenderer from "./QuestionRenderer";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { ulid } from "ulid";
+import EstimationCompleted from "./EstimationCompleted";
 
 function evalRule(rule: any, facts: Record<string, any>) {
   if (!rule) return true;
@@ -88,6 +89,14 @@ const EstimationRun = ({
   const [nodes, setNodes] = useState<EstimationGraphNode[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isFirstChunk, setIsFirstChunk] = useState(true);
+  const [completed, setCompleted] = useState(false);
+  const [pricing, setPricing] = useState<{
+    total_min: number;
+    total_max: number;
+    inferred_tier: string;
+  } | null>(null);
+  const [breakdown, setBreakdown] = useState<any[] | null>(null);
+  const [loadingBreakdown, setLoadingBreakdown] = useState(false);
 
   useEffect(() => {
     if (!currentProjectId) return;
@@ -98,6 +107,8 @@ const EstimationRun = ({
       setAnswers(res.chunk_answers ?? {});
       setFacts(res.facts ?? {});
       setIsFirstChunk(!!res.is_first_chunk);
+      setCompleted(!!res.completed);
+      setPricing(res.pricing ?? null);
     };
 
     if (resumeRunId) {
@@ -109,7 +120,7 @@ const EstimationRun = ({
     }
 
     runtime.startRun.mutate(
-      { project_idx, decision_graph_idx, pricing_graph_idx },
+      { project_idx, decision_graph_idx, pricing_graph_idx: 3 },
       { onSuccess }
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,19 +166,22 @@ const EstimationRun = ({
       project_idx: currentProjectId,
     });
 
+    console.log(res.pricing)
+
     setNodes(res.chunk_nodes ?? []);
     setAnswers(res.chunk_answers ?? {});
     setFacts(res.facts ?? {});
     setIsFirstChunk(!!res.is_first_chunk);
+    setCompleted(!!res.completed);
+    setPricing(res.pricing ?? null);
   }
 
   async function handleBack() {
     if (!runId || !currentProjectId) return;
 
-    if (isFirstChunk) {
-      onExit();
-      return;
-    }
+    setCompleted(false);
+    setPricing(null);
+    setBreakdown(null);
 
     const res: any = await runtime.goBack.mutateAsync({
       estimate_run_id: runId,
@@ -178,6 +192,44 @@ const EstimationRun = ({
     setAnswers(res.chunk_answers ?? {});
     setFacts(res.facts ?? {});
     setIsFirstChunk(!!res.is_first_chunk);
+  }
+
+  useEffect(() => {
+    if (!completed || nodes.length !== 0 || !runId || !currentProjectId) return;
+
+    setBreakdown(null);
+    setLoadingBreakdown(true);
+
+    runtime.getBreakdown
+      .mutateAsync({
+        estimate_run_id: runId,
+        project_idx: currentProjectId,
+      })
+      .then((res: any) => {
+        setBreakdown(res.breakdown ?? []);
+      })
+      .finally(() => {
+        setLoadingBreakdown(false);
+      });
+  }, [completed, nodes.length, runId, currentProjectId]);
+
+  if (nodes.length === 0 && completed) {
+    if (!pricing || !breakdown) {
+      return (
+        <div className="max-w-[720px] mx-auto p-6">
+          <div className="text-gray-500">Calculating breakdown…</div>
+        </div>
+      );
+    }
+
+    return (
+      <EstimationCompleted
+        pricing={pricing}
+        breakdown={breakdown}
+        onBack={handleBack}
+        onLeave={onExit}
+      />
+    );
   }
 
   return (

@@ -40,7 +40,8 @@ export type Screen =
   | "google-ads"
   | "updates"
   | "estimations"
-  | "estimations-builder";
+  | "estimations-builder"
+  | "estimations-pricing";
 
 export type Modal =
   | { type: "mediaUpload" }

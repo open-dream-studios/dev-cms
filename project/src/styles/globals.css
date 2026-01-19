@@ -52,7 +52,37 @@ select.custom-select {
   outline: none;
 }
 
+.recharts-wrapper,
+.recharts-wrapper * {
+  outline: none !important;
+}
+
+.recharts-wrapper:focus,
+.recharts-wrapper:focus-visible,
+.recharts-surface:focus,
+.recharts-surface:focus-visible,
+svg:focus,
+svg:focus-visible {
+  outline: none !important;
+}
+
+/* ===== KILL ACTIVE / HOVER BACKGROUND ===== */
+.recharts-active-bar,
+.recharts-tooltip-cursor {
+  fill: transparent !important;
+}
+
+/* ===== PREVENT SVG FROM BEING FOCUSABLE ===== */
+.recharts-wrapper svg {
+  pointer-events: auto;
+}
+
+.recharts-wrapper svg * {
+  pointer-events: auto;
+}
+
 /* 
+
 
 input[type="range"]::-webkit-slider-runnable-track {
   height: 2px;

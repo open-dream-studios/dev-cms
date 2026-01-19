@@ -1,30 +1,47 @@
-// server/handlers/modules/estimations/runtime/fact_validations.ts
-import { FactType } from "../facts/fact_definitions_repositories.js";
+import { getFactDefinitionByKey } from "../facts/fact_definitions_repositories.js";
+import type { FactType } from "../facts/fact_definitions_repositories.js";
 
-export const coerceFactValue = (fact_type: FactType, value: any) => {
+/**
+ * Resolve + coerce a fact value using the DB fact definition.
+ * This is the ONLY place fact_type should be interpreted.
+ */
+export const coerceFactValue = async (
+  project_idx: number,
+  fact_key: string,
+  raw: any
+) => {
+  const def = await getFactDefinitionByKey(project_idx, fact_key);
+
+  if (!def) {
+    throw new Error(`Fact definition not found: ${fact_key}`);
+  }
+
+  const fact_type: FactType = def.fact_type;
+
   if (fact_type === "boolean") {
-    if (typeof value === "boolean") return value;
-    if (value === "true") return true;
-    if (value === "false") return false;
-    throw new Error("Expected boolean");
+    if (typeof raw === "boolean") return raw;
+    if (raw === "true") return true;
+    if (raw === "false") return false;
+    throw new Error(`Expected boolean for ${fact_key}`);
   }
 
   if (fact_type === "number") {
-    if (typeof value === "number" && Number.isFinite(value)) return value;
-    const n = Number(value);
+    if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+    const n = Number(raw);
     if (Number.isFinite(n)) return n;
-    throw new Error("Expected number");
+    throw new Error(`Expected number for ${fact_key}`);
   }
 
   if (fact_type === "string") {
-    if (value === null || value === undefined) return "";
-    return String(value);
+    if (raw === null || raw === undefined) return "";
+    return String(raw);
   }
 
   if (fact_type === "enum") {
-    // MVP: enum is stored as string; allowed-values can be added later
-    if (value === null || value === undefined) throw new Error("Expected enum value");
-    return String(value);
+    if (raw === null || raw === undefined) {
+      throw new Error(`Expected enum value for ${fact_key}`);
+    }
+    return String(raw);
   }
 
   throw new Error(`Unsupported fact_type: ${fact_type}`);

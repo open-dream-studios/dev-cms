@@ -5,6 +5,8 @@ import { getFactDefinitionByKey } from "../facts/fact_definitions_repositories.j
 import { coerceFactValue } from "./fact_validations.js";
 import { resolveProducedValue } from "./value_resolver.js";
 import { safeParse } from "./runtime_controllers.js";
+import { GraphNode } from "./types.js";
+import { evaluateExpression } from "./expression_evaluator.js";
 
 export const createEstimationRun = async (
   connection: PoolConnection,
@@ -95,110 +97,100 @@ export const getFactsForRun = async (
 export const insertAnswerAndFacts = async (
   connection: PoolConnection,
   estimate_run_id: string,
-  node: any,
+  node: GraphNode,
   answer: any,
   batch_id: string
 ) => {
-  const [[run]] = await connection.query<any[]>(
-    `SELECT id, project_idx FROM estimation_runs WHERE estimate_run_id = ? LIMIT 1`,
-    [estimate_run_id]
-  );
-  if (!run) throw new Error("Run not found");
+  // 🚫 DO NOT STORE EMPTY ANSWERS
+  const hasAnswer =
+    answer !== undefined &&
+    answer !== null &&
+    !(typeof answer === "string" && answer.trim() === "");
 
-  await connection.query(
-    `
-    INSERT INTO estimation_answers (
-      answer_id,
-      batch_id,
-      estimate_run_idx,
-      node_idx,
-      answer_value
-    ) VALUES (?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      batch_id = VALUES(batch_id),
-      answer_value = VALUES(answer_value),
-      updated_at = NOW()
-    `,
-    [`ANS-${ulid()}`, batch_id, run.id, node.id, JSON.stringify(answer)]
-  );
-
-  await touchRunUpdatedAt(connection, estimate_run_id);
-
-  // 2) load current facts (needed for value_expr)
-  const [factRows] = await connection.query<any[]>(
-    `
-    SELECT fact_key, fact_value
-    FROM estimation_facts
-    WHERE estimate_run_idx = ?
-    `,
-    [run.id]
-  );
-
-  const facts: Record<string, any> = {};
-  for (const r of factRows) {
-    try {
-      facts[r.fact_key] =
-        typeof r.fact_value === "string"
-          ? JSON.parse(r.fact_value)
-          : r.fact_value;
-    } catch {
-      // legacy / bad data fallback
-      facts[r.fact_key] = r.fact_value;
-    }
-  }
-
-  // 3) produce facts
-  const produces = node.config?.produces_facts || [];
-
-  // 🔒 DO NOT produce facts if answer is null / empty
-  if (
-    answer === null ||
-    answer === undefined ||
-    (typeof answer === "string" && answer.trim() === "")
-  ) {
-    return { success: true };
-  }
-
-  for (const f of produces) {
-    if (!f.fact_key) throw new Error("produces_facts missing fact_key");
-
-    const def = await getFactDefinitionByKey(run.project_idx, f.fact_key);
-    if (!def) {
-      throw new Error(
-        `Fact key "${f.fact_key}" is not defined in estimation_fact_definitions`
-      );
-    }
-
-    const raw = resolveProducedValue(f, answer, facts);
-    const coerced = coerceFactValue(def.fact_type, raw);
-
+  // still allow facts to be produced conditionally
+  if (hasAnswer) {
     await connection.query(
       `
-    INSERT INTO estimation_facts (
-      estimate_fact_id,
-      estimate_run_idx,
-      fact_key,
-      fact_value,
-      source_node_idx,
-      batch_id
-    ) VALUES (?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      fact_value = VALUES(fact_value),
-      source_node_idx = VALUES(source_node_idx),
-      batch_id = VALUES(batch_id)
-    `,
+        INSERT INTO estimation_answers (
+          answer_id,
+          estimate_run_idx,
+          node_idx,
+          answer_value,
+          batch_id
+        )
+        VALUES (
+          ?,
+          (SELECT id FROM estimation_runs WHERE estimate_run_id = ?),
+          ?,
+          ?,
+          ?
+        )
+        ON DUPLICATE KEY UPDATE
+          answer_value = VALUES(answer_value),
+          batch_id = VALUES(batch_id),
+          updated_at = CURRENT_TIMESTAMP
+        `,
       [
-        `FACT-${ulid()}`,
-        run.id,
-        f.fact_key,
-        JSON.stringify(coerced),
+        `ANS-${ulid()}`,
+        estimate_run_id,
         node.id,
+        JSON.stringify(answer),
         batch_id,
       ]
     );
   }
 
-  return { success: true };
+  // facts can be derived even if answer is missing
+  const produces = node.config?.produces_facts ?? [];
+
+  for (const p of produces) {
+    let value: any = null;
+
+    if (p.value === "{{answer}}") {
+      if (!hasAnswer) continue;
+      // value = coerceFactValue(p.fact_key, answer);
+      const [[run]] = await connection.query<any[]>(
+        `SELECT project_idx FROM estimation_runs WHERE estimate_run_id = ? LIMIT 1`,
+        [estimate_run_id]
+      );
+      value = await coerceFactValue(run.project_idx, p.fact_key, answer);
+    } else if (p.value_expr) {
+      value = evaluateExpression(p.value_expr, { answer });
+    } else {
+      value = p.value;
+    }
+
+    if (value === undefined || value === null) continue;
+
+    await connection.query(
+      `
+  INSERT INTO estimation_facts (
+    estimate_fact_id,
+    estimate_run_idx,
+    batch_id,
+    fact_key,
+    fact_value,
+    source_node_idx
+  )
+  VALUES (
+    ?,
+    (SELECT id FROM estimation_runs WHERE estimate_run_id = ?),
+    ?,
+    ?,
+    ?,
+    ?
+  )
+  `,
+      [
+        `FACT-${ulid()}`,
+        estimate_run_id,
+        batch_id,
+        p.fact_key,
+        JSON.stringify(value),
+        node.id, // 👈 THIS IS CRITICAL
+      ]
+    );
+  }
 };
 
 export const getRunMeta = async (estimate_run_id: string) => {
@@ -224,6 +216,7 @@ export const listEstimationRuns = async (
     `
     SELECT
       estimate_run_id,
+      status,
       created_at,
       updated_at
     FROM estimation_runs

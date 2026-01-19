@@ -5,7 +5,12 @@ import { db } from "../../../../../connection/connect.js";
 
 export const getNodesFunction = async (graph_idx: number) => {
   const [rows] = await db.promise().query(
-    `SELECT * FROM estimation_graph_nodes WHERE graph_idx = ?`,
+    `
+    SELECT *
+    FROM estimation_graph_nodes
+    WHERE graph_idx = ?
+      AND is_archived = FALSE
+    `,
     [graph_idx]
   );
   return rows;
@@ -47,7 +52,9 @@ export const deleteNodeFunction = async (
   node_id: string
 ) => {
   await connection.query(
-    `DELETE FROM estimation_graph_nodes WHERE node_id = ?`,
+    `UPDATE estimation_graph_nodes
+      SET is_archived = TRUE
+      WHERE node_id = ?`,
     [node_id]
   );
   return { success: true };

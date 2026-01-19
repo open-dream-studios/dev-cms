@@ -30,6 +30,7 @@ export const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
   tasks: <ProductsDataIcon size={22} />,
   estimations: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
   "estimations-builder": <ProductsDataIcon size={22} />,
+  "estimations-pricing": <ProductsDataIcon size={22} />,
 };
 
 export const buildAccessibleModules = (
@@ -53,6 +54,14 @@ export const buildAccessibleModules = (
       key: "estimations-builder",
       title: "Builder",
       pages: ["estimations-builder"],
+    });
+  }
+
+  if (hasProjectModule("estimations-module")) {
+    modules.push({
+      key: "estimations-pricing",
+      title: "Pricing",
+      pages: ["estimations-pricing"],
     });
   }
 

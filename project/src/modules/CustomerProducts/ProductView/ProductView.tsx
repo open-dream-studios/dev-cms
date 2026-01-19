@@ -51,6 +51,8 @@ import {
   onSelectProductCustomer,
 } from "../_actions/products.actions";
 import JobDefinitionSelection from "@/modules/_util/Selection/JobDefinitionSelection";
+import { Download } from "lucide-react";
+import { handleZipDownload } from "@/util/functions/Images";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -63,8 +65,14 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     jobs,
     jobDefinitions,
   } = useContextQueries();
-  const { addingProduct, setAddingProduct, leftBarOpen, modal1, setModal1 } =
-    useUiStore();
+  const {
+    addingProduct,
+    setAddingProduct,
+    leftBarOpen,
+    modal1,
+    setModal1,
+    setUpdatingLock,
+  } = useUiStore();
   const {
     currentProduct,
     currentProductImages,
@@ -375,6 +383,17 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }
 
+  const zipDownload = async () => {
+    try {
+      setUpdatingLock(true);
+      await handleZipDownload(currentProductImages, serialNumber ?? "images");
+    } catch (e: any) {
+      console.log(e);
+    } finally {
+      setUpdatingLock(false);
+    }
+  };
+
   return (
     <div className="w-full h-full overflow-y-auto overflow-x-hidden hide-scrollbar">
       {currentMediaSelected && <MediaPlayer />}
@@ -520,6 +539,23 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     </div>
                   </div>
                   <div className="flex flex-row gap-[8.5px]">
+                    <div
+                      onClick={zipDownload}
+                      style={{
+                        backgroundColor: currentTheme.background_2,
+                        border: editMediaLinks
+                          ? "1px solid " + currentTheme.text_2
+                          : "none",
+                      }}
+                      className="w-[38px] h-[38px] rounded-full flex items-center justify-center dim hover:brightness-90 cursor-pointer"
+                    >
+                      <Download
+                        size={17}
+                        color={currentTheme.text_1}
+                        className="opacity-[0.81] ml-[0.5px] mb-[0.3px]"
+                      />
+                    </div>
+
                     <div
                       onClick={() => {
                         setEditMediaLinks((prev) => !prev);

@@ -36,6 +36,7 @@ export default function EstimationLauncher() {
       {
         onSuccess: (data: any) => {
           setRuns(data ?? []);
+          console.log(data)
         },
       }
     );
@@ -107,8 +108,14 @@ export default function EstimationLauncher() {
                   setStarted(true);
                 }}
               >
-                <div className="text-sm">
-                  Last Updated {formatDateTime(r.updated_at)}
+                <div className="text-sm flex items-center gap-2">
+                  <span>Last Updated {formatDateTime(r.updated_at)}</span>
+
+                  {r.run_status === "completed" && (
+                    <span className="text-xs px-2 py-[2px] rounded bg-green-100 text-green-700">
+                      Completed
+                    </span>
+                  )}
                 </div>
               </button>
             ))}

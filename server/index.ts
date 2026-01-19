@@ -47,7 +47,7 @@ import estimationRuntimeRoutes from "./handlers/modules/estimations/runtime/runt
 import estimationGraphRoutes from "./handlers/modules/estimations/graphs/graphs/graph_routes.js"
 import estimationGraphEdgesRoutes from "./handlers/modules/estimations/graphs/graph_edges/graph_edge_routes.js"
 import estimationGraphNodesRoutes from "./handlers/modules/estimations/graphs/graph_nodes/graph_node_routes.js"
-
+import pricingGraphRoutes from "./handlers/modules/estimations/pricing/pricing_graph_routes.js"
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -168,7 +168,7 @@ app.use("/api/estimations/runtime", estimationRuntimeRoutes);
 app.use("/api/estimations/graphs", estimationGraphRoutes);
 app.use("/api/estimations/graph-edges", estimationGraphEdgesRoutes);
 app.use("/api/estimations/graph-nodes", estimationGraphNodesRoutes);
-
+app.use("/api/estimations/pricing/graphs", pricingGraphRoutes);
 
 
 

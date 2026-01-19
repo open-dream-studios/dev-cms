@@ -1,4 +1,4 @@
-// shared/types/models/estimation.ts
+// shared/types/models/estimations/estimation.ts
 export type EstimationGraphType = "decision" | "pricing";
 export type EstimationGraphStatus = "draft" | "published" | "archived";
 

@@ -12,9 +12,12 @@ import {
   listEstimationRuns,
   touchRunUpdatedAt,
 } from "./runtime_repositories.js";
-
+import { getPricingSummary } from "./get_pricing_summary.js";
 import { loadGraph } from "./graph_loader.js";
 import { computeActiveChunk } from "./compute_active_chunk.js";
+import { executePricingGraph } from "./pricing_graph_executor.js";
+import { buildPricingSummary } from "./pricing_summary_builder.js";
+import { getActivePricingGraphIdx } from "../pricing/pricing_graph_repositories.js";
 
 /**
  * Chunk-based nav flags
@@ -27,6 +30,9 @@ const computeNavFlags = (
     Object.keys(facts).length === 0 && answeredNodeIdxs.size === 0;
   return { is_first_chunk, can_go_back: !is_first_chunk };
 };
+
+const computeStatus = (completed: boolean) =>
+  completed ? "completed" : "in_progress";
 
 /**
  * Return answers keyed by node_id for the current chunk nodes.
@@ -74,7 +80,13 @@ export const startEstimationRun = async (
   connection: PoolConnection
 ) => {
   const project_idx = req.user?.project_idx;
-  const { decision_graph_idx, pricing_graph_idx } = req.body;
+  if (!project_idx) return { success: false };
+  // const { decision_graph_idx, pricing_graph_idx } = req.body;
+  const { decision_graph_idx } = req.body;
+  const pricing_graph_idx = await getActivePricingGraphIdx(
+    connection,
+    project_idx
+  );
 
   if (!project_idx) throw new Error("Missing project_idx");
   if (!decision_graph_idx || !pricing_graph_idx) {
@@ -105,6 +117,8 @@ export const startEstimationRun = async (
     answeredNodeIdxs
   );
 
+  const pricing = await getPricingSummary(connection, run.id);
+
   return {
     success: true,
     estimate_run_id: run.estimate_run_id,
@@ -112,8 +126,10 @@ export const startEstimationRun = async (
     chunk_nodes: state.chunk_nodes,
     chunk_answers,
     completed: state.completed,
+    run_status: computeStatus(state.completed),
     is_first_chunk,
     can_go_back,
+    pricing,
   };
 };
 
@@ -144,14 +160,18 @@ export const getEstimationState = async (
     answeredNodeIdxs
   );
 
+  const pricing = await getPricingSummary(connection, runMeta.id);
+
   return {
     success: true,
     facts,
     chunk_nodes: state.chunk_nodes,
     chunk_answers,
     completed: state.completed,
+    run_status: computeStatus(state.completed),
     is_first_chunk,
     can_go_back,
+    pricing,
   };
 };
 
@@ -187,6 +207,32 @@ export const answerNode = async (
   );
 
   const state = computeActiveChunk(graph, facts, answeredNodeIdxs);
+  if (state.completed) {
+    await connection.query(
+      `
+    UPDATE estimation_runs
+    SET status = 'completed'
+    WHERE estimate_run_id = ?
+    `,
+      [estimate_run_id]
+    );
+
+    await connection.query(
+      `DELETE FROM estimation_summary WHERE estimate_run_idx = ?`,
+      [runMeta.id]
+    );
+
+    const pricingGraph = await loadGraph(runMeta.pricing_graph_idx);
+
+    console.log("🧪 PRICING TRIGGER CHECK", {
+      estimate_run_id,
+      state_completed: state.completed,
+      facts_snapshot: JSON.stringify(facts),
+    });
+
+    await executePricingGraph(connection, pricingGraph, runMeta.id, facts);
+    await buildPricingSummary(connection, runMeta.id);
+  }
 
   const chunk_answers = await getAnswersForChunk(
     connection,
@@ -199,14 +245,18 @@ export const answerNode = async (
     answeredNodeIdxs
   );
 
+  const pricing = await getPricingSummary(connection, runMeta.id);
+
   return {
     success: true,
     facts,
     chunk_nodes: state.chunk_nodes,
     chunk_answers,
     completed: state.completed,
+    run_status: computeStatus(state.completed),
     is_first_chunk,
     can_go_back,
+    pricing,
   };
 };
 
@@ -263,6 +313,7 @@ export const goBackOneStep = async (
       chunk_nodes: state.chunk_nodes,
       chunk_answers,
       completed: state.completed,
+      run_status: computeStatus(state.completed),
       is_first_chunk,
       can_go_back,
     };
@@ -290,6 +341,15 @@ export const goBackOneStep = async (
   //   [run.id, batch_id]
   // );
 
+  await connection.query(
+    `
+  UPDATE estimation_runs
+  SET status = 'in_progress'
+  WHERE estimate_run_id = ?
+  `,
+    [estimate_run_id]
+  );
+
   await touchRunUpdatedAt(connection, estimate_run_id);
 
   const { facts, answeredNodeIdxs } = await getFactsForRun(
@@ -309,14 +369,18 @@ export const goBackOneStep = async (
     answeredNodeIdxs
   );
 
+  const pricing = await getPricingSummary(connection, run.id);
+
   return {
     success: true,
     facts,
     chunk_nodes: state.chunk_nodes,
     chunk_answers,
     completed: state.completed,
+    run_status: computeStatus(state.completed),
     is_first_chunk,
     can_go_back,
+    pricing,
   };
 };
 
@@ -374,6 +438,8 @@ export const resumeEstimationRun = async (
     answeredNodeIdxs
   );
 
+  const pricing = await getPricingSummary(connection, runMeta.id);
+
   return {
     success: true,
     estimate_run_id,
@@ -381,7 +447,9 @@ export const resumeEstimationRun = async (
     chunk_nodes: state.chunk_nodes,
     chunk_answers,
     completed: state.completed,
+    run_status: computeStatus(state.completed),
     is_first_chunk,
     can_go_back,
+    pricing,
   };
 };

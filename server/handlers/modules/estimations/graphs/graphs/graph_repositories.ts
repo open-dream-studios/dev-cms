@@ -1,13 +1,15 @@
 // estimation_graphs_repositories.ts
 import { ulid } from "ulid";
-import type { PoolConnection } from "mysql2/promise";
+import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { db } from "../../../../../connection/connect.js";
 
 export const getGraphsFunction = async (project_idx: number) => {
-  const [rows] = await db.promise().query(
-    `SELECT * FROM estimation_graphs WHERE project_idx = ? ORDER BY created_at DESC`,
-    [project_idx]
-  );
+  const [rows] = await db
+    .promise()
+    .query(
+      `SELECT * FROM estimation_graphs WHERE project_idx = ? ORDER BY created_at DESC`,
+      [project_idx]
+    );
   return rows;
 };
 
@@ -16,13 +18,24 @@ export const createGraphFunction = async (
   project_idx: number,
   { name, graph_type }: any
 ) => {
+  const [rows] = await connection.query<RowDataPacket[]>(
+    `
+  SELECT COALESCE(MAX(version), 0) + 1 AS next_version
+  FROM estimation_graphs
+  WHERE project_idx = ? AND graph_type = ?
+  `,
+    [project_idx, graph_type]
+  );
+
+  const version = rows[0].next_version;
+
   const graph_id = `GRAPH-${ulid()}`;
   await connection.query(
     `
-    INSERT INTO estimation_graphs (graph_id, project_idx, graph_type, name)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO estimation_graphs (graph_id, project_idx, graph_type, name, version)
+    VALUES (?, ?, ?, ?, ?)
     `,
-    [graph_id, project_idx, graph_type, name]
+    [graph_id, project_idx, graph_type, name, version]
   );
   return { success: true, graph_id };
 };

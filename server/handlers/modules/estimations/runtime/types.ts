@@ -17,10 +17,9 @@ export type GraphEdge = {
 
 export type LoadedGraph = {
   graph_idx: number;
+  graph_type: "decision" | "pricing" | string;
   nodesById: Map<number, GraphNode>;
   edgesFromNode: Map<number, GraphEdge[]>;
   incomingToNode: Map<number, GraphEdge[]>;
-  entryNodes: GraphNode[];
 };
-
 export type FactMap = Record<string, any>;

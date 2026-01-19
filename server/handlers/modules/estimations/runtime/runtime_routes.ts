@@ -6,12 +6,15 @@ import {
   answerNode,
   goBackOneStep,
   listRuns,
-  resumeEstimationRun
+  resumeEstimationRun,
 } from "./runtime_controllers.js";
+import { calculateEstimate } from "./estimation_calculate_controller.js";
+import { getEstimateReport } from "./estimation_report_controller.js";
 import { authenticateUser } from "../../../../util/auth.js";
 import { checkProjectPermission } from "../../../../util/permissions.js";
-import { errorHandler, transactionHandler } from "../../../../util/handlerWrappers.js";
+import { transactionHandler } from "../../../../util/handlerWrappers.js";
 import { verifyVercelProxy } from "../../../../util/verifyProxy.js";
+import { getEstimateBreakdown } from "./pricing_breakdown_controller.js";
 
 const router = express.Router();
 
@@ -22,7 +25,6 @@ router.post(
   checkProjectPermission(2),
   transactionHandler(startEstimationRun)
 );
-
 router.post(
   "/state",
   verifyVercelProxy,
@@ -30,7 +32,6 @@ router.post(
   checkProjectPermission(2),
   transactionHandler(getEstimationState)
 );
-
 router.post(
   "/answer",
   verifyVercelProxy,
@@ -38,7 +39,6 @@ router.post(
   checkProjectPermission(2),
   transactionHandler(answerNode)
 );
-
 router.post(
   "/back",
   verifyVercelProxy,
@@ -46,7 +46,6 @@ router.post(
   checkProjectPermission(2),
   transactionHandler(goBackOneStep)
 );
-
 router.post(
   "/runs",
   verifyVercelProxy,
@@ -54,8 +53,6 @@ router.post(
   checkProjectPermission(2),
   transactionHandler(listRuns)
 );
-
-
 router.post(
   "/resume",
   verifyVercelProxy,
@@ -64,5 +61,26 @@ router.post(
   transactionHandler(resumeEstimationRun)
 );
 
+router.post(
+  "/calculate",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(calculateEstimate)
+);
+router.post(
+  "/report",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(getEstimateReport)
+);
+router.post(
+  "/breakdown",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(getEstimateBreakdown)
+);
 
 export default router;
