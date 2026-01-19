@@ -14,7 +14,7 @@ import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useTimer } from "@/store/util/useTimer";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
 
 type InventoryRowFormProps = {
   product: Product;
@@ -69,6 +69,7 @@ const InventoryRowForm = ({
         "customer-products",
         `/products/${existingProduct.serial_number}`
       );
+      setCurrentProductData(existingProduct);
     }
   };
 

@@ -66,7 +66,11 @@ export function useModules() {
       if (windowWidth && windowWidth < 1024) {
         closeLeftBar();
       }
-      screenClick(tab, null);
+      if (tab === "customer-products") {
+        screenClick(tab, "/products");
+      } else {
+        screenClick(tab, null);
+      }
     },
     [windowWidth, closeLeftBar, screenClick]
   );

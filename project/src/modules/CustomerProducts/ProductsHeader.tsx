@@ -150,7 +150,6 @@ const ProductsHeader = ({ title }: { title: string }) => {
     setEditingProducts(false);
     if (!inventoryView) {
       setAddingProduct(true);
-      screenClick("customer-products", "/products");
     } else {
       setModal2({
         ...modal2,

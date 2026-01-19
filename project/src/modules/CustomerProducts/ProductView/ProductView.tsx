@@ -239,16 +239,10 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     }
   }, [media, currentProductImages]);
 
-  const handleBackButton = async () => {
+  const handleBackClick = async () => {
     setAddingProduct(false);
     setCurrentProductData(null);
     await screenClick("customer-products", "/products");
-  };
-
-  const handleProductsClick = async () => {
-    await screenClick("customer-products", "/products");
-    setCurrentProductData(null);
-    setAddingProduct(false);
   };
 
   const handleCancelFormChanges = () => {
@@ -357,7 +351,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       return (
         <div className="w-[100%] justify-center items-center flex gap-[20px] flex-row mt-20">
           <div
-            onClick={handleBackButton}
+            onClick={handleBackClick}
             style={{
               backgroundColor: currentTheme.background_2,
             }}
@@ -390,7 +384,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       >
         <div className="flex flex-row gap-[13px] ml-[3px]">
           <div
-            onClick={handleBackButton}
+            onClick={handleBackClick}
             style={{
               backgroundColor: currentTheme.background_2,
             }}
@@ -413,7 +407,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
               }}
             >
               <div
-                onClick={handleProductsClick}
+                onClick={handleBackClick}
                 className="cursor-pointer dim hover:brightness-75"
               >
                 Products

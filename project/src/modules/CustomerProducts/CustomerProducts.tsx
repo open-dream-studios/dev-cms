@@ -9,7 +9,7 @@ import DraggableItems from "./DraggableItems";
 import ProductsHeader from "./ProductsHeader";
 import CustomerProductSkeleton from "../components/ProductCard/CustomerProductSkeleton";
 import ProductView from "./ProductView/ProductView";
-import InventoryGrid from "./Grid/InventoryGrid"; 
+import InventoryGrid from "./Grid/InventoryGrid";
 import { useUiStore } from "@/store/useUIStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
 import { HomeLayout } from "@/layouts/homeLayout";
@@ -25,9 +25,7 @@ const CustomerProducts = () => {
   return (
     <>
       {addingProduct ? (
-        <HomeLayout left={<CustomerProductsModuleLeftBar />}>
-          <ProductView />
-        </HomeLayout>
+        <ProductView />
       ) : (
         <>
           {inventoryView === true ? (
