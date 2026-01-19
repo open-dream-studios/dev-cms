@@ -8,11 +8,11 @@ export type GraphNode = {
 };
 
 export type GraphEdge = {
-  id: number;
+  id?: number;
   from_node_idx: number;
   to_node_idx: number;
   edge_condition: any;
-  priority?: number;
+  execution_priority: number;
 };
 
 export type LoadedGraph = {

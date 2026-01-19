@@ -1,3 +1,4 @@
+// project/src/api/estimations/runtime.api.ts
 import { makeRequest } from "@/util/axios";
 import { utcToLocal } from "@/util/functions/Time";
 import type { EstimationGraphNode, EstimationRun } from "@open-dream/shared";
@@ -6,10 +7,10 @@ export type RuntimeState = {
   success: boolean;
   estimate_run_id: string;
   facts: Record<string, any>;
-  page_nodes: EstimationGraphNode[];
-  page_answers: Record<string, any>;
-  completed?: boolean;
-  is_first_page: boolean;
+  chunk_nodes: EstimationGraphNode[];
+  chunk_answers: Record<string, any>;
+  completed: boolean;
+  is_first_chunk: boolean;
   can_go_back: boolean;
 };
 

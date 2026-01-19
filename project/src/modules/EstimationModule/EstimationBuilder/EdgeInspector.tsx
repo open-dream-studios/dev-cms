@@ -2,21 +2,27 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { EstimationGraphEdge, EstimationGraphNode } from "@open-dream/shared";
+import type {
+  EstimationGraphEdge,
+  EstimationGraphNode,
+} from "@open-dream/shared";
 
 export default function EdgeInspector({
   edge,
+  edges,
   nodes,
   onSave,
   onDelete,
 }: {
   edge: EstimationGraphEdge;
+  edges: EstimationGraphEdge[];
   nodes: EstimationGraphNode[];
   onSave: (payload: {
     edge_id: string;
     from_node_idx: number;
     to_node_idx: number;
     edge_condition: any;
+    execution_priority: number;
   }) => Promise<void> | void;
   onDelete?: (edge_id: string) => Promise<any>;
 }) {
@@ -27,11 +33,16 @@ export default function EdgeInspector({
   );
   const [error, setError] = useState<string | null>(null);
 
+  const [executionPriority, setExecutionPriority] = useState<number>(
+    edge.execution_priority ?? 0
+  );
+
   // ✅ fix stale inspector state when selecting a different edge
   useEffect(() => {
     setFromNodeIdx(edge.from_node_idx);
     setToNodeIdx(edge.to_node_idx);
     setCondJson(JSON.stringify(edge.edge_condition ?? {}, null, 2));
+    setExecutionPriority(edge.execution_priority ?? 0);
     setError(null);
   }, [edge.edge_id]);
 
@@ -47,7 +58,9 @@ export default function EdgeInspector({
   const isAlways = useMemo(() => {
     try {
       const parsed = JSON.parse(condJson || "{}");
-      return typeof parsed === "object" && parsed && Object.keys(parsed).length === 0;
+      return (
+        typeof parsed === "object" && parsed && Object.keys(parsed).length === 0
+      );
     } catch {
       return false;
     }
@@ -56,7 +69,11 @@ export default function EdgeInspector({
   function parseCondition(): any | null {
     try {
       const parsed = JSON.parse(condJson || "{}");
-      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        Array.isArray(parsed)
+      ) {
         setError("edge_condition must be a JSON object");
         return null;
       }
@@ -92,7 +109,43 @@ export default function EdgeInspector({
       from_node_idx: fromNodeIdx,
       to_node_idx: toNodeIdx,
       edge_condition,
+      execution_priority: executionPriority,
     });
+  }
+
+  function wouldCreateCycle(
+    fromId: number,
+    toId: number,
+    edges: EstimationGraphEdge[]
+  ) {
+    const graph = new Map<number, number[]>();
+    for (const e of edges) {
+      if (!graph.has(e.from_node_idx)) graph.set(e.from_node_idx, []);
+      graph.get(e.from_node_idx)!.push(e.to_node_idx);
+    }
+
+    // simulate new edge
+    graph.set(fromId, [...(graph.get(fromId) ?? []), toId]);
+
+    const visited = new Set<number>();
+    const stack = new Set<number>();
+
+    const dfs = (id: number): boolean => {
+      if (stack.has(id)) return true;
+      if (visited.has(id)) return false;
+
+      visited.add(id);
+      stack.add(id);
+
+      for (const next of graph.get(id) ?? []) {
+        if (dfs(next)) return true;
+      }
+
+      stack.delete(id);
+      return false;
+    };
+
+    return dfs(fromId);
   }
 
   return (
@@ -131,7 +184,8 @@ export default function EdgeInspector({
       <div className="rounded-lg border px-3 py-2">
         <div className="text-xs opacity-60">From → To</div>
         <div className="text-sm font-medium mt-[3px]">
-          {fromNode?.label ?? `#${fromNodeIdx}`} → {toNode?.label ?? `#${toNodeIdx}`}
+          {fromNode?.label ?? `#${fromNodeIdx}`} →{" "}
+          {toNode?.label ?? `#${toNodeIdx}`}
         </div>
       </div>
 
@@ -144,7 +198,7 @@ export default function EdgeInspector({
         >
           {nodes.map((n) => (
             <option key={n.id} value={n.id}>
-              {n.label} (#{n.id})
+              {n.label}
             </option>
           ))}
         </select>
@@ -155,12 +209,26 @@ export default function EdgeInspector({
           value={toNodeIdx}
           onChange={(e) => setToNodeIdx(Number(e.target.value))}
         >
-          {nodes.map((n) => (
-            <option key={n.id} value={n.id}>
-              {n.label} (#{n.id})
-            </option>
-          ))}
+          {nodes.map((n) => {
+            const invalid =
+              n.id === fromNodeIdx ||
+              wouldCreateCycle(fromNodeIdx, n.id, edges);
+
+            return (
+              <option key={n.id} value={n.id} disabled={invalid}>
+                {n.label} {invalid ? "(invalid)" : ""}
+              </option>
+            );
+          })}
         </select>
+
+        <label className="text-xs font-medium">Execution Priority</label>
+        <input
+          type="number"
+          value={executionPriority}
+          onChange={(e) => setExecutionPriority(Number(e.target.value))}
+          className="border rounded px-2 py-1 text-sm"
+        />
 
         <div className="flex items-center justify-between mt-2">
           <div className="text-xs opacity-70">
@@ -201,7 +269,8 @@ export default function EdgeInspector({
         {error && <div className="text-xs text-red-500">{error}</div>}
 
         <div className="text-[11px] opacity-60">
-          Example: <span className="font-mono">{`{"==":[{"fact":"layout_change"}, true]}`}</span>
+          Example:{" "}
+          <span className="font-mono">{`{"==":[{"fact":"layout_change"}, true]}`}</span>
         </div>
       </div>
     </div>

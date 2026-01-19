@@ -80,6 +80,7 @@ export type EstimationGraphEdge = {
   from_node_idx: number;
   to_node_idx: number;
   edge_condition: any;
+  execution_priority: number;
   created_at: string;
   updated_at: string;
 }; 

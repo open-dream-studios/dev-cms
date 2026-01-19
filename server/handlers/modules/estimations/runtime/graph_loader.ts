@@ -1,4 +1,4 @@
-// server/handlers/modules/estimations/runtime/graph_loaders.ts
+// server/handlers/modules/estimations/runtime/graph_loader.ts
 import { db } from "../../../../connection/connect.js";
 import type { RowDataPacket } from "mysql2/promise";
 import { GraphEdge, GraphNode, LoadedGraph } from "./types.js";
@@ -19,7 +19,7 @@ export const loadGraph = async (graph_idx: number): Promise<LoadedGraph> => {
 
   const [edgeRows] = await db.promise().query<(GraphEdge & RowDataPacket)[]>(
     `
-  SELECT id, from_node_idx, to_node_idx, edge_condition
+  SELECT id, from_node_idx, to_node_idx, edge_condition, execution_priority 
   FROM estimation_graph_edges
   WHERE graph_idx = ?
   `,

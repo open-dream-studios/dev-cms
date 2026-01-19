@@ -1,4 +1,4 @@
-// project/src/api/estimation/estimationGraphEdges.api.ts
+// project/src/api/estimations/estimationGraphEdges.api.ts
 import { makeRequest } from "@/util/axios";
 import { EstimationGraphEdge } from "@open-dream/shared";
 
@@ -13,17 +13,25 @@ export async function fetchEstimationGraphEdgesApi(
   return res.data.edges as EstimationGraphEdge[];
 }
 
+export type UpsertEdgeResponse = {
+  success: boolean;
+  edge_id?: string;
+  errors?: string[];
+  warnings?: string[];
+};
+
 export async function upsertEstimationGraphEdgeApi(
   graph_idx: number,
   edge: Partial<EstimationGraphEdge>,
   currentProjectId: number
-) {
+): Promise<UpsertEdgeResponse> {
   const res = await makeRequest.post("/estimations/graph-edges/upsert", {
     graph_idx,
     edge,
     project_idx: currentProjectId,
   });
-  return { edge_id: res.data.edge_id as string };
+ 
+  return res.data as UpsertEdgeResponse;
 }
 
 export async function deleteEstimationGraphEdgeApi(

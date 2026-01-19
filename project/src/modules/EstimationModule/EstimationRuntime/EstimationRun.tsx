@@ -83,20 +83,21 @@ const EstimationRun = ({
   const { currentProjectId } = useCurrentDataStore();
 
   const [runId, setRunId] = useState<string | null>(null);
+  const [facts, setFacts] = useState<Record<string, any>>({});
+  // const [isFirstPage, setIsFirstPage] = useState(true);
   const [nodes, setNodes] = useState<EstimationGraphNode[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [facts, setFacts] = useState<Record<string, any>>({});
-  const [isFirstPage, setIsFirstPage] = useState(true);
+  const [isFirstChunk, setIsFirstChunk] = useState(true);
 
   useEffect(() => {
     if (!currentProjectId) return;
 
     const onSuccess = (res: any) => {
       setRunId(res.estimate_run_id);
-      setNodes(res.page_nodes ?? []);
-      setAnswers(res.page_answers ?? {});
+      setNodes(res.chunk_nodes ?? []);
+      setAnswers(res.chunk_answers ?? {});
       setFacts(res.facts ?? {});
-      setIsFirstPage(!!res.is_first_page);
+      setIsFirstChunk(!!res.is_first_chunk);
     };
 
     if (resumeRunId) {
@@ -154,16 +155,16 @@ const EstimationRun = ({
       project_idx: currentProjectId,
     });
 
-    setNodes(res.page_nodes ?? []);
-    setAnswers(res.page_answers ?? {});
+    setNodes(res.chunk_nodes ?? []);
+    setAnswers(res.chunk_answers ?? {});
     setFacts(res.facts ?? {});
-    setIsFirstPage(!!res.is_first_page);
+    setIsFirstChunk(!!res.is_first_chunk);
   }
 
   async function handleBack() {
     if (!runId || !currentProjectId) return;
 
-    if (isFirstPage) {
+    if (isFirstChunk) {
       onExit();
       return;
     }
@@ -173,10 +174,10 @@ const EstimationRun = ({
       project_idx: currentProjectId,
     });
 
-    setNodes(res.page_nodes ?? []);
-    setAnswers(res.page_answers ?? {});
+    setNodes(res.chunk_nodes ?? []);
+    setAnswers(res.chunk_answers ?? {});
     setFacts(res.facts ?? {});
-    setIsFirstPage(!!res.is_first_page);
+    setIsFirstChunk(!!res.is_first_chunk);
   }
 
   return (

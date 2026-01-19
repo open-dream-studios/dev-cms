@@ -1,18 +1,26 @@
 // project/src/modules/EstimationModule/EstimationBuilder/DecisionGraphBuilder.tsx
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useEstimationGraphs } from "@/contexts/queryContext/queries/estimations/estimationGraphs";
 import { useEstimationGraphContent } from "@/contexts/queryContext/queries/estimations/estimationGraphContent";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
+import { useEstimationGraphValidation } from "@/contexts/queryContext/queries/estimations/estimationGraphValidation";
+
 import type {
   EstimationGraphNode,
   EstimationGraphEdge,
 } from "@open-dream/shared";
+
 import { AuthContext } from "@/contexts/authContext";
 import NodeInspector from "./NodeInspector";
 import EdgeInspector from "./EdgeInspector";
+import { toast } from "react-toastify";
 
 export default function DecisionGraphBuilder() {
+  const qc = useQueryClient();
+
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
 
@@ -25,10 +33,17 @@ export default function DecisionGraphBuilder() {
   );
 
   const [selectedGraphIdx, setSelectedGraphIdx] = useState<number | null>(null);
+
   const selectedGraph = useMemo(
     () => decisionGraphs.find((g) => g.id === selectedGraphIdx) || null,
     [decisionGraphs, selectedGraphIdx]
   );
+
+  const validationQuery = useEstimationGraphValidation(
+    selectedGraphIdx,
+    currentProjectId
+  );
+  const validation = validationQuery.data;
 
   const { nodes, edges, upsertNode, deleteNode, upsertEdge, deleteEdge } =
     useEstimationGraphContent(
@@ -52,6 +67,15 @@ export default function DecisionGraphBuilder() {
     [edges, selectedEdgeId]
   );
 
+  // ✅ CRITICAL FIX:
+  // Validation must refetch when graph content changes, otherwise Publish stays disabled forever.
+  useEffect(() => {
+    if (!selectedGraphIdx) return;
+    qc.invalidateQueries({
+      queryKey: ["estimationGraphValidation", selectedGraphIdx],
+    });
+  }, [qc, selectedGraphIdx, nodes.length, edges.length]);
+
   async function handleCreateGraph() {
     const name = prompt("Decision graph name?")?.trim();
     if (!name) return;
@@ -68,7 +92,7 @@ export default function DecisionGraphBuilder() {
       config: {
         prompt: label,
         input_type: "text",
-        required: false, 
+        required: false,
         select_mode: "single",
         produces_facts: [],
         options: [],
@@ -77,11 +101,18 @@ export default function DecisionGraphBuilder() {
     };
 
     await upsertNode(node);
+
+    qc.invalidateQueries({
+      queryKey: ["estimationGraphValidation", selectedGraphIdx],
+    });
   }
 
   async function handleAddEdge() {
     if (!selectedGraphIdx) return;
-    if (nodes.length < 2) return alert("Need at least 2 nodes.");
+    if (nodes.length < 2) {
+      alert("Need at least 2 nodes.");
+      return;
+    }
 
     const fromLabel = prompt(
       `From node (pick by label)\nAvailable:\n${nodes
@@ -105,10 +136,19 @@ export default function DecisionGraphBuilder() {
     const edge: Partial<EstimationGraphEdge> = {
       from_node_idx: from.id,
       to_node_idx: to.id,
-      edge_condition: {}, // always
+      edge_condition: {},
+      execution_priority: 0,
     };
 
-    await upsertEdge(edge);
+    const res = await upsertEdge(edge);
+    qc.invalidateQueries({
+      queryKey: ["estimationGraphValidation", selectedGraphIdx],
+    });
+
+    if (res?.success === false) {
+      toast.warning(res.errors?.join(" - ") ?? "Edge rejected");
+      return;
+    }
   }
 
   async function saveEdge(edge: EstimationGraphEdge, payload: any) {
@@ -117,12 +157,28 @@ export default function DecisionGraphBuilder() {
       from_node_idx: payload.from_node_idx ?? edge.from_node_idx,
       to_node_idx: payload.to_node_idx ?? edge.to_node_idx,
       edge_condition: payload.edge_condition ?? payload,
+      execution_priority:
+        payload.execution_priority ?? edge.execution_priority ?? 0,
     });
+
+    if (selectedGraphIdx) {
+      qc.invalidateQueries({
+        queryKey: ["estimationGraphValidation", selectedGraphIdx],
+      });
+    }
   }
+
+  // Publish should only be blocked if we *know* it’s invalid.
+  const isValidationLoading =
+    validationQuery.isLoading || validationQuery.isFetching;
+  const isValidationError = validationQuery.isError;
+  const isValidationInvalid = !!validation && validation.valid === false;
+
+  const publishDisabled = isValidationLoading || isValidationInvalid;
 
   return (
     <div className="w-full h-full flex gap-3 p-3">
-      {/* LEFT: graphs + facts */}
+      {/* LEFT */}
       <div className="w-[320px] shrink-0 flex flex-col gap-3">
         <div className="rounded-xl border p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -156,6 +212,49 @@ export default function DecisionGraphBuilder() {
             ))}
           </div>
 
+          {/* ✅ NEVER SILENT: show loading/error */}
+          {selectedGraph && (
+            <div className="rounded-xl border p-3 text-sm">
+              <div className="font-semibold mb-1">Graph Health</div>
+
+              {isValidationLoading && (
+                <div className="text-xs opacity-70">validating…</div>
+              )}
+
+              {isValidationError && (
+                <div className="text-red-600 text-xs">
+                  ❌ Validation request failed. (Check route
+                  /estimations/graphs/validate)
+                </div>
+              )}
+
+              {!isValidationLoading && !isValidationError && validation && (
+                <>
+                  {!validation.valid && (
+                    <div className="text-red-600">
+                      ❌ {validation.errors.join(", ")}
+                    </div>
+                  )}
+
+                  {validation.valid && (
+                    <div className="text-green-600">✓ Graph is valid</div>
+                  )}
+
+                  {validation.warnings.length > 0 && (
+                    <div className="text-yellow-600 mt-2 text-xs">
+                      ⚠ Warnings:
+                      <ul className="list-disc ml-4 mt-1">
+                        {validation.warnings.map((w) => (
+                          <li key={w}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           {selectedGraph && (
             <div className="flex gap-2 pt-2">
               <button
@@ -171,11 +270,31 @@ export default function DecisionGraphBuilder() {
               >
                 Rename
               </button>
+
               <button
-                className="px-2 py-1 rounded-md border text-sm"
-                onClick={() =>
-                  publishGraph({ graph_id: selectedGraph.graph_id })
-                }
+                className="px-2 py-1 rounded-md border text-sm disabled:opacity-40"
+                disabled={publishDisabled}
+                onClick={async () => {
+                  // If invalid, we stop with a loud message.
+                  if (validation && validation.valid === false) {
+                    alert("Fix graph errors before publishing.");
+                    return;
+                  }
+
+                  // If validation request failed, still block and explain.
+                  if (isValidationError) {
+                    alert(
+                      "Validation endpoint failed. Fix /estimations/graphs/validate route."
+                    );
+                    return;
+                  }
+
+                  // If we’re still validating, just stop.
+                  if (isValidationLoading) return;
+
+                  // 🔥 at this point, we allow publish
+                  await publishGraph({ graph_id: selectedGraph.graph_id });
+                }}
               >
                 Publish
               </button>
@@ -191,13 +310,13 @@ export default function DecisionGraphBuilder() {
               onClick={async () => {
                 const fact_key = prompt("fact_key? (snake_case)")?.trim();
                 if (!fact_key) return;
-                // const fact_type = (prompt("fact_type? boolean|number|string|enum")?.trim() ||
-                // "string") as any;
+
                 const raw = (
                   prompt("fact_type? boolean|number|string|enum") || "string"
                 )
                   .trim()
                   .toLowerCase();
+
                 const fact_type =
                   raw === "boolean" ||
                   raw === "number" ||
@@ -205,9 +324,10 @@ export default function DecisionGraphBuilder() {
                   raw === "enum"
                     ? raw
                     : "string";
+
                 await upsertFactDefinition({
                   fact_key,
-                  fact_type,
+                  fact_type: fact_type as any,
                   description: null,
                 });
               }}
@@ -240,7 +360,7 @@ export default function DecisionGraphBuilder() {
         </div>
       </div>
 
-      {/* MIDDLE: nodes + edges */}
+      {/* MIDDLE */}
       <div className="flex-1 flex gap-3">
         <div className="w-[340px] shrink-0 rounded-xl border p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -275,56 +395,19 @@ export default function DecisionGraphBuilder() {
           {selectedNode && (
             <button
               className="mt-2 px-2 py-1 rounded-md border text-sm"
-              onClick={() => deleteNode(selectedNode.node_id)}
+              onClick={async () => {
+                await deleteNode(selectedNode.node_id);
+                if (selectedGraphIdx) {
+                  qc.invalidateQueries({
+                    queryKey: ["estimationGraphValidation", selectedGraphIdx],
+                  });
+                }
+              }}
             >
               Delete Selected Node
             </button>
           )}
         </div>
-
-        {/* <div className="w-[340px] shrink-0 rounded-xl border p-3 flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="font-semibold">Edges</div>
-            <button
-              className="px-2 py-1 rounded-md border text-sm"
-              onClick={handleAddEdge}
-              disabled={!selectedGraphIdx}
-            >
-              + Edge
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-1 overflow-auto">
-            {edges.map((e) => (
-              <button
-                key={e.edge_id}
-                className={`text-left px-2 py-2 rounded-md border ${
-                  selectedEdgeId === e.edge_id ? "bg-black text-white" : ""
-                }`}
-                onClick={() => {
-                  setSelectedEdgeId(e.edge_id);
-                  setSelectedNodeId(null);
-                }}
-              >
-                <div className="text-xs opacity-70">
-                  from #{e.from_node_idx} → to #{e.to_node_idx}
-                </div>
-                <div className="text-xs truncate">
-                  {JSON.stringify(e.edge_condition)}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {selectedEdge && (
-            <button
-              className="mt-2 px-2 py-1 rounded-md border text-sm"
-              onClick={() => deleteEdge(selectedEdge.edge_id)}
-            >
-              Delete Selected Edge
-            </button>
-          )}
-        </div> */}
 
         <div className="w-[380px] shrink-0 rounded-xl border p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -333,46 +416,16 @@ export default function DecisionGraphBuilder() {
               className="px-2 py-1 rounded-md border text-sm disabled:opacity-40"
               onClick={handleAddEdge}
               disabled={!selectedGraphIdx || nodes.length < 2}
-              title={
-                !selectedGraphIdx
-                  ? "Select a graph"
-                  : nodes.length < 2
-                  ? "Need 2+ nodes"
-                  : ""
-              }
             >
               + Edge
             </button>
           </div>
 
-          <div className="text-xs opacity-70">
-            Tip: edges control what question comes next. Start with
-            unconditional edges (&#123;&#125;), add conditions later.
-          </div>
-
           <div className="flex flex-col gap-2 overflow-auto mt-1">
-            {edges.length === 0 && (
-              <div className="text-sm opacity-60 border rounded-md px-3 py-2">
-                No edges yet.
-              </div>
-            )}
-
             {edges.map((e) => {
               const from = nodes.find((n) => n.id === e.from_node_idx);
               const to = nodes.find((n) => n.id === e.to_node_idx);
-
               const isSelected = selectedEdgeId === e.edge_id;
-
-              const condPreview = (() => {
-                try {
-                  const c = e.edge_condition ?? {};
-                  const txt = JSON.stringify(c);
-                  if (!txt || txt === "{}") return "always";
-                  return txt.length > 42 ? txt.slice(0, 42) + "…" : txt;
-                } catch {
-                  return "invalid condition";
-                }
-              })();
 
               return (
                 <div
@@ -397,7 +450,9 @@ export default function DecisionGraphBuilder() {
                         }`}
                       >
                         condition:{" "}
-                        <span className="font-mono">{condPreview}</span>
+                        <span className="font-mono">
+                          {JSON.stringify(e.edge_condition ?? {})}
+                        </span>
                       </div>
                     </div>
 
@@ -406,37 +461,31 @@ export default function DecisionGraphBuilder() {
                       className={`text-[11px] px-2 py-1 rounded-md border ${
                         isSelected ? "border-white/30" : ""
                       }`}
-                      onClick={(ev) => {
+                      onClick={async (ev) => {
                         ev.preventDefault();
                         ev.stopPropagation();
-                        if (confirm("Delete this edge?")) deleteEdge(e.edge_id);
+                        if (!confirm("Delete this edge?")) return;
+                        await deleteEdge(e.edge_id);
+                        if (selectedGraphIdx) {
+                          qc.invalidateQueries({
+                            queryKey: [
+                              "estimationGraphValidation",
+                              selectedGraphIdx,
+                            ],
+                          });
+                        }
                       }}
                     >
                       delete
                     </button>
                   </div>
-
-                  <div
-                    className={`text-[11px] mt-2 ${
-                      isSelected ? "opacity-80" : "opacity-60"
-                    }`}
-                  >
-                    edge_id: <span className="font-mono">{e.edge_id}</span>
-                  </div>
                 </div>
               );
             })}
           </div>
-
-          {selectedEdge && (
-            <div className="mt-2 text-xs opacity-60 border rounded-md px-3 py-2">
-              Selected:{" "}
-              <span className="font-mono">{selectedEdge.edge_id}</span>
-            </div>
-          )}
         </div>
 
-        {/* RIGHT: inspector */}
+        {/* RIGHT */}
         <div className="flex-1 rounded-xl border p-3">
           {!selectedNode && !selectedEdge && (
             <div className="text-sm opacity-70">
@@ -456,6 +505,11 @@ export default function DecisionGraphBuilder() {
                   config: selectedNode.config,
                   position: selectedNode.position,
                 });
+                if (selectedGraphIdx) {
+                  qc.invalidateQueries({
+                    queryKey: ["estimationGraphValidation", selectedGraphIdx],
+                  });
+                }
               }}
               onSave={async ({ label, config }) => {
                 await upsertNode({
@@ -465,6 +519,11 @@ export default function DecisionGraphBuilder() {
                   config,
                   position: selectedNode.position,
                 });
+                if (selectedGraphIdx) {
+                  qc.invalidateQueries({
+                    queryKey: ["estimationGraphValidation", selectedGraphIdx],
+                  });
+                }
               }}
             />
           )}
@@ -472,9 +531,17 @@ export default function DecisionGraphBuilder() {
           {selectedEdge && (
             <EdgeInspector
               edge={selectedEdge}
+              edges={edges}
               nodes={nodes}
               onSave={(payload) => saveEdge(selectedEdge, payload)}
-              onDelete={async (edge_id) => await deleteEdge(edge_id)}
+              onDelete={async (edge_id) => {
+                await deleteEdge(edge_id);
+                if (selectedGraphIdx) {
+                  qc.invalidateQueries({
+                    queryKey: ["estimationGraphValidation", selectedGraphIdx],
+                  });
+                }
+              }}
             />
           )}
         </div>

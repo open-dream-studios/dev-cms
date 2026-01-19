@@ -1,5 +1,9 @@
+// server/handlers/modules/estimations/runtime/runtime_controllers.ts
+// REPLACE THE ENTIRE FILE WITH THIS (no page_nodes, no page_answers, no undefined vars)
+
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
+
 import {
   createEstimationRun,
   getFactsForRun,
@@ -8,15 +12,67 @@ import {
   listEstimationRuns,
   touchRunUpdatedAt,
 } from "./runtime_repositories.js";
-import { loadGraph } from "./graph_loader.js";
-import { computePageNodes } from "./compute_page_nodes.js";
 
-const computeNavFlags = (facts: Record<string, any>, answeredNodeIdxs: Set<number>) => {
-  const is_first_page = Object.keys(facts).length === 0 && answeredNodeIdxs.size === 0;
-  return { is_first_page, can_go_back: !is_first_page };
+import { loadGraph } from "./graph_loader.js";
+import { computeActiveChunk } from "./compute_active_chunk.js";
+
+/**
+ * Chunk-based nav flags
+ */
+const computeNavFlags = (
+  facts: Record<string, any>,
+  answeredNodeIdxs: Set<number>
+) => {
+  const is_first_chunk =
+    Object.keys(facts).length === 0 && answeredNodeIdxs.size === 0;
+  return { is_first_chunk, can_go_back: !is_first_chunk };
 };
 
-export const startEstimationRun = async (req: Request, _res: Response, connection: PoolConnection) => {
+/**
+ * Return answers keyed by node_id for the current chunk nodes.
+ */
+export const getAnswersForChunk = async (
+  connection: PoolConnection,
+  estimate_run_idx: number,
+  chunk_nodes: { id: number; node_id: string }[]
+) => {
+  if (!chunk_nodes.length) return {};
+
+  const nodeIdxs = chunk_nodes.map((n) => n.id);
+
+  const [rows] = await connection.query<any[]>(
+    `
+    SELECT node_idx, answer_value
+    FROM estimation_answers
+    WHERE estimate_run_idx = ?
+      AND node_idx IN (${nodeIdxs.map(() => "?").join(",")})
+    `,
+    [estimate_run_idx, ...nodeIdxs]
+  );
+
+  const byIdx: Record<number, any> = {};
+  for (const r of rows) {
+    byIdx[r.node_idx] = safeParse(r.answer_value);
+  }
+
+  // map to node_id for frontend
+  return Object.fromEntries(chunk_nodes.map((n) => [n.node_id, byIdx[n.id]]));
+};
+
+export const safeParse = (v: any) => {
+  if (typeof v !== "string") return v;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return v;
+  }
+};
+
+export const startEstimationRun = async (
+  req: Request,
+  _res: Response,
+  connection: PoolConnection
+) => {
   const project_idx = req.user?.project_idx;
   const { decision_graph_idx, pricing_graph_idx } = req.body;
 
@@ -25,25 +81,38 @@ export const startEstimationRun = async (req: Request, _res: Response, connectio
     throw new Error("decision_graph_idx and pricing_graph_idx required");
   }
 
-  const run = await createEstimationRun(connection, project_idx, decision_graph_idx, pricing_graph_idx);
+  const run = await createEstimationRun(
+    connection,
+    project_idx,
+    decision_graph_idx,
+    pricing_graph_idx
+  );
 
   const graph = await loadGraph(decision_graph_idx);
 
-  const facts = {};
+  const facts: Record<string, any> = {};
   const answeredNodeIdxs = new Set<number>();
 
-  const state = computePageNodes(graph, facts, answeredNodeIdxs);
-  const page_answers = await getAnswersForPage(connection, run.id, state.page_nodes);
+  const state = computeActiveChunk(graph, facts, answeredNodeIdxs);
+  const chunk_answers = await getAnswersForChunk(
+    connection,
+    run.id,
+    state.chunk_nodes
+  );
 
-  const { is_first_page, can_go_back } = computeNavFlags(facts, answeredNodeIdxs);
+  const { is_first_chunk, can_go_back } = computeNavFlags(
+    facts,
+    answeredNodeIdxs
+  );
 
   return {
     success: true,
     estimate_run_id: run.estimate_run_id,
     facts,
-    page_nodes: state.page_nodes,
-    page_answers,
-    is_first_page,
+    chunk_nodes: state.chunk_nodes,
+    chunk_answers,
+    completed: state.completed,
+    is_first_chunk,
     can_go_back,
   };
 };
@@ -63,29 +132,34 @@ export const getEstimationState = async (
   const runMeta = await getRunMeta(estimate_run_id);
   const graph = await loadGraph(runMeta.decision_graph_idx);
 
-  const state = computePageNodes(graph, facts, answeredNodeIdxs);
-
-  const page_answers = await getAnswersForPage(
+  const state = computeActiveChunk(graph, facts, answeredNodeIdxs);
+  const chunk_answers = await getAnswersForChunk(
     connection,
     runMeta.id,
-    state.page_nodes
+    state.chunk_nodes
   );
 
-  const is_first_page =
-    Object.keys(facts).length === 0 && answeredNodeIdxs.size === 0;
-  const can_go_back = !is_first_page;
+  const { is_first_chunk, can_go_back } = computeNavFlags(
+    facts,
+    answeredNodeIdxs
+  );
 
   return {
     success: true,
     facts,
-    page_nodes: state.page_nodes,
-    page_answers,
-    is_first_page,
+    chunk_nodes: state.chunk_nodes,
+    chunk_answers,
+    completed: state.completed,
+    is_first_chunk,
     can_go_back,
   };
 };
 
-export const answerNode = async (req: Request, _res: Response, connection: PoolConnection) => {
+export const answerNode = async (
+  req: Request,
+  _res: Response,
+  connection: PoolConnection
+) => {
   const { estimate_run_id, node_id, answer, batch_id } = req.body;
   if (!estimate_run_id || !node_id) throw new Error("Missing fields");
   if (!batch_id) throw new Error("Missing batch_id");
@@ -93,94 +167,54 @@ export const answerNode = async (req: Request, _res: Response, connection: PoolC
   const runMeta = await getRunMeta(estimate_run_id);
   const graph = await loadGraph(runMeta.decision_graph_idx);
 
-  const node = Array.from(graph.nodesById.values()).find((n) => n.node_id === node_id);
+  const node = Array.from(graph.nodesById.values()).find(
+    (n) => n.node_id === node_id
+  );
   if (!node) throw new Error("Invalid node");
 
-  await insertAnswerAndFacts(connection, estimate_run_id, node, answer, batch_id);
+  // 🚫 NO chunk validation here — batch-level flow only
+  await insertAnswerAndFacts(
+    connection,
+    estimate_run_id,
+    node,
+    answer,
+    batch_id
+  );
 
-  const { facts, answeredNodeIdxs } = await getFactsForRun(estimate_run_id, connection);
-  const state = computePageNodes(graph, facts, answeredNodeIdxs);
+  const { facts, answeredNodeIdxs } = await getFactsForRun(
+    estimate_run_id,
+    connection
+  );
 
-  const page_answers = await getAnswersForPage(connection, runMeta.id, state.page_nodes);
-  const { is_first_page, can_go_back } = computeNavFlags(facts, answeredNodeIdxs);
+  const state = computeActiveChunk(graph, facts, answeredNodeIdxs);
+
+  const chunk_answers = await getAnswersForChunk(
+    connection,
+    runMeta.id,
+    state.chunk_nodes
+  );
+
+  const { is_first_chunk, can_go_back } = computeNavFlags(
+    facts,
+    answeredNodeIdxs
+  );
 
   return {
     success: true,
     facts,
-    page_nodes: state.page_nodes,
-    page_answers,
-    is_first_page,
+    chunk_nodes: state.chunk_nodes,
+    chunk_answers,
+    completed: state.completed,
+    is_first_chunk,
     can_go_back,
   };
 };
 
-export const getAnswersForPage = async (
-  connection: PoolConnection,
-  estimate_run_idx: number,
-  page_nodes: { id: number; node_id: string }[]
+export const goBackOneStep = async (
+  req: Request,
+  _res: Response,
+  connection: PoolConnection
 ) => {
-  if (!page_nodes.length) return {};
-
-  const nodeIdxs = page_nodes.map((n) => n.id);
-
-  const [rows] = await connection.query<any[]>(
-    `
-    SELECT node_idx, answer_value
-    FROM estimation_answers
-    WHERE estimate_run_idx = ?
-      AND node_idx IN (${nodeIdxs.map(() => "?").join(",")})
-    `,
-    [estimate_run_idx, ...nodeIdxs]
-  );
-
-  const byIdx: Record<number, any> = {};
-  for (const r of rows) {
-    try {
-      byIdx[r.node_idx] =
-        typeof r.answer_value === "string"
-          ? JSON.parse(r.answer_value)
-          : r.answer_value;
-    } catch {
-      byIdx[r.node_idx] = r.answer_value;
-    }
-  }
-
-  // map to node_id for frontend
-  return Object.fromEntries(page_nodes.map((n) => [n.node_id, byIdx[n.id]]));
-};
-
-export const getAnswersForBatch = async (
-  connection: PoolConnection,
-  estimate_run_idx: number,
-  batch_id: string
-) => {
-  const [rows] = await connection.query<any[]>(
-    `
-    SELECT node_idx, answer_value
-    FROM estimation_answers
-    WHERE estimate_run_idx = ? AND batch_id = ?
-    `,
-    [estimate_run_idx, batch_id]
-  );
-
-  const answers: Record<number, any> = {};
-  for (const r of rows) {
-    answers[r.node_idx] = safeParse(r.answer_value);
-  }
-
-  return answers;
-};
-
-export const safeParse = (v: any) => {
-  if (typeof v !== "string") return v;
-  try {
-    return JSON.parse(v);
-  } catch {
-    return v;
-  }
-};
-
-export const goBackOneStep = async (req: Request, _res: Response, connection: PoolConnection) => {
   const { estimate_run_id } = req.body;
   if (!estimate_run_id) throw new Error("Missing estimate_run_id");
 
@@ -205,25 +239,38 @@ export const goBackOneStep = async (req: Request, _res: Response, connection: Po
     [run.id]
   );
 
+  const graph = await loadGraph(run.decision_graph_idx);
+
+  // nothing to undo -> return initial chunk
   if (!latest?.batch_id) {
-    const graph = await loadGraph(run.decision_graph_idx);
-    const facts = {};
+    const facts: Record<string, any> = {};
     const answeredNodeIdxs = new Set<number>();
-    const state = computePageNodes(graph, facts, answeredNodeIdxs);
-    const { is_first_page, can_go_back } = computeNavFlags(facts, answeredNodeIdxs);
+
+    const state = computeActiveChunk(graph, facts, answeredNodeIdxs);
+    const chunk_answers = await getAnswersForChunk(
+      connection,
+      run.id,
+      state.chunk_nodes
+    );
+    const { is_first_chunk, can_go_back } = computeNavFlags(
+      facts,
+      answeredNodeIdxs
+    );
 
     return {
       success: true,
       facts,
-      page_nodes: state.page_nodes,
-      page_answers: {},
-      is_first_page,
+      chunk_nodes: state.chunk_nodes,
+      chunk_answers,
+      completed: state.completed,
+      is_first_chunk,
       can_go_back,
     };
   }
 
   const batch_id = latest.batch_id;
 
+  // delete facts for latest batch (this drives "answered" state)
   await connection.query(
     `
     DELETE FROM estimation_facts
@@ -233,22 +280,42 @@ export const goBackOneStep = async (req: Request, _res: Response, connection: Po
     [run.id, batch_id]
   );
 
+  // optional: delete answers too (if you want UI to clear old answers)
+  // await connection.query(
+  //   `
+  //   DELETE FROM estimation_answers
+  //   WHERE estimate_run_idx = ?
+  //     AND batch_id = ?
+  //   `,
+  //   [run.id, batch_id]
+  // );
+
   await touchRunUpdatedAt(connection, estimate_run_id);
 
-  const { facts, answeredNodeIdxs } = await getFactsForRun(estimate_run_id, connection);
+  const { facts, answeredNodeIdxs } = await getFactsForRun(
+    estimate_run_id,
+    connection
+  );
 
-  const graph = await loadGraph(run.decision_graph_idx);
-  const state = computePageNodes(graph, facts, answeredNodeIdxs);
+  const state = computeActiveChunk(graph, facts, answeredNodeIdxs);
+  const chunk_answers = await getAnswersForChunk(
+    connection,
+    run.id,
+    state.chunk_nodes
+  );
 
-  const page_answers = await getAnswersForPage(connection, run.id, state.page_nodes);
-  const { is_first_page, can_go_back } = computeNavFlags(facts, answeredNodeIdxs);
+  const { is_first_chunk, can_go_back } = computeNavFlags(
+    facts,
+    answeredNodeIdxs
+  );
 
   return {
     success: true,
     facts,
-    page_nodes: state.page_nodes,
-    page_answers,
-    is_first_page,
+    chunk_nodes: state.chunk_nodes,
+    chunk_answers,
+    completed: state.completed,
+    is_first_chunk,
     can_go_back,
   };
 };
@@ -274,7 +341,11 @@ export const listRuns = async (
   return { success: true, runs };
 };
 
-export const resumeEstimationRun = async (req: Request, _res: Response, connection: PoolConnection) => {
+export const resumeEstimationRun = async (
+  req: Request,
+  _res: Response,
+  connection: PoolConnection
+) => {
   const project_idx = req.user?.project_idx;
   const { estimate_run_id } = req.body;
 
@@ -286,20 +357,31 @@ export const resumeEstimationRun = async (req: Request, _res: Response, connecti
 
   const graph = await loadGraph(runMeta.decision_graph_idx);
 
-  const { facts, answeredNodeIdxs } = await getFactsForRun(estimate_run_id, connection);
-  const state = computePageNodes(graph, facts, answeredNodeIdxs);
-  const page_answers = await getAnswersForPage(connection, runMeta.id, state.page_nodes);
+  const { facts, answeredNodeIdxs } = await getFactsForRun(
+    estimate_run_id,
+    connection
+  );
 
-  const { is_first_page, can_go_back } = computeNavFlags(facts, answeredNodeIdxs);
+  const state = computeActiveChunk(graph, facts, answeredNodeIdxs);
+  const chunk_answers = await getAnswersForChunk(
+    connection,
+    runMeta.id,
+    state.chunk_nodes
+  );
+
+  const { is_first_chunk, can_go_back } = computeNavFlags(
+    facts,
+    answeredNodeIdxs
+  );
 
   return {
     success: true,
     estimate_run_id,
     facts,
-    page_nodes: state.page_nodes,
-    page_answers,
+    chunk_nodes: state.chunk_nodes,
+    chunk_answers,
     completed: state.completed,
-    is_first_page,
+    is_first_chunk,
     can_go_back,
   };
 };

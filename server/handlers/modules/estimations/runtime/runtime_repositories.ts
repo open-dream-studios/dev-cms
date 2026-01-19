@@ -150,6 +150,15 @@ export const insertAnswerAndFacts = async (
   // 3) produce facts
   const produces = node.config?.produces_facts || [];
 
+  // 🔒 DO NOT produce facts if answer is null / empty
+  if (
+    answer === null ||
+    answer === undefined ||
+    (typeof answer === "string" && answer.trim() === "")
+  ) {
+    return { success: true };
+  }
+
   for (const f of produces) {
     if (!f.fact_key) throw new Error("produces_facts missing fact_key");
 
@@ -163,22 +172,21 @@ export const insertAnswerAndFacts = async (
     const raw = resolveProducedValue(f, answer, facts);
     const coerced = coerceFactValue(def.fact_type, raw);
 
-    // upsert fact (so re-answering node updates it)
     await connection.query(
       `
-      INSERT INTO estimation_facts (
-        estimate_fact_id,
-        estimate_run_idx,
-        fact_key,
-        fact_value,
-        source_node_idx,
-        batch_id
-      ) VALUES (?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        fact_value = VALUES(fact_value),
-        source_node_idx = VALUES(source_node_idx),
-        batch_id = VALUES(batch_id)
-      `,
+    INSERT INTO estimation_facts (
+      estimate_fact_id,
+      estimate_run_idx,
+      fact_key,
+      fact_value,
+      source_node_idx,
+      batch_id
+    ) VALUES (?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      fact_value = VALUES(fact_value),
+      source_node_idx = VALUES(source_node_idx),
+      batch_id = VALUES(batch_id)
+    `,
       [
         `FACT-${ulid()}`,
         run.id,
@@ -210,7 +218,7 @@ export const getRunMeta = async (estimate_run_id: string) => {
 export const listEstimationRuns = async (
   connection: PoolConnection,
   project_idx: number,
-  decision_graph_idx: number,
+  decision_graph_idx: number
 ) => {
   const [rows] = await connection.query<any[]>(
     `

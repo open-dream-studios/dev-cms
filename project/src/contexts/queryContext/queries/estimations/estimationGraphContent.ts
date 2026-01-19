@@ -49,12 +49,14 @@ export function useEstimationGraphContent(
       qc.invalidateQueries({ queryKey: ["estimationGraphEdges", graph_idx] });
     },
   });
-
+  
   const upsertEdgeMutation = useMutation({
     mutationFn: (edge: Partial<EstimationGraphEdge>) =>
       upsertEstimationGraphEdgeApi(graph_idx!, edge, currentProjectId!),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["estimationGraphEdges", graph_idx] }),
+    onSuccess: (res) => {
+      if (!res.success) return;
+      qc.invalidateQueries({ queryKey: ["estimationGraphEdges", graph_idx] });
+    },
   });
 
   const deleteEdgeMutation = useMutation({
