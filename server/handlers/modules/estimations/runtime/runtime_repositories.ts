@@ -1,12 +1,11 @@
+// server/handlers/modules/estimations/runtime/runtime_repositories.ts
 import { db } from "../../../../connection/connect.js";
 import { ulid } from "ulid";
 import type { PoolConnection } from "mysql2/promise";
-import { getFactDefinitionByKey } from "../facts/fact_definitions_repositories.js";
-import { coerceFactValue } from "./fact_validations.js";
-import { resolveProducedValue } from "./value_resolver.js";
-import { safeParse } from "./runtime_controllers.js";
+import { coerceFactValue } from "./helpers/fact_validations.js";
+import { safeParse } from "./handlers/runtime_controllers.js";
 import { GraphNode } from "./types.js";
-import { evaluateExpression } from "./expression_evaluator.js";
+import { evaluateExpression } from "./helpers/expression_evaluator.js";
 
 export const createEstimationRun = async (
   connection: PoolConnection,
@@ -243,4 +242,21 @@ export const touchRunUpdatedAt = async (
     `,
     [estimate_run_id]
   );
+};
+
+export const getPricingSummaryFunction = async (
+  connection: PoolConnection,
+  estimate_run_idx: number
+) => {
+  const [[row]] = await connection.query<any[]>(
+    `
+    SELECT total_min, total_max, inferred_tier
+    FROM estimation_summary
+    WHERE estimate_run_idx = ?
+    `,
+    [estimate_run_idx]
+  );
+
+  console.log(row)
+  return row ?? null;
 };

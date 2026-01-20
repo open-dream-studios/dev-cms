@@ -1,7 +1,7 @@
-// server/handlers/modules/estimations/runtime/graph_loader.ts
-import { db } from "../../../../connection/connect.js";
+// server/handlers/modules/estimations/runtime/run_graph/graph_loader.ts
+import { db } from "../../../../../connection/connect.js";
 import type { RowDataPacket } from "mysql2/promise";
-import type { GraphEdge, GraphNode, LoadedGraph } from "./types.js";
+import type { GraphEdge, GraphNode, LoadedGraph } from "../types.js";
 
 export const loadGraph = async (graph_idx: number): Promise<LoadedGraph> => {
   const [[graphMeta]] = await db

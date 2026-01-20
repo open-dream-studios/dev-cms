@@ -1,4 +1,4 @@
-// server/handlers/modules/estimations/runtime/pricing_breakdown_respository.ts
+// server/handlers/modules/estimations/runtime/pricing_breakdown_respositories.ts
 import type { PoolConnection } from "mysql2/promise";
 
 export const getPricingBreakdown = async (

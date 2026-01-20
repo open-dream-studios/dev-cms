@@ -2,7 +2,7 @@
 import { ulid } from "ulid";
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { db } from "../../../../../connection/connect.js";
-import { loadGraph } from "../../runtime/graph_loader.js";
+import { loadGraph } from "../../runtime/run_graph/graph_loader.js";
 import { validateGraphStructure } from "../graphs/validation/graph_validation.js";
 
 export const getEdgesFunction = async (graph_idx: number) => {

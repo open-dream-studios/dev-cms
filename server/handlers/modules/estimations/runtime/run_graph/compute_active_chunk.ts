@@ -1,31 +1,12 @@
-// server/handlers/modules/estimations/runtime/compute_active_chunk.ts
-import { evaluateCondition } from "./condition_evaluator.js";
-import type { LoadedGraph, GraphNode } from "./types.js";
+// server/handlers/modules/estimations/runtime/run_graph/compute_active_chunk.ts
+import { evaluateCondition } from "../helpers/condition_evaluator.js";
+import type { LoadedGraph, GraphNode } from "../types.js";
 
 type Facts = Record<string, any>;
 
 export type ChunkState = {
   chunk_nodes: GraphNode[];
   completed: boolean;
-};
-
-const buildDescendantMap = (graph: LoadedGraph) => {
-  const map = new Map<number, Set<number>>();
-
-  const dfs = (root: number, current: number) => {
-    if (!map.has(root)) map.set(root, new Set());
-    map.get(root)!.add(current);
-
-    for (const e of graph.edgesFromNode.get(current) ?? []) {
-      dfs(root, e.to_node_idx);
-    }
-  };
-
-  for (const node of graph.nodesById.values()) {
-    dfs(node.id, node.id);
-  }
-
-  return map;
 };
 
 const computeNodeDepths = (graph: LoadedGraph) => {
@@ -61,7 +42,7 @@ export const computeActiveChunk = (
     node: GraphNode;
     depth: number;
     priority: number;
-    from: number; // parent that activated it
+    from: number;  
   };
 
   const ready: Ready[] = [];

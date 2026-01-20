@@ -1,6 +1,4 @@
 // server/handlers/modules/estimations/runtime/runtime_controllers.ts
-// REPLACE THE ENTIRE FILE WITH THIS (no page_nodes, no page_answers, no undefined vars)
-
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
 
@@ -12,11 +10,11 @@ import {
   listEstimationRuns,
   touchRunUpdatedAt,
 } from "./runtime_repositories.js";
-import { getPricingSummary } from "./get_pricing_summary.js";
-import { loadGraph } from "./graph_loader.js";
-import { computeActiveChunk } from "./compute_active_chunk.js";
-import { executePricingGraph } from "./pricing_graph_executor.js";
-import { buildPricingSummary } from "./pricing_summary_builder.js";
+import { getPricingSummaryFunction } from "./runtime_repositories.js";
+import { loadGraph } from "./run_graph/graph_loader.js";
+import { computeActiveChunk } from "./run_graph/compute_active_chunk.js";
+import { executePricingGraph } from "./calculate/pricing_graph_executor.js";
+import { buildPricingSummary } from "./calculate/pricing_summary_builder.js";
 import { getActivePricingGraphIdx } from "../pricing_graphs/pricing_graph_repositories.js";
 
 /**
@@ -117,7 +115,7 @@ export const startEstimationRun = async (
     answeredNodeIdxs
   );
 
-  const pricing = await getPricingSummary(connection, run.id);
+  const pricing = await getPricingSummaryFunction(connection, run.id);
 
   return {
     success: true,
@@ -160,7 +158,7 @@ export const getEstimationState = async (
     answeredNodeIdxs
   );
 
-  const pricing = await getPricingSummary(connection, runMeta.id);
+  const pricing = await getPricingSummaryFunction(connection, runMeta.id);
 
   return {
     success: true,
@@ -245,7 +243,7 @@ export const answerNode = async (
     answeredNodeIdxs
   );
 
-  const pricing = await getPricingSummary(connection, runMeta.id);
+  const pricing = await getPricingSummaryFunction(connection, runMeta.id);
 
   return {
     success: true,
@@ -369,7 +367,7 @@ export const goBackOneStep = async (
     answeredNodeIdxs
   );
 
-  const pricing = await getPricingSummary(connection, run.id);
+  const pricing = await getPricingSummaryFunction(connection, run.id);
 
   return {
     success: true,
@@ -438,7 +436,7 @@ export const resumeEstimationRun = async (
     answeredNodeIdxs
   );
 
-  const pricing = await getPricingSummary(connection, runMeta.id);
+  const pricing = await getPricingSummaryFunction(connection, runMeta.id);
 
   return {
     success: true,
