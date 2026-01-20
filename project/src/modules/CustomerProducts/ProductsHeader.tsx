@@ -12,14 +12,15 @@ import { FaPlus } from "react-icons/fa6";
 import Modal2Input from "@/modals/Modal2Input";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { useRouting } from "@/hooks/useRouting";
-import { productFilter, Product } from "@open-dream/shared";
+import { Product } from "@open-dream/shared";
 import { productToForm } from "@/util/schemas/productSchema";
 import { getCardStyle } from "@/styles/themeStyles";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { promptContinue } from "@/modals/_actions/modals.actions";
 import { onProductFormSubmit, saveProducts } from "./_actions/products.actions";
+import { handleViewClick } from "../_util/Filters/_actions/filters.actions";
+import { ProductFilterSelection } from "../_util/Filters/ProductFilterSelection";
 
 const ProductsHeader = ({ title }: { title: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -38,20 +39,20 @@ const ProductsHeader = ({ title }: { title: string }) => {
     setUpdatingLock,
     setAddingProduct,
     inventoryView,
-    setInventoryView,
   } = useUiStore();
   const { deleteProducts, hasProjectModule, runModule } = useContextQueries();
-  const { screenClick } = useRouting();
   const currentTheme = useCurrentTheme();
   const { modal2, setModal2 } = useUiStore();
 
   const [showFilterPopup, setShowFilterPopup] = useState<boolean>(false);
   const showFilterPopupRef = useRef<boolean>(false);
   const filterPopupRef = useRef<HTMLDivElement | null>(null);
+
   const handleFilterButtonClick = () => {
     setShowFilterPopup(true);
     showFilterPopupRef.current = true;
   };
+
   useOutsideClick(filterPopupRef, () => {
     if (showFilterPopup) {
       setShowFilterPopup(false);
@@ -206,161 +207,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
     requestAnimationFrame(() => setEditingProducts(!editingProducts));
   };
 
-  const handleFilterClick = async (filter: productFilter) => {
-    let active = [...productFilters.products];
-
-    if (active.includes(filter)) {
-      active = active.filter((f) => f !== filter);
-    } else {
-      active.push(filter);
-    }
-    setProductFilters({ ...productFilters, products: active });
-    setSelectedProducts([]);
-    if (inventoryView) {
-      await saveProducts();
-    } else {
-      setEditingProducts(false);
-    }
-  };
-
-  const handleJobFilterClick = async (
-    filter: "Service" | "Refurbishment" | "Sale"
-  ) => {
-    let active = [...productFilters.jobType];
-    if (active.includes(filter)) {
-      active = active.filter((f) => f !== filter);
-    } else {
-      active.push(filter);
-    }
-    setProductFilters({ ...productFilters, jobType: active });
-    setSelectedProducts([]);
-    if (inventoryView) {
-      await saveProducts();
-    } else {
-      setEditingProducts(false);
-    }
-  };
-
-  const handleViewClick = async (tableView: boolean) => {
-    if (inventoryView) {
-      await saveProducts();
-    }
-    setInventoryView(tableView);
-  };
-
   if (!currentUser) return null;
-
-  const FilterSelections = ({ popup }: { popup: boolean }) => {
-    return (
-      <div
-        className={`flex ${
-          popup ? "flex-col gap-[6px]" : "flex-row gap-[13px]"
-        }`}
-      >
-        <div
-          style={{
-            backgroundColor: currentTheme.header_1_1,
-          }}
-          className="flex w-[184px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
-        >
-          <div
-            onClick={() => handleFilterClick("Active")}
-            style={{
-              backgroundColor: productFilters.products.includes("Active")
-                ? currentTheme.header_1_2
-                : "transparent",
-            }}
-            className="select-none cursor-pointer w-[84px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-          >
-            Active
-          </div>
-          <div
-            className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
-            style={{
-              opacity: productFilters.products.length === 0 ? "0.1" : 0,
-              backgroundColor: currentTheme.text_1,
-            }}
-          />
-          <div
-            onClick={() => handleFilterClick("Complete")}
-            style={{
-              backgroundColor: productFilters.products.includes("Complete")
-                ? currentTheme.header_1_2
-                : "transparent",
-            }}
-            className="select-none cursor-pointer w-[88px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-          >
-            Complete
-          </div>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: currentTheme.header_1_1,
-          }}
-          className="flex w-[330px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
-        >
-          <div
-            onClick={() => handleJobFilterClick("Service")}
-            style={{
-              backgroundColor: productFilters.jobType.includes("Service")
-                ? currentTheme.header_1_2
-                : "transparent",
-            }}
-            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-          >
-            Service
-          </div>
-          <div
-            className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
-            style={{
-              opacity:
-                (productFilters.jobType.length === 1 &&
-                  productFilters.jobType[0] === "Sale") ||
-                productFilters.jobType.length === 0
-                  ? "0.1"
-                  : 0,
-              backgroundColor: currentTheme.text_1,
-            }}
-          />
-          <div
-            onClick={() => handleJobFilterClick("Refurbishment")}
-            style={{
-              backgroundColor: productFilters.jobType.includes("Refurbishment")
-                ? currentTheme.header_1_2
-                : "transparent",
-            }}
-            className="select-none cursor-pointer w-[124px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-          >
-            Refurbishment
-          </div>
-          <div
-            className="w-[1px] h-[22px] rounded-[4px] mx-[2px]"
-            style={{
-              opacity:
-                (productFilters.jobType.length === 1 &&
-                  productFilters.jobType[0] === "Service") ||
-                productFilters.jobType.length === 0
-                  ? "0.1"
-                  : 0,
-              backgroundColor: currentTheme.text_1,
-            }}
-          />
-          <div
-            onClick={() => handleJobFilterClick("Sale")}
-            style={{
-              backgroundColor: productFilters.jobType.includes("Sale")
-                ? currentTheme.header_1_2
-                : "transparent",
-            }}
-            className="select-none cursor-pointer w-[94px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-          >
-            Sale
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="relative">
@@ -398,7 +245,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
             </div>
 
             <div className="hidden min-[1380px]:flex">
-              <FilterSelections popup={false} />
+              <ProductFilterSelection popup={false} jobTypeDropdown={false} />
             </div>
 
             <div className="relative">
@@ -422,7 +269,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
                   style={getCardStyle(currentUser.theme, currentTheme)}
                   className="absolute bottom-[-92px] left-[-140px] min-[600px]:left-[-25px] h-[86px] justify-center items-start rounded-[10px] px-[6px] flex flex-col"
                 >
-                  <FilterSelections popup={true} />
+                  <ProductFilterSelection popup={true} jobTypeDropdown={false}/>
                 </div>
               )}
             </div>

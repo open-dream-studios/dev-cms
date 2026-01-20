@@ -53,7 +53,7 @@ export const currentDataInitialState = {
   currentSection: null as Section | null,
   currentSectionId: null as number | null,
 
-  productFilters: { products: [], jobType: [] } as DataFilters,
+  productFilters: { products: ["Active"], jobType: [] } as DataFilters,
 
   currentCustomerSearchTerm: "",
 

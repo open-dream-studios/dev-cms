@@ -59,7 +59,7 @@ export const handleZipDownload = async (
   await handleZipDownloadFromUrls(
     currentProductImages.map((mediaLink: MediaLink, index: number) => ({
       url: mediaLink.url,
-      filename: `slide-${index + 1}`,
+      filename: `img-${index + 1}`,
     })),
     zipName
   );

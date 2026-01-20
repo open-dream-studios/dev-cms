@@ -14,9 +14,11 @@ import { getContactCardSearchDisplay } from "../_util/Search/_actions/search.act
 const CustomerMiniCard = ({
   customer,
   index,
+  isCustomer,
 }: {
   customer: Customer;
   index: number;
+  isCustomer: boolean;
 }) => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
@@ -50,8 +52,11 @@ const CustomerMiniCard = ({
             ? "rgba(255,255,255,0.057)"
             : "rgba(255,255,255,0.028)",
         color: currentTheme.text_3,
+        borderLeft: isCustomer
+          ? `2px solid ${currentTheme.app_color_1}`
+          : "2px solid transparent",
       }}
-      className="w-full h-[70px] pl-[14px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 
+      className="w-full h-[70px] pl-[10px] pr-[7px] flex flex-row gap-[10px] items-center rounded-[12px] 
             dim hover:brightness-[85%] transition cursor-pointer shadow-sm"
     >
       <div

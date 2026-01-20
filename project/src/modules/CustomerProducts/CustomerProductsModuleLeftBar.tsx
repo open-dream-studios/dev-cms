@@ -21,6 +21,8 @@ import {
   haveImagesChanged,
   onProductFormSubmit,
 } from "./_actions/products.actions";
+import { ProductFilterSelection } from "../_util/Filters/ProductFilterSelection";
+import { useDataFilters } from "@/hooks/useDataFilters";
 
 const CustomerProductsModuleLeftBar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -30,6 +32,7 @@ const CustomerProductsModuleLeftBar = () => {
   const { getForm } = useFormInstanceStore();
   const { setAddingProduct } = useUiStore();
   const currentTheme = useCurrentTheme();
+  const { filteredProducts } = useDataFilters();
 
   const productForm = getForm("product");
 
@@ -47,10 +50,7 @@ const CustomerProductsModuleLeftBar = () => {
         `/products/${product.serial_number}`
       );
     } else {
-      await screenClick(
-        "customer-products",
-        `/products`
-      );
+      await screenClick("customer-products", `/products`);
     }
     setCurrentProductData(product);
     setAddingProduct(!product);
@@ -80,7 +80,7 @@ const CustomerProductsModuleLeftBar = () => {
           }}
         >
           <div className="select-none flex flex-row gap-[13.5px] items-center w-[100%]">
-            <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
+            <p className="w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[2px]">
               Products
             </p>
           </div>
@@ -97,6 +97,10 @@ const CustomerProductsModuleLeftBar = () => {
           </div>
         </div>
         <Divider />
+
+        <div className="w-[100%] h-[auto] mt-[8px]">
+          <ProductFilterSelection popup={true} jobTypeDropdown={true} />
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 h-[100%]">
@@ -108,16 +112,18 @@ const CustomerProductsModuleLeftBar = () => {
               })}
             </div>
           ) : (
-            localProductsData.map((product: Product, index: number) => {
-              return (
-                <ProductMiniCard
-                  key={index}
-                  product={product}
-                  index={index}
-                  handleProductClick={handleProductClick}
-                />
-              );
-            })
+            filteredProducts(localProductsData).map(
+              (product: Product, index: number) => {
+                return (
+                  <ProductMiniCard
+                    key={index}
+                    product={product}
+                    index={index}
+                    handleProductClick={handleProductClick}
+                  />
+                );
+              }
+            )
           )}
         </div>
       </div>

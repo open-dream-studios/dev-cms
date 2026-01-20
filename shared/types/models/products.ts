@@ -14,4 +14,6 @@ export type Product = {
   height: number;
   note: string | null;
   ordinal: number;
+  created_at?: string | null;
+  updated_at?: string | null;
 };

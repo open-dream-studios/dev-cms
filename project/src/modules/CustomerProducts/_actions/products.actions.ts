@@ -24,6 +24,7 @@ import { saveCurrentProductImages } from "@/modules/MediaModule/_actions/media.a
 import { queryClient } from "@/lib/queryClient";
 import { useTimer } from "@/store/util/useTimer";
 import { productToForm } from "@/util/schemas/productSchema";
+import { fetchAICompletionApi } from "@/api/AI.api";
 
 export const createJobDefinitionContextMenu =
   (): ContextMenuDefinition<JobDefinition> => ({
@@ -249,4 +250,112 @@ export const onSelectProductCustomer = async (
       queryKey: ["products", currentProjectId],
     });
   }
+};
+
+const getDescriptionFromTemplate = (
+  dynamicInsert1: string,
+  matchedProduct: Product
+) => {
+  const formatDimension = (value: unknown) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num.toFixed(0) : "unmeasured";
+  };
+
+  const dynamicDescription = `FREE DELIVERY & INSTALLATION INCLUDED
+
+${dynamicInsert1}
+
+✅ Included:
+  - 90-day warranty 
+  - Hot water delivery (if requested)
+  - Again, FREE DELIVERY & INSTALLATION 
+
+➕ Additional Accessories:
+   - Spa care kit $200
+   - Entry steps $100
+   - Cover Lifter $150
+  
+🧪 Spa-Care Package ($200):
+   - Skimmer net
+   - Water test strips
+   - Oxidizing Shock
+   - Chlorine granulate 
+   - PH Up 
+   - PH Down 
+   - Water clarifier 
+   - Thermometer
+   - Kid-safe sealed bucket for chemicals
+   - Step-by-step tutorial 
+
+📏 Dimensions:
+            ${formatDimension(
+              matchedProduct.length
+            )}"    x    ${formatDimension(
+    matchedProduct.width
+  )}"   x     ${formatDimension(matchedProduct.height)}" 
+       (Length)x(Width)x(Height)
+
+⚡️ Electrical: 240v, 50A
+
+💲Discounts: As a small business, we’re able to offer discounted rates for customers who purchase BOTH a hot tub + an electrical installation through us! Message for more info!
+
+*** No holds. First-come, first-served. ***`;
+  return dynamicDescription;
+};
+
+export const handleGenerateDescription = async (matchedProduct: Product) => {
+  const { currentProjectId } = useCurrentDataStore.getState();
+  const { setUpdatingLock } = useUiStore.getState();
+  setUpdatingLock(true);
+
+  const dynamicInsert1 = "// I WILL INSERT your response here";
+  const dynamicDescription = getDescriptionFromTemplate(
+    dynamicInsert1,
+    matchedProduct
+  );
+  const {
+    id,
+    product_id,
+    customer_id,
+    created_at,
+    updated_at,
+    project_idx,
+    ...productInfo
+  } = matchedProduct;
+
+  const prompt = `Respond to me with an answer and nothing else. Do exactly as I say.
+  Write a short paragraph about this tub, to go at the top of the description under FREE DELIVERY & INSTALLATION INCLUDED
+  Here is an example: This is a practically brand new 240v lifeSpas. This tub works perfectly and is an excellent choice for someone looking for a newer tub under warranty for a very fair price.
+  
+  Don't make it sound salesy.. Don't write a bunch of nonsense, don't start with something cheesy like "Discover the new" or "Explore " or a question like "Interested in ...?"
+  MAkE this paragraph very fact based.
+  Here are 3 more examples: 
+
+  1) Fully tested Hot Springs Grande running on 240v / 50A. The tub heats properly, jets perform as expected, and all systems are functioning correctly. Known for solid construction and long-term reliability.
+  2) Large Hot Springs Grande measuring 100” x 90” x 34”, offering deep seating and plenty of interior space. Comfortable layout, strong jet pressure, and consistent heating make it a practical everyday spa.
+  3) Hot Springs Grande spa that’s ready for installation and use. Built by a manufacturer with a strong reputation for durability and parts availability. Includes delivery, installation, and a warranty for peace of mind.
+  
+  Lastly, to help you write this, here is the product info:
+  ${JSON.stringify(productInfo)}
+
+  And here is the full description, missing the paragraph you will write for me... in it's place I put // I WILL INSERT your response here. Here is the full thing:
+
+  ${dynamicDescription}
+
+  Ok now write me 1 paragraph, nothing else. Remember, just return the paragraph. Don't say anything else.
+  OK GO`;
+  let result = null
+  try {
+    const res = await fetchAICompletionApi(currentProjectId!, prompt);
+    if (!res || !res.success) return null;
+    result = res.response;
+  } finally {
+    setUpdatingLock(false);
+  }
+
+  const dynamicDescriptionResult = getDescriptionFromTemplate(
+    result,
+    matchedProduct
+  );
+  return dynamicDescriptionResult;
 };

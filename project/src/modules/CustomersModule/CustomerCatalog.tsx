@@ -14,9 +14,15 @@ import {
   scrollToItem,
 } from "@/util/functions/Search";
 import CatalogMiniCardSkeleton from "@/lib/skeletons/CatalogMiniCardSkeleton";
+import { useDataFilters } from "@/hooks/useDataFilters";
+import { useCustomerUiStore } from "./_store/customers.store";
 
 const CustomerCatalog = () => {
   const { customers, isLoadingCustomers } = useContextQueries();
+  const { filteredCustomers: applyCustomerFilter, isCustomer } =
+    useDataFilters();
+  const { contactsFilter } = useCustomerUiStore();
+
   const {
     searchContext,
     setSearchContext,
@@ -31,7 +37,12 @@ const CustomerCatalog = () => {
   const ignoreNextSearchRef = useRef(false);
   const [pendingScroll, setPendingScroll] = useState(false);
 
-  const lastScreenRef = useRef<Screen | null>(null);
+  const baseCustomers = applyCustomerFilter(customers);
+
+  useEffect(() => {
+    setSearchContext(null);
+    setCurrentCustomerSearchTerm("");
+  }, [contactsFilter]);
 
   useEffect(() => {
     if (!triggerCustomerScrollRef.current) return;
@@ -41,12 +52,11 @@ const CustomerCatalog = () => {
       setCurrentCustomerSearchTerm("");
       setPendingScroll(true);
     }
-    lastScreenRef.current = screen;
   }, [screen, currentCustomer]);
 
   useEffect(() => {
     if (!pendingScroll) return;
-    if (!customers.length) return;
+    if (!baseCustomers.length) return;
     if (!currentCustomer) return;
 
     const id = currentCustomer.customer_id;
@@ -59,35 +69,52 @@ const CustomerCatalog = () => {
         setPendingScroll(false);
       });
     }
-  }, [pendingScroll, customers, currentCustomer]);
+  }, [pendingScroll, baseCustomers, currentCustomer]);
 
   useEffect(() => {
     if (ignoreNextSearchRef.current) {
       ignoreNextSearchRef.current = false;
       return;
     }
-    if (!customers.length) return;
-    if (!currentCustomerSearchTerm.trim()) return;
+
+    if (!currentCustomerSearchTerm.trim()) {
+      if (searchContext !== null) setSearchContext(null);
+      return;
+    }
+
+    if (!baseCustomers.length) return;
+
     const ctx = determineSearchContext(
       currentCustomerSearchTerm.trim(),
-      customers
+      baseCustomers
     );
+ 
+    if (
+      searchContext &&
+      JSON.stringify(searchContext.parsed) === JSON.stringify(ctx.parsed) &&
+      searchContext.type === ctx.type
+    ) {
+      return;
+    }
+
     if (ctx.bestMatch) {
       scrollToItem(ctx.bestMatch.customer_id, itemRefs, customerScrollRef, 106);
     }
-    setSearchContext(ctx);
-  }, [currentCustomerSearchTerm, customers, setSearchContext]);
 
-  const filteredCustomers = React.useMemo(() => {
-    if (!currentCustomerSearchTerm.trim() || !searchContext) return customers;
+    setSearchContext(ctx);
+  }, [currentCustomerSearchTerm, baseCustomers]);
+
+  const finalCustomers = React.useMemo(() => {
+    if (!currentCustomerSearchTerm.trim() || !searchContext)
+      return baseCustomers;
+
     const ctx = searchContext;
-    const parsed = ctx.parsed;
-    return customers.filter((customer) => {
+    return baseCustomers.filter((customer) => {
       const schema = ctx.schema(customer);
-      const result = runSearchMatch(parsed, schema);
+      const result = runSearchMatch(ctx.parsed, schema);
       return result.isMatch;
     });
-  }, [customers, searchContext, currentCustomerSearchTerm]);
+  }, [baseCustomers, searchContext, currentCustomerSearchTerm]);
 
   return (
     <div
@@ -95,21 +122,23 @@ const CustomerCatalog = () => {
       className="w-[100%] h-[100%] px-[15px] pb-[20px] flex flex-col overflow-y-auto gap-[9px]"
     >
       {isLoadingCustomers
-        ? Array.from({ length: 4 }, (_, index) => {
-            return <CatalogMiniCardSkeleton key={index} />;
-          })
-        : filteredCustomers.map((customer: Customer, index: number) => {
-            return (
-              <div
-                key={customer.customer_id}
-                ref={(el) => {
-                  itemRefs.current[customer.customer_id] = el;
-                }}
-              >
-                <CustomerMiniCard customer={customer} index={index} />
-              </div>
-            );
-          })}
+        ? Array.from({ length: 4 }).map((_, i) => (
+            <CatalogMiniCardSkeleton key={i} />
+          ))
+        : finalCustomers.map((customer: Customer, index: number) => (
+            <div
+              key={customer.customer_id}
+              ref={(el) => {
+                itemRefs.current[customer.customer_id] = el;
+              }}
+            >
+              <CustomerMiniCard
+                customer={customer}
+                index={index}
+                isCustomer={isCustomer(customer)}
+              />
+            </div>
+          ))}
     </div>
   );
 };

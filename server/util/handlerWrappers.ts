@@ -67,7 +67,13 @@ export const transactionHandler = (fn: TransactionFn) => {
       return res.status(status).json(body);
     } catch (err: any) {
       await connection.rollback();
-      console.error(`❌ Transaction failed in ${functionName}:`, err.message);
+
+      if (err?.code === "ER_LOCK_DEADLOCK") {
+        console.warn(`⚠️ Deadlock detected - ${functionName} did not execute`);
+      } else {
+        console.error(`❌ Transaction failed in ${functionName}:`, err.message);
+      }
+      connection.release();
       console.error(err.stack);
       res.status(500).json({
         success: false,

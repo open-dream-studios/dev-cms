@@ -12,8 +12,6 @@ import ProductView from "./ProductView/ProductView";
 import InventoryGrid from "./Grid/InventoryGrid";
 import { useUiStore } from "@/store/useUIStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
-import { HomeLayout } from "@/layouts/homeLayout";
-import CustomerProductsModuleLeftBar from "./CustomerProductsModuleLeftBar";
 
 const CustomerProducts = () => {
   const { currentUser } = useContext(AuthContext);

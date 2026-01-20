@@ -1,7 +1,7 @@
 // shared/types/models/filters.ts
-export type jobType = "Service" | "Refurbishment" | "Sale";
-export type productFilter = "Active" | "Complete";
+export type JobType = "Sale" | "Service" | "Refurbishment";
+export type ProductFilter = "Active" | "Complete";
 export type DataFilters = {
-  products: productFilter[];
-  jobType: jobType[];
+  products: ProductFilter[];
+  jobType: JobType[];
 };

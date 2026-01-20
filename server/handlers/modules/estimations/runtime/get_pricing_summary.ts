@@ -14,5 +14,6 @@ export const getPricingSummary = async (
     [estimate_run_idx]
   );
 
+  console.log(row)
   return row ?? null;
 };

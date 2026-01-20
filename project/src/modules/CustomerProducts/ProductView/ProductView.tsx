@@ -45,6 +45,7 @@ import ImageGallery from "@/modules/components/ImageGallery";
 import { FiEdit } from "react-icons/fi";
 import { uploadProductImages } from "@/modules/MediaModule/_actions/media.actions";
 import {
+  handleGenerateDescription,
   haveImagesChanged,
   onClearProductCustomer,
   onProductFormSubmit,
@@ -53,6 +54,7 @@ import {
 import JobDefinitionSelection from "@/modules/_util/Selection/JobDefinitionSelection";
 import { Download } from "lucide-react";
 import { handleZipDownload } from "@/util/functions/Images";
+import { HiCursorArrowRays, HiMiniChevronDoubleRight } from "react-icons/hi2";
 
 const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -90,6 +92,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     useState<boolean>(false);
   const [noteEditorOpen, setNoteEditorOpen] = useState<boolean>(false);
   const [editMediaLinks, setEditMediaLinks] = useState<boolean>(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const productForm = useProductForm(currentProduct);
   const { registerForm, unregisterForm } = useFormInstanceStore();
@@ -349,6 +352,10 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
     });
   };
 
+  const Spinner = () => (
+    <div className="h-[16px] w-[16px] border-2 border-white/40 border-t-white rounded-full animate-spin" />
+  );
+
   if (!currentUser) return null;
 
   if (!addingProduct && serialNumber && productsData?.length) {
@@ -391,6 +398,20 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
       console.log(e);
     } finally {
       setUpdatingLock(false);
+    }
+  };
+
+  const generateDescription = async () => {
+    if (!matchedProduct || isGenerating) return;
+    try {
+      setIsGenerating(true);
+      const newDescription = await handleGenerateDescription(matchedProduct);
+      productForm.setValue("description", newDescription, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -696,6 +717,34 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                           <FaChevronUp className="opacity-[0.2]" size={20} />
                         </div>
                       )}
+
+                      {descriptionEditorOpen &&
+                        (!description ||
+                          (description && description.length === 0)) && (
+                          <div
+                            onClick={generateDescription}
+                            style={{
+                              backgroundColor: currentTheme.background_2_2,
+                            }}
+                            className={`flex justify-center items-center gap-[6px] rounded-[7px] px-[16px] py-[3px] left-[10px] bottom-[10px] absolute z-[300]
+                              ${
+                                isGenerating
+                                  ? "opacity-70 cursor-not-allowed"
+                                  : "cursor-pointer hover:brightness-90"
+                              }
+                            `}
+                          >
+                            <p className="text-[15px] font-[600]">
+                              {isGenerating ? "Generating" : "Generate"}
+                            </p>
+
+                            {isGenerating ? (
+                              <Spinner />
+                            ) : (
+                              <HiCursorArrowRays size={16} />
+                            )}
+                          </div>
+                        )}
                     </div>
                   </div>
 
