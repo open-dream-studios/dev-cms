@@ -17,7 +17,7 @@ import { loadGraph } from "./graph_loader.js";
 import { computeActiveChunk } from "./compute_active_chunk.js";
 import { executePricingGraph } from "./pricing_graph_executor.js";
 import { buildPricingSummary } from "./pricing_summary_builder.js";
-import { getActivePricingGraphIdx } from "../pricing/pricing_graph_repositories.js";
+import { getActivePricingGraphIdx } from "../pricing_graphs/pricing_graph_repositories.js";
 
 /**
  * Chunk-based nav flags

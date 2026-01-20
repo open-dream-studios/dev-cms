@@ -1,4 +1,4 @@
-// server/handlers/modules/estimations/pricing/pricing_graph_controllers.ts
+// server/handlers/modules/estimations/pricing_graphs/pricing_graph_controllers.ts
 import type { Request } from "express";
 import type { PoolConnection } from "mysql2/promise";
 import {

@@ -1,4 +1,4 @@
-// server/handlers/modules/estimations/pricing/pricing_graph_routes.ts
+// server/handlers/modules/estimations/pricing_graphs/pricing_graph_routes.ts
 import express from "express";
 import {
   createGraph,

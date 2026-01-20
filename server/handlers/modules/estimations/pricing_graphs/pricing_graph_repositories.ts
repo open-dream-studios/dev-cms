@@ -1,4 +1,4 @@
-// server/handlers/modules/estimations/pricing/pricing_graph_repositories.ts
+// server/handlers/modules/estimations/pricing_graphs/pricing_graph_repositories.ts
 import type { PoolConnection } from "mysql2/promise";
 import { ulid } from "ulid";
 import { PricingNodeConfig } from "./pricing_graph_types.js";

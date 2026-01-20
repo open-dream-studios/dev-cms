@@ -1,4 +1,4 @@
-// server/handlers/modules/estimations/pricing/pricing_graph_types.ts
+// server/handlers/modules/estimations/pricing_graphs/pricing_graph_types.ts
 export type PricingCategory =
   | "Labor"
   | "Materials"
