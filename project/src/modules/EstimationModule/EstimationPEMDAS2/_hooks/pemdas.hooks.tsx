@@ -1,0 +1,523 @@
+// src/pemdas/_actions/pemdas.hooks.ts
+import { useMemo, useReducer, useRef, useState, useEffect } from "react";
+import {
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragMoveEvent,
+  DragEndEvent,
+  DragStartEvent,
+  DragCancelEvent,
+} from "@dnd-kit/core";
+import { reducer, initialState } from "../state/reducer";
+import { WORLD_BOTTOM, WORLD_TOP } from "../_constants/pemdas.constants";
+import { PemdasNode, PEMDASNodeType } from "../types";
+import { arrayMove, getClosestSlotIndex, getSlotCenters } from "../_helpers/pemdas.helpers";
+import Modal2MultiStepModalInput, {
+  StepConfig,
+} from "@/modals/Modal2MultiStepInput";
+import { useUiStore } from "@/store/useUIStore";
+import { capitalizeFirstLetter } from "@/util/functions/Data";
+
+export const PAN_PADDING = 310;
+
+type ReorderPreview = {
+  layerId: string;
+  activeId: string;
+  overIndex: number;
+} | null;
+
+export const usePemdasCanvas = () => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const didInitPanRef = useRef(false);
+  const viewportSizeRef = useRef<{ w: number; h: number } | null>(null);
+  const justDroppedNodeRef = useRef<string | null>(null);
+
+  const [ghost, setGhost] = useState<{
+    variable: string;
+    value: number;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const [reorderPreview, setReorderPreview] = useState<ReorderPreview>(null);
+
+  const isPanningRef = useRef(false);
+  const panStartRef = useRef<{ x: number; y: number } | null>(null);
+  const panOriginRef = useRef<{ x: number; y: number } | null>(null);
+
+  const isDndDraggingRef = useRef(false);
+  const isVarDraggingRef = useRef(false);
+  const isNodeDraggingRef = useRef(false);
+
+  const activeNodeRef = useRef<{ nodeId: string; layerId: string } | null>(
+    null,
+  );
+
+  const ghostOriginRef = useRef<{
+    x: number;
+    y: number;
+    variable: string;
+    value: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!viewportRef.current) return;
+    if (viewportSizeRef.current) return;
+
+    viewportSizeRef.current = {
+      w: viewportRef.current.clientWidth,
+      h: viewportRef.current.clientHeight,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!justDroppedNodeRef.current) return;
+    const id = justDroppedNodeRef.current;
+    const raf = requestAnimationFrame(() => {
+      if (justDroppedNodeRef.current === id) {
+        justDroppedNodeRef.current = null;
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
+  );
+
+  const layers = state.layers;
+
+  const bounds = useMemo(() => {
+    const vw =
+      viewportSizeRef.current?.w ?? viewportRef.current?.clientWidth ?? 1;
+    const vh =
+      viewportSizeRef.current?.h ?? viewportRef.current?.clientHeight ?? 1;
+
+    const minWorldY = WORLD_TOP;
+    const maxWorldY = WORLD_BOTTOM;
+
+    const minWorldX = -PAN_PADDING;
+    const maxWorldX = vw + PAN_PADDING;
+
+    return {
+      minPanX: vw - maxWorldX,
+      maxPanX: -minWorldX,
+      minPanY: vh - maxWorldY,
+      maxPanY: -minWorldY,
+      minWorldX,
+      maxWorldX,
+      minWorldY,
+      maxWorldY,
+    };
+  }, [layers]);
+
+  useEffect(() => {
+    if (didInitPanRef.current) return;
+    if (!viewportRef.current) return;
+
+    setPan({ x: -15, y: -WORLD_TOP });
+    didInitPanRef.current = true;
+  }, [bounds]);
+
+  const clamp = (n: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, n));
+
+  const clearGhost = () => {
+    setGhost(null);
+    ghostOriginRef.current = null;
+    isVarDraggingRef.current = false;
+  };
+
+  const clearReorder = () => {
+    setReorderPreview(null);
+    activeNodeRef.current = null;
+    isNodeDraggingRef.current = false;
+  };
+
+  // ---- CAMERA PAN ----
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (isDndDraggingRef.current) return;
+    if (e.button !== 0) return;
+
+    const el = e.target as HTMLElement;
+    if (el.closest("[data-draggable]") || el.closest("[data-no-pan]")) return;
+
+    isPanningRef.current = true;
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    panStartRef.current = { x: e.clientX, y: e.clientY };
+    panOriginRef.current = { ...pan };
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isPanningRef.current || !panStartRef.current || !panOriginRef.current)
+      return;
+
+    const dx = e.clientX - panStartRef.current.x;
+    const dy = e.clientY - panStartRef.current.y;
+
+    setPan({
+      x: clamp(panOriginRef.current.x + dx, bounds.minPanX, bounds.maxPanX),
+      y: clamp(panOriginRef.current.y + dy, bounds.minPanY, bounds.maxPanY),
+    });
+  };
+
+  const onPointerUp = () => {
+    isPanningRef.current = false;
+    panStartRef.current = null;
+    panOriginRef.current = null;
+  };
+
+  // ---- DND ----
+  const onDragStart = (e: DragStartEvent) => {
+    isDndDraggingRef.current = true;
+
+    const id = String(e.active.id);
+    isVarDraggingRef.current = id.startsWith("var-");
+    isNodeDraggingRef.current = !isVarDraggingRef.current;
+
+    if (isVarDraggingRef.current) {
+      clearReorder();
+      return;
+    }
+
+    // node dragging
+    const data = e.active.data.current as any;
+    if (data?.kind === "NODE" && data?.nodeId && data?.layerId) {
+      activeNodeRef.current = { nodeId: data.nodeId, layerId: data.layerId };
+    }
+  };
+
+  const onDragMove = (e: DragMoveEvent) => {
+    // -------- variable ghost --------
+    if (isVarDraggingRef.current) {
+      const id = String(e.active.id);
+      const data = e.active.data.current as any;
+      if (!id.startsWith("var-") || !data?.variable) return;
+      if (!viewportRef.current) return;
+
+      const rect = viewportRef.current.getBoundingClientRect();
+
+      if (!ghostOriginRef.current) {
+        const p = e.activatorEvent as PointerEvent;
+        ghostOriginRef.current = {
+          variable: data.variable,
+          x: p.clientX - rect.left - pan.x,
+          y: p.clientY - rect.top - pan.y,
+          value: data.value,
+        };
+      }
+
+      setGhost({
+        variable: ghostOriginRef.current.variable,
+        x: ghostOriginRef.current.x + e.delta.x,
+        y: ghostOriginRef.current.y + e.delta.y,
+        value: ghostOriginRef.current.value,
+      });
+
+      return;
+    }
+
+    // -------- node reorder preview --------
+    // const active = activeNodeRef.current;
+    const active = activeNodeRef.current;
+
+    if (!active) return;
+
+    const node = state.nodes[active.nodeId];
+    if (!node) return;
+
+    const layer = state.layers.find((l) => l.id === active.layerId);
+    if (!layer) return;
+
+    // current dragged x in layer-local coordinates
+    const draggedX = node.x + e.delta.x;
+
+    const fromIndex = layer.nodeIds.indexOf(active.nodeId);
+    const overIndex = getClosestSlotIndex(
+      draggedX,
+      layer.width,
+      layer.nodeIds.length,
+    );
+
+    if (fromIndex === -1) return;
+
+    // only update if changed (prevents jitter)
+    setReorderPreview((prev) => {
+      if (!prev) {
+        return { layerId: layer.id, activeId: active.nodeId, overIndex };
+      }
+      if (
+        prev.layerId === layer.id &&
+        prev.activeId === active.nodeId &&
+        prev.overIndex === overIndex
+      ) {
+        return prev;
+      }
+      return { layerId: layer.id, activeId: active.nodeId, overIndex };
+    });
+  };
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const id = String(e.active.id);
+
+    // ✅ variable drop -> same as before
+    if (id.startsWith("var-") && ghost) {
+      const SNAP = 80;
+      let bestLayer: any = null;
+      let bestDist = Infinity;
+
+      for (const l of layers) {
+        const d = Math.abs(ghost.y - l.y);
+        if (d < bestDist) {
+          bestDist = d;
+          bestLayer = l;
+        }
+      }
+
+      if (bestLayer && bestDist <= SNAP) {
+        const index = bestLayer.nodeIds.findIndex(
+          (nid: any) => state.nodes[nid].x > ghost.x,
+        );
+
+        dispatch({
+          type: "ADD_NODE_AT",
+          variable: ghost.variable,
+          nodeType: "var",
+          layerId: bestLayer.id,
+          index: index === -1 ? bestLayer.nodeIds.length : index,
+          constantValue: ghost.value,
+        });
+      }
+
+      clearGhost();
+      isDndDraggingRef.current = false;
+      return;
+    }
+
+    // ✅ commit reorder if we have preview
+    const active = activeNodeRef.current;
+    if (active?.nodeId) {
+      justDroppedNodeRef.current = active.nodeId;
+    }
+
+    if (active && reorderPreview && reorderPreview.layerId === active.layerId) {
+      const layer = state.layers.find((l) => l.id === active.layerId);
+      if (layer) {
+        const fromIndex = layer.nodeIds.indexOf(active.nodeId);
+        const toIndex = reorderPreview.overIndex;
+
+        if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+          const nextIds = arrayMove(layer.nodeIds, fromIndex, toIndex);
+          console.groupCollapsed("[onDragEnd] commit reorder");
+          console.log("activeNodeId:", active.nodeId);
+          console.log("fromIndex:", fromIndex);
+          console.log("toIndex:", toIndex);
+          console.log("node.x BEFORE dispatch:", state.nodes[active.nodeId]?.x);
+          console.log(
+            "target slot center:",
+            getSlotCenters(layer.width, layer.nodeIds.length)[toIndex],
+          );
+          console.groupEnd();
+          dispatch({
+            type: "REORDER_LAYER",
+            layerId: layer.id,
+            nodeIds: nextIds,
+          });
+        }
+      }
+    }
+
+    clearGhost();
+    clearReorder();
+    isDndDraggingRef.current = false;
+  };
+
+  const onDragCancel = (_: DragCancelEvent) => {
+    clearGhost();
+    clearReorder();
+    isDndDraggingRef.current = false;
+  };
+
+  const addNodeAtEnd = (
+    label: string,
+    layerId: string,
+    nodeType: PEMDASNodeType,
+    constantValue?: number,
+  ) => {
+    const layer = layers.find((l) => l.id === layerId);
+    if (!layer) return;
+
+    dispatch({
+      type: "ADD_NODE_AT",
+      variable: label,
+      nodeType,
+      constantValue,
+      layerId: layer.id,
+      index: layer.nodeIds.length,
+    });
+  };
+
+  const editNodeLabel = (
+    nodeId: string,
+    label: string,
+    constantValue?: number,
+  ) => {
+    dispatch({
+      type: "UPDATE_NODE_LABEL",
+      nodeId,
+      label,
+      constantValue,
+    });
+  };
+
+  const { modal2, setModal2 } = useUiStore();
+  const handleAddNode = (nodeType: PEMDASNodeType) => {
+    const ConstantInputSteps: StepConfig[] = [
+      {
+        name: "name",
+        placeholder: `${capitalizeFirstLetter(nodeType)} Name...`,
+        validate: (v) => (v.length >= 1 ? true : "1+ chars"),
+      },
+      {
+        name: "value",
+        placeholder: `Numerical Value...`,
+        validate: (v) =>
+          v.trim() !== "" && !Number.isNaN(Number(v)) ? true : "Invalid number",
+      },
+    ];
+
+    const LayerInputSteps: StepConfig[] = [
+      {
+        name: "name",
+        placeholder: `${capitalizeFirstLetter(nodeType)} Name...`,
+        validate: (v) => (v.length >= 1 ? true : "1+ chars"),
+      },
+    ];
+
+    setModal2({
+      ...modal2,
+      open: true,
+      showClose: false,
+      offClickClose: true,
+      width: "w-[300px]",
+      maxWidth: "max-w-[400px]",
+      aspectRatio: "aspect-[5/2]",
+      borderRadius: "rounded-[12px] md:rounded-[15px]",
+      content: (
+        <Modal2MultiStepModalInput
+          key={`add-node-${Date.now()}`}
+          steps={nodeType === "constant" ? ConstantInputSteps : LayerInputSteps}
+          onComplete={(values: any) => {
+            const layer = layers[layers.length - 1];
+            if (!layer) return;
+
+            const raw = values.value;
+            const constantValue =
+              raw !== undefined &&
+              raw.trim() !== "" &&
+              !Number.isNaN(Number(raw))
+                ? Number(raw)
+                : undefined;
+
+            addNodeAtEnd(values.name, layer.id, nodeType, constantValue);
+          }}
+        />
+      ),
+    });
+  };
+
+  const handleEditNode = (node: PemdasNode) => {
+    const ConstantInputSteps: StepConfig[] = [
+      {
+        name: "name",
+        initialValue: node.variable ?? "",
+        placeholder: `${capitalizeFirstLetter(node.nodeType)} Name...`,
+        validate: (val) => (val.length >= 1 ? true : "1+ chars"),
+      },
+      {
+        name: "value",
+        placeholder: `Numberical Value...`,
+        initialValue: String(node.constantValue) ?? "",
+        validate: (val) => {
+          const trimmed = val.trim();
+          if (trimmed === "") return "Enter a number";
+          const isValidNumber = /^\d+(\s*\.\s*\d+)?$/.test(
+            trimmed.replace(/\s+/g, " "),
+          );
+          return isValidNumber ? true : "Invalid number";
+        },
+      },
+    ];
+
+    const LayerInputSteps: StepConfig[] = [
+      {
+        name: "name",
+        initialValue: node.variable ?? "",
+        placeholder: `${capitalizeFirstLetter(node.nodeType)} Name...`,
+        validate: (val) => (val.length >= 1 ? true : "1+ chars"),
+      },
+    ];
+
+    setModal2({
+      ...modal2,
+      open: true,
+      showClose: false,
+      offClickClose: true,
+      width: "w-[300px]",
+      maxWidth: "max-w-[400px]",
+      aspectRatio: "aspect-[5/2]",
+      borderRadius: "rounded-[12px] md:rounded-[15px]",
+      content: (
+        <Modal2MultiStepModalInput
+          key={`edit-node-${node.id}`}
+          steps={
+            node.nodeType === "constant" ? ConstantInputSteps : LayerInputSteps
+          }
+          onComplete={(values) => {
+            const raw = values.value;
+            const constantValue =
+              raw !== undefined &&
+              typeof raw === "string" &&
+              raw.trim() !== "" &&
+              !Number.isNaN(Number(raw))
+                ? Number(raw)
+                : undefined;
+            editNodeLabel(node.id, values.name, constantValue);
+          }}
+        />
+      ),
+    });
+  };
+
+  const justDroppedNodeId = justDroppedNodeRef.current;
+
+  return {
+    state,
+    dispatch,
+    sensors,
+    viewportRef,
+    pan,
+    layers,
+    ghost,
+    bounds,
+    reorderPreview,
+    activeNodeId: activeNodeRef.current?.nodeId ?? null,
+    justDroppedNodeId,
+    handlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp,
+      onDragStart,
+      onDragMove,
+      onDragEnd,
+      onDragCancel,
+    },
+    addNodeAtEnd,
+    editNodeLabel,
+    handleEditNode,
+    handleAddNode,
+  };
+};

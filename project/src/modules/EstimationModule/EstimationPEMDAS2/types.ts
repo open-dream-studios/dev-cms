@@ -3,21 +3,25 @@ export type VariableKey = string;
 
 export type Operand = "+" | "-" | "×" | "/";
 
+export type PEMDASNodeType = "layer" | "constant" | "var";
+export type creatablePEMDASNodeType = "layer" | "constant";
+export const creatablePEMDASNodeTypes: PEMDASNodeType[] = ["layer", "constant"];
+
 export type PemdasNode = {
   id: string;
   variable: VariableKey;
-  x: number; // center-x in canvas space
-  y: number; // center-y in canvas space
+  x: number; // layer-local center-x
+  y: number; // canvas center-y
   layerId: string;
-  nodeType: PEMDASNodeType
-  constantValue?: number;
+  nodeType: PEMDASNodeType;
+  constantValue?: number; 
+  operand: Operand;
 };
 
 export type PemdasLayer = {
   id: string;
   y: number;
   nodeIds: string[];
-  operands: Operand[];
   width: number;
 };
 
@@ -39,7 +43,3 @@ export type DragGhost = {
   x: number;
   y: number;
 } | null;
-
-export type PEMDASNodeType = "layer" | "constant" | "var";
-export type creatablePEMDASNodeType = "layer" | "constant";
-export const creatablePEMDASNodeTypes: PEMDASNodeType[] = ["layer", "constant"];

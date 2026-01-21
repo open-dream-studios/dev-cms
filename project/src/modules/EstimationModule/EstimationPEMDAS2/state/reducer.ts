@@ -2,12 +2,7 @@
 import { uid } from "../utils/uid";
 import { Operand, PemdasLayer, PemdasNode, PEMDASNodeType } from "../types";
 import { computeLineWidth, layoutNodes } from "../_helpers/pemdas.helpers";
-import {
-  BASE_LINE_WIDTH,
-  EDGE_PADDING,
-  NODE_SIZE,
-  WORLD_TOP,
-} from "../_constants/pemdas.constants";
+import { BASE_LINE_WIDTH, WORLD_TOP } from "../_constants/pemdas.constants";
 
 type State = {
   nodes: Record<string, PemdasNode>;
@@ -22,18 +17,15 @@ type Action =
       constantValue?: number;
       layerId: string;
       index: number;
-      x: number;
     }
   | {
-      type: "MOVE_NODE";
-      nodeId: string;
-      x: number;
-      y: number;
-    }
-  | {
-      type: "SET_OPERAND";
+      type: "REORDER_LAYER";
       layerId: string;
-      index: number;
+      nodeIds: string[];
+    }
+  | {
+      type: "UPDATE_NODE_OPERAND";
+      nodeId: string;
       operand: Operand;
     }
   | {
@@ -44,22 +36,14 @@ type Action =
       type: "UPDATE_NODE_LABEL";
       nodeId: string;
       label: string;
-      constantValue: number | undefined
+      constantValue: number | undefined;
     };
-
-// const NODE_RADIUS = NODE_SIZE / 2;
-// const MIN_GAP = 30;
-// const MIN_CENTER_DIST = NODE_SIZE + MIN_GAP;
-
-const clamp = (n: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, n));
 
 const INITIAL_LAYERS: PemdasLayer[] = [
   {
     id: "layer-0",
     y: WORLD_TOP + 290,
     nodeIds: [],
-    operands: [],
     width: BASE_LINE_WIDTH,
   },
 ];
@@ -75,61 +59,19 @@ function getLayer(state: State, layerId: string) {
   return layer;
 }
 
-// function sortNodeIdsByX(nodes: Record<string, PemdasNode>, ids: string[]) {
-//   return [...ids].sort((a, b) => (nodes[a]?.x ?? 0) - (nodes[b]?.x ?? 0));
-// }
-
-function rebuildOperandsForCount(count: number): Operand[] {
-  if (count <= 1) return [];
-  return Array.from({ length: count - 1 }, () => "+");
+/**
+ * Ensure first node's operand is "+" (still hidden in UI, but stored).
+ */
+function enforceFirstOperandPlus(
+  nodes: Record<string, PemdasNode>,
+  layer: PemdasLayer
+) {
+  const firstId = layer.nodeIds[0];
+  if (!firstId) return;
+  const first = nodes[firstId];
+  if (!first) return;
+  if (first.operand !== "+") nodes[firstId] = { ...first, operand: "+" };
 }
-
-// function enforceNoOverlapWithinLayer(
-//   nodes: Record<string, PemdasNode>,
-//   layer: PemdasLayer,
-//   movingNodeId?: string
-// ) {
-//   const sorted = sortNodeIdsByX(nodes, layer.nodeIds);
-
-//   // Left-to-right pass: push right if overlapping
-//   for (let i = 1; i < sorted.length; i++) {
-//     const leftId = sorted[i - 1];
-//     const rightId = sorted[i];
-
-//     const left = nodes[leftId];
-//     const right = nodes[rightId];
-
-//     if (!left || !right) continue;
-
-//     const minRightX = left.x + MIN_CENTER_DIST;
-//     if (right.x < minRightX) {
-//       // Only move the right node unless it's not allowed (we allow all)
-//       nodes[rightId] = { ...right, x: minRightX };
-//     }
-//   }
-
-//   // Right-to-left pass: if we pushed too far and have a "moving" node,
-//   // gently pull others left to reduce drift.
-//   // (Keeps layout stable during drags.)
-//   for (let i = sorted.length - 2; i >= 0; i--) {
-//     const leftId = sorted[i];
-//     const rightId = sorted[i + 1];
-
-//     const left = nodes[leftId];
-//     const right = nodes[rightId];
-
-//     if (!left || !right) continue;
-
-//     const maxLeftX = right.x - MIN_CENTER_DIST;
-//     if (left.x > maxLeftX) {
-//       nodes[leftId] = { ...left, x: maxLeftX };
-//     }
-//   }
-
-//   // Re-sort to keep stable order (optional)
-//   const finalSorted = sortNodeIdsByX(nodes, layer.nodeIds);
-//   layer.nodeIds = finalSorted;
-// }
 
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -144,22 +86,21 @@ export function reducer(state: State, action: Action): State {
         x: 0,
         y: layer.y,
         layerId: layer.id,
-        constantValue: action.constantValue
+        constantValue: action.constantValue,
+        operand: "+", // ✅ default
       };
 
       const nodes = { ...state.nodes, [id]: node };
+
       const nodeIds = [...layer.nodeIds];
       nodeIds.splice(action.index, 0, id);
 
       const width = computeLineWidth(nodeIds.length);
-      const nextLayer: PemdasLayer = {
-        ...layer,
-        nodeIds,
-        operands: rebuildOperandsForCount(nodeIds.length),
-        width,
-      };
+      const nextLayer: PemdasLayer = { ...layer, nodeIds, width };
 
+      // layout is based on order + slots
       layoutNodes(nodes, nextLayer);
+      enforceFirstOperandPlus(nodes, nextLayer);
 
       return {
         nodes,
@@ -167,35 +108,49 @@ export function reducer(state: State, action: Action): State {
       };
     }
 
-    case "MOVE_NODE": {
+    case "REORDER_LAYER": {
+      const layer = getLayer(state, action.layerId);
+
+      const nextLayer: PemdasLayer = {
+        ...layer,
+        nodeIds: action.nodeIds,
+        // width stays fixed during reorder (per your requirement)
+        width: layer.width,
+      };
+
+      const nodes = { ...state.nodes };
+      layoutNodes(nodes, nextLayer);
+
+      console.groupCollapsed("[reducer] REORDER_LAYER layout");
+      action.nodeIds.forEach((id, i) => {
+        console.log(id, "-> x:", nodes[id].x);
+      });
+      console.groupEnd();
+
+      enforceFirstOperandPlus(nodes, nextLayer);
+
+      return {
+        ...state,
+        nodes,
+        layers: state.layers.map((l) => (l.id === layer.id ? nextLayer : l)),
+      };
+    }
+
+    case "UPDATE_NODE_OPERAND": {
       const node = state.nodes[action.nodeId];
       if (!node) return state;
 
+      // don't allow changing if it's first in its layer
       const layer = getLayer(state, node.layerId);
-      const minX = EDGE_PADDING + NODE_SIZE / 2;
-      const maxX = layer.width - EDGE_PADDING - NODE_SIZE / 2;
+      if (layer.nodeIds[0] === node.id) return state;
 
-      const nextNodes = {
-        ...state.nodes,
-        [node.id]: {
-          ...node,
-          x: clamp(action.x, minX, maxX),
-          y: layer.y,
+      return {
+        ...state,
+        nodes: {
+          ...state.nodes,
+          [node.id]: { ...node, operand: action.operand },
         },
       };
-
-      return { ...state, nodes: nextNodes };
-    }
-
-    case "SET_OPERAND": {
-      const nextLayers = state.layers.map((l) => {
-        if (l.id !== action.layerId) return l;
-        const ops = [...l.operands];
-        if (action.index < 0 || action.index >= ops.length) return l;
-        ops[action.index] = action.operand;
-        return { ...l, operands: ops };
-      });
-      return { ...state, layers: nextLayers };
     }
 
     case "DELETE_NODE": {
@@ -211,16 +166,14 @@ export function reducer(state: State, action: Action): State {
         const nodeIds = l.nodeIds.filter((id) => id !== node.id);
         const width = computeLineWidth(nodeIds.length);
 
-        const nextLayer = {
-          ...l,
-          nodeIds,
-          operands: rebuildOperandsForCount(nodeIds.length),
-          width,
-        };
+        const nextLayer: PemdasLayer = { ...l, nodeIds, width };
 
         layoutNodes(nextNodes, nextLayer);
+        enforceFirstOperandPlus(nextNodes, nextLayer);
+
         return nextLayer;
       });
+
       return { nodes: nextNodes, layers: nextLayers };
     }
 
@@ -235,7 +188,7 @@ export function reducer(state: State, action: Action): State {
           [node.id]: {
             ...node,
             variable: action.label,
-            constantValue: action.constantValue
+            constantValue: action.constantValue,
           },
         },
       };

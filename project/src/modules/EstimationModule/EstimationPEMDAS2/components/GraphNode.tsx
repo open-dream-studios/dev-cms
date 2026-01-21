@@ -9,6 +9,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { nodeColors } from "../_constants/pemdas.constants";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import GraphArrow from "./GraphArrow";
+import { OperandChipInline } from "./OperandChipInline";
 
 export const GraphNodeIcon = () => {
   return (
@@ -26,12 +27,16 @@ export const GraphNode = ({
   ghost = false,
   offsetX = 0,
   onEdit,
+  isFirstInLayer = false,
+  isDragging: isDraggingNode = false,
 }: {
   node: PemdasNode;
   dispatch: React.Dispatch<any>;
   ghost?: boolean;
   offsetX?: number;
   onEdit?: (node: PemdasNode) => void;
+  isFirstInLayer?: boolean;
+  isDragging?: boolean;
 }) => {
   const currentTheme = useCurrentTheme();
   const { openContextMenu } = useContextMenuStore();
@@ -42,29 +47,39 @@ export const GraphNode = ({
   useLayoutEffect(() => {
     if (!numberTextRef.current) return;
     const el = numberTextRef.current;
-    const ellipsed = el.scrollWidth > el.clientWidth;
-    setIsEllipsed(ellipsed);
+    setIsEllipsed(el.scrollWidth > el.clientWidth);
   }, [node.constantValue, numberDisplayOpen]);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: node.id,
       disabled: ghost,
+      data: {
+        kind: "NODE",
+        nodeId: node.id,
+        layerId: node.layerId,
+      },
     });
 
+  const isActivelyDragged = isDragging;
+  const shouldDisableTransform =
+    isDraggingNode === false && isActivelyDragged === false;
+
   const style: React.CSSProperties = {
-    transform: CSS.Translate.toString(transform),
+    transform: shouldDisableTransform
+      ? undefined
+      : CSS.Translate.toString(transform),
     position: "absolute",
     left: offsetX + node.x - 24,
     top: node.y - 24,
-    zIndex: isDragging ? 999 : "auto",
-    willChange: "transform",
+    zIndex: isActivelyDragged ? 999 : "auto",
+    willChange: isActivelyDragged ? "transform" : "left",
   };
 
   const nodeType: PEMDASNodeType = node.nodeType ?? "layer";
 
   return (
-    <div
+    <motion.div
       data-draggable
       ref={setNodeRef}
       {...(!ghost ? attributes : {})}
@@ -83,35 +98,28 @@ export const GraphNode = ({
     >
       {/* NUMBER DISPLAY */}
       <AnimatePresence>
-        {node.constantValue !== undefined && (
+        {node.nodeType === "constant" && node.constantValue !== undefined && (
           <motion.div
             key={numberDisplayOpen ? "open" : "closed"}
-            initial={{
-              opacity: 0,
-              y: 0,
-              maxWidth: 75,
-            }}
+            initial={{ opacity: 0, y: 0, maxWidth: 75 }}
             animate={{
               opacity: 1,
               y: numberDisplayOpen ? -25 : 0,
               maxWidth: numberDisplayOpen ? "none" : 75,
             }}
-            exit={{
-              opacity: 0,
-            }}
+            exit={{ opacity: 0 }}
             transition={{
               y: { type: "spring", stiffness: 260, damping: 22 },
               opacity: { duration: 0.15 },
               maxWidth: { duration: 0.25, ease: "easeInOut" },
             }}
             className="absolute min-w-[45px] pl-[6px] pr-[8px] flex py-[2.5px] justify-center
-                 mt-[-27px] rounded-[5.5px] text-white text-[12px] leading-[14px]
-                 text-center overflow-hidden"
+                       mt-[-27px] rounded-[5.5px] text-white text-[12px] leading-[14px]
+                       text-center overflow-hidden"
             style={{
               backgroundColor: currentTheme.background_2,
               border: "1px solid " + currentTheme.background_3,
             }}
-            onClick={() => setNumberDisplayOpen((v) => !v)}
           >
             <motion.div
               ref={numberTextRef}
@@ -138,31 +146,41 @@ export const GraphNode = ({
         )}
       </AnimatePresence>
 
-      {/* NODE CIRCLE */}
-      <div
-        style={{
-          backgroundColor: ghost ? nodeColors["var"] : nodeColors[nodeType],
-        }}
-        className={`cursor-grab dim hover:brightness-75 w-12 h-12 rounded-full flex items-center justify-center`}
-        onMouseEnter={() => {
-          if (isEllipsed) setNumberDisplayOpen(true);
-        }}
-        onMouseLeave={() => {
-          setNumberDisplayOpen(false);
-        }}
-      >
-        {/* ICON */}
+      {/* NODE CIRCLE + INLINE OPERAND */}
+      <div className="relative">
+        <OperandChipInline
+          hidden={isFirstInLayer}
+          value={node.operand}
+          onChange={(op) =>
+            dispatch({
+              type: "UPDATE_NODE_OPERAND",
+              nodeId: node.id,
+              operand: op,
+            })
+          }
+        />
 
-        <GraphNodeIcon />
+        <div
+          style={{
+            backgroundColor: ghost ? nodeColors["var"] : nodeColors[nodeType],
+          }}
+          className="cursor-grab dim hover:brightness-70 brightness-95 w-12 h-12 rounded-full flex items-center justify-center"
+          onMouseEnter={() => {
+            if (isEllipsed) setNumberDisplayOpen(true);
+          }}
+          onMouseLeave={() => setNumberDisplayOpen(false)}
+        >
+          <GraphNodeIcon />
+        </div>
       </div>
 
       {/* LABEL */}
       <div
         className="mt-[6px] text-white text-[12px] leading-[14px] text-center opacity-90"
         style={{
-          maxWidth: 58, // node (48) + 10px
+          maxWidth: 58,
           display: "-webkit-box",
-          WebkitLineClamp: 3, // ← allow up to 3 lines
+          WebkitLineClamp: 3,
           WebkitBoxOrient: "vertical",
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -171,9 +189,11 @@ export const GraphNode = ({
         {node.variable}
       </div>
 
-      {node.nodeType === "layer" && <div className="absolute top-0 mt-[90px]"> 
-        <GraphArrow />
-      </div>}
-    </div>
+      {node.nodeType === "layer" && (
+        <div className="absolute top-0 mt-[90px]">
+          <GraphArrow />
+        </div>
+      )}
+    </motion.div>
   );
 };
