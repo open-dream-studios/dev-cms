@@ -12,8 +12,7 @@ import {
 import { useMediaModuleUIStore } from "../_store/media.store";
 import { deleteMediaFolderApi } from "@/api/mediaFolders.api";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
-import { getCurrentTimestamp } from "@/util/functions/Data";
-import { makeRequest } from "@/util/axios";
+import { getCurrentTimestamp } from "@/util/functions/Data"; 
 import { deleteMediaLinksApi, upsertMediaLinksApi } from "@/api/mediaLinks.api";
 import { deleteProjectMediaApi, rotateProjectMediaApi } from "@/api/media.api";
 import { showSuccessToast } from "@/util/functions/UI";

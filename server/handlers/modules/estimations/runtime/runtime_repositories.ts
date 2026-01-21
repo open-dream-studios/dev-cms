@@ -3,7 +3,7 @@ import { db } from "../../../../connection/connect.js";
 import { ulid } from "ulid";
 import type { PoolConnection } from "mysql2/promise";
 import { coerceFactValue } from "./helpers/fact_validations.js";
-import { safeParse } from "./handlers/runtime_controllers.js";
+import { safeParse } from "./runtime_controllers.js";
 import { GraphNode } from "./types.js";
 import { evaluateExpression } from "./helpers/expression_evaluator.js";
 

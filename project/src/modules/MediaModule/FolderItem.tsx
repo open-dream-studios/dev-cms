@@ -40,8 +40,7 @@ export default function FolderItem({
   folder,
   depth,
   toggleFolderOpen,
-}: FolderItemProps) {
-  const queryClient = useQueryClient();
+}: FolderItemProps) { 
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { upsertMediaFolders } = useContextQueries();

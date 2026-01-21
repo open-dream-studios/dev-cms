@@ -47,7 +47,7 @@ import estimationRuntimeRoutes from "./handlers/modules/estimations/runtime/runt
 import estimationGraphRoutes from "./handlers/modules/estimations/graphs/graphs/graph_routes.js"
 import estimationGraphEdgesRoutes from "./handlers/modules/estimations/graphs/graph_edges/graph_edge_routes.js"
 import estimationGraphNodesRoutes from "./handlers/modules/estimations/graphs/graph_nodes/graph_node_routes.js"
-import pricingGraphRoutes from "./handlers/modules/estimations/pricing_graph/pricing_graph_routes.js"
+import pricingGraphRoutes from "./handlers/modules/estimations/pricing_graphs/pricing_graph_routes.js"
 import AIRoutes from "./handlers/modules/AI/AI_routes.js"
 dotenv.config();
 

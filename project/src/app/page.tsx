@@ -11,7 +11,8 @@ import GmailModule from "@/modules/GoogleModule/GmailModule/GmailModule";
 import UpdatesCatalog from "@/modules/UpdatesModule/UpdatesCatalog";
 import DecisionGraphBuilder from "@/modules/EstimationModule/EstimationBuilder/DecisionGraphBuilder";
 import EstimationLauncher from "@/modules/EstimationModule/EstimationRuntime/EstimationLaunch";
-import PricingAdminPage from "@/modules/EstimationModule/PricingAdmin/PricingAdminPage";
+// import PricingAdminPage from "@/modules/EstimationModule/PricingAdmin/PricingAdminPage";
+import PemdasEditor from "@/modules/EstimationModule/EstimationPEMDAS2/PemdasEditor";
 
 const HomePage = () => {
   const { screen } = useUiStore();
@@ -26,7 +27,8 @@ const HomePage = () => {
       {screen === "updates" && <UpdatesCatalog />}
       {screen === "estimations-builder" && <DecisionGraphBuilder />}
       {screen === "estimations" && <EstimationLauncher />}
-      {screen === "estimations-pricing" && <PricingAdminPage />}
+      {/* {screen === "estimations-pricing" && <PricingAdminPage />} */}
+      {screen === "estimations-pricing" && <PemdasEditor />}
     </div>
   );
 };

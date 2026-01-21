@@ -19,7 +19,7 @@ export const executePricingGraph = async (
     node_kinds: Array.from(graph.nodesById.values()).map((n) => n.config?.kind),
   });
 
-  // Reset previous results
+  // RESET
   await connection.query(
     `DELETE FROM estimation_costs WHERE estimate_run_idx = ?`,
     [estimate_run_idx]
@@ -40,7 +40,9 @@ export const executePricingGraph = async (
     explanation: string;
   }[] = [];
 
-  // 1️⃣ Execute VAR nodes (ordered)
+  // APPLY MIN/MAX - TWO FACT SETS
+
+  // 1️⃣ EXECUTE VAR nodes (ordered)
   const varNodes = Array.from(graph.nodesById.values())
     .filter((n) => n.config?.kind === "var")
     .sort((a, b) => a.config.execution_priority - b.config.execution_priority);
