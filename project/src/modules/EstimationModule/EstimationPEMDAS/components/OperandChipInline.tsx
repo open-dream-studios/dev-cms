@@ -3,6 +3,8 @@ import React, { useRef, useState } from "react";
 import { OperandOverlayPortal } from "./OperandOverlayPortal";
 import { Operand } from "../types";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { nodeColors } from "../_constants/pemdas.constants";
 
 export const OperandChipInline = ({
   value,
@@ -13,6 +15,7 @@ export const OperandChipInline = ({
   onChange: (op: Operand) => void;
   hidden?: boolean;
 }) => {
+  const currentTheme = useCurrentTheme()
   const ref = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
 
@@ -30,10 +33,10 @@ export const OperandChipInline = ({
     <>
       <div
         ref={ref}
-        className="absolute -left-[32px] top-1/2 -translate-y-1/2
+        className={`absolute -left-[32px] top-1/2 -translate-y-1/2
                    w-6 h-6 rounded-full bg-[#1f1f1f]
-                   text-white text-[12px] flex items-center justify-center
-                   cursor-pointer z-10 pl-[0.5px] pb-[1px]"
+                   text-white flex items-center justify-center
+                   cursor-pointer z-10 pl-[0.5px] pb-[1px] ${value === "/" ? "text-[13px]" : "text-[14px]"}`}
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);
@@ -57,7 +60,8 @@ export const OperandChipInline = ({
             {(["+", "-", "×", "/"] as Operand[]).map((op) => (
               <button
                 key={op}
-                className="select-none px-2 h-6 rounded bg-white/10 text-white/85
+                style={{backgroundColor: op === value ? nodeColors["constant"] : currentTheme.background_2}}
+                className="pb-[2px] select-none px-2 h-6 rounded  text-white/85
                            text-[13px] hover:brightness-75 cursor-pointer dim"
                 onPointerDown={() => {
                   onChange(op);

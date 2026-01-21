@@ -12,7 +12,8 @@ import {
 import { reducer, initialState } from "../state/reducer";
 import {
   BASE_LINE_WIDTH,
-  WORLD_BOTTOM,
+  BASE_WORLD_HEIGHT,
+  WORLD_BOTTOM_PADDING,
   WORLD_TOP,
 } from "../_constants/pemdas.constants";
 import { PemdasNode, PEMDASNodeType } from "../types";
@@ -54,6 +55,7 @@ export const usePemdasCanvas = () => {
   const [activeLayerByRow, setActiveLayerByRow] = useState<
     Record<number, string>
   >({});
+  const [maxDepthReached, setMaxDepthReached] = useState(0);
 
   const [openLayerStack, setOpenLayerStack] = useState<string[]>([]);
 
@@ -85,6 +87,8 @@ export const usePemdasCanvas = () => {
     value: number;
   } | null>(null);
 
+  const layers = state.layers;
+
   useEffect(() => {
     if (!viewportRef.current) return;
     if (viewportSizeRef.current) return;
@@ -106,11 +110,27 @@ export const usePemdasCanvas = () => {
     return () => cancelAnimationFrame(raf);
   });
 
+  const visibleRows: VisibleRow[] = useMemo(() => {
+    const root = layers.find((l) => l.id === "layer-0") ?? layers[0];
+
+    const rootY = root?.y ?? WORLD_TOP + 290;
+
+    const ids = ["layer-0", ...openLayerStack];
+
+    return ids.map((id, i) => {
+      const real = layers.find((l) => l.id === id);
+      return {
+        id,
+        y: rootY + i * ROW_GAP,
+        width: real?.width ?? BASE_LINE_WIDTH,
+        nodeIds: real?.nodeIds ?? [],
+      };
+    });
+  }, [layers, openLayerStack]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
   );
-
-  const layers = state.layers;
 
   const bounds = useMemo(() => {
     const vw =
@@ -119,7 +139,11 @@ export const usePemdasCanvas = () => {
       viewportSizeRef.current?.h ?? viewportRef.current?.clientHeight ?? 1;
 
     const minWorldY = WORLD_TOP;
-    const maxWorldY = WORLD_BOTTOM;
+    const maxWorldY =
+      WORLD_TOP +
+      BASE_WORLD_HEIGHT +
+      maxDepthReached * ROW_GAP +
+      WORLD_BOTTOM_PADDING;
 
     const minWorldX = -PAN_PADDING;
     const maxWorldX = vw + PAN_PADDING;
@@ -134,7 +158,7 @@ export const usePemdasCanvas = () => {
       minWorldY,
       maxWorldY,
     };
-  }, [layers]);
+  }, [layers, maxDepthReached]);
 
   useEffect(() => {
     if (didInitPanRef.current) return;
@@ -169,34 +193,16 @@ export const usePemdasCanvas = () => {
       }
       return next;
     });
-
     setOpenLayerStack((prev) => {
       if (layerNodeId === null) {
         return prev.slice(0, rowIndex);
       }
       const next = prev.slice(0, rowIndex);
       next[rowIndex] = layerNodeId;
+      setMaxDepthReached((d) => Math.max(d, rowIndex + 1));
       return next;
     });
   };
-
-  const visibleRows: VisibleRow[] = useMemo(() => {
-    const root = layers.find((l) => l.id === "layer-0") ?? layers[0];
-
-    const rootY = root?.y ?? WORLD_TOP + 290;
-
-    const ids = ["layer-0", ...openLayerStack];
-
-    return ids.map((id, i) => {
-      const real = layers.find((l) => l.id === id);
-      return {
-        id,
-        y: rootY + i * ROW_GAP,
-        width: real?.width ?? BASE_LINE_WIDTH,
-        nodeIds: real?.nodeIds ?? [],
-      };
-    });
-  }, [layers, openLayerStack]);
 
   // ---- CAMERA PAN ----
   const onPointerDown = (e: React.PointerEvent) => {

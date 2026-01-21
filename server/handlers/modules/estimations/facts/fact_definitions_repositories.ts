@@ -1,19 +1,8 @@
+// server/handlers/modules/estimations/facts/fact_definition_repositories.ts
+import { EstimationFactDefinition, FactType } from "@open-dream/shared";
 import { db } from "../../../../connection/connect.js";
 import type { PoolConnection, RowDataPacket, ResultSetHeader } from "mysql2/promise";
 import { ulid } from "ulid";
-
-export type FactType = "boolean" | "number" | "string" | "enum";
-
-export type EstimationFactDefinition = {
-  id: number;
-  fact_id: string;
-  project_idx: number;
-  fact_key: string;
-  fact_type: FactType;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
-};
 
 export const getFactDefinitionsFunction = async (
   project_idx: number
@@ -35,18 +24,23 @@ export const upsertFactDefinitionFunction = async (
   project_idx: number,
   reqBody: any
 ) => {
-  const { fact_id, fact_key, fact_type, description } = reqBody;
+  const {
+    fact_id,
+    fact_key,
+    fact_type,
+    description,
+    folder_id,
+    process_id,
+  } = reqBody;
 
-  if (!fact_key || !fact_type) {
-    throw new Error("fact_key and fact_type required");
+  if (!fact_key || !fact_type || !process_id) {
+    throw new Error("fact_key, fact_type, and process_id required");
   }
 
   const normalizedFactType = String(fact_type).trim().toLowerCase();
   const allowed: FactType[] = ["boolean", "number", "string", "enum"];
   if (!allowed.includes(normalizedFactType as FactType)) {
-    throw new Error(
-      `Invalid fact_type "${fact_type}". Must be one of: ${allowed.join(", ")}`
-    );
+    throw new Error(`Invalid fact_type "${fact_type}"`);
   }
 
   const finalFactId = fact_id?.trim() || `FACTDEF-${ulid()}`;
@@ -55,12 +49,16 @@ export const upsertFactDefinitionFunction = async (
     INSERT INTO estimation_fact_definitions (
       fact_id,
       project_idx,
+      folder_id,
+      process_id,
       fact_key,
       fact_type,
       description
     )
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
+      folder_id = VALUES(folder_id),
+      process_id = VALUES(process_id),
       fact_type = VALUES(fact_type),
       description = VALUES(description),
       updated_at = NOW()
@@ -69,12 +67,14 @@ export const upsertFactDefinitionFunction = async (
   const [result] = await connection.query<ResultSetHeader>(q, [
     finalFactId,
     project_idx,
+    folder_id ?? null,
+    process_id,
     fact_key.trim(),
     normalizedFactType,
-    description || null,
+    description ?? null,
   ]);
 
-  return { success: true, fact_id: finalFactId, affectedRows: result.affectedRows };
+  return { success: true, fact_id: finalFactId };
 };
 
 export const deleteFactDefinitionFunction = async (
@@ -89,7 +89,6 @@ export const deleteFactDefinitionFunction = async (
   return { success: true };
 };
 
-// Used by runtime validation:
 export const getFactDefinitionByKey = async (
   project_idx: number,
   fact_key: string

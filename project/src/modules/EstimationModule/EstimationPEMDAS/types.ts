@@ -4,8 +4,8 @@ export type VariableKey = string;
 export type Operand = "+" | "-" | "×" | "/";
 
 export type PEMDASNodeType = "layer" | "constant" | "var";
-export type creatablePEMDASNodeType = "layer" | "constant";
-export const creatablePEMDASNodeTypes: PEMDASNodeType[] = ["layer", "constant"];
+export type CreatablePEMDASNodeType = "layer" | "constant";
+export const creatablePEMDASNodeTypes: CreatablePEMDASNodeType[] = ["layer", "constant"];
 
 export type PemdasNode = {
   id: string;

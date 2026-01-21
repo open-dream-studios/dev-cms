@@ -22,6 +22,8 @@ export type EstimationFactDefinition = {
   id: number;
   fact_id: string;
   project_idx: number;
+  folder_id: string | null;
+  process_id: string;
   fact_key: string;
   fact_type: FactType;
   description: string | null;
@@ -29,31 +31,41 @@ export type EstimationFactDefinition = {
   updated_at: string;
 };
 
+export type EstimationFactFolder = {
+  id: number;
+  folder_id: string;
+  project_idx: number;
+  parent_folder_id: number | null;
+  name: string;
+  ordinal: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProducesFact = {
   fact_key: string;
-  value: any; 
+  value: any;
 };
 
 export type SelectOption = {
-  id: string;  
+  id: string;
   label: string;
   value: string;
-  visibility_rules?: any; 
+  visibility_rules?: any;
 };
-
 
 export type SelectMode = "single" | "multi";
 export type QuestionNodeConfig = {
   prompt: string;
   input_type: "text" | "number" | "boolean" | "select";
-  required: boolean;  
+  required: boolean;
   select_mode?: SelectMode;
   options?: SelectOption[];
   produces_facts: ProducesFact[];
   validation_rules?: any;
   visibility_rules?: any;
-}; 
-     
+};
+
 export type CostNodeConfig = {
   applies_if: any;
   cost_range: { min: any; max: any };
@@ -71,7 +83,7 @@ export type EstimationGraphNode = {
   position: any | null;
   created_at: string;
   updated_at: string;
-}; 
+};
 
 export type EstimationGraphEdge = {
   id: number;
@@ -83,7 +95,7 @@ export type EstimationGraphEdge = {
   execution_priority: number;
   created_at: string;
   updated_at: string;
-}; 
+};
 
 export type EstimationRunStatus = "in_progress" | "completed" | "abandoned";
 
@@ -97,4 +109,3 @@ export type EstimationRun = {
   created_at: string | Date | null;
   updated_at: string | Date | null;
 };
-
