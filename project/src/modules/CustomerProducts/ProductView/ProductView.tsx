@@ -700,7 +700,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                         <div className="opacity-[0.5] truncate w-[100%] min-h-[24px] text-[16px]">
                           {description && description.length > 0
                             ? description
-                            : "..."}
+                            : ""}
                         </div>
                       ) : (
                         <textarea

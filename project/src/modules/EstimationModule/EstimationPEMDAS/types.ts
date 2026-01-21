@@ -1,35 +1,45 @@
-// project/src/modules/EstimationModule/EstimationPEMDAS/types.ts
-export type FactNode = {
+// src/pemdas/types.ts
+export type VariableKey = string;
+
+export type Operand = "+" | "-" | "×" | "/";
+
+export type PEMDASNodeType = "layer" | "constant" | "var";
+export type creatablePEMDASNodeType = "layer" | "constant";
+export const creatablePEMDASNodeTypes: PEMDASNodeType[] = ["layer", "constant"];
+
+export type PemdasNode = {
   id: string;
-  key: string;
-  value?: number;
+  variable: VariableKey;
+  x: number; // layer-local center-x
+  y: number; // canvas center-y
+  layerId: string;
+  nodeType: PEMDASNodeType;
+  constantValue?: number; 
+  operand: Operand;
 };
 
-export type Operator = "+" | "-" | "*" | "/";
-
-export type PemdasNode =
-  | {
-      id: string;
-      type: "fact";
-      factId: string;
-      x: number;
-      y: number;
-    }
-  | {
-      id: string;
-      type: "operator";
-      operator: Operator;
-      x: number;
-      y: number;
-    }
-  | {
-      id: string;
-      type: "group";
-      x: number;
-      y: number;
-    };
-
-export type Edge = {
-  from: string;
-  to: string;
+export type PemdasLayer = {
+  id: string;
+  y: number;
+  nodeIds: string[];
+  width: number;
 };
+
+export type DragState =
+  | { type: "VAR_TEMPLATE"; variable: VariableKey; x: number; y: number }
+  | {
+      type: "NODE";
+      nodeId: string;
+      offsetX: number; // mouseX - nodeCenterX at mousedown
+      offsetY: number; // mouseY - nodeCenterY at mousedown
+      lastX: number; // last nodeCenterX while dragging
+      lastY: number; // last nodeCenterY while dragging
+    }
+  | null;
+
+export type DragGhost = {
+  type: "VAR_GHOST";
+  variable: VariableKey;
+  x: number;
+  y: number;
+} | null;

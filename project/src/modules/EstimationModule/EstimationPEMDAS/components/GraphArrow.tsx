@@ -1,14 +1,29 @@
-// pemdas/components/GraphArrow.tsx
+// src/pemdas/components/GraphArrow.tsx
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import React from "react";
 
-const GraphArrow = () => {
-  const currentTheme = useCurrentTheme()
-  const isError = false
-  const arrowColor = isError ? "#FF4339" : currentTheme.background_2 
+type GraphArrowProps = {
+  isActive: boolean;
+  hasActiveInRow: boolean;
+};
+
+const GraphArrow = ({ isActive, hasActiveInRow }: GraphArrowProps) => {
+  const currentTheme = useCurrentTheme();
+
+  const arrowColor = isActive
+    ? currentTheme.text_2
+    : currentTheme.background_2;
+
+  const opacity = hasActiveInRow
+    ? isActive
+      ? 1
+      : 0
+    : 1;
 
   return (
-    <div className="flex flex-col items-center mt-[14px]">
+    <div
+      className="flex flex-col items-center mt-[14px]"
+      style={{ opacity }}
+    >
       <div className="relative w-[20px] h-[20px] mr-[1.1px]">
         <div
           className="absolute rounded-[2px] left-1/2 top-0 w-[1.3px] h-[14px] origin-top-left rotate-45"

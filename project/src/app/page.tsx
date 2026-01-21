@@ -12,7 +12,7 @@ import UpdatesCatalog from "@/modules/UpdatesModule/UpdatesCatalog";
 import DecisionGraphBuilder from "@/modules/EstimationModule/EstimationBuilder/DecisionGraphBuilder";
 import EstimationLauncher from "@/modules/EstimationModule/EstimationRuntime/EstimationLaunch";
 // import PricingAdminPage from "@/modules/EstimationModule/PricingAdmin/PricingAdminPage";
-import PemdasEditor from "@/modules/EstimationModule/EstimationPEMDAS2/PemdasEditor";
+import PemdasEditor from "@/modules/EstimationModule/EstimationPEMDAS/PemdasEditor";
 
 const HomePage = () => {
   const { screen } = useUiStore();

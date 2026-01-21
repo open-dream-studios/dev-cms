@@ -51,6 +51,9 @@ export const usePemdasCanvas = () => {
   const didInitPanRef = useRef(false);
   const viewportSizeRef = useRef<{ w: number; h: number } | null>(null);
   const justDroppedNodeRef = useRef<string | null>(null);
+  const [activeLayerByRow, setActiveLayerByRow] = useState<
+    Record<number, string>
+  >({});
 
   const [openLayerStack, setOpenLayerStack] = useState<string[]>([]);
 
@@ -137,7 +140,7 @@ export const usePemdasCanvas = () => {
     if (didInitPanRef.current) return;
     if (!viewportRef.current) return;
 
-    setPan({ x: -15, y: -WORLD_TOP });
+    setPan({ x: -23, y: -WORLD_TOP });
     didInitPanRef.current = true;
   }, [bounds]);
 
@@ -156,10 +159,23 @@ export const usePemdasCanvas = () => {
     isNodeDraggingRef.current = false;
   };
 
-  const openLayer = (layerNodeId: string, stackIndex: number) => {
+  const openLayer = (layerNodeId: string | null, rowIndex: number) => {
+    setActiveLayerByRow((prev) => {
+      const next = { ...prev };
+      if (layerNodeId === null) {
+        delete next[rowIndex];
+      } else {
+        next[rowIndex] = layerNodeId;
+      }
+      return next;
+    });
+
     setOpenLayerStack((prev) => {
-      const next = prev.slice(0, stackIndex);
-      next[stackIndex] = layerNodeId;
+      if (layerNodeId === null) {
+        return prev.slice(0, rowIndex);
+      }
+      const next = prev.slice(0, rowIndex);
+      next[rowIndex] = layerNodeId;
       return next;
     });
   };
@@ -334,7 +350,7 @@ export const usePemdasCanvas = () => {
           layerId: bestLayer.id,
           index: index === -1 ? bestLayer.nodeIds.length : index,
           constantValue: ghost.value,
-          layerY: bestLayer.y,  
+          layerY: bestLayer.y,
         });
       }
 
@@ -394,16 +410,14 @@ export const usePemdasCanvas = () => {
     constantValue?: number,
     layerY?: number,
   ) => {
-    const layer = layers.find((l) => l.id === layerId);
-    if (!layer) return;
-
+    console.log(label, layerId, nodeType, constantValue, layerY);
     dispatch({
       type: "ADD_NODE_AT",
       variable: label,
       nodeType,
       constantValue,
       layerId,
-      index: layer ? layer.nodeIds.length : 0,
+      index: layers.find((l) => l.id === layerId)?.nodeIds.length ?? 0,
       layerY,
     });
   };
@@ -422,7 +436,7 @@ export const usePemdasCanvas = () => {
   };
 
   const { modal2, setModal2 } = useUiStore();
-  const handleAddNode = (nodeType: PEMDASNodeType) => {
+  const handleAddNode = (nodeType: PEMDASNodeType, targetLayerId: string) => {
     const ConstantInputSteps: StepConfig[] = [
       {
         name: "name",
@@ -461,7 +475,8 @@ export const usePemdasCanvas = () => {
           onComplete={(values: any) => {
             // const layer = layers[layers.length - 1];
             // if (!layer) return;
-            const target = visibleRows[visibleRows.length - 1];
+            // const target = visibleRows[visibleRows.length - 1];
+            const target = visibleRows.find((r) => r.id === targetLayerId);
             if (!target) return;
 
             const raw = values.value;
@@ -578,5 +593,6 @@ export const usePemdasCanvas = () => {
     handleAddNode,
     visibleRows,
     openLayer,
+    activeLayerByRow,
   };
 };

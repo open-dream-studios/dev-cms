@@ -30,6 +30,9 @@ export const GraphNode = ({
   isFirstInLayer = false,
   isDragging: isDraggingNode = false,
   onSelectLayer,
+  isActiveLayer,
+  hasActiveLayerInRow,
+  dimmed,
 }: {
   node: PemdasNode;
   dispatch: React.Dispatch<any>;
@@ -39,6 +42,9 @@ export const GraphNode = ({
   isFirstInLayer?: boolean;
   isDragging?: boolean;
   onSelectLayer?: (nodeId: string) => void;
+  isActiveLayer?: boolean;
+  hasActiveLayerInRow?: boolean;
+  dimmed?: boolean;
 }) => {
   const currentTheme = useCurrentTheme();
   const { openContextMenu } = useContextMenuStore();
@@ -74,7 +80,7 @@ export const GraphNode = ({
     position: "absolute",
     left: offsetX + node.x - 24,
     top: node.y - 24,
-    zIndex: isActivelyDragged ? 999 : "auto",
+    zIndex: isActivelyDragged ? 100 : 1,
     willChange: isActivelyDragged ? "transform" : "left",
   };
 
@@ -170,8 +176,9 @@ export const GraphNode = ({
         />
 
         <div
-          style={{
+          style={{ 
             backgroundColor: ghost ? nodeColors["var"] : nodeColors[nodeType],
+            filter: dimmed ? "brightness(0.5)" : "none",
           }}
           className="cursor-grab dim hover:brightness-70 brightness-95 w-12 h-12 rounded-full flex items-center justify-center"
           onMouseEnter={() => {
@@ -200,7 +207,10 @@ export const GraphNode = ({
 
       {node.nodeType === "layer" && (
         <div className="absolute top-0 mt-[90px]">
-          <GraphArrow />
+          <GraphArrow
+            isActive={!!isActiveLayer}
+            hasActiveInRow={!!hasActiveLayerInRow}
+          />
         </div>
       )}
     </motion.div>

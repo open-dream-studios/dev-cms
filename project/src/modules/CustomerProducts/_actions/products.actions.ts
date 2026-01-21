@@ -22,8 +22,7 @@ import {
 } from "@/api/products.api";
 import { saveCurrentProductImages } from "@/modules/MediaModule/_actions/media.actions";
 import { queryClient } from "@/lib/queryClient";
-import { useTimer } from "@/store/util/useTimer";
-import { productToForm } from "@/util/schemas/productSchema";
+import { useTimer } from "@/store/util/useTimer"; 
 import { fetchAICompletionApi } from "@/api/AI.api";
 
 export const createJobDefinitionContextMenu =

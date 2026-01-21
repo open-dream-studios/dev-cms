@@ -1,0 +1,75 @@
+// src/pemdas/components/OperandChipInline.tsx
+import React, { useRef, useState } from "react";
+import { OperandOverlayPortal } from "./OperandOverlayPortal";
+import { Operand } from "../types";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
+
+export const OperandChipInline = ({
+  value,
+  onChange,
+  hidden,
+}: {
+  value: Operand;
+  onChange: (op: Operand) => void;
+  hidden?: boolean;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+
+  const rect = ref.current?.getBoundingClientRect();
+  const popupX = rect ? rect.left + rect.width / 2 : 0;
+  const popupY = rect ? rect.top - 36 : 0;
+
+  const popupRef = useRef(null)
+
+  useOutsideClick(popupRef, () => setOpen(false))
+
+  if (hidden) return null;
+
+  return (
+    <>
+      <div
+        ref={ref}
+        className="absolute -left-[32px] top-1/2 -translate-y-1/2
+                   w-6 h-6 rounded-full bg-[#1f1f1f]
+                   text-white text-[12px] flex items-center justify-center
+                   cursor-pointer z-10 pl-[0.5px] pb-[1px]"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+      >
+        {value}
+      </div>
+
+      {open && rect && (
+        <OperandOverlayPortal>
+          <div
+            className="fixed bg-[#111] border border-white/10 rounded-md
+             shadow-lg p-1 flex gap-1 cursor-auto pointer-events-auto"
+            style={{
+              left: popupX - 52,
+              top: popupY + 68,
+            }}
+            ref={popupRef}
+            // onClick={(e) => e.stopPropagation()}
+          >
+            {(["+", "-", "×", "/"] as Operand[]).map((op) => (
+              <button
+                key={op}
+                className="select-none px-2 h-6 rounded bg-white/10 text-white/85
+                           text-[13px] hover:brightness-75 cursor-pointer dim"
+                onPointerDown={() => {
+                  onChange(op);
+                  setOpen(false);
+                }}
+              >
+                {op}
+              </button>
+            ))}
+          </div>
+        </OperandOverlayPortal>
+      )}
+    </>
+  );
+};
