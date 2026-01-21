@@ -33,7 +33,7 @@ const HoverBox = ({ children, onClick, pages }: HoverBoxProps) => {
           : currentTheme.background_1,
       }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="cursor-pointer rounded-[8px] w-full h-[38px] flex items-center justify-start px-[12px]"
+      className="select-none cursor-pointer rounded-[8px] w-full h-[38px] flex items-center justify-start px-[12px]"
     >
       {children}
     </motion.div>

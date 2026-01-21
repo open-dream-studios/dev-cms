@@ -11,6 +11,7 @@ import {
 } from "@dnd-kit/core";
 import { reducer, initialState } from "../state/reducer";
 import { WORLD_BOTTOM, WORLD_TOP } from "../_constants/pemdas.constants";
+import { PEMDASNodeType } from "../types";
 
 export const PAN_PADDING = 310;
 
@@ -36,6 +37,7 @@ export const usePemdasCanvas = () => {
   );
   const [ghost, setGhost] = useState<{
     variable: string;
+    value: number;
     x: number;
     y: number;
   } | null>(null);
@@ -51,6 +53,7 @@ export const usePemdasCanvas = () => {
     x: number;
     y: number;
     variable: string;
+    value: number;
   } | null>(null);
 
   const sensors = useSensors(
@@ -88,7 +91,7 @@ export const usePemdasCanvas = () => {
     if (!viewportRef.current) return;
 
     setPan({
-      x: -30,
+      x: -15,
       //  x: bounds.maxPanX,
       y: -WORLD_TOP,
     });
@@ -161,6 +164,7 @@ export const usePemdasCanvas = () => {
         variable: data.variable,
         x: p.clientX - rect.left - pan.x,
         y: p.clientY - rect.top - pan.y,
+        value: data.value
       };
     }
 
@@ -168,6 +172,7 @@ export const usePemdasCanvas = () => {
       variable: ghostOriginRef.current.variable,
       x: ghostOriginRef.current.x + e.delta.x,
       y: ghostOriginRef.current.y + e.delta.y,
+      value: ghostOriginRef.current.value,
     });
   };
 
@@ -199,9 +204,11 @@ export const usePemdasCanvas = () => {
         dispatch({
           type: "ADD_NODE_AT",
           variable: ghost.variable,
+          nodeType: "var",
           layerId: bestLayer.id,
           index: index === -1 ? bestLayer.nodeIds.length : index,
           x: ghost.x,
+          constantValue: ghost.value
         });
       }
 
@@ -230,16 +237,27 @@ export const usePemdasCanvas = () => {
     isDndDraggingRef.current = false;
   };
 
-  const addNodeAtEnd = (label: string, layerId: string) => {
+  const addNodeAtEnd = (label: string, layerId: string, nodeType: PEMDASNodeType, constantValue?: number) => {
     const layer = layers.find((l) => l.id === layerId);
     if (!layer) return;
 
     dispatch({
       type: "ADD_NODE_AT",
-      variable: "A",
+      variable: label,
+      nodeType,
       layerId: layer.id,
-      index: layer.nodeIds.length, // 👈 end of line
-      x: 0, // ignored by reducer/layoutNodes
+      index: layer.nodeIds.length,
+      x: 0,
+      constantValue
+    });
+  };
+
+  const editNodeLabel = (nodeId: string, label: string, constantValue?: number) => {
+    dispatch({
+      type: "UPDATE_NODE_LABEL",
+      nodeId,
+      label,
+      constantValue,
     });
   };
 
@@ -262,6 +280,7 @@ export const usePemdasCanvas = () => {
       onDragEnd,
       onDragCancel,
     },
-    addNodeAtEnd
+    addNodeAtEnd,
+    editNodeLabel
   };
 };

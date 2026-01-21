@@ -9,6 +9,8 @@ export type PemdasNode = {
   x: number; // center-x in canvas space
   y: number; // center-y in canvas space
   layerId: string;
+  nodeType: PEMDASNodeType
+  constantValue?: number;
 };
 
 export type PemdasLayer = {
@@ -16,7 +18,7 @@ export type PemdasLayer = {
   y: number;
   nodeIds: string[];
   operands: Operand[];
-  width: number; 
+  width: number;
 };
 
 export type DragState =
@@ -37,3 +39,7 @@ export type DragGhost = {
   x: number;
   y: number;
 } | null;
+
+export type PEMDASNodeType = "layer" | "constant" | "var";
+export type creatablePEMDASNodeType = "layer" | "constant";
+export const creatablePEMDASNodeTypes: PEMDASNodeType[] = ["layer", "constant"];

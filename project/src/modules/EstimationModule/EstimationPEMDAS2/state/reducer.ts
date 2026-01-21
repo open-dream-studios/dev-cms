@@ -1,8 +1,13 @@
 // src/pemdas/state/reducer.ts
 import { uid } from "../utils/uid";
-import { Operand, PemdasLayer, PemdasNode } from "../types";
+import { Operand, PemdasLayer, PemdasNode, PEMDASNodeType } from "../types";
 import { computeLineWidth, layoutNodes } from "../_helpers/pemdas.helpers";
-import { BASE_LINE_WIDTH, EDGE_PADDING, NODE_SIZE, WORLD_TOP } from "../_constants/pemdas.constants";
+import {
+  BASE_LINE_WIDTH,
+  EDGE_PADDING,
+  NODE_SIZE,
+  WORLD_TOP,
+} from "../_constants/pemdas.constants";
 
 type State = {
   nodes: Record<string, PemdasNode>;
@@ -13,6 +18,8 @@ type Action =
   | {
       type: "ADD_NODE_AT";
       variable: string;
+      nodeType: PEMDASNodeType;
+      constantValue?: number;
       layerId: string;
       index: number;
       x: number;
@@ -32,6 +39,12 @@ type Action =
   | {
       type: "DELETE_NODE";
       nodeId: string;
+    }
+  | {
+      type: "UPDATE_NODE_LABEL";
+      nodeId: string;
+      label: string;
+      constantValue: number | undefined
     };
 
 // const NODE_RADIUS = NODE_SIZE / 2;
@@ -42,7 +55,13 @@ const clamp = (n: number, min: number, max: number) =>
   Math.max(min, Math.min(max, n));
 
 const INITIAL_LAYERS: PemdasLayer[] = [
-  { id: "layer-0", y: WORLD_TOP + 290, nodeIds: [], operands: [], width: BASE_LINE_WIDTH },
+  {
+    id: "layer-0",
+    y: WORLD_TOP + 290,
+    nodeIds: [],
+    operands: [],
+    width: BASE_LINE_WIDTH,
+  },
 ];
 
 export const initialState: State = {
@@ -121,9 +140,11 @@ export function reducer(state: State, action: Action): State {
       const node: PemdasNode = {
         id,
         variable: action.variable,
+        nodeType: action.nodeType,
         x: 0,
         y: layer.y,
         layerId: layer.id,
+        constantValue: action.constantValue
       };
 
       const nodes = { ...state.nodes, [id]: node };
@@ -201,6 +222,23 @@ export function reducer(state: State, action: Action): State {
         return nextLayer;
       });
       return { nodes: nextNodes, layers: nextLayers };
+    }
+
+    case "UPDATE_NODE_LABEL": {
+      const node = state.nodes[action.nodeId];
+      if (!node) return state;
+
+      return {
+        ...state,
+        nodes: {
+          ...state.nodes,
+          [node.id]: {
+            ...node,
+            variable: action.label,
+            constantValue: action.constantValue
+          },
+        },
+      };
     }
 
     default:

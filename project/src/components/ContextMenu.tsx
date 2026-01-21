@@ -1,10 +1,14 @@
 // project/src/components/ContextMenuRenderer.tsx
 "use client";
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { useContextMenuStore } from "../store/util/contextMenuStore";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { AuthContext } from "@/contexts/authContext";
 
 export const ContextMenu = () => {
   const { contextMenu, closeContextMenu } = useContextMenuStore();
+  const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
 
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -19,15 +23,20 @@ export const ContextMenu = () => {
     return () => document.removeEventListener("mousedown", handler, true);
   }, [contextMenu, closeContextMenu]);
 
-  if (!contextMenu) return null;
+  if (!contextMenu || !currentUser) return null;
 
   const { position, target, menu } = contextMenu;
 
   return (
     <div
       ref={menuRef}
-      className="fixed z-999 min-w-[160px] rounded-md border bg-white shadow-lg py-1"
-      style={{ top: position.y, left: position.x }}
+      className="fixed z-999 min-w-[160px] rounded-md border shadow-lg py-1"
+      style={{
+        top: position.y,
+        left: position.x,
+        backgroundColor: currentTheme.background_2,
+        border: "1px solid " + currentTheme.background_3,
+      }}
       onContextMenu={(e) => e.preventDefault()}
     >
       {menu.items.map((item) => {
@@ -45,12 +54,14 @@ export const ContextMenu = () => {
               await item.onClick(target);
               closeContextMenu();
             }}
-            className={`w-full text-left px-3 py-2 text-sm
-              ${
-                item.danger
-                  ? "text-red-600 hover:bg-red-50"
-                  : "hover:bg-gray-100"
-              }
+            style={{
+              color: !item.danger
+                ? currentTheme.text_1
+                : currentUser.theme === "light"
+                  ? "red"
+                  : "#FF746B",
+            }}
+            className={`w-full text-left px-3 py-2 text-sm dim hover:brightness-75
               ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
             `}
           >

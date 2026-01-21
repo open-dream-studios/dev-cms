@@ -117,7 +117,7 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
             backgroundColor: currentTheme.background_2_2,
             color: currentTheme.text_1,
           }}
-          className="rounded-[7px] w-full px-[11px] py-[5px]"
+          className="outline-none border-none rounded-[7px] w-full px-[11px] py-[5px]"
         />
         {error && (
           <div className="absolute top-[7px] right-[16px] text-red-500 text-[14px]">
@@ -128,7 +128,7 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
 
       <div className="w-full h-[40px] px-[25px] flex flex-row gap-[10px]">
         <div
-          className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
+          className="select-none dim hover:brightness-85 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
             color: currentTheme.text_1,
             backgroundColor: currentTheme.background_2_2,

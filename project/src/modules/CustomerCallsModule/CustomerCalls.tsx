@@ -91,7 +91,7 @@ const CustomerCalls = () => {
           "Project ID check",
           String(msg.projectId),
           String(currentProjectId),
-          String(msg.projectId) === String(currentProjectId)
+          String(msg.projectId) === String(currentProjectId),
         );
 
         // if (String(msg.projectId) !== String(currentProjectId)) {
@@ -157,7 +157,11 @@ const CustomerCalls = () => {
     const sendHello = () => {
       if (sentHello || ws.readyState !== WebSocket.OPEN) return;
       ws.send(
-        JSON.stringify({ type: "hello", identity, projectId: currentProjectId })
+        JSON.stringify({
+          type: "hello",
+          identity,
+          projectId: currentProjectId,
+        }),
       );
       sentHello = true;
     };
@@ -208,6 +212,7 @@ const CustomerCalls = () => {
       borderRadius: "rounded-[12px] md:rounded-[15px]",
       content: (
         <Modal2MultiStepModalInput
+          key={`trigger-${Date.now()}`}
           steps={steps}
           onComplete={(values) => {
             const e164 = `+1${values.phone}`;
@@ -244,7 +249,7 @@ const CustomerCalls = () => {
     projectUsers.some(
       (u: any) =>
         Number(u.project_idx) === Number(currentProjectId) &&
-        u.email === currentUser.email
+        u.email === currentUser.email,
     );
   if (!currentProjectId || !userIsInProject) return null;
 
@@ -300,7 +305,7 @@ const CustomerCalls = () => {
                   {incoming.parameters?.From &&
                   normalizeUSNumber(incoming.parameters.From)
                     ? formatPhoneNumber(
-                        normalizeUSNumber(incoming.parameters.From)
+                        normalizeUSNumber(incoming.parameters.From),
                       )
                     : "Unknown Caller"}
                 </p>
@@ -419,13 +424,13 @@ const CustomerCalls = () => {
                 <p className="truncate text-base font-semibold text-white leading-tight">
                   {connection.parameters?.From
                     ? formatPhoneNumber(
-                        normalizeUSNumber(connection.parameters?.From)
+                        normalizeUSNumber(connection.parameters?.From),
                       )
                     : connection.parameters?.To
-                    ? formatPhoneNumber(
-                        normalizeUSNumber(connection.parameters?.To)
-                      )
-                    : "Unknown Caller"}
+                      ? formatPhoneNumber(
+                          normalizeUSNumber(connection.parameters?.To),
+                        )
+                      : "Unknown Caller"}
                 </p>
 
                 <span className="text-xs px-[15px] py-[4px] rounded-full bg-white/6 text-white/80 font-medium">

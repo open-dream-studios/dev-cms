@@ -169,7 +169,7 @@ export default function MediaFoldersSidebar() {
       {
         name: "name",
         placeholder: "Folder Name...",
-        validate: (val) => (val.length > 1 ? true : "2+ characters required"),
+        validate: (val) => (val.length > 1 ? true : "2+ chars"),
       },
     ];
 
@@ -185,6 +185,7 @@ export default function MediaFoldersSidebar() {
       content: (
         <Modal2MultiStepModalInput
           steps={steps}
+          key={`trigger-${Date.now()}`}
           onComplete={async (values) => {
             const newIds = await upsertMediaFolders([
               {

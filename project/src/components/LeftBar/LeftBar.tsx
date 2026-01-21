@@ -7,8 +7,7 @@ import {
   useState,
   useContext,
   useMemo,
-  ReactNode,
-  useCallback,
+  ReactNode, 
 } from "react";
 import Modal2Continue from "../../modals/Modal2Continue";
 import appDetails from "../../util/appDetails.json";
@@ -37,14 +36,14 @@ type BoxSectionProps = {
 
 const BoxSection: React.FC<BoxSectionProps> = ({ items }) => {
   return (
-    <div className="w-[100%] flex flex-col mb-[10px]">
+    <div className="select-none w-[100%] flex flex-col mb-[10px]">
       <Divider mb={10} />
       <div className="flex flex-col gap-[9px]">
         {items.map((item: BoxItem, index: number) => (
           <HoverBox key={index} onClick={item.onClick} pages={item.pages}>
             <div className="select-none flex flex-row gap-[8px]">
               {item.icon}
-              <p className="brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
+              <p className="select-none brightness-[55%] text-[15.6px] leading-[18px] font-[400]">
                 {item.title}
               </p>
             </div>

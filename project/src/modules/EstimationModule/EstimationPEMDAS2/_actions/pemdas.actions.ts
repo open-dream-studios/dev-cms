@@ -1,17 +1,28 @@
-// src/pemdas/_actions/pemdas.actions.ts
+// src/pemdas/_actions/pemdas.actions.tsx
+import { useUiStore } from "@/store/useUIStore";
 import { PemdasNode } from "../types";
 import { ContextMenuDefinition } from "@open-dream/shared";
+import Modal2MultiStepModalInput, { StepConfig } from "@/modals/Modal2MultiStepInput";
 
 export const createPemdasNodeContextMenu = (
-  dispatch: React.Dispatch<any>
+  onEdit: (node: PemdasNode) => void,
+  dispatch: React.Dispatch<any>,
 ): ContextMenuDefinition<PemdasNode> => ({
   items: [
+    {
+      id: "edit-node",
+      label: "Edit Node",
+      onClick: (node) => onEdit(node),
+    },
     {
       id: "delete-node",
       label: "Delete Node",
       danger: true,
-      onClick: async (node) => {
-        handleDeletePemdasNode(dispatch, node);
+      onClick: (node) => {
+        dispatch({
+          type: "DELETE_NODE",
+          nodeId: node.id,
+        });
       },
     },
   ],
@@ -19,7 +30,7 @@ export const createPemdasNodeContextMenu = (
 
 export const handleDeletePemdasNode = (
   dispatch: React.Dispatch<any>,
-  node: PemdasNode
+  node: PemdasNode,
 ) => {
   dispatch({
     type: "DELETE_NODE",
