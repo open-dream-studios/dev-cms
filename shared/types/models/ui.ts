@@ -1,4 +1,6 @@
 // shared/types/models/ui.ts
+import type * as React from "react";
+
 export type ContextMenuPosition = {
   x: number;
   y: number;
