@@ -1,6 +1,4 @@
 // shared/types/models/ui.ts
-import type * as React from "react";
-
 export type ContextMenuPosition = {
   x: number;
   y: number;
@@ -48,7 +46,7 @@ export type Screen =
 export type Modal =
   | { type: "mediaUpload" }
   | { type: "confirmDelete"; payload: { id: string } }
-  | { type: "custom"; content: React.ReactNode };
+  | { type: "custom"; content: any };
 
 export type UIState = {
   screen: Screen;

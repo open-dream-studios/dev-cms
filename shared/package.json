@@ -16,8 +16,5 @@
   ],
   "dependencies": {
     "mysql2": "^3.15.3"
-  },
-  "devDependencies": {
-    "@types/react": "^18.0.0"
   }
 }
