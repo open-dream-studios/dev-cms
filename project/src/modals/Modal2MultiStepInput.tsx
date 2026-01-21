@@ -1,6 +1,6 @@
 // project/src/modals/Modal2MultiStepInput.tsx
 "use client";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../contexts/authContext";
 import { formatPhone } from "@/util/functions/Customers";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
@@ -37,11 +37,24 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
   );
   const [error, setError] = useState<string | null>(null);
 
+  const focusAndSelect = useCallback(() => {
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+  }, []);
+
   useEffect(() => {
     setCurrentInput(inputs[steps[stepIndex].name] ?? "");
     setError(null);
-    inputRef.current?.focus();
-  }, [stepIndex]);
+    focusAndSelect();
+  }, [stepIndex, focusAndSelect]);
+
+  useEffect(() => {
+    if (modal2?.open) {
+      focusAndSelect();
+    }
+  }, [modal2?.open, focusAndSelect]);
 
   if (!currentUser) return null;
 

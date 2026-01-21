@@ -8,26 +8,27 @@ export const VariableBar = () => {
   return (
     <div className="flex justify-center gap-4 py-4">
       {VARS.map((v) => (
-        <VariableItem key={v} variable={v} />
+        <VariableItem key={v} variableKey={v} />
       ))}
     </div>
   );
 };
 
-const VariableItem = ({ variable }: { variable: string }) => {
+const VariableItem = ({ variableKey }: { variableKey: string }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `var-${variable}`,
-    data: { variable },
+    id: `var-${variableKey}`,
+    data: { variableKey },
   });
 
   return (
     <div
+      data-draggable
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center cursor-grab select-none"
+      className="dim hover:brightness-75 w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center cursor-grab select-none"
     >
-      {variable}
+      {variableKey}
     </div>
   );
 };

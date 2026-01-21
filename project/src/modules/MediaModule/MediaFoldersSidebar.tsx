@@ -40,7 +40,6 @@ import {
 import { motion } from "framer-motion";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
-import { useContextMenuStore } from "@/store/util/contextMenuStore";
 
 function findNode(
   nodes: MediaFolderNode[],

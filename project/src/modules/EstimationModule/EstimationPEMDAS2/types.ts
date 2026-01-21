@@ -1,7 +1,7 @@
 // src/pemdas/types.ts
 export type VariableKey = string;
 
-export type Operand = "+" | "-" | "*" | "/";
+export type Operand = "+" | "-" | "×" | "/";
 
 export type PemdasNode = {
   id: string;
@@ -13,9 +13,10 @@ export type PemdasNode = {
 
 export type PemdasLayer = {
   id: string;
-  y: number; // center-y of the layer line
+  y: number;
   nodeIds: string[];
   operands: Operand[];
+  width: number; 
 };
 
 export type DragState =
@@ -30,11 +31,9 @@ export type DragState =
     }
   | null;
 
-export type DragGhost =
-  | {
-      type: "VAR_GHOST";
-      variable: VariableKey;
-      x: number;
-      y: number;
-    }
-  | null;
+export type DragGhost = {
+  type: "VAR_GHOST";
+  variable: VariableKey;
+  x: number;
+  y: number;
+} | null;

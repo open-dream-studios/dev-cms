@@ -10,23 +10,26 @@ export const GraphNode = ({
   node,
   dispatch,
   ghost = false,
+  offsetX = 0,
 }: {
   node: PemdasNode;
   dispatch: React.Dispatch<any>;
   ghost?: boolean;
+  offsetX?: number;
 }) => {
   const { openContextMenu } = useContextMenuStore();
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: node.id,
-      disabled: ghost, // 👈 ghosts are NOT draggable
+      disabled: ghost,  
     });
 
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     position: "absolute",
-    left: node.x - 24,
+    // left: node.x - 24,
+    left: offsetX + node.x - 24,
     top: node.y - 24,
     zIndex: isDragging ? 999 : "auto",
     willChange: "transform",
@@ -34,11 +37,12 @@ export const GraphNode = ({
 
   return (
     <div
+      data-draggable
       ref={setNodeRef}
       {...(!ghost ? attributes : {})}
       {...(!ghost ? listeners : {})}
       style={style}
-      className={`w-12 h-12 rounded-full text-white flex items-center justify-center select-none ${
+      className={`dim hover:brightness-75 w-12 h-12 rounded-full text-white flex items-center justify-center select-none ${
         ghost
           ? "bg-blue-500 opacity-80 pointer-events-none"
           : "bg-purple-500 cursor-grab"

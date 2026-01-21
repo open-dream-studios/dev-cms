@@ -1,6 +1,6 @@
 // src/pemdas/_actions/pemdas.actions.ts
 import { PemdasNode } from "../types";
-import { ContextMenuDefinition } from "@open-dream/shared"; 
+import { ContextMenuDefinition } from "@open-dream/shared";
 
 export const createPemdasNodeContextMenu = (
   dispatch: React.Dispatch<any>
