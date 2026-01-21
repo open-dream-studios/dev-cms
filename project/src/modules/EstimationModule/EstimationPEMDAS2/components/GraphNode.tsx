@@ -29,6 +29,7 @@ export const GraphNode = ({
   onEdit,
   isFirstInLayer = false,
   isDragging: isDraggingNode = false,
+  onSelectLayer,
 }: {
   node: PemdasNode;
   dispatch: React.Dispatch<any>;
@@ -37,6 +38,7 @@ export const GraphNode = ({
   onEdit?: (node: PemdasNode) => void;
   isFirstInLayer?: boolean;
   isDragging?: boolean;
+  onSelectLayer?: (nodeId: string) => void;
 }) => {
   const currentTheme = useCurrentTheme();
   const { openContextMenu } = useContextMenuStore();
@@ -94,6 +96,13 @@ export const GraphNode = ({
           target: node,
           menu: createPemdasNodeContextMenu(onEdit!, dispatch),
         });
+      }}
+      onClick={(e) => {
+        if (ghost) return;
+        if (node.nodeType === "layer") {
+          e.stopPropagation();
+          onSelectLayer?.(node.id);
+        }
       }}
     >
       {/* NUMBER DISPLAY */}

@@ -41,6 +41,8 @@ export const PemdasCanvas = () => {
     activeNodeId,
     handleEditNode,
     handleAddNode,
+    visibleRows,
+    openLayer,
   } = usePemdasCanvas();
 
   return (
@@ -134,7 +136,7 @@ export const PemdasCanvas = () => {
               </div>
 
               {/* LAYERS */}
-              {layers.map((layer) => {
+              {visibleRows.map((layer, rowIndex) => {
                 const lineLeft =
                   (viewportRef.current?.clientWidth ?? 0) / 2 - layer.width / 2;
 
@@ -154,7 +156,7 @@ export const PemdasCanvas = () => {
 
                 const previewCenters = getSlotCenters(
                   layer.width,
-                  layer.nodeIds.length,
+                  previewNodeIds.length,
                 );
 
                 return (
@@ -247,6 +249,9 @@ export const PemdasCanvas = () => {
                           onEdit={handleEditNode}
                           isFirstInLayer={previewNodeIds[0] === id}
                           isDragging={isDragging}
+                          onSelectLayer={(nodeId) =>
+                            openLayer(nodeId, rowIndex)
+                          }
                         />
                       );
                     })}

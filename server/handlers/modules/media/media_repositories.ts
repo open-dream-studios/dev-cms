@@ -522,12 +522,15 @@ export async function uploadMediaFunction(
       };
     }
 
-    const finalKind = await fileTypeFromFile(toUploadPath);
-    if (!finalKind || !supportedImageExts.includes(finalKind.ext)) {
-      console.warn("Post-compression file-type invalid; using original file");
-      toUploadPath = origPath;
-      finalMeta.ext = origExt;
-      finalMeta.mimeType = origMime;
+    if (imageExts.includes(origExt)) {
+      const finalKind = await fileTypeFromFile(toUploadPath);
+      if (!finalKind || !supportedImageExts.includes(finalKind.ext)) {
+        console.warn("Post-compression file-type invalid; using original file");
+        toUploadPath = origPath;
+        finalMeta.ext = origExt;
+        finalMeta.mimeType = origMime;
+        finalMeta.transformed = false;
+      }
     }
 
     const s3Key = buildS3Key({ projectId, ext: finalMeta.ext, type: "media" });
@@ -537,9 +540,9 @@ export async function uploadMediaFunction(
     }
 
     // Upload
-    const validImg = await fileTypeFromFile(toUploadPath);
-    if (!validImg || !supportedImageExts.includes(validImg.ext)) {
-      throw new Error("Refusing to upload non-image file to S3");
+    const validFile = await fileTypeFromFile(toUploadPath);
+    if (!validFile || !allSupportedExts.includes(validFile.ext)) {
+      throw new Error("Refusing to upload unsupported file type to S3");
     }
 
     const uploadResult = await uploadFileToS3(

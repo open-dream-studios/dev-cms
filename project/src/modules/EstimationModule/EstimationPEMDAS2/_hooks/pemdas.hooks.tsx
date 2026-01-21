@@ -10,9 +10,17 @@ import {
   DragCancelEvent,
 } from "@dnd-kit/core";
 import { reducer, initialState } from "../state/reducer";
-import { WORLD_BOTTOM, WORLD_TOP } from "../_constants/pemdas.constants";
+import {
+  BASE_LINE_WIDTH,
+  WORLD_BOTTOM,
+  WORLD_TOP,
+} from "../_constants/pemdas.constants";
 import { PemdasNode, PEMDASNodeType } from "../types";
-import { arrayMove, getClosestSlotIndex, getSlotCenters } from "../_helpers/pemdas.helpers";
+import {
+  arrayMove,
+  getClosestSlotIndex,
+  getSlotCenters,
+} from "../_helpers/pemdas.helpers";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
@@ -27,6 +35,15 @@ type ReorderPreview = {
   overIndex: number;
 } | null;
 
+const ROW_GAP = 170;
+
+type VisibleRow = {
+  id: string; // layerId being displayed
+  y: number;
+  width: number;
+  nodeIds: string[];
+};
+
 export const usePemdasCanvas = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -34,6 +51,8 @@ export const usePemdasCanvas = () => {
   const didInitPanRef = useRef(false);
   const viewportSizeRef = useRef<{ w: number; h: number } | null>(null);
   const justDroppedNodeRef = useRef<string | null>(null);
+
+  const [openLayerStack, setOpenLayerStack] = useState<string[]>([]);
 
   const [ghost, setGhost] = useState<{
     variable: string;
@@ -136,6 +155,32 @@ export const usePemdasCanvas = () => {
     activeNodeRef.current = null;
     isNodeDraggingRef.current = false;
   };
+
+  const openLayer = (layerNodeId: string, stackIndex: number) => {
+    setOpenLayerStack((prev) => {
+      const next = prev.slice(0, stackIndex);
+      next[stackIndex] = layerNodeId;
+      return next;
+    });
+  };
+
+  const visibleRows: VisibleRow[] = useMemo(() => {
+    const root = layers.find((l) => l.id === "layer-0") ?? layers[0];
+
+    const rootY = root?.y ?? WORLD_TOP + 290;
+
+    const ids = ["layer-0", ...openLayerStack];
+
+    return ids.map((id, i) => {
+      const real = layers.find((l) => l.id === id);
+      return {
+        id,
+        y: rootY + i * ROW_GAP,
+        width: real?.width ?? BASE_LINE_WIDTH,
+        nodeIds: real?.nodeIds ?? [],
+      };
+    });
+  }, [layers, openLayerStack]);
 
   // ---- CAMERA PAN ----
   const onPointerDown = (e: React.PointerEvent) => {
@@ -269,7 +314,7 @@ export const usePemdasCanvas = () => {
       let bestLayer: any = null;
       let bestDist = Infinity;
 
-      for (const l of layers) {
+      for (const l of visibleRows) {
         const d = Math.abs(ghost.y - l.y);
         if (d < bestDist) {
           bestDist = d;
@@ -289,6 +334,7 @@ export const usePemdasCanvas = () => {
           layerId: bestLayer.id,
           index: index === -1 ? bestLayer.nodeIds.length : index,
           constantValue: ghost.value,
+          layerY: bestLayer.y,  
         });
       }
 
@@ -346,6 +392,7 @@ export const usePemdasCanvas = () => {
     layerId: string,
     nodeType: PEMDASNodeType,
     constantValue?: number,
+    layerY?: number,
   ) => {
     const layer = layers.find((l) => l.id === layerId);
     if (!layer) return;
@@ -355,8 +402,9 @@ export const usePemdasCanvas = () => {
       variable: label,
       nodeType,
       constantValue,
-      layerId: layer.id,
-      index: layer.nodeIds.length,
+      layerId,
+      index: layer ? layer.nodeIds.length : 0,
+      layerY,
     });
   };
 
@@ -411,8 +459,10 @@ export const usePemdasCanvas = () => {
           key={`add-node-${Date.now()}`}
           steps={nodeType === "constant" ? ConstantInputSteps : LayerInputSteps}
           onComplete={(values: any) => {
-            const layer = layers[layers.length - 1];
-            if (!layer) return;
+            // const layer = layers[layers.length - 1];
+            // if (!layer) return;
+            const target = visibleRows[visibleRows.length - 1];
+            if (!target) return;
 
             const raw = values.value;
             const constantValue =
@@ -422,7 +472,14 @@ export const usePemdasCanvas = () => {
                 ? Number(raw)
                 : undefined;
 
-            addNodeAtEnd(values.name, layer.id, nodeType, constantValue);
+            // addNodeAtEnd(values.name, layer.id, nodeType, constantValue);
+            addNodeAtEnd(
+              values.name,
+              target.id,
+              nodeType,
+              constantValue,
+              target.y,
+            );
           }}
         />
       ),
@@ -519,5 +576,7 @@ export const usePemdasCanvas = () => {
     editNodeLabel,
     handleEditNode,
     handleAddNode,
+    visibleRows,
+    openLayer,
   };
 };

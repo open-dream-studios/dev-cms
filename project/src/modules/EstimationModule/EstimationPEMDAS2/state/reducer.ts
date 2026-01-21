@@ -17,6 +17,7 @@ type Action =
       constantValue?: number;
       layerId: string;
       index: number;
+      layerY?: number;
     }
   | {
       type: "REORDER_LAYER";
@@ -76,7 +77,17 @@ function enforceFirstOperandPlus(
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "ADD_NODE_AT": {
-      const layer = getLayer(state, action.layerId);
+      let layer = state.layers.find((l) => l.id === action.layerId);
+
+      if (!layer) {
+        layer = {
+          id: action.layerId,
+          y: action.layerY ?? WORLD_TOP + 290,
+          nodeIds: [],
+          width: BASE_LINE_WIDTH,
+        };
+      }
+
       const id = uid();
 
       const node: PemdasNode = {
@@ -102,9 +113,13 @@ export function reducer(state: State, action: Action): State {
       layoutNodes(nodes, nextLayer);
       enforceFirstOperandPlus(nodes, nextLayer);
 
+      const nextLayers = state.layers.some((l) => l.id === layer!.id)
+        ? state.layers.map((l) => (l.id === layer!.id ? nextLayer : l))
+        : [...state.layers, nextLayer];
+
       return {
         nodes,
-        layers: state.layers.map((l) => (l.id === layer.id ? nextLayer : l)),
+        layers: nextLayers,
       };
     }
 
