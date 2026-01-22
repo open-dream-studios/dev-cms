@@ -30,7 +30,7 @@ export function useEstimationFactDefinitions(
       fact_type: FactType;
       description?: string | null;
       folder_id?: number | null;
-      process_id: string;
+      process_id: number;
     }) => upsertFactDefinitionApi(currentProjectId!, payload),
     onSuccess: () =>
       qc.invalidateQueries({
@@ -86,7 +86,7 @@ export function useEstimationFactDefinitions(
       fact_type: FactType;
       description?: string | null;
       folder_id?: number | null;
-      process_id: string;
+      process_id: number;
     }) => upsertMutation.mutateAsync(p),
     deleteFactDefinition: (fact_id: string) =>
       deleteMutation.mutateAsync(fact_id),

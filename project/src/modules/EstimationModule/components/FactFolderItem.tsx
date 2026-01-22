@@ -21,7 +21,7 @@ import { createFactFolderContextMenu } from "../_actions/estimations.actions";
 import { EstimationFactFolder } from "@open-dream/shared";
 import Modal2MultiStepModalInput, {
   StepConfig,
-} from "@/modals/Modal2MultiStepInput";
+} from "@/modals/Modal2MultiStepInput"; 
 
 export default function FactFolderItem({
   node,
@@ -46,7 +46,7 @@ export default function FactFolderItem({
   const { factFolders, upsertFactFolders } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId!,
-  );
+  ); 
 
   const { setNodeRef, attributes, listeners, transform, transition } =
     useSortable({
@@ -57,8 +57,10 @@ export default function FactFolderItem({
   const alteredDepth = Math.max(depth - 1, 0);
 
   const handleEditFolder = () => {
-    const matchedFactFolder = factFolders.find((folder: EstimationFactFolder) => folder.folder_id === node.folder_id)
-    if (!matchedFactFolder) return
+    const matchedFactFolder = factFolders.find(
+      (folder: EstimationFactFolder) => folder.folder_id === node.folder_id,
+    );
+    if (!matchedFactFolder) return;
     const EditFolderSteps: StepConfig[] = [
       {
         name: "name",
@@ -105,6 +107,7 @@ export default function FactFolderItem({
     >
       <div
         {...attributes}
+        data-fact-folder-item
         className="flex items-center gap-2 px-2 rounded cursor-grab hover:brightness-90 dim"
         // {...attributes}
         // {...listeners}

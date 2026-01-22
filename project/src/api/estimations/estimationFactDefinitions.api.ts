@@ -21,7 +21,7 @@ export async function upsertFactDefinitionApi(
     fact_type: FactType;
     description?: string | null;
     folder_id?: number | null;
-    process_id: string;
+    process_id: number;
   }
 ) {
   const res = await makeRequest.post("/estimations/fact-definitions/upsert", {

@@ -3,12 +3,12 @@ import { useEffect } from "react";
 
 export function useOutsideClick<T extends HTMLElement>(
   ref: React.RefObject<T | null>,
-  onOutsideClick: () => void
+  onOutsideClick: (e?: any) => void
 ) {
   useEffect(() => {
     const handleOutside = (event: PointerEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        onOutsideClick();
+        onOutsideClick(event);
       }
     };
 

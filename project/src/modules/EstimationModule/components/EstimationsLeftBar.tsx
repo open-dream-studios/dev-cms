@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
 import { buildFactFolderTree } from "../_helpers/estimations.helpers";
 import FactFolderItem from "./FactFolderItem";
@@ -19,6 +19,7 @@ import { DragOverlay } from "@dnd-kit/core";
 import { Folder, GripVertical } from "lucide-react";
 import { useEstimationFactsUIStore } from "../_store/estimations.store";
 import { EstimationFactDefinition } from "@open-dream/shared";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 
 export default function EstimationsLeftBar() {
   const currentTheme = useCurrentTheme();
@@ -123,11 +124,10 @@ export default function EstimationsLeftBar() {
     });
   };
 
-  const handleAddFactDefinition = (fact: EstimationFactDefinition) => {
+  const handleAddFactDefinition = () => {
     const EditFactSteps: StepConfig[] = [
       {
         name: "name",
-        initialValue: fact.fact_key ?? "",
         placeholder: `Fact Name...`,
         validate: (val) => (val.length >= 1 ? true : "1+ chars"),
       },
@@ -161,7 +161,7 @@ export default function EstimationsLeftBar() {
         fact_type: fact_type as any,
         description: null,
         folder_id: selectedFolderId,
-        process_id: "1",
+        process_id: 0,
       });
     };
 
@@ -184,6 +184,18 @@ export default function EstimationsLeftBar() {
     });
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(containerRef, (e: React.PointerEvent) => {
+    const el = e.target as HTMLElement;
+    if (
+      el.closest("[data-fact-folder-item]") ||
+      el.closest("[data-fact-button]")
+    ) {
+      return;
+    }
+    setSelectedFolderId(null);
+  });
+
   return (
     <div
       data-no-pan
@@ -205,17 +217,31 @@ export default function EstimationsLeftBar() {
           </p>
         </div>
 
-        <div
-          onClick={handleAddFolder}
-          className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
-          style={{
-            backgroundColor: currentTheme.background_1_2,
-          }}
-        >
-          <FaPlus size={12} />
+        <div className="flex flex-row gap-[7px] items-center">
+          <div
+            data-fact-button
+            onClick={handleAddFolder}
+            className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+            style={{
+              backgroundColor: currentTheme.background_1_2,
+            }}
+          >
+            <Folder size={13} />
+          </div>
+
+          <div
+            data-fact-button
+            onClick={handleAddFactDefinition}
+            className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+            style={{
+              backgroundColor: currentTheme.background_1_2,
+            }}
+          >
+            <FaPlus size={12} />
+          </div>
         </div>
       </div>
-      <div className="px-3 mt-[-8px]  space-y-1">
+      <div ref={containerRef} className="px-3 mt-[-8px]  space-y-1">
         <SortableContext
           items={tree.map((n) => `folder-${n.folder_id}`)}
           strategy={verticalListSortingStrategy}
