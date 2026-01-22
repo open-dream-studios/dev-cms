@@ -20,55 +20,31 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { openFactFolder, toggleFactFolder } from "../_actions/estimations.actions";
 
 export default function EstimationsLeftBar() {
   const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
-  const { upsertFactDefinition } = useEstimationFactDefinitions(
-    !!currentUser,
-    currentProjectId,
-  );
-
   const {
     factDefinitions,
     factFolders,
+    upsertFactDefinition,
     upsertFactFolders,
-    deleteFactDefinition, 
+    deleteFactDefinition,
   } = useEstimationFactDefinitions(!!currentUser, currentProjectId);
   const { modal2, setModal2 } = useUiStore();
-
-  const ROOT_ID = "__root__";
-  const [openFolders, setOpenFolders] = useState<Set<string>>(
-    () => new Set([ROOT_ID]),
-  );
-  const { selectedFolderId, setSelectedFolderId } = useEstimationFactsUIStore();
+  const {
+    selectedFolderId,
+    setSelectedFolderId,
+    openFolders, 
+  } = useEstimationFactsUIStore();
 
   const tree = useMemo(() => {
     const newTree = buildFactFolderTree(factFolders, factDefinitions);
     console.log(newTree);
     return newTree;
   }, [factFolders, factDefinitions]);
-
-  const toggleFolder = (folder: any) => {
-    const id = folder.folder_id;
-    setSelectedFolderId(folder.id);
-    setOpenFolders((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const openFolder = (folder: any) => {
-    const id = folder.folder_id;
-    setSelectedFolderId(folder.id);
-    setOpenFolders((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? () => {} : next.add(id);
-      return next;
-    });
-  };
 
   const handleAddFolder = async () => {
     if (!currentProjectId) return;
@@ -109,7 +85,7 @@ export default function EstimationsLeftBar() {
                   folder.id === selectedFolderId,
               );
               if (selectedFolder) {
-                openFolder(selectedFolder);
+                openFactFolder(selectedFolder);
               }
             }
           }}
@@ -244,7 +220,6 @@ export default function EstimationsLeftBar() {
               node={node}
               depth={0}
               openFolders={openFolders}
-              toggleFolder={toggleFolder}
               onDeleteFact={deleteFactDefinition}
             />
           </SortableContext>

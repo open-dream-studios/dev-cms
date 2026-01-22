@@ -28,14 +28,15 @@ export const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
   media: <FaImages />,
   employees: <BsFillPersonVcardFill />,
   tasks: <ProductsDataIcon size={22} />,
-  estimations: <HiViewBoards className="w-[17px] h-[17px] brightness-75" />,
+  estimations: <ProductsDataIcon size={22} />,
   "estimations-builder": <ProductsDataIcon size={22} />,
   "estimations-pricing": <ProductsDataIcon size={22} />,
+  "estimations-calculation":  <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
 };
 
 export const buildAccessibleModules = (
   hasProjectModule: (name: string) => boolean,
-  currentUser: User | null
+  currentUser: User | null,
 ): AccessibleModule[] => {
   if (!currentUser) return [];
 
@@ -62,6 +63,14 @@ export const buildAccessibleModules = (
       key: "estimations-pricing",
       title: "Pricing",
       pages: ["estimations-pricing"],
+    });
+  }
+
+  if (hasProjectModule("estimations-module")) {
+    modules.push({
+      key: "estimations-calculation",
+      title: "Calculation",
+      pages: ["estimations-calculation"],
     });
   }
 
@@ -111,7 +120,7 @@ export const buildAccessibleModules = (
         key: "products-table",
         title: "Data",
         pages: ["products-table"],
-      }
+      },
     );
   }
 

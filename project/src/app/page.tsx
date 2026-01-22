@@ -13,6 +13,7 @@ import DecisionGraphBuilder from "@/modules/EstimationModule/EstimationBuilder/D
 import EstimationLauncher from "@/modules/EstimationModule/EstimationRuntime/EstimationLaunch";
 // import PricingAdminPage from "@/modules/EstimationModule/PricingAdmin/PricingAdminPage";
 import PemdasEditor from "@/modules/EstimationModule/EstimationPEMDAS/PemdasEditor";
+import PricingAdminPage from "@/modules/EstimationModule/PricingAdmin/PricingAdminPage";
 
 const HomePage = () => {
   const { screen } = useUiStore();
@@ -27,8 +28,8 @@ const HomePage = () => {
       {screen === "updates" && <UpdatesCatalog />}
       {screen === "estimations-builder" && <DecisionGraphBuilder />}
       {screen === "estimations" && <EstimationLauncher />}
-      {/* {screen === "estimations-pricing" && <PricingAdminPage />} */}
-      {screen === "estimations-pricing" && <PemdasEditor />}
+      {screen === "estimations-pricing" && <PricingAdminPage />}
+      {screen === "estimations-calculation" && <PemdasEditor />}
     </div>
   );
 };

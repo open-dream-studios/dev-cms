@@ -41,7 +41,8 @@ export type Screen =
   | "updates"
   | "estimations"
   | "estimations-builder"
-  | "estimations-pricing";
+  | "estimations-pricing"
+  | "estimations-calculation"
 
 export type Modal =
   | { type: "mediaUpload" }

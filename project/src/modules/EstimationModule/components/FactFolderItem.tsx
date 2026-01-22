@@ -11,30 +11,28 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { ChevronRight, ChevronDown, Folder, GripVertical } from "lucide-react";
 import FactDraggableItem from "./FactDraggableItem";
 import { useEstimationFactsUIStore } from "../_store/estimations.store";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
-import { createFactFolderContextMenu } from "../_actions/estimations.actions";
+import { createFactFolderContextMenu, toggleFactFolder } from "../_actions/estimations.actions";
 import { EstimationFactFolder } from "@open-dream/shared";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
-import { useDroppable } from "@dnd-kit/core";
+import { useDndContext } from "@dnd-kit/core";
 
 export default function FactFolderItem({
   node,
   depth,
-  openFolders,
-  toggleFolder,
+  openFolders, 
   onDeleteFact,
 }: {
   node: FactFolderNode;
   depth: number;
-  openFolders: Set<string>;
-  toggleFolder: (folder: any) => void;
+  openFolders: Set<string>; 
   onDeleteFact: (id: string) => void;
 }) {
   const { currentUser } = useContext(AuthContext);
@@ -56,17 +54,10 @@ export default function FactFolderItem({
     transform,
     transition,
     isDragging,
+    isOver,
   } = useSortable({
     id: `folder-${node.folder_id}`,
     data: { kind: "FOLDER", folder: node },
-  });
-
-  const { setNodeRef: setDropRef, isOver } = useDroppable({
-    id: `folder-drop-${node.folder_id}`,
-    data: {
-      kind: "FOLDER_DROP",
-      folderId: node.id, // DB id
-    },
   });
 
   const alteredDepth = Math.max(depth - 1, 0);
@@ -117,26 +108,31 @@ export default function FactFolderItem({
   const isDraggingThis = draggingFolderId === node.folder_id;
 
   const setRefs = (el: HTMLDivElement | null) => {
-    setNodeRef(el); // sortable
-    setDropRef(el); // droppable
+    setNodeRef(el);
   };
+
+  const { active } = useDndContext();
+  const isFactDragging = active?.data.current?.kind === "FACT";
 
   return (
     <div
       data-draggable
       ref={setRefs}
+      className="rounded-[5px] mt-[4px]"
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0 : 1,
-        outline: isOver ? "2px solid " + currentTheme.text_4 : undefined,
-      }}
-      className="mt-[4px]"
+        opacity: isDragging ? 0 : 1, 
+        outline:
+          isOver && isFactDragging
+            ? `1px solid ${currentTheme.text_4}`
+            : undefined,
+      }} 
     >
       <div
         {...attributes}
         data-fact-folder-item
-        className="flex items-center gap-2 px-2 rounded cursor-grab hover:brightness-90 dim"
+        className="flex items-center gap-2 px-2 rounded-[5px] cursor-grab hover:brightness-90 dim"
         style={{
           width: `calc(100% - ${alteredDepth * 10}px)`,
           marginLeft: `${alteredDepth * 10}px`,
@@ -149,7 +145,7 @@ export default function FactFolderItem({
         }}
         onClick={() => {
           setSelectedFolderId(node.id);
-          toggleFolder(node);
+          toggleFactFolder(node);
         }}
         onContextMenu={(e) => {
           e.preventDefault();
@@ -177,8 +173,7 @@ export default function FactFolderItem({
                 key={child.folder_id}
                 node={child}
                 depth={depth + 1}
-                openFolders={openFolders}
-                toggleFolder={toggleFolder}
+                openFolders={openFolders} 
                 onDeleteFact={onDeleteFact}
               />
             ))}

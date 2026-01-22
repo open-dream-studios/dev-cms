@@ -1,5 +1,5 @@
 // src/pemdas/components/PemdasCanvas.tsx
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { DndContext, DragOverlay, useDroppable } from "@dnd-kit/core";
 import { GraphNode, GraphNodeIcon } from "./GraphNode";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
@@ -26,18 +26,30 @@ import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/es
 import { useFolderDndHandlers } from "../../_hooks/folders.hooks";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { factTypeConversion } from "../../_helpers/estimations.helpers";
+import { AuthContext } from "@/contexts/authContext";
+import { openFactFolder } from "../../_actions/estimations.actions";
+import { EstimationFactFolder } from "@open-dream/shared";
+import { ChevronRight, Folder, GripVertical } from "lucide-react";
 
 export const PemdasCanvas = () => {
+  const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProjectId } = useCurrentDataStore();
-
+  const { upsertFactDefinition } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId,
+  );
   const { openNodeIdTypeSelection, setOpenNodeIdTypeSelection } =
     usePemdasUIStore();
   const selectorRef = useRef<HTMLDivElement>(null);
 
-  const { setDraggingFolderId, draggingFact, setDraggingFact } =
-    useEstimationFactsUIStore();
-  const { setIsCanvasGhostActive } = useEstimationFactsUIStore();
+  const {
+    setDraggingFolderId,
+    draggingFact,
+    setDraggingFact,
+    setIsCanvasGhostActive,
+    draggingFolderId,
+  } = useEstimationFactsUIStore();
 
   useOutsideClick(selectorRef, () => setOpenNodeIdTypeSelection(null));
 
@@ -129,13 +141,30 @@ export const PemdasCanvas = () => {
           setIsOverCanvas(inside);
           setCanvasGhostMode(inside);
         }}
-        onDragEnd={(e) => {
+        onDragEnd={async (e) => {
           handlers.onDragEnd(e);
           folderDnd.onDragEnd(e);
+          const active = e.active.data.current;
+          const over = e.over?.data.current;
+          if (active?.kind === "FACT" && over?.kind === "FOLDER") {
+            const normalizedFolderId =
+              over.folder.id === -1 ? null : over.folder.id;
+            await upsertFactDefinition({
+              ...active.fact,
+              folder_id: normalizedFolderId,
+            });
+            if (normalizedFolderId) {
+              const foundFolder = factFolders.find(
+                (folder: EstimationFactFolder) =>
+                  folder.id === normalizedFolderId,
+              );
+              if (foundFolder) {
+                openFactFolder(foundFolder);
+              }
+            }
+          }
           setDraggingFact(null);
           setDraggingFolderId(null);
-          setIsOverCanvas(false);
-          setIsCanvasGhostActive(false);
           dragStartPointerRef.current = null;
         }}
         onDragCancel={(e) => {
@@ -453,47 +482,17 @@ export const PemdasCanvas = () => {
               </div>
             </div>
           )}
-        </DragOverlay>
-        {/* 
-        <DragOverlay>
-          {draggingFact && (
-            <div
-              className="cursor-grab flex items-center gap-2 px-2 py-1 rounded shadow pointer-events-none"
-              style={{
-                backgroundColor: currentTheme.background_2,
-                opacity: isOverCanvas ? 0.3 : 1,
-              }}
-            >
-              <div
-                className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: nodeColors.var }}
-              >
-                <GraphNodeIcon />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm truncate">
-                  {capitalizeFirstLetter(
-                    draggingFact.fact_key.replace("_", " "),
-                  )}
-                </div>
-                <div className="text-xs opacity-60">
-                  {capitalizeFirstLetter(
-                    factTypeConversion(draggingFact.fact_type),
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
+          {/* ✅ FOLDER ghost (THIS WAS MISSING) */}
           {draggingFolderId && (
             <div
-              className="cursor-grab flex items-center gap-2 px-2 py-1 rounded shadow"
+              className="cursor-grab flex items-center gap-2 px-2 py-1 rounded shadow pointer-events-none"
               style={{ backgroundColor: currentTheme.background_2 }}
             >
               <ChevronRight size={14} />
               <GripVertical size={14} />
-              <Folder size={16} />
-              <span>
+              <Folder size={16} className="mt-[1px]" />
+              <span className="truncate select-none">
                 {
                   factFolders.find((f) => f.folder_id === draggingFolderId)
                     ?.name
@@ -501,7 +500,7 @@ export const PemdasCanvas = () => {
               </span>
             </div>
           )}
-        </DragOverlay> */}
+        </DragOverlay>
       </DndContext>
     </div>
   );

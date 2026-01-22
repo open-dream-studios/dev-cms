@@ -10,6 +10,7 @@ import {
   EstimationFactDefinition,
   EstimationFactFolder,
 } from "@open-dream/shared";
+import { useEstimationFactsUIStore } from "../_store/estimations.store";
 
 export const createFactDefinitionContextMenu = (
   onEdit: (fact: EstimationFactDefinition) => void
@@ -66,5 +67,27 @@ export const handleDeleteFactFolder = async (folder_id: string) => {
   await deleteFactFolderApi(currentProjectId!, folder_id);
   queryClient.invalidateQueries({
     queryKey: ["estimationFactFolders", currentProjectId],
+  });
+};
+
+export const toggleFactFolder = (folder: EstimationFactFolder) => {
+  const { setSelectedFolderId, set } = useEstimationFactsUIStore.getState();
+  const id = folder.folder_id;
+  setSelectedFolderId(folder.id);
+  set((state) => {
+    const next = new Set(state.openFolders);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return { openFolders: next };
+  });
+};
+
+export const openFactFolder = (folder: EstimationFactFolder) => {
+  const { setSelectedFolderId, set } = useEstimationFactsUIStore.getState();
+  const id = folder.folder_id;
+  setSelectedFolderId(folder.id);
+  set((state) => {
+    const next = new Set(state.openFolders);
+    next.has(id) ? () => {} : next.add(id);
+    return { openFolders: next };
   });
 };
