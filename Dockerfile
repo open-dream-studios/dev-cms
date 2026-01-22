@@ -69,7 +69,7 @@ COPY shared ./shared
 COPY package.json package-lock.json ./
 
 RUN npm ci --workspaces
-RUN npm rebuild sharp --build-from-source --sharp-libvips=system
+# RUN npm rebuild sharp --build-from-source --sharp-libvips=system
 
 # build shared FIRST
 RUN npm run build --workspace=shared

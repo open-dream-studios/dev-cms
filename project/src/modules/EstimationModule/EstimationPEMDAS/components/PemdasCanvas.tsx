@@ -142,6 +142,18 @@ export const PemdasCanvas = () => {
           setCanvasGhostMode(inside);
         }}
         onDragEnd={async (e) => {
+          const activeData = e.active.data.current;
+          const overData = e.over?.data.current;
+
+          // 🟡 FOLDER dropped ON folder → NO reorder
+          if (activeData?.kind === "FOLDER" && overData?.kind === "FOLDER") {
+            console.log("FOLDER DRAG:");
+            console.log("active:", activeData.folder);
+            console.log("over:", overData.folder); 
+            setDraggingFolderId(null);
+            return;
+          }
+
           handlers.onDragEnd(e);
           folderDnd.onDragEnd(e);
           const active = e.active.data.current;

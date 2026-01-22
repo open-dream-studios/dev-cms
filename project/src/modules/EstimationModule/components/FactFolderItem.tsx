@@ -17,7 +17,10 @@ import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
-import { createFactFolderContextMenu, toggleFactFolder } from "../_actions/estimations.actions";
+import {
+  createFactFolderContextMenu,
+  toggleFactFolder,
+} from "../_actions/estimations.actions";
 import { EstimationFactFolder } from "@open-dream/shared";
 import Modal2MultiStepModalInput, {
   StepConfig,
@@ -27,12 +30,12 @@ import { useDndContext } from "@dnd-kit/core";
 export default function FactFolderItem({
   node,
   depth,
-  openFolders, 
+  openFolders,
   onDeleteFact,
 }: {
   node: FactFolderNode;
   depth: number;
-  openFolders: Set<string>; 
+  openFolders: Set<string>;
   onDeleteFact: (id: string) => void;
 }) {
   const { currentUser } = useContext(AuthContext);
@@ -112,7 +115,9 @@ export default function FactFolderItem({
   };
 
   const { active } = useDndContext();
-  const isFactDragging = active?.data.current?.kind === "FACT";
+  const isDraggingOverFolder =
+    active?.data.current?.kind === "FACT" ||
+    active?.data.current?.kind === "FOLDER";
 
   return (
     <div
@@ -122,12 +127,12 @@ export default function FactFolderItem({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0 : 1, 
+        opacity: isDragging ? 0 : 1,
         outline:
-          isOver && isFactDragging
+          isOver && isDraggingOverFolder
             ? `1px solid ${currentTheme.text_4}`
             : undefined,
-      }} 
+      }}
     >
       <div
         {...attributes}
@@ -173,7 +178,7 @@ export default function FactFolderItem({
                 key={child.folder_id}
                 node={child}
                 depth={depth + 1}
-                openFolders={openFolders} 
+                openFolders={openFolders}
                 onDeleteFact={onDeleteFact}
               />
             ))}
