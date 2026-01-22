@@ -1,6 +1,6 @@
 // src/pemdas/components/PemdasCanvas.tsx
 import React, { useRef } from "react";
-import { DndContext } from "@dnd-kit/core"; 
+import { DndContext } from "@dnd-kit/core";
 import { GraphNode } from "./GraphNode";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { usePemdasCanvas } from "../_hooks/pemdas.hooks";
@@ -20,6 +20,7 @@ import { getSlotCenters } from "../_helpers/pemdas.helpers";
 import { usePemdasUIStore } from "../_store/pemdas.store";
 import { HomeLayout } from "@/layouts/homeLayout";
 import EstimationsLeftBar from "../../components/EstimationsLeftBar";
+import { NODE_SIZE, MIN_NODE_GAP } from "../_constants/pemdas.constants";
 
 export const PemdasCanvas = () => {
   const currentTheme = useCurrentTheme();
@@ -48,6 +49,8 @@ export const PemdasCanvas = () => {
     visibleRows,
     openLayer,
     activeLayerByRow,
+    ghostReorderPreview,
+    isGhostDragging,
   } = usePemdasCanvas();
 
   const handleSelectNode = (nodeId: string, rowIndex: number) => {
@@ -72,9 +75,7 @@ export const PemdasCanvas = () => {
         onDragEnd={handlers.onDragEnd}
         onDragCancel={handlers.onDragCancel}
       >
-        <HomeLayout
-          left={<EstimationsLeftBar />}
-        >
+        <HomeLayout left={<EstimationsLeftBar />}>
           <div className="flex flex-col h-full cursor-grab">
             {/* VIEWPORT */}
             <div
@@ -155,23 +156,38 @@ export const PemdasCanvas = () => {
 
                 {/* LAYERS */}
                 {visibleRows.map((layer, rowIndex) => {
+                  const isGhostPreviewLayer =
+                    ghostReorderPreview?.layerId === layer.id;
+
+                  const effectiveWidth = isGhostPreviewLayer
+                    ? layer.width + NODE_SIZE + MIN_NODE_GAP
+                    : layer.width;
+
                   const lineLeft =
                     (viewportRef.current?.clientWidth ?? 0) / 2 -
-                    layer.width / 2;
+                    effectiveWidth / 2;
 
-                  const isPreviewLayer = reorderPreview?.layerId === layer.id;
-                  const activeId = reorderPreview?.activeId;
+                  const isNodePreviewLayer =
+                    reorderPreview?.layerId === layer.id;
 
-                  const baseIds = layer.nodeIds.filter((id) => id !== activeId);
+                  const activeId = reorderPreview?.activeId ?? null;
+                  const baseIds = activeId
+                    ? layer.nodeIds.filter((id) => id !== activeId)
+                    : layer.nodeIds;
 
-                  const previewNodeIds =
-                    isPreviewLayer && activeId
-                      ? (() => {
-                          const copy = baseIds.slice();
-                          copy.splice(reorderPreview.overIndex, 0, activeId);
-                          return copy;
-                        })()
-                      : layer.nodeIds;
+                  let previewNodeIds = baseIds;
+
+                  if (isNodePreviewLayer && reorderPreview) {
+                    const copy = baseIds.slice();
+                    copy.splice(reorderPreview.overIndex, 0, activeId!);
+                    previewNodeIds = copy;
+                  }
+
+                  if (isGhostPreviewLayer && ghostReorderPreview) {
+                    const copy = baseIds.slice();
+                    copy.splice(ghostReorderPreview.overIndex, 0, "__ghost__");
+                    previewNodeIds = copy;
+                  }
 
                   const previewCenters = getSlotCenters(
                     layer.width,
@@ -186,7 +202,7 @@ export const PemdasCanvas = () => {
                         style={{
                           top: layer.y,
                           left: "50%",
-                          width: layer.width,
+                          width: effectiveWidth,
                           transform: "translateX(-50%)",
                         }}
                       />
@@ -198,7 +214,8 @@ export const PemdasCanvas = () => {
                         style={{
                           width: 48,
                           height: 48,
-                          left: lineLeft + layer.width + 24,
+                          // left: lineLeft + layer.width + 24,
+                          left: lineLeft + effectiveWidth + 24,
                           top: layer.y - 24,
                         }}
                       >
@@ -248,6 +265,10 @@ export const PemdasCanvas = () => {
 
                       {/* NODES */}
                       {previewNodeIds.map((id) => {
+                        if (id === "__ghost__") {
+                          return null;
+                        }
+
                         const n = state.nodes[id];
                         if (!n) return null;
 
@@ -262,12 +283,13 @@ export const PemdasCanvas = () => {
 
                         let x = n.x;
 
-                        if (
-                          reorderPreview &&
-                          reorderPreview.layerId === layer.id &&
-                          !isDragging &&
-                          !isJustDropped
-                        ) {
+                        const shouldUsePreview =
+                          (reorderPreview &&
+                            reorderPreview.layerId === layer.id) ||
+                          (ghostReorderPreview &&
+                            ghostReorderPreview.layerId === layer.id);
+
+                        if (shouldUsePreview && !isDragging && !isJustDropped) {
                           const previewIndex = previewNodeIds.indexOf(id);
                           if (previewIndex !== -1) {
                             x = previewCenters[previewIndex];
@@ -298,18 +320,17 @@ export const PemdasCanvas = () => {
                   );
                 })}
 
-                {/* VARIABLE GHOST */}
                 {ghost && (
                   <GraphNode
                     ghost
                     dispatch={dispatch}
                     node={{
-                      id: "__ghost__",
+                      id: "__ghost_floating__",
                       variable: ghost.variable,
                       nodeType: "var",
                       x: ghost.x,
                       y: ghost.y,
-                      layerId: layers[0]?.id ?? "layer-0",
+                      layerId: "__floating__",
                       operand: "+",
                     }}
                   />

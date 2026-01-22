@@ -93,7 +93,7 @@ export const GraphNode = ({
       {...(!ghost ? attributes : {})}
       {...(!ghost ? listeners : {})}
       style={style}
-      className="absolute flex flex-col items-center select-none"
+      className="min-w-[65px] absolute flex flex-col items-center select-none"
       onContextMenu={(e) => {
         if (ghost) return;
         e.preventDefault();

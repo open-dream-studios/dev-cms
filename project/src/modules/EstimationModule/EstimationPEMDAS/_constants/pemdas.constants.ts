@@ -7,6 +7,7 @@ export const NODE_SIZE = 48;
 export const EDGE_PADDING = 42;
 export const BASE_LINE_WIDTH = 300;
 export const SLOT_WIDTH = NODE_SIZE;
+
 export const MIN_NODE_GAP = 40; 
 export const BASE_WORLD_HEIGHT = 900;
 

@@ -56,7 +56,13 @@ export const usePemdasCanvas = () => {
     Record<number, string>
   >({});
   const [maxDepthReached, setMaxDepthReached] = useState(0);
+  type GhostReorderPreview = {
+    layerId: string;
+    overIndex: number;
+  } | null;
 
+  const [ghostReorderPreview, setGhostReorderPreview] =
+    useState<GhostReorderPreview>(null);
   const [openLayerStack, setOpenLayerStack] = useState<string[]>([]);
 
   const [ghost, setGhost] = useState<{
@@ -173,6 +179,7 @@ export const usePemdasCanvas = () => {
 
   const clearGhost = () => {
     setGhost(null);
+    setGhostReorderPreview(null);
     ghostOriginRef.current = null;
     isVarDraggingRef.current = false;
   };
@@ -277,12 +284,51 @@ export const usePemdasCanvas = () => {
         };
       }
 
-      setGhost({
+      const nextGhost = {
         variable: ghostOriginRef.current.variable,
         x: ghostOriginRef.current.x + e.delta.x,
         y: ghostOriginRef.current.y + e.delta.y,
         value: ghostOriginRef.current.value,
-      });
+      };
+
+      setGhost(nextGhost);
+
+      // 👇 NEW: compute ghost reorder preview
+      const SNAP = 80;
+      let bestLayer: any = null;
+      let bestDist = Infinity;
+
+      for (const l of visibleRows) {
+        const d = Math.abs(nextGhost.y - l.y);
+        if (d < bestDist) {
+          bestDist = d;
+          bestLayer = l;
+        }
+      }
+
+      if (bestLayer && bestDist <= SNAP) {
+        const layerLocalX =
+          nextGhost.x -
+          (viewportRef.current!.clientWidth / 2 - bestLayer.width / 2);
+
+        // const overIndex = getClosestSlotIndex(
+        //   nextGhost.x,
+        //   bestLayer.width,
+        //   bestLayer.nodeIds.length + 1, // +1 for ghost
+        // );
+        const overIndex = getClosestSlotIndex(
+          layerLocalX,
+          bestLayer.width,
+          bestLayer.nodeIds.length + 1,
+        );
+
+        setGhostReorderPreview({
+          layerId: bestLayer.id,
+          overIndex,
+        });
+      } else {
+        setGhostReorderPreview(null);
+      }
 
       return;
     }
@@ -345,9 +391,10 @@ export const usePemdasCanvas = () => {
       }
 
       if (bestLayer && bestDist <= SNAP) {
-        const index = bestLayer.nodeIds.findIndex(
-          (nid: any) => state.nodes[nid].x > ghost.x,
-        );
+        const index =
+          ghostReorderPreview && ghostReorderPreview.layerId === bestLayer.id
+            ? ghostReorderPreview.overIndex
+            : bestLayer.nodeIds.length;
 
         dispatch({
           type: "ADD_NODE_AT",
@@ -379,16 +426,6 @@ export const usePemdasCanvas = () => {
 
         if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
           const nextIds = arrayMove(layer.nodeIds, fromIndex, toIndex);
-          console.groupCollapsed("[onDragEnd] commit reorder");
-          console.log("activeNodeId:", active.nodeId);
-          console.log("fromIndex:", fromIndex);
-          console.log("toIndex:", toIndex);
-          console.log("node.x BEFORE dispatch:", state.nodes[active.nodeId]?.x);
-          console.log(
-            "target slot center:",
-            getSlotCenters(layer.width, layer.nodeIds.length)[toIndex],
-          );
-          console.groupEnd();
           dispatch({
             type: "REORDER_LAYER",
             layerId: layer.id,
@@ -571,6 +608,7 @@ export const usePemdasCanvas = () => {
   };
 
   const justDroppedNodeId = justDroppedNodeRef.current;
+  const isGhostDragging = !!ghost;
 
   return {
     state,
@@ -600,5 +638,7 @@ export const usePemdasCanvas = () => {
     visibleRows,
     openLayer,
     activeLayerByRow,
+    ghostReorderPreview,
+    isGhostDragging,
   };
 };
