@@ -22,7 +22,7 @@ export type EstimationFactDefinition = {
   id: number;
   fact_id: string;
   project_idx: number;
-  folder_id: string | null;
+  folder_id: number | null;
   process_id: string;
   fact_key: string;
   fact_type: FactType;

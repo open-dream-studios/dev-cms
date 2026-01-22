@@ -62,7 +62,7 @@ export function buildFactFolderTree(
   facts.forEach((fact) => {
     const parentId =
       fact.folder_id !== null
-        ? folders.find((f) => f.folder_id === fact.folder_id)?.id ?? ROOT_ID
+        ? folders.find((f) => f.id === fact.folder_id)?.id ?? ROOT_ID
         : ROOT_ID;
 
     map.get(parentId)!.facts.push(fact);

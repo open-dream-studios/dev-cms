@@ -329,7 +329,7 @@ export default function DecisionGraphBuilder() {
                   fact_key,
                   fact_type: fact_type as any,
                   description: null,
-                  folder_id: "1",
+                  folder_id: null,
                   process_id: "1"
                 });
               }}

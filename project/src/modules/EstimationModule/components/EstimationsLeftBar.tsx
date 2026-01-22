@@ -18,16 +18,21 @@ import {
 import { DragOverlay } from "@dnd-kit/core";
 import { Folder, GripVertical } from "lucide-react";
 import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import { EstimationFactDefinition } from "@open-dream/shared";
 
 export default function EstimationsLeftBar() {
   const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId } = useCurrentDataStore();
+  const { upsertFactDefinition } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId,
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const {
     factDefinitions,
-    factFolders, 
+    factFolders,
     upsertFactFolders,
     deleteFactDefinition,
   } = useEstimationFactDefinitions(!!currentUser, currentProjectId);
@@ -113,6 +118,67 @@ export default function EstimationsLeftBar() {
               },
             ]);
           }}
+        />
+      ),
+    });
+  };
+
+  const handleAddFactDefinition = (fact: EstimationFactDefinition) => {
+    const EditFactSteps: StepConfig[] = [
+      {
+        name: "name",
+        initialValue: fact.fact_key ?? "",
+        placeholder: `Fact Name...`,
+        validate: (val) => (val.length >= 1 ? true : "1+ chars"),
+      },
+      {
+        name: "type",
+        placeholder: `Fact Type...`,
+        validate: (val) => {
+          return true;
+        },
+      },
+    ];
+
+    const onComplete = async (values: any) => {
+      const fact_key = values.name.trim();
+      if (!fact_key) return;
+
+      const raw = (prompt("fact_type? boolean|number|string|enum") || "string")
+        .trim()
+        .toLowerCase();
+
+      const fact_type =
+        raw === "boolean" ||
+        raw === "number" ||
+        raw === "string" ||
+        raw === "enum"
+          ? raw
+          : "string";
+
+      await upsertFactDefinition({
+        fact_key,
+        fact_type: fact_type as any,
+        description: null,
+        folder_id: selectedFolderId,
+        process_id: "1",
+      });
+    };
+
+    setModal2({
+      ...modal2,
+      open: true,
+      showClose: false,
+      offClickClose: true,
+      width: "w-[300px]",
+      maxWidth: "max-w-[400px]",
+      aspectRatio: "aspect-[5/2]",
+      borderRadius: "rounded-[12px] md:rounded-[15px]",
+      content: (
+        <Modal2MultiStepModalInput
+          key={`edit-fact-${Date.now()}`}
+          steps={EditFactSteps}
+          onComplete={onComplete}
         />
       ),
     });

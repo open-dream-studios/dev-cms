@@ -20,7 +20,7 @@ export async function upsertFactDefinitionApi(
     fact_key: string;
     fact_type: FactType;
     description?: string | null;
-    folder_id?: string | null;
+    folder_id?: number | null;
     process_id: string;
   }
 ) {

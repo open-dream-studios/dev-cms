@@ -16,6 +16,8 @@ import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/es
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
+import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
+import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
 
 export default function FactDraggableItem({
   fact,
@@ -74,7 +76,7 @@ export default function FactDraggableItem({
         ...fact,
         fact_key: values.name,
         fact_type: values.type,
-      })
+      });
       await upsertFactDefinition({
         ...fact,
         fact_key: values.name,
@@ -106,7 +108,7 @@ export default function FactDraggableItem({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className="select-none mt-[4px] flex items-center justify-between px-2 py-1 rounded cursor-grab dim hover:brightness-90"
+      className="select-none mt-[4px] flex flex-row gap-[8.5px] items-center px-2 py-1 rounded cursor-grab dim hover:brightness-90"
       style={{
         backgroundColor: theme.background_2_dim,
         width: `calc(100% - ${alteredDepth}px)`,
@@ -120,6 +122,12 @@ export default function FactDraggableItem({
         });
       }}
     >
+      <div
+        className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
+        style={{ backgroundColor: nodeColors.var }}
+      >
+        <GraphNodeIcon />
+      </div>
       <div className="min-w-0">
         <div className="text-sm truncate">
           {capitalizeFirstLetter(fact.fact_key.replace("_", " "))}

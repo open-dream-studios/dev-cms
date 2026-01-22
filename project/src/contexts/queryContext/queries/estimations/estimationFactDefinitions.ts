@@ -29,7 +29,7 @@ export function useEstimationFactDefinitions(
       fact_key: string;
       fact_type: FactType;
       description?: string | null;
-      folder_id?: string | null;
+      folder_id?: number | null;
       process_id: string;
     }) => upsertFactDefinitionApi(currentProjectId!, payload),
     onSuccess: () =>
@@ -85,7 +85,7 @@ export function useEstimationFactDefinitions(
       fact_key: string;
       fact_type: FactType;
       description?: string | null;
-      folder_id?: string | null;
+      folder_id?: number | null;
       process_id: string;
     }) => upsertMutation.mutateAsync(p),
     deleteFactDefinition: (fact_id: string) =>
