@@ -121,3 +121,16 @@ export const getNextOrdinal = (productsData: Product[]): number => {
   return ordinals.length > 0 ? Math.max(...ordinals) + 1 : 0;
 };
 
+
+export function displayToKey(value: string | null): string {
+  if (value === null) return "";
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/ /g, "_");
+}
+
+export function keyToDisplay(key: string | null): string | null {
+  if (key === null) return null;
+  return capitalizeFirstLetter(key.replace(/_/g, " "));
+}

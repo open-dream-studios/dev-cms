@@ -21,7 +21,8 @@ import { createFactFolderContextMenu } from "../_actions/estimations.actions";
 import { EstimationFactFolder } from "@open-dream/shared";
 import Modal2MultiStepModalInput, {
   StepConfig,
-} from "@/modals/Modal2MultiStepInput"; 
+} from "@/modals/Modal2MultiStepInput";
+import { useDroppable } from "@dnd-kit/core";
 
 export default function FactFolderItem({
   node,
@@ -37,7 +38,7 @@ export default function FactFolderItem({
   onDeleteFact: (id: string) => void;
 }) {
   const { currentUser } = useContext(AuthContext);
-  const theme = useCurrentTheme();
+  const currentTheme = useCurrentTheme();
   const isOpen = openFolders.has(node.folder_id!);
   const { selectedFolderId, setSelectedFolderId } = useEstimationFactsUIStore();
   const { openContextMenu } = useContextMenuStore();
@@ -46,13 +47,27 @@ export default function FactFolderItem({
   const { factFolders, upsertFactFolders } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId!,
-  ); 
+  );
 
-  const { setNodeRef, attributes, listeners, transform, transition } =
-    useSortable({
-      id: `folder-${node.folder_id}`,
-      data: { kind: "FOLDER", folder: node },
-    });
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `folder-${node.folder_id}`,
+    data: { kind: "FOLDER", folder: node },
+  });
+
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `folder-drop-${node.folder_id}`,
+    data: {
+      kind: "FOLDER_DROP",
+      folderId: node.id, // DB id
+    },
+  });
 
   const alteredDepth = Math.max(depth - 1, 0);
 
@@ -98,20 +113,30 @@ export default function FactFolderItem({
     });
   };
 
+  const draggingFolderId = useEstimationFactsUIStore((s) => s.draggingFolderId);
+  const isDraggingThis = draggingFolderId === node.folder_id;
+
+  const setRefs = (el: HTMLDivElement | null) => {
+    setNodeRef(el); // sortable
+    setDropRef(el); // droppable
+  };
+
   return (
     <div
       data-draggable
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
+      ref={setRefs}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0 : 1,
+        outline: isOver ? "2px solid " + currentTheme.text_4 : undefined,
+      }}
       className="mt-[4px]"
     >
       <div
         {...attributes}
         data-fact-folder-item
         className="flex items-center gap-2 px-2 rounded cursor-grab hover:brightness-90 dim"
-        // {...attributes}
-        // {...listeners}
-        // className="flex items-center gap-2 px-2 py-1 rounded cursor-grab"
         style={{
           width: `calc(100% - ${alteredDepth * 10}px)`,
           marginLeft: `${alteredDepth * 10}px`,
@@ -119,8 +144,8 @@ export default function FactFolderItem({
           height: depth === 0 ? 0 : 34,
           backgroundColor:
             selectedFolderId === node.id
-              ? theme.background_2
-              : theme.background_2_dim,
+              ? currentTheme.background_2
+              : currentTheme.background_2_dim,
         }}
         onClick={() => {
           setSelectedFolderId(node.id);
@@ -136,18 +161,15 @@ export default function FactFolderItem({
         }}
       >
         {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <GripVertical size={14} />
+        <GripVertical {...listeners} size={14} />
         <Folder size={16} className="mt-[1px]" />
         <span className="truncate select-none">{node.name}</span>
       </div>
 
-      {isOpen && (
+      {isOpen && !isDraggingThis && (
         <div>
           <SortableContext
-            items={[
-              ...node.children.map((c) => `folder-${c.folder_id}`),
-              ...node.facts.map((f) => `fact-${f.fact_id}`),
-            ]}
+            items={node.children.map((c) => `folder-${c.folder_id}`)}
             strategy={verticalListSortingStrategy}
           >
             {node.children.map((child) => (
@@ -160,17 +182,16 @@ export default function FactFolderItem({
                 onDeleteFact={onDeleteFact}
               />
             ))}
-
-            {node.facts.map((fact) => (
-              <div key={fact.fact_id}>
-                <FactDraggableItem
-                  fact={fact}
-                  depth={depth + 1}
-                  onDelete={() => onDeleteFact(fact.fact_id)}
-                />
-              </div>
-            ))}
           </SortableContext>
+          {node.facts.map((fact) => (
+            <div key={fact.fact_id}>
+              <FactDraggableItem
+                fact={fact}
+                depth={depth + 1}
+                onDelete={() => onDeleteFact(fact.fact_id)}
+              />
+            </div>
+          ))}
         </div>
       )}
     </div>

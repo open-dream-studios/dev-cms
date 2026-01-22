@@ -39,7 +39,7 @@ type ReorderPreview = {
 const ROW_GAP = 170;
 
 type VisibleRow = {
-  id: string; // layerId being displayed
+  id: string; 
   y: number;
   width: number;
   nodeIds: string[];
@@ -91,7 +91,8 @@ export const usePemdasCanvas = () => {
     y: number;
     variable: string;
     value: number;
-  } | null>(null);
+  } | null>(null); 
+  const isOverCanvasRef = useRef(false);
 
   const layers = state.layers;
 
@@ -246,58 +247,62 @@ export const usePemdasCanvas = () => {
 
   // ---- DND ----
   const onDragStart = (e: DragStartEvent) => {
-    const rect = viewportRef.current?.getBoundingClientRect();
-    const p = e.activatorEvent as PointerEvent;
-    const insideLeftBar = rect && p.clientX < rect.left;
-    if (!insideLeftBar) {
-      isVarDraggingRef.current = true;
-    }
-
     isDndDraggingRef.current = true;
-    const dataVal = e.active.data.current;
-    if (dataVal?.kind === "FACT") {
+
+    const data = e.active.data.current;
+    if (!data) return;
+
+    if (data.kind === "FACT") {
+      // mark intent only
       isVarDraggingRef.current = true;
-      // ghostOriginRef.current = {
-      //   variable: dataVal.fact.fact_key,
-      //   value: 0,
-      //   x: 0,
-      //   y: 0,
-      // };
-      const rect = viewportRef.current!.getBoundingClientRect();
-      const p = e.activatorEvent as PointerEvent;
+      return;
+    }
 
-      ghostOriginRef.current = {
-        variable: dataVal.fact.fact_key,
-        value: 0,
-        x: p.clientX - rect.left - pan.x,
-        y: p.clientY - rect.top - pan.y,
+    // NODE → canvas reorder
+    if (data.kind === "NODE") {
+      activeNodeRef.current = {
+        nodeId: data.nodeId,
+        layerId: data.layerId,
       };
-      clearReorder();
+      isNodeDraggingRef.current = true;
       return;
     }
 
-    const id = String(e.active.id);
-    isVarDraggingRef.current = id.startsWith("var-");
-    isNodeDraggingRef.current = !isVarDraggingRef.current;
-
-    if (isVarDraggingRef.current) {
-      clearReorder();
-      return;
-    }
-
-    // node dragging
-    const data = e.active.data.current as any;
-    if (data?.kind === "NODE" && data?.nodeId && data?.layerId) {
-      activeNodeRef.current = { nodeId: data.nodeId, layerId: data.layerId };
-    }
+    // FOLDER → do nothing here (sidebar handles it)
   };
 
   const onDragMove = (e: DragMoveEvent) => {
-    // -------- variable ghost --------
-    if (isVarDraggingRef.current) {
+    const data = e.active.data.current;
+    if (data?.kind !== "FACT" && data?.kind !== "NODE") {
+      return;
+    }
+
+    // -------- variable ghost -------- 
+    if (isVarDraggingRef.current && isOverCanvasRef.current) {
       const id = String(e.active.id);
-      const data = e.active.data.current as any;
-      // if (!id.startsWith("var-") || !data?.variable) return;
+      const data = e.active.data.current as any; 
+
+      if (isVarDraggingRef.current && !ghost) {
+        if (!viewportRef.current) return;
+        const rect = viewportRef.current.getBoundingClientRect();
+        const p = e.activatorEvent as PointerEvent;
+        const factKey = data.fact?.fact_key ?? data.variable;
+
+        ghostOriginRef.current = {
+          variable: factKey,
+          value: 0,
+          x: p.clientX - rect.left - pan.x,
+          y: p.clientY - rect.top - pan.y,
+        };
+
+        setGhost({
+          variable: capitalizeFirstLetter(factKey.replace("_", " ")),
+          x: ghostOriginRef.current.x,
+          y: ghostOriginRef.current.y,
+          value: 0,
+        });
+      }
+
       if (!(id.startsWith("var-") || id.startsWith("fact-"))) return;
       if (!viewportRef.current) return;
 
@@ -404,10 +409,23 @@ export const usePemdasCanvas = () => {
   };
 
   const onDragEnd = (e: DragEndEvent) => {
+    const data = e.active.data.current;
+
+    // 🟡 1️⃣ FOLDER — sidebar owns this entirely
+    if (data?.kind === "FOLDER") {
+      // IMPORTANT:
+      // - do NOT touch sidebar state
+      // - do NOT reorder anything here
+      // - just clean up canvas flags
+      clearGhost();
+      clearReorder();
+      isDndDraggingRef.current = false;
+      return;
+    }
+
     const id = String(e.active.id);
 
-    // ✅ variable drop -> same as before
-    // if (id.startsWith("var-") && ghost) {
+    // 🔵 2️⃣ FACT → drop ghost into canvas
     if ((id.startsWith("var-") || id.startsWith("fact-")) && ghost) {
       const SNAP = 80;
       let bestLayer: any = null;
@@ -448,8 +466,9 @@ export const usePemdasCanvas = () => {
       return;
     }
 
-    // ✅ commit reorder if we have preview
+    // 🟣 3️⃣ NODE → commit reorder
     const active = activeNodeRef.current;
+
     if (active?.nodeId) {
       justDroppedNodeRef.current = active.nodeId;
     }
@@ -676,5 +695,12 @@ export const usePemdasCanvas = () => {
     activeLayerByRow,
     ghostReorderPreview,
     isGhostDragging,
+    setIsOverCanvas: (v: boolean) => {
+      isOverCanvasRef.current = v;
+      if (!v) {
+        setGhost(null);
+        setGhostReorderPreview(null);
+      }
+    },
   };
 };

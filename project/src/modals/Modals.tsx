@@ -32,7 +32,7 @@ const Modals = ({ landing }: { landing: boolean }) => {
   if (!landing && !currentUser) return;
 
   return (
-    <div>
+    <div data-modal>
       <div
         ref={modal1Ref}
         onClick={() => {

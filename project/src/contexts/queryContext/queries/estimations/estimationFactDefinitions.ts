@@ -7,6 +7,8 @@ import {
   fetchFactFoldersApi,
   upsertFactFoldersApi,
   deleteFactFolderApi,
+  reorderFactDefinitionsApi,
+  reorderFactFoldersApi,
 } from "@/api/estimations/estimationFactDefinitions.api";
 import type { FactType, EstimationFactFolder } from "@open-dream/shared";
 
@@ -47,6 +49,19 @@ export function useEstimationFactDefinitions(
       }),
   });
 
+  const reorderFactsMutation = useMutation({
+    mutationFn: (payload: {
+      process_id: number;
+      parent_folder_id?: number | null;
+      orderedIds: string[];
+    }) => reorderFactDefinitionsApi(currentProjectId!, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["estimationFactDefinitions", currentProjectId],
+      });
+    },
+  });
+
   // ---------- FOLDERS ----------
   const { data: factFolders = [], isLoading: isLoadingFolders } = useQuery({
     queryKey: ["estimationFactFolders", currentProjectId],
@@ -55,12 +70,14 @@ export function useEstimationFactDefinitions(
   });
 
   const upsertFoldersMutation = useMutation({
-    mutationFn: (folders: {
-      folder_id?: string | null;
-      parent_folder_id?: number | null;
-      name: string;
-      ordinal?: number | null;
-    }[]) => upsertFactFoldersApi(currentProjectId!, folders),
+    mutationFn: (
+      folders: {
+        folder_id?: string | null;
+        parent_folder_id?: number | null;
+        name: string;
+        ordinal?: number | null;
+      }[]
+    ) => upsertFactFoldersApi(currentProjectId!, folders),
     onSuccess: () =>
       qc.invalidateQueries({
         queryKey: ["estimationFactFolders", currentProjectId],
@@ -76,31 +93,44 @@ export function useEstimationFactDefinitions(
       }),
   });
 
+  const reorderFoldersMutation = useMutation({
+    mutationFn: (payload: {
+      process_id: number;
+      parent_folder_id?: number | null;
+      orderedIds: string[];
+    }) => reorderFactFoldersApi(currentProjectId!, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: ["estimationFactFolders", currentProjectId],
+      });
+    },
+  });
+
   return {
-    // facts
+    // ---------- FACTS ----------
     factDefinitions,
     isLoadingFactDefinitions: isLoading,
-    upsertFactDefinition: (p: {
-      fact_id?: string | null;
-      fact_key: string;
-      fact_type: FactType;
-      description?: string | null;
-      folder_id?: number | null;
-      process_id: number;
-    }) => upsertMutation.mutateAsync(p),
+    upsertFactDefinition: (p: any) => upsertMutation.mutateAsync(p),
     deleteFactDefinition: (fact_id: string) =>
       deleteMutation.mutateAsync(fact_id),
 
-    // folders
+    reorderFactDefinitions: (payload: {
+      process_id: number;
+      parent_folder_id?: number | null;
+      orderedIds: string[];
+    }) => reorderFactsMutation.mutateAsync(payload),
+
+    // ---------- FOLDERS ----------
     factFolders: factFolders as EstimationFactFolder[],
     isLoadingFactFolders: isLoadingFolders,
-    upsertFactFolders: (folders: {
-      folder_id?: string | null;
-      parent_folder_id?: number | null;
-      name: string;
-      ordinal?: number | null;
-    }[]) => upsertFoldersMutation.mutateAsync(folders),
+    upsertFactFolders: (folders: any) => upsertFoldersMutation.mutateAsync(folders),
     deleteFactFolder: (folder_id: string) =>
       deleteFolderMutation.mutateAsync(folder_id),
+
+    reorderFactFolders: (payload: {
+      process_id: number;
+      parent_folder_id?: number | null;
+      orderedIds: string[];
+    }) => reorderFoldersMutation.mutateAsync(payload),
   };
 }

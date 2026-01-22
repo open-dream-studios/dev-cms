@@ -24,6 +24,7 @@ export type EstimationFactDefinition = {
   project_idx: number;
   folder_id: number | null;
   process_id: number;
+  ordinal: number;
   fact_key: string;
   fact_type: FactType;
   description: string | null;
@@ -35,6 +36,7 @@ export type EstimationFactFolder = {
   id: number;
   folder_id: string;
   project_idx: number;
+  process_id: number;
   parent_folder_id: number | null;
   name: string;
   ordinal: number;

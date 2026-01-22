@@ -1,22 +1,22 @@
 // src/modules/EstimationModule/components/FactDraggableItem.tsx
 import { useDraggable } from "@dnd-kit/core";
 import { EstimationFactDefinition } from "@open-dream/shared";
-import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { FaTrash } from "react-icons/fa6";
-import { capitalizeFirstLetter } from "@/util/functions/Data";
+import { useCurrentTheme } from "@/hooks/util/useTheme"; 
+import { capitalizeFirstLetter, displayToKey } from "@/util/functions/Data";
 import { factTypeConversion } from "../_helpers/estimations.helpers";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { createFactDefinitionContextMenu } from "../_actions/estimations.actions";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
-import { useUiStore } from "@/store/useUIStore"; 
+import { useUiStore } from "@/store/useUIStore";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
+import { useEstimationFactsUIStore } from "../_store/estimations.store";
 
 export default function FactDraggableItem({
   fact,
@@ -36,8 +36,9 @@ export default function FactDraggableItem({
     !!currentUser,
     currentProjectId!,
   );
+  const { isCanvasGhostActive } = useEstimationFactsUIStore()
 
-  const { attributes, listeners, setNodeRef } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `fact-${fact.fact_id}`,
     data: {
       kind: "FACT",
@@ -71,14 +72,9 @@ export default function FactDraggableItem({
     ];
 
     const onComplete = async (values: any) => {
-      console.log({
-        ...fact,
-        fact_key: values.name,
-        fact_type: values.type,
-      });
       await upsertFactDefinition({
         ...fact,
-        fact_key: values.name,
+        fact_key: displayToKey(values.name),
         fact_type: values.type,
       });
     };
@@ -105,12 +101,16 @@ export default function FactDraggableItem({
   return (
     <div
       ref={setNodeRef}
+      data-draggable
       {...attributes}
       {...listeners}
       className="select-none mt-[4px] flex flex-row gap-[8.5px] items-center px-2 py-1 rounded cursor-grab dim hover:brightness-90"
       style={{
         backgroundColor: theme.background_2_dim,
-        width: `calc(100% - ${alteredDepth}px)`,
+        width: `calc(100% - ${alteredDepth * 10}px)`,
+        marginLeft: `${alteredDepth * 10}px`,
+        touchAction: "none",
+        opacity: isDragging ? isCanvasGhostActive ? 0.5 : 0 : 1,
       }}
       onContextMenu={(e) => {
         e.preventDefault();

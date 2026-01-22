@@ -3,6 +3,7 @@ import {
   getFactDefinitions,
   upsertFactDefinition,
   deleteFactDefinition,
+  reorderFactDefinitions,
 } from "./fact_definitions_controllers.js";
 import { authenticateUser } from "../../../../util/auth.js";
 import { checkProjectPermission } from "../../../../util/permissions.js";
@@ -15,6 +16,7 @@ import {
   getFactFolders,
   upsertFactFolders,
   deleteFactFolder,
+  reorderFactFolders,
 } from "./fact_definition_folder_controllers.js";
 
 const router = express.Router();
@@ -33,7 +35,7 @@ router.post(
   "/upsert",
   verifyVercelProxy,
   authenticateUser,
-  checkProjectPermission(3),
+  checkProjectPermission(2),
   transactionHandler(upsertFactDefinition)
 );
 
@@ -42,8 +44,16 @@ router.post(
   "/delete",
   verifyVercelProxy,
   authenticateUser,
-  checkProjectPermission(3),
+  checkProjectPermission(2),
   transactionHandler(deleteFactDefinition)
+);
+
+router.post(
+  "/reorder",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),  
+  transactionHandler(reorderFactDefinitions)
 );
 
 // ---- FACT FOLDERS ----
@@ -69,6 +79,15 @@ router.post(
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(deleteFactFolder)
+);
+
+
+router.post(
+  "/folders/reorder",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(reorderFactFolders)
 );
 
 export default router;

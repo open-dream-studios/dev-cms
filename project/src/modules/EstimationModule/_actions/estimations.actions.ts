@@ -8,6 +8,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import {
   ContextMenuDefinition,
   EstimationFactDefinition,
+  EstimationFactFolder,
 } from "@open-dream/shared";
 
 export const createFactDefinitionContextMenu = (
@@ -39,8 +40,8 @@ export const handleDeleteFact = async (fact_id: string) => {
 };
 
 export const createFactFolderContextMenu = (
-  onEdit: (folder: EstimationFactDefinition) => void
-): ContextMenuDefinition<EstimationFactDefinition> => ({
+  onEdit: (folder: EstimationFactFolder) => void
+): ContextMenuDefinition<EstimationFactFolder> => ({
   items: [
     {
       id: "edit-fact",

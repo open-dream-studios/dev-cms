@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useMemo, useRef, useState } from "react";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
 import { buildFactFolderTree } from "../_helpers/estimations.helpers";
 import FactFolderItem from "./FactFolderItem";
@@ -11,15 +11,15 @@ import Modal2MultiStepModalInput, {
 } from "@/modals/Modal2MultiStepInput";
 import { useUiStore } from "@/store/useUIStore";
 import { FaPlus } from "react-icons/fa6";
+import { Folder } from "lucide-react";
+import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import { EstimationFactFolder } from "@open-dream/shared";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
+import { displayToKey } from "@/util/functions/Data";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { DragOverlay } from "@dnd-kit/core";
-import { Folder, GripVertical } from "lucide-react";
-import { useEstimationFactsUIStore } from "../_store/estimations.store";
-import { EstimationFactDefinition } from "@open-dream/shared";
-import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 
 export default function EstimationsLeftBar() {
   const currentTheme = useCurrentTheme();
@@ -29,13 +29,12 @@ export default function EstimationsLeftBar() {
     !!currentUser,
     currentProjectId,
   );
-  const [activeId, setActiveId] = useState<string | null>(null);
 
   const {
     factDefinitions,
     factFolders,
     upsertFactFolders,
-    deleteFactDefinition,
+    deleteFactDefinition, 
   } = useEstimationFactDefinitions(!!currentUser, currentProjectId);
   const { modal2, setModal2 } = useUiStore();
 
@@ -61,9 +60,15 @@ export default function EstimationsLeftBar() {
     });
   };
 
-  useEffect(() => {
-    if (!activeId) return;
-  }, [activeId]);
+  const openFolder = (folder: any) => {
+    const id = folder.folder_id;
+    setSelectedFolderId(folder.id);
+    setOpenFolders((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? () => {} : next.add(id);
+      return next;
+    });
+  };
 
   const handleAddFolder = async () => {
     if (!currentProjectId) return;
@@ -89,35 +94,24 @@ export default function EstimationsLeftBar() {
           steps={steps}
           key={`trigger-${Date.now()}`}
           onComplete={async (values) => {
-            // const newIds = await upsertMediaFolders([
-            //   {
-            //     folder_id: null,
-            //     project_idx: currentProjectId,
-            //     parent_folder_id: currentActiveFolder
-            //       ? currentActiveFolder.id
-            //       : null,
-            //     name: values.name,
-            //     ordinal: null,
-            //   } as MediaFolder,
-            // ]);
-
-            // if (newIds && newIds.length) {
-            //   if (currentActiveFolder && currentActiveFolder.id) {
-            //     setCurrentOpenFolders((prev) =>
-            //       new Set(prev).add(currentActiveFolder.id!),
-            //     );
-            //   }
-            //   newlyAddedFolderRef.current = newIds[0];
-            // }
-
             await upsertFactFolders([
               {
                 folder_id: null,
                 parent_folder_id: selectedFolderId,
                 name: values.name,
                 ordinal: null,
+                process_id: 1,
               },
             ]);
+            if (selectedFolderId) {
+              const selectedFolder = factFolders.find(
+                (folder: EstimationFactFolder) =>
+                  folder.id === selectedFolderId,
+              );
+              if (selectedFolder) {
+                openFolder(selectedFolder);
+              }
+            }
           }}
         />
       ),
@@ -141,13 +135,10 @@ export default function EstimationsLeftBar() {
     ];
 
     const onComplete = async (values: any) => {
-      const fact_key = values.name.trim();
+      const fact_key = displayToKey(values.name);
       if (!fact_key) return;
 
-      const raw = (prompt("fact_type? boolean|number|string|enum") || "string")
-        .trim()
-        .toLowerCase();
-
+      const raw = values.type;
       const fact_type =
         raw === "boolean" ||
         raw === "number" ||
@@ -158,10 +149,10 @@ export default function EstimationsLeftBar() {
 
       await upsertFactDefinition({
         fact_key,
-        fact_type: fact_type as any,
+        fact_type: fact_type,
         description: null,
         folder_id: selectedFolderId,
-        process_id: 0,
+        process_id: 1,
       });
     };
 
@@ -189,7 +180,8 @@ export default function EstimationsLeftBar() {
     const el = e.target as HTMLElement;
     if (
       el.closest("[data-fact-folder-item]") ||
-      el.closest("[data-fact-button]")
+      el.closest("[data-fact-button]") ||
+      el.closest("[data-modal]")
     ) {
       return;
     }
@@ -242,35 +234,22 @@ export default function EstimationsLeftBar() {
         </div>
       </div>
       <div ref={containerRef} className="px-3 mt-[-8px]  space-y-1">
-        <SortableContext
-          items={tree.map((n) => `folder-${n.folder_id}`)}
-          strategy={verticalListSortingStrategy}
-        >
-          {tree.map((node) => (
+        {tree.map((node) => (
+          <SortableContext
+            key={node.folder_id}
+            items={node.children.map((f) => `folder-${f.folder_id}`)}
+            strategy={verticalListSortingStrategy}
+          >
             <FactFolderItem
-              key={node.folder_id}
               node={node}
               depth={0}
               openFolders={openFolders}
               toggleFolder={toggleFolder}
               onDeleteFact={deleteFactDefinition}
             />
-          ))}
-        </SortableContext>
+          </SortableContext>
+        ))}
       </div>
-
-      <DragOverlay>
-        {activeId?.startsWith("folder-") && (
-          <div
-            className="flex items-center gap-2 px-2 py-1 rounded shadow"
-            style={{ backgroundColor: currentTheme.background_2 }}
-          >
-            <GripVertical size={14} />
-            <Folder size={16} />
-            <span>Folder</span>
-          </div>
-        )}
-      </DragOverlay>
     </div>
   );
 }

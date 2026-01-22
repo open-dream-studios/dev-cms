@@ -1,10 +1,11 @@
 // server/handlers/modules/estimations/fact_definition_folder_controllers.ts
-import type { Request } from "express";
+import type { Request, Response } from "express";
 import type { PoolConnection } from "mysql2/promise";
 import {
   getFactFoldersFunction,
   upsertFactFoldersFunction,
   deleteFactFolderFunction,
+  reorderFactFoldersFunction
 } from "./fact_definition_folder_repositories.js";
 
 export const getFactFolders = async (req: Request) => {
@@ -35,4 +36,22 @@ export const deleteFactFolder = async (
   const { folder_id } = req.body;
   if (!project_idx || !folder_id) throw new Error("Missing required fields");
   return await deleteFactFolderFunction(connection, project_idx, folder_id);
+};
+
+export const reorderFactFolders = async (
+  req: Request,
+  res: Response,
+  connection: PoolConnection
+) => {
+  const {orderedIds, process_id } = req.body;
+  const project_idx = req.user?.project_idx;
+  if (!project_idx || !Array.isArray(orderedIds) || !process_id) {
+    throw new Error("Missing required fields");
+  }
+  const result = await reorderFactFoldersFunction(
+    connection,
+    project_idx,
+    req.body
+  );
+  return { success: true, updated: result.affectedRows };
 };

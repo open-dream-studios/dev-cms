@@ -2,7 +2,12 @@
 import { db } from "../../../../connection/connect.js";
 import type { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { ulid } from "ulid";
-import { getNextOrdinal, reindexOrdinals, deleteAndReindex } from "../../../../lib/ordinals.js";
+import {
+  getNextOrdinal,
+  reindexOrdinals,
+  deleteAndReindex,
+  reorderOrdinals,
+} from "../../../../lib/ordinals.js";
 
 export const getFactFoldersFunction = async (project_idx: number) => {
   const q = `
@@ -20,10 +25,14 @@ export const upsertFactFoldersFunction = async (
   project_idx: number,
   folders: any[]
 ) => {
-  let nextOrdinal = await getNextOrdinal(connection, "estimation_fact_definitions_folder", {
-    project_idx,
-    parent_folder_id: folders[0]?.parent_folder_id ?? null,
-  });
+  let nextOrdinal = await getNextOrdinal(
+    connection,
+    "estimation_fact_definitions_folder",
+    {
+      project_idx,
+      parent_folder_id: folders[0]?.parent_folder_id ?? null,
+    }
+  );
 
   const values: any[] = [];
   const folderIds: string[] = [];
@@ -37,6 +46,7 @@ export const upsertFactFoldersFunction = async (
       finalFolderId,
       project_idx,
       f.parent_folder_id ?? null,
+      f.process_id,  
       f.name ?? "",
       finalOrdinal
     );
@@ -46,14 +56,15 @@ export const upsertFactFoldersFunction = async (
     f.ordinal = finalOrdinal;
   }
 
-  const placeholders = folders.map(() => `(?, ?, ?, ?, ?)`).join(", ");
+  const placeholders = folders.map(() => `(?, ?, ?, ?, ?, ?)`).join(", ");
   const q = `
     INSERT INTO estimation_fact_definitions_folder (
-      folder_id, project_idx, parent_folder_id, name, ordinal
+      folder_id, project_idx, parent_folder_id, process_id, name, ordinal
     )
     VALUES ${placeholders}
     ON DUPLICATE KEY UPDATE
       parent_folder_id = VALUES(parent_folder_id),
+      process_id = VALUES(process_id),
       name = VALUES(name),
       ordinal = VALUES(ordinal),
       updated_at = NOW()
@@ -86,5 +97,27 @@ export const deleteFactFolderFunction = async (
     "folder_id",
     folder_id,
     ["project_idx", "parent_folder_id"]
+  );
+};
+
+export const reorderFactFoldersFunction = async (
+  connection: PoolConnection,
+  project_idx: number,
+  reqBody: any
+) => {
+  const { parent_folder_id, process_id, orderedIds } = reqBody;
+
+  const layer = {
+    project_idx,
+    process_id,
+    parent_folder_id: parent_folder_id ?? null,
+  };
+
+  return await reorderOrdinals(
+    connection,
+    "estimation_fact_definitions_folder",
+    layer,
+    orderedIds,
+    "folder_id"
   );
 };

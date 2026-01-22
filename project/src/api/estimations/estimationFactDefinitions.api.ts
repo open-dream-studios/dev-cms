@@ -42,8 +42,26 @@ export async function deleteFactDefinitionApi(
   return { success: true };
 }
 
-// -------- FOLDERS --------
+export async function reorderFactDefinitionsApi(
+  project_idx: number,
+  payload: {
+    process_id: number;
+    parent_folder_id?: number | null;
+    orderedIds: string[]; // fact_id[]
+  }
+) {
+  const res = await makeRequest.post(
+    "/estimations/fact-definitions/reorder",
+    {
+      project_idx,
+      ...payload,
+    }
+  );
+  return res.data;
+}
 
+
+// -------- FOLDERS --------
 export async function fetchFactFoldersApi(project_idx: number) {
   const res = await makeRequest.post(
     "/estimations/fact-definitions/folders",
@@ -77,4 +95,22 @@ export async function deleteFactFolderApi(
     { project_idx, folder_id }
   );
   return { success: true };
+}
+
+export async function reorderFactFoldersApi(
+  project_idx: number,
+  payload: {
+    process_id: number;
+    parent_folder_id?: number | null;
+    orderedIds: string[];  
+  }
+) {
+  const res = await makeRequest.post(
+    "/estimations/fact-definitions/folders/reorder",
+    {
+      project_idx,
+      ...payload,
+    }
+  );
+  return res.data;
 }
