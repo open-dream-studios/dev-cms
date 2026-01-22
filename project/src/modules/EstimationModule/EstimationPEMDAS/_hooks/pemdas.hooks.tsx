@@ -246,7 +246,35 @@ export const usePemdasCanvas = () => {
 
   // ---- DND ----
   const onDragStart = (e: DragStartEvent) => {
+    const rect = viewportRef.current?.getBoundingClientRect();
+    const p = e.activatorEvent as PointerEvent;
+    const insideLeftBar = rect && p.clientX < rect.left;
+    if (!insideLeftBar) {
+      isVarDraggingRef.current = true;
+    }
+
     isDndDraggingRef.current = true;
+    const dataVal = e.active.data.current;
+    if (dataVal?.kind === "FACT") {
+      isVarDraggingRef.current = true;
+      // ghostOriginRef.current = {
+      //   variable: dataVal.fact.fact_key,
+      //   value: 0,
+      //   x: 0,
+      //   y: 0,
+      // };
+      const rect = viewportRef.current!.getBoundingClientRect();
+      const p = e.activatorEvent as PointerEvent;
+
+      ghostOriginRef.current = {
+        variable: dataVal.fact.fact_key,
+        value: 0,
+        x: p.clientX - rect.left - pan.x,
+        y: p.clientY - rect.top - pan.y,
+      };
+      clearReorder();
+      return;
+    }
 
     const id = String(e.active.id);
     isVarDraggingRef.current = id.startsWith("var-");
@@ -269,10 +297,12 @@ export const usePemdasCanvas = () => {
     if (isVarDraggingRef.current) {
       const id = String(e.active.id);
       const data = e.active.data.current as any;
-      if (!id.startsWith("var-") || !data?.variable) return;
+      // if (!id.startsWith("var-") || !data?.variable) return;
+      if (!(id.startsWith("var-") || id.startsWith("fact-"))) return;
       if (!viewportRef.current) return;
 
       const rect = viewportRef.current.getBoundingClientRect();
+      const variable = data.variable ?? data.fact?.fact_key;
 
       if (!ghostOriginRef.current) {
         const p = e.activatorEvent as PointerEvent;
@@ -285,7 +315,7 @@ export const usePemdasCanvas = () => {
       }
 
       const nextGhost = {
-        variable: ghostOriginRef.current.variable,
+        variable: capitalizeFirstLetter(variable.replace("_", " ")),
         x: ghostOriginRef.current.x + e.delta.x,
         y: ghostOriginRef.current.y + e.delta.y,
         value: ghostOriginRef.current.value,
@@ -377,7 +407,8 @@ export const usePemdasCanvas = () => {
     const id = String(e.active.id);
 
     // ✅ variable drop -> same as before
-    if (id.startsWith("var-") && ghost) {
+    // if (id.startsWith("var-") && ghost) {
+    if ((id.startsWith("var-") || id.startsWith("fact-")) && ghost) {
       const SNAP = 80;
       let bestLayer: any = null;
       let bestDist = Infinity;
@@ -396,9 +427,14 @@ export const usePemdasCanvas = () => {
             ? ghostReorderPreview.overIndex
             : bestLayer.nodeIds.length;
 
+        const variable =
+          ghost.variable ??
+          e.active.data.current?.variable ??
+          e.active.data.current?.fact?.fact_key;
+
         dispatch({
           type: "ADD_NODE_AT",
-          variable: ghost.variable,
+          variable: capitalizeFirstLetter(variable.replace("_", " ")),
           nodeType: "var",
           layerId: bestLayer.id,
           index: index === -1 ? bestLayer.nodeIds.length : index,
@@ -587,7 +623,7 @@ export const usePemdasCanvas = () => {
       borderRadius: "rounded-[12px] md:rounded-[15px]",
       content: (
         <Modal2MultiStepModalInput
-          key={`edit-node-${node.id}`}
+          key={`edit-node-${Date.now()}`}
           steps={
             node.nodeType === "constant" ? ConstantInputSteps : LayerInputSteps
           }

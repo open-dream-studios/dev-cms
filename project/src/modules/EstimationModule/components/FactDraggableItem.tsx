@@ -1,76 +1,133 @@
-import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { capitalizeFirstLetter } from "@/util/functions/Data";
+// src/modules/EstimationModule/components/FactDraggableItem.tsx
 import { useDraggable } from "@dnd-kit/core";
+import { EstimationFactDefinition } from "@open-dream/shared";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { FaTrash } from "react-icons/fa6";
+import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { factTypeConversion } from "../_helpers/estimations.helpers";
-import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
-import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
+import { createFactDefinitionContextMenu } from "../_actions/estimations.actions";
+import Modal2MultiStepModalInput, {
+  StepConfig,
+} from "@/modals/Modal2MultiStepInput";
+import { useUiStore } from "@/store/useUIStore";
+import { useContextQueries } from "@/contexts/queryContext/queryContext";
+import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useContext } from "react";
+import { AuthContext } from "@/contexts/authContext";
 
-// project/src/modules/EstimationModule/components/FactDraggableItem.tsx
-const FactDraggableItem = ({
+export default function FactDraggableItem({
   fact,
+  depth,
   onDelete,
 }: {
-  fact: any;
+  fact: EstimationFactDefinition;
+  depth: number;
   onDelete: () => void;
-}) => {
-  const currentTheme = useCurrentTheme();
+}) {
+  const { currentUser } = useContext(AuthContext);
+  const theme = useCurrentTheme();
+  const { openContextMenu } = useContextMenuStore();
+  const { currentProjectId } = useCurrentDataStore();
+  const { modal2, setModal2 } = useUiStore();
+  const { upsertFactDefinition } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId!,
+  );
 
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `var-${fact.fact_key}`,
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `fact-${fact.fact_id}`,
     data: {
-      variable: fact.fact_key,
-      value: null, // facts don’t have numeric value yet
+      kind: "FACT",
+      fact,
     },
   });
+
+  const alteredDepth = Math.max(0, depth - 1);
+
+  const handleEditFact = (fact: EstimationFactDefinition) => {
+    const EditFactSteps: StepConfig[] = [
+      {
+        name: "name",
+        initialValue: fact.fact_key ?? "",
+        placeholder: `Fact Name...`,
+        validate: (val) => (val.length >= 1 ? true : "1+ chars"),
+      },
+      {
+        name: "type",
+        placeholder: `Fact Type...`,
+        validate: (val) => {
+          // const trimmed = val.trim();
+          // if (trimmed === "") return "Enter a number";
+          // const isValidNumber = /^\d+(\s*\.\s*\d+)?$/.test(
+          //   trimmed.replace(/\s+/g, " "),
+          // );
+          // return isValidNumber ? true : "Invalid number";
+          return true;
+        },
+      },
+    ];
+
+    const onComplete = async (values: any) => {
+      console.log({
+        ...fact,
+        fact_key: values.name,
+        fact_type: values.type,
+      })
+      await upsertFactDefinition({
+        ...fact,
+        fact_key: values.name,
+        fact_type: values.type,
+      });
+    };
+
+    setModal2({
+      ...modal2,
+      open: true,
+      showClose: false,
+      offClickClose: true,
+      width: "w-[300px]",
+      maxWidth: "max-w-[400px]",
+      aspectRatio: "aspect-[5/2]",
+      borderRadius: "rounded-[12px] md:rounded-[15px]",
+      content: (
+        <Modal2MultiStepModalInput
+          key={`edit-fact-${Date.now()}`}
+          steps={EditFactSteps}
+          onComplete={onComplete}
+        />
+      ),
+    });
+  };
 
   return (
     <div
       ref={setNodeRef}
-      data-draggable
       {...attributes}
       {...listeners}
+      className="select-none mt-[4px] flex items-center justify-between px-2 py-1 rounded cursor-grab dim hover:brightness-90"
       style={{
-        backgroundColor: currentTheme.background_2,
-        opacity: isDragging ? 0.4 : 1,
+        backgroundColor: theme.background_2_dim,
+        width: `calc(100% - ${alteredDepth}px)`,
       }}
-      className="select-none cursor-grab hover:brightness-88 dim
-                 flex items-center justify-between rounded-md px-2 py-1"
+      onContextMenu={(e) => {
+        e.preventDefault();
+        openContextMenu({
+          position: { x: e.clientX, y: e.clientY },
+          target: fact,
+          menu: createFactDefinitionContextMenu(handleEditFact),
+        });
+      }}
     >
-      <div className="flex items-center gap-2 min-w-0">
-        {/* Icon */}
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-          style={{ backgroundColor: nodeColors.var }}
-        >
-          <GraphNodeIcon />
+      <div className="min-w-0">
+        <div className="text-sm truncate">
+          {capitalizeFirstLetter(fact.fact_key.replace("_", " "))}
         </div>
-
-        {/* Text */}
-        <div className="min-w-0">
-          <div className="text-sm font-medium truncate">
-            {fact.fact_key}
-          </div>
-          <div className="text-xs opacity-70">
-            {capitalizeFirstLetter(factTypeConversion(fact.fact_type))}
-          </div>
+        <div className="text-xs opacity-60">
+          {capitalizeFirstLetter(factTypeConversion(fact.fact_type))}
         </div>
       </div>
-
-      {/* Delete */}
-      <button
-        className="text-xs w-[30px] h-[30px] flex rounded-full items-center justify-center
-                   cursor-pointer hover:brightness-90 dim"
-        style={{ backgroundColor: currentTheme.background_3 }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-      >
-        <FaTrash size={14} color={currentTheme.text_4} />
-      </button>
     </div>
   );
-};
-
-export default FactDraggableItem
+}

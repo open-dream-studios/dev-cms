@@ -31,7 +31,7 @@ export const upsertFactDefinitionFunction = async (
     description,
     folder_id,
     process_id,
-  } = reqBody;
+  } = reqBody; 
 
   if (!fact_key || !fact_type || !process_id) {
     throw new Error("fact_key, fact_type, and process_id required");
@@ -59,6 +59,7 @@ export const upsertFactDefinitionFunction = async (
     ON DUPLICATE KEY UPDATE
       folder_id = VALUES(folder_id),
       process_id = VALUES(process_id),
+      fact_key = VALUES(fact_key),
       fact_type = VALUES(fact_type),
       description = VALUES(description),
       updated_at = NOW()
@@ -73,7 +74,7 @@ export const upsertFactDefinitionFunction = async (
     normalizedFactType,
     description ?? null,
   ]);
-
+ 
   return { success: true, fact_id: finalFactId };
 };
 

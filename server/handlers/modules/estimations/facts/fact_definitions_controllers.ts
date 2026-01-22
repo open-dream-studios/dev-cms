@@ -21,7 +21,6 @@ export const upsertFactDefinition = async (
 ) => {
   const project_idx = req.user?.project_idx;
   if (!project_idx) throw new Error("Missing project_idx");
-
   return await upsertFactDefinitionFunction(connection, project_idx, req.body);
 };
 

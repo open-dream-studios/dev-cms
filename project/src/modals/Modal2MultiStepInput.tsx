@@ -26,14 +26,15 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { modal2, setModal2 } = useUiStore();
+  const didCompleteRef = useRef(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [inputs, setInputs] = useState<Record<string, string>>(
-    Object.fromEntries(steps.map((s) => [s.name, s.initialValue ?? ""]))
+    Object.fromEntries(steps.map((s) => [s.name, s.initialValue ?? ""])),
   );
   const [currentInput, setCurrentInput] = useState(
-    steps[0]?.initialValue ?? ""
+    steps[0]?.initialValue ?? "",
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -81,6 +82,8 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
     if (stepIndex < steps.length - 1) {
       setStepIndex(stepIndex + 1);
     } else {
+      if (didCompleteRef.current) return;
+      didCompleteRef.current = true;
       setModal2({ ...modal2, open: false });
       onComplete(updated);
     }
@@ -109,6 +112,7 @@ const Modal2MultiStepModalInput: React.FC<Modal2MultiStepModalInputProps> = ({
           placeholder={config.placeholder}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
+              if (didCompleteRef.current) return;
               e.preventDefault();
               handleContinue();
             }

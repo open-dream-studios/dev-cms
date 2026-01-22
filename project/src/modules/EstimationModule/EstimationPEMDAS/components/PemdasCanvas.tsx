@@ -80,7 +80,7 @@ export const PemdasCanvas = () => {
             {/* VIEWPORT */}
             <div
               ref={viewportRef}
-              className="relative flex-1 overflow-hidden touch-none"
+              className="relative flex-1 overflow-hidden"
               onPointerDown={handlers.onPointerDown}
               onPointerMove={handlers.onPointerMove}
               onPointerUp={handlers.onPointerUp}
