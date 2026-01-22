@@ -38,28 +38,28 @@
 # =========================
 FROM node:20-bookworm AS build
 
-RUN apt-get update && apt-get install -y \
-  build-essential ca-certificates gcc g++ make python3 pkg-config cmake git curl \
-  libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev \
-  libglib2.0-dev libpango1.0-dev libgirepository1.0-dev \
-  meson ninja-build \
-  && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#   build-essential ca-certificates gcc g++ make python3 pkg-config cmake git curl \
+#   libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev \
+#   libglib2.0-dev libpango1.0-dev libgirepository1.0-dev \
+#   meson ninja-build \
+#   && rm -rf /var/lib/apt/lists/*
 
-# Build libvips
-RUN git clone --branch v8.17.3 https://github.com/libvips/libvips.git /tmp/libvips \
-  && cd /tmp/libvips \
-  && meson setup builddir --prefix=/usr \
-  && ninja -C builddir \
-  && ninja -C builddir install \
-  && ldconfig \
-  && rm -rf /tmp/libvips
+# # Build libvips
+# RUN git clone --branch v8.17.3 https://github.com/libvips/libvips.git /tmp/libvips \
+#   && cd /tmp/libvips \
+#   && meson setup builddir --prefix=/usr \
+#   && ninja -C builddir \
+#   && ninja -C builddir install \
+#   && ldconfig \
+#   && rm -rf /tmp/libvips
 
-# Build libheif
-RUN git clone https://github.com/strukturag/libheif.git /tmp/libheif \
-  && cd /tmp/libheif && mkdir build && cd build \
-  && cmake -DENABLE_PLUGIN_LOADING=ON -DENABLE_X265=ON -DENABLE_LIBDE265=ON -DENABLE_LIBAVIF=ON .. \
-  && make -j"$(nproc)" && make install && ldconfig \
-  && rm -rf /tmp/libheif
+# # Build libheif
+# RUN git clone https://github.com/strukturag/libheif.git /tmp/libheif \
+#   && cd /tmp/libheif && mkdir build && cd build \
+#   && cmake -DENABLE_PLUGIN_LOADING=ON -DENABLE_X265=ON -DENABLE_LIBDE265=ON -DENABLE_LIBAVIF=ON .. \
+#   && make -j"$(nproc)" && make install && ldconfig \
+#   && rm -rf /tmp/libheif
 
 WORKDIR /usr/src/app
 
