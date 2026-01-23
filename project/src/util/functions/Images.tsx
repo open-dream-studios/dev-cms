@@ -12,18 +12,34 @@ export const preloadImages = (urls: string[]) => {
 
 export type ZipImageInput = { url: string; filename?: string };
 
+const mimeToExt: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/webm": "webm",
+};
+
 const guessExt = (url: string, contentType?: string) => {
-  if (contentType?.includes("/")) return contentType.split("/")[1];
+  if (contentType && mimeToExt[contentType]) {
+    return mimeToExt[contentType];
+  }
+
+  // fallback to URL
   const clean = url.split("?")[0];
   const m = clean.match(/\.([a-zA-Z0-9]+)$/);
-  return m?.[1] ?? "jpg";
+  return m?.[1] ?? "bin";
 };
 
 export const handleZipDownloadFromUrls = async (
   images: ZipImageInput[],
-  zipName: string = "images"
+  zipName: string = "images",
 ) => {
   if (!images?.length) return;
+  console.log(images);
 
   const zip = new JSZip();
 
@@ -38,22 +54,26 @@ export const handleZipDownloadFromUrls = async (
 
         const base =
           img.filename?.replace(/\.[^/.]+$/, "") ??
-          `image-${String(idx + 1).padStart(2, "0")}`;
+          `media-${String(idx + 1).padStart(2, "0")}`;
 
         zip.file(`${base}.${ext}`, blob);
       } catch (e) {
         console.error("ZIP DOWNLOAD FAILED:", img.url, e);
       }
-    })
+    }),
   );
 
-  const zipBlob = await zip.generateAsync({ type: "blob" });
+  const zipBlob = await zip.generateAsync({
+    type: "blob",
+    streamFiles: true,
+    mimeType: "application/zip",
+  });
   saveAs(zipBlob, `${zipName}.zip`);
 };
 
 export const handleZipDownload = async (
   currentProductImages: MediaLink[],
-  zipName: string = "product-images"
+  zipName: string = "product-images",
 ) => {
   if (!currentProductImages?.length) return;
   await handleZipDownloadFromUrls(
@@ -61,6 +81,6 @@ export const handleZipDownload = async (
       url: mediaLink.url,
       filename: `img-${index + 1}`,
     })),
-    zipName
+    zipName,
   );
 };

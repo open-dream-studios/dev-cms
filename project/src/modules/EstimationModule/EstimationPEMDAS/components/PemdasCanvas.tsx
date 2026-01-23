@@ -158,13 +158,14 @@ export const PemdasCanvas = () => {
           folderDnd.onDragEnd(e);
           const active = e.active.data.current;
           const over = e.over?.data.current;
-          if (active?.kind === "FACT" && over?.kind === "FOLDER") {
+          if (active?.kind === "FACT" && over?.kind === "FOLDER" && over.folder.id !== active.fact.folder_id) {
             const normalizedFolderId =
               over.folder.id === -1 ? null : over.folder.id;
             await upsertFactDefinition({
               ...active.fact,
               folder_id: normalizedFolderId,
             });
+
             if (normalizedFolderId) {
               const foundFolder = factFolders.find(
                 (folder: EstimationFactFolder) =>
