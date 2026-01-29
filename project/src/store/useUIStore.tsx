@@ -6,8 +6,7 @@ import {
   Screen,
   UIState,
   Media,
-  MediaUsage,
-  Product,
+  MediaUsage, 
 } from "@open-dream/shared";
 import { createStore } from "@/store/createStore";
 import { ReactNode, RefObject } from "react"; 
