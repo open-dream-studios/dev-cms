@@ -1,30 +1,63 @@
+// // project/src/modules/EstimationModule/EstimationsAdmin.tsx
+// import React from "react";
+// import { PemdasCanvas } from "./EstimationPEMDAS/components/PemdasCanvas";
+// import { useCurrentTheme } from "@/hooks/util/useTheme";
+
+// const EstimationsAdmin = () => {
+// const currentTheme = useCurrentTheme();
+// const handleCanvasSave = () => {
+//   //   if (usage === "estimation") {
+//   //   } else if (usage === "variable") {
+//   //     // await saveVariable()
+//   //   }
+// };
+
+//   return (
+//     <div className="w-full h-[100%]">
+//       <PemdasCanvas usage={"estimation"} />
+//   <div
+//     onClick={handleCanvasSave}
+//     className="fixed bottom-[25px] right-[25px] z-500 px-[37px] py-[8px] rounded-[8px] font-bold text-[16px] cursor-pointer hover:brightness-70 brightness-90 dim"
+//     style={{
+//       backgroundColor: currentTheme.text_1,
+//       color: currentTheme.background_1,
+//     }}
+//   >
+//     Save
+//   </div>
+// </div>
+//   );
+// };
+
+// export default EstimationsAdmin;
+
 // src/pemdas/components/PemdasCanvas.tsx
-import React, { use, useContext, useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { DndContext, DragOverlay, useDroppable } from "@dnd-kit/core";
-import { GraphNodeIcon } from "./GraphNode";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { usePemdasCanvas } from "../_hooks/pemdas.hooks";
-import { nodeColors } from "../_constants/pemdas.constants";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { usePemdasUIStore } from "../_store/pemdas.store";
 import { HomeLayout } from "@/layouts/homeLayout";
-import EstimationsLeftBar from "../../components/EstimationsLeftBar";
-import { useEstimationFactsUIStore } from "../../_store/estimations.store";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
-import { useFolderDndHandlers } from "../../_hooks/folders.hooks";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { factTypeConversion } from "../../_helpers/estimations.helpers";
 import { AuthContext } from "@/contexts/authContext";
-import { openFactFolder } from "../../_actions/estimations.actions";
 import { EstimationFactFolder } from "@open-dream/shared";
 import { ChevronRight, Folder, GripVertical } from "lucide-react";
-import PemdasViewport from "./PemdasViewport";
-import GeometricVariableBuilder from "../../EstimationVariables/GeometricVariableBuilder";
+import { usePemdasUIStore } from "./EstimationPEMDAS/_store/pemdas.store";
+import { useEstimationFactsUIStore } from "./_store/estimations.store";
+import { usePemdasCanvas } from "./EstimationPEMDAS/_hooks/pemdas.hooks";
+import { useFolderDndHandlers } from "./_hooks/folders.hooks";
+import { openFactFolder } from "./_actions/estimations.actions";
+import EstimationsLeftBar from "./components/EstimationsLeftBar";
+import PemdasViewport from "./EstimationPEMDAS/components/PemdasViewport";
+import { GraphNodeIcon } from "./EstimationPEMDAS/components/GraphNode";
+import { nodeColors } from "./EstimationPEMDAS/_constants/pemdas.constants";
+import { factTypeConversion } from "./_helpers/estimations.helpers";
+import GeometricVariableBuilder from "./EstimationVariables/GeometricVariableBuilder";
 
 export type CanvasUsage = "estimation" | "variable";
 
-export const PemdasCanvas = ({ usage }: { usage: CanvasUsage }) => {
+const EstimationAdmin = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProjectId } = useCurrentDataStore();
@@ -35,6 +68,7 @@ export const PemdasCanvas = ({ usage }: { usage: CanvasUsage }) => {
   const { openNodeIdTypeSelection, setOpenNodeIdTypeSelection } =
     usePemdasUIStore();
   const selectorRef = useRef<HTMLDivElement>(null);
+
   const {
     setDraggingFolderId,
     draggingFact,
@@ -85,6 +119,13 @@ export const PemdasCanvas = ({ usage }: { usage: CanvasUsage }) => {
     id: "CANVAS_DROP",
     data: { kind: "CANVAS" },
   });
+
+  const handleCanvasSave = () => {
+    // if (usage === "estimation") {
+    // } else if (usage === "variable") {
+    //   // await saveVariable()
+    // }
+  };
 
   return (
     <div
@@ -182,7 +223,7 @@ export const PemdasCanvas = ({ usage }: { usage: CanvasUsage }) => {
             <GeometricVariableBuilder />
           ) : (
             <PemdasViewport
-              usage={usage}
+              usage={"estimation"}
               viewportRef={viewportRef}
               selectorRef={selectorRef}
               state={state}
@@ -253,6 +294,19 @@ export const PemdasCanvas = ({ usage }: { usage: CanvasUsage }) => {
           )}
         </DragOverlay>
       </DndContext>
+
+      <div
+        onClick={handleCanvasSave}
+        className="fixed bottom-[25px] right-[25px] z-500 px-[37px] py-[8px] rounded-[8px] font-bold text-[16px] cursor-pointer hover:brightness-70 brightness-90 dim"
+        style={{
+          backgroundColor: currentTheme.text_1,
+          color: currentTheme.background_1,
+        }}
+      >
+        Save
+      </div>
     </div>
   );
 };
+
+export default EstimationAdmin;

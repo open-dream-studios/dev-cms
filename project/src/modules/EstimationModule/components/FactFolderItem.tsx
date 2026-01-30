@@ -143,6 +143,7 @@ export default function FactFolderItem({
           marginLeft: `${alteredDepth * 10}px`,
           opacity: depth === 0 ? 0 : 1,
           height: depth === 0 ? 0 : 34,
+          pointerEvents: depth === 0 ? "none" : "all",
           backgroundColor:
             selectedFolderId === node.id
               ? currentTheme.background_2

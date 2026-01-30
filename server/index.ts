@@ -49,6 +49,11 @@ import estimationGraphEdgesRoutes from "./handlers/modules/estimations/graphs/gr
 import estimationGraphNodesRoutes from "./handlers/modules/estimations/graphs/graph_nodes/graph_node_routes.js"
 import pricingGraphRoutes from "./handlers/modules/estimations/pricing_graphs/pricing_graph_routes.js"
 import AIRoutes from "./handlers/modules/AI/AI_routes.js"
+import ifTreeRoutes from "./handlers/modules/estimations/if_trees/if_tree_routes.js"
+import ifBranchRoutes from "./handlers/modules/estimations/if_trees/if_branch_routes.js"
+import ifExpressionRoutes from "./handlers/modules/estimations/if_trees/if_expression_routes.js"
+import estimationVariableRoutes from "./handlers/modules/estimations/if_trees/variable_routes.js"
+
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -170,6 +175,11 @@ app.use("/api/estimations/graphs", estimationGraphRoutes);
 app.use("/api/estimations/graph-edges", estimationGraphEdgesRoutes);
 app.use("/api/estimations/graph-nodes", estimationGraphNodesRoutes);
 app.use("/api/estimations/pricing/graphs", pricingGraphRoutes);
+
+app.use("/api/estimations/if-trees", ifTreeRoutes);
+app.use("/api/estimations/if-trees/branches", ifBranchRoutes);
+app.use("/api/estimations/if-trees/expressions", ifExpressionRoutes);
+app.use("/api/estimations/variables", estimationVariableRoutes);
 
 app.use("/api/ai", AIRoutes)
 

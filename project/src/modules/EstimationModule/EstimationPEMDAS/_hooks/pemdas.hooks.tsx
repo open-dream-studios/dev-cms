@@ -39,7 +39,7 @@ type ReorderPreview = {
 const ROW_GAP = 170;
 
 type VisibleRow = {
-  id: string; 
+  id: string;
   y: number;
   width: number;
   nodeIds: string[];
@@ -47,11 +47,7 @@ type VisibleRow = {
 
 export const usePemdasCanvas = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const viewportRef = useRef<HTMLDivElement>(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const didInitPanRef = useRef(false);
-  const viewportSizeRef = useRef<{ w: number; h: number } | null>(null);
-  const justDroppedNodeRef = useRef<string | null>(null);
   const [activeLayerByRow, setActiveLayerByRow] = useState<
     Record<number, string>
   >({});
@@ -60,38 +56,36 @@ export const usePemdasCanvas = () => {
     layerId: string;
     overIndex: number;
   } | null;
-
   const [ghostReorderPreview, setGhostReorderPreview] =
     useState<GhostReorderPreview>(null);
   const [openLayerStack, setOpenLayerStack] = useState<string[]>([]);
-
   const [ghost, setGhost] = useState<{
     variable: string;
     value: number;
     x: number;
     y: number;
   } | null>(null);
-
   const [reorderPreview, setReorderPreview] = useState<ReorderPreview>(null);
 
+  const didInitPanRef = useRef(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const viewportSizeRef = useRef<{ w: number; h: number } | null>(null);
+  const justDroppedNodeRef = useRef<string | null>(null);
   const isPanningRef = useRef(false);
   const panStartRef = useRef<{ x: number; y: number } | null>(null);
   const panOriginRef = useRef<{ x: number; y: number } | null>(null);
-
   const isDndDraggingRef = useRef(false);
   const isVarDraggingRef = useRef(false);
   const isNodeDraggingRef = useRef(false);
-
   const activeNodeRef = useRef<{ nodeId: string; layerId: string } | null>(
     null,
   );
-
   const ghostOriginRef = useRef<{
     x: number;
     y: number;
     variable: string;
     value: number;
-  } | null>(null); 
+  } | null>(null);
   const isOverCanvasRef = useRef(false);
 
   const layers = state.layers;
@@ -277,10 +271,10 @@ export const usePemdasCanvas = () => {
       return;
     }
 
-    // -------- variable ghost -------- 
+    // -------- variable ghost --------
     if (isVarDraggingRef.current && isOverCanvasRef.current) {
       const id = String(e.active.id);
-      const data = e.active.data.current as any; 
+      const data = e.active.data.current as any;
 
       if (isVarDraggingRef.current && !ghost) {
         if (!viewportRef.current) return;
