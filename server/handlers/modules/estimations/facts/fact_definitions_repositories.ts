@@ -27,7 +27,10 @@ export const getFactDefinitionsFunction = async (
       ON eo.fact_definition_idx = fd.id
      AND eo.is_archived = 0
     WHERE fd.project_idx = ?
-    ORDER BY fd.fact_key ASC, eo.ordinal ASC
+    ORDER BY
+      fd.variable_scope ASC,
+      fd.ordinal ASC,
+      eo.created_at ASC
     `,
     [project_idx]
   );
@@ -76,20 +79,47 @@ export const upsertFactDefinitionFunction = async (
   project_idx: number,
   reqBody: any
 ) => {
-  const { fact_id, fact_key, fact_type, description, folder_id, process_id } =
-    reqBody;
+  const {
+    fact_id,
+    fact_key,
+    fact_type,
+    description,
+    folder_id,
+    process_id,
+    variable_scope,
+  } = reqBody;
 
-  if (!fact_key || !fact_type || !process_id) {
-    throw new Error("fact_key, fact_type, and process_id required");
+  if (!fact_key || !fact_type || !process_id || !variable_scope) {
+    throw new Error(
+      "fact_key, fact_type, variable_scope, and process_id required"
+    );
   }
 
   const normalizedFactType = String(fact_type).trim().toLowerCase();
   const allowed: FactType[] = ["boolean", "number", "string", "enum"];
+
+  if (reqBody.variable_scope !== "fact" && normalizedFactType !== "number") {
+    throw new Error("Non-fact variables must be number type");
+  }
+
   if (!allowed.includes(normalizedFactType as FactType)) {
     throw new Error(`Invalid fact_type "${fact_type}"`);
   }
 
   const finalFactId = fact_id?.trim() || `FACTDEF-${ulid()}`;
+
+  const [rows] = await connection.query<RowDataPacket[]>(
+    `
+  SELECT COALESCE(MAX(ordinal), -1) + 1 AS nextOrdinal
+  FROM estimation_fact_definitions
+  WHERE project_idx = ?
+    AND variable_scope = ?
+    AND process_id = ?
+  `,
+    [project_idx, reqBody.variable_scope ?? "fact", process_id]
+  );
+
+  const ordinal = rows[0].nextOrdinal;
 
   const q = `
     INSERT INTO estimation_fact_definitions (
@@ -97,14 +127,17 @@ export const upsertFactDefinitionFunction = async (
       project_idx,
       folder_id,
       process_id,
+      variable_scope,
       fact_key,
       fact_type,
-      description
+      description,
+      ordinal
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       folder_id = VALUES(folder_id),
       process_id = VALUES(process_id),
+      variable_scope = VALUES(variable_scope),
       fact_key = VALUES(fact_key),
       fact_type = VALUES(fact_type),
       description = VALUES(description),
@@ -116,9 +149,11 @@ export const upsertFactDefinitionFunction = async (
     project_idx,
     folder_id ?? null,
     process_id,
+    variable_scope,
     fact_key.trim(),
     normalizedFactType,
     description ?? null,
+    ordinal,
   ]);
 
   return { success: true, fact_id: finalFactId };

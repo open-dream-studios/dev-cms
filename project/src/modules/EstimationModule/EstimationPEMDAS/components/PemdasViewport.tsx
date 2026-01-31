@@ -340,7 +340,7 @@ const PemdasViewport = ({
               node={{
                 id: "__ghost_floating__",
                 variable: ghost.variable,
-                nodeType: "var",
+                nodeType: ghost.nodeType,
                 x: ghost.x,
                 y: ghost.y,
                 layerId: "__floating__",

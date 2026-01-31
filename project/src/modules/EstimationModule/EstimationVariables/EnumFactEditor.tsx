@@ -20,11 +20,15 @@ export default function EnumFactEditor({
   onClose: () => void;
 }) {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const theme = useCurrentTheme();
 
   const { upsertFactDefinition, upsertEnumOption, deleteEnumOption } =
-    useEstimationFactDefinitions(!!currentUser, currentProjectId);
+    useEstimationFactDefinitions(
+      !!currentUser,
+      currentProjectId,
+      currentProcessId,
+    );
 
   const [draftType, setDraftType] = useState<FactType>(fact.fact_type);
   const [draftOptions, setDraftOptions] = useState<EstimationFactEnumOption[]>(
@@ -44,8 +48,11 @@ export default function EnumFactEditor({
     if (draftType === "enum" && next !== "enum") {
       setDraftOptions([]);
     }
+    if (draftType !== "enum" && next === "enum") {
+      setDraftOptions(originalOptions);
+    }
   };
-
+  
   // ---------- OPTIONS ----------
   const addOption = () => {
     setDraftOptions((prev) => [
@@ -93,6 +100,7 @@ export default function EnumFactEditor({
           fact_id: fact.fact_id,
           fact_key: fact.fact_key,
           fact_type: draftType,
+          variable_scope: fact.variable_scope,
           process_id: fact.process_id,
           folder_id: fact.folder_id,
           description: fact.description,
@@ -133,7 +141,6 @@ export default function EnumFactEditor({
               : opt.option_id,
             label: opt.value,
             value: opt.value,
-            ordinal: opt.ordinal,
           },
         });
         if (res.success === false) {
@@ -142,12 +149,7 @@ export default function EnumFactEditor({
       }
       onClose();
     } catch (err: any) {
-      const msg =
-        err?.message ??
-        err?.response?.data?.message ??
-        "Failed to save enum options";
-
-      toast.warning("Duplicate Option");
+      toast.warning("Save failed");
     }
   };
 
@@ -200,7 +202,7 @@ export default function EnumFactEditor({
             </div>
           </div>
 
-          {fact.fact_type === "enum" && (
+          {fact.fact_type === "enum" && draftType === "enum" && (
             <button
               onClick={addOption}
               className="text-sm opacity-60 hover:brightness-80 dim cursor-pointer"

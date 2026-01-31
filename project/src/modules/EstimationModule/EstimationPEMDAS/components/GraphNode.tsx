@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useState, useLayoutEffect, useRef } from "react";
 import { CSS } from "@dnd-kit/utilities";
-import { PemdasNode, PEMDASNodeType } from "../types";
+import { PemdasNode, PEMDASNodeType, variableScopes } from "../types";
 import { createPemdasNodeContextMenu } from "../_actions/pemdas.actions";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { useDraggable } from "@dnd-kit/core";
@@ -126,8 +126,12 @@ export const GraphNode = ({
           e.stopPropagation();
           onSelectLayer?.(node.id);
         }
-        if (node.nodeType === "var") {
-          setEditingVariable({ var_key: node.variable, var_id: node.id });
+        if (node.var_scope && variableScopes.includes(node.var_scope)) {
+          setEditingVariable({
+            var_key: node.variable,
+            var_id: node.var_id!,
+            var_type: node.var_scope!,
+          });
         }
       }}
     >
@@ -197,7 +201,7 @@ export const GraphNode = ({
 
         <div
           style={{
-            backgroundColor: ghost ? nodeColors["var"] : nodeColors[nodeType],
+            backgroundColor: nodeColors[nodeType],
             filter: dimmed ? "brightness(0.5)" : "none",
           }}
           className="cursor-grab dim hover:brightness-70 brightness-95 w-12 h-12 rounded-full flex items-center justify-center"

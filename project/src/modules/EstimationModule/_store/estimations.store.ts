@@ -1,14 +1,14 @@
 // project/src/modules/EstimationModule/_store/estimations.store.ts
 import { createStore } from "@/store/createStore";
-import { EstimationFactDefinition } from "@open-dream/shared";
+import { EstimationFactDefinition, VariableScope } from "@open-dream/shared";
 import { Value } from "../EstimationVariables/types";
 
-export type VariableView = "facts" | "geometric" | "project";
 const ROOT_ID = "__root__";
 
 export type VariableKey = {
   var_key: string;
   var_id: string | null;
+  var_type: VariableScope;
 };
 
 export type PendingVariableTarget =
@@ -34,7 +34,7 @@ export const useEstimationFactsUIStore = createStore({
   openFolders: new Set<string>([ROOT_ID]),
 
   // variables
-  variableView: "facts" as VariableView,
+  variableView: "fact" as VariableScope,
   editingVariable: null as null | VariableKey,
   isEditingVariableReturn: false,
   pendingVariableTarget: null as PendingVariableTarget | null,

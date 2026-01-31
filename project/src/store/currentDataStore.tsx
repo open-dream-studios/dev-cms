@@ -56,8 +56,9 @@ export const currentDataInitialState = {
   productFilters: { products: ["Active"], jobType: [] } as DataFilters,
 
   currentCustomerSearchTerm: "",
-
   searchContext: null as SearchContext,
+
+  currentProcessId: 1 as number | null
 };
 
 export const useCurrentDataStore = createStore(currentDataInitialState);

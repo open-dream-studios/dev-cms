@@ -25,10 +25,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { usePemdasUIStore } from "../_store/pemdas.store";
 import { cleanVariableKey } from "@/util/functions/Variables";
-import {
-  resetVariableUI,
-  useEstimationFactsUIStore,
-} from "../../_store/estimations.store";
+import { resetVariableUI } from "../../_store/estimations.store";
 
 export const PAN_PADDING = 310;
 
@@ -50,7 +47,6 @@ type VisibleRow = {
 export const usePemdasCanvas = () => {
   const { setOperandOverlayOpen, setOpenNodeIdTypeSelection } =
     usePemdasUIStore();
-  const { setEditingVariable } = useEstimationFactsUIStore();
   const graphState = usePemdasUIStore((s) => s.graphState);
   const set = usePemdasUIStore((s) => s.set);
   const state = graphState;
@@ -77,6 +73,7 @@ export const usePemdasCanvas = () => {
     value: number;
     x: number;
     y: number;
+    nodeType: PEMDASNodeType;
   } | null>(null);
   const [reorderPreview, setReorderPreview] = useState<ReorderPreview>(null);
 
@@ -98,6 +95,7 @@ export const usePemdasCanvas = () => {
     y: number;
     variable: string;
     value: number;
+    nodeType: PEMDASNodeType;
   } | null>(null);
   const isOverCanvasRef = useRef(false);
 
@@ -287,11 +285,19 @@ export const usePemdasCanvas = () => {
     if (data?.kind !== "FACT" && data?.kind !== "NODE") {
       return;
     }
-
+  
     // -------- variable ghost --------
     if (isVarDraggingRef.current && isOverCanvasRef.current) {
       const id = String(e.active.id);
       const data = e.active.data.current as any;
+      const scope = data.fact?.variable_scope ?? "fact";
+
+      // ⛔ block non-number facts from becoming canvas ghosts
+      if (data?.fact && data.fact.fact_type !== "number") {
+        setGhost(null);
+        setGhostReorderPreview(null);
+        return;
+      }
 
       if (isVarDraggingRef.current && !ghost) {
         if (!viewportRef.current) return;
@@ -304,6 +310,7 @@ export const usePemdasCanvas = () => {
           value: 0,
           x: p.clientX - rect.left - pan.x,
           y: p.clientY - rect.top - pan.y,
+          nodeType: scope,
         };
 
         setGhost({
@@ -311,6 +318,7 @@ export const usePemdasCanvas = () => {
           x: ghostOriginRef.current.x,
           y: ghostOriginRef.current.y,
           value: 0,
+          nodeType: ghostOriginRef.current.nodeType,
         });
       }
 
@@ -327,6 +335,7 @@ export const usePemdasCanvas = () => {
           x: p.clientX - rect.left - pan.x,
           y: p.clientY - rect.top - pan.y,
           value: data.value,
+          nodeType: scope,
         };
       }
 
@@ -335,6 +344,7 @@ export const usePemdasCanvas = () => {
         x: ghostOriginRef.current.x + e.delta.x,
         y: ghostOriginRef.current.y + e.delta.y,
         value: ghostOriginRef.current.value,
+        nodeType: ghostOriginRef.current.nodeType,
       };
 
       setGhost(nextGhost);
@@ -438,6 +448,15 @@ export const usePemdasCanvas = () => {
 
     // 🔵 2️⃣ FACT → drop ghost into canvas
     if ((id.startsWith("var-") || id.startsWith("fact-")) && ghost) {
+      const fact = e.active.data.current?.fact;
+
+      // ⛔ BLOCK non-number facts
+      if (fact && fact.fact_type !== "number") {
+        clearGhost();
+        isDndDraggingRef.current = false;
+        return;
+      }
+
       const SNAP = 80;
       let bestLayer: any = null;
       let bestDist = Infinity;
@@ -461,10 +480,14 @@ export const usePemdasCanvas = () => {
           e.active.data.current?.variable ??
           e.active.data.current?.fact?.fact_key;
 
+        const fact = e.active.data.current?.fact;
         dispatch({
           type: "ADD_NODE_AT",
           variable: cleanVariableKey(variable),
-          nodeType: "var",
+          nodeType: ghost.nodeType,
+          var_scope: ghost.nodeType,
+          var_fact_type: fact.fact_type, 
+          var_id: fact.fact_id,
           layerId: bestLayer.id,
           index: index === -1 ? bestLayer.nodeIds.length : index,
           constantValue: ghost.value,
@@ -519,7 +542,6 @@ export const usePemdasCanvas = () => {
     constantValue?: number,
     layerY?: number,
   ) => {
-    console.log(label, layerId, nodeType, constantValue, layerY);
     dispatch({
       type: "ADD_NODE_AT",
       variable: label,

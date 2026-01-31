@@ -21,7 +21,7 @@ import { toast } from "react-toastify";
 export default function DecisionGraphBuilder() {
   const qc = useQueryClient();
 
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
 
   const { graphs, createGraph, publishGraph, updateGraph } =
@@ -53,7 +53,7 @@ export default function DecisionGraphBuilder() {
     );
 
   const { factDefinitions, upsertFactDefinition, deleteFactDefinition } =
-    useEstimationFactDefinitions(!!currentUser, currentProjectId);
+    useEstimationFactDefinitions(!!currentUser, currentProjectId, currentProcessId);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const selectedNode = useMemo(

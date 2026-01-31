@@ -1,20 +1,29 @@
+import { FactType, VariableScope } from "@open-dream/shared";
+
 // src/pemdas/types.ts
 export type VariableKey = string;
 
 export type Operand = "+" | "-" | "×" | "/";
 
-export type PEMDASNodeType = "layer" | "constant" | "var";
+export type PEMDASNodeType = "layer" | "constant" | VariableScope;
+export const variableScopes: VariableScope[] = ["fact", "geometric", "project"]
 export type CreatablePEMDASNodeType = "layer" | "constant";
-export const creatablePEMDASNodeTypes: CreatablePEMDASNodeType[] = ["layer", "constant"];
+export const creatablePEMDASNodeTypes: CreatablePEMDASNodeType[] = [
+  "layer",
+  "constant",
+];
 
 export type PemdasNode = {
   id: string;
+  var_id?: string;
+  var_fact_type?: FactType;     // number | string | enum | boolean
+  var_scope?: VariableScope;   // fact | geometric | project
   variable: VariableKey;
   x: number; // layer-local center-x
   y: number; // canvas center-y
   layerId: string;
   nodeType: PEMDASNodeType;
-  constantValue?: number; 
+  constantValue?: number;
   operand: Operand;
 };
 

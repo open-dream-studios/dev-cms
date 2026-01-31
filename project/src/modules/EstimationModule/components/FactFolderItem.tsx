@@ -43,11 +43,12 @@ export default function FactFolderItem({
   const isOpen = openFolders.has(node.folder_id!);
   const { selectedFolderId, setSelectedFolderId } = useEstimationFactsUIStore();
   const { openContextMenu } = useContextMenuStore();
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const { modal2, setModal2 } = useUiStore();
   const { factFolders, upsertFactFolders } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId!,
+    currentProcessId
   );
 
   const {

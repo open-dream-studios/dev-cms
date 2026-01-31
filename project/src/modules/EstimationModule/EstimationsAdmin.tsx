@@ -29,10 +29,11 @@ export type CanvasUsage = "estimation" | "variable";
 const EstimationAdmin = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { currentProjectId } = useCurrentDataStore();
-  const { upsertFactDefinition } = useEstimationFactDefinitions(
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
+  const { upsertFactDefinition, factFolders, reorderFactFolders } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId,
+    currentProcessId,
   );
   const { openNodeIdTypeSelection, setOpenNodeIdTypeSelection } =
     usePemdasUIStore();
@@ -72,11 +73,6 @@ const EstimationAdmin = () => {
 
   const [isOverCanvas, setIsOverCanvas] = useState(false);
   const dragStartPointerRef = useRef<{ x: number; y: number } | null>(null);
-
-  const { factFolders, reorderFactFolders } = useEstimationFactDefinitions(
-    true,
-    currentProjectId,
-  );
 
   const folderDnd = useFolderDndHandlers({
     factFolders,
@@ -223,7 +219,7 @@ const EstimationAdmin = () => {
             >
               <div
                 className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: nodeColors.var }}
+                style={{ backgroundColor: nodeColors[draggingFact.variable_scope] }}
               >
                 <GraphNodeIcon color={null} />
               </div>

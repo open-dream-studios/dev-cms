@@ -33,10 +33,10 @@ export const createFactDefinitionContextMenu = (
 });
 
 export const handleDeleteFact = async (fact_id: string) => {
-  const { currentProjectId } = useCurrentDataStore.getState();
+  const { currentProjectId, currentProcessId } = useCurrentDataStore.getState();
   await deleteFactDefinitionApi(currentProjectId!, fact_id);
   queryClient.invalidateQueries({
-    queryKey: ["estimationFactDefinitions", currentProjectId],
+    queryKey: ["estimationFactDefinitions", currentProjectId, currentProcessId],
   });
 };
 

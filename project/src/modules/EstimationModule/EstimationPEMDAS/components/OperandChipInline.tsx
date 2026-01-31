@@ -1,5 +1,5 @@
 // src/pemdas/components/OperandChipInline.tsx
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { OperandOverlayPortal } from "./OperandOverlayPortal";
 import { Operand } from "../types";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";

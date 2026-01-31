@@ -12,7 +12,9 @@ export const MIN_NODE_GAP = 40;
 export const BASE_WORLD_HEIGHT = 900;
 
 export const nodeColors: Record<PEMDASNodeType, string> = {
-  var: "#22C55E",
+  fact: "#22C55E",
+  geometric: "#A855F7",
+  project: "#EF4444", 
   layer: "#A855F7",
   constant: "#3B82F6"
 };

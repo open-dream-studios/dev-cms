@@ -1,8 +1,15 @@
 // src/pemdas/state/reducer.ts
 import { uid } from "../utils/uid";
-import { Operand, PemdasLayer, PemdasNode, PEMDASNodeType } from "../types";
+import {
+  Operand,
+  PemdasLayer,
+  PemdasNode,
+  PEMDASNodeType,
+  variableScopes,
+} from "../types";
 import { computeLineWidth, layoutNodes } from "../_helpers/pemdas.helpers";
 import { BASE_LINE_WIDTH, WORLD_TOP } from "../_constants/pemdas.constants";
+import { FactType, VariableScope } from "@open-dream/shared";
 
 type State = {
   nodes: Record<string, PemdasNode>;
@@ -13,6 +20,9 @@ type Action =
   | {
       type: "ADD_NODE_AT";
       variable: string;
+      var_id?: string;
+      var_fact_type?: FactType;
+      var_scope?: VariableScope;
       nodeType: PEMDASNodeType;
       constantValue?: number;
       layerId: string;
@@ -90,15 +100,24 @@ export function reducer(state: State, action: Action): State {
 
       const id = uid();
 
+      if (action.var_scope && variableScopes.includes(action.var_scope)) {
+        if (!action.var_fact_type || !action.var_scope) {
+          throw new Error("var nodes require var_fact_type and var_scope");
+        }
+      }
+
       const node: PemdasNode = {
         id,
         variable: action.variable,
+        var_id: action.var_id,
+        var_fact_type: action.var_fact_type,
+        var_scope: action.var_scope,
         nodeType: action.nodeType,
         x: 0,
         y: layer.y,
         layerId: layer.id,
         constantValue: action.constantValue,
-        operand: "+", // ✅ default
+        operand: "+",
       };
 
       const nodes = { ...state.nodes, [id]: node };

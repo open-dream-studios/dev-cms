@@ -1,6 +1,6 @@
 // src/modules/EstimationModule/components/FactDraggableItem.tsx
 import { useDraggable } from "@dnd-kit/core";
-import { EstimationFactDefinition, FactType } from "@open-dream/shared";
+import { EstimationFactDefinition, FactType, VariableScope } from "@open-dream/shared";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { capitalizeFirstLetter, displayToKey } from "@/util/functions/Data";
 import { factTypeConversion } from "../_helpers/estimations.helpers";
@@ -22,10 +22,12 @@ import { cleanVariableKey } from "@/util/functions/Variables";
 export const VariableDisplayItem = ({
   fact_key,
   fact_type,
+  variable_scope,
   displayOnly,
 }: {
   fact_key: string;
   fact_type: FactType;
+  variable_scope: VariableScope;
   displayOnly: boolean;
 }) => {
   const currentTheme = useCurrentTheme();
@@ -43,14 +45,12 @@ export const VariableDisplayItem = ({
     >
       <div
         className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
-        style={{ backgroundColor: nodeColors.var }}
+        style={{ backgroundColor: nodeColors[variable_scope]  }}
       >
         <GraphNodeIcon color={null} />
       </div>
       <div className="min-w-0">
-        <div className="text-sm truncate">
-          {cleanVariableKey(fact_key)}
-        </div>
+        <div className="text-sm truncate">{cleanVariableKey(fact_key)}</div>
         <div className="text-xs opacity-60">
           {capitalizeFirstLetter(factTypeConversion(fact_type))}
         </div>
@@ -68,11 +68,12 @@ export default function FactDraggableItem({
 }) {
   const { currentUser } = useContext(AuthContext);
   const { openContextMenu } = useContextMenuStore();
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const { modal2, setModal2 } = useUiStore();
   const { upsertFactDefinition } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId!,
+    currentProcessId,
   );
   const {
     isCanvasGhostActive,
@@ -89,6 +90,7 @@ export default function FactDraggableItem({
       kind: "FACT",
       fact,
     },
+    disabled: selectingVariableReturn !== null,
   });
   const alteredDepth = Math.max(0, depth - 1);
 
@@ -145,7 +147,7 @@ export default function FactDraggableItem({
   return (
     <div
       ref={setNodeRef}
-      data-draggable={selectingVariableReturn === null}
+      data-draggable
       {...attributes}
       {...listeners}
       onClick={() => {
@@ -160,7 +162,11 @@ export default function FactDraggableItem({
           setPendingVariableTarget(null);
           setSelectingVariableReturn(null);
         } else {
-          setEditingVariable({ var_key: fact.fact_key, var_id: fact.fact_id });
+          setEditingVariable({
+            var_key: fact.fact_key,
+            var_id: fact.fact_id,
+            var_type: fact.variable_scope,
+          });
         }
       }}
       style={{
@@ -183,6 +189,7 @@ export default function FactDraggableItem({
       <VariableDisplayItem
         fact_key={fact.fact_key}
         fact_type={fact.fact_type}
+        variable_scope={fact.variable_scope}
         displayOnly={false}
       />
     </div>

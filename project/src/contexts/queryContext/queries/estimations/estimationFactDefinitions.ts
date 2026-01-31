@@ -9,27 +9,24 @@ import {
   deleteFactFolderApi,
   reorderFactDefinitionsApi,
   reorderFactFoldersApi,
-  fetchEnumOptionsApi,
   upsertEnumOptionApi,
   deleteEnumOptionApi,
   reorderEnumOptionsApi,
 } from "@/api/estimations/estimationFactDefinitions.api";
-import type {
-  FactType,
-  EstimationFactFolder, 
-} from "@open-dream/shared";
+import type { FactType, EstimationFactFolder } from "@open-dream/shared";
 
 export function useEstimationFactDefinitions(
   isLoggedIn: boolean,
-  currentProjectId: number | null
+  currentProjectId: number | null,
+  process_id: number | null
 ) {
   const qc = useQueryClient();
 
   // ---------- FACTS ----------
   const { data: factDefinitions = [], isLoading } = useQuery({
-    queryKey: ["estimationFactDefinitions", currentProjectId],
+    queryKey: ["estimationFactDefinitions", currentProjectId, process_id],
     queryFn: () => fetchFactDefinitionsApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    enabled: isLoggedIn && !!currentProjectId && !!process_id,
   });
 
   const upsertMutation = useMutation({
@@ -37,13 +34,14 @@ export function useEstimationFactDefinitions(
       fact_id?: string | null;
       fact_key: string;
       fact_type: FactType;
+      variable_scope: "fact" | "geometric" | "project";
       description?: string | null;
       folder_id?: number | null;
       process_id: number;
     }) => upsertFactDefinitionApi(currentProjectId!, payload),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: ["estimationFactDefinitions", currentProjectId],
+        queryKey: ["estimationFactDefinitions", currentProjectId, process_id],
       }),
   });
 
@@ -52,7 +50,7 @@ export function useEstimationFactDefinitions(
       deleteFactDefinitionApi(currentProjectId!, fact_id),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: ["estimationFactDefinitions", currentProjectId],
+        queryKey: ["estimationFactDefinitions", currentProjectId, process_id],
       }),
   });
 
@@ -64,7 +62,7 @@ export function useEstimationFactDefinitions(
     }) => reorderFactDefinitionsApi(currentProjectId!, payload),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["estimationFactDefinitions", currentProjectId],
+        queryKey: ["estimationFactDefinitions", currentProjectId, process_id],
       });
     },
   });
@@ -114,9 +112,6 @@ export function useEstimationFactDefinitions(
   });
 
   // ------- ENUM -----
-  const fetchEnumOptions = (fact_definition_idx: number) =>
-    fetchEnumOptionsApi(currentProjectId!, fact_definition_idx);
-
   const upsertEnumOptionMutation = useMutation({
     mutationFn: (payload: {
       fact_definition_idx: number;
@@ -124,12 +119,11 @@ export function useEstimationFactDefinitions(
         option_id?: string;
         label: string;
         value: string;
-        ordinal?: number;
       };
     }) => upsertEnumOptionApi(currentProjectId!, payload),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: ["estimationFactDefinitions", currentProjectId],
+        queryKey: ["estimationFactDefinitions", currentProjectId, process_id],
       }),
   });
 
@@ -138,7 +132,7 @@ export function useEstimationFactDefinitions(
       deleteEnumOptionApi(currentProjectId!, option_id),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: ["estimationFactDefinitions", currentProjectId],
+        queryKey: ["estimationFactDefinitions", currentProjectId, process_id],
       }),
   });
 
@@ -149,7 +143,7 @@ export function useEstimationFactDefinitions(
     }) => reorderEnumOptionsApi(currentProjectId!, payload),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: ["estimationFactDefinitions", currentProjectId],
+        queryKey: ["estimationFactDefinitions", currentProjectId, process_id],
       }),
   });
 
@@ -182,14 +176,12 @@ export function useEstimationFactDefinitions(
     }) => reorderFoldersMutation.mutateAsync(payload),
 
     // ---------- ENUM OPTIONS ----------
-    fetchEnumOptions,
     upsertEnumOption: (p: {
       fact_definition_idx: number;
       option: {
         option_id?: string;
         label: string;
         value: string;
-        ordinal?: number;
       };
     }) => upsertEnumOptionMutation.mutateAsync(p),
 

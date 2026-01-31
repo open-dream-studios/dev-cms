@@ -30,7 +30,7 @@ export function buildFactFolderTree(
     id: ROOT_ID,
     folder_id: "__root__",
     name: "ROOT",
-    parent_folder_id: null,
+    parent_folder_id: null, 
     ordinal: 0,
     process_id: 1,
     project_idx: 0,

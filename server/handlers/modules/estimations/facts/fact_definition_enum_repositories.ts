@@ -58,7 +58,7 @@ export const upsertEnumOption = async (
   if (dupes.length) {
     return {
       success: false,
-      message: "Duplicate enum option value",
+      message: "Duplicate option entered",
     };
   }
 

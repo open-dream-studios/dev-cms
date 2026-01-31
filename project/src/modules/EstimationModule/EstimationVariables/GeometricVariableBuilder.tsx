@@ -18,7 +18,7 @@ import {
   lightenColor,
   literalValue,
   statementValue,
-} from "./_helpers/variables.helpers"; 
+} from "./_helpers/variables.helpers";
 import { EstimationFactDefinition } from "@open-dream/shared";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
 import { AuthContext } from "@/contexts/authContext";
@@ -34,6 +34,9 @@ function BranchEditor({
   onChange: (b: Branch) => void;
 }) {
   const currentTheme = useCurrentTheme();
+  const { editingVariable } = useEstimationFactsUIStore();
+
+  if (!editingVariable) return null;
 
   if (branch.type === "return") {
     return (
@@ -42,7 +45,7 @@ function BranchEditor({
         className="pb-[16px] pt-[2px] px-[5px] flex flex-row gap-[10px] text-[15.5px] brightness-90"
       >
         <BsArrowRight
-          color={lightenColor(nodeColors["var"], 0.28)}
+          color={lightenColor(nodeColors[editingVariable.var_type], 0.28)}
           size={19}
           className="mt-[2px]"
         />
@@ -269,7 +272,10 @@ function ValueEditor({
     setSelectingVariableReturn,
     setIsEditingVariableReturn,
     setPendingVariableTarget,
+    editingVariable
   } = useEstimationFactsUIStore();
+
+  if (!editingVariable) return null
 
   return (
     <div
@@ -335,7 +341,7 @@ function ValueEditor({
             color={
               selectingVariableReturn?.selector_id === value.selector_id ||
               (value.kind === "variable" && !!value.var_key)
-                ? nodeColors["var"]
+                ? nodeColors[editingVariable.var_type]
                 : null
             }
           />
@@ -374,26 +380,16 @@ function ValueEditor({
   );
 }
 
-export function VariablePalette({ vars }: { vars: string[] }) {
-  return (
-    <div style={{ width: 200, borderLeft: "1px solid #444", padding: 8 }}>
-      <strong>Variables</strong>
-      {vars.map((v) => (
-        <div key={v}>{v}</div>
-      ))}
-    </div>
-  );
-}
-
 export default function GeometricVariableBuilder() {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
   const { editingVariable, setSelectingVariableReturn } =
     useEstimationFactsUIStore();
   const { factDefinitions } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId,
+    currentProcessId,
   );
   const [root, setRoot] = useState<Branch>({
     type: "return",
@@ -408,7 +404,11 @@ export default function GeometricVariableBuilder() {
 
   if (foundVariable && foundVariable.variable_scope === "fact") {
     return (
-      <EnumFactEditor key={editingVariable.var_id} fact={foundVariable} onClose={() => resetVariableUI()} />
+      <EnumFactEditor
+        key={editingVariable.var_id}
+        fact={foundVariable}
+        onClose={() => resetVariableUI()}
+      />
     );
   }
 
@@ -432,6 +432,7 @@ export default function GeometricVariableBuilder() {
       <VariableDisplayItem
         fact_key={editingVariable.var_key}
         fact_type={"number"}
+        variable_scope={editingVariable.var_type}
         displayOnly={true}
       />
       <BranchEditor branch={root} onChange={setRoot} />

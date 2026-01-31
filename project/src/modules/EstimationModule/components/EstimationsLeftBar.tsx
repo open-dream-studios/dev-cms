@@ -12,11 +12,8 @@ import Modal2MultiStepModalInput, {
 import { useUiStore } from "@/store/useUIStore";
 import { FaPlus } from "react-icons/fa6";
 import { Folder } from "lucide-react";
-import {
-  useEstimationFactsUIStore,
-  VariableView,
-} from "../_store/estimations.store";
-import { EstimationFactFolder } from "@open-dream/shared";
+import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import { EstimationFactFolder, VariableScope } from "@open-dream/shared";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { displayToKey } from "@/util/functions/Data";
 import {
@@ -24,20 +21,23 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { openFactFolder } from "../_actions/estimations.actions";
-import { useEstimationIfTrees } from "@/contexts/queryContext/queries/estimations/if_trees/estimationIfTrees";
-import { VariablePalette } from "../EstimationVariables/GeometricVariableBuilder";
+import FactDraggableItem from "./FactDraggableItem";
 
 export default function EstimationsLeftBar() {
   const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const {
     factDefinitions,
     factFolders,
     upsertFactDefinition,
     upsertFactFolders,
     deleteFactDefinition,
-  } = useEstimationFactDefinitions(!!currentUser, currentProjectId);
+  } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId,
+    currentProcessId,
+  );
   const { modal2, setModal2 } = useUiStore();
   const {
     selectedFolderId,
@@ -45,20 +45,24 @@ export default function EstimationsLeftBar() {
     openFolders,
     variableView,
     setVariableView,
+    editingVariable,
     setEditingVariable,
     selectingVariableReturn,
   } = useEstimationFactsUIStore();
 
-  const { variables } = useEstimationIfTrees(!!currentUser, currentProjectId);
-  const availableVariables = Array.isArray(variables)
-    ? variables.map((v: any) => v.var_key)
-    : (variables.variables?.map((v: any) => v.var_key) ?? []);
+  // const { variables } = useEstimationIfTrees(!!currentUser, currentProjectId);
+  // const availableVariables = Array.isArray(variables)
+  //   ? variables.map((v: any) => v.var_key)
+  //   : (variables.variables?.map((v: any) => v.var_key) ?? []);
+
+  const scopedFacts = useMemo(() => {
+    return factDefinitions.filter((f) => f.variable_scope === variableView);
+  }, [factDefinitions, variableView]);
 
   const tree = useMemo(() => {
-    const newTree = buildFactFolderTree(factFolders, factDefinitions);
-    console.log(newTree);
-    return newTree;
-  }, [factFolders, factDefinitions]);
+    const treeResult = buildFactFolderTree(factFolders, scopedFacts);
+    return treeResult;
+  }, [factFolders, scopedFacts]);
 
   const handleAddFolder = async () => {
     if (!currentProjectId) return;
@@ -109,20 +113,29 @@ export default function EstimationsLeftBar() {
   };
 
   const handleAddVariable = () => {
-    const EditVariableSteps: StepConfig[] = [
-      {
-        name: "name",
-        placeholder: `Variable Name...`,
-        validate: (val) => (val.length >= 1 ? true : "1+ chars"),
-      },
-      {
-        name: "type",
-        placeholder: `Variable Type...`,
-        validate: (val) => {
-          return true;
-        },
-      },
-    ];
+    const EditVariableSteps: StepConfig[] =
+      variableView === "fact"
+        ? [
+            {
+              name: "name",
+              placeholder: `Fact Name...`,
+              validate: (val) => (val.length >= 1 ? true : "1+ chars"),
+            },
+            {
+              name: "type",
+              placeholder: `Fact Type...`,
+              validate: (val) => {
+                return true;
+              },
+            },
+          ]
+        : [
+            {
+              name: "name",
+              placeholder: `Variable Name...`,
+              validate: (val) => (val.length >= 1 ? true : "1+ chars"),
+            },
+          ];
 
     const onComplete = async (values: any) => {
       const fact_key = displayToKey(values.name);
@@ -135,19 +148,16 @@ export default function EstimationsLeftBar() {
         raw === "string" ||
         raw === "enum"
           ? raw
-          : "string";
+          : "number";
 
-      if (variableView === "facts") {
-        await upsertFactDefinition({
-          fact_key,
-          fact_type: fact_type,
-          description: null,
-          folder_id: selectedFolderId,
-          process_id: 1,
-        });
-      } else {
-        setEditingVariable({ var_key: values.name, var_id: null });
-      }
+      await upsertFactDefinition({
+        fact_key,
+        fact_type: variableView === "fact" ? fact_type : "number",
+        variable_scope: variableView,
+        description: null,
+        folder_id: selectedFolderId,
+        process_id: currentProcessId!,
+      });
     };
 
     setModal2({
@@ -182,7 +192,10 @@ export default function EstimationsLeftBar() {
     setSelectedFolderId(null);
   });
 
-  const handleFolderTypeClick = (type: VariableView) => {
+  const handleFolderTypeClick = (type: VariableScope) => {
+    if (editingVariable && editingVariable.var_type === "fact") {
+      setEditingVariable(null);
+    }
     setVariableView(type);
   };
 
@@ -203,22 +216,24 @@ export default function EstimationsLeftBar() {
           }
         >
           <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
-            <p className=" w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
+            <p className="select-none w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
               Variables
             </p>
           </div>
 
           <div className="flex flex-row gap-[7px] items-center">
-            <div
-              data-fact-button
-              onClick={handleAddFolder}
-              className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
-              style={{
-                backgroundColor: currentTheme.background_1_2,
-              }}
-            >
-              <Folder size={13} />
-            </div>
+            {variableView === "fact" && (
+              <div
+                data-fact-button
+                onClick={handleAddFolder}
+                className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+                style={{
+                  backgroundColor: currentTheme.background_1_2,
+                }}
+              >
+                <Folder size={13} />
+              </div>
+            )}
 
             <div
               data-fact-button
@@ -239,11 +254,11 @@ export default function EstimationsLeftBar() {
           </p>
         </div>
       )}
-      <div className="w-[100%] flex flex-row gap-[7px] justify-center mb-[14px] px-3 text-[12px] font-[400]">
+      <div className="select-none w-[100%] flex flex-row gap-[7px] justify-center mb-[14px] px-3 text-[12px] font-[400]">
         <div
-          onClick={() => handleFolderTypeClick("facts")}
+          onClick={() => handleFolderTypeClick("fact")}
           style={{ backgroundColor: currentTheme.background_3 }}
-          className={`${variableView !== "facts" && "brightness-55 hover:brightness-60"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
+          className={`${variableView !== "fact" && "brightness-55 hover:brightness-60"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
         >
           Form
         </div>
@@ -263,8 +278,8 @@ export default function EstimationsLeftBar() {
         </div>
       </div>
 
-      {variableView === "facts" ? (
-        <div ref={containerRef} className="px-3 mt-[-8px] h-[100%]  space-y-1">
+      {variableView === "fact" && (
+        <div ref={containerRef} className="px-3 mt-[-8px] h-[100%] space-y-1">
           {tree.map((node) => (
             <SortableContext
               key={node.folder_id}
@@ -280,8 +295,14 @@ export default function EstimationsLeftBar() {
             </SortableContext>
           ))}
         </div>
-      ) : (
-        <VariablePalette vars={availableVariables} />
+      )}
+
+      {variableView !== "fact" && (
+        <div className="px-3 mt-[-8px] space-y-1">
+          {scopedFacts.map((fact) => (
+            <FactDraggableItem key={fact.fact_id} fact={fact} depth={0} />
+          ))}
+        </div>
       )}
     </div>
   );

@@ -1,8 +1,7 @@
 // project/src/api/estimation/estimationFactDefinitions.api.ts
 import { makeRequest } from "@/util/axios";
 import {
-  EstimationFactDefinition,
-  EstimationFactEnumOption,
+  EstimationFactDefinition, 
   EstimationFactFolder,
   FactType,
 } from "@open-dream/shared";
@@ -20,6 +19,7 @@ export async function upsertFactDefinitionApi(
     fact_id?: string | null;
     fact_key: string;
     fact_type: FactType;
+    variable_scope: "fact" | "geometric" | "project";
     description?: string | null;
     folder_id?: number | null;
     process_id: number;
@@ -117,17 +117,6 @@ export async function reorderFactFoldersApi(
 }
 
 // -------- ENUM OPTIONS --------
-export async function fetchEnumOptionsApi(
-  project_idx: number,
-  fact_definition_idx: number
-) {
-  const res = await makeRequest.post(
-    "/estimations/fact-definitions/enum-options",
-    { project_idx, fact_definition_idx }
-  );
-  return res.data.options as EstimationFactEnumOption[];
-}
-
 export async function upsertEnumOptionApi(
   project_idx: number,
   payload: {
