@@ -18,6 +18,7 @@ import {
   deleteFactFolder,
   reorderFactFolders,
 } from "./fact_definition_folder_controllers.js";
+import { deleteEnumOptionController, getEnumOptions, reorderEnumOptionsController, upsertEnumOptionController } from "./fact_definition_enum_controllers.js";
 
 const router = express.Router();
 
@@ -88,6 +89,38 @@ router.post(
   authenticateUser,
   checkProjectPermission(2),
   transactionHandler(reorderFactFolders)
+);
+
+router.post(
+  "/enum-options",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),
+  errorHandler(getEnumOptions)
+);
+
+router.post(
+  "/enum-options/upsert",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(3),
+  transactionHandler(upsertEnumOptionController)
+);
+
+router.post(
+  "/enum-options/delete",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(3),
+  transactionHandler(deleteEnumOptionController)
+);
+
+router.post(
+  "/enum-options/reorder",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(reorderEnumOptionsController)
 );
 
 export default router;

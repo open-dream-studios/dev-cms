@@ -9,8 +9,15 @@ import {
   deleteFactFolderApi,
   reorderFactDefinitionsApi,
   reorderFactFoldersApi,
+  fetchEnumOptionsApi,
+  upsertEnumOptionApi,
+  deleteEnumOptionApi,
+  reorderEnumOptionsApi,
 } from "@/api/estimations/estimationFactDefinitions.api";
-import type { FactType, EstimationFactFolder } from "@open-dream/shared";
+import type {
+  FactType,
+  EstimationFactFolder, 
+} from "@open-dream/shared";
 
 export function useEstimationFactDefinitions(
   isLoggedIn: boolean,
@@ -106,6 +113,46 @@ export function useEstimationFactDefinitions(
     },
   });
 
+  // ------- ENUM -----
+  const fetchEnumOptions = (fact_definition_idx: number) =>
+    fetchEnumOptionsApi(currentProjectId!, fact_definition_idx);
+
+  const upsertEnumOptionMutation = useMutation({
+    mutationFn: (payload: {
+      fact_definition_idx: number;
+      option: {
+        option_id?: string;
+        label: string;
+        value: string;
+        ordinal?: number;
+      };
+    }) => upsertEnumOptionApi(currentProjectId!, payload),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ["estimationFactDefinitions", currentProjectId],
+      }),
+  });
+
+  const deleteEnumOptionMutation = useMutation({
+    mutationFn: (option_id: string) =>
+      deleteEnumOptionApi(currentProjectId!, option_id),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ["estimationFactDefinitions", currentProjectId],
+      }),
+  });
+
+  const reorderEnumOptionsMutation = useMutation({
+    mutationFn: (payload: {
+      fact_definition_idx: number;
+      orderedOptionIds: string[];
+    }) => reorderEnumOptionsApi(currentProjectId!, payload),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ["estimationFactDefinitions", currentProjectId],
+      }),
+  });
+
   return {
     // ---------- FACTS ----------
     factDefinitions,
@@ -123,7 +170,8 @@ export function useEstimationFactDefinitions(
     // ---------- FOLDERS ----------
     factFolders: factFolders as EstimationFactFolder[],
     isLoadingFactFolders: isLoadingFolders,
-    upsertFactFolders: (folders: any) => upsertFoldersMutation.mutateAsync(folders),
+    upsertFactFolders: (folders: any) =>
+      upsertFoldersMutation.mutateAsync(folders),
     deleteFactFolder: (folder_id: string) =>
       deleteFolderMutation.mutateAsync(folder_id),
 
@@ -132,5 +180,25 @@ export function useEstimationFactDefinitions(
       parent_folder_id?: number | null;
       orderedIds: string[];
     }) => reorderFoldersMutation.mutateAsync(payload),
+
+    // ---------- ENUM OPTIONS ----------
+    fetchEnumOptions,
+    upsertEnumOption: (p: {
+      fact_definition_idx: number;
+      option: {
+        option_id?: string;
+        label: string;
+        value: string;
+        ordinal?: number;
+      };
+    }) => upsertEnumOptionMutation.mutateAsync(p),
+
+    deleteEnumOption: (option_id: string) =>
+      deleteEnumOptionMutation.mutateAsync(option_id),
+
+    reorderEnumOptions: (p: {
+      fact_definition_idx: number;
+      orderedOptionIds: string[];
+    }) => reorderEnumOptionsMutation.mutateAsync(p),
   };
 }

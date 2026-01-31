@@ -24,6 +24,11 @@ import Modal2MultiStepModalInput, {
 import { useUiStore } from "@/store/useUIStore";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { usePemdasUIStore } from "../_store/pemdas.store";
+import { cleanVariableKey } from "@/util/functions/Variables";
+import {
+  resetVariableUI,
+  useEstimationFactsUIStore,
+} from "../../_store/estimations.store";
 
 export const PAN_PADDING = 310;
 
@@ -43,7 +48,9 @@ type VisibleRow = {
 };
 
 export const usePemdasCanvas = () => {
-  const { setOperandOverlayOpen, setOpenNodeIdTypeSelection } = usePemdasUIStore()
+  const { setOperandOverlayOpen, setOpenNodeIdTypeSelection } =
+    usePemdasUIStore();
+  const { setEditingVariable } = useEstimationFactsUIStore();
   const graphState = usePemdasUIStore((s) => s.graphState);
   const set = usePemdasUIStore((s) => s.set);
   const state = graphState;
@@ -226,7 +233,8 @@ export const usePemdasCanvas = () => {
     panOriginRef.current = { ...pan };
 
     setOperandOverlayOpen(false);
-    setOpenNodeIdTypeSelection(null)
+    setOpenNodeIdTypeSelection(null);
+    resetVariableUI();
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -299,7 +307,7 @@ export const usePemdasCanvas = () => {
         };
 
         setGhost({
-          variable: capitalizeFirstLetter(factKey.replace("_", " ")),
+          variable: cleanVariableKey(factKey),
           x: ghostOriginRef.current.x,
           y: ghostOriginRef.current.y,
           value: 0,
@@ -323,7 +331,7 @@ export const usePemdasCanvas = () => {
       }
 
       const nextGhost = {
-        variable: capitalizeFirstLetter(variable.replace("_", " ")),
+        variable: cleanVariableKey(variable),
         x: ghostOriginRef.current.x + e.delta.x,
         y: ghostOriginRef.current.y + e.delta.y,
         value: ghostOriginRef.current.value,
@@ -455,7 +463,7 @@ export const usePemdasCanvas = () => {
 
         dispatch({
           type: "ADD_NODE_AT",
-          variable: capitalizeFirstLetter(variable.replace("_", " ")),
+          variable: cleanVariableKey(variable),
           nodeType: "var",
           layerId: bestLayer.id,
           index: index === -1 ? bestLayer.nodeIds.length : index,

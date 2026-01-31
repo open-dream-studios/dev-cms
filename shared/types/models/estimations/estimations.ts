@@ -17,6 +17,7 @@ export type EstimationGraph = {
 export type EstimationNodeType = "question" | "cost";
 
 export type FactType = "boolean" | "number" | "string" | "enum";
+export type VariableScope = "fact" | "geometric" | "project";
 
 export type EstimationFactDefinition = {
   id: number;
@@ -24,10 +25,12 @@ export type EstimationFactDefinition = {
   project_idx: number;
   folder_id: number | null;
   process_id: number;
+  variable_scope: VariableScope;
   ordinal: number;
   fact_key: string;
   fact_type: FactType;
   description: string | null;
+  enum_options?: EstimationFactEnumOption[];
   created_at: string;
   updated_at: string;
 };
@@ -37,6 +40,7 @@ export type EstimationFactFolder = {
   folder_id: string;
   project_idx: number;
   process_id: number;
+  variable_scope: VariableScope;
   parent_folder_id: number | null;
   name: string;
   ordinal: number;
@@ -54,6 +58,18 @@ export type SelectOption = {
   label: string;
   value: string;
   visibility_rules?: any;
+};
+
+export type EstimationFactEnumOption = {
+  id: number;
+  option_id: string;
+  fact_definition_idx: number;
+  label: string;
+  value: string;
+  ordinal: number;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
 };
 
 export type SelectMode = "single" | "multi";

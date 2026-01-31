@@ -12,16 +12,63 @@ import { reorderOrdinals } from "../../../../lib/ordinals.js";
 export const getFactDefinitionsFunction = async (
   project_idx: number
 ): Promise<EstimationFactDefinition[]> => {
-  const q = `
-    SELECT *
-    FROM estimation_fact_definitions
-    WHERE project_idx = ?
-    ORDER BY fact_key ASC
-  `;
-  const [rows] = await db
-    .promise()
-    .query<(EstimationFactDefinition & RowDataPacket)[]>(q, [project_idx]);
-  return rows;
+  const [rows] = await db.promise().query<RowDataPacket[]>(
+    `
+    SELECT
+      fd.*,
+      eo.id AS enum_id,
+      eo.option_id,
+      eo.label,
+      eo.value,
+      eo.ordinal,
+      eo.is_archived
+    FROM estimation_fact_definitions fd
+    LEFT JOIN estimation_fact_enum_options eo
+      ON eo.fact_definition_idx = fd.id
+     AND eo.is_archived = 0
+    WHERE fd.project_idx = ?
+    ORDER BY fd.fact_key ASC, eo.ordinal ASC
+    `,
+    [project_idx]
+  );
+
+  const map = new Map<number, EstimationFactDefinition>();
+
+  for (const r of rows) {
+    if (!map.has(r.id)) {
+      map.set(r.id, {
+        id: r.id,
+        fact_id: r.fact_id,
+        project_idx: r.project_idx,
+        folder_id: r.folder_id,
+        variable_scope: r.variable_scope,
+        process_id: r.process_id,
+        ordinal: r.ordinal,
+        fact_key: r.fact_key,
+        fact_type: r.fact_type,
+        description: r.description,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+        enum_options: [],
+      });
+    }
+
+    if (r.enum_id) {
+      map.get(r.id)!.enum_options!.push({
+        id: r.enum_id,
+        option_id: r.option_id,
+        fact_definition_idx: r.id,
+        label: r.label,
+        value: r.value,
+        ordinal: r.ordinal,
+        is_archived: r.is_archived,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+      });
+    }
+  }
+
+  return Array.from(map.values());
 };
 
 export const upsertFactDefinitionFunction = async (
@@ -117,7 +164,7 @@ export const reorderFactDefinitionsFunction = async (
   const layer = {
     project_idx,
     process_id,
-    folder_id: parent_folder_id ?? null,  
+    folder_id: parent_folder_id ?? null,
   };
 
   return await reorderOrdinals(
@@ -125,6 +172,6 @@ export const reorderFactDefinitionsFunction = async (
     "estimation_fact_definitions",
     layer,
     orderedIds,
-    "fact_id" // ✅ THIS WAS THE BUG
+    "fact_id"
   );
 };

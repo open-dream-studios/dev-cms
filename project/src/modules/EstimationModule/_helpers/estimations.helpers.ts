@@ -7,8 +7,8 @@ import {
 
 export const factTypeConversion = (factType: FactType) => {
   let fact: any = factType;
-  if (factType === "enum") fact = "Selectable";
-  if (factType === "boolean") fact = "Yes / No";
+  if (factType === "enum") fact = "Selection";
+  if (factType === "boolean") fact = "True / False";
   if (factType === "string") fact = "Text";
   return fact;
 };

@@ -1,6 +1,7 @@
 // project/src/modules/EstimationModule/_store/estimations.store.ts
 import { createStore } from "@/store/createStore";
 import { EstimationFactDefinition } from "@open-dream/shared";
+import { Value } from "../EstimationVariables/types";
 
 export type VariableView = "facts" | "geometric" | "project";
 const ROOT_ID = "__root__";
@@ -9,6 +10,20 @@ export type VariableKey = {
   var_key: string;
   var_id: string | null;
 };
+
+export type PendingVariableTarget =
+  | {
+      kind: "condition-left";
+      set: (v: Value) => void;
+    }
+  | {
+      kind: "condition-right";
+      set: (v: Value) => void;
+    }
+  | {
+      kind: "return";
+      set: (v: Value) => void;
+    };
 
 export const useEstimationFactsUIStore = createStore({
   selectedFolderId: null as null | number,
@@ -21,13 +36,17 @@ export const useEstimationFactsUIStore = createStore({
   // variables
   variableView: "facts" as VariableView,
   editingVariable: null as null | VariableKey,
-  isSelectingVariableReturn: false,
   isEditingVariableReturn: false,
+  pendingVariableTarget: null as PendingVariableTarget | null,
+  selectingVariableReturn: null as null | {
+    selector_id: string;
+    target: "condition-left" | "condition-right" | "return";
+  },
 });
 
 export const resetVariableUI = () =>
   useEstimationFactsUIStore.getState().set({
     editingVariable: null,
-    isSelectingVariableReturn: false,
+    selectingVariableReturn: null,
     isEditingVariableReturn: false,
   });

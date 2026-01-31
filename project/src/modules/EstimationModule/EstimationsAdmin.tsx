@@ -22,6 +22,7 @@ import { nodeColors } from "./EstimationPEMDAS/_constants/pemdas.constants";
 import { factTypeConversion } from "./_helpers/estimations.helpers";
 import GeometricVariableBuilder from "./EstimationVariables/GeometricVariableBuilder";
 import SaveAndBackBar from "./EstimationPEMDAS/components/SaveAndBackBar";
+import { cleanVariableKey } from "@/util/functions/Variables";
 
 export type CanvasUsage = "estimation" | "variable";
 
@@ -224,14 +225,12 @@ const EstimationAdmin = () => {
                 className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
                 style={{ backgroundColor: nodeColors.var }}
               >
-                <GraphNodeIcon />
+                <GraphNodeIcon color={null} />
               </div>
 
               <div className="min-w-0">
                 <div className="text-sm truncate">
-                  {capitalizeFirstLetter(
-                    draggingFact.fact_key.replace("_", " "),
-                  )}
+                  {cleanVariableKey(draggingFact.fact_key)}
                 </div>
                 <div className="text-xs opacity-60">
                   {capitalizeFirstLetter(

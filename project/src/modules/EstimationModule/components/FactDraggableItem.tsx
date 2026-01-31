@@ -17,29 +17,39 @@ import { AuthContext } from "@/contexts/authContext";
 import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
 import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import { cleanVariableKey } from "@/util/functions/Variables";
 
 export const VariableDisplayItem = ({
   fact_key,
   fact_type,
+  displayOnly,
 }: {
   fact_key: string;
   fact_type: FactType;
+  displayOnly: boolean;
 }) => {
   const currentTheme = useCurrentTheme();
+  const { selectingVariableReturn } = useEstimationFactsUIStore();
   return (
     <div
-      style={{ backgroundColor: currentTheme.background_2_dim }}
-      className="w-[100%] max-w-[220px] select-none mt-[4px] flex flex-row gap-[8.5px] items-center px-2 py-1 rounded"
+      style={{
+        backgroundColor: currentTheme.background_2_dim,
+        border:
+          !displayOnly && selectingVariableReturn !== null
+            ? `1px dashed ${currentTheme.text_4}`
+            : "1px solid transparent",
+      }}
+      className="w-[100%] max-w-[220px] select-none mt-[4px] flex flex-row gap-[8.5px] items-center px-2 py-1 rounded-[4px]"
     >
       <div
         className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
         style={{ backgroundColor: nodeColors.var }}
       >
-        <GraphNodeIcon />
+        <GraphNodeIcon color={null} />
       </div>
       <div className="min-w-0">
         <div className="text-sm truncate">
-          {capitalizeFirstLetter(fact_key.replace("_", " "))}
+          {cleanVariableKey(fact_key)}
         </div>
         <div className="text-xs opacity-60">
           {capitalizeFirstLetter(factTypeConversion(fact_type))}
@@ -64,8 +74,14 @@ export default function FactDraggableItem({
     !!currentUser,
     currentProjectId!,
   );
-  const { isCanvasGhostActive, setEditingVariable } =
-    useEstimationFactsUIStore();
+  const {
+    isCanvasGhostActive,
+    selectingVariableReturn,
+    pendingVariableTarget,
+    setPendingVariableTarget,
+    setSelectingVariableReturn,
+    setEditingVariable,
+  } = useEstimationFactsUIStore();
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `fact-${fact.fact_id}`,
@@ -129,17 +145,29 @@ export default function FactDraggableItem({
   return (
     <div
       ref={setNodeRef}
-      data-draggable
+      data-draggable={selectingVariableReturn === null}
       {...attributes}
       {...listeners}
       onClick={() => {
-        setEditingVariable({ var_key: fact.fact_key, var_id: fact.fact_id });
+        if (selectingVariableReturn !== null && pendingVariableTarget) {
+          pendingVariableTarget.set({
+            kind: "variable",
+            var_key: fact.fact_key,
+            var_id: fact.fact_id,
+            selector_id: selectingVariableReturn.selector_id,
+          });
+
+          setPendingVariableTarget(null);
+          setSelectingVariableReturn(null);
+        } else {
+          setEditingVariable({ var_key: fact.fact_key, var_id: fact.fact_id });
+        }
       }}
       style={{
         width: `calc(100% - ${alteredDepth * 10}px)`,
         marginLeft: `${alteredDepth * 10}px`,
         touchAction: "none",
-        cursor: "grab",
+        cursor: selectingVariableReturn !== null ? "pointer" : "grab",
         opacity: isDragging ? (isCanvasGhostActive ? 0.5 : 0) : 1,
       }}
       className="dim hover:brightness-90"
@@ -155,6 +183,7 @@ export default function FactDraggableItem({
       <VariableDisplayItem
         fact_key={fact.fact_key}
         fact_type={fact.fact_type}
+        displayOnly={false}
       />
     </div>
   );

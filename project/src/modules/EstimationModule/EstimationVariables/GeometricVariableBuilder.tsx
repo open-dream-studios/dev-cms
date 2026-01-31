@@ -1,5 +1,5 @@
 // project/src/modules/EstimationModule/EstimationVariables/GeometricVariableBuilder.tsx
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   resetVariableUI,
   useEstimationFactsUIStore,
@@ -11,25 +11,20 @@ import { VariableDisplayItem } from "../components/FactDraggableItem";
 import SaveAndBackBar from "../EstimationPEMDAS/components/SaveAndBackBar";
 import { BsArrowRight } from "react-icons/bs";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
-
-function lightenColor(color: string, amount = 1) {
-  const hex = color.replace("#", "");
-  const num = parseInt(hex, 16);
-  const r = Math.min(255, Math.floor(((num >> 16) & 255) + 255 * amount));
-  const g = Math.min(255, Math.floor(((num >> 8) & 255) + 255 * amount));
-  const b = Math.min(255, Math.floor((num & 255) + 255 * amount));
-
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function extractFirstReturn(branch: Branch): Value {
-  if (branch.type === "return") return branch.value;
-  for (const c of branch.cases) {
-    const v = extractFirstReturn(c.then);
-    if (v) return v;
-  }
-  return extractFirstReturn(branch.else);
-}
+import {
+  booleanValue,
+  emptyVariableValue,
+  extractFirstReturn,
+  lightenColor,
+  literalValue,
+  statementValue,
+} from "./_helpers/variables.helpers"; 
+import { EstimationFactDefinition } from "@open-dream/shared";
+import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
+import { AuthContext } from "@/contexts/authContext";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import EnumFactEditor from "./EnumFactEditor";
+import { cleanVariableKey } from "@/util/functions/Variables";
 
 function BranchEditor({
   branch,
@@ -46,10 +41,16 @@ function BranchEditor({
         style={{ borderLeft: "1px solid #444" }}
         className="pb-[16px] pt-[2px] px-[5px] flex flex-row gap-[10px] text-[15.5px] brightness-90"
       >
-        {/* <strong className="mt-[1px]">RETURN</strong> */}
-        <BsArrowRight color={lightenColor(nodeColors["var"], 0.28)} size={19} className="mt-[2px]" />
+        <BsArrowRight
+          color={lightenColor(nodeColors["var"], 0.28)}
+          size={19}
+          className="mt-[2px]"
+        />
+        <strong className="mt-[1px]">RETURN</strong>
         <ValueEditor
           value={branch.value}
+          allowed={["literal", "variable", "statement"]}
+          target="return"
           onChange={(v) => onChange({ type: "return", value: v })}
         />
         <button
@@ -64,14 +65,17 @@ function BranchEditor({
               cases: [
                 {
                   condition: {
-                    left: { kind: "number", value: 0 },
+                    left: emptyVariableValue(),
                     operator: "==",
-                    right: { kind: "number", value: 0 },
+                    right: literalValue(""),
                   },
                   then: branch,
                 },
               ],
-              else: { type: "return", value: { kind: "number", value: 0 } },
+              else: {
+                type: "return",
+                value: literalValue(""),
+              },
             })
           }
         >
@@ -147,11 +151,14 @@ function BranchEditor({
               ...branch.cases,
               {
                 condition: {
-                  left: { kind: "number", value: 0 },
+                  left: emptyVariableValue(),
                   operator: "==",
-                  right: { kind: "number", value: 0 },
+                  right: literalValue(""),
                 },
-                then: { type: "return", value: { kind: "number", value: 0 } },
+                then: {
+                  type: "return",
+                  value: literalValue(""),
+                },
               },
             ],
           })
@@ -176,7 +183,7 @@ function BranchEditor({
         </div>
       </div>
 
-      <div style={{ marginLeft: 16 }}>
+      <div style={{ marginLeft: 30 }}>
         <BranchEditor
           branch={branch.else}
           onChange={(b) => onChange({ ...branch, else: b })}
@@ -195,9 +202,18 @@ function ConditionEditor({
 }) {
   return (
     <div style={{ display: "flex", gap: 8 }}>
+      {/* LEFT: variable | statement ONLY */}
       <ValueEditor
         value={condition.left}
-        onChange={(v) => onChange({ ...condition, left: v })}
+        allowed={["variable", "statement"]}
+        target="condition-left"
+        onChange={(v) =>
+          onChange({
+            ...condition,
+            left: v,
+            operator: "==",
+          })
+        }
       />
 
       <select
@@ -208,16 +224,28 @@ function ConditionEditor({
             operator: e.target.value as Condition["operator"],
           })
         }
+        className="ml-[6px] mr-[-4px] outline-none border-none cursor-pointer hover:brightness-80 dim min-w-[48px]
+             appearance-none"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M6 8l4 4 4-4' stroke='rgba(80,80,80,0.9)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 4px center",
+          backgroundSize: "18px",
+        }}
       >
         <option value="==">==</option>
+        <option value=">">&gt;</option>
+        <option value="<">&lt;</option>
         <option value=">=">&gt;=</option>
         <option value="<=">&lt;=</option>
-        <option value="AND">AND</option>
-        <option value="OR">OR</option>
       </select>
 
+      {/* RIGHT: literal | variable | statement */}
       <ValueEditor
         value={condition.right}
+        allowed={["literal", "variable", "statement"]}
+        target="condition-right"
         onChange={(v) => onChange({ ...condition, right: v })}
       />
     </div>
@@ -227,13 +255,21 @@ function ConditionEditor({
 function ValueEditor({
   value,
   onChange,
+  allowed,
+  target,
 }: {
   value: Value;
   onChange: (v: Value) => void;
+  allowed: Array<Value["kind"]>;
+  target: "condition-left" | "condition-right" | "return";
 }) {
   const currentTheme = useCurrentTheme();
-  const { setIsSelectingVariableReturn, setIsEditingVariableReturn } =
-    useEstimationFactsUIStore();
+  const {
+    selectingVariableReturn,
+    setSelectingVariableReturn,
+    setIsEditingVariableReturn,
+    setPendingVariableTarget,
+  } = useEstimationFactsUIStore();
 
   return (
     <div
@@ -245,57 +281,94 @@ function ValueEditor({
         value={value.kind}
         onChange={(e) => {
           const next = e.target.value as Value["kind"];
-          if (next === "number") onChange({ kind: "number", value: 0 });
-          if (next === "variable") onChange({ kind: "variable" });
-          if (next === "statement") onChange({ kind: "statement" });
+          if (next === "literal") onChange(literalValue(""));
+          if (next === "variable") onChange(emptyVariableValue());
+          if (next === "statement") onChange(statementValue());
+          if (next === "boolean") onChange(booleanValue(false));
         }}
-        className="opacity-[0.4] text-[13px] outline-none border-none cursor-pointer hover:brightness-75 dim"
+        className="select-none opacity-[0.4] text-[13px] outline-none border-none cursor-pointer hover:brightness-75 dim"
       >
-        <option value="number">Number</option>
-        <option value="variable">Variable</option>
-        <option value="statement">Statement</option>
+        {allowed.includes("literal") && <option value="literal">Value</option>}
+        {allowed.includes("variable") && (
+          <option value="variable">Variable</option>
+        )}
+        {allowed.includes("statement") && (
+          <option value="statement">Statement</option>
+        )}
+        {allowed.includes("boolean") && (
+          <option value="boolean">True / False</option>
+        )}
       </select>
 
-      {/* NUMBER INPUT */}
-      {value.kind === "number" && (
+      {value.kind === "literal" && (
         <input
           type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
           value={value.value}
-          className="max-w-[85px] h-[23px] pl-[6px] ml-[2px] py-[1px] outline-none rounded-[4px]"
+          className="max-w-[110px] h-[23px] pl-[6px] ml-[2px] py-[1px] outline-none rounded-[4px]"
           style={{ border: "1px solid #444" }}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (/^\d*$/.test(v)) {
-              onChange({ kind: "number", value: v === "" ? 0 : Number(v) });
-            }
-          }}
+          onChange={(e) =>
+            onChange({
+              ...value,
+              kind: "literal",
+              value: e.target.value,
+            })
+          }
         />
       )}
 
-      {/* NODE PICKER */}
       {value.kind === "variable" && (
         <div
-          className="cursor-pointer"
+          className="flex items-center gap-[6px] cursor-pointer"
           onClick={() => {
-            setIsSelectingVariableReturn(true);
+            setPendingVariableTarget({
+              kind: target,
+              set: onChange,
+            });
+
+            setSelectingVariableReturn({
+              selector_id: value.selector_id,
+              target,
+            });
           }}
         >
-          <GraphNodeIcon />
+          <GraphNodeIcon
+            color={
+              selectingVariableReturn?.selector_id === value.selector_id ||
+              (value.kind === "variable" && !!value.var_key)
+                ? nodeColors["var"]
+                : null
+            }
+          />
+          {value.var_key && (
+            <span className="pl-[2px] pr-[5px] text-[13px] opacity-80 whitespace-nowrap">
+              {cleanVariableKey(value.var_key)}
+            </span>
+          )}
         </div>
       )}
 
-      {/* STATEMENT PICKER */}
       {value.kind === "statement" && (
         <div
           className="cursor-pointer"
-          onClick={() => {
-            setIsEditingVariableReturn(true);
-          }}
+          onClick={() => setIsEditingVariableReturn(true)}
         >
-          <GraphNodeIcon />
+          <GraphNodeIcon color={null} />
         </div>
+      )}
+
+      {value.kind === "boolean" && (
+        <button
+          className="h-[23px] px-[8px] rounded-[4px] text-[13px] dim hover:brightness-90"
+          style={{ border: "1px solid #444" }}
+          onClick={() =>
+            onChange({
+              ...value,
+              value: !value.value,
+            })
+          }
+        >
+          {value.value ? "True" : "False"}
+        </button>
       )}
     </div>
   );
@@ -313,17 +386,35 @@ export function VariablePalette({ vars }: { vars: string[] }) {
 }
 
 export default function GeometricVariableBuilder() {
+  const { currentUser } = useContext(AuthContext);
+  const { currentProjectId } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
-  const { editingVariable } = useEstimationFactsUIStore();
+  const { editingVariable, setSelectingVariableReturn } =
+    useEstimationFactsUIStore();
+  const { factDefinitions } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId,
+  );
   const [root, setRoot] = useState<Branch>({
     type: "return",
-    value: { kind: "number", value: 0 },
+    value: literalValue(""),
   });
 
   if (!editingVariable) return null;
 
+  const foundVariable = factDefinitions.find(
+    (fact: EstimationFactDefinition) => fact.fact_id === editingVariable.var_id,
+  );
+
+  if (foundVariable && foundVariable.variable_scope === "fact") {
+    return (
+      <EnumFactEditor key={editingVariable.var_id} fact={foundVariable} onClose={() => resetVariableUI()} />
+    );
+  }
+
   return (
     <div
+      onPointerDown={() => setSelectingVariableReturn(null)}
       style={{ backgroundColor: currentTheme.background_1 }}
       className="z-500 absolute top-0 left-0 flex gap-[10px] w-[100%] h-[100%] flex-col px-[20px] py-[20px] overflow-y-auto"
     >
@@ -341,6 +432,7 @@ export default function GeometricVariableBuilder() {
       <VariableDisplayItem
         fact_key={editingVariable.var_key}
         fact_type={"number"}
+        displayOnly={true}
       />
       <BranchEditor branch={root} onChange={setRoot} />
     </div>

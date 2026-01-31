@@ -45,7 +45,8 @@ export default function EstimationsLeftBar() {
     openFolders,
     variableView,
     setVariableView,
-    setEditingVariable
+    setEditingVariable,
+    selectingVariableReturn,
   } = useEstimationFactsUIStore();
 
   const { variables } = useEstimationIfTrees(!!currentUser, currentProjectId);
@@ -194,61 +195,69 @@ export default function EstimationsLeftBar() {
         borderRight: "0.5px solid " + currentTheme.background_2,
       }}
     >
-      <div
-        data-folders-top={-1}
-        className={
-          "px-[15px] flex flex-row items-center justify-between pt-[12px] pb-[2px] h-[55px]"
-        }
-      >
-        <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
-          <p className="cursor-pointer hover:opacity-[75%] transition-all duration-300 ease-in-out w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
-            Variables
+      {selectingVariableReturn === null ? (
+        <div
+          data-folders-top={-1}
+          className={
+            "px-[15px] flex flex-row items-center justify-between pt-[12px] pb-[2px] h-[55px]"
+          }
+        >
+          <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
+            <p className=" w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]">
+              Variables
+            </p>
+          </div>
+
+          <div className="flex flex-row gap-[7px] items-center">
+            <div
+              data-fact-button
+              onClick={handleAddFolder}
+              className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+              style={{
+                backgroundColor: currentTheme.background_1_2,
+              }}
+            >
+              <Folder size={13} />
+            </div>
+
+            <div
+              data-fact-button
+              onClick={handleAddVariable}
+              className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
+              style={{
+                backgroundColor: currentTheme.background_1_2,
+              }}
+            >
+              <FaPlus size={12} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="h-[55px] w-[100%] justify-center items-center flex pt-[4px]">
+          <p className="font-[600] h-[40px] truncate text-[23px] leading-[30px] mt-[6px]">
+            Select Variable
           </p>
         </div>
-
-        <div className="flex flex-row gap-[7px] items-center">
-          <div
-            data-fact-button
-            onClick={handleAddFolder}
-            className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
-            style={{
-              backgroundColor: currentTheme.background_1_2,
-            }}
-          >
-            <Folder size={13} />
-          </div>
-
-          <div
-            data-fact-button
-            onClick={handleAddVariable}
-            className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
-            style={{
-              backgroundColor: currentTheme.background_1_2,
-            }}
-          >
-            <FaPlus size={12} />
-          </div>
-        </div>
-      </div>
-      <div className="w-[100%] flex flex-row gap-[8px] justify-center mb-[14px] px-3 text-[12px] font-[400]">
+      )}
+      <div className="w-[100%] flex flex-row gap-[7px] justify-center mb-[14px] px-3 text-[12px] font-[400]">
         <div
           onClick={() => handleFolderTypeClick("facts")}
-          style={{ backgroundColor: currentTheme.background_2 }}
-          className={`${variableView !== "facts" && "brightness-75 hover:brightness-70"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
+          style={{ backgroundColor: currentTheme.background_3 }}
+          className={`${variableView !== "facts" && "brightness-55 hover:brightness-60"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
         >
           Form
         </div>
         <div
-          style={{ backgroundColor: currentTheme.background_2 }}
+          style={{ backgroundColor: currentTheme.background_3 }}
           onClick={() => handleFolderTypeClick("geometric")}
-          className={`${variableView !== "geometric" && "brightness-75 hover:brightness-70"} w-[100%] rounded-[5px] px-[9px] cursor-pointer dim text-center py-[3px]`}
+          className={`${variableView !== "geometric" && "brightness-55 hover:brightness-60"} w-[100%] rounded-[5px] px-[9px] cursor-pointer dim text-center py-[3px]`}
         >
           Geometric
         </div>
         <div
-          style={{ backgroundColor: currentTheme.background_2 }}
+          style={{ backgroundColor: currentTheme.background_3 }}
           onClick={() => handleFolderTypeClick("project")}
-          className={`${variableView !== "project" && "brightness-75 hover:brightness-70"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
+          className={`${variableView !== "project" && "brightness-55 hover:brightness-60"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
         >
           Project
         </div>

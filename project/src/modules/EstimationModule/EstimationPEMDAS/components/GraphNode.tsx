@@ -12,12 +12,27 @@ import GraphArrow from "./GraphArrow";
 import { OperandChipInline } from "./OperandChipInline";
 import { useEstimationFactsUIStore } from "../../_store/estimations.store";
 
-export const GraphNodeIcon = () => {
-  return (
+export const GraphNodeIcon = ({ color }: { color?: string | null }) => {
+  return !color ? (
     <div className="relative w-[25px] h-[25px]">
       <div className="absolute inset-0 rounded-full border border-white/10" />
       <div className="absolute inset-[3.5px] rounded-full border border-white/20" />
       <div className="absolute inset-[7px] rounded-full bg-white/20" />
+    </div>
+  ) : (
+    <div className="relative w-[25px] h-[25px]">
+      <div
+        className="absolute inset-0 rounded-full brightness-128"
+        style={{ border: "1px solid " + color }}
+      />
+      <div
+        className="absolute inset-[3.5px] rounded-full brightness-128"
+        style={{ border: "1px solid " + color }}
+      />
+      <div
+        className="absolute inset-[7px] rounded-full brightness-128"
+        style={{ backgroundColor: color }}
+      />
     </div>
   );
 };
