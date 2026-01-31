@@ -12,7 +12,10 @@ import Modal2MultiStepModalInput, {
 import { useUiStore } from "@/store/useUIStore";
 import { FaPlus } from "react-icons/fa6";
 import { Folder } from "lucide-react";
-import { useEstimationFactsUIStore, VariableView } from "../_store/estimations.store";
+import {
+  useEstimationFactsUIStore,
+  VariableView,
+} from "../_store/estimations.store";
 import { EstimationFactFolder } from "@open-dream/shared";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { displayToKey } from "@/util/functions/Data";
@@ -42,6 +45,7 @@ export default function EstimationsLeftBar() {
     openFolders,
     variableView,
     setVariableView,
+    setEditingVariable
   } = useEstimationFactsUIStore();
 
   const { variables } = useEstimationIfTrees(!!currentUser, currentProjectId);
@@ -141,7 +145,7 @@ export default function EstimationsLeftBar() {
           process_id: 1,
         });
       } else {
-        // await save new variable
+        setEditingVariable({ var_key: values.name, var_id: null });
       }
     };
 
@@ -179,8 +183,7 @@ export default function EstimationsLeftBar() {
 
   const handleFolderTypeClick = (type: VariableView) => {
     setVariableView(type);
-  }
-
+  };
 
   return (
     <div
@@ -230,20 +233,20 @@ export default function EstimationsLeftBar() {
       <div className="w-[100%] flex flex-row gap-[8px] justify-center mb-[14px] px-3 text-[12px] font-[400]">
         <div
           onClick={() => handleFolderTypeClick("facts")}
-          style={{backgroundColor: currentTheme.background_2 }}
+          style={{ backgroundColor: currentTheme.background_2 }}
           className={`${variableView !== "facts" && "brightness-75 hover:brightness-70"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
         >
           Form
         </div>
         <div
-          style={{backgroundColor: currentTheme.background_2 }}
+          style={{ backgroundColor: currentTheme.background_2 }}
           onClick={() => handleFolderTypeClick("geometric")}
           className={`${variableView !== "geometric" && "brightness-75 hover:brightness-70"} w-[100%] rounded-[5px] px-[9px] cursor-pointer dim text-center py-[3px]`}
         >
           Geometric
         </div>
         <div
-          style={{backgroundColor: currentTheme.background_2 }}
+          style={{ backgroundColor: currentTheme.background_2 }}
           onClick={() => handleFolderTypeClick("project")}
           className={`${variableView !== "project" && "brightness-75 hover:brightness-70"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
         >

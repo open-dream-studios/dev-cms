@@ -1,5 +1,5 @@
 // src/pemdas/_actions/pemdas.hooks.ts
-import { useMemo, useReducer, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import {
   PointerSensor,
   useSensor,
@@ -9,7 +9,7 @@ import {
   DragStartEvent,
   DragCancelEvent,
 } from "@dnd-kit/core";
-import { reducer, initialState } from "../state/reducer";
+import { reducer } from "../state/reducer";
 import {
   BASE_LINE_WIDTH,
   BASE_WORLD_HEIGHT,
@@ -17,16 +17,13 @@ import {
   WORLD_TOP,
 } from "../_constants/pemdas.constants";
 import { PemdasNode, PEMDASNodeType } from "../types";
-import {
-  arrayMove,
-  getClosestSlotIndex,
-  getSlotCenters,
-} from "../_helpers/pemdas.helpers";
+import { arrayMove, getClosestSlotIndex } from "../_helpers/pemdas.helpers";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
 import { useUiStore } from "@/store/useUIStore";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
+import { usePemdasUIStore } from "../_store/pemdas.store";
 
 export const PAN_PADDING = 310;
 
@@ -46,7 +43,16 @@ type VisibleRow = {
 };
 
 export const usePemdasCanvas = () => {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const { setOperandOverlayOpen, setOpenNodeIdTypeSelection } = usePemdasUIStore()
+  const graphState = usePemdasUIStore((s) => s.graphState);
+  const set = usePemdasUIStore((s) => s.set);
+  const state = graphState;
+  const dispatch = (action: any) => {
+    set((store) => ({
+      graphState: reducer(store.graphState, action),
+    }));
+  };
+
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [activeLayerByRow, setActiveLayerByRow] = useState<
     Record<number, string>
@@ -218,6 +224,9 @@ export const usePemdasCanvas = () => {
     (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
     panStartRef.current = { x: e.clientX, y: e.clientY };
     panOriginRef.current = { ...pan };
+
+    setOperandOverlayOpen(false);
+    setOpenNodeIdTypeSelection(null)
   };
 
   const onPointerMove = (e: React.PointerEvent) => {

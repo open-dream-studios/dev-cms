@@ -11,7 +11,7 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { ChevronRight, ChevronDown, Folder, GripVertical } from "lucide-react";
 import FactDraggableItem from "./FactDraggableItem";
 import { useEstimationFactsUIStore } from "../_store/estimations.store";
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { useCurrentDataStore } from "@/store/currentDataStore";
@@ -188,8 +188,7 @@ export default function FactFolderItem({
             <div key={fact.fact_id}>
               <FactDraggableItem
                 fact={fact}
-                depth={depth + 1}
-                onDelete={() => onDeleteFact(fact.fact_id)}
+                depth={depth + 1}  
               />
             </div>
           ))}

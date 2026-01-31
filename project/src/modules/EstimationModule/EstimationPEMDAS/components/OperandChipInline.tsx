@@ -5,6 +5,7 @@ import { Operand } from "../types";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { nodeColors } from "../_constants/pemdas.constants";
+import { usePemdasUIStore } from "../_store/pemdas.store";
 
 export const OperandChipInline = ({
   value,
@@ -15,17 +16,17 @@ export const OperandChipInline = ({
   onChange: (op: Operand) => void;
   hidden?: boolean;
 }) => {
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
   const ref = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
+  const { operandOverlayOpen, setOperandOverlayOpen } = usePemdasUIStore();
 
   const rect = ref.current?.getBoundingClientRect();
   const popupX = rect ? rect.left + rect.width / 2 : 0;
   const popupY = rect ? rect.top - 36 : 0;
 
-  const popupRef = useRef(null)
+  const popupRef = useRef(null);
 
-  useOutsideClick(popupRef, () => setOpen(false))
+  useOutsideClick(popupRef, () => console.log(1));
 
   if (hidden) return null;
 
@@ -39,13 +40,13 @@ export const OperandChipInline = ({
                    cursor-pointer z-10 pl-[0.5px] pb-[1px] ${value === "/" ? "text-[13px]" : "text-[14px]"}`}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((v) => !v);
+          setOperandOverlayOpen(!operandOverlayOpen);
         }}
       >
         {value}
       </div>
 
-      {open && rect && (
+      {operandOverlayOpen && rect && (
         <OperandOverlayPortal>
           <div
             className="fixed bg-[#111] border border-white/10 rounded-md
@@ -60,12 +61,17 @@ export const OperandChipInline = ({
             {(["+", "-", "×", "/"] as Operand[]).map((op) => (
               <button
                 key={op}
-                style={{backgroundColor: op === value ? nodeColors["constant"] : currentTheme.background_2}}
+                style={{
+                  backgroundColor:
+                    op === value
+                      ? nodeColors["constant"]
+                      : currentTheme.background_2,
+                }}
                 className="pb-[2px] select-none px-2 h-6 rounded  text-white/85
                            text-[13px] hover:brightness-75 cursor-pointer dim"
                 onPointerDown={() => {
                   onChange(op);
-                  setOpen(false);
+                  setOperandOverlayOpen(false);
                 }}
               >
                 {op}

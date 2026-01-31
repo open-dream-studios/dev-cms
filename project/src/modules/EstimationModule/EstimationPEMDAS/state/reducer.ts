@@ -135,13 +135,6 @@ export function reducer(state: State, action: Action): State {
 
       const nodes = { ...state.nodes };
       layoutNodes(nodes, nextLayer);
-
-      console.groupCollapsed("[reducer] REORDER_LAYER layout");
-      action.nodeIds.forEach((id, i) => {
-        console.log(id, "-> x:", nodes[id].x);
-      });
-      console.groupEnd();
-
       enforceFirstOperandPlus(nodes, nextLayer);
 
       return {

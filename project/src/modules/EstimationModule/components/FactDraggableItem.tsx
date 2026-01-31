@@ -1,7 +1,7 @@
 // src/modules/EstimationModule/components/FactDraggableItem.tsx
 import { useDraggable } from "@dnd-kit/core";
-import { EstimationFactDefinition } from "@open-dream/shared";
-import { useCurrentTheme } from "@/hooks/util/useTheme"; 
+import { EstimationFactDefinition, FactType } from "@open-dream/shared";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { capitalizeFirstLetter, displayToKey } from "@/util/functions/Data";
 import { factTypeConversion } from "../_helpers/estimations.helpers";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
@@ -18,17 +18,45 @@ import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
 import { useEstimationFactsUIStore } from "../_store/estimations.store";
 
+export const VariableDisplayItem = ({
+  fact_key,
+  fact_type,
+}: {
+  fact_key: string;
+  fact_type: FactType;
+}) => {
+  const currentTheme = useCurrentTheme();
+  return (
+    <div
+      style={{ backgroundColor: currentTheme.background_2_dim }}
+      className="w-[100%] max-w-[220px] select-none mt-[4px] flex flex-row gap-[8.5px] items-center px-2 py-1 rounded"
+    >
+      <div
+        className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
+        style={{ backgroundColor: nodeColors.var }}
+      >
+        <GraphNodeIcon />
+      </div>
+      <div className="min-w-0">
+        <div className="text-sm truncate">
+          {capitalizeFirstLetter(fact_key.replace("_", " "))}
+        </div>
+        <div className="text-xs opacity-60">
+          {capitalizeFirstLetter(factTypeConversion(fact_type))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function FactDraggableItem({
   fact,
   depth,
-  onDelete,
 }: {
   fact: EstimationFactDefinition;
   depth: number;
-  onDelete: () => void;
 }) {
   const { currentUser } = useContext(AuthContext);
-  const theme = useCurrentTheme();
   const { openContextMenu } = useContextMenuStore();
   const { currentProjectId } = useCurrentDataStore();
   const { modal2, setModal2 } = useUiStore();
@@ -36,7 +64,8 @@ export default function FactDraggableItem({
     !!currentUser,
     currentProjectId!,
   );
-  const { isCanvasGhostActive } = useEstimationFactsUIStore()
+  const { isCanvasGhostActive, setEditingVariable } =
+    useEstimationFactsUIStore();
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `fact-${fact.fact_id}`,
@@ -45,7 +74,6 @@ export default function FactDraggableItem({
       fact,
     },
   });
-
   const alteredDepth = Math.max(0, depth - 1);
 
   const handleEditFact = (fact: EstimationFactDefinition) => {
@@ -104,14 +132,17 @@ export default function FactDraggableItem({
       data-draggable
       {...attributes}
       {...listeners}
-      className="select-none mt-[4px] flex flex-row gap-[8.5px] items-center px-2 py-1 rounded cursor-grab dim hover:brightness-90"
+      onClick={() => {
+        setEditingVariable({ var_key: fact.fact_key, var_id: fact.fact_id });
+      }}
       style={{
-        backgroundColor: theme.background_2_dim,
         width: `calc(100% - ${alteredDepth * 10}px)`,
         marginLeft: `${alteredDepth * 10}px`,
         touchAction: "none",
-        opacity: isDragging ? isCanvasGhostActive ? 0.5 : 0 : 1,
+        cursor: "grab",
+        opacity: isDragging ? (isCanvasGhostActive ? 0.5 : 0) : 1,
       }}
+      className="dim hover:brightness-90"
       onContextMenu={(e) => {
         e.preventDefault();
         openContextMenu({
@@ -121,20 +152,10 @@ export default function FactDraggableItem({
         });
       }}
     >
-      <div
-        className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
-        style={{ backgroundColor: nodeColors.var }}
-      >
-        <GraphNodeIcon />
-      </div>
-      <div className="min-w-0">
-        <div className="text-sm truncate">
-          {capitalizeFirstLetter(fact.fact_key.replace("_", " "))}
-        </div>
-        <div className="text-xs opacity-60">
-          {capitalizeFirstLetter(factTypeConversion(fact.fact_type))}
-        </div>
-      </div>
+      <VariableDisplayItem
+        fact_key={fact.fact_key}
+        fact_type={fact.fact_type}
+      />
     </div>
   );
 }

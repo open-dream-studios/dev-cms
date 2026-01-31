@@ -273,7 +273,7 @@ const PemdasViewport = ({
                           >
                             {capitalizeFirstLetter(opt)}
                           </button>
-                        ),
+                        )
                       )}
                     </div>
                   )}

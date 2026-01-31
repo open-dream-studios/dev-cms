@@ -1,37 +1,4 @@
-// // project/src/modules/EstimationModule/EstimationsAdmin.tsx
-// import React from "react";
-// import { PemdasCanvas } from "./EstimationPEMDAS/components/PemdasCanvas";
-// import { useCurrentTheme } from "@/hooks/util/useTheme";
-
-// const EstimationsAdmin = () => {
-// const currentTheme = useCurrentTheme();
-// const handleCanvasSave = () => {
-//   //   if (usage === "estimation") {
-//   //   } else if (usage === "variable") {
-//   //     // await saveVariable()
-//   //   }
-// };
-
-//   return (
-//     <div className="w-full h-[100%]">
-//       <PemdasCanvas usage={"estimation"} />
-//   <div
-//     onClick={handleCanvasSave}
-//     className="fixed bottom-[25px] right-[25px] z-500 px-[37px] py-[8px] rounded-[8px] font-bold text-[16px] cursor-pointer hover:brightness-70 brightness-90 dim"
-//     style={{
-//       backgroundColor: currentTheme.text_1,
-//       color: currentTheme.background_1,
-//     }}
-//   >
-//     Save
-//   </div>
-// </div>
-//   );
-// };
-
-// export default EstimationsAdmin;
-
-// src/pemdas/components/PemdasCanvas.tsx
+// project/src/modules/EstimationModule/EstimationsAdmin.tsx
 import React, { useContext, useRef, useState } from "react";
 import { DndContext, DragOverlay, useDroppable } from "@dnd-kit/core";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
@@ -54,6 +21,7 @@ import { GraphNodeIcon } from "./EstimationPEMDAS/components/GraphNode";
 import { nodeColors } from "./EstimationPEMDAS/_constants/pemdas.constants";
 import { factTypeConversion } from "./_helpers/estimations.helpers";
 import GeometricVariableBuilder from "./EstimationVariables/GeometricVariableBuilder";
+import SaveAndBackBar from "./EstimationPEMDAS/components/SaveAndBackBar";
 
 export type CanvasUsage = "estimation" | "variable";
 
@@ -75,7 +43,7 @@ const EstimationAdmin = () => {
     setDraggingFact,
     setIsCanvasGhostActive,
     draggingFolderId,
-    isEditingVariableReturn,
+    editingVariable,
   } = useEstimationFactsUIStore();
 
   useOutsideClick(selectorRef, () => setOpenNodeIdTypeSelection(null));
@@ -120,12 +88,14 @@ const EstimationAdmin = () => {
     data: { kind: "CANVAS" },
   });
 
-  const handleCanvasSave = () => {
+  const handleSaveButton = () => {
     // if (usage === "estimation") {
     // } else if (usage === "variable") {
     //   // await saveVariable()
     // }
   };
+
+  const handleBackButton = () => {};
 
   return (
     <div
@@ -219,33 +189,30 @@ const EstimationAdmin = () => {
         }}
       >
         <HomeLayout left={<EstimationsLeftBar />}>
-          {isEditingVariableReturn ? (
-            <GeometricVariableBuilder />
-          ) : (
-            <PemdasViewport
-              usage={"estimation"}
-              viewportRef={viewportRef}
-              selectorRef={selectorRef}
-              state={state}
-              pan={pan}
-              bounds={bounds}
-              visibleRows={visibleRows}
-              activeLayerByRow={activeLayerByRow}
-              ghost={ghost}
-              reorderPreview={reorderPreview}
-              ghostReorderPreview={ghostReorderPreview}
-              justDroppedNodeId={justDroppedNodeId}
-              activeNodeId={activeNodeId}
-              openNodeIdTypeSelection={openNodeIdTypeSelection}
-              dispatch={dispatch}
-              handlers={handlers}
-              handleEditNode={handleEditNode}
-              handleAddNode={handleAddNode}
-              openLayer={openLayer}
-              setOpenNodeIdTypeSelection={setOpenNodeIdTypeSelection}
-              setCanvasDropRef={setCanvasDropRef}
-            />
-          )}
+          {editingVariable !== null && <GeometricVariableBuilder />}
+          <PemdasViewport
+            usage={"estimation"}
+            viewportRef={viewportRef}
+            selectorRef={selectorRef}
+            state={state}
+            pan={pan}
+            bounds={bounds}
+            visibleRows={visibleRows}
+            activeLayerByRow={activeLayerByRow}
+            ghost={ghost}
+            reorderPreview={reorderPreview}
+            ghostReorderPreview={ghostReorderPreview}
+            justDroppedNodeId={justDroppedNodeId}
+            activeNodeId={activeNodeId}
+            openNodeIdTypeSelection={openNodeIdTypeSelection}
+            dispatch={dispatch}
+            handlers={handlers}
+            handleEditNode={handleEditNode}
+            handleAddNode={handleAddNode}
+            openLayer={openLayer}
+            setOpenNodeIdTypeSelection={setOpenNodeIdTypeSelection}
+            setCanvasDropRef={setCanvasDropRef}
+          />
         </HomeLayout>
         <DragOverlay>
           {draggingFact && !isOverCanvas && (
@@ -295,15 +262,8 @@ const EstimationAdmin = () => {
         </DragOverlay>
       </DndContext>
 
-      <div
-        onClick={handleCanvasSave}
-        className="fixed bottom-[25px] right-[25px] z-500 px-[37px] py-[8px] rounded-[8px] font-bold text-[16px] cursor-pointer hover:brightness-70 brightness-90 dim"
-        style={{
-          backgroundColor: currentTheme.text_1,
-          color: currentTheme.background_1,
-        }}
-      >
-        Save
+      <div className="fixed top-[20px] left-[20px] z-500">
+        <SaveAndBackBar onSave={handleSaveButton} onBack={handleBackButton} />
       </div>
     </div>
   );

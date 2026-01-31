@@ -10,6 +10,7 @@ import { nodeColors } from "../_constants/pemdas.constants";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import GraphArrow from "./GraphArrow";
 import { OperandChipInline } from "./OperandChipInline";
+import { useEstimationFactsUIStore } from "../../_store/estimations.store";
 
 export const GraphNodeIcon = () => {
   return (
@@ -51,6 +52,7 @@ export const GraphNode = ({
   const [numberDisplayOpen, setNumberDisplayOpen] = useState(false);
   const numberTextRef = useRef<HTMLDivElement | null>(null);
   const [isEllipsed, setIsEllipsed] = useState(false);
+  const { setEditingVariable } = useEstimationFactsUIStore();
 
   useLayoutEffect(() => {
     if (!numberTextRef.current) return;
@@ -108,6 +110,9 @@ export const GraphNode = ({
         if (node.nodeType === "layer") {
           e.stopPropagation();
           onSelectLayer?.(node.id);
+        }
+        if (node.nodeType === "var") {
+          setEditingVariable({ var_key: node.variable, var_id: node.id });
         }
       }}
     >
@@ -176,7 +181,7 @@ export const GraphNode = ({
         />
 
         <div
-          style={{ 
+          style={{
             backgroundColor: ghost ? nodeColors["var"] : nodeColors[nodeType],
             filter: dimmed ? "brightness(0.5)" : "none",
           }}
