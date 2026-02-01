@@ -1,6 +1,6 @@
-// project/src/components/ContextMenuRenderer.tsx
 "use client";
 import { useContext, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useContextMenuStore } from "../store/util/contextMenuStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { AuthContext } from "@/contexts/authContext";
@@ -11,11 +11,11 @@ export const ContextMenu = () => {
   const currentTheme = useCurrentTheme();
 
   const menuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!contextMenu) return;
     const handler = (e: MouseEvent) => {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target as Node)) {
+      if (!menuRef.current?.contains(e.target as Node)) {
         closeContextMenu();
       }
     };
@@ -25,12 +25,15 @@ export const ContextMenu = () => {
 
   if (!contextMenu || !currentUser) return null;
 
+  const root = document.getElementById("ui-overlay-root");
+  if (!root) return null;
+
   const { position, target, menu } = contextMenu;
 
-  return (
+  return createPortal(
     <div
       ref={menuRef}
-      className="fixed z-999 min-w-[160px] rounded-md border shadow-lg py-1"
+      className="fixed z-[10000] min-w-[160px] rounded-md border shadow-lg py-1"
       style={{
         top: position.y,
         left: position.x,
@@ -58,8 +61,8 @@ export const ContextMenu = () => {
               color: !item.danger
                 ? currentTheme.text_1
                 : currentUser.theme === "light"
-                  ? "red"
-                  : "#FF746B",
+                ? "red"
+                : "#FF746B",
             }}
             className={`w-full text-left px-3 py-2 text-sm dim hover:brightness-75
               ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
@@ -69,6 +72,7 @@ export const ContextMenu = () => {
           </button>
         );
       })}
-    </div>
+    </div>,
+    root
   );
 };

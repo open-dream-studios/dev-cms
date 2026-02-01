@@ -11,8 +11,33 @@ import { AuthContext } from "@/contexts/authContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { cleanVariableKey } from "@/util/functions/Variables";
 import { toast } from "react-toastify";
+import { useEstimationFactsUIStore } from "../_store/estimations.store";
 
-export default function EnumFactEditor({
+export default function FactEditor() {
+  const { currentUser } = useContext(AuthContext);
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
+  const { editingFact, setEditingFact } = useEstimationFactsUIStore();
+  const { factDefinitions } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId,
+    currentProcessId,
+  );
+  if (!editingFact) return null;
+  const foundVariable = factDefinitions.find(
+    (fact: EstimationFactDefinition) => fact.fact_id === editingFact.var_id,
+  );
+  if (foundVariable && foundVariable.variable_scope === "fact") {
+    return (
+      <EnumFactEditor
+        key={editingFact.var_id}
+        fact={foundVariable}
+        onClose={() => setEditingFact(null)}
+      />
+    );
+  } else return null;
+}
+
+export function EnumFactEditor({
   fact,
   onClose,
 }: {
@@ -52,7 +77,7 @@ export default function EnumFactEditor({
       setDraftOptions(originalOptions);
     }
   };
-  
+
   // ---------- OPTIONS ----------
   const addOption = () => {
     setDraftOptions((prev) => [

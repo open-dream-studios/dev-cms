@@ -70,7 +70,7 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
       exit={{ opacity: 0, y: 25 }}
       transition={{ duration: 0.22 }}
       className="absolute bottom-0 left-0 right-0 border-t border-white/5 p-4 rounded-t-2xl shadow-lg shadow-black/50 z-[500]"
-      style={{ height: 380, backgroundColor: currentTheme.gmail_background_1_2 }}
+      style={{ height: 380, backgroundColor: currentTheme.gmail_background_1_3 }}
     >
       <div className="flex justify-between items-center mb-2">
         <div className="text-[13px] text-white/70">

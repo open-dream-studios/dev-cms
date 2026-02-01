@@ -40,7 +40,7 @@ const EmployeesModuleLeftBar = () => {
               onClick={() => handleEmployeeClick(null)}
               className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
               style={{
-                backgroundColor: currentTheme.background_1_2,
+                backgroundColor: currentTheme.background_1_3,
               }}
             >
               <FaPlus size={12} />

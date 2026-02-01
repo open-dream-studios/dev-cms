@@ -9,7 +9,7 @@ import {
   DragStartEvent,
   DragCancelEvent,
 } from "@dnd-kit/core";
-import { reducer } from "../state/reducer";
+import { initialState, reducer } from "../state/reducer";
 import {
   BASE_LINE_WIDTH,
   BASE_WORLD_HEIGHT,
@@ -25,7 +25,10 @@ import { useUiStore } from "@/store/useUIStore";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { usePemdasUIStore } from "../_store/pemdas.store";
 import { cleanVariableKey } from "@/util/functions/Variables";
-import { resetVariableUI } from "../../_store/estimations.store";
+import {
+  resetVariableUI,
+  useEstimationFactsUIStore,
+} from "../../_store/estimations.store";
 
 export const PAN_PADDING = 310;
 
@@ -44,17 +47,51 @@ type VisibleRow = {
   nodeIds: string[];
 };
 
-export const usePemdasCanvas = () => {
-  const { setOperandOverlayOpen, setOpenNodeIdTypeSelection } =
-    usePemdasUIStore();
-  const graphState = usePemdasUIStore((s) => s.graphState);
-  const set = usePemdasUIStore((s) => s.set);
+export const usePemdasCanvas = (
+  usage: "estimation" | "variable",
+  variableKey?: string,
+) => {
+  const store = usePemdasUIStore();
+
+  const graphState =
+    usage === "estimation"
+      ? store.graphs.estimation
+      : variableKey
+        ? (store.graphs.variables[variableKey] ?? initialState)
+        : initialState;
+
   const state = graphState;
+
   const dispatch = (action: any) => {
-    set((store) => ({
-      graphState: reducer(store.graphState, action),
+    if (usage === "estimation") {
+      usePemdasUIStore.setState((s) => ({
+        graphs: {
+          ...s.graphs,
+          estimation: reducer(s.graphs.estimation, action),
+        },
+      }));
+      return;
+    }
+
+    if (!variableKey) return;
+
+    usePemdasUIStore.setState((s) => ({
+      graphs: {
+        ...s.graphs,
+        variables: {
+          ...s.graphs.variables,
+          [variableKey]: reducer(
+            s.graphs.variables[variableKey] ?? initialState,
+            action,
+          ),
+        },
+      },
     }));
   };
+
+  const { setOperandOverlayNodeId, setOpenNodeIdTypeSelection } =
+    usePemdasUIStore();
+  const { setEditingFact } = useEstimationFactsUIStore();
 
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [activeLayerByRow, setActiveLayerByRow] = useState<
@@ -123,14 +160,14 @@ export const usePemdasCanvas = () => {
   });
 
   const visibleRows: VisibleRow[] = useMemo(() => {
-    const root = layers.find((l) => l.id === "layer-0") ?? layers[0];
+    const root = layers.find((l: any) => l.id === "layer-0") ?? layers[0];
 
     const rootY = root?.y ?? WORLD_TOP + 290;
 
     const ids = ["layer-0", ...openLayerStack];
 
     return ids.map((id, i) => {
-      const real = layers.find((l) => l.id === id);
+      const real = layers.find((l: any) => l.id === id);
       return {
         id,
         y: rootY + i * ROW_GAP,
@@ -179,6 +216,11 @@ export const usePemdasCanvas = () => {
     setPan({ x: -23, y: -WORLD_TOP });
     didInitPanRef.current = true;
   }, [bounds]);
+
+  const resetPanToTop = () => {
+    if (!viewportRef.current) return;
+    setPan({ x: -23, y: -WORLD_TOP });
+  };
 
   const clamp = (n: number, min: number, max: number) =>
     Math.max(min, Math.min(max, n));
@@ -230,9 +272,13 @@ export const usePemdasCanvas = () => {
     panStartRef.current = { x: e.clientX, y: e.clientY };
     panOriginRef.current = { ...pan };
 
-    setOperandOverlayOpen(false);
+    setOperandOverlayNodeId(null);
     setOpenNodeIdTypeSelection(null);
-    resetVariableUI();
+    if (usage === "estimation") {
+      resetVariableUI();
+    } else {
+      setEditingFact(null);
+    }
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -285,7 +331,7 @@ export const usePemdasCanvas = () => {
     if (data?.kind !== "FACT" && data?.kind !== "NODE") {
       return;
     }
-  
+
     // -------- variable ghost --------
     if (isVarDraggingRef.current && isOverCanvasRef.current) {
       const id = String(e.active.id);
@@ -398,7 +444,7 @@ export const usePemdasCanvas = () => {
     const node = state.nodes[active.nodeId];
     if (!node) return;
 
-    const layer = state.layers.find((l) => l.id === active.layerId);
+    const layer = state.layers.find((l: any) => l.id === active.layerId);
     if (!layer) return;
 
     // current dragged x in layer-local coordinates
@@ -486,7 +532,7 @@ export const usePemdasCanvas = () => {
           variable: cleanVariableKey(variable),
           nodeType: ghost.nodeType,
           var_scope: ghost.nodeType,
-          var_fact_type: fact.fact_type, 
+          var_fact_type: fact.fact_type,
           var_id: fact.fact_id,
           layerId: bestLayer.id,
           index: index === -1 ? bestLayer.nodeIds.length : index,
@@ -508,7 +554,7 @@ export const usePemdasCanvas = () => {
     }
 
     if (active && reorderPreview && reorderPreview.layerId === active.layerId) {
-      const layer = state.layers.find((l) => l.id === active.layerId);
+      const layer = state.layers.find((l: any) => l.id === active.layerId);
       if (layer) {
         const fromIndex = layer.nodeIds.indexOf(active.nodeId);
         const toIndex = reorderPreview.overIndex;
@@ -548,7 +594,7 @@ export const usePemdasCanvas = () => {
       nodeType,
       constantValue,
       layerId,
-      index: layers.find((l) => l.id === layerId)?.nodeIds.length ?? 0,
+      index: layers.find((l: any) => l.id === layerId)?.nodeIds.length ?? 0,
       layerY,
     });
   };
@@ -735,5 +781,6 @@ export const usePemdasCanvas = () => {
         setGhostReorderPreview(null);
       }
     },
+    resetPanToTop,
   };
 };

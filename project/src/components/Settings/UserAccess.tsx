@@ -103,7 +103,7 @@ const UserAccess = () => {
                   onClick={() => setEditListMode((prev) => !prev)}
                   className="select-none dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                     border: editListMode
                       ? "1px solid " + currentTheme.text_3
                       : "none",
@@ -116,7 +116,7 @@ const UserAccess = () => {
                   onClick={handleShowAddUserInput}
                   className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                   }}
                 >
                   <FaPlus size={16} />
@@ -127,7 +127,7 @@ const UserAccess = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer text-[14.5px] h-[36px] mt-[-0.6px] rounded-full flex justify-center items-center gap-[6px] pl-[16px] pr-[15px]"
                   style={{
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                     color: currentTheme.text_3,
                   }}
                   onClick={() => setShowAddProjectInput(false)}
@@ -139,7 +139,7 @@ const UserAccess = () => {
                   type="submit"
                   className="select-none dim hover:brightness-75 cursor-pointer text-[15px] h-[36px] rounded-full mt-[-0.4px] flex justify-center items-center gap-[9px] pl-[16px] pr-[15px]"
                   style={{
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                     color: currentTheme.text_3,
                   }}
                 >
@@ -154,7 +154,7 @@ const UserAccess = () => {
 
       <div
         className="w-[90%] max-h-[305px] overflow-y-scroll rounded-[8px]"
-        style={{ backgroundColor: currentTheme.background_1_2 }}
+        style={{ backgroundColor: currentTheme.background_1_3 }}
       >
         {showAddProjectInput && (
           <div
@@ -189,7 +189,7 @@ const UserAccess = () => {
                 <div
                   className="absolute z-[352] right-[96px] top-[9.5px] py-[8px] text-[16px] px-[11px] rounded-[6px]"
                   style={{
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                   }}
                 >
                   <p className="text-red-500 text-xs">

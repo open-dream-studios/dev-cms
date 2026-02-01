@@ -42,7 +42,7 @@ const JobDefinitionSelectCard = ({
       }}
       key={jobDefinition.job_definition_id}
       style={{
-        backgroundColor: currentTheme.background_1_2,
+        backgroundColor: currentTheme.background_1_3,
         border:
           selectedDefinition &&
           selectedDefinition.job_definition_id ===

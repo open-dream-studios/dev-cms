@@ -87,7 +87,7 @@ const SortablePageItem = ({ page }: SortablePageItemProps) => {
         className="dim hover:brightness-[85%] dim group cursor-pointer w-full h-[50px] flex justify-between items-center pl-[18px] pr-[12px] rounded-[8px]"
         style={{
           color: currentTheme.text_4,
-          backgroundColor: currentTheme.background_1_2,
+          backgroundColor: currentTheme.background_1_3,
         }}
       >
         <p className="select-none truncate w-[calc(100%-40px)]">{page.title}</p>

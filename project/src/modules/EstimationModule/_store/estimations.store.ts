@@ -33,13 +33,13 @@ export const useEstimationFactsUIStore = createStore({
   hoveredFolderId: null as string | null,
   openFolders: new Set<string>([ROOT_ID]),
 
-  // variables
   variableView: "fact" as VariableScope,
+  editingFact: null as null | VariableKey,
   editingVariable: null as null | VariableKey,
-  isEditingVariableReturn: false,
   pendingVariableTarget: null as PendingVariableTarget | null,
   selectingVariableReturn: null as null | {
-    selector_id: string;
+    selector_id: string; // == expression_id
+    type: "variable" | "statement";
     target: "condition-left" | "condition-right" | "return";
   },
 });
@@ -47,6 +47,6 @@ export const useEstimationFactsUIStore = createStore({
 export const resetVariableUI = () =>
   useEstimationFactsUIStore.getState().set({
     editingVariable: null,
-    selectingVariableReturn: null,
-    isEditingVariableReturn: false,
+    editingFact: null,
+    selectingVariableReturn: null, 
   });

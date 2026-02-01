@@ -125,7 +125,7 @@ const DefinitionsController = ({ control }: { control: DefinitionControl }) => {
       {showForm && (
         <div
           style={{
-            backgroundColor: currentTheme.background_1_2,
+            backgroundColor: currentTheme.background_1_3,
           }}
           className="flex justify-between items-center rounded-[10px] px-[20px] py-[10px]"
         >
@@ -207,7 +207,7 @@ const DefinitionsController = ({ control }: { control: DefinitionControl }) => {
               <div
                 key={definition.id}
                 style={{
-                  backgroundColor: currentTheme.background_1_2,
+                  backgroundColor: currentTheme.background_1_3,
                 }}
                 className={`${
                   selectedDefinition === null &&

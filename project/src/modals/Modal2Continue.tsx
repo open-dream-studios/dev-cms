@@ -152,7 +152,7 @@ const Modal2Continue: React.FC<Modal2ContinueProps> = ({
           className="w-[50%] select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
             width: threeOptions ? "50%" : "33%",
-            color: currentTheme.background_1_2,
+            color: currentTheme.background_1_3,
             backgroundColor: currentTheme.text_3,
           }}
           onClick={handleContinue}

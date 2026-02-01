@@ -75,7 +75,7 @@ const ProjectItem = ({
       <div
         onClick={handleProjectClick}
         className="dim cursor-pointer hover:brightness-75 w-[100%] h-[100px] rounded-[10px] px-[30px] py-[20px] gap-[5px] flex flex-col"
-        style={{ backgroundColor: currentTheme.background_1_2 }}
+        style={{ backgroundColor: currentTheme.background_1_3 }}
       >
         <p
           className="text-[20px] font-bold truncate"
@@ -170,7 +170,7 @@ const AdminHome = () => {
                   onClick={handleAddProjectClick}
                   className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                   style={{
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                   }}
                 >
                   <FaPlus size={16} />
@@ -185,7 +185,7 @@ const AdminHome = () => {
                     border: editProjectsMode
                       ? "1.4px solid" + currentTheme.text_3
                       : "none",
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                   }}
                 >
                   <FiEdit size={16} />

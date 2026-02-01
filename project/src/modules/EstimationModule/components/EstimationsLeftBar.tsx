@@ -45,8 +45,7 @@ export default function EstimationsLeftBar() {
     openFolders,
     variableView,
     setVariableView,
-    editingVariable,
-    setEditingVariable,
+    setEditingFact,
     selectingVariableReturn,
   } = useEstimationFactsUIStore();
 
@@ -193,22 +192,21 @@ export default function EstimationsLeftBar() {
   });
 
   const handleFolderTypeClick = (type: VariableScope) => {
-    if (editingVariable && editingVariable.var_type === "fact") {
-      setEditingVariable(null);
-    }
+    setEditingFact(null);
     setVariableView(type);
   };
 
   return (
     <div
       data-no-pan
-      className="w-full h-full overflow-auto"
+      className="w-full h-[100%] flex flex-col"
       style={{
         backgroundColor: currentTheme.background_1,
         borderRight: "0.5px solid " + currentTheme.background_2,
       }}
     >
-      {selectingVariableReturn === null ? (
+      {selectingVariableReturn === null ||
+      selectingVariableReturn.type !== "variable" ? (
         <div
           data-folders-top={-1}
           className={
@@ -228,7 +226,7 @@ export default function EstimationsLeftBar() {
                 onClick={handleAddFolder}
                 className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
                 style={{
-                  backgroundColor: currentTheme.background_1_2,
+                  backgroundColor: currentTheme.background_1_3,
                 }}
               >
                 <Folder size={13} />
@@ -240,7 +238,7 @@ export default function EstimationsLeftBar() {
               onClick={handleAddVariable}
               className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
               style={{
-                backgroundColor: currentTheme.background_1_2,
+                backgroundColor: currentTheme.background_1_3,
               }}
             >
               <FaPlus size={12} />
@@ -254,7 +252,8 @@ export default function EstimationsLeftBar() {
           </p>
         </div>
       )}
-      <div className="select-none w-[100%] flex flex-row gap-[7px] justify-center mb-[14px] px-3 text-[12px] font-[400]">
+    
+      <div className="select-none w-[100%] flex flex-row gap-[7px] justify-center pb-[8px] mb-[0px] px-3 text-[12px] font-[400]">
         <div
           onClick={() => handleFolderTypeClick("fact")}
           style={{ backgroundColor: currentTheme.background_3 }}
@@ -279,7 +278,10 @@ export default function EstimationsLeftBar() {
       </div>
 
       {variableView === "fact" && (
-        <div ref={containerRef} className="px-3 mt-[-8px] h-[100%] space-y-1">
+        <div
+          ref={containerRef}
+          className="px-3 flex-1 overflow-y-auto pb-[15px]"
+        >
           {tree.map((node) => (
             <SortableContext
               key={node.folder_id}
@@ -298,7 +300,7 @@ export default function EstimationsLeftBar() {
       )}
 
       {variableView !== "fact" && (
-        <div className="px-3 mt-[-8px] space-y-1">
+        <div className="px-3 flex-1 overflow-y-auto pb-[15px]">
           {scopedFacts.map((fact) => (
             <FactDraggableItem key={fact.fact_id} fact={fact} depth={0} />
           ))}

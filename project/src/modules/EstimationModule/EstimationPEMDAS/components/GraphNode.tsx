@@ -1,5 +1,5 @@
 // src/pemdas/components/GraphNode.tsx
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, cubicBezier } from "framer-motion";
 import React, { useState, useLayoutEffect, useRef } from "react";
 import { CSS } from "@dnd-kit/utilities";
 import { PemdasNode, PEMDASNodeType, variableScopes } from "../types";
@@ -13,27 +13,59 @@ import { OperandChipInline } from "./OperandChipInline";
 import { useEstimationFactsUIStore } from "../../_store/estimations.store";
 
 export const GraphNodeIcon = ({ color }: { color?: string | null }) => {
-  return !color ? (
-    <div className="relative w-[25px] h-[25px]">
-      <div className="absolute inset-0 rounded-full border border-white/10" />
-      <div className="absolute inset-[3.5px] rounded-full border border-white/20" />
-      <div className="absolute inset-[7px] rounded-full bg-white/20" />
-    </div>
-  ) : (
-    <div className="relative w-[25px] h-[25px]">
+  const { selectingVariableReturn } = useEstimationFactsUIStore();
+
+  const isActive = !!selectingVariableReturn;
+
+  if (!color) {
+    return (
+      <div className="relative w-[25px] h-[25px]">
+        <div className="absolute inset-0 rounded-full border border-white/10" />
+        <div className="absolute inset-[3.5px] rounded-full border border-white/20" />
+        <div className="absolute inset-[7px] rounded-full bg-white/20" />
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      className="relative w-[25px] h-[25px] brightness-137"
+      animate={
+        isActive
+          ? {
+              opacity: [0.6, 0.86, 0.85, 0.6],
+              scale: [1, 1.015, 1.005, 1],
+            }
+          : { opacity: 1, scale: 1 }
+      }
+      transition={
+        isActive
+          ? {
+              duration: 0.9,
+              times: [0, 0.4, 0.7, 1],
+              ease: [
+                cubicBezier(0.37, 0.0, 0.63, 1.0),
+                cubicBezier(0.37, 0.0, 0.63, 1.0),
+                cubicBezier(0.37, 0.0, 0.63, 1.0),
+              ],
+              repeat: Infinity,
+            }
+          : { duration: 0.15 }
+      }
+    >
       <div
-        className="absolute inset-0 rounded-full brightness-128"
-        style={{ border: "1px solid " + color }}
+        className="absolute inset-0 rounded-full"
+        style={{ border: `1px solid ${color}` }}
       />
       <div
-        className="absolute inset-[3.5px] rounded-full brightness-128"
-        style={{ border: "1px solid " + color }}
+        className="absolute inset-[3.5px] rounded-full"
+        style={{ border: `1px solid ${color}` }}
       />
       <div
-        className="absolute inset-[7px] rounded-full brightness-128"
+        className="absolute inset-[7px] rounded-full"
         style={{ backgroundColor: color }}
       />
-    </div>
+    </motion.div>
   );
 };
 
@@ -67,7 +99,7 @@ export const GraphNode = ({
   const [numberDisplayOpen, setNumberDisplayOpen] = useState(false);
   const numberTextRef = useRef<HTMLDivElement | null>(null);
   const [isEllipsed, setIsEllipsed] = useState(false);
-  const { setEditingVariable } = useEstimationFactsUIStore();
+  const { setEditingVariable, setEditingFact } = useEstimationFactsUIStore();
 
   useLayoutEffect(() => {
     if (!numberTextRef.current) return;
@@ -127,11 +159,16 @@ export const GraphNode = ({
           onSelectLayer?.(node.id);
         }
         if (node.var_scope && variableScopes.includes(node.var_scope)) {
-          setEditingVariable({
+          const editItem = {
             var_key: node.variable,
             var_id: node.var_id!,
             var_type: node.var_scope!,
-          });
+          };
+          if (node.var_scope === "fact") {
+            setEditingFact(editItem);
+          } else {
+            setEditingVariable(editItem);
+          }
         }
       }}
     >
@@ -188,6 +225,7 @@ export const GraphNode = ({
       {/* NODE CIRCLE + INLINE OPERAND */}
       <div className="relative">
         <OperandChipInline
+          nodeId={node.id}
           hidden={isFirstInLayer}
           value={node.operand}
           onChange={(op) =>

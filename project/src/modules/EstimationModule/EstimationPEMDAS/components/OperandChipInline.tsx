@@ -8,17 +8,19 @@ import { nodeColors } from "../_constants/pemdas.constants";
 import { usePemdasUIStore } from "../_store/pemdas.store";
 
 export const OperandChipInline = ({
+  nodeId,
   value,
   onChange,
   hidden,
 }: {
+  nodeId: string;
   value: Operand;
   onChange: (op: Operand) => void;
   hidden?: boolean;
 }) => {
   const currentTheme = useCurrentTheme();
   const ref = useRef<HTMLDivElement>(null);
-  const { operandOverlayOpen, setOperandOverlayOpen } = usePemdasUIStore();
+  const { operandOverlayNodeId, setOperandOverlayNodeId } = usePemdasUIStore();
 
   const rect = ref.current?.getBoundingClientRect();
   const popupX = rect ? rect.left + rect.width / 2 : 0;
@@ -27,6 +29,8 @@ export const OperandChipInline = ({
   const popupRef = useRef(null);
 
   useOutsideClick(popupRef, () => console.log(1));
+  const isOpen =
+    operandOverlayNodeId !== null && operandOverlayNodeId === nodeId;
 
   if (hidden) return null;
 
@@ -34,23 +38,26 @@ export const OperandChipInline = ({
     <>
       <div
         ref={ref}
+        style={{
+          backgroundColor: currentTheme.background_2,
+        }}
         className={`absolute -left-[32px] top-1/2 -translate-y-1/2
-                   w-6 h-6 rounded-full bg-[#1f1f1f]
+                   w-6 h-6 rounded-full 
                    text-white flex items-center justify-center
                    cursor-pointer z-10 pl-[0.5px] pb-[1px] ${value === "/" ? "text-[13px]" : "text-[14px]"}`}
         onClick={(e) => {
           e.stopPropagation();
-          setOperandOverlayOpen(!operandOverlayOpen);
+          setOperandOverlayNodeId(nodeId);
         }}
       >
         {value}
       </div>
 
-      {operandOverlayOpen && rect && (
+      {isOpen && rect && (
         <OperandOverlayPortal>
           <div
-            className="fixed bg-[#111] border border-white/10 rounded-md
-             shadow-lg p-1 flex gap-1 cursor-auto pointer-events-auto"
+            className="fixed z-[2000] bg-[#111] border border-white/10 rounded-md
+              shadow-lg p-1 flex gap-1 cursor-auto pointer-events-auto"
             style={{
               left: popupX - 52,
               top: popupY + 68,
@@ -71,7 +78,7 @@ export const OperandChipInline = ({
                            text-[13px] hover:brightness-75 cursor-pointer dim"
                 onPointerDown={() => {
                   onChange(op);
-                  setOperandOverlayOpen(false);
+                  setOperandOverlayNodeId(null);
                 }}
               >
                 {op}

@@ -28,7 +28,7 @@ const SearchBar = () => {
         backgroundColor:
           currentUser.theme === "dark"
             ? "rgba(255,255,255,0.028)"
-            : currentTheme.background_1_2,
+            : currentTheme.background_1_3,
       }}
     >
       <Search color={currentTheme.text_3} size={15} className="opacity-[0.7]" />

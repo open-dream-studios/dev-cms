@@ -1,9 +1,22 @@
+import { VariableScope } from "@open-dream/shared";
+
 // project/src/nodes/EstimationModule/EstimationVariables/types.ts
 export type Value =
   | { kind: "literal"; value: string; selector_id: string }
-  | { kind: "variable"; var_key: string; var_id: string | number; selector_id: string }
-  | { kind: "statement"; expression_id?: number; selector_id: string }
-  | { kind: "boolean"; value: boolean; selector_id: string };
+  | {
+      kind: "variable";
+      var_key: string;
+      var_id: string | number;
+      var_type: VariableScope;
+      selector_id: string;
+    }
+  | {
+      kind: "statement";
+      expression_id: string; // REQUIRED + STABLE
+      selector_id: string;
+    }
+  | { kind: "boolean"; value: boolean; selector_id: string }
+  | { kind: "option"; option_id: string; selector_id: string };
 
 export type Condition = {
   left: Value;

@@ -19,8 +19,8 @@ const themeColors = {
   background_3: c("#BBBBBB", "#333333"),
   background_3_2: c("#AAAAAA", "#494949"),
   background_4: c("#AAAAAA", "#666666"),
-  background_1_2: c("#EFEFEF", "#252525"),
-  background_1_2Mix: c("#FFFFFF", "#252525"),
+  background_1_2: c("#F3F3F3", "#191919"), 
+  background_1_3: c("#EFEFEF", "#252525"),
   background_2_dim: c("#F0F0F0", "#1e1e1e"),
   background_2_selected: c("#D9D9D9", "#343434"),
   background_2_2: c("#E0E0E0", "#343434"),
@@ -81,7 +81,7 @@ const themeColors = {
   // gmail_detail_background_1: c("#ffffff", "#080809")
 
   gmail_background_1: c("#FFFFFF", "#161616"),
-  gmail_background_1_2: c("#FFFFFF", "#1a1a1a"),
+  gmail_background_1_3: c("#FFFFFF", "#1a1a1a"),
   gmail_background_2: c("#F5F5F5", "#1D1D1D"),
   gmail_button_1: c("#E6E6E6", "#252525"),
   skeleton_background_1: c("#E0E0E0", "#1E1E1E"),

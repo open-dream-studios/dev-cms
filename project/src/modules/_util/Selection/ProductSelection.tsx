@@ -27,7 +27,7 @@ const ProductSelectCard = ({
       }}
       key={product.product_id}
       style={{
-        backgroundColor: currentTheme.background_1_2,
+        backgroundColor: currentTheme.background_1_3,
       }}
       className={`hover:brightness-[88%] dim cursor-pointer flex justify-between items-center rounded-[10px] px-[20px] py-[10px]`}
     >

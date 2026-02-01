@@ -5,7 +5,10 @@ import { initialState } from "../state/reducer";
 type PemdasGraphState = typeof initialState;
 
 export const usePemdasUIStore = createStore({
-  graphState: initialState as PemdasGraphState,
+  graphs: {
+    estimation: initialState as PemdasGraphState,
+    variables: {} as Record<string, PemdasGraphState>,
+  },
   openNodeIdTypeSelection: null as null | string,
-  operandOverlayOpen: false, 
+  operandOverlayNodeId: null as string | null,
 });

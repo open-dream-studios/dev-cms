@@ -36,7 +36,7 @@ const NoProductImage = () => {
   return (
     <div
       className="w-[100%] h-full p-[15%]"
-      style={{ backgroundColor: currentTheme.background_1_2 }}
+      style={{ backgroundColor: currentTheme.background_1_3 }}
     >
       {currentUser.theme === "light" && currentLightLogo && (
         <img

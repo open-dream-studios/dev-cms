@@ -14,9 +14,15 @@ import {
   WORLD_TOP,
 } from "../_constants/pemdas.constants";
 import GraphArrow from "./GraphArrow";
-import { CreatablePEMDASNodeType, creatablePEMDASNodeTypes, PemdasNode } from "../types";
+import {
+  CreatablePEMDASNodeType,
+  creatablePEMDASNodeTypes,
+  PemdasNode,
+} from "../types";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { GraphNode } from "./GraphNode";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
+import SaveAndCancelBar from "./SaveAndCancelBar";
 
 type PemdasViewportProps = {
   usage: "estimation" | "variable";
@@ -73,6 +79,8 @@ const PemdasViewport = ({
   setOpenNodeIdTypeSelection,
   setCanvasDropRef,
 }: PemdasViewportProps) => {
+  const currentTheme = useCurrentTheme();
+
   const handleSelectNode = (nodeId: string, rowIndex: number) => {
     const currentlyActive = activeLayerByRow[rowIndex];
     setOpenNodeIdTypeSelection(null);
@@ -84,7 +92,12 @@ const PemdasViewport = ({
   };
 
   return (
-    <div className="flex flex-col h-full cursor-grab">
+    <div
+      className="flex flex-col h-full cursor-grab"
+      style={{
+        backgroundColor: currentTheme.background_1_2,
+      }}
+    >
       {/* VIEWPORT */}
       <div
         ref={(el) => {
@@ -160,7 +173,7 @@ const PemdasViewport = ({
                 color: "white",
               }}
             >
-              {usage === "estimation" ? "Estimation" : "Variable"}
+              {usage === "estimation" ? "Estimation" : "Statement"}
             </div>
             <GraphArrow
               isActive={
@@ -236,7 +249,11 @@ const PemdasViewport = ({
                   }}
                 >
                   <div
-                    className="select-none w-full h-full rounded-full bg-[#1f1f1f] text-[#555] hover:brightness-90 dim
+                    style={{
+                      backgroundColor: currentTheme.background_2,
+                      color: currentTheme.text_4,
+                    }}
+                    className="select-none w-full h-full rounded-full hover:brightness-90 dim
                                    text-2xl flex items-center justify-center cursor-pointer pb-[3.6px] pl-[0.45px]"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -273,7 +290,7 @@ const PemdasViewport = ({
                           >
                             {capitalizeFirstLetter(opt)}
                           </button>
-                        )
+                        ),
                       )}
                     </div>
                   )}
@@ -354,6 +371,14 @@ const PemdasViewport = ({
           className="absolute inset-0 z-[9999] pointer-events-none"
         />
       </div>
+      
+      {/* <div className="absolute top-4 left-4">
+      <SaveAndCancelBar
+        onSave={() => {}}
+        onCancel={() => {}}
+        backButton="cancel"
+      />
+      </div> */}
     </div>
   );
 };

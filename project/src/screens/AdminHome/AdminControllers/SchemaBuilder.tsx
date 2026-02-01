@@ -301,7 +301,7 @@ const FieldRow: React.FC<{
   return (
     <div
       className="rounded-lg p-3 mb-3"
-      style={{ background: themeColors.background_1_2 }}
+      style={{ background: themeColors.background_1_3 }}
     >
       <div className="flex items-center gap-2">
         <input
@@ -506,7 +506,7 @@ const AddFieldMenu: React.FC<{
       {open && (
         <div
           className="absolute mt-2 z-10 w-[260px] rounded-lg p-2"
-          style={{ background: themeColors.background_1_2 }}
+          style={{ background: themeColors.background_1_3 }}
         >
           {FIELD_TYPES.map((t) => (
             <button
@@ -542,7 +542,7 @@ const SchemaBuilder: React.FC<SchemaBuilderProps> = ({
   return (
     <div
       className="rounded-[10px] p-4"
-      style={{ background: currentTheme.background_1_2 }}
+      style={{ background: currentTheme.background_1_3 }}
     >
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-[18px] font-semibold">

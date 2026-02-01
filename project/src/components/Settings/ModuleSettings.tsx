@@ -222,7 +222,7 @@ const ModuleSettings = () => {
             onClick={handleBackClick}
             className="dim hover:brightness-75 cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
             style={{
-              backgroundColor: currentTheme.background_1_2,
+              backgroundColor: currentTheme.background_1_3,
             }}
           >
             <MdChevronLeft
@@ -248,7 +248,7 @@ const ModuleSettings = () => {
                   type="submit"
                   className="dim cursor-pointer text-[15px] h-[36px] rounded-full flex items-center gap-[9px] px-[15px]"
                   style={{
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                     color: currentTheme.text_3,
                   }}
                 >
@@ -258,7 +258,7 @@ const ModuleSettings = () => {
                   onClick={() => setShowAddKeyInput(false)}
                   className="dim cursor-pointer text-[14.5px] h-[36px] rounded-full flex items-center gap-[6px] px-[15px]"
                   style={{
-                    backgroundColor: currentTheme.background_1_2,
+                    backgroundColor: currentTheme.background_1_3,
                     color: currentTheme.text_3,
                   }}
                 >
@@ -270,7 +270,7 @@ const ModuleSettings = () => {
                 onClick={() => addNewKey(null)}
                 className="dim hover:brightness-[85%] cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
                 style={{
-                  backgroundColor: currentTheme.background_1_2,
+                  backgroundColor: currentTheme.background_1_3,
                 }}
               >
                 <FaPlus size={14} />
@@ -281,7 +281,7 @@ const ModuleSettings = () => {
               onClick={() => setAddingModules(true)}
               className="dim hover:brightness-[85%] cursor-pointer w-[36px] h-[36px] rounded-full flex justify-center items-center"
               style={{
-                backgroundColor: currentTheme.background_1_2,
+                backgroundColor: currentTheme.background_1_3,
               }}
             >
               <FaPlus size={14} />
@@ -332,7 +332,7 @@ const ModuleSettings = () => {
           onClick={() => setKeysEditor((prev) => !prev)}
           className="dim hover:brightness-[85%] cursor-pointer px-[17px] flex flex-row gap-[8px] h-[36px] rounded-full justify-center items-center"
           style={{
-            backgroundColor: currentTheme.background_1_2,
+            backgroundColor: currentTheme.background_1_3,
           }}
         >
           {keysEditor ? (
@@ -351,7 +351,7 @@ const ModuleSettings = () => {
         <div
           className="w-[90%] max-h-[305px] overflow-y-scroll rounded-[8px]"
           style={{
-            backgroundColor: currentTheme.background_1_2,
+            backgroundColor: currentTheme.background_1_3,
           }}
         >
           {activeModules.map((m: ModuleDefinitionTree, index: number) => {
@@ -402,7 +402,7 @@ const ModuleSettings = () => {
         <div
           className="w-[90%] overflow-y-scroll rounded-[8px]"
           style={{
-            backgroundColor: currentTheme.background_1_2,
+            backgroundColor: currentTheme.background_1_3,
           }}
         >
           {showAddKeyInput && (

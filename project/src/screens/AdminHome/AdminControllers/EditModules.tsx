@@ -76,7 +76,7 @@ const EditModules = () => {
             <div
               key={node.name}
               style={{
-                backgroundColor: currentTheme.background_1_2,
+                backgroundColor: currentTheme.background_1_3,
               }}
               className={`${
                 nodeHasChildren(node) &&

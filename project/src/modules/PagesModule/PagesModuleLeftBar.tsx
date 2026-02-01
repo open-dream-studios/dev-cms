@@ -141,7 +141,7 @@ const PagesModuleLeftBar = () => {
               onClick={handleBackClick}
               className="dim hover:brightness-75 cursor-pointer w-[30px] h-[30px] min-w-[30px] mt-[-5px] pr-[2px] pb-[2px] rounded-full flex justify-center items-center"
               style={{
-                backgroundColor: currentTheme.background_1_2,
+                backgroundColor: currentTheme.background_1_3,
               }}
             >
               <MdChevronLeft size={25} />
@@ -158,7 +158,7 @@ const PagesModuleLeftBar = () => {
               onClick={handleAddItemClick}
               className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
               style={{
-                backgroundColor: currentTheme.background_1_2,
+                backgroundColor: currentTheme.background_1_3,
               }}
             >
               <FaPlus size={12} />
@@ -175,7 +175,7 @@ const PagesModuleLeftBar = () => {
               onSubmit={pageForm.handleSubmit(onPageFormSubmit)}
               className="w-[100%] rounded-[8px] p-[15px] flex flex-col gap-[10px]"
               style={{
-                backgroundColor: currentTheme.background_1_2,
+                backgroundColor: currentTheme.background_1_3,
               }}
             >
               <select
@@ -231,7 +231,7 @@ const PagesModuleLeftBar = () => {
             <form
               onSubmit={sectionForm.handleSubmit(onSectionFormSubmit)}
               style={{
-                backgroundColor: currentTheme.background_1_2,
+                backgroundColor: currentTheme.background_1_3,
               }}
               className="flex flex-col gap-[10px] px-[15px] py-[15px] rounded-[8px]"
             >

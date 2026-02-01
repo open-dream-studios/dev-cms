@@ -8,7 +8,6 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
 import { Branch, Condition, Value } from "./types";
 import { VariableDisplayItem } from "../components/FactDraggableItem";
-import SaveAndBackBar from "../EstimationPEMDAS/components/SaveAndBackBar";
 import { BsArrowRight } from "react-icons/bs";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
 import {
@@ -17,14 +16,18 @@ import {
   extractFirstReturn,
   lightenColor,
   literalValue,
+  optionValue,
   statementValue,
 } from "./_helpers/variables.helpers";
-import { EstimationFactDefinition } from "@open-dream/shared";
+import {
+  EstimationFactDefinition,
+  EstimationFactEnumOption,
+} from "@open-dream/shared";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
 import { AuthContext } from "@/contexts/authContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import EnumFactEditor from "./EnumFactEditor";
 import { cleanVariableKey } from "@/util/functions/Variables";
+import SaveAndCancelBar from "../EstimationPEMDAS/components/SaveAndCancelBar";
 
 function BranchEditor({
   branch,
@@ -203,9 +206,32 @@ function ConditionEditor({
   condition: Condition;
   onChange: (c: Condition) => void;
 }) {
+  const { currentUser } = useContext(AuthContext);
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
+
+  const { factDefinitions } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId,
+    currentProcessId,
+  );
+
+  const left = condition.left;
+  const leftIsEnum =
+    left.kind === "variable" &&
+    !!factDefinitions.find(
+      (f) => f.fact_id === left.var_id && f.fact_type === "enum",
+    );
+
+  const enumOptions =
+    left.kind === "variable"
+      ? (factDefinitions.find(
+          (f) => f.fact_id === left.var_id && f.fact_type === "enum",
+        )?.enum_options ?? [])
+      : [];
+
   return (
     <div style={{ display: "flex", gap: 8 }}>
-      {/* LEFT: variable | statement ONLY */}
+      {/* LEFT */}
       <ValueEditor
         value={condition.left}
         allowed={["variable", "statement"]}
@@ -244,10 +270,16 @@ function ConditionEditor({
         <option value="<=">&lt;=</option>
       </select>
 
-      {/* RIGHT: literal | variable | statement */}
+      {/* RIGHT */}
       <ValueEditor
         value={condition.right}
-        allowed={["literal", "variable", "statement"]}
+        allowed={[
+          "literal",
+          "variable",
+          "statement",
+          ...(leftIsEnum ? (["option"] as const) : []),
+        ]}
+        enumOptions={enumOptions}
         target="condition-right"
         onChange={(v) => onChange({ ...condition, right: v })}
       />
@@ -259,23 +291,25 @@ function ValueEditor({
   value,
   onChange,
   allowed,
+  enumOptions = [],
   target,
 }: {
   value: Value;
   onChange: (v: Value) => void;
   allowed: Array<Value["kind"]>;
+  enumOptions?: EstimationFactEnumOption[];
   target: "condition-left" | "condition-right" | "return";
 }) {
   const currentTheme = useCurrentTheme();
   const {
     selectingVariableReturn,
     setSelectingVariableReturn,
-    setIsEditingVariableReturn,
     setPendingVariableTarget,
-    editingVariable
+    editingVariable,
+    setVariableView,
   } = useEstimationFactsUIStore();
 
-  if (!editingVariable) return null
+  if (!editingVariable) return null;
 
   return (
     <div
@@ -291,6 +325,7 @@ function ValueEditor({
           if (next === "variable") onChange(emptyVariableValue());
           if (next === "statement") onChange(statementValue());
           if (next === "boolean") onChange(booleanValue(false));
+          if (next === "option") onChange(optionValue());
         }}
         className="select-none opacity-[0.4] text-[13px] outline-none border-none cursor-pointer hover:brightness-75 dim"
       >
@@ -304,6 +339,7 @@ function ValueEditor({
         {allowed.includes("boolean") && (
           <option value="boolean">True / False</option>
         )}
+        {allowed.includes("option") && <option value="option">Option</option>}
       </select>
 
       {value.kind === "literal" && (
@@ -333,15 +369,20 @@ function ValueEditor({
 
             setSelectingVariableReturn({
               selector_id: value.selector_id,
+              type: "variable",
               target,
             });
+            setVariableView("fact");
           }}
         >
           <GraphNodeIcon
             color={
-              selectingVariableReturn?.selector_id === value.selector_id ||
+              (selectingVariableReturn?.selector_id === value.selector_id &&
+                selectingVariableReturn.type === "variable") ||
               (value.kind === "variable" && !!value.var_key)
-                ? nodeColors[editingVariable.var_type]
+                ? selectingVariableReturn
+                  ? nodeColors[editingVariable.var_type]
+                  : nodeColors[value.var_type]
                 : null
             }
           />
@@ -356,9 +397,26 @@ function ValueEditor({
       {value.kind === "statement" && (
         <div
           className="cursor-pointer"
-          onClick={() => setIsEditingVariableReturn(true)}
+          onClick={() => {
+            setPendingVariableTarget({
+              kind: target,
+              set: onChange,
+            });
+            setSelectingVariableReturn({
+              selector_id: value.selector_id,
+              type: "statement",
+              target,
+            });
+          }}
         >
-          <GraphNodeIcon color={null} />
+          <GraphNodeIcon
+            color={
+              selectingVariableReturn?.selector_id === value.selector_id &&
+              selectingVariableReturn.type === "statement"
+                ? nodeColors[editingVariable.var_type]
+                : null
+            }
+          />
         </div>
       )}
 
@@ -376,15 +434,48 @@ function ValueEditor({
           {value.value ? "True" : "False"}
         </button>
       )}
+
+      {value.kind === "option" &&
+        (enumOptions.length > 0 ? (
+          <select
+            value={value.option_id}
+            onChange={(e) =>
+              onChange({
+                kind: "option",
+                option_id: e.target.value,
+                selector_id: value.selector_id,
+              })
+            }
+            className="ml-[6px] h-[23px] px-[6px] rounded-[4px] text-[13px] outline-none cursor-pointer"
+            style={{ border: "1px solid #444" }}
+          >
+            <option value="" disabled>
+              Select option
+            </option>
+            {enumOptions.map((opt) => (
+              <option key={opt.option_id} value={opt.option_id}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="ml-[6px] text-[12px] opacity-50">
+            No options defined
+          </span>
+        ))}
     </div>
   );
 }
 
-export default function GeometricVariableBuilder() {
+export default function GeometricVariableBuilder({
+  handleSaveStatement,
+}: {
+  handleSaveStatement: () => void;
+}) {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
-  const { editingVariable, setSelectingVariableReturn } =
+  const { editingVariable, setSelectingVariableReturn, setEditingFact } =
     useEstimationFactsUIStore();
   const { factDefinitions } = useEstimationFactDefinitions(
     !!currentUser,
@@ -401,20 +492,16 @@ export default function GeometricVariableBuilder() {
   const foundVariable = factDefinitions.find(
     (fact: EstimationFactDefinition) => fact.fact_id === editingVariable.var_id,
   );
-
   if (foundVariable && foundVariable.variable_scope === "fact") {
-    return (
-      <EnumFactEditor
-        key={editingVariable.var_id}
-        fact={foundVariable}
-        onClose={() => resetVariableUI()}
-      />
-    );
+    return null;
   }
 
   return (
     <div
-      onPointerDown={() => setSelectingVariableReturn(null)}
+      onPointerDown={() => {
+        setSelectingVariableReturn(null);
+        setEditingFact(null);
+      }}
       style={{ backgroundColor: currentTheme.background_1 }}
       className="z-500 absolute top-0 left-0 flex gap-[10px] w-[100%] h-[100%] flex-col px-[20px] py-[20px] overflow-y-auto"
     >
@@ -422,11 +509,14 @@ export default function GeometricVariableBuilder() {
         <p className="select-none font-[600] text-[18px] leading-[20px] opacity-[0.88]">
           {editingVariable.var_id ? "Edit Variable" : "New Variable"}
         </p>
-        <SaveAndBackBar
-          onSave={() => {}}
-          onBack={() => {
+        <SaveAndCancelBar
+          onSave={handleSaveStatement}
+          onCancel={() => {
             resetVariableUI();
           }}
+          backButton="cancel"
+          showSave={true}
+          showCancel={true}
         />
       </div>
       <VariableDisplayItem

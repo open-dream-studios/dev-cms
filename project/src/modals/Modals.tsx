@@ -97,7 +97,7 @@ const Modals = ({ landing }: { landing: boolean }) => {
           style={{
             border: `1px solid ${currentTheme.background_2_2}`,
             color: currentTheme.text_1,
-            backgroundColor: currentTheme.background_1_2,
+            backgroundColor: currentTheme.background_1_3,
           }}
         >
           {modal2.showClose && (

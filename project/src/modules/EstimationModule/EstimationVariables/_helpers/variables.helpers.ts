@@ -1,6 +1,6 @@
 // project/src/modules/EstimationModule/EstimationVariables/_helpers/variables.helpers.ts
 import { Branch, Value } from "../types";
-import { nanoid } from "nanoid";
+import { nanoid } from "nanoid"; 
 
 export function lightenColor(color: string, amount = 1) {
   const hex = color.replace("#", "");
@@ -34,16 +34,27 @@ export const emptyVariableValue = (): Value => ({
   kind: "variable",
   var_key: "",
   var_id: "",
+  var_type: "fact",
   selector_id: createSelectorId(),
 });
 
-export const statementValue = (): Value => ({
-  kind: "statement",
-  selector_id: createSelectorId(),
-});
+export function statementValue(): Value {
+  const id = crypto.randomUUID();
+  return {
+    kind: "statement",
+    expression_id: id,   
+    selector_id: id,     
+  };
+}
 
 export const booleanValue = (v: boolean = false) => ({
   kind: "boolean" as const,
   value: v,
   selector_id: nanoid(),
+});
+
+export const optionValue = (option_id = ""): Value => ({
+  kind: "option",
+  option_id,
+  selector_id: createSelectorId(),
 });

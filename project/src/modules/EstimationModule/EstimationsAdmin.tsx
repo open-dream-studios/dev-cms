@@ -1,5 +1,5 @@
 // project/src/modules/EstimationModule/EstimationsAdmin.tsx
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { DndContext, DragOverlay, useDroppable } from "@dnd-kit/core";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
@@ -21,8 +21,15 @@ import { GraphNodeIcon } from "./EstimationPEMDAS/components/GraphNode";
 import { nodeColors } from "./EstimationPEMDAS/_constants/pemdas.constants";
 import { factTypeConversion } from "./_helpers/estimations.helpers";
 import GeometricVariableBuilder from "./EstimationVariables/GeometricVariableBuilder";
-import SaveAndBackBar from "./EstimationPEMDAS/components/SaveAndBackBar";
 import { cleanVariableKey } from "@/util/functions/Variables";
+import SaveAndCancelBar from "./EstimationPEMDAS/components/SaveAndCancelBar";
+import { usePemdasGraphs } from "@/contexts/queryContext/queries/estimations/pemdasGraphs";
+import {
+  serializePemdasState,
+  deserializePemdasState,
+} from "./EstimationPEMDAS/_helpers/pemdas.serialize";
+import { initialState } from "./EstimationPEMDAS/state/reducer";
+import FactEditor from "./EstimationVariables/EnumFactEditor";
 
 export type CanvasUsage = "estimation" | "variable";
 
@@ -30,10 +37,15 @@ const EstimationAdmin = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
-  const { upsertFactDefinition, factFolders, reorderFactFolders } = useEstimationFactDefinitions(
+  const { upsertFactDefinition, factFolders, reorderFactFolders } =
+    useEstimationFactDefinitions(
+      !!currentUser,
+      currentProjectId,
+      currentProcessId,
+    );
+  const { upsertPemdasGraph, getPemdasGraph } = usePemdasGraphs(
     !!currentUser,
     currentProjectId,
-    currentProcessId,
   );
   const { openNodeIdTypeSelection, setOpenNodeIdTypeSelection } =
     usePemdasUIStore();
@@ -46,30 +58,53 @@ const EstimationAdmin = () => {
     setIsCanvasGhostActive,
     draggingFolderId,
     editingVariable,
+    editingFact,
+    selectingVariableReturn,
+    setSelectingVariableReturn,
+    setPendingVariableTarget,
   } = useEstimationFactsUIStore();
 
   useOutsideClick(selectorRef, () => setOpenNodeIdTypeSelection(null));
 
-  const {
-    state,
-    dispatch,
-    sensors,
-    viewportRef,
-    pan,
-    ghost,
-    bounds,
-    reorderPreview,
-    justDroppedNodeId,
-    handlers,
-    activeNodeId,
-    handleEditNode,
-    handleAddNode,
-    visibleRows,
-    openLayer,
-    activeLayerByRow,
-    ghostReorderPreview,
-    setIsOverCanvas: setCanvasGhostMode,
-  } = usePemdasCanvas();
+  const estimationPemdas = usePemdasCanvas("estimation");
+
+  const variableKey =
+    selectingVariableReturn?.type === "statement"
+      ? selectingVariableReturn.selector_id
+      : undefined;
+
+  const variablePemdas = usePemdasCanvas("variable", variableKey);
+
+  const [estimationBaseline, setEstimationBaseline] = useState<string | null>(
+    null,
+  );
+  const [variableBaseline, setVariableBaseline] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!currentProjectId || !currentProcessId) return;
+    (async () => {
+      const config = await getPemdasGraph({
+        process_id: currentProcessId,
+        pemdas_type: "estimation",
+      });
+      const restored = config
+        ? deserializePemdasState(config)
+        : usePemdasUIStore.getState().graphs.estimation;
+
+      usePemdasUIStore.setState((s) => ({
+        graphs: { ...s.graphs, estimation: restored },
+      }));
+      setEstimationBaseline(JSON.stringify(serializePemdasState(restored)));
+    })();
+  }, [currentProcessId]);
+
+  useEffect(() => {
+    if (!selectingVariableReturn || selectingVariableReturn.type === "variable")
+      return;
+    requestAnimationFrame(() => {
+      variablePemdas.resetPanToTop();
+    });
+  }, [selectingVariableReturn]);
 
   const [isOverCanvas, setIsOverCanvas] = useState(false);
   const dragStartPointerRef = useRef<{ x: number; y: number } | null>(null);
@@ -85,14 +120,85 @@ const EstimationAdmin = () => {
     data: { kind: "CANVAS" },
   });
 
-  const handleSaveButton = () => {
-    // if (usage === "estimation") {
-    // } else if (usage === "variable") {
-    //   // await saveVariable()
-    // }
+  const handleSaveButton = async () => {
+    if (!currentProcessId) return;
+    const state = usePemdasUIStore.getState().graphs.estimation;
+    const config = serializePemdasState(state);
+    const res = await upsertPemdasGraph({
+      process_id: currentProcessId,
+      pemdas_type: "estimation",
+      config,
+    });
+    if (res.success) {
+      setEstimationBaseline(JSON.stringify(config));
+    }
   };
 
   const handleBackButton = () => {};
+
+  const activePemdas =
+    selectingVariableReturn && selectingVariableReturn.type === "statement"
+      ? variablePemdas
+      : estimationPemdas;
+
+  const isDirty = useMemo(() => {
+    if (!estimationBaseline) return false;
+    const current = JSON.stringify(
+      serializePemdasState(usePemdasUIStore.getState().graphs.estimation),
+    );
+    return current !== estimationBaseline;
+  }, [estimationPemdas.state, estimationBaseline]);
+
+  useEffect(() => {
+    if (selectingVariableReturn?.type !== "statement" || !currentProcessId)
+      return;
+
+    const id = selectingVariableReturn.selector_id;
+
+    (async () => {
+      const config = await getPemdasGraph({
+        process_id: currentProcessId,
+        pemdas_type: "variable",
+        conditional_id: id,
+      });
+
+      const restored = config
+        ? deserializePemdasState(config)
+        : (usePemdasUIStore.getState().graphs.variables[id] ?? initialState);
+
+      usePemdasUIStore.setState((s) => ({
+        graphs: {
+          ...s.graphs,
+          variables: {
+            ...s.graphs.variables,
+            [id]: restored,
+          },
+        },
+      }));
+
+      setVariableBaseline(JSON.stringify(serializePemdasState(restored)));
+    })();
+  }, [selectingVariableReturn?.selector_id]);
+
+  const isVariableDirty = useMemo(() => {
+    if (!variableKey || !variableBaseline) return false;
+    const state = usePemdasUIStore.getState().graphs.variables[variableKey];
+    if (!state) return false;
+    return JSON.stringify(serializePemdasState(state)) !== variableBaseline;
+  }, [variablePemdas.state, variableKey, variableBaseline]);
+
+  const handleSaveStatement = async () => {
+    if (!currentProcessId || !variableKey) return;
+    const state = usePemdasUIStore.getState().graphs.variables[variableKey];
+    const config = serializePemdasState(state);
+    await upsertPemdasGraph({
+      process_id: currentProcessId,
+      pemdas_type: "variable",
+      conditional_id: variableKey,
+      config,
+    });
+    setVariableBaseline(JSON.stringify(config));
+  };
 
   return (
     <div
@@ -100,7 +206,7 @@ const EstimationAdmin = () => {
       style={{ backgroundColor: currentTheme.background_1 }}
     >
       <DndContext
-        sensors={sensors}
+        sensors={activePemdas.sensors}
         onDragStart={(e) => {
           const evt = e.activatorEvent as PointerEvent;
           dragStartPointerRef.current = {
@@ -114,13 +220,14 @@ const EstimationAdmin = () => {
           if (data?.kind === "FOLDER") {
             setDraggingFolderId(data.folder.folder_id);
           }
-          handlers.onDragStart(e);
+          activePemdas.handlers.onDragStart(e);
           folderDnd.onDragStart(e);
         }}
         onDragMove={(e) => {
-          handlers.onDragMove(e);
-          if (!viewportRef.current || !dragStartPointerRef.current) return;
-          const rect = viewportRef.current.getBoundingClientRect();
+          activePemdas.handlers.onDragMove(e);
+          if (!activePemdas.viewportRef.current || !dragStartPointerRef.current)
+            return;
+          const rect = activePemdas.viewportRef.current.getBoundingClientRect();
           const pointerX = dragStartPointerRef.current.x + e.delta.x;
           const pointerY = dragStartPointerRef.current.y + e.delta.y;
           const inside =
@@ -128,9 +235,9 @@ const EstimationAdmin = () => {
             pointerX <= rect.right &&
             pointerY >= rect.top &&
             pointerY <= rect.bottom;
-          setIsCanvasGhostActive(inside && !!ghost);
+          setIsCanvasGhostActive(inside && !!activePemdas.ghost);
           setIsOverCanvas(inside);
-          setCanvasGhostMode(inside);
+          activePemdas.setIsOverCanvas(inside);
         }}
         onDragEnd={async (e) => {
           const activeData = e.active.data.current;
@@ -145,7 +252,7 @@ const EstimationAdmin = () => {
             return;
           }
 
-          handlers.onDragEnd(e);
+          activePemdas.handlers.onDragEnd(e);
           folderDnd.onDragEnd(e);
           const active = e.active.data.current;
           const over = e.over?.data.current;
@@ -176,7 +283,7 @@ const EstimationAdmin = () => {
           dragStartPointerRef.current = null;
         }}
         onDragCancel={(e) => {
-          handlers.onDragCancel(e);
+          activePemdas.handlers.onDragCancel(e);
           folderDnd.onDragCancel();
           setDraggingFact(null);
           setDraggingFolderId(null);
@@ -186,30 +293,98 @@ const EstimationAdmin = () => {
         }}
       >
         <HomeLayout left={<EstimationsLeftBar />}>
-          {editingVariable !== null && <GeometricVariableBuilder />}
-          <PemdasViewport
-            usage={"estimation"}
-            viewportRef={viewportRef}
-            selectorRef={selectorRef}
-            state={state}
-            pan={pan}
-            bounds={bounds}
-            visibleRows={visibleRows}
-            activeLayerByRow={activeLayerByRow}
-            ghost={ghost}
-            reorderPreview={reorderPreview}
-            ghostReorderPreview={ghostReorderPreview}
-            justDroppedNodeId={justDroppedNodeId}
-            activeNodeId={activeNodeId}
-            openNodeIdTypeSelection={openNodeIdTypeSelection}
-            dispatch={dispatch}
-            handlers={handlers}
-            handleEditNode={handleEditNode}
-            handleAddNode={handleAddNode}
-            openLayer={openLayer}
-            setOpenNodeIdTypeSelection={setOpenNodeIdTypeSelection}
-            setCanvasDropRef={setCanvasDropRef}
-          />
+          <div className="w-[100%] h-[100%] relative">
+            {editingVariable !== null && (
+              <GeometricVariableBuilder
+                handleSaveStatement={handleSaveStatement}
+              />
+            )}
+            {editingFact !== null && <FactEditor />}
+
+            <PemdasViewport
+              usage="estimation"
+              viewportRef={estimationPemdas.viewportRef}
+              selectorRef={selectorRef}
+              state={estimationPemdas.state}
+              pan={estimationPemdas.pan}
+              bounds={estimationPemdas.bounds}
+              visibleRows={estimationPemdas.visibleRows}
+              activeLayerByRow={estimationPemdas.activeLayerByRow}
+              ghost={estimationPemdas.ghost}
+              reorderPreview={estimationPemdas.reorderPreview}
+              ghostReorderPreview={estimationPemdas.ghostReorderPreview}
+              justDroppedNodeId={estimationPemdas.justDroppedNodeId}
+              activeNodeId={estimationPemdas.activeNodeId}
+              openNodeIdTypeSelection={openNodeIdTypeSelection}
+              dispatch={estimationPemdas.dispatch}
+              handlers={estimationPemdas.handlers}
+              handleEditNode={estimationPemdas.handleEditNode}
+              handleAddNode={estimationPemdas.handleAddNode}
+              openLayer={estimationPemdas.openLayer}
+              setOpenNodeIdTypeSelection={setOpenNodeIdTypeSelection}
+              setCanvasDropRef={setCanvasDropRef}
+            />
+            {isDirty && (
+              <div className="absolute top-[20px] left-[20px] z-500">
+                <SaveAndCancelBar
+                  onSave={handleSaveButton}
+                  onCancel={handleBackButton}
+                  backButton="back"
+                  showSave={true}
+                  showCancel={false}
+                />
+              </div>
+            )}
+
+            {selectingVariableReturn &&
+              selectingVariableReturn.type === "statement" && (
+                <div className="w-[100%] h-[50vh] absolute bottom-0 left-0 z-500">
+                  {isVariableDirty && (
+                    <div className="absolute top-[16px] left-[16px] z-600">
+                      <SaveAndCancelBar
+                        onSave={handleSaveStatement}
+                        onCancel={() => {}}
+                        backButton={"cancel"}
+                        showSave={true}
+                        showCancel={false}
+                      />
+                    </div>
+                  )}
+                  <PemdasViewport
+                    usage="variable"
+                    viewportRef={variablePemdas.viewportRef}
+                    selectorRef={selectorRef}
+                    state={variablePemdas.state}
+                    pan={variablePemdas.pan}
+                    bounds={variablePemdas.bounds}
+                    visibleRows={variablePemdas.visibleRows}
+                    activeLayerByRow={variablePemdas.activeLayerByRow}
+                    ghost={variablePemdas.ghost}
+                    reorderPreview={variablePemdas.reorderPreview}
+                    ghostReorderPreview={variablePemdas.ghostReorderPreview}
+                    justDroppedNodeId={variablePemdas.justDroppedNodeId}
+                    activeNodeId={variablePemdas.activeNodeId}
+                    openNodeIdTypeSelection={openNodeIdTypeSelection}
+                    dispatch={variablePemdas.dispatch}
+                    handlers={variablePemdas.handlers}
+                    handleEditNode={variablePemdas.handleEditNode}
+                    handleAddNode={variablePemdas.handleAddNode}
+                    openLayer={variablePemdas.openLayer}
+                    setOpenNodeIdTypeSelection={setOpenNodeIdTypeSelection}
+                    setCanvasDropRef={setCanvasDropRef}
+                  />
+                  <div
+                    className="absolute top-4 right-6 text-[18px] opacity-[0.6] hover:brightness-75 dim cursor-pointer"
+                    onClick={() => {
+                      setSelectingVariableReturn(null);
+                      setPendingVariableTarget(null);
+                    }}
+                  >
+                    ✕
+                  </div>
+                </div>
+              )}
+          </div>
         </HomeLayout>
         <DragOverlay>
           {draggingFact && !isOverCanvas && (
@@ -219,7 +394,9 @@ const EstimationAdmin = () => {
             >
               <div
                 className="brightness-90 w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: nodeColors[draggingFact.variable_scope] }}
+                style={{
+                  backgroundColor: nodeColors[draggingFact.variable_scope],
+                }}
               >
                 <GraphNodeIcon color={null} />
               </div>
@@ -256,10 +433,6 @@ const EstimationAdmin = () => {
           )}
         </DragOverlay>
       </DndContext>
-
-      <div className="fixed top-[20px] left-[20px] z-500">
-        <SaveAndBackBar onSave={handleSaveButton} onBack={handleBackButton} />
-      </div>
     </div>
   );
 };

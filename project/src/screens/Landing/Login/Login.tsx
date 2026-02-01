@@ -337,7 +337,7 @@ const Login = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
                   style={{
-                    color: currentTheme.background_1_2,
+                    color: currentTheme.background_1_3,
                     backgroundColor: currentTheme.text_3,
                   }}
                   onClick={executeForgotPassword}
@@ -438,7 +438,7 @@ const Login = () => {
                       : "cursor-default brightness-[60%]"
                   } flex-1 h-full rounded-[10px] flex items-center justify-center`}
                   style={{
-                    color: currentTheme.background_1_2,
+                    color: currentTheme.background_1_3,
                     backgroundColor: currentTheme.text_3,
                   }}
                   onClick={() => {
@@ -512,7 +512,7 @@ const Login = () => {
                 <div
                   className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
                   style={{
-                    color: currentTheme.background_1_2,
+                    color: currentTheme.background_1_3,
                     backgroundColor: currentTheme.text_3,
                   }}
                   onClick={confirmNewPassword}
@@ -540,7 +540,7 @@ const Login = () => {
               <div
                 className="mt-[12px] w-[130px] h-[40px] select-none dim hover:brightness-75 cursor-pointer rounded-[10px] flex items-center justify-center"
                 style={{
-                  color: currentTheme.background_1_2,
+                  color: currentTheme.background_1_3,
                   backgroundColor: currentTheme.text_3,
                 }}
                 onClick={cancelModal}
@@ -567,7 +567,7 @@ const Login = () => {
               <div
                 className="mt-[12px] w-[130px] h-[40px] select-none dim hover:brightness-75 cursor-pointer rounded-[10px] flex items-center justify-center"
                 style={{
-                  color: currentTheme.background_1_2,
+                  color: currentTheme.background_1_3,
                   backgroundColor: currentTheme.text_3,
                 }}
                 onClick={cancelModal}

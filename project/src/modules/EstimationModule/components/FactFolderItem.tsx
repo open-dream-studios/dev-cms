@@ -124,7 +124,7 @@ export default function FactFolderItem({
     <div
       data-draggable
       ref={setRefs}
-      className="rounded-[5px] mt-[4px]"
+      className="rounded-[5px] mb-[4px]"
       style={{
         transform: CSS.Transform.toString(transform),
         transition,

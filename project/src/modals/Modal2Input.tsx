@@ -138,7 +138,7 @@ const Modal2Input: React.FC<Modal2InputProps> = ({ text, onContinue }) => {
         <div
           className="select-none dim hover:brightness-75 cursor-pointer flex-1 h-full rounded-[10px] flex items-center justify-center"
           style={{
-            color: currentTheme.background_1_2,
+            color: currentTheme.background_1_3,
             backgroundColor: currentTheme.text_3,
           }}
           onClick={handleContinue}

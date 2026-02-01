@@ -1,18 +1,12 @@
 // src/pemdas/components/OverlayPortal.tsx
 import { createPortal } from "react-dom";
-import { useEffect, useState } from "react";
 
-export const OverlayPortal = ({
+export const OperandOverlayPortal = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-  return createPortal(children, document.body);
+  const root = document.getElementById("operand-overlay-root");
+  if (!root) return null;
+  return createPortal(children, root);
 };
