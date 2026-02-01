@@ -152,3 +152,21 @@ export async function deleteVariableApi(
   });
   return { success: true };
 }
+
+export async function upsertReturnNumberApi(project_idx: number, payload: any) {
+  await makeRequest.post(
+    "/estimations/if-trees/returns/number/upsert",
+    { project_idx, ...payload }
+  );
+}
+
+export async function loadIfTreeApi(
+  project_idx: number,
+  decision_tree_id: number
+) {
+  const res = await makeRequest.post(
+    "/estimations/if-trees/load",
+    { project_idx, decision_tree_id }
+  );
+  return res.data;
+}

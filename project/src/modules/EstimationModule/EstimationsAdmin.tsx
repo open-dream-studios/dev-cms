@@ -294,11 +294,7 @@ const EstimationAdmin = () => {
       >
         <HomeLayout left={<EstimationsLeftBar />}>
           <div className="w-[100%] h-[100%] relative">
-            {editingVariable !== null && (
-              <GeometricVariableBuilder
-                handleSaveStatement={handleSaveStatement}
-              />
-            )}
+            {editingVariable !== null && <GeometricVariableBuilder />}
             {editingFact !== null && <FactEditor />}
 
             <PemdasViewport

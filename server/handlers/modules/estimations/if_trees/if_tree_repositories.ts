@@ -1,5 +1,5 @@
 // server/handlers/modules/estimations/if_trees/if_tree_repositories.ts
-import type { PoolConnection } from "mysql2/promise";
+import type { PoolConnection, ResultSetHeader } from "mysql2/promise";
 import { db } from "../../../../connection/connect.js";
 
 export const listIfTreesRepo = async (project_idx: number) => {
@@ -13,19 +13,27 @@ export const listIfTreesRepo = async (project_idx: number) => {
 export const upsertIfTreeRepo = async (
   conn: PoolConnection,
   project_idx: number,
-  body: any
+  body: { id?: number; return_type: "number" | "node" | "adjustment" }
 ) => {
   const { id, return_type } = body;
-  if (!return_type) throw new Error("return_type required");
 
-  const q = `
-    INSERT INTO estimation_if_decision_trees (id, project_idx, return_type)
-    VALUES (?, ?, ?)
-    ON DUPLICATE KEY UPDATE return_type = VALUES(return_type)
-  `;
+  if (id) {
+    await conn.query(
+      `UPDATE estimation_if_decision_trees
+       SET return_type = ?
+       WHERE id = ? AND project_idx = ?`,
+      [return_type, id, project_idx]
+    );
+    return { id };
+  }
 
-  await conn.query(q, [id ?? null, project_idx, return_type]);
-  return { success: true };
+  const [res] = await conn.query<ResultSetHeader>(
+    `INSERT INTO estimation_if_decision_trees (project_idx, return_type)
+     VALUES (?, ?)`,
+    [project_idx, return_type]
+  );
+
+  return { id: res.insertId };
 };
 
 export const deleteIfTreeRepo = async (

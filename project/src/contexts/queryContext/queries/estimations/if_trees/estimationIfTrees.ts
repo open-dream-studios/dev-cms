@@ -12,6 +12,8 @@ import {
   fetchVariablesApi,
   upsertVariableApi,
   deleteVariableApi,
+  upsertReturnNumberApi,
+  loadIfTreeApi,
 } from "@/api/estimations/if_trees/estimationIfTrees.api";
 
 export function useEstimationIfTrees(
@@ -29,15 +31,13 @@ export function useEstimationIfTrees(
   });
 
   const upsertIfTree = useMutation({
-    mutationFn: (payload: any) =>
-      upsertIfTreeApi(currentProjectId!, payload),
+    mutationFn: (payload: any) => upsertIfTreeApi(currentProjectId!, payload),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["ifTrees", currentProjectId] }),
   });
 
   const deleteIfTree = useMutation({
-    mutationFn: (id: number) =>
-      deleteIfTreeApi(currentProjectId!, id),
+    mutationFn: (id: number) => deleteIfTreeApi(currentProjectId!, id),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["ifTrees", currentProjectId] }),
   });
@@ -50,15 +50,13 @@ export function useEstimationIfTrees(
   });
 
   const deleteExpression = useMutation({
-    mutationFn: (id: number) =>
-      deleteExpressionApi(currentProjectId!, id),
+    mutationFn: (id: number) => deleteExpressionApi(currentProjectId!, id),
   });
 
   /* ========= BRANCHES ========= */
 
   const upsertBranch = useMutation({
-    mutationFn: (payload: any) =>
-      upsertBranchApi(currentProjectId!, payload),
+    mutationFn: (payload: any) => upsertBranchApi(currentProjectId!, payload),
   });
 
   const reorderBranches = useMutation({
@@ -67,11 +65,8 @@ export function useEstimationIfTrees(
   });
 
   const deleteBranch = useMutation({
-    mutationFn: (id: number) =>
-      deleteBranchApi(currentProjectId!, id),
+    mutationFn: (id: number) => deleteBranchApi(currentProjectId!, id),
   });
-
-  /* ========= VARIABLES ========= */
 
   const { data: variables = [] } = useQuery({
     queryKey: ["estimationVariables", currentProjectId],
@@ -80,8 +75,7 @@ export function useEstimationIfTrees(
   });
 
   const upsertVariable = useMutation({
-    mutationFn: (payload: any) =>
-      upsertVariableApi(currentProjectId!, payload),
+    mutationFn: (payload: any) => upsertVariableApi(currentProjectId!, payload),
     onSuccess: () =>
       qc.invalidateQueries({
         queryKey: ["estimationVariables", currentProjectId],
@@ -97,6 +91,11 @@ export function useEstimationIfTrees(
       }),
   });
 
+  // RETURN
+  const upsertReturnNumber = useMutation({
+    mutationFn: (p: any) => upsertReturnNumberApi(currentProjectId!, p),
+  });
+
   return {
     ifTrees,
     variables,
@@ -108,11 +107,14 @@ export function useEstimationIfTrees(
     deleteExpression: (id: number) => deleteExpression.mutateAsync(id),
 
     upsertBranch: (p: any) => upsertBranch.mutateAsync(p),
-    reorderBranches: (ids: number[]) =>
-      reorderBranches.mutateAsync(ids),
+    reorderBranches: (ids: number[]) => reorderBranches.mutateAsync(ids),
     deleteBranch: (id: number) => deleteBranch.mutateAsync(id),
 
     upsertVariable: (p: any) => upsertVariable.mutateAsync(p),
     deleteVariable: (k: string) => deleteVariable.mutateAsync(k),
+
+    upsertReturnNumber: (p: any) => upsertReturnNumber.mutateAsync(p),
+
+    loadIfTree: (treeId: number) => loadIfTreeApi(currentProjectId!, treeId),
   };
 }

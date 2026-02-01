@@ -6,8 +6,13 @@ export const validateDecisionTree = async (
   conn: PoolConnection,
   project_idx: number,
   decision_tree_id: number,
-  allowedVariableKeys: Set<string>
+  allowedVariableKeys: string[] | Set<string> | undefined
 ) => {
+  const allowedKeys =
+    allowedVariableKeys instanceof Set
+      ? allowedVariableKeys
+      : new Set(allowedVariableKeys ?? []);
+
   const [[tree]] = await conn.query<any[]>(
     `SELECT * FROM estimation_if_decision_trees WHERE id = ?`,
     [decision_tree_id]
@@ -33,7 +38,7 @@ export const validateDecisionTree = async (
         conn,
         project_idx,
         branch.condition_expression_id,
-        allowedVariableKeys
+        allowedKeys
       );
       if (condType !== "boolean") {
         throw new Error("Condition must resolve to boolean");
@@ -53,7 +58,7 @@ export const validateDecisionTree = async (
         conn,
         project_idx,
         ret.value_expression_id,
-        allowedVariableKeys
+        allowedKeys
       );
       if (retType !== "number") {
         throw new Error("Return expression must be number");
@@ -73,14 +78,15 @@ export const validateDecisionTree = async (
         `SELECT * FROM estimation_if_decision_return_adjustments WHERE branch_id = ?`,
         [branch.id]
       );
-      if (!rets.length) throw new Error("Adjustment branch must return commands");
+      if (!rets.length)
+        throw new Error("Adjustment branch must return commands");
 
       for (const r of rets) {
         const valType = await resolveExpressionType(
           conn,
           project_idx,
           r.value_expression_id,
-          allowedVariableKeys
+          allowedKeys
         );
         if (valType !== "number") {
           throw new Error("Adjustment value must be number");

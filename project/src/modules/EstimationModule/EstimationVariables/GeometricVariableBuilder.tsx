@@ -1,5 +1,5 @@
 // project/src/modules/EstimationModule/EstimationVariables/GeometricVariableBuilder.tsx
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   resetVariableUI,
   useEstimationFactsUIStore,
@@ -28,6 +28,9 @@ import { AuthContext } from "@/contexts/authContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { cleanVariableKey } from "@/util/functions/Variables";
 import SaveAndCancelBar from "../EstimationPEMDAS/components/SaveAndCancelBar";
+import { useEstimationIfTrees } from "@/contexts/queryContext/queries/estimations/if_trees/estimationIfTrees";
+import { compileIfTree } from "./_helpers/compilerTrees.helpers";
+import { rebuildIfTree } from "./_helpers/rebuildTree.helpers";
 
 function BranchEditor({
   branch,
@@ -467,11 +470,7 @@ function ValueEditor({
   );
 }
 
-export default function GeometricVariableBuilder({
-  handleSaveStatement,
-}: {
-  handleSaveStatement: () => void;
-}) {
+export default function GeometricVariableBuilder() {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
@@ -482,10 +481,61 @@ export default function GeometricVariableBuilder({
     currentProjectId,
     currentProcessId,
   );
+  const {
+    upsertIfTree,
+    upsertExpression,
+    upsertBranch,
+    upsertVariable,
+    upsertReturnNumber,
+    loadIfTree,
+    variables,
+  } = useEstimationIfTrees(!!currentUser, currentProjectId);
+
   const [root, setRoot] = useState<Branch>({
     type: "return",
     value: literalValue(""),
   });
+
+  useEffect(() => {
+    if (!editingVariable) return;
+
+    const varsArray = Array.isArray(variables)
+      ? variables
+      : Object.values(variables ?? {});
+
+    if (varsArray.length === 0) {
+      console.log("⏳ variables empty");
+      return;
+    }
+
+    const variableRecord = varsArray.find(
+      (v: any) => v.var_key === editingVariable.var_key,
+    );
+
+    console.log("🟨 VARIABLE LOOKUP", {
+      found: !!variableRecord,
+      decision_tree_id: variableRecord?.decision_tree_id,
+    });
+
+    if (!variableRecord?.decision_tree_id) {
+      setRoot({
+        type: "return",
+        value: literalValue(""),
+      });
+      return;
+    }
+
+    console.log("🟧 CALLING loadIfTree", variableRecord.decision_tree_id);
+
+    loadIfTree(variableRecord.decision_tree_id).then((data) => {
+      console.log("🟥 loadIfTree RESPONSE", data);
+
+      const tree = rebuildIfTree(data.branches, data.expressions);
+      console.log("🟢 rebuilt tree", tree);
+
+      setRoot(tree);
+    });
+  }, [editingVariable?.var_key, variables]);
 
   if (!editingVariable) return null;
 
@@ -495,6 +545,74 @@ export default function GeometricVariableBuilder({
   if (foundVariable && foundVariable.variable_scope === "fact") {
     return null;
   }
+
+  // ✅ FIX: frontend save flow — USE EXISTING upsertBranch (NO BATCH)
+
+  const handleSave = async () => {
+    const tree = await upsertIfTree({ return_type: "number" });
+    const compiled = compileIfTree(root);
+    const idMap = new Map<number, number>();
+    // for (const expr of compiled.expressions) {
+    //   const tempId = expr.id;
+    //   const res = await upsertExpression({
+    //     ...expr,
+    //     id: undefined,
+    //   });
+    //   idMap.set(tempId, res.id);
+    // }
+    // PASS 1 — save leaves (const, variable_ref, node_ref)
+    for (const expr of compiled.expressions) {
+      if (expr.node_type === "operator") continue;
+
+      const res = await upsertExpression({
+        ...expr,
+        id: undefined,
+      });
+
+      idMap.set(expr.id, res.id);
+    }
+
+    // PASS 2 — save operators WITH remapped children
+    for (const expr of compiled.expressions) {
+      if (expr.node_type !== "operator") continue;
+
+      const res = await upsertExpression({
+        ...expr,
+        id: undefined,
+        left_child_id: idMap.get(expr.left_child_id),
+        right_child_id: idMap.get(expr.right_child_id),
+      });
+
+      idMap.set(expr.id, res.id);
+    }
+
+    // Branches — CALL upsertBranch PER BRANCH
+    for (const b of compiled.branches) {
+      const branchRes = await upsertBranch({
+        decision_tree_id: tree.id,
+        order_index: b.order_index,
+        condition_expression_id:
+          b.condition_expression_id != null
+            ? idMap.get(b.condition_expression_id)!
+            : null,
+      });
+
+      console.log("DEBUG", branchRes?.id, idMap.get(b.return_expression_id));
+
+      await upsertReturnNumber({
+        branch_id: branchRes.id,
+        value_expression_id: idMap.get(b.return_expression_id)!,
+      });
+    }
+
+    // Variable
+    await upsertVariable({
+      var_key: editingVariable.var_key,
+      decision_tree_id: tree.id,
+      allowedVariableKeys: [],
+    });
+    resetVariableUI();
+  };
 
   return (
     <div
@@ -510,7 +628,7 @@ export default function GeometricVariableBuilder({
           {editingVariable.var_id ? "Edit Variable" : "New Variable"}
         </p>
         <SaveAndCancelBar
-          onSave={handleSaveStatement}
+          onSave={handleSave}
           onCancel={() => {
             resetVariableUI();
           }}

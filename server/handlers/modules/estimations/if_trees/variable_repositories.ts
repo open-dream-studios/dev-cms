@@ -18,25 +18,22 @@ export const upsertVariableRepo = async (
   project_idx: number,
   body: any
 ) => {
-  const { var_key, decision_tree_id, allowedVariableKeys } = body;
+  const { var_key, decision_tree_id } = body;
+
   if (!var_key || !decision_tree_id) {
     throw new Error("Missing var_key or decision_tree_id");
   }
 
-  await validateDecisionTree(
-    conn,
-    project_idx,
-    decision_tree_id,
-    allowedVariableKeys
-  );
-
-  const q = `
+  await conn.query(
+    `
     INSERT INTO estimation_variables (project_idx, var_key, decision_tree_id)
     VALUES (?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      decision_tree_id = VALUES(decision_tree_id)
-  `;
-  await conn.query(q, [project_idx, var_key, decision_tree_id]);
+    ON DUPLICATE KEY UPDATE decision_tree_id = VALUES(decision_tree_id)
+    `,
+    [project_idx, var_key, decision_tree_id]
+  );
+
+  return { success: true }; // ← ADD THIS
 };
 
 export const deleteVariableRepo = async (

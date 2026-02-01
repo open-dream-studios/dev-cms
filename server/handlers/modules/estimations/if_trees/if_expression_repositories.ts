@@ -1,5 +1,5 @@
 // server/handlers/modules/estimations/if_trees/if_expression_repositories.ts
-import type { PoolConnection } from "mysql2/promise";
+import type { PoolConnection, ResultSetHeader } from "mysql2/promise";
 
 export const upsertExpressionNode = async (
   conn: PoolConnection,
@@ -38,7 +38,7 @@ export const upsertExpressionNode = async (
       extra_child_id = VALUES(extra_child_id)
   `;
 
-  await conn.query(q, [
+  const [res] = await conn.query<ResultSetHeader>(q, [
     id ?? null,
     project_idx,
     node_type,
@@ -52,6 +52,54 @@ export const upsertExpressionNode = async (
     right_child_id ?? null,
     extra_child_id ?? null
   ]);
+
+  return {
+    id: res.insertId || id
+  };
+};
+
+
+export const insertExpressionNode = async (
+  conn: PoolConnection,
+  project_idx: number,
+  node: any
+) => {
+  const {
+    node_type,
+    number_value,
+    string_value,
+    boolean_value,
+    ref_key,
+    operator,
+    function_name,
+    left_child_id,
+    right_child_id,
+    extra_child_id,
+  } = node;
+
+  const [res] = await conn.query<ResultSetHeader>(
+    `
+    INSERT INTO estimation_if_expression_nodes
+    (project_idx, node_type, number_value, string_value, boolean_value,
+     ref_key, operator, function_name, left_child_id, right_child_id, extra_child_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      project_idx,
+      node_type,
+      number_value ?? null,
+      string_value ?? null,
+      boolean_value ?? null,
+      ref_key ?? null,
+      operator ?? null,
+      function_name ?? null,
+      left_child_id ?? null,
+      right_child_id ?? null,
+      extra_child_id ?? null,
+    ]
+  );
+
+  return { id: res.insertId };
 };
 
 export const deleteExpressionNode = async (
