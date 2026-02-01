@@ -26,7 +26,7 @@ export function compileIfTree(root: Branch): CompiledTree {
       expressions.push({
         id,
         node_type: "const",
-        number_value: Number(v.value), // ← FIX (number return)
+        number_value: Number(v.value),
       });
       return id;
     }
@@ -36,6 +36,15 @@ export function compileIfTree(root: Branch): CompiledTree {
         id,
         node_type: "const",
         boolean_value: v.value,
+      });
+      return id;
+    }
+
+    if (v.kind === "option") {
+      expressions.push({
+        id,
+        node_type: "const",
+        string_value: v.option_id, 
       });
       return id;
     }
@@ -58,7 +67,7 @@ export function compileIfTree(root: Branch): CompiledTree {
       return id;
     }
 
-    throw new Error("Unsupported value kind");
+    throw new Error(`Unsupported value kind: ${v}`);
   }
 
   function compileCondition(c: Condition): number {

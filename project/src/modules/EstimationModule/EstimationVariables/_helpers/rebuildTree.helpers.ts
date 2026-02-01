@@ -1,11 +1,15 @@
 import { Branch, Value } from "../types";
-import { VariableScope } from "@open-dream/shared";
 import { v4 as uuid } from "uuid";
 import { emptyVariableValue, literalValue } from "./variables.helpers";
+import { EstimationFactDefinition } from "@open-dream/shared";
 
 const sid = () => uuid();
 
-export function rebuildIfTree(branches: any[], expressions: any[]): Branch {
+export function rebuildIfTree(
+  branches: any[],
+  expressions: any[],
+  factDefinitions: EstimationFactDefinition[]
+): Branch {
   const exprMap = new Map<number, any>();
   expressions.forEach((e) => exprMap.set(e.id, e));
 
@@ -13,15 +17,34 @@ export function rebuildIfTree(branches: any[], expressions: any[]): Branch {
     const e = exprMap.get(id);
     if (!e) throw new Error("Missing expression " + id);
 
-    if (e.number_value !== null)
-      return {
-        kind: "literal",
-        value: String(e.number_value),
-        selector_id: sid(),
-      };
+    if (e.node_type === "const") {
+      if (e.number_value != null) {
+        return {
+          kind: "literal",
+          value: String(e.number_value),
+          selector_id: sid(),
+        };
+      }
 
-    if (e.boolean_value !== null)
-      return { kind: "boolean", value: e.boolean_value, selector_id: sid() };
+      if (e.boolean_value != null) {
+        return {
+          kind: "boolean",
+          value: e.boolean_value,
+          selector_id: sid(),
+        };
+      }
+
+      if (e.string_value != null) {
+        return {
+          kind: "option",
+          option_id: e.option_id,
+          selector_id: sid(),
+        };
+      }
+
+      // ✅ EMPTY CONST (this was crashing you)
+      return literalValue("");
+    }
 
     if (e.node_type === "variable_ref") {
       const isUUID =
@@ -34,20 +57,33 @@ export function rebuildIfTree(branches: any[], expressions: any[]): Branch {
         return {
           kind: "statement",
           expression_id: e.ref_key,
-          selector_id: e.ref_key, 
+          selector_id: e.ref_key,
         };
       }
 
-      return {
-        kind: "variable",
-        var_key: e.ref_key,
-        var_id: e.ref_key,
-        var_type: "geometric" as VariableScope,
-        selector_id: sid(),
-      };
+      function variableFromRef(
+        ref_key: string,
+        facts: EstimationFactDefinition[]
+      ): Value {
+        const fact = facts.find((f) => f.fact_key === ref_key);
+
+        if (!fact) {
+          return emptyVariableValue();
+        }
+
+        return {
+          kind: "variable",
+          var_key: fact.fact_key,
+          var_id: fact.fact_id,
+          var_type: fact.variable_scope,
+          selector_id: sid(),
+        };
+      }
+
+      return variableFromRef(e.ref_key, factDefinitions);
     }
 
-    throw new Error("Unsupported expression node");
+    throw new Error(`Unsupported expression node: ${JSON.stringify(e)}`);
   };
 
   function rebuildCondition(exprId: number) {

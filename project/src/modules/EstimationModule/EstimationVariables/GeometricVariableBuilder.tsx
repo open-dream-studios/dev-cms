@@ -219,18 +219,116 @@ function ConditionEditor({
   );
 
   const left = condition.left;
-  const leftIsEnum =
-    left.kind === "variable" &&
-    !!factDefinitions.find(
-      (f) => f.fact_id === left.var_id && f.fact_type === "enum",
-    );
 
-  const enumOptions =
+  const isLeftSelected =
+    left.kind === "statement" || (left.kind === "variable" && !!left.var_key);
+
+  const leftIsNumber =
+    left.kind === "statement" ||
+    (left.kind === "variable" &&
+      !!factDefinitions.find(
+        (f) => f.fact_id === left.var_id && f.fact_type === "number",
+      ));
+
+  const allowedOperators: Condition["operator"][] = !isLeftSelected
+    ? ["=="]
+    : leftIsNumber
+      ? ["==", ">", "<", ">=", "<="]
+      : ["=="];
+
+  const rightAllowed: Array<Value["kind"]> = (() => {
+    // LEFT = STATEMENT → numeric
+    if (left.kind === "statement") {
+      return ["literal", "variable", "statement"];
+    }
+
+    // LEFT = VARIABLE
+    if (left.kind === "variable") {
+      const fact = factDefinitions.find((f) => f.fact_id === left.var_id);
+
+      if (!fact) return ["literal"];
+
+      if (fact.fact_type === "number") {
+        return ["literal", "variable", "statement"];
+      }
+
+      if (fact.fact_type === "enum") {
+        return ["option"];
+      }
+
+      if (fact.fact_type === "boolean") {
+        return ["boolean"];
+      }
+
+      // text / fallback
+      return ["literal"];
+    }
+
+    // default
+    return ["literal"];
+  })();
+
+  function normalizeRightValue(
+    allowed: Array<Value["kind"]>,
+    current: Value,
+  ): Value {
+    if (allowed.includes(current.kind)) return current;
+
+    if (allowed.length === 1 && allowed[0] === "boolean") {
+      return booleanValue(false);
+    }
+
+    if (allowed.length === 1 && allowed[0] === "option") {
+      return optionValue();
+    }
+
+    if (allowed.includes("literal")) {
+      return literalValue("");
+    }
+
+    if (allowed.includes("variable")) {
+      return emptyVariableValue();
+    }
+
+    if (allowed.includes("statement")) {
+      return statementValue();
+    }
+
+    // fallback (should never hit)
+    return literalValue("");
+  }
+
+  const rightEnumOptions: EstimationFactEnumOption[] =
     left.kind === "variable"
       ? (factDefinitions.find(
           (f) => f.fact_id === left.var_id && f.fact_type === "enum",
         )?.enum_options ?? [])
       : [];
+
+  function isNumberValue(v: Value, facts: EstimationFactDefinition[]): boolean {
+    if (v.kind === "statement") return true;
+    if (v.kind !== "variable") return false;
+    return !!facts.find(
+      (f) => f.fact_id === v.var_id && f.fact_type === "number",
+    );
+  }
+
+  function leftCategory(
+    v: Value,
+    facts: EstimationFactDefinition[],
+  ): "number" | "boolean" | "enum" | "text" {
+    if (v.kind === "statement") return "number";
+    if (v.kind !== "variable") return "text";
+
+    const fact = facts.find((f) => f.fact_id === v.var_id);
+    if (!fact) return "text";
+
+    if (fact.fact_type === "number") return "number";
+    if (fact.fact_type === "boolean") return "boolean";
+    if (fact.fact_type === "enum") return "enum";
+
+    return "text";
+  }
 
   return (
     <div style={{ display: "flex", gap: 8 }}>
@@ -239,13 +337,37 @@ function ConditionEditor({
         value={condition.left}
         allowed={["variable", "statement"]}
         target="condition-left"
-        onChange={(v) =>
+        onChange={(v) => {
+          const prevCategory = leftCategory(condition.left, factDefinitions);
+          const nextCategory = leftCategory(v, factDefinitions);
+
+          const nextRightAllowed: Array<Value["kind"]> = (() => {
+            if (v.kind === "statement")
+              return ["literal", "variable", "statement"];
+
+            if (v.kind === "variable") {
+              const fact = factDefinitions.find((f) => f.fact_id === v.var_id);
+              if (!fact) return ["literal"];
+              if (fact.fact_type === "number")
+                return ["literal", "variable", "statement"];
+              if (fact.fact_type === "enum") return ["option"];
+              if (fact.fact_type === "boolean") return ["boolean"];
+              return ["literal"];
+            }
+
+            return ["literal"];
+          })();
+
           onChange({
             ...condition,
             left: v,
             operator: "==",
-          })
-        }
+            right:
+              prevCategory !== nextCategory
+                ? normalizeRightValue(nextRightAllowed, literalValue(""))
+                : normalizeRightValue(nextRightAllowed, condition.right),
+          });
+        }}
       />
 
       <select
@@ -266,25 +388,23 @@ function ConditionEditor({
           backgroundSize: "18px",
         }}
       >
-        <option value="==">==</option>
-        <option value=">">&gt;</option>
-        <option value="<">&lt;</option>
-        <option value=">=">&gt;=</option>
-        <option value="<=">&lt;=</option>
+        {allowedOperators.map((op) => (
+          <option key={op} value={op}>
+            {op}
+          </option>
+        ))}
       </select>
 
       {/* RIGHT */}
       <ValueEditor
         value={condition.right}
-        allowed={[
-          "literal",
-          "variable",
-          "statement",
-          ...(leftIsEnum ? (["option"] as const) : []),
-        ]}
-        enumOptions={enumOptions}
+        allowed={rightAllowed}
+        enumOptions={rightEnumOptions}
         target="condition-right"
-        onChange={(v) => onChange({ ...condition, right: v })}
+        numericLiteralOnly={leftIsNumber}
+        onChange={(v) => {
+          onChange({ ...condition, right: v });
+        }}
       />
     </div>
   );
@@ -296,14 +416,23 @@ function ValueEditor({
   allowed,
   enumOptions = [],
   target,
+  numericLiteralOnly = false,
 }: {
   value: Value;
   onChange: (v: Value) => void;
   allowed: Array<Value["kind"]>;
   enumOptions?: EstimationFactEnumOption[];
   target: "condition-left" | "condition-right" | "return";
+  numericLiteralOnly?: boolean;
 }) {
+  const { currentUser } = useContext(AuthContext);
+  const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
+  const { factDefinitions } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId,
+    currentProcessId,
+  );
   const {
     selectingVariableReturn,
     setSelectingVariableReturn,
@@ -311,6 +440,8 @@ function ValueEditor({
     editingVariable,
     setVariableView,
   } = useEstimationFactsUIStore();
+
+  const booleanOnly = allowed.length === 1 && allowed[0] === "boolean";
 
   if (!editingVariable) return null;
 
@@ -320,44 +451,54 @@ function ValueEditor({
       style={{ backgroundColor: currentTheme.background_2 }}
     >
       {/* TYPE SELECTOR */}
-      <select
-        value={value.kind}
-        onChange={(e) => {
-          const next = e.target.value as Value["kind"];
-          if (next === "literal") onChange(literalValue(""));
-          if (next === "variable") onChange(emptyVariableValue());
-          if (next === "statement") onChange(statementValue());
-          if (next === "boolean") onChange(booleanValue(false));
-          if (next === "option") onChange(optionValue());
-        }}
-        className="select-none opacity-[0.4] text-[13px] outline-none border-none cursor-pointer hover:brightness-75 dim"
-      >
-        {allowed.includes("literal") && <option value="literal">Value</option>}
-        {allowed.includes("variable") && (
-          <option value="variable">Variable</option>
-        )}
-        {allowed.includes("statement") && (
-          <option value="statement">Statement</option>
-        )}
-        {allowed.includes("boolean") && (
-          <option value="boolean">True / False</option>
-        )}
-        {allowed.includes("option") && <option value="option">Option</option>}
-      </select>
+      {!booleanOnly && (
+        <select
+          value={value.kind}
+          onChange={(e) => {
+            const next = e.target.value as Value["kind"];
+            if (next === "literal") onChange(literalValue(""));
+            if (next === "variable") onChange(emptyVariableValue());
+            if (next === "statement") onChange(statementValue());
+            if (next === "boolean") onChange(booleanValue(false));
+            if (next === "option") onChange(optionValue());
+          }}
+          className="select-none opacity-[0.4] text-[13px] outline-none border-none cursor-pointer hover:brightness-75 dim"
+        >
+          {allowed.includes("literal") && (
+            <option value="literal">Value</option>
+          )}
+          {allowed.includes("variable") && (
+            <option value="variable">Variable</option>
+          )}
+          {allowed.includes("statement") && (
+            <option value="statement">Statement</option>
+          )}
+          {allowed.includes("boolean") && (
+            <option value="boolean">True / False</option>
+          )}
+          {allowed.includes("option") && <option value="option">Option</option>}
+        </select>
+      )}
 
       {value.kind === "literal" && (
         <input
           type="text"
+          inputMode="decimal"
           value={value.value}
           className="max-w-[110px] h-[23px] pl-[6px] ml-[2px] py-[1px] outline-none rounded-[4px]"
           style={{ border: "1px solid #444" }}
-          onChange={(e) =>
+          onChange={(e) => {
+            const next = e.target.value;
+            const enforceNumeric = numericLiteralOnly || target === "return";
+            if (enforceNumeric && !/^-?\d*\.?\d*$/.test(next)) {
+              return;
+            }
             onChange({
               ...value,
               kind: "literal",
-              value: e.target.value,
-            })
-          }
+              value: next,
+            });
+          }}
         />
       )}
 
@@ -365,9 +506,26 @@ function ValueEditor({
         <div
           className="flex items-center gap-[6px] cursor-pointer"
           onClick={() => {
+            // ⛔ block non-number variables at selection time
             setPendingVariableTarget({
               kind: target,
-              set: onChange,
+              set: (v: Value) => {
+                // 🔒 enforce number-only ONLY for right side + returns
+                if (
+                  (target === "condition-right" || target === "return") &&
+                  v.kind === "variable"
+                ) {
+                  const fact = factDefinitions.find(
+                    (f) => f.fact_id === v.var_id,
+                  );
+
+                  if (!fact || fact.fact_type !== "number") {
+                    return; // ⛔ block
+                  }
+                }
+
+                onChange(v);
+              },
             });
 
             setSelectingVariableReturn({
@@ -375,6 +533,7 @@ function ValueEditor({
               type: "variable",
               target,
             });
+
             setVariableView("fact");
           }}
         >
@@ -425,7 +584,7 @@ function ValueEditor({
 
       {value.kind === "boolean" && (
         <button
-          className="h-[23px] px-[8px] rounded-[4px] text-[13px] dim hover:brightness-90"
+          className="h-[23px] px-[8px] rounded-[4px] text-[13px] dim hover:brightness-85 cursor-pointer"
           style={{ border: "1px solid #444" }}
           onClick={() =>
             onChange({
@@ -530,7 +689,7 @@ export default function GeometricVariableBuilder() {
     loadIfTree(variableRecord.decision_tree_id).then((data) => {
       console.log("🟥 loadIfTree RESPONSE", data);
 
-      const tree = rebuildIfTree(data.branches, data.expressions);
+      const tree = rebuildIfTree(data.branches, data.expressions, factDefinitions);
       console.log("🟢 rebuilt tree", tree);
 
       setRoot(tree);
