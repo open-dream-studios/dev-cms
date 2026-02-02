@@ -274,11 +274,7 @@ export const usePemdasCanvas = (
 
     setOperandOverlayNodeId(null);
     setOpenNodeIdTypeSelection(null);
-    if (usage === "estimation") {
-      resetVariableUI();
-    } else {
-      setEditingFact(null);
-    }
+    setEditingFact(null);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {

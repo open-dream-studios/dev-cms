@@ -12,11 +12,13 @@ import GraphArrow from "./GraphArrow";
 import { OperandChipInline } from "./OperandChipInline";
 import { useEstimationFactsUIStore } from "../../_store/estimations.store";
 
-export const GraphNodeIcon = ({ color }: { color?: string | null }) => {
-  const { selectingVariableReturn } = useEstimationFactsUIStore();
-
-  const isActive = !!selectingVariableReturn;
-
+export const GraphNodeIcon = ({
+  color,
+  isBlinking,
+}: {
+  color?: string | null;
+  isBlinking?: boolean;
+}) => {
   if (!color) {
     return (
       <div className="relative w-[25px] h-[25px]">
@@ -31,7 +33,7 @@ export const GraphNodeIcon = ({ color }: { color?: string | null }) => {
     <motion.div
       className="relative w-[25px] h-[25px] brightness-137"
       animate={
-        isActive
+        isBlinking
           ? {
               opacity: [0.6, 0.86, 0.85, 0.6],
               scale: [1, 1.015, 1.005, 1],
@@ -39,7 +41,7 @@ export const GraphNodeIcon = ({ color }: { color?: string | null }) => {
           : { opacity: 1, scale: 1 }
       }
       transition={
-        isActive
+        isBlinking
           ? {
               duration: 0.9,
               times: [0, 0.4, 0.7, 1],
@@ -133,7 +135,7 @@ export const GraphNode = ({
     willChange: isActivelyDragged ? "transform" : "left",
   };
 
-  const nodeType: PEMDASNodeType = node.nodeType ?? "layer";
+  const nodeType: PEMDASNodeType = node.nodeType ?? "contributor-node";
 
   return (
     <motion.div
@@ -154,7 +156,8 @@ export const GraphNode = ({
       }}
       onClick={(e) => {
         if (ghost) return;
-        if (node.nodeType === "layer") {
+        console.log(node.nodeType)
+        if (node.nodeType === "contributor-node" || node.nodeType ==="contributor-bucket") {
           e.stopPropagation();
           onSelectLayer?.(node.id);
         }
@@ -267,7 +270,8 @@ export const GraphNode = ({
         {node.variable}
       </div>
 
-      {node.nodeType === "layer" && (
+      {(node.nodeType === "contributor-node" ||
+        node.nodeType === "contributor-bucket") && (
         <div className="absolute top-0 mt-[90px]">
           <GraphArrow
             isActive={!!isActiveLayer}

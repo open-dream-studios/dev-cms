@@ -37,12 +37,11 @@ export function rebuildIfTree(
       if (e.string_value != null) {
         return {
           kind: "option",
-          option_id: e.option_id,
+          option_id: e.string_value,
           selector_id: sid(),
         };
       }
 
-      // ✅ EMPTY CONST (this was crashing you)
       return literalValue("");
     }
 
@@ -87,13 +86,7 @@ export function rebuildIfTree(
   };
 
   function rebuildCondition(exprId: number) {
-    const e = exprMap.get(exprId);
-    console.log("🧠 CONDITION RAW", {
-      exprId,
-      operator: e.operator,
-      left_child_id: e.left_child_id,
-      right_child_id: e.right_child_id,
-    });
+    const e = exprMap.get(exprId); 
     if (!e) throw new Error("Missing condition expr " + exprId);
     if (e.node_type !== "operator")
       throw new Error("Condition expr is not operator");

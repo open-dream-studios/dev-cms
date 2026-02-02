@@ -20,7 +20,7 @@ import PemdasViewport from "./EstimationPEMDAS/components/PemdasViewport";
 import { GraphNodeIcon } from "./EstimationPEMDAS/components/GraphNode";
 import { nodeColors } from "./EstimationPEMDAS/_constants/pemdas.constants";
 import { factTypeConversion } from "./_helpers/estimations.helpers";
-import GeometricVariableBuilder from "./EstimationVariables/GeometricVariableBuilder";
+import IfTreeEditor from "./EstimationVariables/IfTreeEditor";
 import { cleanVariableKey } from "@/util/functions/Variables";
 import SaveAndCancelBar from "./EstimationPEMDAS/components/SaveAndCancelBar";
 import { usePemdasGraphs } from "@/contexts/queryContext/queries/estimations/pemdasGraphs";
@@ -294,7 +294,7 @@ const EstimationAdmin = () => {
       >
         <HomeLayout left={<EstimationsLeftBar />}>
           <div className="w-[100%] h-[100%] relative">
-            {editingVariable !== null && <GeometricVariableBuilder />}
+            {editingVariable !== null && <IfTreeEditor />}
             {editingFact !== null && <FactEditor />}
 
             <PemdasViewport
@@ -321,7 +321,7 @@ const EstimationAdmin = () => {
               setCanvasDropRef={setCanvasDropRef}
             />
             {isDirty && (
-              <div className="absolute top-[20px] left-[20px] z-500">
+              <div className="absolute top-[20px] left-[20px]">
                 <SaveAndCancelBar
                   onSave={handleSaveButton}
                   onCancel={handleBackButton}
@@ -334,8 +334,8 @@ const EstimationAdmin = () => {
 
             {selectingVariableReturn &&
               selectingVariableReturn.type === "statement" && (
-                <div className="w-[100%] h-[50vh] absolute bottom-0 left-0 z-500">
-                  {isVariableDirty && (
+                <div className="w-[100%] h-[calc(50vh-65px)] absolute bottom-0 left-0 z-500">
+                  {/* {isVariableDirty && (
                     <div className="absolute top-[16px] left-[16px] z-600">
                       <SaveAndCancelBar
                         onSave={handleSaveStatement}
@@ -345,7 +345,7 @@ const EstimationAdmin = () => {
                         showCancel={false}
                       />
                     </div>
-                  )}
+                  )} */}
                   <PemdasViewport
                     usage="variable"
                     viewportRef={variablePemdas.viewportRef}
@@ -394,7 +394,7 @@ const EstimationAdmin = () => {
                   backgroundColor: nodeColors[draggingFact.variable_scope],
                 }}
               >
-                <GraphNodeIcon color={null} />
+                <GraphNodeIcon />
               </div>
 
               <div className="min-w-0">

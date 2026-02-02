@@ -5,11 +5,11 @@ export type VariableKey = string;
 
 export type Operand = "+" | "-" | "×" | "/";
 
-export type PEMDASNodeType = "layer" | "constant" | VariableScope;
+export type PEMDASNodeType = "contributor-node" | "contributor-bucket" | "constant" | VariableScope;
 export const variableScopes: VariableScope[] = ["fact", "geometric", "project"]
-export type CreatablePEMDASNodeType = "layer" | "constant";
+export type CreatablePEMDASNodeType = "contributor-node" | "constant";
 export const creatablePEMDASNodeTypes: CreatablePEMDASNodeType[] = [
-  "layer",
+  "contributor-node",
   "constant",
 ];
 

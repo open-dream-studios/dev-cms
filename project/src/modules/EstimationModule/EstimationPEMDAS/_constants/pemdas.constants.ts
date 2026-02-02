@@ -15,6 +15,7 @@ export const nodeColors: Record<PEMDASNodeType, string> = {
   fact: "#22C55E",
   geometric: "#A855F7",
   project: "#EF4444", 
-  layer: "#A855F7",
-  constant: "#3B82F6"
+  "contributor-node": "#3B82F6",
+  "contributor-bucket": "#429",
+  constant: "#666"
 };

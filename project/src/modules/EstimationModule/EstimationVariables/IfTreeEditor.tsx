@@ -22,6 +22,7 @@ import {
 import {
   EstimationFactDefinition,
   EstimationFactEnumOption,
+  VariableScope,
 } from "@open-dream/shared";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
 import { AuthContext } from "@/contexts/authContext";
@@ -434,24 +435,49 @@ function ValueEditor({
     currentProcessId,
   );
   const {
-    selectingVariableReturn,
     setSelectingVariableReturn,
     setPendingVariableTarget,
     editingVariable,
     setVariableView,
+    selectingVariableReturn,
   } = useEstimationFactsUIStore();
 
   const booleanOnly = allowed.length === 1 && allowed[0] === "boolean";
+  const optionOnly = allowed.length === 1 && allowed[0] === "option";
+
+  function getValueColor(
+    value: Value,
+    editingVariable: { var_type: VariableScope } | null,
+    selectingVariableReturn: {
+      selector_id: string;
+      type: "variable" | "statement";
+      target: "condition-left" | "condition-right" | "return";
+    } | null,
+  ): string | null {
+    // variable: always show its own scope color if set
+    if (value.kind === "variable" && value.var_key) {
+      return nodeColors[value.var_type];
+    }
+    // statement: ONLY show color when THIS selector is being selected
+    if (
+      value.kind === "statement" &&
+      editingVariable &&
+      selectingVariableReturn?.selector_id === value.selector_id &&
+      selectingVariableReturn.type === "statement"
+    ) {
+      return nodeColors[editingVariable.var_type];
+    }
+    return null;
+  }
 
   if (!editingVariable) return null;
 
   return (
     <div
-      className="flex flex-row gap-[5px] items-center h-[25px] px-[6px] rounded-[5px]"
+      className={`flex flex-row gap-[5px] items-center h-[25px] rounded-[5px] ${!booleanOnly && !optionOnly && "px-[6px]"}`}
       style={{ backgroundColor: currentTheme.background_2 }}
     >
-      {/* TYPE SELECTOR */}
-      {!booleanOnly && (
+      {!booleanOnly && !optionOnly && (
         <select
           value={value.kind}
           onChange={(e) => {
@@ -539,13 +565,14 @@ function ValueEditor({
         >
           <GraphNodeIcon
             color={
-              (selectingVariableReturn?.selector_id === value.selector_id &&
-                selectingVariableReturn.type === "variable") ||
-              (value.kind === "variable" && !!value.var_key)
-                ? selectingVariableReturn
-                  ? nodeColors[editingVariable.var_type]
-                  : nodeColors[value.var_type]
-                : null
+              getValueColor(value, editingVariable, selectingVariableReturn) ??
+              (selectingVariableReturn?.selector_id === value.selector_id
+                ? currentTheme.text_4
+                : null)
+            }
+            isBlinking={
+              selectingVariableReturn?.selector_id === value.selector_id &&
+              selectingVariableReturn?.type === "variable"
             }
           />
           {value.var_key && (
@@ -572,11 +599,10 @@ function ValueEditor({
           }}
         >
           <GraphNodeIcon
-            color={
+            color={currentTheme.text_4}
+            isBlinking={
               selectingVariableReturn?.selector_id === value.selector_id &&
-              selectingVariableReturn.type === "statement"
-                ? nodeColors[editingVariable.var_type]
-                : null
+              selectingVariableReturn?.type === "statement"
             }
           />
         </div>
@@ -597,39 +623,41 @@ function ValueEditor({
         </button>
       )}
 
-      {value.kind === "option" &&
-        (enumOptions.length > 0 ? (
-          <select
-            value={value.option_id}
-            onChange={(e) =>
-              onChange({
-                kind: "option",
-                option_id: e.target.value,
-                selector_id: value.selector_id,
-              })
-            }
-            className="ml-[6px] h-[23px] px-[6px] rounded-[4px] text-[13px] outline-none cursor-pointer"
-            style={{ border: "1px solid #444" }}
-          >
-            <option value="" disabled>
-              Select option
-            </option>
-            {enumOptions.map((opt) => (
-              <option key={opt.option_id} value={opt.option_id}>
-                {opt.label}
+      {value.kind === "option" && (
+        <div className="rounded-[4px] pl-[8px] pr-[8px] h-[23px] ">
+          {enumOptions.length > 0 ? (
+            <select
+              value={value.option_id}
+              onChange={(e) =>
+                onChange({
+                  kind: "option",
+                  option_id: e.target.value,
+                  selector_id: value.selector_id,
+                })
+              }
+              className="h-[100%] w-[100%] text-[13px] outline-none cursor-pointer"
+            >
+              <option value="" disabled>
+                Select option
               </option>
-            ))}
-          </select>
-        ) : (
-          <span className="ml-[6px] text-[12px] opacity-50">
-            No options defined
-          </span>
-        ))}
+              {enumOptions.map((opt) => (
+                <option key={opt.option_id} value={opt.option_id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="ml-[6px] text-[12px] opacity-50">
+              No options defined
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-export default function GeometricVariableBuilder() {
+export default function IfTreeEditor() {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
@@ -663,18 +691,12 @@ export default function GeometricVariableBuilder() {
       : Object.values(variables ?? {});
 
     if (varsArray.length === 0) {
-      console.log("⏳ variables empty");
       return;
     }
 
     const variableRecord = varsArray.find(
       (v: any) => v.var_key === editingVariable.var_key,
     );
-
-    console.log("🟨 VARIABLE LOOKUP", {
-      found: !!variableRecord,
-      decision_tree_id: variableRecord?.decision_tree_id,
-    });
 
     if (!variableRecord?.decision_tree_id) {
       setRoot({
@@ -684,14 +706,12 @@ export default function GeometricVariableBuilder() {
       return;
     }
 
-    console.log("🟧 CALLING loadIfTree", variableRecord.decision_tree_id);
-
     loadIfTree(variableRecord.decision_tree_id).then((data) => {
-      console.log("🟥 loadIfTree RESPONSE", data);
-
-      const tree = rebuildIfTree(data.branches, data.expressions, factDefinitions);
-      console.log("🟢 rebuilt tree", tree);
-
+      const tree = rebuildIfTree(
+        data.branches,
+        data.expressions,
+        factDefinitions,
+      );
       setRoot(tree);
     });
   }, [editingVariable?.var_key, variables]);
@@ -705,21 +725,10 @@ export default function GeometricVariableBuilder() {
     return null;
   }
 
-  // ✅ FIX: frontend save flow — USE EXISTING upsertBranch (NO BATCH)
-
   const handleSave = async () => {
     const tree = await upsertIfTree({ return_type: "number" });
     const compiled = compileIfTree(root);
     const idMap = new Map<number, number>();
-    // for (const expr of compiled.expressions) {
-    //   const tempId = expr.id;
-    //   const res = await upsertExpression({
-    //     ...expr,
-    //     id: undefined,
-    //   });
-    //   idMap.set(tempId, res.id);
-    // }
-    // PASS 1 — save leaves (const, variable_ref, node_ref)
     for (const expr of compiled.expressions) {
       if (expr.node_type === "operator") continue;
 
@@ -756,8 +765,6 @@ export default function GeometricVariableBuilder() {
             : null,
       });
 
-      console.log("DEBUG", branchRes?.id, idMap.get(b.return_expression_id));
-
       await upsertReturnNumber({
         branch_id: branchRes.id,
         value_expression_id: idMap.get(b.return_expression_id)!,
@@ -780,7 +787,7 @@ export default function GeometricVariableBuilder() {
         setEditingFact(null);
       }}
       style={{ backgroundColor: currentTheme.background_1 }}
-      className="z-500 absolute top-0 left-0 flex gap-[10px] w-[100%] h-[100%] flex-col px-[20px] py-[20px] overflow-y-auto"
+      className="z-500 absolute bottom-0 left-0 flex gap-[10px] w-[100%] h-[50vh] flex-col px-[20px] py-[20px] overflow-y-auto"
     >
       <div className="flex flex-row gap-[13px] items-center">
         <p className="select-none font-[600] text-[18px] leading-[20px] opacity-[0.88]">
@@ -802,6 +809,7 @@ export default function GeometricVariableBuilder() {
         variable_scope={editingVariable.var_type}
         displayOnly={true}
       />
+      <div className="h-[0px]"></div>
       <BranchEditor branch={root} onChange={setRoot} />
     </div>
   );

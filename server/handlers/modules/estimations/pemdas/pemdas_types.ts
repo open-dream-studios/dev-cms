@@ -1,7 +1,7 @@
 // server/handlers/modules/estimations/pemdas/pemdas_types.ts
 export type PemdasOperand = "+" | "-" | "*" | "/";
 
-export type PemdasNodeKind = "variable" | "constant" | "layer";
+export type PemdasNodeKind = "variable" | "constant" | "contributor-node" | "contributor-bucket";
 
 export type PemdasNodeConfig = {
   kind: PemdasNodeKind;
