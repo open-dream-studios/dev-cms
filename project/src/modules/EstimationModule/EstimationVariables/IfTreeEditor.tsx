@@ -798,9 +798,11 @@ export default function IfTreeEditor() {
   loadConditionalRef.current = loadConditionalIfTree;
 
   useEffect(() => {
-    if (mode === "variable" && !editingVariable) return;
-    if (mode === "conditional" && !editingConditional) return;
+    // hard reset whenever we switch what we're editing
+    setRoot({ type: "return", value: literalValue("") });
+  }, [mode, editingVariable?.var_key, editingConditional]);
 
+  useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
@@ -808,16 +810,12 @@ export default function IfTreeEditor() {
 
       if (mode === "variable") {
         if (!editingVariable) return;
+
         const rec = variablesArray.find(
           (v: any) => v.var_key === editingVariable.var_key,
         );
 
-        if (!rec?.decision_tree_id) {
-          if (!cancelled) {
-            setRoot({ type: "return", value: literalValue("") });
-          }
-          return;
-        }
+        if (!rec?.decision_tree_id) return;
 
         data = await loadVariableRef.current(rec.decision_tree_id);
       }
@@ -837,7 +835,12 @@ export default function IfTreeEditor() {
     return () => {
       cancelled = true;
     };
-  }, [mode, editingVariable?.var_key, editingConditional, variablesArray]);
+  }, [
+    mode,
+    editingVariable?.var_key,
+    editingConditional,
+    variablesArray, // YES — but now it is SAFE
+  ]);
 
   const [root, setRoot] = useState<Branch>({
     type: "return",
@@ -993,7 +996,7 @@ export default function IfTreeEditor() {
 
     if (mode === "conditional") {
       await upsertConditionalBinding({
-        node_id: editingConditional!, 
+        node_id: editingConditional!,
         decision_tree_id: tree.id,
         allowedVariableKeys: factDefinitions.map((f) => f.fact_key),
       });
