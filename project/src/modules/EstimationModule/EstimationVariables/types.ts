@@ -39,3 +39,5 @@ export type Branch =
       cases: IfCase[]; // IF / ELSE IF / ELSE IF ...
       else: Branch; // single ELSE
     };
+
+export type EditorMode = "variable" | "conditional" | "adjustment";

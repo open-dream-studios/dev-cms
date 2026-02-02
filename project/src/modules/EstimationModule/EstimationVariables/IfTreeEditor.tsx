@@ -1,12 +1,12 @@
-// project/src/modules/EstimationModule/EstimationVariables/GeometricVariableBuilder.tsx
-import { useContext, useEffect, useState } from "react";
+// project/src/modules/EstimationModule/EstimationVariables/IfTreeEditor.tsx
+import { useContext, useEffect, useRef, useMemo, useState } from "react";
 import {
   resetVariableUI,
   useEstimationFactsUIStore,
 } from "../_store/estimations.store";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
-import { Branch, Condition, Value } from "./types";
+import { Branch, Condition, EditorMode, Value } from "./types";
 import { VariableDisplayItem } from "../components/FactDraggableItem";
 import { BsArrowRight } from "react-icons/bs";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
@@ -41,18 +41,96 @@ function BranchEditor({
   onChange: (b: Branch) => void;
 }) {
   const currentTheme = useCurrentTheme();
-  const { editingVariable } = useEstimationFactsUIStore();
+  const { editingVariable, editingConditional, editingIfTreeType } =
+    useEstimationFactsUIStore();
 
-  if (!editingVariable) return null;
+  if (!editingVariable && !editingConditional) return null;
+
+  const arrowColor = editingVariable
+    ? nodeColors[editingVariable.var_type]
+    : nodeColors["contributor-node"];
 
   if (branch.type === "return") {
+    // 🚫 CONDITIONALS: NO VALUE EDITOR
+    if (editingIfTreeType === "conditional") {
+      return (
+        <div
+          style={{ borderLeft: "1px solid #444" }}
+          className="pb-[16px] pt-[2px] px-[5px] flex flex-row gap-[10px] text-[15.5px] opacity-70"
+        >
+          <BsArrowRight
+            color={nodeColors["contributor-node"]}
+            size={19}
+            className="mt-[2px]"
+          />
+          <strong className="mt-[1px]">RETURN</strong>
+
+          {/* BOOLEAN TOGGLE */}
+          <button
+            className="h-[23px] px-[8px] rounded-[4px] text-[13px] dim hover:brightness-85 cursor-pointer"
+            style={{ border: "1px solid #444" }}
+            onClick={() =>
+              onChange({
+                type: "return",
+                value: {
+                  kind: "boolean",
+                  value: !(
+                    branch.value.kind === "boolean" && branch.value.value
+                  ),
+                  selector_id: branch.value.selector_id,
+                },
+              })
+            }
+          >
+            {branch.value.kind === "boolean" && branch.value.value
+              ? "True"
+              : "False"}
+          </button>
+
+          {/* ✅ BRANCH BUTTON */}
+          <button
+            className="h-[25px] px-[10px] rounded-[5px] cursor-pointer hover:brightness-85 dim font-[200] text-[13px]"
+            style={{
+              backgroundColor: currentTheme.background_2,
+              color: currentTheme.text_2,
+            }}
+            onClick={() =>
+              onChange({
+                type: "if",
+                cases: [
+                  {
+                    condition: {
+                      left: emptyVariableValue(),
+                      operator: "==",
+                      right: booleanValue(false),
+                    },
+                    then: {
+                      type: "return",
+                      value: booleanValue(false),
+                    },
+                  },
+                ],
+                else: {
+                  type: "return",
+                  value: booleanValue(false),
+                },
+              })
+            }
+          >
+            BRANCH
+          </button>
+        </div>
+      );
+    }
+
+    // ✅ VARIABLES: NORMAL RETURN UI
     return (
       <div
         style={{ borderLeft: "1px solid #444" }}
         className="pb-[16px] pt-[2px] px-[5px] flex flex-row gap-[10px] text-[15.5px] brightness-90"
       >
         <BsArrowRight
-          color={lightenColor(nodeColors[editingVariable.var_type], 0.28)}
+          color={lightenColor(arrowColor, 0.28)}
           size={19}
           className="mt-[2px]"
         />
@@ -163,11 +241,11 @@ function BranchEditor({
                 condition: {
                   left: emptyVariableValue(),
                   operator: "==",
-                  right: literalValue(""),
+                  right: booleanValue(false),
                 },
                 then: {
                   type: "return",
-                  value: literalValue(""),
+                  value: booleanValue(false),
                 },
               },
             ],
@@ -365,7 +443,14 @@ function ConditionEditor({
             operator: "==",
             right:
               prevCategory !== nextCategory
-                ? normalizeRightValue(nextRightAllowed, literalValue(""))
+                ? normalizeRightValue(
+                    nextRightAllowed,
+                    leftIsNumber
+                      ? literalValue("")
+                      : nextRightAllowed.includes("boolean")
+                        ? booleanValue(false)
+                        : literalValue(""),
+                  )
                 : normalizeRightValue(nextRightAllowed, condition.right),
           });
         }}
@@ -440,6 +525,7 @@ function ValueEditor({
     editingVariable,
     setVariableView,
     selectingVariableReturn,
+    editingConditional,
   } = useEstimationFactsUIStore();
 
   const booleanOnly = allowed.length === 1 && allowed[0] === "boolean";
@@ -470,7 +556,7 @@ function ValueEditor({
     return null;
   }
 
-  if (!editingVariable) return null;
+  if (!editingVariable && !editingConditional) return null;
 
   return (
     <div
@@ -661,8 +747,14 @@ export default function IfTreeEditor() {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
-  const { editingVariable, setSelectingVariableReturn, setEditingFact } =
-    useEstimationFactsUIStore();
+
+  const {
+    editingVariable,
+    setSelectingVariableReturn,
+    setEditingFact,
+    editingConditional,
+    editingIfTreeType,
+  } = useEstimationFactsUIStore();
   const { factDefinitions } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId,
@@ -674,89 +766,199 @@ export default function IfTreeEditor() {
     upsertBranch,
     upsertVariable,
     upsertReturnNumber,
-    loadIfTree,
+    loadVariableIfTree,
     variables,
+    loadConditionalIfTree,
+    upsertConditionalBinding,
+    upsertReturnBoolean,
   } = useEstimationIfTrees(!!currentUser, currentProjectId);
+
+  const mode: EditorMode = editingIfTreeType!;
+  const targetId =
+    mode === "variable"
+      ? (editingVariable?.var_key ?? null)
+      : (editingConditional ?? null);
+
+  // const variablesArray = Array.isArray(variables)
+  //   ? variables
+  //   : Object.values(variables ?? {});
+
+  const variablesArray = useMemo(
+    () =>
+      Array.isArray(variables) ? variables : Object.values(variables ?? {}),
+    [variables],
+  );
+
+  const loadVariableRef = useRef(loadVariableIfTree);
+  const loadConditionalRef = useRef(loadConditionalIfTree);
+  const factsRef = useRef(factDefinitions);
+  factsRef.current = factDefinitions;
+
+  loadVariableRef.current = loadVariableIfTree;
+  loadConditionalRef.current = loadConditionalIfTree;
+
+  useEffect(() => {
+    if (mode === "variable" && !editingVariable) return;
+    if (mode === "conditional" && !editingConditional) return;
+
+    let cancelled = false;
+
+    const load = async () => {
+      let data;
+
+      if (mode === "variable") {
+        if (!editingVariable) return;
+        const rec = variablesArray.find(
+          (v: any) => v.var_key === editingVariable.var_key,
+        );
+
+        if (!rec?.decision_tree_id) {
+          if (!cancelled) {
+            setRoot({ type: "return", value: literalValue("") });
+          }
+          return;
+        }
+
+        data = await loadVariableRef.current(rec.decision_tree_id);
+      }
+
+      if (mode === "conditional") {
+        if (!editingConditional) return;
+        data = await loadConditionalRef.current(editingConditional);
+      }
+
+      if (!data || cancelled) return;
+
+      setRoot(rebuildIfTree(data.branches, data.expressions, factsRef.current));
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, editingVariable?.var_key, editingConditional, variablesArray]);
 
   const [root, setRoot] = useState<Branch>({
     type: "return",
     value: literalValue(""),
   });
 
-  useEffect(() => {
-    if (!editingVariable) return;
-
-    const varsArray = Array.isArray(variables)
-      ? variables
-      : Object.values(variables ?? {});
-
-    if (varsArray.length === 0) {
-      return;
-    }
-
-    const variableRecord = varsArray.find(
-      (v: any) => v.var_key === editingVariable.var_key,
-    );
-
-    if (!variableRecord?.decision_tree_id) {
-      setRoot({
-        type: "return",
-        value: literalValue(""),
-      });
-      return;
-    }
-
-    loadIfTree(variableRecord.decision_tree_id).then((data) => {
-      const tree = rebuildIfTree(
-        data.branches,
-        data.expressions,
-        factDefinitions,
-      );
-      setRoot(tree);
-    });
-  }, [editingVariable?.var_key, variables]);
-
-  if (!editingVariable) return null;
-
-  const foundVariable = factDefinitions.find(
-    (fact: EstimationFactDefinition) => fact.fact_id === editingVariable.var_id,
-  );
-  if (foundVariable && foundVariable.variable_scope === "fact") {
+  if (
+    !editingIfTreeType ||
+    (editingIfTreeType === "variable" && !editingVariable) ||
+    (editingIfTreeType === "conditional" && !editingConditional) ||
+    (editingIfTreeType === "adjustment" && !editingConditional)
+  ) {
     return null;
   }
 
+  const foundVariable = editingVariable
+    ? factDefinitions.find(
+        (fact: EstimationFactDefinition) =>
+          fact.fact_id === editingVariable.var_id,
+      )
+    : null;
+  if (
+    editingVariable &&
+    foundVariable &&
+    foundVariable.variable_scope === "fact"
+  ) {
+    return null;
+  }
+
+  // const handleSave = async () => {
+  //   const tree = await upsertIfTree({ return_type: "number" });
+  //   const compiled = compileIfTree(root);
+  //   const idMap = new Map<number, number>();
+  //   for (const expr of compiled.expressions) {
+  //     if (expr.node_type === "operator") continue;
+
+  //     const res = await upsertExpression({
+  //       ...expr,
+  //       id: undefined,
+  //     });
+
+  //     idMap.set(expr.id, res.id);
+  //   }
+
+  //   // PASS 2 — save operators WITH remapped children
+  //   for (const expr of compiled.expressions) {
+  //     if (expr.node_type !== "operator") continue;
+
+  //     const res = await upsertExpression({
+  //       ...expr,
+  //       id: undefined,
+  //       left_child_id: idMap.get(expr.left_child_id),
+  //       right_child_id: idMap.get(expr.right_child_id),
+  //     });
+
+  //     idMap.set(expr.id, res.id);
+  //   }
+
+  //   // Branches — CALL upsertBranch PER BRANCH
+  //   for (const b of compiled.branches) {
+  //     const branchRes = await upsertBranch({
+  //       decision_tree_id: tree.id,
+  //       order_index: b.order_index,
+  //       condition_expression_id:
+  //         b.condition_expression_id != null
+  //           ? idMap.get(b.condition_expression_id)!
+  //           : null,
+  //     });
+
+  //     await upsertReturnNumber({
+  //       branch_id: branchRes.id,
+  //       value_expression_id: idMap.get(b.return_expression_id)!,
+  //     });
+  //   }
+
+  //   // Variable
+  //   await upsertVariable({
+  //     var_key: editingVariable.var_key,
+  //     decision_tree_id: tree.id,
+  //     allowedVariableKeys: [],
+  //   });
+  //   resetVariableUI();
+  // };
+
   const handleSave = async () => {
-    const tree = await upsertIfTree({ return_type: "number" });
+    // const tree = await upsertIfTree({
+    //   return_type: mode === "variable" ? "number" : "node",
+    // });
+    const tree = await upsertIfTree({
+      return_type:
+        mode === "variable"
+          ? "number"
+          : mode === "conditional"
+            ? "boolean"
+            : "node",
+    });
+
     const compiled = compileIfTree(root);
     const idMap = new Map<number, number>();
-    for (const expr of compiled.expressions) {
-      if (expr.node_type === "operator") continue;
 
-      const res = await upsertExpression({
-        ...expr,
-        id: undefined,
-      });
-
+    for (const expr of compiled.expressions.filter(
+      (e) => e.node_type !== "operator",
+    )) {
+      const res = await upsertExpression({ ...expr, id: undefined });
       idMap.set(expr.id, res.id);
     }
 
-    // PASS 2 — save operators WITH remapped children
-    for (const expr of compiled.expressions) {
-      if (expr.node_type !== "operator") continue;
-
+    for (const expr of compiled.expressions.filter(
+      (e) => e.node_type === "operator",
+    )) {
       const res = await upsertExpression({
         ...expr,
         id: undefined,
         left_child_id: idMap.get(expr.left_child_id),
         right_child_id: idMap.get(expr.right_child_id),
       });
-
       idMap.set(expr.id, res.id);
     }
 
-    // Branches — CALL upsertBranch PER BRANCH
     for (const b of compiled.branches) {
-      const branchRes = await upsertBranch({
+      const branch = await upsertBranch({
         decision_tree_id: tree.id,
         order_index: b.order_index,
         condition_expression_id:
@@ -765,18 +967,38 @@ export default function IfTreeEditor() {
             : null,
       });
 
-      await upsertReturnNumber({
-        branch_id: branchRes.id,
-        value_expression_id: idMap.get(b.return_expression_id)!,
+      // ✅ VARIABLE returns (number)
+      if (mode === "variable") {
+        await upsertReturnNumber({
+          branch_id: branch.id,
+          value_expression_id: idMap.get(b.return_expression_id)!,
+        });
+      }
+
+      if (mode === "conditional") {
+        await upsertReturnBoolean({
+          branch_id: branch.id,
+          value_expression_id: idMap.get(b.return_expression_id)!,
+        });
+      }
+    }
+
+    if (mode === "variable") {
+      await upsertVariable({
+        var_key: editingVariable!.var_key,
+        decision_tree_id: tree.id,
+        allowedVariableKeys: [],
       });
     }
 
-    // Variable
-    await upsertVariable({
-      var_key: editingVariable.var_key,
-      decision_tree_id: tree.id,
-      allowedVariableKeys: [],
-    });
+    if (mode === "conditional") {
+      await upsertConditionalBinding({
+        node_id: editingConditional!, 
+        decision_tree_id: tree.id,
+        allowedVariableKeys: factDefinitions.map((f) => f.fact_key),
+      });
+    }
+
     resetVariableUI();
   };
 
@@ -791,7 +1013,7 @@ export default function IfTreeEditor() {
     >
       <div className="flex flex-row gap-[13px] items-center">
         <p className="select-none font-[600] text-[18px] leading-[20px] opacity-[0.88]">
-          {editingVariable.var_id ? "Edit Variable" : "New Variable"}
+          {editingVariable && "Edit Variable"}
         </p>
         <SaveAndCancelBar
           onSave={handleSave}
@@ -803,12 +1025,14 @@ export default function IfTreeEditor() {
           showCancel={true}
         />
       </div>
-      <VariableDisplayItem
-        fact_key={editingVariable.var_key}
-        fact_type={"number"}
-        variable_scope={editingVariable.var_type}
-        displayOnly={true}
-      />
+      {editingVariable && (
+        <VariableDisplayItem
+          fact_key={editingVariable.var_key}
+          fact_type={"number"}
+          variable_scope={editingVariable.var_type}
+          displayOnly={true}
+        />
+      )}
       <div className="h-[0px]"></div>
       <BranchEditor branch={root} onChange={setRoot} />
     </div>

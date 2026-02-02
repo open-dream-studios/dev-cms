@@ -1,11 +1,11 @@
-// server/handlers/modules/estimations/if_trees/variable_controllers.ts
+// server/handlers/modules/estimations/if_trees/variables/variable_controllers.ts
 import type { Request } from "express";
 import type { PoolConnection } from "mysql2/promise";
 import {
   listVariablesRepo,
   upsertVariableRepo,
   deleteVariableRepo
-} from "./variable_repositories.js";
+} from "./variable_repositories.js"
 
 export const listVariables = async (
   req: Request,
@@ -17,28 +17,18 @@ export const listVariables = async (
   return await listVariablesRepo(conn, project_idx);
 };
 
-// export const upsertVariable = async (
-//   req: Request,
-//   _: any,
-//   conn: PoolConnection
-// ) => {
-//   const project_idx = req.user?.project_idx;
-//   if (!project_idx) throw new Error("Missing project_idx");
-//   return await upsertVariableRepo(conn, project_idx, req.body);
-// };
-
 export const upsertVariable = async (
   req: Request,
   _: any,
   conn: PoolConnection
 ) => {
-  console.log("🟢 upsertVariable controller HIT");
-  console.log("BODY:", req.body);
-  console.log("USER:", req.user);
+  // console.log("🟢 upsertVariable controller HIT");
+  // console.log("BODY:", req.body);
+  // console.log("USER:", req.user);
 
   const project_idx = req.user?.project_idx;
   if (!project_idx) {
-    console.log("❌ Missing project_idx");
+    // console.log("❌ Missing project_idx");
     throw new Error("Missing project_idx");
   }
 

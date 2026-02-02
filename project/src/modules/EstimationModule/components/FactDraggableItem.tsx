@@ -20,7 +20,7 @@ import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
-import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import { openVariableIfTree, useEstimationFactsUIStore } from "../_store/estimations.store";
 import { cleanVariableKey } from "@/util/functions/Variables";
 import { motion } from "framer-motion";
 import { cubicBezier } from "framer-motion";
@@ -115,8 +115,7 @@ export default function FactDraggableItem({
     pendingVariableTarget,
     setPendingVariableTarget,
     setSelectingVariableReturn,
-    setEditingFact,
-    setEditingVariable,
+    setEditingFact, 
   } = useEstimationFactsUIStore();
 
   const selectingVariable =
@@ -210,7 +209,7 @@ export default function FactDraggableItem({
           if (fact.variable_scope === "fact") {
             setEditingFact(editItem);
           } else {
-            setEditingVariable(editItem);
+            openVariableIfTree(editItem);
           }
         }
       }}

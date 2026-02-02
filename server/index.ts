@@ -50,9 +50,9 @@ import estimationGraphNodesRoutes from "./handlers/modules/estimations/graphs/gr
 import pricingGraphRoutes from "./handlers/modules/estimations/pricing_graphs/pricing_graph_routes.js"
 import AIRoutes from "./handlers/modules/AI/AI_routes.js"
 import ifTreeRoutes from "./handlers/modules/estimations/if_trees/if_tree_routes.js"
-import ifBranchRoutes from "./handlers/modules/estimations/if_trees/if_branch_routes.js"
-import ifExpressionRoutes from "./handlers/modules/estimations/if_trees/if_expression_routes.js"
-import estimationVariableRoutes from "./handlers/modules/estimations/if_trees/variable_routes.js"
+import ifBranchRoutes from "./handlers/modules/estimations/if_trees/branch/if_branch_routes.js"
+import ifExpressionRoutes from "./handlers/modules/estimations/if_trees/expressions/if_expression_routes.js"
+import estimationBindingRoutes from "./handlers/modules/estimations/if_trees/bindings/bindings_routes.js"
 import estimationPemdasRoutes from "./handlers/modules/estimations/pemdas/pemdas_routes.js"
 
 dotenv.config();
@@ -180,7 +180,7 @@ app.use("/api/estimations/pricing/graphs", pricingGraphRoutes);
 app.use("/api/estimations/if-trees", ifTreeRoutes);
 app.use("/api/estimations/if-trees/branches", ifBranchRoutes);
 app.use("/api/estimations/if-trees/expressions", ifExpressionRoutes);
-app.use("/api/estimations/variables", estimationVariableRoutes);
+app.use("/api/estimations/bindings", estimationBindingRoutes);
 
 app.use("/api/estimations/pemdas", estimationPemdasRoutes);
 

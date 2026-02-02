@@ -73,6 +73,25 @@ export const validateDecisionTree = async (
       if (!ret) throw new Error("Missing node return");
     }
 
+    if (tree.return_type === "boolean") {
+      const [[ret]] = await conn.query<any[]>(
+        `SELECT * FROM estimation_if_decision_return_boolean WHERE branch_id = ?`,
+        [branch.id]
+      );
+      if (!ret) throw new Error("Missing boolean return");
+
+      const retType = await resolveExpressionType(
+        conn,
+        project_idx,
+        ret.value_expression_id,
+        allowedKeys
+      );
+
+      if (retType !== "boolean") {
+        throw new Error("Boolean return must resolve to boolean");
+      }
+    }
+
     if (tree.return_type === "adjustment") {
       const [rets] = await conn.query<any[]>(
         `SELECT * FROM estimation_if_decision_return_adjustments WHERE branch_id = ?`,

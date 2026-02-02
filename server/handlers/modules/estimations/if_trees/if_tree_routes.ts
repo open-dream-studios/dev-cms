@@ -2,17 +2,21 @@
 import express from "express";
 import { authenticateUser } from "../../../../util/auth.js";
 import { checkProjectPermission } from "../../../../util/permissions.js";
-import {
-  transactionHandler,
-  errorHandler,
-} from "../../../../util/handlerWrappers.js";
+import { transactionHandler, errorHandler } from "../../../../util/handlerWrappers.js";
+
 import {
   listIfTrees,
   upsertIfTree,
   deleteIfTree,
 } from "./if_tree_controllers.js";
-import { upsertReturnNumber } from "./if_return_number_controllers.js";
-import { getIfTreeForVariable } from "./if_tree_read_controllers.js";
+
+import { upsertReturnNumber } from "./if_tree_returns/if_return_number_controllers.js";
+import { upsertReturnAdjustment } from "./if_tree_returns/if_return_adjustment_controllers.js";
+
+import { loadVariableIfTree } from "./load/load_variable_controllers.js";
+import { loadConditionalIfTree } from "./load/load_conditional_controllers.js";
+import { loadAdjustmentIfTree } from "./load/load_adjustment_controllers.js";
+import { upsertReturnBoolean } from "./if_tree_returns/if_return_boolean_controllers.js";
 
 const router = express.Router();
 
@@ -37,6 +41,7 @@ router.post(
   transactionHandler(deleteIfTree)
 );
 
+// RETURNS
 router.post(
   "/returns/number/upsert",
   authenticateUser,
@@ -45,10 +50,39 @@ router.post(
 );
 
 router.post(
-  "/load",
+  "/returns/adjustment/upsert",
+  authenticateUser,
+  checkProjectPermission(3),
+  transactionHandler(upsertReturnAdjustment)
+);
+
+router.post(
+  "/returns/boolean/upsert",
+  authenticateUser,
+  checkProjectPermission(3),
+  transactionHandler(upsertReturnBoolean)
+);
+
+// LOAD
+router.post(
+  "/load/variable",
   authenticateUser,
   checkProjectPermission(2),
-  transactionHandler(getIfTreeForVariable)
+  transactionHandler(loadVariableIfTree)
+);
+
+router.post(
+  "/load/conditional",
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(loadConditionalIfTree)
+);
+
+router.post(
+  "/load/adjustment",
+  authenticateUser,
+  checkProjectPermission(2),
+  transactionHandler(loadAdjustmentIfTree)
 );
 
 export default router;

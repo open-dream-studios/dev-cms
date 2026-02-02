@@ -1,6 +1,6 @@
-// server/handlers/modules/estimations/if_trees/variable_repositories.ts
+// server/handlers/modules/estimations/if_trees/variables/variable_repositories.ts
 import type { PoolConnection } from "mysql2/promise";
-import { validateDecisionTree } from "./decision_tree_validator.js";
+import { validateDecisionTree } from "../decision_tree_validator.js";
 
 export const listVariablesRepo = async (
   conn: PoolConnection,

@@ -62,6 +62,7 @@ const EstimationAdmin = () => {
     selectingVariableReturn,
     setSelectingVariableReturn,
     setPendingVariableTarget,
+    editingConditional
   } = useEstimationFactsUIStore();
 
   useOutsideClick(selectorRef, () => setOpenNodeIdTypeSelection(null));
@@ -294,7 +295,7 @@ const EstimationAdmin = () => {
       >
         <HomeLayout left={<EstimationsLeftBar />}>
           <div className="w-[100%] h-[100%] relative">
-            {editingVariable !== null && <IfTreeEditor />}
+            {(editingVariable || editingConditional) && <IfTreeEditor />}
             {editingFact !== null && <FactEditor />}
 
             <PemdasViewport

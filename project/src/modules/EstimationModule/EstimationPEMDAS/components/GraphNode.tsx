@@ -10,7 +10,12 @@ import { nodeColors } from "../_constants/pemdas.constants";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import GraphArrow from "./GraphArrow";
 import { OperandChipInline } from "./OperandChipInline";
-import { useEstimationFactsUIStore } from "../../_store/estimations.store";
+import {
+  openConditionalIfTree,
+  openVariableIfTree,
+  useEstimationFactsUIStore,
+} from "../../_store/estimations.store";
+import { BiQuestionMark } from "react-icons/bi";
 
 export const GraphNodeIcon = ({
   color,
@@ -101,7 +106,7 @@ export const GraphNode = ({
   const [numberDisplayOpen, setNumberDisplayOpen] = useState(false);
   const numberTextRef = useRef<HTMLDivElement | null>(null);
   const [isEllipsed, setIsEllipsed] = useState(false);
-  const { setEditingVariable, setEditingFact } = useEstimationFactsUIStore();
+  const { setEditingFact } = useEstimationFactsUIStore();
 
   useLayoutEffect(() => {
     if (!numberTextRef.current) return;
@@ -155,9 +160,11 @@ export const GraphNode = ({
         });
       }}
       onClick={(e) => {
-        if (ghost) return;
-        console.log(node.nodeType)
-        if (node.nodeType === "contributor-node" || node.nodeType ==="contributor-bucket") {
+        if (ghost) return; 
+        if (
+          node.nodeType === "contributor-node" ||
+          node.nodeType === "contributor-bucket"
+        ) {
           e.stopPropagation();
           onSelectLayer?.(node.id);
         }
@@ -170,7 +177,7 @@ export const GraphNode = ({
           if (node.var_scope === "fact") {
             setEditingFact(editItem);
           } else {
-            setEditingVariable(editItem);
+            openVariableIfTree(editItem);
           }
         }
       }}
@@ -224,6 +231,19 @@ export const GraphNode = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div
+        className="absolute top-[-28px] left-[50%] -translate-x-1/2 w-[20px] h-[20px] rounded-full flex items-center justify-center cursor-pointer brightness-85 hover:brightness-70 dim"
+        style={{
+          border: "1px solid " + currentTheme.background_3,
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          openConditionalIfTree(node.id);
+        }}
+      >
+        <BiQuestionMark color={currentTheme.background_3} />
+      </div>
 
       {/* NODE CIRCLE + INLINE OPERAND */}
       <div className="relative">

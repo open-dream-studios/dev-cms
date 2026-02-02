@@ -121,7 +121,7 @@ export async function deleteBranchApi(
 ======================= */
 
 export async function fetchVariablesApi(project_idx: number) {
-  const res = await makeRequest.post("/estimations/variables/list", {
+  const res = await makeRequest.post("/estimations/bindings/variables/list", {
     project_idx,
   });
   return res.data;
@@ -135,7 +135,7 @@ export async function upsertVariableApi(
     allowedVariableKeys: string[];
   }
 ) {
-  const res = await makeRequest.post("/estimations/variables/upsert", {
+  const res = await makeRequest.post("/estimations/bindings/variables/upsert", {
     project_idx,
     ...payload,
   });
@@ -146,12 +146,98 @@ export async function deleteVariableApi(
   project_idx: number,
   var_key: string
 ) {
-  await makeRequest.post("/estimations/variables/delete", {
+  await makeRequest.post("/estimations/bindings/variables/delete", {
     project_idx,
     var_key,
   });
   return { success: true };
 }
+
+export async function loadVariableIfTreeApi(
+  project_idx: number,
+  decision_tree_id: number
+) {
+  const res = await makeRequest.post(
+    "/estimations/if-trees/load/variable",
+    { project_idx, decision_tree_id }
+  );
+  return res.data;
+}
+
+/* =======================
+   CONDITIONALS
+======================= */
+
+export async function loadConditionalIfTreeApi(
+  project_idx: number,
+  node_id: string
+) {
+  const res = await makeRequest.post(
+    "/estimations/if-trees/load/conditional",
+    { project_idx, node_id }
+  );
+  console.log("[FE] loadConditionalIfTree response", res.data);
+  return res.data;
+}
+
+export async function upsertConditionalBindingApi(
+  project_idx: number,
+  payload: any
+) {
+  await makeRequest.post(
+    "/estimations/bindings/conditionals/upsert",
+    { project_idx, ...payload }
+  );
+}
+
+export async function deleteConditionalBindingApi(
+  project_idx: number,
+  node_id: number
+) {
+  await makeRequest.post(
+    "/estimations/bindings/conditionals/delete",
+    { project_idx, node_id }
+  );
+}
+
+/* =======================
+   ADJUSTMENTS
+======================= */
+
+export async function loadAdjustmentIfTreeApi(
+  project_idx: number,
+  node_id: number
+) {
+  const res = await makeRequest.post(
+    "/estimations/if-trees/load/adjustment",
+    { project_idx, node_id }
+  );
+  return res.data;
+}
+
+export async function upsertAdjustmentBindingApi(
+  project_idx: number,
+  payload: any
+) {
+  await makeRequest.post(
+    "/estimations/bindings/adjustments/upsert",
+    { project_idx, ...payload }
+  );
+}
+
+export async function deleteAdjustmentBindingApi(
+  project_idx: number,
+  node_id: number
+) {
+  await makeRequest.post(
+    "/estimations/bindings/adjustments/delete",
+    { project_idx, node_id }
+  );
+}
+
+/* =======================
+   RETURNS
+======================= */
 
 export async function upsertReturnNumberApi(project_idx: number, payload: any) {
   await makeRequest.post(
@@ -160,13 +246,23 @@ export async function upsertReturnNumberApi(project_idx: number, payload: any) {
   );
 }
 
-export async function loadIfTreeApi(
+export async function upsertReturnBooleanApi(
   project_idx: number,
-  decision_tree_id: number
+  payload: any
 ) {
-  const res = await makeRequest.post(
-    "/estimations/if-trees/load",
-    { project_idx, decision_tree_id }
+  await makeRequest.post(
+    "/estimations/if-trees/returns/boolean/upsert",
+    { project_idx, ...payload }
   );
-  return res.data;
 }
+
+export async function upsertReturnAdjustmentApi(
+  project_idx: number,
+  payload: any
+) {
+  await makeRequest.post(
+    "/estimations/if-trees/returns/adjustment/upsert",
+    { project_idx, ...payload }
+  );
+}
+

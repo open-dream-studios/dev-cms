@@ -25,5 +25,6 @@ export * from "./types/models/users"
 export * from "./types/models/schedule"
 export * from "./types/models/googleCalendar"
 export * from "./types/models/estimations/estimations" 
+export * from "./types/models/estimations/if_trees" 
 
 // export * from "./definitions/google";

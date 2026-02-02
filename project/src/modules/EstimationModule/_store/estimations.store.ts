@@ -1,7 +1,7 @@
 // project/src/modules/EstimationModule/_store/estimations.store.ts
 import { createStore } from "@/store/createStore";
 import { EstimationFactDefinition, VariableScope } from "@open-dream/shared";
-import { Value } from "../EstimationVariables/types";
+import { EditorMode, Value } from "../EstimationVariables/types";
 
 const ROOT_ID = "__root__";
 
@@ -42,11 +42,42 @@ export const useEstimationFactsUIStore = createStore({
     type: "variable" | "statement";
     target: "condition-left" | "condition-right" | "return";
   },
+  editingConditional: null as null | string,
+  editingIfTreeType: null as null | EditorMode,
 });
 
 export const resetVariableUI = () =>
   useEstimationFactsUIStore.getState().set({
     editingVariable: null,
     editingFact: null,
-    selectingVariableReturn: null, 
+    selectingVariableReturn: null,
+    editingConditional: null,
+    editingIfTreeType: null,
+  });
+
+export const openVariableIfTree = (variable: VariableKey) =>
+  useEstimationFactsUIStore.getState().set({
+    editingVariable: variable,
+    editingConditional: null,
+    editingIfTreeType: "variable",
+    selectingVariableReturn: null,
+    editingFact: null,
+  });
+
+export const openConditionalIfTree = (nodeId: string | number) =>
+  useEstimationFactsUIStore.getState().set({
+    editingVariable: null,
+    editingConditional: String(nodeId),
+    editingIfTreeType: "conditional",
+    selectingVariableReturn: null,
+    editingFact: null,
+  });
+
+export const openAdjustmentIfTree = (nodeId: string | number) =>
+  useEstimationFactsUIStore.getState().set({
+    editingVariable: null,
+    editingConditional: String(nodeId),
+    editingIfTreeType: "adjustment",
+    selectingVariableReturn: null,
+    editingFact: null,
   });

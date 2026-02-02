@@ -86,7 +86,7 @@ export function rebuildIfTree(
   };
 
   function rebuildCondition(exprId: number) {
-    const e = exprMap.get(exprId); 
+    const e = exprMap.get(exprId);
     if (!e) throw new Error("Missing condition expr " + exprId);
     if (e.node_type !== "operator")
       throw new Error("Condition expr is not operator");
@@ -108,14 +108,29 @@ export function rebuildIfTree(
 
   // split branches
   const conditional = branches.filter((b) => b.condition_expression_id);
+  // const elseBranch = branches.find((b) => !b.condition_expression_id);
+  // if (!elseBranch) throw new Error("Missing ELSE branch");
   const elseBranch = branches.find((b) => !b.condition_expression_id);
-  if (!elseBranch) throw new Error("Missing ELSE branch");
 
   // no IFs → simple return
+  // if (conditional.length === 0) {
+  //   return {
+  //     type: "return",
+  //     value: valueFromExpr(elseBranch.value_expression_id),
+  //   };
+  // }
   if (conditional.length === 0) {
+    const v =
+      elseBranch?.value_expression_id != null
+        ? valueFromExpr(elseBranch.value_expression_id)
+        : null;
+
     return {
       type: "return",
-      value: valueFromExpr(elseBranch.value_expression_id),
+      value:
+        v && v.kind === "boolean"
+          ? v
+          : { kind: "boolean", value: false, selector_id: sid() },
     };
   }
 
@@ -124,14 +139,35 @@ export function rebuildIfTree(
     type: "if",
     cases: conditional.map((b) => ({
       condition: rebuildCondition(b.condition_expression_id),
+      // then: {
+      //   type: "return",
+      //   value: valueFromExpr(b.value_expression_id),
+      // },
       then: {
         type: "return",
-        value: valueFromExpr(b.value_expression_id),
+        value: (() => {
+          const v = valueFromExpr(b.value_expression_id);
+          return v.kind === "boolean"
+            ? v
+            : { kind: "boolean", value: false, selector_id: sid() };
+        })(),
       },
     })),
+    // else: {
+    //   type: "return",
+    //   value: valueFromExpr(elseBranch.value_expression_id),
+    // },
     else: {
       type: "return",
-      value: valueFromExpr(elseBranch.value_expression_id),
+      value: (() => {
+        if (!elseBranch?.value_expression_id)
+          return { kind: "boolean", value: false, selector_id: sid() };
+
+        const v = valueFromExpr(elseBranch.value_expression_id);
+        return v.kind === "boolean"
+          ? v
+          : { kind: "boolean", value: false, selector_id: sid() };
+      })(),
     },
   };
 }

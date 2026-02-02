@@ -13,7 +13,15 @@ import {
   upsertVariableApi,
   deleteVariableApi,
   upsertReturnNumberApi,
-  loadIfTreeApi,
+  upsertReturnAdjustmentApi,
+  loadVariableIfTreeApi,
+  loadConditionalIfTreeApi,
+  loadAdjustmentIfTreeApi,
+  upsertConditionalBindingApi,
+  deleteConditionalBindingApi,
+  upsertAdjustmentBindingApi,
+  deleteAdjustmentBindingApi,
+  upsertReturnBooleanApi,
 } from "@/api/estimations/if_trees/estimationIfTrees.api";
 
 export function useEstimationIfTrees(
@@ -96,6 +104,40 @@ export function useEstimationIfTrees(
     mutationFn: (p: any) => upsertReturnNumberApi(currentProjectId!, p),
   });
 
+  const upsertReturnAdjustment = useMutation({
+    mutationFn: (p: any) => upsertReturnAdjustmentApi(currentProjectId!, p),
+  });
+
+  /* ========= LOAD ========= */
+  const loadConditionalIfTree = (nodeId: string) =>
+    loadConditionalIfTreeApi(currentProjectId!, nodeId);
+
+  const loadAdjustmentIfTree = (nodeId: number) =>
+    loadAdjustmentIfTreeApi(currentProjectId!, nodeId);
+
+  /* ========= BINDINGS ========= */
+  const upsertConditionalBinding = useMutation({
+    mutationFn: (p: any) => upsertConditionalBindingApi(currentProjectId!, p),
+  });
+
+  const deleteConditionalBinding = useMutation({
+    mutationFn: (nodeId: number) =>
+      deleteConditionalBindingApi(currentProjectId!, nodeId),
+  });
+
+  const upsertAdjustmentBinding = useMutation({
+    mutationFn: (p: any) => upsertAdjustmentBindingApi(currentProjectId!, p),
+  });
+
+  const deleteAdjustmentBinding = useMutation({
+    mutationFn: (nodeId: number) =>
+      deleteAdjustmentBindingApi(currentProjectId!, nodeId),
+  });
+
+  const upsertReturnBoolean = useMutation({
+    mutationFn: (p: any) => upsertReturnBooleanApi(currentProjectId!, p),
+  });
+
   return {
     ifTrees,
     variables,
@@ -113,8 +155,24 @@ export function useEstimationIfTrees(
     upsertVariable: (p: any) => upsertVariable.mutateAsync(p),
     deleteVariable: (k: string) => deleteVariable.mutateAsync(k),
 
-    upsertReturnNumber: (p: any) => upsertReturnNumber.mutateAsync(p),
 
-    loadIfTree: (treeId: number) => loadIfTreeApi(currentProjectId!, treeId),
+    loadVariableIfTree: (treeId: number) =>
+      loadVariableIfTreeApi(currentProjectId!, treeId),
+
+    upsertReturnNumber: (p: any) => upsertReturnNumber.mutateAsync(p),
+    upsertReturnAdjustment: (p: any) => upsertReturnAdjustment.mutateAsync(p),
+    upsertReturnBoolean: (p: any) => upsertReturnBoolean.mutateAsync(p),
+
+    loadConditionalIfTree,
+    loadAdjustmentIfTree,
+
+    upsertConditionalBinding: (p: any) =>
+      upsertConditionalBinding.mutateAsync(p),
+    deleteConditionalBinding: (nodeId: number) =>
+      deleteConditionalBinding.mutateAsync(nodeId),
+
+    upsertAdjustmentBinding: (p: any) => upsertAdjustmentBinding.mutateAsync(p),
+    deleteAdjustmentBinding: (nodeId: number) =>
+      deleteAdjustmentBinding.mutateAsync(nodeId),
   };
 }

@@ -1,0 +1,1 @@
+export type IfDecisionReturnType = "number" | "node" | "adjustment" | "boolean";
