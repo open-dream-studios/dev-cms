@@ -22,6 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { openFactFolder } from "../_actions/estimations.actions";
 import FactDraggableItem from "./FactDraggableItem";
+import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
 
 export default function EstimationsLeftBar() {
   const currentTheme = useCurrentTheme();
@@ -252,24 +253,39 @@ export default function EstimationsLeftBar() {
           </p>
         </div>
       )}
-    
+
       <div className="select-none w-[100%] flex flex-row gap-[7px] justify-center pb-[8px] mb-[0px] px-3 text-[12px] font-[400]">
         <div
           onClick={() => handleFolderTypeClick("fact")}
-          style={{ backgroundColor: currentTheme.background_3 }}
+          style={{
+            backgroundColor:
+              variableView === "fact"
+                ? nodeColors["fact"]
+                : currentTheme.background_3,
+          }}
           className={`${variableView !== "fact" && "brightness-55 hover:brightness-60"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
         >
           Form
         </div>
         <div
-          style={{ backgroundColor: currentTheme.background_3 }}
+          style={{
+            backgroundColor:
+              variableView === "geometric"
+                ? nodeColors["geometric"]
+                : currentTheme.background_3,
+          }}
           onClick={() => handleFolderTypeClick("geometric")}
           className={`${variableView !== "geometric" && "brightness-55 hover:brightness-60"} w-[100%] rounded-[5px] px-[9px] cursor-pointer dim text-center py-[3px]`}
         >
           Geometric
         </div>
         <div
-          style={{ backgroundColor: currentTheme.background_3 }}
+          style={{
+            backgroundColor:
+              variableView === "project"
+                ? nodeColors["project"]
+                : currentTheme.background_3,
+          }}
           onClick={() => handleFolderTypeClick("project")}
           className={`${variableView !== "project" && "brightness-55 hover:brightness-60"} w-[100%] rounded-[5px] cursor-pointer dim text-center py-[3px]`}
         >

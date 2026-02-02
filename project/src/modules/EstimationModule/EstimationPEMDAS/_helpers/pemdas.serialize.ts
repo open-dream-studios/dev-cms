@@ -23,14 +23,20 @@ export type PemdasSerialized = {
   >;
 };
 
-const hydrateLayout = (state: any) => {
+
+const hydrateLayout = (state: {
+  layers: PemdasLayer[];
+  nodes: Record<string, PemdasNode>;
+}) => {
   for (const layer of state.layers) {
     const centers = getSlotCenters(layer.width, layer.nodeIds.length);
 
     layer.nodeIds.forEach((id: string, i: number) => {
       const node = state.nodes[id];
       if (!node) return;
+
       node.x = centers[i];
+      node.y = layer.y;
       node.layerId = layer.id;
     });
   }
@@ -96,7 +102,7 @@ export function deserializePemdasState(data: PemdasSerialized): {
     return l;
   });
 
-  const state = { layers, nodes };
+  const state = { layers, nodes }
 
   hydrateLayout(state);
 

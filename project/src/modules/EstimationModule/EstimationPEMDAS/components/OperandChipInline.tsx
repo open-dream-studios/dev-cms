@@ -12,11 +12,13 @@ export const OperandChipInline = ({
   value,
   onChange,
   hidden,
+  dimmed,
 }: {
   nodeId: string;
   value: Operand;
   onChange: (op: Operand) => void;
   hidden?: boolean;
+  dimmed: boolean;
 }) => {
   const currentTheme = useCurrentTheme();
   const ref = useRef<HTMLDivElement>(null);
@@ -41,9 +43,9 @@ export const OperandChipInline = ({
         style={{
           backgroundColor: currentTheme.background_2,
         }}
-        className={`absolute -left-[32px] top-1/2 -translate-y-1/2
+        className={`select-none absolute -left-[32px] top-1/2 -translate-y-1/2
                    w-6 h-6 rounded-full 
-                   text-white flex items-center justify-center
+                   ${dimmed ? "text-white/40" : "text-white"} flex items-center justify-center
                    cursor-pointer z-10 pl-[0.5px] pb-[1px] ${value === "/" ? "text-[13px]" : "text-[14px]"}`}
         onClick={(e) => {
           e.stopPropagation();
@@ -71,7 +73,7 @@ export const OperandChipInline = ({
                 style={{
                   backgroundColor:
                     op === value
-                      ? nodeColors["constant"]
+                      ? nodeColors["contributor-node"]
                       : currentTheme.background_2,
                 }}
                 className="pb-[2px] select-none px-2 h-6 rounded  text-white/85

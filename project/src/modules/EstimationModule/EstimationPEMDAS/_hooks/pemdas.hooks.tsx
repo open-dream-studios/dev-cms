@@ -17,7 +17,11 @@ import {
   WORLD_TOP,
 } from "../_constants/pemdas.constants";
 import { PemdasNode, PEMDASNodeType } from "../types";
-import { arrayMove, getClosestSlotIndex } from "../_helpers/pemdas.helpers";
+import {
+  arrayMove,
+  cleanContributorNode,
+  getClosestSlotIndex,
+} from "../_helpers/pemdas.helpers";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
@@ -627,7 +631,7 @@ export const usePemdasCanvas = (
     const LayerInputSteps: StepConfig[] = [
       {
         name: "name",
-        placeholder: `${capitalizeFirstLetter(nodeType)} Name...`,
+        placeholder: `${capitalizeFirstLetter(cleanContributorNode(nodeType))} Name...`,
         validate: (v) => (v.length >= 1 ? true : "1+ chars"),
       },
     ];

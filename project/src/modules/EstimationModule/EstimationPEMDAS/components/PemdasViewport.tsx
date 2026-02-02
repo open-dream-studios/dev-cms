@@ -1,6 +1,7 @@
 // project/src/modules/EstimationModule/EstimationPEMDAS/components/PemdasViewport.tsx
 import React, { RefObject } from "react";
 import {
+  cleanContributorNode,
   getScrollXLeft,
   getScrollXWidth,
   getScrollYHeight,
@@ -22,7 +23,6 @@ import {
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { GraphNode } from "./GraphNode";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import SaveAndCancelBar from "./SaveAndCancelBar";
 
 type PemdasViewportProps = {
   usage: "estimation" | "variable";
@@ -224,7 +224,7 @@ const PemdasViewport = ({
             );
 
             return (
-              <React.Fragment key={layer.id}>
+              <div key={layer.id}>
                 {/* LINE */}
                 <div
                   className="absolute h-[1px] bg-white/10"
@@ -236,64 +236,116 @@ const PemdasViewport = ({
                   }}
                 />
 
+                {/* BUCKETS */}
+                {usage === "estimation" && layer.id !== "layer-0" &&
+                  !activeLayerByRow[rowIndex - 1]?.startsWith("bucket-") &&
+                  ["labor", "materials", "misc"].map((key, i) => {
+                    const id = `bucket-${key}__${layer.id}`;
+
+                    const node: PemdasNode = {
+                      id,
+                      nodeType: "contributor-bucket",
+                      variable: capitalizeFirstLetter(key),
+                      operand: "+",
+                      layerId: layer.id,
+                      x:
+                        effectiveWidth +
+                        24 +  
+                        48 +  
+                        i * (NODE_SIZE + 40),
+                      y: layer.y,
+                    };
+
+                    return (
+                      <GraphNode
+                        key={id}
+                        node={node}
+                        dispatch={dispatch}
+                        offsetX={lineLeft - (layer.id === "layer1" ? 0 : 50)}
+                        // offsetX={(viewportRef.current?.clientWidth ?? 0) / 2}
+                        isFirstInLayer={i === 0}
+                        onSelectLayer={(nodeId) =>
+                          handleSelectNode(nodeId, rowIndex)
+                        }
+                        isActiveLayer={activeLayerByRow[rowIndex] === id}
+                        hasActiveLayerInRow={!!activeLayerByRow[rowIndex]}
+                        dimmed={
+                          activeLayerByRow[rowIndex] !== null &&
+                          activeLayerByRow[rowIndex] !== id
+                        }
+                      />
+                    );
+                  })}
+
                 {/* ADD BUTTON */}
                 <div
                   data-no-pan
-                  className="absolute"
+                  className="absolute flex flex-row w-auto gap-[15px] "
                   style={{
-                    width: 48,
                     height: 48,
                     // left: lineLeft + layer.width + 24,
                     left: lineLeft + effectiveWidth + 24,
                     top: layer.y - 24,
                   }}
                 >
-                  <div
-                    style={{
-                      backgroundColor: currentTheme.background_2,
-                      color: currentTheme.text_4,
-                    }}
-                    className="select-none w-full h-full rounded-full hover:brightness-90 dim
-                                   text-2xl flex items-center justify-center cursor-pointer pb-[3.6px] pl-[0.45px]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (openNodeIdTypeSelection) {
-                        setOpenNodeIdTypeSelection(null);
-                      } else {
-                        setOpenNodeIdTypeSelection(layer.id);
-                      }
-                    }}
-                  >
-                    +
-                  </div>
-
-                  {openNodeIdTypeSelection === layer.id && (
+                  <div className="relative h-[100%]">
                     <div
-                      ref={selectorRef}
-                      className="absolute bottom-[-39px] left-1/2 -translate-x-1/2
+                      style={{
+                        backgroundColor: currentTheme.background_2,
+                        color: currentTheme.text_4,
+                      }}
+                      className="select-none w-[48px] h-[48px] rounded-full hover:brightness-90 dim
+                                   text-2xl flex items-center justify-center cursor-pointer pb-[3.6px] pl-[0.45px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (openNodeIdTypeSelection) {
+                          setOpenNodeIdTypeSelection(null);
+                        } else {
+                          setOpenNodeIdTypeSelection(layer.id);
+                        }
+                      }}
+                    >
+                      +
+                    </div>
+
+                    {openNodeIdTypeSelection === layer.id && (
+                      <div
+                        ref={selectorRef}
+                        className="absolute bottom-[-39px] ml-[6px] left-1/2 -translate-x-1/2
                                      bg-[#111] border border-white/10 rounded-md
                                      shadow-lg p-1 flex gap-1 z-50"
-                    >
-                      {creatablePEMDASNodeTypes.map(
-                        (opt: CreatablePEMDASNodeType) => (
-                          <button
-                            key={opt}
-                            onClick={() => {
-                              handleAddNode(opt, layer.id);
-                              setOpenNodeIdTypeSelection(null);
-                            }}
-                            style={{
-                              backgroundColor: nodeColors[opt],
-                            }}
-                            className="px-2 h-6 rounded  text-white/95
-                                        min-w-[60px] select-none text-[11px] hover:brightness-75 dim cursor-pointer"
-                          >
-                            {capitalizeFirstLetter(opt)}
-                          </button>
-                        ),
-                      )}
-                    </div>
-                  )}
+                      >
+                        {creatablePEMDASNodeTypes.map(
+                          (opt: CreatablePEMDASNodeType) => {
+                            if (
+                              openNodeIdTypeSelection &&
+                              openNodeIdTypeSelection.startsWith("bucket") &&
+                              opt === "contributor-node"
+                            )
+                              return null;
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() => {
+                                  handleAddNode(opt, layer.id);
+                                  setOpenNodeIdTypeSelection(null);
+                                }}
+                                style={{
+                                  backgroundColor: nodeColors[opt],
+                                }}
+                                className="px-2 h-6 rounded text-white/95
+                                min-w-[60px] select-none text-[11px] hover:brightness-75 dim cursor-pointer"
+                              >
+                                {capitalizeFirstLetter(
+                                  cleanContributorNode(opt),
+                                )}
+                              </button>
+                            );
+                          },
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* NODES */}
@@ -346,7 +398,7 @@ const PemdasViewport = ({
                     />
                   );
                 })}
-              </React.Fragment>
+              </div>
             );
           })}
 
@@ -371,7 +423,7 @@ const PemdasViewport = ({
           className="absolute inset-0 z-[9999] pointer-events-none"
         />
       </div>
-      
+
       {/* <div className="absolute top-4 left-4">
       <SaveAndCancelBar
         onSave={() => {}}

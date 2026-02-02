@@ -1,5 +1,5 @@
 // src/pemdas/_helpers/pemdas.helpers.ts
-import { NODE_SIZE } from "../_constants/pemdas.constants";
+import { BUCKETS, NODE_SIZE } from "../_constants/pemdas.constants";
 import {
   BASE_LINE_WIDTH,
   EDGE_PADDING, 
@@ -7,6 +7,10 @@ import {
 } from "../_constants/pemdas.constants";
 import { PemdasLayer, PemdasNode } from "../types";
  
+export const cleanContributorNode = (opt: string) => {
+  return opt.replace("contributor-node","contributor")
+}
+
 export function getSlotCenters(lineWidth: number, count: number): number[] {
   if (count <= 0) return []; 
   if (count === 1) return [lineWidth / 2];
@@ -76,17 +80,13 @@ export function arrayMove<T>(arr: T[], from: number, to: number) {
   return next;
 }
 
-
-
-
-
-// PREVIOUS
 export function computeLineWidth(count: number) {
-  if (count <= 0) return BASE_LINE_WIDTH;
+  const effectiveCount = Math.max(0, count);
+  if (effectiveCount <= 0) return BASE_LINE_WIDTH;
   const required =
     EDGE_PADDING * 2 +
-    count * NODE_SIZE +
-    Math.max(0, count - 1) * MIN_NODE_GAP;
+    effectiveCount * NODE_SIZE +
+    Math.max(0, effectiveCount - 1) * MIN_NODE_GAP;
   return Math.max(BASE_LINE_WIDTH, required);
 }
 

@@ -6,7 +6,11 @@ import { PemdasNode, PEMDASNodeType, variableScopes } from "../types";
 import { createPemdasNodeContextMenu } from "../_actions/pemdas.actions";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { useDraggable } from "@dnd-kit/core";
-import { nodeColors } from "../_constants/pemdas.constants";
+import {
+  BUCKET_COLORS,
+  BucketType,
+  nodeColors,
+} from "../_constants/pemdas.constants";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import GraphArrow from "./GraphArrow";
 import { OperandChipInline } from "./OperandChipInline";
@@ -16,6 +20,7 @@ import {
   useEstimationFactsUIStore,
 } from "../../_store/estimations.store";
 import { BiQuestionMark } from "react-icons/bi";
+import { usePemdasUIStore } from "../_store/pemdas.store";
 
 export const GraphNodeIcon = ({
   color,
@@ -107,6 +112,7 @@ export const GraphNode = ({
   const numberTextRef = useRef<HTMLDivElement | null>(null);
   const [isEllipsed, setIsEllipsed] = useState(false);
   const { setEditingFact } = useEstimationFactsUIStore();
+  const { setOperandOverlayNodeId } = usePemdasUIStore();
 
   useLayoutEffect(() => {
     if (!numberTextRef.current) return;
@@ -114,10 +120,15 @@ export const GraphNode = ({
     setIsEllipsed(el.scrollWidth > el.clientWidth);
   }, [node.constantValue, numberDisplayOpen]);
 
+  const isBucket = node.nodeType === "contributor-bucket";
+  const isFirstBucket =
+    node.nodeType === "contributor-bucket" &&
+    node.variable.toLowerCase() === "labor";
+
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: node.id,
-      disabled: ghost,
+      disabled: ghost || isBucket,
       data: {
         kind: "NODE",
         nodeId: node.id,
@@ -149,7 +160,7 @@ export const GraphNode = ({
       {...(!ghost ? attributes : {})}
       {...(!ghost ? listeners : {})}
       style={style}
-      className="min-w-[65px] absolute flex flex-col items-center select-none"
+      className={`min-w-[65px] ${isBucket && "ml-[89px]"} absolute flex flex-col items-center select-none`}
       onContextMenu={(e) => {
         if (ghost) return;
         e.preventDefault();
@@ -158,9 +169,10 @@ export const GraphNode = ({
           target: node,
           menu: createPemdasNodeContextMenu(onEdit!, dispatch),
         });
+        setOperandOverlayNodeId(null);
       }}
       onClick={(e) => {
-        if (ghost) return; 
+        if (ghost) return;
         if (
           node.nodeType === "contributor-node" ||
           node.nodeType === "contributor-bucket"
@@ -180,6 +192,7 @@ export const GraphNode = ({
             openVariableIfTree(editItem);
           }
         }
+        setOperandOverlayNodeId(null);
       }}
     >
       {/* NUMBER DISPLAY */}
@@ -199,7 +212,7 @@ export const GraphNode = ({
               opacity: { duration: 0.15 },
               maxWidth: { duration: 0.25, ease: "easeInOut" },
             }}
-            className="absolute min-w-[45px] pl-[6px] pr-[8px] flex py-[2.5px] justify-center
+            className="absolute mr-[22px] min-w-[45px] pl-[6px] pr-[8px] flex py-[2.5px] justify-center
                        mt-[-27px] rounded-[5.5px] text-white text-[12px] leading-[14px]
                        text-center overflow-hidden"
             style={{
@@ -232,46 +245,65 @@ export const GraphNode = ({
         )}
       </AnimatePresence>
 
-      <div
-        className="absolute top-[-28px] left-[50%] -translate-x-1/2 w-[20px] h-[20px] rounded-full flex items-center justify-center cursor-pointer brightness-85 hover:brightness-70 dim"
-        style={{
-          border: "1px solid " + currentTheme.background_3,
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          openConditionalIfTree(node.id);
-        }}
-      >
-        <BiQuestionMark color={currentTheme.background_3} />
-      </div>
+      {!isBucket && (
+        <div
+          className={`${node.nodeType === "constant" && node.constantValue !== undefined && "ml-[32px]"} absolute top-[-27px] left-[50%] -translate-x-1/2 w-[20px] h-[20px] rounded-full flex items-center justify-center cursor-pointer brightness-85 hover:brightness-70 dim`}
+          style={{
+            border: "1px solid " + currentTheme.background_3,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            openConditionalIfTree(node.id);
+            setOperandOverlayNodeId(null);
+          }}
+        >
+          <BiQuestionMark color={currentTheme.background_3} />
+        </div>
+      )}
 
       {/* NODE CIRCLE + INLINE OPERAND */}
       <div className="relative">
-        <OperandChipInline
-          nodeId={node.id}
-          hidden={isFirstInLayer}
-          value={node.operand}
-          onChange={(op) =>
-            dispatch({
-              type: "UPDATE_NODE_OPERAND",
-              nodeId: node.id,
-              operand: op,
-            })
-          }
-        />
+        {!isFirstBucket && (
+          <OperandChipInline
+            nodeId={node.id}
+            hidden={isFirstInLayer}
+            value={node.operand}
+            onChange={(op) =>
+              dispatch({
+                type: "UPDATE_NODE_OPERAND",
+                nodeId: node.id,
+                operand: op,
+              })
+            }
+            dimmed={false}
+          />
+        )}
 
         <div
           style={{
-            backgroundColor: nodeColors[nodeType],
             filter: dimmed ? "brightness(0.5)" : "none",
           }}
-          className="cursor-grab dim hover:brightness-70 brightness-95 w-12 h-12 rounded-full flex items-center justify-center"
-          onMouseEnter={() => {
-            if (isEllipsed) setNumberDisplayOpen(true);
-          }}
-          onMouseLeave={() => setNumberDisplayOpen(false)}
+          className="dim brightness-95 w-12 h-12 rounded-full flex items-center justify-center"
         >
-          <GraphNodeIcon />
+          <div
+            className="absolute left-0 top-0 w-[100%] h-[100%] rounded-full"
+            style={{
+              opacity: isBucket ? 0.75 : 1,
+              backgroundColor: isBucket
+                ? BUCKET_COLORS[node.variable.toLowerCase() as BucketType]
+                : nodeColors[nodeType],
+            }}
+          ></div>
+          {isBucket ? (
+            <span
+              className="relative z-1 font-bold text-[18px]"
+              style={{ color: currentTheme.text_1 }}
+            >
+              {node.variable[0]}
+            </span>
+          ) : (
+            <GraphNodeIcon />
+          )}
         </div>
       </div>
 
@@ -292,7 +324,7 @@ export const GraphNode = ({
 
       {(node.nodeType === "contributor-node" ||
         node.nodeType === "contributor-bucket") && (
-        <div className="absolute top-0 mt-[90px]">
+        <div className="absolute top-0 mt-[74px]">
           <GraphArrow
             isActive={!!isActiveLayer}
             hasActiveInRow={!!hasActiveLayerInRow}

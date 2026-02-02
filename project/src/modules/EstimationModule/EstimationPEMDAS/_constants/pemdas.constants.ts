@@ -19,3 +19,12 @@ export const nodeColors: Record<PEMDASNodeType, string> = {
   "contributor-bucket": "#429",
   constant: "#666"
 };
+
+export const BUCKETS = ["labor", "materials", "misc"] as const;
+export type BucketType = "labor" | "materials" | "misc"
+
+export const BUCKET_COLORS = {
+  labor: "#ff8902", // orange
+  materials: "#0F766E", // dark teal
+  misc: "#7C3AED", // deep violet
+};

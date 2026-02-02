@@ -35,7 +35,7 @@ const GraphArrow = ({ isActive, hasActiveInRow }: GraphArrowProps) => {
         />
       </div>
       <div
-        className="mt-[-19.8px] w-[1.5px] h-[56px] rounded-[2px]"
+        className="mt-[-19.8px] w-[1.5px] h-[40px] rounded-[2px]"
         style={{ backgroundColor: arrowColor }}
       />
     </div>
