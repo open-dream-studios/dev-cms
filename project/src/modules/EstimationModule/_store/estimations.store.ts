@@ -43,6 +43,7 @@ export const useEstimationFactsUIStore = createStore({
     target: "condition-left" | "condition-right" | "return";
   },
   editingConditional: null as null | string,
+  editingAdjustment: null as null | string,
   editingIfTreeType: null as null | EditorMode,
 });
 
@@ -53,12 +54,14 @@ export const resetVariableUI = () =>
     selectingVariableReturn: null,
     editingConditional: null,
     editingIfTreeType: null,
+    editingAdjustment: null,
   });
 
 export const openVariableIfTree = (variable: VariableKey) =>
   useEstimationFactsUIStore.getState().set({
     editingVariable: variable,
     editingConditional: null,
+    editingAdjustment: null,
     editingIfTreeType: "variable",
     selectingVariableReturn: null,
     editingFact: null,
@@ -68,6 +71,7 @@ export const openConditionalIfTree = (nodeId: string | number) =>
   useEstimationFactsUIStore.getState().set({
     editingVariable: null,
     editingConditional: String(nodeId),
+    editingAdjustment: null,
     editingIfTreeType: "conditional",
     selectingVariableReturn: null,
     editingFact: null,
@@ -76,7 +80,8 @@ export const openConditionalIfTree = (nodeId: string | number) =>
 export const openAdjustmentIfTree = (nodeId: string | number) =>
   useEstimationFactsUIStore.getState().set({
     editingVariable: null,
-    editingConditional: String(nodeId),
+    editingConditional: null,
+    editingAdjustment: String(nodeId),
     editingIfTreeType: "adjustment",
     selectingVariableReturn: null,
     editingFact: null,

@@ -15,6 +15,7 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import GraphArrow from "./GraphArrow";
 import { OperandChipInline } from "./OperandChipInline";
 import {
+  openAdjustmentIfTree,
   openConditionalIfTree,
   openVariableIfTree,
   useEstimationFactsUIStore,
@@ -324,11 +325,32 @@ export const GraphNode = ({
 
       {(node.nodeType === "contributor-node" ||
         node.nodeType === "contributor-bucket") && (
-        <div className="absolute top-0 mt-[74px]">
-          <GraphArrow
-            isActive={!!isActiveLayer}
-            hasActiveInRow={!!hasActiveLayerInRow}
-          />
+        <div className="absolute w-[40px] top-[74px] h-[60px]">
+          {/* ARROW */}
+          <div className="-translate-x-1/2 left-[50%] z-500 absolute top-0 pointer-events-none">
+            <GraphArrow
+              isActive={!!isActiveLayer}
+              hasActiveInRow={!!hasActiveLayerInRow}
+            />
+          </div>
+
+          {/* ADJUSTMENT BUTTON */}
+          {isActiveLayer && (
+            <div
+              style={{
+                backgroundColor: currentTheme.background_2,
+              }}
+              className={`select-none absolute left-[39px] top-[36px] -translate-y-1/2
+                   w-6 h-6 rounded-full text-white/40 flex items-center justify-center
+                   cursor-pointer hover:brightness-85 dim z-10 pl-[1px] pb-[1.7px] pr-[0.8px] text-[14px]`}
+              onClick={(e) => {
+                e.stopPropagation();
+                openAdjustmentIfTree(node.id)
+              }}
+            >
+              +
+            </div>
+          )}
         </div>
       )}
     </motion.div>
