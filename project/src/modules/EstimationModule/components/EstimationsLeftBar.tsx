@@ -9,10 +9,10 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
-import { useUiStore } from "@/store/useUIStore";
+import { resetUIStore, useUiStore } from "@/store/useUIStore";
 import { FaPlus } from "react-icons/fa6";
 import { Folder } from "lucide-react";
-import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import { resetVariableUI, useEstimationFactsUIStore } from "../_store/estimations.store";
 import { EstimationFactFolder, VariableScope } from "@open-dream/shared";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { displayToKey } from "@/util/functions/Data";
@@ -23,11 +23,13 @@ import {
 import { openFactFolder } from "../_actions/estimations.actions";
 import FactDraggableItem from "./FactDraggableItem";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
+import { LuPanelLeftClose } from "react-icons/lu";
 
 export default function EstimationsLeftBar() {
   const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId, currentProcessId } = useCurrentDataStore();
+  const { currentProjectId, currentProcessId, currentProcessRunId } =
+    useCurrentDataStore();
   const {
     factDefinitions,
     factFolders,
@@ -48,6 +50,8 @@ export default function EstimationsLeftBar() {
     setVariableView,
     setEditingFact,
     selectingVariableReturn,
+    runInputsOpen,
+    setRunInputsOpen,
   } = useEstimationFactsUIStore();
 
   // const { variables } = useEstimationIfTrees(!!currentUser, currentProjectId);
@@ -200,12 +204,51 @@ export default function EstimationsLeftBar() {
   return (
     <div
       data-no-pan
-      className="w-full h-[100%] flex flex-col"
+      className="relative w-full h-[100%] flex flex-col"
       style={{
         backgroundColor: currentTheme.background_1,
         borderRight: "0.5px solid " + currentTheme.background_2,
       }}
     >
+      {currentProcessRunId !== null && (
+        <div>
+          {runInputsOpen ? (
+            <div
+              style={{
+                borderLeft: "0.5px solid " + currentTheme.background_2,
+                borderRight: "0.5px solid " + currentTheme.background_2,
+                backgroundColor: currentTheme.background_1,
+              }}
+              className="w-[120px] h-[100%] left-[100%] absolute top-0 z-500"
+            >
+              <LuPanelLeftClose
+                style={{ color: currentTheme.text_4 }}
+                className="mt-[15px] ml-[85px] dim cursor-pointer brightness-75 hover:brightness-50 w-[22px] h-[22px]"
+                onClick={() => {
+                  setRunInputsOpen(false);
+                }}
+              />
+            </div>
+          ) : (
+            <div
+              className="absolute z-500 top-[13px] left-[100%] w-[30px] h-[34px] flex justify-center items-center  hover:brightness-80 cursor-pointer dim"
+              style={{
+                backgroundColor: currentTheme.background_1,
+                border: "0.5px solid " + currentTheme.background_2,
+              }}
+              onClick={() => {
+                setRunInputsOpen(true);
+                resetVariableUI()
+              }}
+            >
+              <LuPanelLeftClose
+                style={{ color: currentTheme.text_4 }}
+                className="rotate-180 brightness-75 w-[22px] h-[22px]"
+              />
+            </div>
+          )}
+        </div>
+      )}
       {selectingVariableReturn === null ||
       selectingVariableReturn.type !== "variable" ? (
         <div
@@ -296,7 +339,7 @@ export default function EstimationsLeftBar() {
       {variableView === "fact" && (
         <div
           ref={containerRef}
-          className="px-3 flex-1 overflow-y-auto pb-[15px]"
+          className={`px-3 flex-1 overflow-y-auto ${currentProcessRunId !== null && runInputsOpen ? "w-[calc(100%+120px)]" : "w-[100%]"}`}
         >
           {tree.map((node) => (
             <SortableContext

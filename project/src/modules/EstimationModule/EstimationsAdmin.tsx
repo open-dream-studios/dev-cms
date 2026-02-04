@@ -36,7 +36,12 @@ export type CanvasUsage = "estimation" | "variable";
 const EstimationAdmin = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { currentProjectId, currentProcessId } = useCurrentDataStore();
+  const {
+    currentProjectId,
+    currentProcessId,
+    currentProcessRunId,
+    setCurrentProcessRunId,
+  } = useCurrentDataStore();
   const { upsertFactDefinition, factFolders, reorderFactFolders } =
     useEstimationFactDefinitions(
       !!currentUser,
@@ -62,7 +67,9 @@ const EstimationAdmin = () => {
     selectingVariableReturn,
     setSelectingVariableReturn,
     setPendingVariableTarget,
-    editingConditional
+    editingConditional,
+    editingAdjustment,
+    setRunInputsOpen,
   } = useEstimationFactsUIStore();
 
   useOutsideClick(selectorRef, () => setOpenNodeIdTypeSelection(null));
@@ -295,8 +302,36 @@ const EstimationAdmin = () => {
       >
         <HomeLayout left={<EstimationsLeftBar />}>
           <div className="w-[100%] h-[100%] relative">
-            {(editingVariable || editingConditional) && <IfTreeEditor />}
+            {(editingVariable || editingConditional || editingAdjustment) && (
+              <IfTreeEditor />
+            )}
             {editingFact !== null && <FactEditor />}
+            {currentProcessRunId === null ? (
+              <div
+                onClick={() => {
+                  setCurrentProcessRunId(
+                    Math.floor(10000000 + Math.random() * 90000000),
+                  );
+                  setRunInputsOpen(true);
+                }}
+                style={{ backgroundColor: currentTheme.background_2_dim }}
+                className="z-500 absolute right-[25px] top-[25px] rounded-[9px] px-[20px] py-[9px] cursor-pointer hover:brightness-95 dim"
+              >
+                <p className="text-[14px] leading-[16px] opacity-70">
+                  + Estimation Run
+                </p>
+              </div>
+            ) : (
+              <div
+                onClick={() => {}}
+                style={{ backgroundColor: currentTheme.background_2_dim }}
+                className="z-500 absolute right-[25px] top-[25px] rounded-[9px] px-[20px] py-[9px] cursor-pointer hover:brightness-95 dim"
+              >
+                <p className="text-[14px] leading-[16px] opacity-70">
+                  Calculate
+                </p>
+              </div>
+            )}
 
             <PemdasViewport
               usage="estimation"

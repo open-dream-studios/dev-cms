@@ -106,6 +106,19 @@ export function rebuildIfTree(
     };
   }
 
+  if (branches.length && branches[0].statements) {
+    console.log("[REBUILD] adjustment tree", branches);
+
+    return {
+      type: "adjustment-return",
+      statements: branches[0].statements.map((s: any) => ({
+        left: emptyVariableValue(),
+        operator: s.operation as any,
+        right: valueFromExpr(s.value_expression_id),
+      })),
+    };
+  }
+
   // split branches
   const conditional = branches.filter((b) => b.condition_expression_id);
   // const elseBranch = branches.find((b) => !b.condition_expression_id);

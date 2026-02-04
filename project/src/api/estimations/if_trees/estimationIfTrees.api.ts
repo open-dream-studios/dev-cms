@@ -204,14 +204,31 @@ export async function deleteConditionalBindingApi(
    ADJUSTMENTS
 ======================= */
 
+// export async function loadAdjustmentIfTreeApi(
+//   project_idx: number,
+//   node_id: string
+// ) {
+//   const res = await makeRequest.post(
+//     "/estimations/if-trees/load/adjustment",
+//     { project_idx, node_id }
+//   );
+//   return res.data;
+// }
 export async function loadAdjustmentIfTreeApi(
   project_idx: number,
-  node_id: number
+  node_id: string
 ) {
   const res = await makeRequest.post(
     "/estimations/if-trees/load/adjustment",
     { project_idx, node_id }
   );
+
+  console.log("[FE] loadAdjustmentIfTreeApi", {
+    node_id,
+    branches: res.data.branches,
+    expressions: res.data.expressions,
+  });
+
   return res.data;
 }
 

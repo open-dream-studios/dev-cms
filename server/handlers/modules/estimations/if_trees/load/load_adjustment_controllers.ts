@@ -21,6 +21,13 @@ export const loadAdjustmentIfTree = async (
     [project_idx, node_id]
   );
 
-  if (!row) return null;
+  if (!row) {
+    return {
+      decision_tree_id: null,
+      branches: [],
+      expressions: [],
+    };
+  }
+
   return getIfTreeRepo(conn, row.decision_tree_id);
 };

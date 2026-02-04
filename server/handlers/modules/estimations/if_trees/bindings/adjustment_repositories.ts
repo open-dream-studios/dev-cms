@@ -10,12 +10,12 @@ export const upsertNodeAdjustmentRepo = async (
   const { node_id, decision_tree_id, allowedVariableKeys } = body;
   if (!node_id || !decision_tree_id) throw new Error("Missing fields");
 
-  await validateDecisionTree(
-    conn,
-    project_idx,
-    decision_tree_id,
-    allowedVariableKeys
-  );
+  // await validateDecisionTree(
+  //   conn,
+  //   project_idx,
+  //   decision_tree_id,
+  //   allowedVariableKeys
+  // );
 
   await conn.query(
     `

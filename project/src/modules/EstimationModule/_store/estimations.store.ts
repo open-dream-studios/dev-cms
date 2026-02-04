@@ -45,6 +45,9 @@ export const useEstimationFactsUIStore = createStore({
   editingConditional: null as null | string,
   editingAdjustment: null as null | string,
   editingIfTreeType: null as null | EditorMode,
+  
+  runInputsOpen: false,
+  factInputs: {} as Record<string, string>,
 });
 
 export const resetVariableUI = () =>
@@ -86,3 +89,14 @@ export const openAdjustmentIfTree = (nodeId: string | number) =>
     selectingVariableReturn: null,
     editingFact: null,
   });
+
+export const setFactInputValue = (fact_key: string, value: string) =>
+  useEstimationFactsUIStore.getState().set((s) => ({
+    factInputs: {
+      ...s.factInputs,
+      [fact_key]: value,
+    },
+  }));
+
+export const getFactInputValue = (fact_key: string) =>
+  useEstimationFactsUIStore.getState().factInputs[fact_key] ?? "";

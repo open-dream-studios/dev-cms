@@ -58,7 +58,8 @@ export const currentDataInitialState = {
   currentCustomerSearchTerm: "",
   searchContext: null as SearchContext,
 
-  currentProcessId: 1 as number | null
+  currentProcessId: 1 as number | null,
+  currentProcessRunId: null as number | null
 };
 
 export const useCurrentDataStore = createStore(currentDataInitialState);

@@ -112,7 +112,7 @@ export function useEstimationIfTrees(
   const loadConditionalIfTree = (nodeId: string) =>
     loadConditionalIfTreeApi(currentProjectId!, nodeId);
 
-  const loadAdjustmentIfTree = (nodeId: number) =>
+  const loadAdjustmentIfTree = (nodeId: string) =>
     loadAdjustmentIfTreeApi(currentProjectId!, nodeId);
 
   /* ========= BINDINGS ========= */

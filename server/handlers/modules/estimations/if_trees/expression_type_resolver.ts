@@ -37,7 +37,29 @@ export const resolveExpressionType = async (
         : "string";
     }
 
+    // case "variable_ref": {
+    //   if (!allowedVariableKeys.has(node.ref_key)) {
+    //     throw new Error(`Illegal variable reference: ${node.ref_key}`);
+    //   }
+    //   return "number";
+    // }
+
     case "variable_ref": {
+      // 🔧 treat variable_ref as fact_ref if it matches a fact
+      const [facts] = await conn.query<any[]>(
+        `SELECT fact_type FROM estimation_fact_definitions
+     WHERE project_idx = ? AND fact_key = ?`,
+        [project_idx, node.ref_key]
+      );
+
+      if (facts.length) {
+        return facts[0].fact_type === "number"
+          ? "number"
+          : facts[0].fact_type === "boolean"
+          ? "boolean"
+          : "string";
+      }
+
       if (!allowedVariableKeys.has(node.ref_key)) {
         throw new Error(`Illegal variable reference: ${node.ref_key}`);
       }
@@ -46,10 +68,20 @@ export const resolveExpressionType = async (
 
     case "operator": {
       const leftType = node.left_child_id
-        ? await resolveExpressionType(conn, project_idx, node.left_child_id, allowedVariableKeys)
+        ? await resolveExpressionType(
+            conn,
+            project_idx,
+            node.left_child_id,
+            allowedVariableKeys
+          )
         : null;
       const rightType = node.right_child_id
-        ? await resolveExpressionType(conn, project_idx, node.right_child_id, allowedVariableKeys)
+        ? await resolveExpressionType(
+            conn,
+            project_idx,
+            node.right_child_id,
+            allowedVariableKeys
+          )
         : null;
 
       if (["+", "-", "*", "/"].includes(node.operator)) {
@@ -85,8 +117,18 @@ export const resolveExpressionType = async (
 
     case "function": {
       if (["min", "max"].includes(node.function_name)) {
-        const l = await resolveExpressionType(conn, project_idx, node.left_child_id, allowedVariableKeys);
-        const r = await resolveExpressionType(conn, project_idx, node.right_child_id, allowedVariableKeys);
+        const l = await resolveExpressionType(
+          conn,
+          project_idx,
+          node.left_child_id,
+          allowedVariableKeys
+        );
+        const r = await resolveExpressionType(
+          conn,
+          project_idx,
+          node.right_child_id,
+          allowedVariableKeys
+        );
         if (l !== "number" || r !== "number") {
           throw new Error(`${node.function_name} requires numbers`);
         }
@@ -94,15 +136,35 @@ export const resolveExpressionType = async (
       }
 
       if (node.function_name === "abs") {
-        const l = await resolveExpressionType(conn, project_idx, node.left_child_id, allowedVariableKeys);
+        const l = await resolveExpressionType(
+          conn,
+          project_idx,
+          node.left_child_id,
+          allowedVariableKeys
+        );
         if (l !== "number") throw new Error("abs requires number");
         return "number";
       }
 
       if (node.function_name === "clamp") {
-        const l = await resolveExpressionType(conn, project_idx, node.left_child_id, allowedVariableKeys);
-        const r = await resolveExpressionType(conn, project_idx, node.right_child_id, allowedVariableKeys);
-        const e = await resolveExpressionType(conn, project_idx, node.extra_child_id, allowedVariableKeys);
+        const l = await resolveExpressionType(
+          conn,
+          project_idx,
+          node.left_child_id,
+          allowedVariableKeys
+        );
+        const r = await resolveExpressionType(
+          conn,
+          project_idx,
+          node.right_child_id,
+          allowedVariableKeys
+        );
+        const e = await resolveExpressionType(
+          conn,
+          project_idx,
+          node.extra_child_id,
+          allowedVariableKeys
+        );
         if (l !== "number" || r !== "number" || e !== "number") {
           throw new Error("clamp requires numbers");
         }

@@ -32,12 +32,24 @@ export type IfCase = {
 export type Branch =
   | {
       type: "return";
-      value: Value;
+      value: Value; 
+    }
+  | {
+      type: "adjustment-return";
+      statements: AdjustmentStatement[];  
     }
   | {
       type: "if";
-      cases: IfCase[]; // IF / ELSE IF / ELSE IF ...
-      else: Branch; // single ELSE
+      cases: IfCase[];
+      else: Branch;
     };
 
 export type EditorMode = "variable" | "conditional" | "adjustment";
+
+export type AdjustmentOp = "+=" | "-=" | "*=";
+
+export type AdjustmentStatement = {
+  left: Value;
+  operator: AdjustmentOp;
+  right: Value;
+};

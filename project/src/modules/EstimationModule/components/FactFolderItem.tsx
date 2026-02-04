@@ -10,7 +10,11 @@ import { FactFolderNode } from "../_helpers/estimations.helpers";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { ChevronRight, ChevronDown, Folder, GripVertical } from "lucide-react";
 import FactDraggableItem from "./FactDraggableItem";
-import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import {
+  getFactInputValue,
+  setFactInputValue,
+  useEstimationFactsUIStore,
+} from "../_store/estimations.store";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
@@ -26,6 +30,7 @@ import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
 import { useDndContext } from "@dnd-kit/core";
+import { createPortal } from "react-dom";
 
 export default function FactFolderItem({
   node,
@@ -41,14 +46,16 @@ export default function FactFolderItem({
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const isOpen = openFolders.has(node.folder_id!);
-  const { selectedFolderId, setSelectedFolderId } = useEstimationFactsUIStore();
+  const { selectedFolderId, setSelectedFolderId, runInputsOpen } =
+    useEstimationFactsUIStore();
   const { openContextMenu } = useContextMenuStore();
-  const { currentProjectId, currentProcessId } = useCurrentDataStore();
+  const { currentProjectId, currentProcessId, currentProcessRunId } =
+    useCurrentDataStore();
   const { modal2, setModal2 } = useUiStore();
   const { factFolders, upsertFactFolders } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId!,
-    currentProcessId
+    currentProcessId,
   );
 
   const {
@@ -124,7 +131,7 @@ export default function FactFolderItem({
     <div
       data-draggable
       ref={setRefs}
-      className="rounded-[5px] mb-[4px]"
+      className={`rounded-[5px] mb-[4px] ${currentProcessRunId !== null && runInputsOpen ? "w-[calc(100%-57.5px)]" : "w-[100%]"}`}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -186,11 +193,24 @@ export default function FactFolderItem({
             ))}
           </SortableContext>
           {node.facts.map((fact) => (
-            <div key={fact.fact_id}>
-              <FactDraggableItem
-                fact={fact}
-                depth={depth + 1}  
-              />
+            <div key={fact.fact_id} className="z-501 relative">
+              <FactDraggableItem fact={fact} depth={depth + 1} />
+              {currentProcessRunId !== null && runInputsOpen && (
+                <div
+                  className="z-5001 absolute w-[98px] h-[30px] left-[238px] top-[6px] rounded-[4px]"
+                  style={{
+                    backgroundColor: currentTheme.background_2_dim,
+                  }}
+                >
+                  <input
+                    className="w-[100%] h-[100%] outline-none border-none px-[9px] text-[14px]"
+                    value={getFactInputValue(fact.fact_key)}
+                    onChange={(e) =>
+                      setFactInputValue(fact.fact_key, e.target.value)
+                    }
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

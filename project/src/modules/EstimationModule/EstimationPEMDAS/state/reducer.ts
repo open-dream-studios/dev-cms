@@ -125,7 +125,11 @@ export function reducer(state: State, action: Action): State {
       const nodeIds = [...layer.nodeIds];
       nodeIds.splice(action.index, 0, id);
 
-      const width = computeLineWidth(nodeIds.length);
+      const slotCount = nodeIds.filter(
+        (id) => nodes[id]?.nodeType !== "contributor-bucket"
+      ).length;
+      const width = computeLineWidth(slotCount);
+
       const nextLayer: PemdasLayer = { ...layer, nodeIds, width };
 
       // layout is based on order + slots
@@ -191,7 +195,11 @@ export function reducer(state: State, action: Action): State {
         if (l.id !== node.layerId) return l;
 
         const nodeIds = l.nodeIds.filter((id) => id !== node.id);
-        const width = computeLineWidth(nodeIds.length);
+        
+        const slotCount = nodeIds.filter(
+          (id) => nextNodes[id]?.nodeType !== "contributor-bucket"
+        ).length;
+        const width = computeLineWidth(slotCount);
 
         const nextLayer: PemdasLayer = { ...l, nodeIds, width };
 

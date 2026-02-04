@@ -39,6 +39,70 @@ export const getIfTreeRepo = async (
     returnSelect = `r.node_id`;
   }
 
+  if (tree.return_type === "adjustment") {
+    const [branches] = await conn.query<any[]>(
+      `
+    SELECT
+      b.id AS branch_id,
+      b.order_index,
+      b.condition_expression_id
+    FROM estimation_if_decision_branches b
+    WHERE b.decision_tree_id = ?
+    ORDER BY b.order_index ASC
+    `,
+      [decision_tree_id]
+    );
+
+    const [returns] = await conn.query<any[]>(
+      `
+    SELECT
+      branch_id,
+      order_index,
+      operation,
+      value_expression_id
+    FROM estimation_if_decision_return_adjustments
+    WHERE branch_id IN (?)
+    ORDER BY branch_id, order_index ASC
+    `,
+      [branches.map((b) => b.branch_id)]
+    );
+
+    const byBranch = new Map<number, any[]>();
+    for (const r of returns) {
+      if (!byBranch.has(r.branch_id)) byBranch.set(r.branch_id, []);
+      byBranch.get(r.branch_id)!.push(r);
+    }
+
+    for (const b of branches) {
+      b.statements = byBranch.get(b.branch_id) ?? [];
+    }
+
+    const exprIds = new Set<number>();
+    for (const b of branches) {
+      if (b.condition_expression_id) exprIds.add(b.condition_expression_id);
+      for (const s of b.statements) exprIds.add(s.value_expression_id);
+    }
+
+    const [expressions] = exprIds.size
+      ? await conn.query<any[]>(
+          `
+        WITH RECURSIVE expr_tree AS (
+          SELECT * FROM estimation_if_expression_nodes WHERE id IN (?)
+          UNION ALL
+          SELECT e.*
+          FROM estimation_if_expression_nodes e
+          JOIN expr_tree t
+            ON e.id = t.left_child_id OR e.id = t.right_child_id
+        )
+        SELECT DISTINCT * FROM expr_tree
+        `,
+          [[...exprIds]]
+        )
+      : [[]];
+
+    return { decision_tree_id, branches, expressions };
+  }
+
   const [branches] = await conn.query<any[]>(
     `
     SELECT
