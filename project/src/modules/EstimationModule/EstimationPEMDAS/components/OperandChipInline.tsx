@@ -13,12 +13,14 @@ export const OperandChipInline = ({
   onChange,
   hidden,
   dimmed,
+  noTouch,
 }: {
   nodeId: string;
   value: Operand;
   onChange: (op: Operand) => void;
   hidden?: boolean;
   dimmed: boolean;
+  noTouch: boolean
 }) => {
   const currentTheme = useCurrentTheme();
   const ref = useRef<HTMLDivElement>(null);
@@ -46,9 +48,10 @@ export const OperandChipInline = ({
         className={`select-none absolute -left-[32px] top-1/2 -translate-y-1/2
                    w-6 h-6 rounded-full 
                    ${dimmed ? "text-white/40" : "text-white"} flex items-center justify-center
-                  hover:brightness-85 cursor-pointer z-10 pl-[0.5px] pb-[1px] ${value === "/" ? "text-[13px]" : "text-[14px]"}`}
+                  ${!noTouch && "hover:brightness-85 cursor-pointer"} z-10 pl-[0.5px] pb-[1px] ${value === "/" ? "text-[13px]" : "text-[14px]"}`}
         onClick={(e) => {
           e.stopPropagation();
+          if (noTouch) return
           setOperandOverlayNodeId(nodeId);
         }}
       >

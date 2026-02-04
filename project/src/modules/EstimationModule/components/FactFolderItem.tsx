@@ -177,7 +177,7 @@ export default function FactFolderItem({
       </div>
 
       {isOpen && !isDraggingThis && (
-        <div>
+        <div className="mt-[4px]">
           <SortableContext
             items={node.children.map((c) => `folder-${c.folder_id}`)}
             strategy={verticalListSortingStrategy}

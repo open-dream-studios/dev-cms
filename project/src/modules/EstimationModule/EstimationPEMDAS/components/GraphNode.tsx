@@ -161,9 +161,9 @@ export const GraphNode = ({
       {...(!ghost ? attributes : {})}
       {...(!ghost ? listeners : {})}
       style={style}
-      className={`min-w-[65px] ${isBucket && "ml-[89px]"} absolute flex flex-col items-center select-none`}
+      className="min-w-[65px] absolute flex flex-col items-center select-none"
       onContextMenu={(e) => {
-        if (ghost) return;
+        if (ghost || isBucket) return;
         e.preventDefault();
         openContextMenu({
           position: { x: e.clientX, y: e.clientY },
@@ -277,6 +277,7 @@ export const GraphNode = ({
               })
             }
             dimmed={false}
+            noTouch={isBucket}
           />
         )}
 

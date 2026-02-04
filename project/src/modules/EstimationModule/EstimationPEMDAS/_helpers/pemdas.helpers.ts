@@ -1,5 +1,5 @@
 // src/pemdas/_helpers/pemdas.helpers.ts
-import { BUCKETS, NODE_SIZE } from "../_constants/pemdas.constants";
+import { NODE_SIZE } from "../_constants/pemdas.constants";
 import {
   BASE_LINE_WIDTH,
   EDGE_PADDING, 
@@ -34,11 +34,17 @@ export function getSlotCenters(lineWidth: number, count: number): number[] {
 /**
  * Layout nodes exactly on slots based on layer.nodeIds order.
  */
-export function layoutNodes(nodes: Record<string, PemdasNode>, layer: PemdasLayer) {
-  const ids = layer.nodeIds;
-  const centers = getSlotCenters(layer.width, ids.length);
+export function layoutNodes(
+  nodes: Record<string, PemdasNode>,
+  layer: PemdasLayer
+) {
+  const lineIds = layer.nodeIds.filter(
+    (id) => nodes[id]?.nodeType !== "contributor-bucket"
+  );
 
-  ids.forEach((id, i) => {
+  const centers = getSlotCenters(layer.width, lineIds.length);
+
+  lineIds.forEach((id, i) => {
     const n = nodes[id];
     if (!n) return;
     nodes[id] = {

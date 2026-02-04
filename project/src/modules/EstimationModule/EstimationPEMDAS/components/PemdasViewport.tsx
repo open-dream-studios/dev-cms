@@ -1,5 +1,5 @@
 // project/src/modules/EstimationModule/EstimationPEMDAS/components/PemdasViewport.tsx
-import React, { RefObject } from "react";
+import React, { RefObject, useEffect } from "react";
 import {
   cleanContributorNode,
   getScrollXLeft,
@@ -90,6 +90,15 @@ const PemdasViewport = ({
       openLayer(null as any, rowIndex);
     }
   };
+
+  useEffect(() => {
+    visibleRows.forEach((layer) => {
+      dispatch({
+        type: "ENSURE_BUCKETS_FOR_LAYER",
+        layerId: layer.id,
+      });
+    });
+  }, []);
 
   return (
     <div
@@ -217,10 +226,17 @@ const PemdasViewport = ({
               copy.splice(ghostReorderPreview.overIndex, 0, "__ghost__");
               previewNodeIds = copy;
             }
+            const slotNodeIds = previewNodeIds.filter(
+              (id: any) => state.nodes[id]?.nodeType !== "contributor-bucket",
+            );
 
+            // const previewCenters = getSlotCenters(
+            //   layer.width,
+            //   previewNodeIds.length,
+            // );
             const previewCenters = getSlotCenters(
               layer.width,
-              previewNodeIds.length,
+              slotNodeIds.length,
             );
 
             return (
@@ -237,45 +253,48 @@ const PemdasViewport = ({
                 />
 
                 {/* BUCKETS */}
-                {usage === "estimation" && layer.id !== "layer-0" &&
-                  !activeLayerByRow[rowIndex - 1]?.startsWith("bucket-") &&
-                  ["labor", "materials", "misc"].map((key, i) => {
-                    const id = `bucket-${key}__${layer.id}`;
+                {usage === "estimation" &&
+                  (Object.values(state.nodes) as PemdasNode[])
+                    .filter(
+                      (n) =>
+                        n.nodeType === "contributor-bucket" &&
+                        n.layerId === layer.id,
+                    )
+                    .map((n) => {
+                      const BUCKET_GAP = 40;
+                      const index =
+                        n.variable === "Labor"
+                          ? 0
+                          : n.variable === "Materials"
+                            ? 1
+                            : 2;
 
-                    const node: PemdasNode = {
-                      id,
-                      nodeType: "contributor-bucket",
-                      variable: capitalizeFirstLetter(key),
-                      operand: "+",
-                      layerId: layer.id,
-                      x:
+                      const x =
                         effectiveWidth +
-                        24 +  
-                        48 +  
-                        i * (NODE_SIZE + 40),
-                      y: layer.y,
-                    };
+                        NODE_SIZE / 2 +
+                        BUCKET_GAP +
+                        index * (NODE_SIZE + BUCKET_GAP) +
+                        42;
+                      const activeId = activeLayerByRow[rowIndex];
+                      const activeNode = activeId
+                        ? state.nodes[activeId]
+                        : null;
 
-                    return (
-                      <GraphNode
-                        key={id}
-                        node={node}
-                        dispatch={dispatch}
-                        offsetX={lineLeft - (layer.id === "layer1" ? 0 : 50)}
-                        // offsetX={(viewportRef.current?.clientWidth ?? 0) / 2}
-                        isFirstInLayer={i === 0}
-                        onSelectLayer={(nodeId) =>
-                          handleSelectNode(nodeId, rowIndex)
-                        }
-                        isActiveLayer={activeLayerByRow[rowIndex] === id}
-                        hasActiveLayerInRow={!!activeLayerByRow[rowIndex]}
-                        dimmed={
-                          activeLayerByRow[rowIndex] !== null &&
-                          activeLayerByRow[rowIndex] !== id
-                        }
-                      />
-                    );
-                  })}
+                      return (
+                        <GraphNode
+                          key={n.id}
+                          node={{ ...n, x }}
+                          dispatch={dispatch}
+                          offsetX={lineLeft}
+                          onSelectLayer={(nodeId) =>
+                            handleSelectNode(nodeId, rowIndex)
+                          }
+                          isActiveLayer={activeLayerByRow[rowIndex] === n.id}
+                          hasActiveLayerInRow={!!activeLayerByRow[rowIndex]}
+                          dimmed={!!activeNode && activeNode.id !== n.id}
+                        />
+                      );
+                    })}
 
                 {/* ADD BUTTON */}
                 <div
@@ -368,13 +387,42 @@ const PemdasViewport = ({
 
                   let x = n.x;
 
+                  if (n.nodeType === "contributor-bucket") {
+                    const BUCKET_GAP = 40;
+                    const index =
+                      n.variable === "Labor"
+                        ? 0
+                        : n.variable === "Materials"
+                          ? 1
+                          : 2;
+
+                    x =
+                      effectiveWidth +
+                      NODE_SIZE / 2 +
+                      BUCKET_GAP +
+                      index * (NODE_SIZE + BUCKET_GAP) +
+                      42;
+                  }
+
                   const shouldUsePreview =
                     (reorderPreview && reorderPreview.layerId === layer.id) ||
                     (ghostReorderPreview &&
                       ghostReorderPreview.layerId === layer.id);
 
-                  if (shouldUsePreview && !isDragging && !isJustDropped) {
-                    const previewIndex = previewNodeIds.indexOf(id);
+                  // if (shouldUsePreview && !isDragging && !isJustDropped) {
+                  //   const previewIndex = previewNodeIds.indexOf(id);
+                  //   if (previewIndex !== -1) {
+                  //     x = previewCenters[previewIndex];
+                  //   }
+                  // }
+
+                  if (
+                    shouldUsePreview &&
+                    !isDragging &&
+                    !isJustDropped &&
+                    n.nodeType !== "contributor-bucket"
+                  ) {
+                    const previewIndex = slotNodeIds.indexOf(id);
                     if (previewIndex !== -1) {
                       x = previewCenters[previewIndex];
                     }
