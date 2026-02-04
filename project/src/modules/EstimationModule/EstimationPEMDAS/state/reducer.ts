@@ -48,8 +48,7 @@ type Action =
       nodeId: string;
       label: string;
       constantValue: number | undefined;
-    }
-  | { type: "ENSURE_BUCKETS_FOR_LAYER"; layerId: string };
+    };
 
 const INITIAL_LAYERS: PemdasLayer[] = [
   {
@@ -85,36 +84,6 @@ function enforceFirstOperandPlus(
   if (first.operand !== "+") nodes[firstId] = { ...first, operand: "+" };
 }
 
-function ensureBuckets(nodes: Record<string, PemdasNode>, layer: PemdasLayer) {
-  if (layer.id.startsWith("bucket-")) {
-    return { nodes, layer };
-  }
-
-  const existing = Object.values(nodes).some(
-    (n) => n.nodeType === "contributor-bucket" && n.layerId === layer.id
-  );
-
-  if (existing) return { nodes, layer };
-
-  const bucketKeys = ["Labor", "Materials", "Misc"];
-  const newNodes = { ...nodes };
-
-  bucketKeys.forEach((key) => {
-    const id = `bucket-${key.toLowerCase()}__${layer.id}`;
-    newNodes[id] = {
-      id,
-      nodeType: "contributor-bucket",
-      variable: key,
-      operand: "+",
-      layerId: layer.id,
-      x: 0,
-      y: layer.y,
-    };
-  });
-
-  return { nodes: newNodes, layer };
-}
-
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "ADD_NODE_AT": {
@@ -126,6 +95,11 @@ export function reducer(state: State, action: Action): State {
           y: action.layerY ?? WORLD_TOP + 290,
           nodeIds: [],
           width: BASE_LINE_WIDTH,
+        };
+
+        state = {
+          ...state,
+          layers: [...state.layers, layer],
         };
       }
 
@@ -156,23 +130,19 @@ export function reducer(state: State, action: Action): State {
       const nodeIds = [...layer.nodeIds];
       nodeIds.splice(action.index, 0, id);
 
-      const slotCount = nodeIds.filter(
-        (id) => nodes[id]?.nodeType !== "contributor-bucket"
-      ).length;
-      const width = computeLineWidth(slotCount);
-      const baseLayer: PemdasLayer = { ...layer, nodeIds, width };
+      const width = computeLineWidth(nodeIds.length);
+      const nextLayer: PemdasLayer = { ...layer, nodeIds, width };
 
-      const ensured = ensureBuckets(nodes, baseLayer);
-
-      layoutNodes(ensured.nodes, ensured.layer);
-      enforceFirstOperandPlus(ensured.nodes, ensured.layer);
+      // layout is based on order + slots
+      layoutNodes(nodes, nextLayer);
+      enforceFirstOperandPlus(nodes, nextLayer);
 
       const nextLayers = state.layers.some((l) => l.id === layer!.id)
-        ? state.layers.map((l) => (l.id === layer!.id ? ensured.layer : l))
-        : [...state.layers, ensured.layer];
+        ? state.layers.map((l) => (l.id === layer!.id ? nextLayer : l))
+        : [...state.layers, nextLayer];
 
       return {
-        nodes: ensured.nodes,
+        nodes,
         layers: nextLayers,
       };
     }
@@ -226,11 +196,7 @@ export function reducer(state: State, action: Action): State {
         if (l.id !== node.layerId) return l;
 
         const nodeIds = l.nodeIds.filter((id) => id !== node.id);
-
-        const slotCount = nodeIds.filter(
-          (id) => nextNodes[id]?.nodeType !== "contributor-bucket"
-        ).length;
-        const width = computeLineWidth(slotCount);
+        const width = computeLineWidth(nodeIds.length);
 
         const nextLayer: PemdasLayer = { ...l, nodeIds, width };
 
@@ -257,17 +223,6 @@ export function reducer(state: State, action: Action): State {
             constantValue: action.constantValue,
           },
         },
-      };
-    }
-
-    case "ENSURE_BUCKETS_FOR_LAYER": {
-      const layer = getLayer(state, action.layerId);
-      const ensured = ensureBuckets({ ...state.nodes }, layer);
-      return {
-        nodes: ensured.nodes,
-        layers: state.layers.map((l) =>
-          l.id === layer.id ? ensured.layer : l
-        ),
       };
     }
 

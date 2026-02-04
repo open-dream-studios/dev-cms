@@ -64,7 +64,7 @@ export const ContextMenu = () => {
                 ? "red"
                 : "#FF746B",
             }}
-            className={`w-full text-left px-3 py-2 text-sm dim hover:brightness-75
+            className={`select-none w-full text-left px-3 py-2 text-sm dim hover:brightness-75
               ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
             `}
           >

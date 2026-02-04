@@ -9,6 +9,7 @@ import {
   getSlotCenters,
 } from "../_helpers/pemdas.helpers";
 import {
+  BUCKETS,
   MIN_NODE_GAP,
   NODE_SIZE,
   nodeColors,
@@ -90,15 +91,6 @@ const PemdasViewport = ({
       openLayer(null as any, rowIndex);
     }
   };
-
-  useEffect(() => {
-    visibleRows.forEach((layer) => {
-      dispatch({
-        type: "ENSURE_BUCKETS_FOR_LAYER",
-        layerId: layer.id,
-      });
-    });
-  }, []);
 
   return (
     <div
@@ -239,6 +231,8 @@ const PemdasViewport = ({
               slotNodeIds.length,
             );
 
+            console.log(layer);
+
             return (
               <div key={layer.id}>
                 {/* LINE */}
@@ -254,47 +248,45 @@ const PemdasViewport = ({
 
                 {/* BUCKETS */}
                 {usage === "estimation" &&
-                  (Object.values(state.nodes) as PemdasNode[])
-                    .filter(
-                      (n) =>
-                        n.nodeType === "contributor-bucket" &&
-                        n.layerId === layer.id,
-                    )
-                    .map((n) => {
-                      const BUCKET_GAP = 40;
-                      const index =
-                        n.variable === "Labor"
-                          ? 0
-                          : n.variable === "Materials"
-                            ? 1
-                            : 2;
+                  !layer.id.startsWith("bucket-") &&
+                  BUCKETS.map((label, index) => {
+                    const BUCKET_GAP = 40;
 
-                      const x =
-                        effectiveWidth +
-                        NODE_SIZE / 2 +
-                        BUCKET_GAP +
-                        index * (NODE_SIZE + BUCKET_GAP) +
-                        42;
-                      const activeId = activeLayerByRow[rowIndex];
-                      const activeNode = activeId
-                        ? state.nodes[activeId]
-                        : null;
+                    const x =
+                      effectiveWidth +
+                      NODE_SIZE / 2 +
+                      BUCKET_GAP +
+                      index * (NODE_SIZE + BUCKET_GAP) +
+                      42;
 
-                      return (
-                        <GraphNode
-                          key={n.id}
-                          node={{ ...n, x }}
-                          dispatch={dispatch}
-                          offsetX={lineLeft}
-                          onSelectLayer={(nodeId) =>
-                            handleSelectNode(nodeId, rowIndex)
-                          }
-                          isActiveLayer={activeLayerByRow[rowIndex] === n.id}
-                          hasActiveLayerInRow={!!activeLayerByRow[rowIndex]}
-                          dimmed={!!activeNode && activeNode.id !== n.id}
-                        />
-                      );
-                    })}
+                    const id = `bucket-${label.toLowerCase()}__${layer.id}`;
+                    const activeId = activeLayerByRow[rowIndex];
+
+                    const node: PemdasNode = {
+                      id,
+                      nodeType: "contributor-bucket",
+                      variable: label,
+                      operand: "+",
+                      layerId: layer.id,
+                      x,
+                      y: layer.y,
+                    };
+
+                    return (
+                      <GraphNode
+                        key={id}
+                        node={node}
+                        dispatch={dispatch}
+                        offsetX={lineLeft}
+                        onSelectLayer={(nodeId) =>
+                          handleSelectNode(nodeId, rowIndex)
+                        }
+                        isActiveLayer={activeId === id}
+                        hasActiveLayerInRow={!!activeId}
+                        dimmed={!!activeId && activeId !== id}
+                      />
+                    );
+                  })}
 
                 {/* ADD BUTTON */}
                 <div

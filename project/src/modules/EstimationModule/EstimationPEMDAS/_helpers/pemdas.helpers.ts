@@ -41,9 +41,7 @@ export function layoutNodes(
   const lineIds = layer.nodeIds.filter(
     (id) => nodes[id]?.nodeType !== "contributor-bucket"
   );
-
   const centers = getSlotCenters(layer.width, lineIds.length);
-
   lineIds.forEach((id, i) => {
     const n = nodes[id];
     if (!n) return;

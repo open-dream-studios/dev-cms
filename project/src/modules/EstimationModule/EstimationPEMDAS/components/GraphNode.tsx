@@ -22,6 +22,7 @@ import {
 } from "../../_store/estimations.store";
 import { BiQuestionMark } from "react-icons/bi";
 import { usePemdasUIStore } from "../_store/pemdas.store";
+import { capitalizeFirstLetter } from "@/util/functions/Data";
 
 export const GraphNodeIcon = ({
   color,
@@ -301,7 +302,7 @@ export const GraphNode = ({
               className="relative z-1 font-bold text-[18px]"
               style={{ color: currentTheme.text_1 }}
             >
-              {node.variable[0]}
+              {capitalizeFirstLetter(node.variable[0])}
             </span>
           ) : (
             <GraphNodeIcon />
@@ -321,7 +322,7 @@ export const GraphNode = ({
           textOverflow: "ellipsis",
         }}
       >
-        {node.variable}
+        {node.id.startsWith("bucket-") ? capitalizeFirstLetter(node.variable) : node.variable}
       </div>
 
       {(node.nodeType === "contributor-node" ||
