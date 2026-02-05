@@ -231,8 +231,6 @@ const PemdasViewport = ({
               slotNodeIds.length,
             );
 
-            console.log(layer);
-
             return (
               <div key={layer.id}>
                 {/* LINE */}

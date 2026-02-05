@@ -25,7 +25,10 @@ import {
   createFactFolderContextMenu,
   toggleFactFolder,
 } from "../_actions/estimations.actions";
-import { EstimationFactFolder } from "@open-dream/shared";
+import {
+  EstimationFactDefinition,
+  EstimationFactFolder,
+} from "@open-dream/shared";
 import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
@@ -192,23 +195,73 @@ export default function FactFolderItem({
               />
             ))}
           </SortableContext>
-          {node.facts.map((fact) => (
+          {node.facts.map((fact: EstimationFactDefinition) => (
             <div key={fact.fact_id} className="z-501 relative">
               <FactDraggableItem fact={fact} depth={depth + 1} />
               {currentProcessRunId !== null && runInputsOpen && (
                 <div
-                  className="z-5001 absolute w-[98px] h-[30px] left-[238px] top-[6px] rounded-[4px]"
-                  style={{
-                    backgroundColor: currentTheme.background_2_dim,
-                  }}
+                  className="z-5001 absolute left-[238px] top-[6px] rounded-[4px]"
+                  style={{ backgroundColor: currentTheme.background_2_dim }}
                 >
-                  <input
-                    className="w-[100%] h-[100%] outline-none border-none px-[9px] text-[14px]"
-                    value={getFactInputValue(fact.fact_key)}
-                    onChange={(e) =>
-                      setFactInputValue(fact.fact_key, e.target.value)
-                    }
-                  />
+                  {/* NUMBER */}
+                  {fact.fact_type === "number" && (
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      className="w-[98px] h-[30px] outline-none border-none px-[9px] text-[14px]"
+                      value={getFactInputValue(fact.fact_key)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (!/^-?\d*\.?\d*$/.test(v)) return;
+                        setFactInputValue(fact.fact_key, v);
+                      }}
+                    />
+                  )}
+
+                  {/* STRING */}
+                  {fact.fact_type === "string" && (
+                    <input
+                      type="text"
+                      className="w-[98px] h-[30px] outline-none border-none px-[9px] text-[14px]"
+                      value={getFactInputValue(fact.fact_key)}
+                      onChange={(e) =>
+                        setFactInputValue(fact.fact_key, e.target.value)
+                      }
+                    />
+                  )}
+
+                  {/* BOOLEAN */}
+                  {fact.fact_type === "boolean" && (
+                    <select
+                      className="w-[98px] h-[30px] px-[6px] text-[14px] outline-none border-none"
+                      value={getFactInputValue(fact.fact_key)}
+                      onChange={(e) =>
+                        setFactInputValue(fact.fact_key, e.target.value)
+                      }
+                    >
+                      <option value="">—</option>
+                      <option value="true">True</option>
+                      <option value="false">False</option>
+                    </select>
+                  )}
+
+                  {/* ENUM (✅ STORES option_id) */}
+                  {fact.fact_type === "enum" && (
+                    <select
+                      className="w-[98px] h-[30px] px-[6px] text-[14px] outline-none border-none"
+                      value={getFactInputValue(fact.fact_key)}
+                      onChange={(e) =>
+                        setFactInputValue(fact.fact_key, e.target.value)
+                      }
+                    >
+                      <option value="">Select</option>
+                      {(fact.enum_options ?? []).map((opt) => (
+                        <option key={opt.option_id} value={opt.option_id}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               )}
             </div>

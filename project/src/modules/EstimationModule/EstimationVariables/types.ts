@@ -1,6 +1,6 @@
+// project/src/nodes/EstimationModule/EstimationVariables/types.ts
 import { VariableScope } from "@open-dream/shared";
 
-// project/src/nodes/EstimationModule/EstimationVariables/types.ts
 export type Value =
   | { kind: "literal"; value: string; selector_id: string }
   | {

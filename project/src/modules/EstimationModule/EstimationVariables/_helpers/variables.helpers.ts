@@ -1,6 +1,6 @@
 // project/src/modules/EstimationModule/EstimationVariables/_helpers/variables.helpers.ts
 import { Branch, Value } from "../types";
-import { nanoid } from "nanoid"; 
+import { nanoid } from "nanoid";
 
 export function lightenColor(color: string, amount = 1) {
   const hex = color.replace("#", "");
@@ -14,6 +14,9 @@ export function lightenColor(color: string, amount = 1) {
 
 export function extractFirstReturn(branch: Branch): Value {
   if (branch.type === "return") return branch.value;
+  if (branch.type === "adjustment-return") { 
+    return literalValue("");
+  }
   for (const c of branch.cases) {
     const v = extractFirstReturn(c.then);
     if (v) return v;
@@ -42,8 +45,8 @@ export function statementValue(): Value {
   const id = crypto.randomUUID();
   return {
     kind: "statement",
-    expression_id: id,   
-    selector_id: id,     
+    expression_id: id,
+    selector_id: id,
   };
 }
 

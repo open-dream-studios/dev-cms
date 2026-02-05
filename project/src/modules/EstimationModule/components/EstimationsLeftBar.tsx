@@ -98,7 +98,7 @@ export default function EstimationsLeftBar() {
                 parent_folder_id: selectedFolderId,
                 name: values.name,
                 ordinal: null,
-                process_id: 1,
+                process_id: currentProcessId,
               },
             ]);
             if (selectedFolderId) {

@@ -30,6 +30,8 @@ import {
 } from "./EstimationPEMDAS/_helpers/pemdas.serialize";
 import { initialState } from "./EstimationPEMDAS/state/reducer";
 import FactEditor from "./EstimationVariables/EnumFactEditor";
+import EstimationReport from "./EstimationReport";
+import { toast } from "react-toastify";
 
 export type CanvasUsage = "estimation" | "variable";
 
@@ -42,16 +44,15 @@ const EstimationAdmin = () => {
     currentProcessRunId,
     setCurrentProcessRunId,
   } = useCurrentDataStore();
+
   const { upsertFactDefinition, factFolders, reorderFactFolders } =
     useEstimationFactDefinitions(
       !!currentUser,
       currentProjectId,
       currentProcessId,
     );
-  const { upsertPemdasGraph, getPemdasGraph } = usePemdasGraphs(
-    !!currentUser,
-    currentProjectId,
-  );
+  const { upsertPemdasGraph, getPemdasGraph, calculatePemdasGraph } =
+    usePemdasGraphs(!!currentUser, currentProjectId);
   const { openNodeIdTypeSelection, setOpenNodeIdTypeSelection } =
     usePemdasUIStore();
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -70,6 +71,10 @@ const EstimationAdmin = () => {
     editingConditional,
     editingAdjustment,
     setRunInputsOpen,
+    factInputs,
+    showEstimationReport,
+    setShowEstimationReport,
+    setLatestReport,
   } = useEstimationFactsUIStore();
 
   useOutsideClick(selectorRef, () => setOpenNodeIdTypeSelection(null));
@@ -208,11 +213,36 @@ const EstimationAdmin = () => {
     setVariableBaseline(JSON.stringify(config));
   };
 
+  const handleCalculate = async () => {
+    if (!currentProcessId || !currentProcessRunId) return;
+    const res = await calculatePemdasGraph({
+      process_id: currentProcessId,
+      process_run_id: currentProcessRunId,
+      fact_inputs: factInputs,
+    });
+    console.log(res);
+    if (res.success) {
+      setLatestReport(res.estimation);
+      setShowEstimationReport(true);
+    } else {
+      toast.warn("Estimation calculation failed");
+    }
+  };
+
   return (
     <div
       className="w-full h-full overflow-hidden relative"
       style={{ backgroundColor: currentTheme.background_1 }}
     >
+      {showEstimationReport && (
+        <div
+          className="z-600 absolute top-0 left-0 w-[100%] h-[100%] "
+          style={{ backgroundColor: currentTheme.background_1 }}
+        >
+          <EstimationReport />
+        </div>
+      )}
+
       <DndContext
         sensors={activePemdas.sensors}
         onDragStart={(e) => {
@@ -323,7 +353,7 @@ const EstimationAdmin = () => {
               </div>
             ) : (
               <div
-                onClick={() => {}}
+                onClick={handleCalculate}
                 style={{ backgroundColor: currentTheme.background_2_dim }}
                 className="z-500 absolute right-[25px] top-[25px] rounded-[9px] px-[20px] py-[9px] cursor-pointer hover:brightness-95 dim"
               >

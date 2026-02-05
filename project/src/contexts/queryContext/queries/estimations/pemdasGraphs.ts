@@ -5,9 +5,9 @@ import {
   getPemdasGraphApi,
   deletePemdasGraphApi,
   PemdasGraphType,
+  calculatePemdasGraphApi,
 } from "@/api/estimations/pemdasGraphs.api";
-import type { PemdasSerialized } from
-  "@/modules/EstimationModule/EstimationPEMDAS/_helpers/pemdas.serialize";
+import type { PemdasSerialized } from "@/modules/EstimationModule/EstimationPEMDAS/_helpers/pemdas.serialize";
 
 export function usePemdasGraphs(
   isLoggedIn: boolean,
@@ -19,8 +19,7 @@ export function usePemdasGraphs(
       pemdas_type: PemdasGraphType;
       conditional_id?: string;
       config: PemdasSerialized;
-    }) =>
-      upsertPemdasGraphApi(currentProjectId!, payload),
+    }) => upsertPemdasGraphApi(currentProjectId!, payload),
   });
 
   const getGraphMutation = useMutation({
@@ -28,8 +27,7 @@ export function usePemdasGraphs(
       process_id: number;
       pemdas_type: PemdasGraphType;
       conditional_id?: string;
-    }) =>
-      getPemdasGraphApi(currentProjectId!, payload),
+    }) => getPemdasGraphApi(currentProjectId!, payload),
   });
 
   const deleteGraphMutation = useMutation({
@@ -37,8 +35,15 @@ export function usePemdasGraphs(
       process_id: number;
       pemdas_type: PemdasGraphType;
       conditional_id?: string;
-    }) =>
-      deletePemdasGraphApi(currentProjectId!, payload),
+    }) => deletePemdasGraphApi(currentProjectId!, payload),
+  });
+
+  const calculateGraphMutation = useMutation({
+    mutationFn: (payload: {
+      process_id: number;
+      process_run_id: number;
+      fact_inputs: Record<string, string>;
+    }) => calculatePemdasGraphApi(currentProjectId!, payload),
   });
 
   return {
@@ -60,5 +65,11 @@ export function usePemdasGraphs(
       pemdas_type: PemdasGraphType;
       conditional_id?: string;
     }) => deleteGraphMutation.mutateAsync(p),
+
+    calculatePemdasGraph: (p: {
+      process_id: number;
+      process_run_id: number;
+      fact_inputs: Record<string, string>;
+    }) => calculateGraphMutation.mutateAsync(p),
   };
 }

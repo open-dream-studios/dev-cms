@@ -50,3 +50,18 @@ export async function deletePemdasGraphApi(
   });
   return res.data;
 }
+
+export async function calculatePemdasGraphApi(
+  project_idx: number,
+  payload: {
+    process_id: number;
+    process_run_id: number;
+    fact_inputs: Record<string, string>;
+  }
+) {
+  const res = await makeRequest.post("/estimations/pemdas/calculate", {
+    project_idx,
+    ...payload,
+  });
+  return res.data;
+}

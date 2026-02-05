@@ -18,14 +18,14 @@ import type { FactType, EstimationFactFolder } from "@open-dream/shared";
 export function useEstimationFactDefinitions(
   isLoggedIn: boolean,
   currentProjectId: number | null,
-  process_id: number | null
+  process_id: number | null,
 ) {
   const qc = useQueryClient();
 
   // ---------- FACTS ----------
   const { data: factDefinitions = [], isLoading } = useQuery({
     queryKey: ["estimationFactDefinitions", currentProjectId, process_id],
-    queryFn: () => fetchFactDefinitionsApi(currentProjectId!),
+    queryFn: () => fetchFactDefinitionsApi(currentProjectId!, process_id!),
     enabled: isLoggedIn && !!currentProjectId && !!process_id,
   });
 
@@ -70,8 +70,8 @@ export function useEstimationFactDefinitions(
   // ---------- FOLDERS ----------
   const { data: factFolders = [], isLoading: isLoadingFolders } = useQuery({
     queryKey: ["estimationFactFolders", currentProjectId],
-    queryFn: () => fetchFactFoldersApi(currentProjectId!),
-    enabled: isLoggedIn && !!currentProjectId,
+    queryFn: () => fetchFactFoldersApi(currentProjectId!, process_id!),
+    enabled: isLoggedIn && !!currentProjectId && !!process_id
   });
 
   const upsertFoldersMutation = useMutation({
@@ -81,6 +81,7 @@ export function useEstimationFactDefinitions(
         parent_folder_id?: number | null;
         name: string;
         ordinal?: number | null;
+        process_id: number;
       }[]
     ) => upsertFactFoldersApi(currentProjectId!, folders),
     onSuccess: () =>

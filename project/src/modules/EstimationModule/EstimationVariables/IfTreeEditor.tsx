@@ -1089,7 +1089,7 @@ export default function IfTreeEditor() {
         branches: data.branches,
         expressions: data.expressions,
       });
-      setRoot(rebuildIfTree(data.branches, data.expressions, factsRef.current));
+      setRoot(rebuildIfTree(data.branches, data.expressions, factsRef.current, mode));
     };
 
     load();

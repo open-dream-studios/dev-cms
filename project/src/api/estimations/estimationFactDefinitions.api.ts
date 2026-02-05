@@ -6,9 +6,10 @@ import {
   FactType,
 } from "@open-dream/shared";
 
-export async function fetchFactDefinitionsApi(project_idx: number) {
+export async function fetchFactDefinitionsApi(project_idx: number, process_id: number) {
   const res = await makeRequest.post("/estimations/fact-definitions", {
     project_idx,
+    process_id,
   });
   return res.data.fact_definitions as EstimationFactDefinition[];
 }
@@ -63,10 +64,10 @@ export async function reorderFactDefinitionsApi(
 
 
 // -------- FOLDERS --------
-export async function fetchFactFoldersApi(project_idx: number) {
+export async function fetchFactFoldersApi(project_idx: number, process_id: number) {
   const res = await makeRequest.post(
     "/estimations/fact-definitions/folders",
-    { project_idx }
+    { project_idx, process_id }
   );
   return res.data.folders as EstimationFactFolder[];
 }
@@ -78,6 +79,7 @@ export async function upsertFactFoldersApi(
     parent_folder_id?: number | null;
     name: string;
     ordinal?: number | null;
+    process_id: number;
   }[]
 ) {
   const res = await makeRequest.post(

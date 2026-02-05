@@ -45,9 +45,11 @@ export const useEstimationFactsUIStore = createStore({
   editingConditional: null as null | string,
   editingAdjustment: null as null | string,
   editingIfTreeType: null as null | EditorMode,
-  
+
   runInputsOpen: false,
   factInputs: {} as Record<string, string>,
+  showEstimationReport: false,
+  latestReport: null as null | Record<string, any>,
 });
 
 export const resetVariableUI = () =>

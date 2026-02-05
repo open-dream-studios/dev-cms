@@ -100,9 +100,21 @@ export function compileAdjustmentTree(root: Branch): CompiledAdjustmentTree {
     if (branch.type === "if") {
       branch.cases.forEach((c) => {
         const cond = compileCondition(c.condition);
-        const idx = branches.length;
+
+        const branchIndex = branches.length;
+        branches.push({
+          condition_expression_id: cond,
+          statements: [],
+        });
+
         walk(c.then);
-        branches[idx].condition_expression_id = cond;
+
+        const produced = branches.splice(branchIndex + 1);
+        if (produced.length !== 1) {
+          throw new Error("IF case must produce exactly one adjustment branch");
+        }
+
+        branches[branchIndex].statements = produced[0].statements;
       });
 
       walk(branch.else);
@@ -206,13 +218,10 @@ export function compileIfTree(root: Branch): CompiledTree {
   }
 
   function walk(branch: Branch) {
-    if (branch.type === "adjustment-return") {
+    if (branch.type === "return") {
       branches.push({
         condition_expression_id: null,
-        statements: branch.statements.map((s) => ({
-          operation: s.operator, // "+=" | "-=" | "*="
-          value_expression_id: compileValue(s.right),
-        })),
+        return_expression_id: compileValue(branch.value),
       });
       return;
     }
@@ -220,11 +229,28 @@ export function compileIfTree(root: Branch): CompiledTree {
     if (branch.type === "if") {
       branch.cases.forEach((c) => {
         const cond = compileCondition(c.condition);
-        const idx = branches.length;
+
+        // ✅ create branch FIRST
+        const branchIndex = branches.length;
+        branches.push({
+          condition_expression_id: cond,
+          return_expression_id: -1 as any, // filled below
+        });
+
+        // recurse
         walk(c.then);
-        branches[idx].condition_expression_id = cond;
+
+        // 🔒 enforce exactly one return
+        const produced = branches.splice(branchIndex + 1);
+        if (produced.length !== 1) {
+          throw new Error("IF case must produce exactly one return branch");
+        }
+
+        branches[branchIndex].return_expression_id =
+          produced[0].return_expression_id;
       });
 
+      // ELSE
       walk(branch.else);
     }
   }

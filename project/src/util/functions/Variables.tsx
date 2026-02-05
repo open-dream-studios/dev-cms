@@ -2,5 +2,5 @@
 import { capitalizeFirstLetter } from "./Data";
 
 export const cleanVariableKey = (key: string) => {
-  return capitalizeFirstLetter(key.replace("_", " "));
+  return capitalizeFirstLetter(key.replaceAll("_", " "));
 };

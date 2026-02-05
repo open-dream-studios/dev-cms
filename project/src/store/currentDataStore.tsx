@@ -58,7 +58,7 @@ export const currentDataInitialState = {
   currentCustomerSearchTerm: "",
   searchContext: null as SearchContext,
 
-  currentProcessId: 3 as number | null,
+  currentProcessId: 4 as number | null,
   currentProcessRunId: null as number | null
 };
 
