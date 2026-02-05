@@ -346,7 +346,7 @@ const EstimationAdmin = () => {
             }
           }
           setDraggingFact(null);
-          setDraggingProcess(null)
+          setDraggingProcess(null);
           setDraggingFolderId(null);
           dragStartPointerRef.current = null;
         }}

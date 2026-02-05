@@ -115,7 +115,6 @@ export default function EstimationReport() {
   const pricingData = root.breakdown.total;
 
   const VARIANCE = 0.15;
-
   const withVariance = (v: number) => ({
     min: Math.round(v * (1 - VARIANCE)),
     max: Math.round(v * (1 + VARIANCE)),
