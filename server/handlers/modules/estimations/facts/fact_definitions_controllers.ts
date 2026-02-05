@@ -4,14 +4,15 @@ import {
   getFactDefinitionsFunction,
   upsertFactDefinitionFunction,
   deleteFactDefinitionFunction,
-  reorderFactDefinitionsFunction
+  reorderFactDefinitionsFunction,
 } from "./fact_definitions_repositories.js";
 
 export const getFactDefinitions = async (req: Request) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) throw new Error("Missing project_idx");
+  const { process_id } = req.body;
+  if (!project_idx || !process_id) throw new Error("Missing fields");
 
-  const facts = await getFactDefinitionsFunction(project_idx);
+  const facts = await getFactDefinitionsFunction(project_idx, process_id);
   return { success: true, fact_definitions: facts };
 };
 
@@ -42,7 +43,7 @@ export const reorderFactDefinitions = async (
   res: Response,
   connection: PoolConnection
 ) => {
-  const {orderedIds, process_id } = req.body;
+  const { orderedIds, process_id } = req.body;
   const project_idx = req.user?.project_idx;
   if (!project_idx || !Array.isArray(orderedIds) || !process_id) {
     throw new Error("Missing required fields");

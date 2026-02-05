@@ -2,6 +2,9 @@
 import type { PoolConnection } from "mysql2/promise";
 import { ulid } from "ulid";
 import { PemdasGraphConfig } from "./pemdas_types.js";
+import { loadRuntimeContext } from "./pemdas_runtime_loader.js";
+import { evaluatePemdasGraph } from "./pemdas_graph_evaluator.js";
+import { normalizePemdasGraph } from "./pemdas_normalize_graph.js";
 
 type PemdasType = "estimation" | "variable";
 
@@ -28,13 +31,7 @@ export const upsertPemdasGraph = async (
         )
       LIMIT 1
     `,
-    [
-      project_idx,
-      process_id,
-      pemdas_type,
-      conditional_id,
-      conditional_id,
-    ]
+    [project_idx, process_id, pemdas_type, conditional_id, conditional_id]
   );
 
   let graph_idx: number;
@@ -48,13 +45,7 @@ export const upsertPemdasGraph = async (
         (graph_id, project_idx, process_id, graph_type, pemdas_type, conditional_id, name, version, status)
       VALUES (?, ?, ?, 'pemdas', ?, ?, 'PEMDAS', 1, 'draft')
       `,
-      [
-        graph_id,
-        project_idx,
-        process_id,
-        pemdas_type,
-        conditional_id,
-      ]
+      [graph_id, project_idx, process_id, pemdas_type, conditional_id]
     );
 
     graph_idx = res.insertId;
@@ -101,20 +92,12 @@ export const getPemdasGraph = async (
       )
     LIMIT 1
     `,
-    [
-      project_idx,
-      process_id,
-      pemdas_type,
-      conditional_id,
-      conditional_id,
-    ]
+    [project_idx, process_id, pemdas_type, conditional_id, conditional_id]
   );
 
   if (!row) return null;
 
-  return typeof row.config === "string"
-    ? JSON.parse(row.config)
-    : row.config;
+  return typeof row.config === "string" ? JSON.parse(row.config) : row.config;
 };
 
 export const deletePemdasGraph = async (
@@ -138,14 +121,60 @@ export const deletePemdasGraph = async (
         OR g.conditional_id = ?
       )
     `,
-    [
-      project_idx,
-      process_id,
-      pemdas_type,
-      conditional_id,
-      conditional_id,
-    ]
+    [project_idx, process_id, pemdas_type, conditional_id, conditional_id]
   );
 
   return { success: true };
+};
+
+export const calculateEstimationRepo = async (
+  conn: PoolConnection,
+  project_idx: number,
+  process_id: number,
+  process_run_id: number,
+  fact_inputs: Record<string, string>
+) => {
+  const graph = await getPemdasGraph(
+    conn,
+    project_idx,
+    process_id,
+    "estimation",
+    null
+  );
+
+  if (!graph) throw new Error("PEMDAS graph not found");
+
+  const ctx = await loadRuntimeContext(
+    conn,
+    project_idx,
+    process_id,
+    fact_inputs
+  );
+
+  const normalized = normalizePemdasGraph(graph);
+
+  console.log("=== PEMDAS GRAPH STRUCTURE ===");
+  for (const line of normalized.lines) {
+    console.log({
+      line_id: line.line_id,
+      nodes: line.nodes.map((n) => ({
+        kind: n.kind,
+        operand: n.operand,
+        target: "target_line_id" in n ? n.target_line_id : null,
+        value:
+          n.kind === "constant"
+            ? n.value
+            : n.kind === "fact"
+            ? n.fact_key
+            : n.kind === "variable"
+            ? n.var_key
+            : null,
+      })),
+    });
+  }
+  console.log("=== END GRAPH STRUCTURE ===");
+
+  const root = evaluatePemdasGraph(normalized, ctx);
+
+  return { root };
 };

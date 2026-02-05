@@ -5,15 +5,13 @@ import {
   upsertPemdasGraph,
   getPemdasGraph,
   deletePemdasGraph,
+  calculateEstimationRepo,
 } from "./pemdas_repositories.js";
 import { validatePemdasGraph } from "./pemdas_validation.js";
 
 type PemdasType = "estimation" | "variable";
 
-const assertInputs = (
-  pemdas_type: PemdasType,
-  conditional_id?: number
-) => {
+const assertInputs = (pemdas_type: PemdasType, conditional_id?: number) => {
   if (pemdas_type === "variable" && !conditional_id) {
     throw new Error("conditional_id required for variable pemdas graph");
   }
@@ -97,4 +95,27 @@ export const deleteGraph = async (
   );
 
   return { success: true };
+};
+
+export const calculateEstimation = async (
+  req: Request,
+  _: any,
+  connection: PoolConnection
+) => {
+  const project_idx = req.user?.project_idx;
+  const { process_id, process_run_id, fact_inputs } = req.body;
+
+  if (!project_idx || !process_id || !process_run_id || !fact_inputs) {
+    throw new Error("Missing fields");
+  }
+
+  const estimation = await calculateEstimationRepo(
+    connection,
+    project_idx,
+    process_id,
+    process_run_id,
+    fact_inputs
+  );
+
+  return { success: true, estimation };
 };

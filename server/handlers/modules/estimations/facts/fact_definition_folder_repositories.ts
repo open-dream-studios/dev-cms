@@ -9,14 +9,15 @@ import {
   reorderOrdinals,
 } from "../../../../lib/ordinals.js";
 
-export const getFactFoldersFunction = async (project_idx: number) => {
+export const getFactFoldersFunction = async (project_idx: number, process_id: number) => {
   const q = `
     SELECT *
     FROM estimation_fact_definitions_folder
     WHERE project_idx = ?
+    AND process_id = ?
     ORDER BY ordinal ASC
   `;
-  const [rows] = await db.promise().query<RowDataPacket[]>(q, [project_idx]);
+  const [rows] = await db.promise().query<RowDataPacket[]>(q, [project_idx, process_id]);
   return rows;
 };
 

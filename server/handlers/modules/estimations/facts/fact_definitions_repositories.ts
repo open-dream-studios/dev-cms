@@ -10,11 +10,11 @@ import { ulid } from "ulid";
 import { reorderOrdinals } from "../../../../lib/ordinals.js";
 
 export const getFactDefinitionsFunction = async (
-  project_idx: number
-): Promise<EstimationFactDefinition[]> => {
+  project_idx: number,
+  process_id: number, 
+): Promise<EstimationFactDefinition[]> => { 
   const [rows] = await db.promise().query<RowDataPacket[]>(
-    `
-    SELECT
+    `SELECT
       fd.*,
       eo.id AS enum_id,
       eo.option_id,
@@ -25,14 +25,15 @@ export const getFactDefinitionsFunction = async (
     FROM estimation_fact_definitions fd
     LEFT JOIN estimation_fact_enum_options eo
       ON eo.fact_definition_idx = fd.id
-     AND eo.is_archived = 0
-    WHERE fd.project_idx = ?
+      AND eo.is_archived = 0
+    WHERE fd.project_idx = ? 
+    AND fd.process_id = ?
     ORDER BY
       fd.variable_scope ASC,
       fd.ordinal ASC,
       eo.created_at ASC
     `,
-    [project_idx]
+    [project_idx, process_id]
   );
 
   const map = new Map<number, EstimationFactDefinition>();

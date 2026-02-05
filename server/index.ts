@@ -54,6 +54,7 @@ import ifBranchRoutes from "./handlers/modules/estimations/if_trees/branch/if_br
 import ifExpressionRoutes from "./handlers/modules/estimations/if_trees/expressions/if_expression_routes.js"
 import estimationBindingRoutes from "./handlers/modules/estimations/if_trees/bindings/bindings_routes.js"
 import estimationPemdasRoutes from "./handlers/modules/estimations/pemdas/pemdas_routes.js"
+import estimationProcessRoutes from "./handlers/modules/estimations/process/process_routes.js"
 
 dotenv.config();
 
@@ -183,6 +184,7 @@ app.use("/api/estimations/if-trees/expressions", ifExpressionRoutes);
 app.use("/api/estimations/bindings", estimationBindingRoutes);
 
 app.use("/api/estimations/pemdas", estimationPemdasRoutes);
+app.use("/api/estimations/process", estimationProcessRoutes);
 
 
 app.use("/api/ai", AIRoutes)

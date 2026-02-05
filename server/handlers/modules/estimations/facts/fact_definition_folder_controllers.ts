@@ -10,8 +10,9 @@ import {
 
 export const getFactFolders = async (req: Request) => {
   const project_idx = req.user?.project_idx;
-  if (!project_idx) throw new Error("Missing project_idx");
-  const folders = await getFactFoldersFunction(project_idx);
+  const { process_id } = req.body;
+  if (!project_idx || !process_id) throw new Error("Missing fields");
+  const folders = await getFactFoldersFunction(project_idx, process_id);
   return { success: true, folders };
 };
 

@@ -3,13 +3,35 @@ export type PemdasOperand = "+" | "-" | "*" | "/";
 
 export type PemdasNodeKind = "variable" | "constant" | "contributor-node" | "contributor-bucket";
 
-export type PemdasNodeConfig = {
-  kind: PemdasNodeKind;
-  operand: PemdasOperand; // applied BEFORE this node
-  value?: number;         // constant
-  var_key?: string;       // variable
-  target_line_id?: string; // layer -> jumps to another line
-};
+// export type PemdasNodeConfig = {
+//   kind: PemdasNodeKind;
+//   operand: PemdasOperand; // applied BEFORE this node
+//   value?: number;         // constant
+//   var_key?: string;       // variable
+//   target_line_id?: string; // layer -> jumps to another line
+// };
+
+export type PemdasNodeConfig =
+  | {
+      kind: "constant";
+      operand: PemdasOperand;
+      value: number;
+    }
+  | {
+      kind: "fact";
+      operand: PemdasOperand;
+      fact_key: string;
+    }
+  | {
+      kind: "variable";
+      operand: PemdasOperand;
+      var_key: string;
+    }
+  | {
+      kind: "contributor-bucket";
+      operand: PemdasOperand;
+      target_line_id: string;
+    };
 
 export type PemdasLineConfig = {
   line_id: string;
@@ -18,4 +40,5 @@ export type PemdasLineConfig = {
 
 export type PemdasGraphConfig = {
   lines: PemdasLineConfig[];
+  contributorLabels: Record<string, string>;
 };
