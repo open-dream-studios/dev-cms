@@ -11,9 +11,16 @@ import {
   Media,
   MediaFolder,
   SearchContext,
+  FolderScope,
 } from "@open-dream/shared";
 import { createStore } from "@/store/createStore";
 import { createRef } from "react";
+
+export type SelectedFolder = {
+  id: number | null;
+  scope: FolderScope;
+};
+const ROOT_ID = "__root__";
 
 export const localProductsDataRef = { current: [] as Product[] };
 
@@ -25,7 +32,7 @@ export const currentDataInitialState = {
   currentMediaItemsSelected: [] as Media[],
 
   currentActiveFolder: null as MediaFolder | null,
-  currentOpenFolders: new Set<number>(),
+  currentOpenFolders: new Set<string>([ROOT_ID]),
 
   currentProduct: null as Product | null,
   currentProductSerial: null as string | null,
@@ -58,8 +65,11 @@ export const currentDataInitialState = {
   currentCustomerSearchTerm: "",
   searchContext: null as SearchContext,
 
-  currentProcessId: 4 as number | null,
-  currentProcessRunId: null as number | null
+  currentProcessId: null as number | null,
+  currentProcessRunId: null as number | null,
+
+  selectedFolder: null as SelectedFolder | null,
+  draggingFolderId: null as string | null,
 };
 
 export const useCurrentDataStore = createStore(currentDataInitialState);
@@ -92,7 +102,7 @@ export const setCurrentActiveFolder = (
   }));
 
 export const setCurrentOpenFolders = (
-  updater: Set<number> | ((prev: Set<number>) => Set<number>)
+  updater: Set<string> | ((prev: Set<string>) => Set<string>)
 ) =>
   useCurrentDataStore.getState().set((state) => ({
     currentOpenFolders:

@@ -1,9 +1,8 @@
 // project/src/modules/EstimationsModule/_helpers/estimations.helpers.ts
-import { FactType } from "@open-dream/shared";
-import {
-  EstimationFactFolder,
-  EstimationFactDefinition,
-} from "@open-dream/shared";
+import { deleteEstimationProcessApi, EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
+import { queryClient } from "@/lib/queryClient";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { ContextMenuDefinition, FactType } from "@open-dream/shared";
 
 export const factTypeConversion = (factType: FactType) => {
   let fact: any = factType;
@@ -13,73 +12,33 @@ export const factTypeConversion = (factType: FactType) => {
   return fact;
 };
 
-export type FactFolderNode = EstimationFactFolder & {
-  children: FactFolderNode[];
-  facts: EstimationFactDefinition[];
+export const createEstimationProcessContextMenu = (
+  onEdit: (estimationProcess: EstimationProcess) => void
+): ContextMenuDefinition<EstimationProcess> => ({
+  items: [
+    {
+      id: "edit-estimation-process",
+      label: "Edit",
+      onClick: (process) => onEdit(process),
+    },
+    {
+      id: "delete-estimation-process",
+      label: "Delete",
+      danger: true,
+      onClick: async (process) => {
+        if (process.process_id) {
+          await handleDeleteEstimationProcess(process.process_id);
+        }
+      },
+    },
+  ],
+});
+
+export const handleDeleteEstimationProcess = async (process_id: string) => {
+  const { currentProjectId } = useCurrentDataStore.getState();
+  await deleteEstimationProcessApi(currentProjectId!, process_id);
+  queryClient.invalidateQueries({
+    queryKey: ["estimationProcesses", currentProjectId],
+    exact: false,
+  });
 };
-
-export function buildFactFolderTree(
-  folders: EstimationFactFolder[],
-  facts: EstimationFactDefinition[],
-): FactFolderNode[] {
-  const map = new Map<number, FactFolderNode>();
-
-  const ROOT_ID = -1;
-
-  map.set(ROOT_ID, {
-    id: ROOT_ID,
-    folder_id: "__root__",
-    name: "ROOT",
-    parent_folder_id: null, 
-    ordinal: 0,
-    process_id: 1,
-    project_idx: 0,
-    created_at: "",
-    updated_at: "",
-    children: [],
-    facts: [],
-  });
-
-  // create folder nodes
-  folders.forEach((f) => {
-    map.set(f.id, {
-      ...f,
-      children: [],
-      facts: [],
-    });
-  });
-
-  // attach folders to parents
-  map.forEach((node) => {
-    if (node.id === ROOT_ID) return;
-
-    const parentId =
-      node.parent_folder_id !== null && map.has(node.parent_folder_id)
-        ? node.parent_folder_id
-        : ROOT_ID;
-
-    map.get(parentId)!.children.push(node);
-  });
-
-  // attach facts to folders
-  facts.forEach((fact) => {
-    const parentId = fact.folder_id !== null ? fact.folder_id : ROOT_ID;
-    map.get(parentId)?.facts.push(fact);
-  });
-
-  map.forEach((node) => {
-    // folders by ordinal
-    node.children.sort((a, b) => a.ordinal - b.ordinal);
-
-    // facts (nodes) alphabetically by key
-    node.facts.sort((a, b) =>
-      a.fact_key.localeCompare(b.fact_key, undefined, {
-        sensitivity: "base",
-      }),
-    );
-  });
-
-  const root = map.get(ROOT_ID)!;
-
-  return root.children.length || root.facts.length ? [root] : [];
-}

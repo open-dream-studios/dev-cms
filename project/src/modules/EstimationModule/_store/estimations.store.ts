@@ -2,8 +2,7 @@
 import { createStore } from "@/store/createStore";
 import { EstimationFactDefinition, VariableScope } from "@open-dream/shared";
 import { EditorMode, Value } from "../EstimationVariables/types";
-
-const ROOT_ID = "__root__";
+import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
 
 export type VariableKey = {
   var_key: string;
@@ -26,13 +25,9 @@ export type PendingVariableTarget =
     };
 
 export const useEstimationFactsUIStore = createStore({
-  selectedFolderId: null as null | number,
-  draggingFolderId: null as null | string,
   draggingFact: null as null | EstimationFactDefinition,
+  draggingProcess: null as EstimationProcess | null,
   isCanvasGhostActive: false,
-  hoveredFolderId: null as string | null,
-  openFolders: new Set<string>([ROOT_ID]),
-
   variableView: "fact" as VariableScope,
   editingFact: null as null | VariableKey,
   editingVariable: null as null | VariableKey,

@@ -4,16 +4,12 @@ import {
   deleteFactDefinitionApi,
   fetchFactDefinitionsApi,
   upsertFactDefinitionApi,
-  fetchFactFoldersApi,
-  upsertFactFoldersApi,
-  deleteFactFolderApi,
   reorderFactDefinitionsApi,
-  reorderFactFoldersApi,
   upsertEnumOptionApi,
   deleteEnumOptionApi,
   reorderEnumOptionsApi,
 } from "@/api/estimations/estimationFactDefinitions.api";
-import type { FactType, EstimationFactFolder } from "@open-dream/shared";
+import type { FactType } from "@open-dream/shared";
 
 export function useEstimationFactDefinitions(
   isLoggedIn: boolean,
@@ -67,51 +63,6 @@ export function useEstimationFactDefinitions(
     },
   });
 
-  // ---------- FOLDERS ----------
-  const { data: factFolders = [], isLoading: isLoadingFolders } = useQuery({
-    queryKey: ["estimationFactFolders", currentProjectId],
-    queryFn: () => fetchFactFoldersApi(currentProjectId!, process_id!),
-    enabled: isLoggedIn && !!currentProjectId && !!process_id
-  });
-
-  const upsertFoldersMutation = useMutation({
-    mutationFn: (
-      folders: {
-        folder_id?: string | null;
-        parent_folder_id?: number | null;
-        name: string;
-        ordinal?: number | null;
-        process_id: number;
-      }[]
-    ) => upsertFactFoldersApi(currentProjectId!, folders),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: ["estimationFactFolders", currentProjectId],
-      }),
-  });
-
-  const deleteFolderMutation = useMutation({
-    mutationFn: (folder_id: string) =>
-      deleteFactFolderApi(currentProjectId!, folder_id),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: ["estimationFactFolders", currentProjectId],
-      }),
-  });
-
-  const reorderFoldersMutation = useMutation({
-    mutationFn: (payload: {
-      process_id: number;
-      parent_folder_id?: number | null;
-      orderedIds: string[];
-    }) => reorderFactFoldersApi(currentProjectId!, payload),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["estimationFactFolders", currentProjectId],
-      });
-    },
-  });
-
   // ------- ENUM -----
   const upsertEnumOptionMutation = useMutation({
     mutationFn: (payload: {
@@ -161,20 +112,6 @@ export function useEstimationFactDefinitions(
       parent_folder_id?: number | null;
       orderedIds: string[];
     }) => reorderFactsMutation.mutateAsync(payload),
-
-    // ---------- FOLDERS ----------
-    factFolders: factFolders as EstimationFactFolder[],
-    isLoadingFactFolders: isLoadingFolders,
-    upsertFactFolders: (folders: any) =>
-      upsertFoldersMutation.mutateAsync(folders),
-    deleteFactFolder: (folder_id: string) =>
-      deleteFolderMutation.mutateAsync(folder_id),
-
-    reorderFactFolders: (payload: {
-      process_id: number;
-      parent_folder_id?: number | null;
-      orderedIds: string[];
-    }) => reorderFoldersMutation.mutateAsync(payload),
 
     // ---------- ENUM OPTIONS ----------
     upsertEnumOption: (p: {

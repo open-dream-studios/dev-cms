@@ -8,6 +8,7 @@ export type EstimationProcess = {
   project_idx: number;
   created_at: string;
   updated_at: string;
+  folder_id: number;
 };
 
 export async function fetchEstimationProcessesApi(project_idx: number) {
@@ -22,6 +23,7 @@ export async function upsertEstimationProcessApi(
   payload: {
     process_id?: string | null;
     label?: string | null;
+    folder_id: number | null;
   }
 ) {
   const res = await makeRequest.post("/estimations/process/upsert", {

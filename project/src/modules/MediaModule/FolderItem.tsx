@@ -1,6 +1,5 @@
 // project/src/modules/MediaModule/FolderItem.tsx
 "use client";
-
 import { CSS } from "@dnd-kit/utilities";
 import {
   useSortable,
@@ -25,15 +24,14 @@ import {
 } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
-import { useContextMenuStore } from "@/store/util/contextMenuStore";
-import { useQueryClient } from "@tanstack/react-query";
+import { useContextMenuStore } from "@/store/util/contextMenuStore"; 
 import { createFolderContextMenu } from "./_actions/media.actions";
 import { useMediaModuleUIStore } from "./_store/media.store";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
   depth: number;
-  toggleFolderOpen: (id: number) => void;
+  toggleFolderOpen: (id: string) => void;
 };
 
 export default function FolderItem({
@@ -91,7 +89,7 @@ export default function FolderItem({
     id: folder.id!,
   });
 
-  const isOpen = currentOpenFolders.has(folder.id!);
+  const isOpen = currentOpenFolders.has(folder.folder_id!);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -105,8 +103,8 @@ export default function FolderItem({
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
     clickTimeout.current = setTimeout(() => {
       setCurrentActiveFolder(folder);
-      if (folder.children && folder.children.length > 0 && folder.id) {
-        toggleFolderOpen(folder.id);
+      if (folder.children && folder.children.length > 0 && folder.folder_id) {
+        toggleFolderOpen(folder.folder_id);
       }
     }, 200);
   };

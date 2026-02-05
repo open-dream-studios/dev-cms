@@ -21,8 +21,9 @@ export function useEstimationProcesses(
 
   const upsertMutation = useMutation({
     mutationFn: (payload: {
-      process_id?: string | null;
+      process_id: string | null;
       label?: string | null;
+      folder_id: number | null
     }) => upsertEstimationProcessApi(currentProjectId!, payload),
     onSuccess: () =>
       qc.invalidateQueries({
@@ -43,8 +44,9 @@ export function useEstimationProcesses(
     estimationProcesses: processes as EstimationProcess[],
     isLoadingEstimationProcesses: isLoading,
     upsertEstimationProcess: (p: {
-      process_id?: string | null;
+      process_id: string | null;
       label?: string | null;
+      folder_id: number | null
     }) => upsertMutation.mutateAsync(p),
     deleteEstimationProcess: (process_id: string) =>
       deleteMutation.mutateAsync(process_id),

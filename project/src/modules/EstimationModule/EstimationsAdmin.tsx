@@ -8,14 +8,15 @@ import { HomeLayout } from "@/layouts/homeLayout";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { AuthContext } from "@/contexts/authContext";
-import { EstimationFactFolder } from "@open-dream/shared";
+import { ProjectFolder } from "@open-dream/shared";
 import { ChevronRight, Folder, GripVertical } from "lucide-react";
 import { usePemdasUIStore } from "./EstimationPEMDAS/_store/pemdas.store";
 import { useEstimationFactsUIStore } from "./_store/estimations.store";
 import { usePemdasCanvas } from "./EstimationPEMDAS/_hooks/pemdas.hooks";
 import { useFolderDndHandlers } from "./_hooks/folders.hooks";
-import { openFactFolder } from "./_actions/estimations.actions";
-import EstimationsLeftBar from "./components/EstimationsLeftBar";
+import EstimationsLeftBar, {
+  EstimationProcessItem,
+} from "./components/EstimationsLeftBar";
 import PemdasViewport from "./EstimationPEMDAS/components/PemdasViewport";
 import { GraphNodeIcon } from "./EstimationPEMDAS/components/GraphNode";
 import { nodeColors } from "./EstimationPEMDAS/_constants/pemdas.constants";
@@ -32,6 +33,9 @@ import { initialState } from "./EstimationPEMDAS/state/reducer";
 import FactEditor from "./EstimationVariables/EnumFactEditor";
 import EstimationReport from "./EstimationReport";
 import { toast } from "react-toastify";
+import { useProjectFolders } from "@/contexts/queryContext/queries/projectFolders";
+import { openFolder } from "../_actions/folders.actions";
+import { useEstimationProcesses } from "@/contexts/queryContext/queries/estimations/process/estimationProcess";
 
 export type CanvasUsage = "estimation" | "variable";
 
@@ -43,14 +47,23 @@ const EstimationAdmin = () => {
     currentProcessId,
     currentProcessRunId,
     setCurrentProcessRunId,
+    draggingFolderId,
+    setDraggingFolderId,
   } = useCurrentDataStore();
 
-  const { upsertFactDefinition, factFolders, reorderFactFolders } =
-    useEstimationFactDefinitions(
-      !!currentUser,
-      currentProjectId,
-      currentProcessId,
-    );
+  const { upsertFactDefinition } = useEstimationFactDefinitions(
+    !!currentUser,
+    currentProjectId,
+    currentProcessId,
+  );
+  const { projectFolders, reorderProjectFolders } = useProjectFolders(
+    !!currentUser,
+    currentProjectId!,
+    {
+      scope: "estimation_fact_definition",
+      process_id: currentProcessId,
+    },
+  );
   const { upsertPemdasGraph, getPemdasGraph, calculatePemdasGraph } =
     usePemdasGraphs(!!currentUser, currentProjectId);
   const { openNodeIdTypeSelection, setOpenNodeIdTypeSelection } =
@@ -58,11 +71,11 @@ const EstimationAdmin = () => {
   const selectorRef = useRef<HTMLDivElement>(null);
 
   const {
-    setDraggingFolderId,
     draggingFact,
     setDraggingFact,
+    draggingProcess,
+    setDraggingProcess,
     setIsCanvasGhostActive,
-    draggingFolderId,
     editingVariable,
     editingFact,
     selectingVariableReturn,
@@ -76,6 +89,10 @@ const EstimationAdmin = () => {
     setShowEstimationReport,
     setLatestReport,
   } = useEstimationFactsUIStore();
+  const { upsertEstimationProcess } = useEstimationProcesses(
+    !!currentUser,
+    currentProjectId,
+  );
 
   useOutsideClick(selectorRef, () => setOpenNodeIdTypeSelection(null));
 
@@ -123,9 +140,11 @@ const EstimationAdmin = () => {
   const dragStartPointerRef = useRef<{ x: number; y: number } | null>(null);
 
   const folderDnd = useFolderDndHandlers({
-    factFolders,
+    projectFolders,
     currentProjectId,
-    reorderFactFolders,
+    scope: "estimation_fact_definition",
+    process_id: currentProcessId,
+    reorderProjectFolders,
   });
 
   const { setNodeRef: setCanvasDropRef } = useDroppable({
@@ -252,8 +271,11 @@ const EstimationAdmin = () => {
             y: evt.clientY,
           };
           const data = e.active.data.current;
-          if (data?.kind === "FACT") {
-            setDraggingFact(data.fact);
+          if (data?.kind === "FOLDER-ITEM-FACT") {
+            setDraggingFact(data.item);
+          }
+          if (data?.kind === "FOLDER-ITEM-PROCESS") {
+            setDraggingProcess(data.item);
           }
           if (data?.kind === "FOLDER") {
             setDraggingFolderId(data.folder.folder_id);
@@ -295,28 +317,36 @@ const EstimationAdmin = () => {
           const active = e.active.data.current;
           const over = e.over?.data.current;
           if (
-            active?.kind === "FACT" &&
+            active?.kind.startsWith("FOLDER-ITEM") &&
             over?.kind === "FOLDER" &&
-            over.folder.id !== active.fact.folder_id
+            over.folder.id !== active.item.folder_id
           ) {
             const normalizedFolderId =
               over.folder.id === -1 ? null : over.folder.id;
-            await upsertFactDefinition({
-              ...active.fact,
-              folder_id: normalizedFolderId,
-            });
+
+            if (active?.kind === "FOLDER-ITEM-FACT") {
+              await upsertFactDefinition({
+                ...active.item,
+                folder_id: normalizedFolderId,
+              });
+            } else if (active?.kind === "FOLDER-ITEM-PROCESS") {
+              await upsertEstimationProcess({
+                ...active.item,
+                folder_id: normalizedFolderId,
+              });
+            }
 
             if (normalizedFolderId) {
-              const foundFolder = factFolders.find(
-                (folder: EstimationFactFolder) =>
-                  folder.id === normalizedFolderId,
+              const foundFolder = projectFolders.find(
+                (folder: ProjectFolder) => folder.id === normalizedFolderId,
               );
               if (foundFolder) {
-                openFactFolder(foundFolder);
+                openFolder(foundFolder);
               }
             }
           }
           setDraggingFact(null);
+          setDraggingProcess(null)
           setDraggingFolderId(null);
           dragStartPointerRef.current = null;
         }}
@@ -324,6 +354,7 @@ const EstimationAdmin = () => {
           activePemdas.handlers.onDragCancel(e);
           folderDnd.onDragCancel();
           setDraggingFact(null);
+          setDraggingProcess(null);
           setDraggingFolderId(null);
           setIsOverCanvas(false);
           setIsCanvasGhostActive(false);
@@ -476,8 +507,7 @@ const EstimationAdmin = () => {
             </div>
           )}
 
-          {/* ✅ FOLDER ghost (THIS WAS MISSING) */}
-          {draggingFolderId && (
+          {draggingFolderId !== null && (
             <div
               className="cursor-grab flex items-center gap-2 px-2 py-1 rounded shadow pointer-events-none"
               style={{ backgroundColor: currentTheme.background_2 }}
@@ -487,11 +517,18 @@ const EstimationAdmin = () => {
               <Folder size={16} className="mt-[1px]" />
               <span className="truncate select-none">
                 {
-                  factFolders.find((f) => f.folder_id === draggingFolderId)
+                  projectFolders.find((f) => f.folder_id === draggingFolderId)
                     ?.name
                 }
               </span>
             </div>
+          )}
+
+          {draggingProcess && (
+            <EstimationProcessItem
+              estimationProcess={draggingProcess}
+              index={0}
+            />
           )}
         </DragOverlay>
       </DndContext>

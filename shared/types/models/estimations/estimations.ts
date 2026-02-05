@@ -35,19 +35,6 @@ export type EstimationFactDefinition = {
   updated_at: string;
 };
 
-export type EstimationFactFolder = {
-  id: number;
-  folder_id: string;
-  project_idx: number;
-  process_id: number;
-  variable_scope?: VariableScope;
-  parent_folder_id: number | null;
-  name: string;
-  ordinal: number;
-  created_at: string;
-  updated_at: string;
-};
-
 export type ProducesFact = {
   fact_key: string;
   value: any;

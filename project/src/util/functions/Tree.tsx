@@ -1,11 +1,11 @@
 // project/src/util/functions/Tree.tsx
-import { MediaFolder } from "@open-dream/shared";
+import { Media, MediaFolder } from "@open-dream/shared";
 
 export type MediaFolderNode = MediaFolder & { children: MediaFolderNode[] };
 
 export function buildFolderTree(
   folders: MediaFolder[],
-  parentId: number | null = null
+  parentId: number | null = null,
 ): MediaFolderNode[] {
   return folders
     .filter((f) => f.parent_folder_id === parentId)
@@ -16,19 +16,24 @@ export function buildFolderTree(
     }));
 }
 
-  export function collectParentIds(
-    folder: MediaFolder,
-    allFolders: MediaFolder[]
-  ): number[] {
-    const parents: number[] = [];
-    let current = folder;
+export function collectParentIds(
+  folder: MediaFolder,
+  allFolders: MediaFolder[],
+): string[] {
+  const parents: string[] = [];
+  let current = folder;
 
-    while (current.parent_folder_id !== null) {
-      parents.push(current.parent_folder_id);
-      const next = allFolders.find((f) => f.id === current.parent_folder_id);
-      if (!next) break;
-      current = next;
+  while (current.parent_folder_id !== null) {
+    const foundFolder = allFolders.find(
+      (folder: MediaFolder) => folder.id === current.parent_folder_id,
+    );
+    if (foundFolder && foundFolder.folder_id) {
+      parents.push(foundFolder.folder_id);
     }
-
-    return parents;
+    const next = allFolders.find((f) => f.id === current.parent_folder_id);
+    if (!next) break;
+    current = next;
   }
+
+  return parents;
+}

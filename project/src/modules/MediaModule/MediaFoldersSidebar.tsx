@@ -76,7 +76,7 @@ export default function MediaFoldersSidebar() {
 
   const folderTree: MediaFolderNode[] = buildFolderTree(localFolders);
 
-  const toggleFolderOpen = (id: number) => {
+  const toggleFolderOpen = (id: string) => {
     setCurrentOpenFolders((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -201,7 +201,7 @@ export default function MediaFoldersSidebar() {
             if (newIds && newIds.length) {
               if (currentActiveFolder && currentActiveFolder.id) {
                 setCurrentOpenFolders((prev) =>
-                  new Set(prev).add(currentActiveFolder.id!)
+                  new Set(prev).add(currentActiveFolder.folder_id!)
                 );
               }
               newlyAddedFolderRef.current = newIds[0];
@@ -213,8 +213,8 @@ export default function MediaFoldersSidebar() {
   };
 
   const renderFolderIcons = (folder: MediaFolderNode) => {
-    if (!folder.id) return;
-    const isOpen = currentOpenFolders.has(folder.id);
+    if (!folder.folder_id) return;
+    const isOpen = currentOpenFolders.has(folder.folder_id);
 
     return (
       <>

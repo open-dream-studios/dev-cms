@@ -13,7 +13,7 @@ export const getEstimationProcessesFunction = async (
   const [rows] = await db.promise().query<RowDataPacket[]>(
     `
     SELECT *
-    FROM estimation_process
+    FROM estimation_processes
     WHERE project_idx = ?
     ORDER BY created_at ASC
     `,
@@ -28,25 +28,28 @@ export const upsertEstimationProcessFunction = async (
   project_idx: number,
   reqBody: any
 ) => {
-  const { process_id, label } = reqBody;
+  const { process_id, label, folder_id } = reqBody;
 
   const finalProcessId = process_id?.trim() || `PROC-${ulid()}`;
 
   const q = `
-    INSERT INTO estimation_process (
+    INSERT INTO estimation_processes (
       process_id,
       label,
+      folder_id,
       project_idx
     )
-    VALUES (?, ?, ?)
+    VALUES (?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       label = VALUES(label),
+      folder_id = VALUES(folder_id),
       updated_at = NOW()
   `;
 
   await connection.query<ResultSetHeader>(q, [
     finalProcessId,
     label ?? null,
+    folder_id,
     project_idx,
   ]);
 
@@ -60,7 +63,7 @@ export const deleteEstimationProcessFunction = async (
 ) => {
   await connection.query(
     `
-    DELETE FROM estimation_process
+    DELETE FROM estimation_processes
     WHERE project_idx = ? AND process_id = ?
     `,
     [project_idx, process_id]

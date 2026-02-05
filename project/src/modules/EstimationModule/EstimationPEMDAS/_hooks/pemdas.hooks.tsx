@@ -307,7 +307,7 @@ export const usePemdasCanvas = (
     const data = e.active.data.current;
     if (!data) return;
 
-    if (data.kind === "FACT") {
+    if (data.kind === "FOLDER-ITEM-FACT") {
       // mark intent only
       isVarDraggingRef.current = true;
       return;
@@ -328,7 +328,7 @@ export const usePemdasCanvas = (
 
   const onDragMove = (e: DragMoveEvent) => {
     const data = e.active.data.current;
-    if (data?.kind !== "FACT" && data?.kind !== "NODE") {
+    if (data?.kind !== "FOLDER-ITEM-FACT" && data?.kind !== "NODE") {
       return;
     }
 
@@ -336,10 +336,10 @@ export const usePemdasCanvas = (
     if (isVarDraggingRef.current && isOverCanvasRef.current) {
       const id = String(e.active.id);
       const data = e.active.data.current as any;
-      const scope = data.fact?.variable_scope ?? "fact";
+      const scope = data.item?.variable_scope ?? "fact";
 
       // ⛔ block non-number facts from becoming canvas ghosts
-      if (data?.fact && data.fact.fact_type !== "number") {
+      if (data?.item && data.item.fact_type !== "number") {
         setGhost(null);
         setGhostReorderPreview(null);
         return;
@@ -349,7 +349,7 @@ export const usePemdasCanvas = (
         if (!viewportRef.current) return;
         const rect = viewportRef.current.getBoundingClientRect();
         const p = e.activatorEvent as PointerEvent;
-        const factKey = data.fact?.fact_key ?? data.variable;
+        const factKey = data.item?.fact_key ?? data.variable;
 
         ghostOriginRef.current = {
           variable: factKey,
@@ -372,7 +372,7 @@ export const usePemdasCanvas = (
       if (!viewportRef.current) return;
 
       const rect = viewportRef.current.getBoundingClientRect();
-      const variable = data.variable ?? data.fact?.fact_key;
+      const variable = data.variable ?? data.item?.fact_key;
 
       if (!ghostOriginRef.current) {
         const p = e.activatorEvent as PointerEvent;

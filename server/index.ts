@@ -55,6 +55,7 @@ import ifExpressionRoutes from "./handlers/modules/estimations/if_trees/expressi
 import estimationBindingRoutes from "./handlers/modules/estimations/if_trees/bindings/bindings_routes.js"
 import estimationPemdasRoutes from "./handlers/modules/estimations/pemdas/pemdas_routes.js"
 import estimationProcessRoutes from "./handlers/modules/estimations/process/process_routes.js"
+import projectFolderRoutes from "./handlers/modules/folders/folders_routes.js"
 
 dotenv.config();
 
@@ -164,6 +165,9 @@ app.use("/api/calls/aircall", aircallRoutes);
 app.use("/api/updates", updatesRoutes);
 app.use("/api/wix", wixRoutes);
 app.use("/api/leads", leadRoutes);
+
+app.use("/api/folders", projectFolderRoutes);
+
 
 // Public Routes
 app.use("/api/public/messages", messagesRoutes);

@@ -3,25 +3,29 @@
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { queryClient } from "@/lib/queryClient";
-import { EstimationFactFolder } from "@open-dream/shared";
-import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import { FolderScope, ProjectFolder } from "@open-dream/shared";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type Args = {
-  factFolders: EstimationFactFolder[];
+  projectFolders: ProjectFolder[];
   currentProjectId: number | null;
-  reorderFactFolders: (args: {
-    process_id: number;
+  scope: FolderScope;
+  process_id: number | null;
+  reorderProjectFolders: (args: {
+    process_id: number | null;
     parent_folder_id: number | null;
     orderedIds: string[];
   }) => Promise<any>;
 };
 
 export function useFolderDndHandlers({
-  factFolders,
+  projectFolders,
   currentProjectId,
-  reorderFactFolders,
+  scope,
+  process_id,
+  reorderProjectFolders,
 }: Args) {
-  const { setDraggingFolderId } = useEstimationFactsUIStore()
+  const { setDraggingFolderId } = useCurrentDataStore();
 
   const onDragStart = (event: DragStartEvent) => {
     const id = String(event.active.id);
@@ -40,23 +44,17 @@ export function useFolderDndHandlers({
     const activeId = String(active.id).replace("folder-", "");
     const overId = String(over.id).replace("folder-", "");
 
-    const draggedFolder = factFolders.find(
-      (f) => f.folder_id === activeId,
-    );
+    const draggedFolder = projectFolders.find((f) => f.folder_id === activeId);
     if (!draggedFolder) return;
 
     const parentFolderId = draggedFolder.parent_folder_id ?? null;
 
-    const siblings = factFolders
+    const siblings = projectFolders
       .filter((f) => f.parent_folder_id === parentFolderId)
       .sort((a, b) => a.ordinal - b.ordinal);
 
-    const oldIndex = siblings.findIndex(
-      (f) => f.folder_id === activeId,
-    );
-    const newIndex = siblings.findIndex(
-      (f) => f.folder_id === overId,
-    );
+    const oldIndex = siblings.findIndex((f) => f.folder_id === activeId);
+    const newIndex = siblings.findIndex((f) => f.folder_id === overId);
 
     if (oldIndex === -1 || newIndex === -1) return;
 
@@ -64,19 +62,19 @@ export function useFolderDndHandlers({
 
     // 🔥 optimistic cache update
     queryClient.setQueryData(
-      ["estimationFactFolders", currentProjectId],
-      (prev: EstimationFactFolder[] | undefined) => {
+      ["projectFolders", currentProjectId, scope, process_id],
+      (prev: ProjectFolder[] | undefined) => {
         if (!prev) return prev;
         return prev.map((f) => {
           const idx = reordered.findIndex((r) => r.id === f.id);
           return idx === -1 ? f : { ...f, ordinal: idx };
         });
-      },
+      }
     );
 
     // 🔥 backend reorder
-    await reorderFactFolders({
-      process_id: 1,
+    await reorderProjectFolders({
+      process_id: draggedFolder.process_id ?? null,
       parent_folder_id: parentFolderId,
       orderedIds: reordered.map((f) => f.folder_id),
     });
