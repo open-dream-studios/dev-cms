@@ -31,6 +31,7 @@ import {
 import { GrRotateRight } from "react-icons/gr";
 import { useUiStore } from "@/store/useUIStore";
 import { handleDeleteMedia, handleRotateMedia } from "./_actions/media.actions";
+import { useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
 
 type SortableMediaItemProps = {
   media: Media;
@@ -114,12 +115,12 @@ function SortableMediaItem({
   const cursorClass = editMode
     ? "cursor-pointer"
     : disabled
-    ? showNotAllowed
-      ? "cursor-not-allowed"
-      : "cursor-pointer"
-    : isDragging
-    ? "cursor-grabbing"
-    : "cursor-grab";
+      ? showNotAllowed
+        ? "cursor-not-allowed"
+        : "cursor-pointer"
+      : isDragging
+        ? "cursor-grabbing"
+        : "cursor-grab";
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -131,11 +132,13 @@ function SortableMediaItem({
     e.stopPropagation();
     if (editMode) {
       const exists = currentMediaItemsSelected.some(
-        (m) => m.media_id === media.media_id
+        (m) => m.media_id === media.media_id,
       );
       if (exists) {
         setCurrentMediaItemsSelected(
-          currentMediaItemsSelected.filter((m) => m.media_id !== media.media_id)
+          currentMediaItemsSelected.filter(
+            (m) => m.media_id !== media.media_id,
+          ),
         );
       } else {
         setCurrentMediaItemsSelected([...currentMediaItemsSelected, media]);
@@ -171,7 +174,7 @@ function SortableMediaItem({
           {editMode && (
             <div>
               {currentMediaItemsSelected.some(
-                (m) => m.media_id === media.media_id
+                (m) => m.media_id === media.media_id,
               ) && (
                 <div
                   style={{
@@ -252,7 +255,7 @@ export default function MediaGrid({
       activationConstraint: {
         distance: 5,
       },
-    })
+    }),
   );
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
@@ -261,17 +264,18 @@ export default function MediaGrid({
     currentMediaSelected,
     setCurrentMediaSelected,
     currentMediaItemsSelected,
-    currentActiveFolder,
   } = useCurrentDataStore();
   const { dragItemSize, setDraggingItem, hoveredFolder, setHoveredFolder } =
     useUiStore();
+  const { selectedFolder } = useFoldersCurrentDataStore();
+
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [activeMedia, setActiveMedia] = useState<Media | null>(null);
 
   const originalMediaRef = useRef<Media[]>([]);
   useEffect(() => {
     const sortedMedia = [...filteredMedia].sort(
-      (a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)
+      (a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0),
     );
     setLocalMedia(sortedMedia);
     originalMediaRef.current = sortedMedia;
@@ -286,7 +290,7 @@ export default function MediaGrid({
     if (hoveredFolder) {
       const draggedMediaId = active.id;
       const draggedMedia = localMedia.find(
-        (m) => m.media_id === draggedMediaId
+        (m) => m.media_id === draggedMediaId,
       );
       if (draggedMedia) {
         if (draggedMedia && currentMediaItemsSelected.length <= 1) {
@@ -308,7 +312,7 @@ export default function MediaGrid({
     }
     if (!over || active.id === over.id) return;
 
-    const folderId = currentActiveFolder ? currentActiveFolder.id : null;
+    const folderId = selectedFolder ? selectedFolder.id : null;
     const siblings = folderId
       ? localMedia.filter((m) => m.folder_id === folderId)
       : localMedia.filter((m) => m.folder_id === null);
@@ -322,7 +326,7 @@ export default function MediaGrid({
     setLocalMedia((prev) => {
       const newState = prev.map((item) => {
         const idx = newSiblingsOrder.findIndex(
-          (m) => m.media_id === item.media_id
+          (m) => m.media_id === item.media_id,
         );
         return idx > -1 ? { ...item, ordinal: idx } : item;
       });
@@ -333,7 +337,7 @@ export default function MediaGrid({
       .map((m, idx) => ({ ...m, ordinal: idx }))
       .filter((m) => {
         const original = originalMediaRef.current.find(
-          (om) => om.media_id === m.media_id
+          (om) => om.media_id === m.media_id,
         );
         return original && original.ordinal !== m.ordinal;
       });

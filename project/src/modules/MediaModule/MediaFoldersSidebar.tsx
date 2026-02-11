@@ -10,11 +10,7 @@ import {
   DragOverlay,
   rectIntersection,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
 import {
   Folder,
   FolderOpen,
@@ -24,26 +20,25 @@ import {
 } from "lucide-react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { buildFolderTree, MediaFolderNode } from "@/util/functions/Tree";
-import FolderItem from "./FolderItem";
-import { MediaFolder } from "@open-dream/shared";
+import { FolderScope, MediaFolder } from "@open-dream/shared";
 import Modal2MultiStepModalInput, {
   StepConfig,
-} from "@/modals/Modal2MultiStepInput"; 
+} from "@/modals/Modal2MultiStepInput";
 import { AuthContext } from "@/contexts/authContext";
 import { FaPlus } from "react-icons/fa6";
 import Divider from "@/lib/blocks/Divider";
-import {
-  setCurrentActiveFolder,
-  setCurrentOpenFolders,
-  useCurrentDataStore,
-} from "@/store/currentDataStore";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 import { motion } from "framer-motion";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
+import {
+  setCurrentOpenFolders,
+  useFoldersCurrentDataStore,
+} from "../_util/Folders/_store/folders.store";
 
 function findNode(
   nodes: MediaFolderNode[],
-  id: number
+  id: number,
 ): MediaFolderNode | null {
   for (const node of nodes) {
     if (node.id === id) return node;
@@ -55,43 +50,31 @@ function findNode(
   return null;
 }
 
-export default function MediaFoldersSidebar() { 
+export default function MediaFoldersSidebar() {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { mediaFolders, upsertMediaFolders } =
-    useContextQueries();
+  const { mediaFolders, upsertMediaFolders } = useContextQueries();
   const { hoveredFolder, setHoveredFolder, modal2, setModal2 } = useUiStore();
-  const { currentProjectId, currentActiveFolder, currentOpenFolders } =
-    useCurrentDataStore();
+  const { currentProjectId } = useCurrentDataStore();
+  const { selectedFolder, setSelectedFolder, currentOpenFolders } =
+    useFoldersCurrentDataStore();
 
   const sensors = useSensors(useSensor(PointerSensor));
   const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
   useEffect(() => {
     if (mediaFolders) {
       setLocalFolders(
-        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)),
       );
     }
   }, [mediaFolders]);
 
   const folderTree: MediaFolderNode[] = buildFolderTree(localFolders);
 
-  const toggleFolderOpen = (id: string) => {
-    setCurrentOpenFolders((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
   const findParentId = (
     id: number,
     nodes: MediaFolderNode[],
-    parentId: number | null = null
+    parentId: number | null = null,
   ): number | null => {
     for (const n of nodes) {
       if (n.id === id) return parentId;
@@ -108,7 +91,7 @@ export default function MediaFoldersSidebar() {
     if (mediaFolders) {
       originalFoldersRef.current = mediaFolders;
       setLocalFolders(
-        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)),
       );
     }
   }, [mediaFolders]);
@@ -132,14 +115,14 @@ export default function MediaFoldersSidebar() {
       prev.map((folder) => {
         const idx = newSiblingsOrder.findIndex((f) => f.id === folder.id);
         return idx > -1 ? { ...folder, ordinal: idx } : folder;
-      })
+      }),
     );
 
     const updatedFolders = newSiblingsOrder
       .map((f, idx) => ({ ...f, ordinal: idx }))
       .filter((f) => {
         const original = originalFoldersRef.current.find(
-          (of) => of.id === f.id
+          (of) => of.id === f.id,
         );
         return original && original.ordinal !== f.ordinal;
       });
@@ -154,10 +137,14 @@ export default function MediaFoldersSidebar() {
     if (newlyAddedFolderRef.current) {
       const folderFound = mediaFolders.find(
         (mediaFolder: MediaFolder) =>
-          mediaFolder.folder_id === newlyAddedFolderRef.current
+          mediaFolder.folder_id === newlyAddedFolderRef.current,
       );
-      if (folderFound) {
-        setCurrentActiveFolder(folderFound);
+      if (folderFound && folderFound.id) {
+        setSelectedFolder({
+          id: folderFound.id,
+          folder_id: folderFound.folder_id,
+          scope: "media" as FolderScope,
+        });
       }
       newlyAddedFolderRef.current = null;
     }
@@ -191,17 +178,15 @@ export default function MediaFoldersSidebar() {
               {
                 folder_id: null,
                 project_idx: currentProjectId,
-                parent_folder_id: currentActiveFolder
-                  ? currentActiveFolder.id
-                  : null,
+                parent_folder_id: selectedFolder ? selectedFolder.id : null,
                 name: values.name,
                 ordinal: null,
               } as MediaFolder,
             ]);
             if (newIds && newIds.length) {
-              if (currentActiveFolder && currentActiveFolder.id) {
+              if (selectedFolder && selectedFolder.id) {
                 setCurrentOpenFolders((prev) =>
-                  new Set(prev).add(currentActiveFolder.folder_id!)
+                  new Set(prev).add(selectedFolder.folder_id!),
                 );
               }
               newlyAddedFolderRef.current = newIds[0];
@@ -301,7 +286,7 @@ export default function MediaFoldersSidebar() {
       >
         <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
           <p
-            onClick={() => setCurrentActiveFolder(null)}
+            onClick={() => setSelectedFolder(null)}
             className="cursor-pointer hover:opacity-[75%] transition-all duration-300 ease-in-out w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]"
           >
             Media
@@ -336,19 +321,15 @@ export default function MediaFoldersSidebar() {
           }}
           onDragCancel={() => setActiveId(null)}
         >
-          <SortableContext
+          {/* <SortableContext
             items={folderTree.map((f) => f.id!)}
             strategy={verticalListSortingStrategy}
           >
-            {folderTree.map((folder) => (
-              <FolderItem
-                key={folder.id}
-                folder={folder}
-                depth={0}
-                toggleFolderOpen={toggleFolderOpen}
-              />
+            {folderTree.map((folder, index) => (
+              // <FolderItem key={folder.id} folder={folder} depth={0} />
+              <DraggableFolderItem key={index} />
             ))}
-          </SortableContext>
+          </SortableContext> */}
 
           <DragOverlay>
             {activeId

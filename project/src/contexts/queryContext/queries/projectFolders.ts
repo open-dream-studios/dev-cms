@@ -3,8 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchProjectFoldersApi,
   upsertProjectFoldersApi,
-  deleteProjectFolderApi,
-  reorderProjectFoldersApi,
+  deleteProjectFolderApi, 
+  moveProjectFolderApi,
 } from "@/api/projectFolders.api";
 import type { FolderInput, FolderScope } from "@open-dream/shared";
 
@@ -64,20 +64,10 @@ export function useProjectFolders(
       }),
   });
 
-  // ---------- REORDER ----------
-  const reorderFoldersMutation = useMutation({
-    mutationFn: (payload: {
-      scope?: FolderScope;
-      process_id?: number | null;
-      parent_folder_id?: number | null;
-      orderedIds: string[];
-    }) =>
-      reorderProjectFoldersApi(currentProjectId!, {
-        scope: payload.scope ?? params.scope,
-        process_id: payload.process_id ?? params.process_id ?? null,
-        parent_folder_id: payload.parent_folder_id ?? null,
-        orderedIds: payload.orderedIds,
-      }),
+  // ---------- MOVE ----------
+  const moveProjectFolderMutation = useMutation({
+    mutationFn: (folder: FolderInput) =>
+      moveProjectFolderApi(currentProjectId!, folder),
     onSuccess: () =>
       qc.invalidateQueries({
         queryKey: [
@@ -99,11 +89,7 @@ export function useProjectFolders(
     deleteProjectFolder: (folder_id: string) =>
       deleteFolderMutation.mutateAsync(folder_id),
 
-    reorderProjectFolders: (payload: {
-      scope?: FolderScope;
-      process_id?: number | null;
-      parent_folder_id?: number | null;
-      orderedIds: string[];
-    }) => reorderFoldersMutation.mutateAsync(payload),
+    moveProjectFolder: (folder: FolderInput) =>
+      moveProjectFolderMutation.mutateAsync(folder),
   };
 }

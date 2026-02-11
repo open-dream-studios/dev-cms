@@ -1,4 +1,4 @@
-// project/src/modules/_util/Folders/FolderItemDisplay.tsx
+// project/src/modules/_util/Folders/DraggableFolderItemDisplay.tsx
 "use client";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { ChevronRight, ChevronDown, Folder, GripVertical } from "lucide-react";

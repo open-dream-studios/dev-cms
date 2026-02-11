@@ -1,7 +1,7 @@
 // project/src/modules/_util/Folders/FolderItem.tsx
 "use client";
 import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities"; 
+import { CSS } from "@dnd-kit/utilities";
 import { useEffect, useRef, useState } from "react";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { FolderScope } from "@open-dream/shared";
@@ -17,21 +17,29 @@ import {
   useFoldersCurrentDataStore,
 } from "./_store/folders.store";
 
-export default function FolderItem({
+const DraggableFolderItem = ({
   flat,
   scope,
 }: {
   flat: FlatFolderNode;
   scope: FolderScope;
-}) {
+}) => {
   const { openContextMenu } = useContextMenuStore();
   const { setSelectedFolder } = useFoldersCurrentDataStore();
   const { handleEditFolder } = useProjectFolderHooks(scope);
-  const { folderPXFromTop } = useFoldersCurrentDataStore();
+  const { folderPXFromTop, setEdgeHoverFolderId } =
+    useFoldersCurrentDataStore();
   const { active } = useDndContext();
+  const [isEdgeHover, setIsEdgeHover] = useState(false);
+
+  useEffect(() => {
+    if (!active || active.data.current?.kind !== "FOLDER") return;
+    const activeFolderId = active.data.current.folder.folder_id;
+    if (activeFolderId === node.folder_id) return; 
+    setEdgeHoverFolderId(isEdgeHover ? node.folder_id : null);
+  }, [isEdgeHover, active]);
 
   const refRect = useRef<DOMRect | null>(null);
-  const [isEdgeHover, setIsEdgeHover] = useState(false);
 
   const { node, depth } = flat;
 
@@ -95,6 +103,7 @@ export default function FolderItem({
         onClick={() => {
           setSelectedFolder({
             scope,
+            folder_id: node.folder_id,
             id: node.id,
           });
           toggleFolder(node);
@@ -120,4 +129,6 @@ export default function FolderItem({
       </div>
     </div>
   );
-}
+};
+
+export default DraggableFolderItem;

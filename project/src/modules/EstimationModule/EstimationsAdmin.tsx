@@ -48,8 +48,7 @@ const EstimationAdmin = () => {
     currentProcessRunId,
     setCurrentProcessRunId,
   } = useCurrentDataStore();
-  const { draggingFolderId, draggingFolderDepth } =
-    useFoldersCurrentDataStore();
+  const { draggingFolderId } = useFoldersCurrentDataStore();
 
   const folderScope: FolderScope = currentProcessId
     ? "estimation_fact_definition"
@@ -59,11 +58,14 @@ const EstimationAdmin = () => {
     currentProjectId,
     currentProcessId,
   );
-  const { projectFolders, upsertProjectFolders, reorderProjectFolders } =
-    useProjectFolders(!!currentUser, currentProjectId!, {
+  const { projectFolders } = useProjectFolders(
+    !!currentUser,
+    currentProjectId!,
+    {
       scope: folderScope,
       process_id: currentProcessId,
-    });
+    },
+  );
   const { upsertPemdasGraph, getPemdasGraph, calculatePemdasGraph } =
     usePemdasGraphs(!!currentUser, currentProjectId);
   const { openNodeIdTypeSelection, setOpenNodeIdTypeSelection } =
@@ -150,14 +152,7 @@ const EstimationAdmin = () => {
 
   const [isOverCanvas, setIsOverCanvas] = useState(false);
   const dragStartPointerRef = useRef<{ x: number; y: number } | null>(null);
-
-  const folderDnd = useFolderDndHandlers({
-    projectFolders,
-    currentProjectId,
-    scope: folderScope,
-    process_id: currentProcessId,
-    reorderProjectFolders,
-  });
+  const folderDnd = useFolderDndHandlers();
 
   const { setNodeRef: setCanvasDropRef } = useDroppable({
     id: "CANVAS_DROP",

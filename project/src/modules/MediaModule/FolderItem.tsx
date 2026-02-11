@@ -14,19 +14,17 @@ import {
   GripVertical,
 } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
-import { MediaFolder } from "@open-dream/shared";
+import { FolderScope, MediaFolder } from "@open-dream/shared";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { motion } from "framer-motion";
 import { AuthContext } from "@/contexts/authContext";
-import {
-  setCurrentActiveFolder,
-  useCurrentDataStore,
-} from "@/store/currentDataStore";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
-import { useContextMenuStore } from "@/store/util/contextMenuStore"; 
+import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { createFolderContextMenu } from "./_actions/media.actions";
 import { useMediaModuleUIStore } from "./_store/media.store";
+import { useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
@@ -38,17 +36,18 @@ export default function FolderItem({
   folder,
   depth,
   toggleFolderOpen,
-}: FolderItemProps) { 
+}: FolderItemProps) {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { upsertMediaFolders } = useContextQueries();
-  const { currentProjectId, currentActiveFolder, currentOpenFolders } =
-    useCurrentDataStore();
+  const { currentProjectId } = useCurrentDataStore();
   const { hoveredFolder } = useUiStore();
   const [tempName, setTempName] = useState<string>(folder.name);
   const inputRef = useRef<HTMLInputElement>(null);
   const { openContextMenu } = useContextMenuStore();
   const { renamingFolder, setRenamingFolder } = useMediaModuleUIStore();
+  const { currentOpenFolders, selectedFolder, setSelectedFolder } =
+    useFoldersCurrentDataStore();
 
   useEffect(() => {
     if (renamingFolder === folder.folder_id) {
@@ -102,7 +101,13 @@ export default function FolderItem({
   const handleClick = () => {
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
     clickTimeout.current = setTimeout(() => {
-      setCurrentActiveFolder(folder);
+      if (folder && folder.id) {
+        setSelectedFolder({
+          id: folder.id,
+          folder_id: folder.folder_id,
+          scope: "media" as FolderScope,
+        });
+      }
       if (folder.children && folder.children.length > 0 && folder.folder_id) {
         toggleFolderOpen(folder.folder_id);
       }
@@ -149,9 +154,9 @@ export default function FolderItem({
           backgroundColor:
             hovered || isDraggedOver
               ? currentTheme.background_2
-              : currentActiveFolder && currentActiveFolder.id === folder.id
-              ? currentTheme.background_2
-              : currentTheme.background_1,
+              : selectedFolder && selectedFolder.id === folder.id
+                ? currentTheme.background_2
+                : currentTheme.background_1,
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >

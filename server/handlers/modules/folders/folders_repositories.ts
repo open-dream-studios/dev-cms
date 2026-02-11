@@ -38,6 +38,7 @@ export const upsertFoldersRepo = async (
   project_idx: number,
   folders: FolderInput[]
 ) => {
+
   const [first] = folders as FolderInput[];
   const nextOrdinal = await getNextOrdinal(connection, "project_folders", {
     project_idx,
@@ -64,7 +65,7 @@ export const upsertFoldersRepo = async (
       f.parent_folder_id ?? null,
       f.name,
       o
-    ); 
+    );
 
     folderIds.push(folder_id);
   }
@@ -106,35 +107,214 @@ export const deleteFolderRepo = async (
   project_idx: number,
   folder_id: string
 ) => {
-  return await deleteAndReindex(
-    connection,
-    "project_folders",
-    "folder_id",
-    folder_id,
-    ["project_idx", "scope", "parent_folder_id"]
+  // lock parent
+  const [parentRows] = await connection.query<RowDataPacket[]>(
+    `SELECT * 
+     FROM project_folders 
+     WHERE folder_id = ? 
+     FOR UPDATE`,
+    [folder_id]
   );
+
+  if (!parentRows.length) {
+    throw new Error("Folder not found");
+  }
+
+  const parent = parentRows[0];
+
+  // lock children
+  const [children] = await connection.query<RowDataPacket[]>(
+    `SELECT * 
+     FROM project_folders
+     WHERE parent_folder_id = ?
+     FOR UPDATE`,
+    [parent.id]
+  );
+
+  // get next ordinal for NULL layer
+  let nextOrdinal = await getNextOrdinal(connection, "project_folders", {
+    project_idx,
+    scope: parent.scope,
+    process_id: parent.process_id ?? null,
+    parent_folder_id: null,
+  });
+
+  // move children to NULL parent with new ordinals
+  for (const child of children) {
+    await connection.query(
+      `UPDATE project_folders
+       SET parent_folder_id = NULL,
+           ordinal = ?
+       WHERE id = ?`,
+      [nextOrdinal++, child.id]
+    );
+  }
+
+  // delete parent
+  await connection.query(
+    `DELETE FROM project_folders
+     WHERE id = ?`,
+    [parent.id]
+  );
+
+  // reindex original layer
+  await reindexOrdinals(connection, "project_folders", {
+    project_idx,
+    scope: parent.scope,
+    process_id: parent.process_id ?? null,
+    parent_folder_id: parent.parent_folder_id ?? null,
+  });
+
+  // reindex NULL layer
+  await reindexOrdinals(connection, "project_folders", {
+    project_idx,
+    scope: parent.scope,
+    process_id: parent.process_id ?? null,
+    parent_folder_id: null,
+  });
+
+  return { success: true };
 };
 
-export const reorderFoldersRepo = async (
+export const moveFolderRepo = async (
   connection: PoolConnection,
   project_idx: number,
-  layer: {
-    scope: FolderScope;
-    process_id: number | null;
-    parent_folder_id: number | null;
-    orderedIds: string[];
-  }
+  folder: FolderInput
 ) => {
-  return await reorderOrdinals(
-    connection,
-    "project_folders",
-    {
-      project_idx,
-      scope: layer.scope,
-      process_id: layer.process_id,
-      parent_folder_id: layer.parent_folder_id,
-    },
-    layer.orderedIds,
-    "folder_id"
+  const {
+    folder_id,
+    scope,
+    process_id = null,
+    parent_folder_id = null,
+    ordinal,
+  } = folder;
+
+  if (!folder_id || !scope) {
+    throw new Error("Invalid move payload");
+  }
+
+  // Lock moving folder
+  const [rows] = await connection.query<RowDataPacket[]>(
+    `
+    SELECT *
+    FROM project_folders
+    WHERE folder_id = ?
+      AND project_idx = ?
+    FOR UPDATE
+    `,
+    [folder_id, project_idx]
   );
+
+  if (!rows.length) throw new Error("Folder not found");
+
+  const current = rows[0];
+
+  const oldLayer = {
+    project_idx,
+    scope: current.scope,
+    process_id: current.process_id ?? null,
+    parent_folder_id: current.parent_folder_id ?? null,
+  };
+
+  const newLayer = {
+    project_idx,
+    scope,
+    process_id: process_id ?? null,
+    parent_folder_id: parent_folder_id ?? null,
+  };
+
+  // --------------------------------------------
+  // CASE 1 — append to parent (ordinal === null)
+  // --------------------------------------------
+  if (ordinal === null || ordinal === undefined) {
+    const nextOrdinal = await getNextOrdinal(
+      connection,
+      "project_folders",
+      newLayer
+    );
+
+    await connection.query(
+      `
+      UPDATE project_folders
+      SET parent_folder_id = ?,
+          ordinal = ?
+      WHERE folder_id = ?
+        AND project_idx = ?
+      `,
+      [parent_folder_id ?? null, nextOrdinal, folder_id, project_idx]
+    );
+
+    // reindex old layer
+    await reindexOrdinals(connection, "project_folders", oldLayer);
+
+    // reindex new layer
+    await reindexOrdinals(connection, "project_folders", newLayer);
+
+    return { success: true };
+  }
+
+  // --------------------------------------------
+  // CASE 2 — insert at specific ordinal
+  // --------------------------------------------
+
+  const targetOrdinal = ordinal;
+
+  // Lock new siblings
+  await connection.query(
+    `
+    SELECT id
+    FROM project_folders
+    WHERE project_idx = ?
+      AND scope = ?
+      AND process_id <=> ?
+      AND parent_folder_id <=> ?
+    FOR UPDATE
+    `,
+    [
+      project_idx,
+      scope,
+      process_id ?? null,
+      parent_folder_id ?? null,
+    ]
+  );
+
+  // Shift ordinals in new layer
+  await connection.query(
+    `
+    UPDATE project_folders
+    SET ordinal = ordinal + 1
+    WHERE project_idx = ?
+      AND scope = ?
+      AND process_id <=> ?
+      AND parent_folder_id <=> ?
+      AND ordinal >= ?
+    `,
+    [
+      project_idx,
+      scope,
+      process_id ?? null,
+      parent_folder_id ?? null,
+      targetOrdinal,
+    ]
+  );
+
+  // Move folder
+  await connection.query(
+    `
+    UPDATE project_folders
+    SET parent_folder_id = ?,
+        ordinal = ?
+    WHERE folder_id = ?
+      AND project_idx = ?
+    `,
+    [parent_folder_id ?? null, targetOrdinal, folder_id, project_idx]
+  );
+
+  // Reindex new layer
+  await reindexOrdinals(connection, "project_folders", newLayer);
+
+  // Reindex old layer (if changed)
+  await reindexOrdinals(connection, "project_folders", oldLayer);
+
+  return { success: true };
 };

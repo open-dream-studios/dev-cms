@@ -9,6 +9,7 @@ import { EstimationProcess } from "@/api/estimations/process/estimationProcess.a
 
 export type SelectedFolder = {
   id: number | null;
+  folder_id: string | null;
   scope: FolderScope;
 };
 export const ROOT_ID = "__root__";
@@ -38,6 +39,7 @@ export const useFoldersCurrentDataStore = createStore({
   draggingFolderId: null as string | null,
   draggingFolderDepth: null as number | null,
   flatFolderTreeRef: { current: null as FlatFolderNode[] | null },
+  edgeHoverFolderId: null as string | null
 });
 
 // export const setCurrentSelectedFolder = (

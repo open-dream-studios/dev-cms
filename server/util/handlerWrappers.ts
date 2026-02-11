@@ -73,7 +73,6 @@ export const transactionHandler = (fn: TransactionFn) => {
       } else {
         console.error(`❌ Transaction failed in ${functionName}:`, err.message);
       }
-      connection.release();
       console.error(err.stack);
       res.status(500).json({
         success: false,

@@ -286,7 +286,7 @@ export default function EstimationsLeftBar() {
                   items={node.children.map((f) => `folder-${f.folder_id}`)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <FolderItem node={node} depth={0} scope={folderScope} />
+                  <DraggableFolderItem node={node} depth={0} scope={folderScope} />
                 </SortableContext>
               ))} */}
             </div>

@@ -4,8 +4,8 @@ import type { PoolConnection } from "mysql2/promise";
 import {
   getFoldersRepo,
   upsertFoldersRepo,
-  deleteFolderRepo,
-  reorderFoldersRepo,
+  deleteFolderRepo, 
+  moveFolderRepo
 } from "./folders_repositories.js";
 import { folderScopes } from "@open-dream/shared";
 
@@ -60,26 +60,17 @@ export const deleteFolder = async (
   return await deleteFolderRepo(connection, project_idx, folder_id);
 };
 
-export const reorderFolders = async (
+export const moveFolder = async (
   req: Request,
   _: any,
   connection: PoolConnection
 ) => {
   const project_idx = req.user?.project_idx;
-  const { scope, process_id, parent_folder_id, orderedIds } = req.body;
+  const { folder } = req.body;
 
-  if (!project_idx || !scope || !Array.isArray(orderedIds)) {
-    throw new Error("Missing fields");
+  if (!project_idx || !folder) {
+    throw new Error("Invalid request");
   }
 
-  if (!scope || !folderScopes.includes(scope)) {
-    throw new Error("Invalid scope");
-  }
-
-  return await reorderFoldersRepo(connection, project_idx, {
-    scope,
-    process_id: process_id ?? null,
-    parent_folder_id: parent_folder_id ?? null,
-    orderedIds,
-  });
+  return await moveFolderRepo(connection, project_idx, folder);
 };

@@ -11,8 +11,8 @@ import { verifyVercelProxy } from "../../../util/verifyProxy.js";
 import {
   getFolders,
   upsertFolders,
-  deleteFolder,
-  reorderFolders,
+  deleteFolder, 
+  moveFolder
 } from "./folders_controllers.js";
 
 const router = express.Router();
@@ -44,11 +44,12 @@ router.post(
 );
 
 router.post(
-  "/reorder",
+  "/move",
   verifyVercelProxy,
   authenticateUser,
-  checkProjectPermission(2),
-  transactionHandler(reorderFolders)
+  checkProjectPermission(3),
+  transactionHandler(moveFolder)
 );
+
 
 export default router;

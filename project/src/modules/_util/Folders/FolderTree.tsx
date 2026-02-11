@@ -7,8 +7,7 @@ import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import {
   buildFolderTree,
   flattenFolderTree,
-} from "@/modules/_util/Folders/_helpers/folders.helpers";
-import FolderItem from "@/modules/_util/Folders/FolderItem";
+} from "@/modules/_util/Folders/_helpers/folders.helpers"; 
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import {
   SortableContext,
@@ -17,6 +16,7 @@ import {
 import { FolderScope } from "@open-dream/shared";
 import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { useFoldersCurrentDataStore } from "./_store/folders.store";
+import DraggableFolderItem from "@/modules/_util/Folders/DraggableFolderItem";
 
 const FolderTree = () => {
   const { currentUser } = useContext(AuthContext);
@@ -62,10 +62,7 @@ const FolderTree = () => {
     ) {
       return;
     }
-    setSelectedFolder({
-      id: null,
-      scope: folderScope,
-    });
+    setSelectedFolder(null);
   });
 
   return (
@@ -75,7 +72,7 @@ const FolderTree = () => {
         strategy={verticalListSortingStrategy}
       >
         {flat.map((f, index) => (
-          <FolderItem key={index} flat={f} scope={folderScope} />
+          <DraggableFolderItem key={index} flat={f} scope={folderScope} />
         ))}
       </SortableContext>
     </div>

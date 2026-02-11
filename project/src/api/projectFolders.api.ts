@@ -1,6 +1,6 @@
 // project/src/api/projectFolders.api.ts
 import { makeRequest } from "@/util/axios";
-import type { FolderScope, ProjectFolder } from "@open-dream/shared";
+import type { FolderInput, FolderScope, ProjectFolder } from "@open-dream/shared";
 
 // -------- FETCH --------
 export async function fetchProjectFoldersApi(
@@ -51,19 +51,14 @@ export async function deleteProjectFolderApi(
   return { success: true };
 }
 
-// -------- REORDER --------
-export async function reorderProjectFoldersApi(
+// -------- MOVE --------
+export async function moveProjectFolderApi(
   project_idx: number,
-  payload: {
-    scope: FolderScope;
-    process_id?: number | null;
-    parent_folder_id?: number | null;
-    orderedIds: string[];
-  }
+  folder: FolderInput
 ) {
-  const res = await makeRequest.post("/folders/reorder", {
+  const res = await makeRequest.post("/folders/move", {
     project_idx,
-    ...payload,
+    folder,
   });
 
   return res.data;

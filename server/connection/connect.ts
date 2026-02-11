@@ -25,4 +25,7 @@ export const db: mysql.Pool = mysql.createPool({
   queueLimit: 0,
   multipleStatements: true,
   dateStrings: true,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });

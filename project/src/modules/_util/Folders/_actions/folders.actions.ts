@@ -39,7 +39,11 @@ export const handleDeleteFolder = async (folder_id: string) => {
 export const toggleFolder = (folder: ProjectFolder) => {
   const { setSelectedFolder, set } = useFoldersCurrentDataStore.getState();
   const id = folder.folder_id;
-  setSelectedFolder({ id: folder.id, scope: folder.scope });
+  setSelectedFolder({
+    id: folder.id,
+    folder_id: folder.folder_id,
+    scope: folder.scope,
+  });
   set((state) => {
     const next = new Set(state.currentOpenFolders);
     if (next.has(id)) {
@@ -54,7 +58,11 @@ export const toggleFolder = (folder: ProjectFolder) => {
 export const openFolder = (folder: ProjectFolder) => {
   const { setSelectedFolder, set } = useFoldersCurrentDataStore.getState();
   const id = folder.folder_id;
-  setSelectedFolder({ id: folder.id, scope: folder.scope });
+  setSelectedFolder({
+    id: folder.id,
+    folder_id: folder.folder_id,
+    scope: folder.scope,
+  });
   set((state) => {
     const next = new Set(state.currentOpenFolders);
     if (!next.has(id)) next.add(id);
