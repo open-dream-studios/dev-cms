@@ -11,7 +11,10 @@ import type { RowDataPacket, PoolConnection } from "mysql2/promise";
 import fs from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
-import { compressImage } from "../../../functions/media.js";
+import {
+  compressImage_Q10_SP2,
+  compressImage_Q5_SP10,
+} from "../../../functions/media.js";
 import mime from "mime-types";
 import { buildS3Key, uploadFileToS3 } from "../../../services/aws/S3.js";
 import { fileTypeFromFile } from "file-type";
@@ -476,14 +479,25 @@ export async function uploadMediaFunction(
     const imageExts = supportedImageExts;
     const videoExts = supportedVideoExts;
 
+    type CompressionOption = "Q10_SP2" | "Q5_SP10";
+    const compressionOption = "Q5_SP10" as CompressionOption;
+
     if (imageExts.includes(origExt)) {
-      // Try to compress/transform images (sharp). If compressImage fails, we fall back to original file.
+      // Try to compress/transform images (sharp). If compression fails, we fall back to original file.
       try {
-        const compressed = await compressImage({
-          inputPath: origPath,
-          compressionLevel: "minimal",
-          convertToWebp: true,
-        });
+        let compressed = null;
+        if (compressionOption === "Q10_SP2") {
+          compressed = await compressImage_Q10_SP2({
+            inputPath: origPath,
+            compressionLevel: "minimal",
+          });
+        } else if (compressionOption === "Q5_SP10") {
+          compressed = await compressImage_Q5_SP10({
+            inputPath: origPath,
+          });
+        }
+
+        if (!compressed) return { success: false };
 
         toUploadPath = compressed.outputPath;
         finalMeta = {

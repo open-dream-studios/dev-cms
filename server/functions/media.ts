@@ -36,16 +36,16 @@ export function getContentTypeAndExt(filename: string) {
  *
  * If the file is already webp and maxWidth/quality wouldn't change, it can short-circuit.
  */
-export async function compressImageV1({
+export async function compressImage_Q5_SP10({
   inputPath,
   maxWidth = 1200,
   quality = 90,
   convertToWebp = true,
 }: {
   inputPath: string;
-  maxWidth: number;
-  quality: number;
-  convertToWebp: boolean;
+  maxWidth?: number;
+  quality?: number;
+  convertToWebp?: boolean;
 }) {
   let inputExt = path.extname(inputPath).toLowerCase().replace(".", "");
 
@@ -102,22 +102,44 @@ export async function compressImageV1({
   // Build pipeline
   let pipeline = sharp(inputPath).rotate(); // auto-orient
 
-  if (maxWidth && width && width > maxWidth) {
+  // if (maxWidth && width && width > maxWidth) {
+  if (maxWidth && width && width > maxWidth * 1.05) {
     pipeline = pipeline.resize({ width: maxWidth, withoutEnlargement: true });
   }
 
   // Apply encoder options depending on finalExt
   try {
+    // if (finalExt === "webp") {
+    //   const hasAlpha = !!metadata.hasAlpha;
+    //   const isPng = inputExt === "png";
+
+    //   // For PNGs with transparency, prefer lossless WebP
+    //   if (isPng && hasAlpha) {
+    //     pipeline = pipeline.webp({ lossless: true });
+    //   } else {
+    //     // For other images, use lossy WebP
+    //     pipeline = pipeline.webp({ quality });
+    //   }
+    // }
     if (finalExt === "webp") {
       const hasAlpha = !!metadata.hasAlpha;
       const isPng = inputExt === "png";
 
-      // For PNGs with transparency, prefer lossless WebP
+      const BASE_QUALITY = Math.min(92, quality + 2);
+
       if (isPng && hasAlpha) {
-        pipeline = pipeline.webp({ lossless: true });
+        pipeline = pipeline.webp({
+          lossless: false,
+          nearLossless: true,
+          effort: 3,
+          smartSubsample: true,
+        });
       } else {
-        // For other images, use lossy WebP
-        pipeline = pipeline.webp({ quality });
+        pipeline = pipeline.webp({
+          quality: BASE_QUALITY,
+          effort: 3, // faster than default 4
+          smartSubsample: true, // improves chroma edges
+        });
       }
     } else if (finalExt === "avif") {
       pipeline = pipeline.avif
@@ -197,8 +219,7 @@ export async function compressImageV1({
 }
 
 type CompressionLevel = "minimal" | "balanced" | "aggressive";
-
-export async function compressImage({
+export async function compressImage_Q10_SP2({
   inputPath,
   compressionLevel = "balanced",
   convertToWebp = true,
@@ -206,7 +227,7 @@ export async function compressImage({
 }: {
   inputPath: string;
   compressionLevel: CompressionLevel;
-  convertToWebp: boolean;
+  convertToWebp?: boolean;
   targetSizeKB?: number;
 }) {
   const origStats = await fsp.stat(inputPath);

@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useEffect, useRef, useState } from "react";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
-import { FolderScope } from "@open-dream/shared";
+import { EstimationFactDefinition, FolderScope } from "@open-dream/shared";
 import { useDndContext } from "@dnd-kit/core";
 import {
   createFolderContextMenu,
@@ -16,6 +16,9 @@ import {
   FlatFolderNode,
   useFoldersCurrentDataStore,
 } from "./_store/folders.store";
+import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
+import ProcessDraggableItem from "@/modules/EstimationModule/components/ProcessDraggableItem";
+import VariableDraggableItem from "@/modules/EstimationModule/components/VariableDraggableItem";
 
 const DraggableFolderItem = ({
   flat,
@@ -35,7 +38,7 @@ const DraggableFolderItem = ({
   useEffect(() => {
     if (!active || active.data.current?.kind !== "FOLDER") return;
     const activeFolderId = active.data.current.folder.folder_id;
-    if (activeFolderId === node.folder_id) return; 
+    if (activeFolderId === node.folder_id) return;
     setEdgeHoverFolderId(isEdgeHover ? node.folder_id : null);
   }, [isEdgeHover, active]);
 
@@ -89,7 +92,7 @@ const DraggableFolderItem = ({
       data-draggable
       data-folder-item
       ref={setRefs}
-      className={`mb-[4px] w-[100%]`}
+      className="mb-[4px] w-[100%]"
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -97,9 +100,10 @@ const DraggableFolderItem = ({
         pointerEvents: isDragging ? "none" : "auto",
       }}
     >
+      {/* Folder Row */}
       <div
         {...attributes}
-        className="w-[100%] h-auto rounded-[5px] "
+        className="w-[100%] h-auto rounded-[5px]"
         onClick={() => {
           setSelectedFolder({
             scope,
@@ -127,6 +131,26 @@ const DraggableFolderItem = ({
           outline={isEdgeHover && isDraggingOverFolder && depth !== 0}
         />
       </div>
+
+      {/* Items UNDER folder */}
+      {node.items.map((item, index) => (
+        <div
+          key={item.id}
+          style={{
+            marginLeft: `${(depth + 1) * 10}px`,
+          }}
+        >
+          {scope === "estimation_fact_definition" && (
+            <VariableDraggableItem fact={item as EstimationFactDefinition} />
+          )}
+          {scope === "estimation_process" && (
+            <ProcessDraggableItem
+              estimationProcess={item as EstimationProcess}
+              index={index}
+            />
+          )}
+        </div>
+      ))}
     </div>
   );
 };

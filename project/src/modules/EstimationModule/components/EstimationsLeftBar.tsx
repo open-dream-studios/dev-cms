@@ -132,7 +132,7 @@ export default function EstimationsLeftBar() {
           <div className="w-[100%] h-[100%] overflow-y-auto flex flex-col gap-[4px]">
             {variableView === "fact" && (
               <div className={`px-[12px] flex-1 overflow-y-auto w-[100%]`}>
-                <FolderTree />
+                <FolderTree folderScope={"estimation_process"}/>
               </div>
             )}
           </div>

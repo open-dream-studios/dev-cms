@@ -21,7 +21,7 @@ import {
 } from "./_store/folders.store";
 import DraggableFolderItem from "@/modules/_util/Folders/DraggableFolderItem";
 
-const FolderTree = () => {
+const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const {
@@ -30,10 +30,6 @@ const FolderTree = () => {
     flatFolderTreeRef,
     flatTreesByScope,
   } = useFoldersCurrentDataStore();
-
-  const folderScope: FolderScope = currentProcessId
-    ? "estimation_fact_definition"
-    : "estimation_process";
 
   const { projectFolders } = useProjectFolders(
     !!currentUser,
