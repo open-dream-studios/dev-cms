@@ -18,7 +18,7 @@ import {
   openAdjustmentIfTree,
   openConditionalIfTree,
   openVariableIfTree,
-  useEstimationFactsUIStore,
+  useEstimationsUIStore,
 } from "../../_store/estimations.store";
 import { BiQuestionMark } from "react-icons/bi";
 import { usePemdasUIStore } from "../_store/pemdas.store";
@@ -113,7 +113,7 @@ export const GraphNode = ({
   const [numberDisplayOpen, setNumberDisplayOpen] = useState(false);
   const numberTextRef = useRef<HTMLDivElement | null>(null);
   const [isEllipsed, setIsEllipsed] = useState(false);
-  const { setEditingFact } = useEstimationFactsUIStore();
+  const { setEditingFact } = useEstimationsUIStore();
   const { setOperandOverlayNodeId } = usePemdasUIStore();
 
   useLayoutEffect(() => {

@@ -2,7 +2,7 @@
 import { useContext, useEffect, useRef, useMemo, useState } from "react";
 import {
   resetVariableUI,
-  useEstimationFactsUIStore,
+  useEstimationsUIStore,
 } from "../_store/estimations.store";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { GraphNodeIcon } from "../EstimationPEMDAS/components/GraphNode";
@@ -14,7 +14,7 @@ import {
   EditorMode,
   Value,
 } from "./types";
-import { VariableDisplayItem } from "../components/FactDraggableItem";
+import { VariableDisplayItem } from "../components/VariableDraggableItem";
 import { BsArrowRight } from "react-icons/bs";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
 import {
@@ -294,7 +294,7 @@ function BranchEditor({
     editingConditional,
     editingIfTreeType,
     editingAdjustment,
-  } = useEstimationFactsUIStore();
+  } = useEstimationsUIStore();
 
   if (!editingVariable && !editingConditional && !editingAdjustment)
     return null;
@@ -774,7 +774,7 @@ function ValueEditor({
     selectingVariableReturn,
     editingConditional,
     editingAdjustment,
-  } = useEstimationFactsUIStore();
+  } = useEstimationsUIStore();
 
   const booleanOnly = allowed.length === 1 && allowed[0] === "boolean";
   const optionOnly = allowed.length === 1 && allowed[0] === "option";
@@ -1005,7 +1005,7 @@ export default function IfTreeEditor() {
     editingAdjustment,
     editingIfTreeType,
     setRunInputsOpen,
-  } = useEstimationFactsUIStore();
+  } = useEstimationsUIStore();
   const { factDefinitions } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId,

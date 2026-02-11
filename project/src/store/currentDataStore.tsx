@@ -8,19 +8,11 @@ import {
   Product,
   DataFilters,
   MediaLink,
-  Media,
-  MediaFolder,
+  Media, 
   SearchContext,
-  FolderScope,
 } from "@open-dream/shared";
 import { createStore } from "@/store/createStore";
 import { createRef } from "react";
-
-export type SelectedFolder = {
-  id: number | null;
-  scope: FolderScope;
-};
-const ROOT_ID = "__root__";
 
 export const localProductsDataRef = { current: [] as Product[] };
 
@@ -30,9 +22,6 @@ export const currentDataInitialState = {
 
   currentMediaSelected: null as Media | null,
   currentMediaItemsSelected: [] as Media[],
-
-  currentActiveFolder: null as MediaFolder | null,
-  currentOpenFolders: new Set<string>([ROOT_ID]),
 
   currentProduct: null as Product | null,
   currentProductSerial: null as string | null,
@@ -67,9 +56,6 @@ export const currentDataInitialState = {
 
   currentProcessId: null as number | null,
   currentProcessRunId: null as number | null,
-
-  selectedFolder: null as SelectedFolder | null,
-  draggingFolderId: null as string | null,
 };
 
 export const useCurrentDataStore = createStore(currentDataInitialState);
@@ -87,29 +73,6 @@ export const setCurrentMediaSelected = (media: Media | null) =>
 
 export const setCurrentMediaItemsSelected = (media: Media[]) =>
   useCurrentDataStore.getState().set({ currentMediaItemsSelected: media });
-
-export const setCurrentActiveFolder = (
-  updater:
-    | MediaFolder
-    | null
-    | ((prev: MediaFolder | null) => MediaFolder | null)
-) =>
-  useCurrentDataStore.getState().set((state) => ({
-    currentActiveFolder:
-      typeof updater === "function"
-        ? updater(state.currentActiveFolder)
-        : updater,
-  }));
-
-export const setCurrentOpenFolders = (
-  updater: Set<string> | ((prev: Set<string>) => Set<string>)
-) =>
-  useCurrentDataStore.getState().set((state) => ({
-    currentOpenFolders:
-      typeof updater === "function"
-        ? updater(state.currentOpenFolders)
-        : updater,
-  }));
 
 // Products
 export const setCurrentProductData = (product: Product | null) =>
@@ -129,7 +92,7 @@ triggerCustomerScrollRef.current = false;
 
 export const setCurrentCustomerData = (
   customer: Customer | null,
-  triggerScroll: boolean
+  triggerScroll: boolean,
 ) => {
   useCurrentDataStore.getState().set({
     currentCustomer: customer,

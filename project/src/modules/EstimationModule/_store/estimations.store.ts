@@ -3,6 +3,8 @@ import { createStore } from "@/store/createStore";
 import { EstimationFactDefinition, VariableScope } from "@open-dream/shared";
 import { EditorMode, Value } from "../EstimationVariables/types";
 import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useFoldersCurrentDataStore } from "@/modules/_util/Folders/_store/folders.store";
 
 export type VariableKey = {
   var_key: string;
@@ -24,7 +26,7 @@ export type PendingVariableTarget =
       set: (v: Value) => void;
     };
 
-export const useEstimationFactsUIStore = createStore({
+export const useEstimationsUIStore = createStore({
   draggingFact: null as null | EstimationFactDefinition,
   draggingProcess: null as EstimationProcess | null,
   isCanvasGhostActive: false,
@@ -47,18 +49,37 @@ export const useEstimationFactsUIStore = createStore({
   latestReport: null as null | Record<string, any>,
 });
 
-export const resetVariableUI = () =>
-  useEstimationFactsUIStore.getState().set({
+export const resetVariableUI = () => {
+  const { setCurrentProcessRunId } = useCurrentDataStore.getState();
+  setCurrentProcessRunId(null);
+  return useEstimationsUIStore.getState().set({
     editingVariable: null,
     editingFact: null,
     selectingVariableReturn: null,
     editingConditional: null,
     editingIfTreeType: null,
     editingAdjustment: null,
+
+    runInputsOpen: false,
+    factInputs: {},
+    showEstimationReport: false,
+    latestReport: null,
   });
+};
+
+export const resetEstimationDrag = () => {
+  const { setDraggingFolderId, setDraggingFolderDepth } =
+    useFoldersCurrentDataStore.getState();
+  setDraggingFolderId(null);
+  setDraggingFolderDepth(null);
+  return useEstimationsUIStore.getState().set({
+    draggingFact: null,
+    draggingProcess: null,
+  });
+};
 
 export const openVariableIfTree = (variable: VariableKey) =>
-  useEstimationFactsUIStore.getState().set({
+  useEstimationsUIStore.getState().set({
     editingVariable: variable,
     editingConditional: null,
     editingAdjustment: null,
@@ -68,7 +89,7 @@ export const openVariableIfTree = (variable: VariableKey) =>
   });
 
 export const openConditionalIfTree = (nodeId: string | number) =>
-  useEstimationFactsUIStore.getState().set({
+  useEstimationsUIStore.getState().set({
     editingVariable: null,
     editingConditional: String(nodeId),
     editingAdjustment: null,
@@ -78,7 +99,7 @@ export const openConditionalIfTree = (nodeId: string | number) =>
   });
 
 export const openAdjustmentIfTree = (nodeId: string | number) =>
-  useEstimationFactsUIStore.getState().set({
+  useEstimationsUIStore.getState().set({
     editingVariable: null,
     editingConditional: null,
     editingAdjustment: String(nodeId),
@@ -88,7 +109,7 @@ export const openAdjustmentIfTree = (nodeId: string | number) =>
   });
 
 export const setFactInputValue = (fact_key: string, value: string) =>
-  useEstimationFactsUIStore.getState().set((s) => ({
+  useEstimationsUIStore.getState().set((s) => ({
     factInputs: {
       ...s.factInputs,
       [fact_key]: value,
@@ -96,4 +117,4 @@ export const setFactInputValue = (fact_key: string, value: string) =>
   }));
 
 export const getFactInputValue = (fact_key: string) =>
-  useEstimationFactsUIStore.getState().factInputs[fact_key] ?? "";
+  useEstimationsUIStore.getState().factInputs[fact_key] ?? "";

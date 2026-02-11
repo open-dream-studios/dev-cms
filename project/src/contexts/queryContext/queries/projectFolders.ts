@@ -36,9 +36,8 @@ export function useProjectFolders(
 
   // ---------- UPSERT ----------
   const upsertFoldersMutation = useMutation({
-    mutationFn: (
-      folders: FolderInput[]
-    ) => upsertProjectFoldersApi(currentProjectId!, folders),
+    mutationFn: (folders: FolderInput[]) =>
+      upsertProjectFoldersApi(currentProjectId!, folders),
     onSuccess: () =>
       qc.invalidateQueries({
         queryKey: [
@@ -68,12 +67,14 @@ export function useProjectFolders(
   // ---------- REORDER ----------
   const reorderFoldersMutation = useMutation({
     mutationFn: (payload: {
+      scope?: FolderScope;
+      process_id?: number | null;
       parent_folder_id?: number | null;
       orderedIds: string[];
     }) =>
       reorderProjectFoldersApi(currentProjectId!, {
-        scope: params.scope,
-        process_id: params.process_id ?? null,
+        scope: payload.scope ?? params.scope,
+        process_id: payload.process_id ?? params.process_id ?? null,
         parent_folder_id: payload.parent_folder_id ?? null,
         orderedIds: payload.orderedIds,
       }),
@@ -99,6 +100,8 @@ export function useProjectFolders(
       deleteFolderMutation.mutateAsync(folder_id),
 
     reorderProjectFolders: (payload: {
+      scope?: FolderScope;
+      process_id?: number | null;
       parent_folder_id?: number | null;
       orderedIds: string[];
     }) => reorderFoldersMutation.mutateAsync(payload),

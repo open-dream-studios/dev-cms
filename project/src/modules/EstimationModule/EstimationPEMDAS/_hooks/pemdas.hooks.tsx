@@ -31,7 +31,7 @@ import { usePemdasUIStore } from "../_store/pemdas.store";
 import { cleanVariableKey } from "@/util/functions/Variables";
 import {
   resetVariableUI,
-  useEstimationFactsUIStore,
+  useEstimationsUIStore,
 } from "../../_store/estimations.store";
 
 export const PAN_PADDING = 310;
@@ -95,7 +95,7 @@ export const usePemdasCanvas = (
 
   const { setOperandOverlayNodeId, setOpenNodeIdTypeSelection } =
     usePemdasUIStore();
-  const { setEditingFact } = useEstimationFactsUIStore();
+  const { setEditingFact } = useEstimationsUIStore();
 
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [activeLayerByRow, setActiveLayerByRow] = useState<
@@ -494,7 +494,7 @@ export const usePemdasCanvas = (
 
     // 🔵 2️⃣ FACT → drop ghost into canvas
     if ((id.startsWith("var-") || id.startsWith("fact-")) && ghost) {
-      const fact = e.active.data.current?.fact;
+      const fact = e.active.data.current?.item;
 
       // ⛔ BLOCK non-number facts
       if (fact && fact.fact_type !== "number") {
@@ -526,7 +526,7 @@ export const usePemdasCanvas = (
           e.active.data.current?.variable ??
           e.active.data.current?.fact?.fact_key;
 
-        const fact = e.active.data.current?.fact;
+        const fact = e.active.data.current?.item;
         dispatch({
           type: "ADD_NODE_AT",
           variable: cleanVariableKey(variable),

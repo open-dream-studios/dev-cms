@@ -1,19 +1,6 @@
-// project/src/modules/_helpers/folder.helpers.ts
-import {
-  EstimationFactDefinition,
-  FolderScope,
-  ProjectFolder,
-} from "@open-dream/shared";
-import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
-
-export type ProjectFolderNode = ProjectFolder & {
-  children: ProjectFolderNode[];
-  items: ProjectFolderNodeItem[];
-};
-
-export type ProjectFolderNodeItem =
-  | EstimationFactDefinition
-  | EstimationProcess;
+// project/src/modules/_util/Folders/_helpers/folder.helpers.ts
+import { FolderScope, ProjectFolder } from "@open-dream/shared";
+import { FlatFolderNode, ProjectFolderNode, ProjectFolderNodeItem } from "../_store/folders.store";
 
 export function buildFolderTree(
   folders: ProjectFolder[],
@@ -60,27 +47,51 @@ export function buildFolderTree(
     map.get(parentId)!.children.push(node);
   });
 
-  // attach items to folders
   items.forEach((item) => {
     const parentId = item.folder_id !== null ? item.folder_id : ROOT_ID;
     map.get(parentId)?.items.push(item);
   });
 
   map.forEach((node) => {
-    // folders by ordinal
     node.children.sort((a, b) => a.ordinal - b.ordinal);
-
-    // facts (nodes) alphabetically by key
-    // if (node.scope === "estimation_fact_definition") {
-    //   node.items.sort((a: EstimationFactDefinition, b: EstimationFactDefinition) =>
-    //     a.fact_key.localeCompare(b.fact_key, undefined, {
-    //       sensitivity: "base",
-    //     })
-    //   );
-    // }
   });
 
   const root = map.get(ROOT_ID)!;
 
   return root.children.length || root.items.length ? [root] : [];
+}
+
+export function flattenFolderTree(
+  nodes: ProjectFolderNode[],
+  openSet: Set<string>,
+  depth = 0,
+  parentId: number | null = null,
+  acc: FlatFolderNode[] = []
+) {
+  for (const node of nodes) {
+    acc.push({
+      id: `folder-${node.folder_id}`,
+      folder_id: node.id!,
+      depth,
+      parentId,
+      node,
+    });
+
+    if (openSet.has(node.folder_id) && node.children?.length) {
+      flattenFolderTree(node.children, openSet, depth + 1, node.id!, acc);
+    }
+  }
+
+  return acc;
+}
+
+export function collectDescendantFolderIds(
+  node: ProjectFolderNode,
+  acc: Set<string> = new Set()
+): Set<string> {
+  for (const child of node.children) {
+    acc.add(child.folder_id);
+    collectDescendantFolderIds(child, acc);
+  }
+  return acc;
 }

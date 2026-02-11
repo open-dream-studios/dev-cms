@@ -11,4 +11,5 @@ export const usePemdasUIStore = createStore({
   },
   openNodeIdTypeSelection: null as null | string,
   operandOverlayNodeId: null as string | null,
+  dragIsOverCanvas: false,
 });

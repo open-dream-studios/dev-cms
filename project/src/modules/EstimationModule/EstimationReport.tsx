@@ -13,7 +13,7 @@ import {
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { getCardStyle, getInnerCardStyle } from "@/styles/themeStyles";
 import { AuthContext } from "@/contexts/authContext";
-import { useEstimationFactsUIStore } from "./_store/estimations.store";
+import { useEstimationsUIStore } from "./_store/estimations.store";
 
 function money(n: number) {
   return `$${n.toLocaleString("en-US")}`;
@@ -104,10 +104,10 @@ function money(n: number) {
 
 export default function EstimationReport() {
   const { currentUser } = useContext(AuthContext);
-  const { latestReport } = useEstimationFactsUIStore();
+  const { latestReport } = useEstimationsUIStore();
 
   const theme = useCurrentTheme();
-  const { setShowEstimationReport } = useEstimationFactsUIStore();
+  const { setShowEstimationReport } = useEstimationsUIStore();
 
   if (!currentUser || !latestReport) return null;
 

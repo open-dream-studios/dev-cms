@@ -11,12 +11,12 @@ import { AuthContext } from "@/contexts/authContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { cleanVariableKey } from "@/util/functions/Variables";
 import { toast } from "react-toastify";
-import { useEstimationFactsUIStore } from "../_store/estimations.store";
+import { useEstimationsUIStore } from "../_store/estimations.store";
 
 export default function FactEditor() {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
-  const { editingFact, setEditingFact } = useEstimationFactsUIStore();
+  const { editingFact, setEditingFact } = useEstimationsUIStore();
   const { factDefinitions } = useEstimationFactDefinitions(
     !!currentUser,
     currentProjectId,

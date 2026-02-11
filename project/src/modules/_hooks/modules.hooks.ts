@@ -5,7 +5,7 @@ import {
   AccessibleModule,
   buildAccessibleModules,
   ICON_MAP,
-} from "../_actions/modules.actions";
+} from "../_util/Folders/_actions/modules.actions";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useUiStore } from "@/store/useUIStore";
 import { useRouting } from "@/hooks/useRouting";
