@@ -5,6 +5,7 @@
     "@aws-sdk/s3-request-presigner": "^3.943.0",
     "@dqbd/tiktoken": "^1.0.20",
     "@grpc/grpc-js": "^1.8.21",
+    "@open-dream/shared": "file:../shared",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",

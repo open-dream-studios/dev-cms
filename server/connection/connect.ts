@@ -28,4 +28,6 @@ export const db: mysql.Pool = mysql.createPool({
   ssl: {
     rejectUnauthorized: false,
   },
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
 });
