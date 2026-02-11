@@ -90,11 +90,11 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /usr/src/app
 
-# Copy only runtime artifacts
 COPY --from=build /usr/lib /usr/lib
 COPY --from=build /usr/local/lib /usr/local/lib
 COPY --from=build /usr/src/app/server/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/package.json ./
+COPY --from=build /usr/src/app/shared ./shared
 
 CMD ["node", "dist/index.js"]
