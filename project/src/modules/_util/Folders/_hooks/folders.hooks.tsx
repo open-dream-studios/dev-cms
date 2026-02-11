@@ -13,6 +13,7 @@ import { openFolder } from "../_actions/folders.actions";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
   ProjectFolderNode,
+  setFlatTreeForScope,
   useFoldersCurrentDataStore,
 } from "../_store/folders.store";
 import {
@@ -209,7 +210,8 @@ export function useFolderDndHandlers() {
     // --------------------------------------------
     // CASE 1 — dropped ONTO folder (white border)
     // --------------------------------------------
-    if (edgeHoverFolderId) {
+
+    if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
       const flat = flatFolderTreeRef.current;
       if (!flat) return;
 
@@ -220,6 +222,11 @@ export function useFolderDndHandlers() {
       if (!targetFlat) return;
 
       const newParentId = targetFlat.node.id === -1 ? null : targetFlat.node.id;
+      // prevent no-op (same parent, append case)
+      if (newParentId === (dragged.parent_folder_id ?? null)) {
+        setEdgeHoverFolderId(null);
+        return;
+      }
 
       console.log({
         type: "MOVE_INTO_FOLDER_APPEND",
@@ -232,7 +239,12 @@ export function useFolderDndHandlers() {
         edgeHoverFolderId: null,
       });
 
-      await moveProjectFolder({
+      const reordered = flat.filter(
+        (f) => f.node.folder_id !== dragged.folder_id,
+      );
+      setFlatTreeForScope(folderScope, reordered);
+
+      moveProjectFolder({
         folder_id: dragged.folder_id,
         project_idx: currentProjectId,
         process_id: currentProcessId,
@@ -261,6 +273,7 @@ export function useFolderDndHandlers() {
 
     // simulate final UI order exactly as dnd shows it
     const reordered = arrayMove(flat, oldIndex, overIndex);
+    setFlatTreeForScope(folderScope, reordered);
 
     // new index of dragged item in UI
     const newIndex = reordered.findIndex((f) => f.id === activeId);
@@ -268,13 +281,6 @@ export function useFolderDndHandlers() {
 
     // folder visually ABOVE dragged item in the UI
     const folderAbove = reordered[newIndex - 1] ?? null;
-
-    console.log({
-      type: "ABOVE_FOLDER",
-      dragged_folder_id: dragged.folder_id,
-      above_folder_id: folderAbove?.node.folder_id ?? null,
-      above_folder_numeric_id: folderAbove?.node.id ?? null,
-    });
 
     const aboveFolderId = folderAbove?.node.folder_id ?? null;
     const aboveId = folderAbove?.node.id ?? null;
@@ -298,9 +304,23 @@ export function useFolderDndHandlers() {
       newOrdinal = folderAbove.node.ordinal + 1;
     }
 
-    if (!newParentId || !newOrdinal) return;
+    if (newParentId === undefined || newOrdinal === undefined) return;
+    // prevent no-op (same parent + same ordinal)
+    if (
+      newParentId === (dragged.parent_folder_id ?? null) &&
+      newOrdinal === dragged.ordinal
+    ) {
+      return;
+    }
 
-    await moveProjectFolder({
+    console.log({
+      type: "ABOVE_FOLDER",
+      dragged_folder_id: dragged.folder_id,
+      above_folder_id: folderAbove?.node.folder_id ?? null,
+      above_folder_numeric_id: folderAbove?.node.id ?? null,
+    });
+
+    moveProjectFolder({
       folder_id: dragged.folder_id,
       project_idx: currentProjectId,
       process_id: currentProcessId,

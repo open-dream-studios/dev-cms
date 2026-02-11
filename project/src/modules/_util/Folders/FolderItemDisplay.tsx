@@ -11,7 +11,7 @@ export const FolderItemDisplay = ({
   depth,
   listeners,
   isOpen,
-  outline,
+  outline, 
 }: {
   isGhost: boolean;
   nodeId: number | null;
@@ -19,7 +19,7 @@ export const FolderItemDisplay = ({
   depth: number;
   listeners: any | null;
   isOpen: boolean;
-  outline: boolean;
+  outline: boolean; 
 }) => {
   const currentTheme = useCurrentTheme();
   const { selectedFolder } = useFoldersCurrentDataStore();
@@ -30,6 +30,8 @@ export const FolderItemDisplay = ({
     ? Math.max((draggingFolderDepth ?? 0) - 1, 0)
     : Math.max((depth ?? 0) - 1, 0);
 
+  const isRoot =  !isGhost && depth === 0
+
   return (
     <div
       className="flex h-[34px] items-center gap-2 px-2 rounded-[5px] hover:brightness-90 dim"
@@ -37,7 +39,9 @@ export const FolderItemDisplay = ({
         width: `calc(100% - ${alteredDepth} * 10px)`,
         marginLeft: `calc(${alteredDepth} * 10px)`,
         outline: outline ? `1px solid ${currentTheme.text_4}` : undefined,
-        display: !isGhost && depth === 0 ? "none" : "flex",
+        display: isRoot ? "none" : "flex",
+        marginTop: isRoot ? -30 : 0,
+        marginBottom: isRoot ? 30 : 0,
         cursor: isGhost ? "grab" : "pointer",
         backgroundColor:
           nodeId && selectedFolder && selectedFolder.id === nodeId

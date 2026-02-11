@@ -7,7 +7,7 @@ import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import {
   buildFolderTree,
   flattenFolderTree,
-} from "@/modules/_util/Folders/_helpers/folders.helpers"; 
+} from "@/modules/_util/Folders/_helpers/folders.helpers";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import {
   SortableContext,
@@ -15,14 +15,21 @@ import {
 } from "@dnd-kit/sortable";
 import { FolderScope } from "@open-dream/shared";
 import React, { useContext, useEffect, useMemo, useRef } from "react";
-import { useFoldersCurrentDataStore } from "./_store/folders.store";
+import {
+  setFlatTreeForScope,
+  useFoldersCurrentDataStore,
+} from "./_store/folders.store";
 import DraggableFolderItem from "@/modules/_util/Folders/DraggableFolderItem";
 
 const FolderTree = () => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
-  const { currentOpenFolders, setSelectedFolder, flatFolderTreeRef } =
-    useFoldersCurrentDataStore();
+  const {
+    currentOpenFolders,
+    setSelectedFolder,
+    flatFolderTreeRef,
+    flatTreesByScope,
+  } = useFoldersCurrentDataStore();
 
   const folderScope: FolderScope = currentProcessId
     ? "estimation_fact_definition"
@@ -39,7 +46,7 @@ const FolderTree = () => {
     currentProjectId,
   );
 
-  const flat = useMemo(() => {
+  const computedFlat = useMemo(() => {
     const tree = buildFolderTree(
       projectFolders,
       estimationProcesses,
@@ -48,9 +55,15 @@ const FolderTree = () => {
     return flattenFolderTree(tree, currentOpenFolders);
   }, [projectFolders, estimationProcesses, folderScope, currentOpenFolders]);
 
+  const flat = flatTreesByScope[folderScope] ?? computedFlat;
+
   useEffect(() => {
     flatFolderTreeRef.current = flat;
   }, [flat]);
+
+  useEffect(() => {
+    setFlatTreeForScope(folderScope, computedFlat);
+  }, [computedFlat, folderScope]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   useOutsideClick(containerRef, (e: React.PointerEvent) => {
@@ -71,8 +84,8 @@ const FolderTree = () => {
         items={flat.map((f) => f.id)}
         strategy={verticalListSortingStrategy}
       >
-        {flat.map((f, index) => (
-          <DraggableFolderItem key={index} flat={f} scope={folderScope} />
+        {flat.map((f) => (
+          <DraggableFolderItem key={f.id} flat={f} scope={folderScope} />
         ))}
       </SortableContext>
     </div>

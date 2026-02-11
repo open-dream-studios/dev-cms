@@ -39,7 +39,8 @@ export const useFoldersCurrentDataStore = createStore({
   draggingFolderId: null as string | null,
   draggingFolderDepth: null as number | null,
   flatFolderTreeRef: { current: null as FlatFolderNode[] | null },
-  edgeHoverFolderId: null as string | null
+  edgeHoverFolderId: null as string | null,
+  flatTreesByScope: {} as Record<FolderScope, FlatFolderNode[]>,
 });
 
 // export const setCurrentSelectedFolder = (
@@ -56,11 +57,22 @@ export const useFoldersCurrentDataStore = createStore({
 //   }));
 
 export const setCurrentOpenFolders = (
-  updater: Set<string> | ((prev: Set<string>) => Set<string>),
+  updater: Set<string> | ((prev: Set<string>) => Set<string>)
 ) =>
   useFoldersCurrentDataStore.getState().set((state) => ({
     currentOpenFolders:
       typeof updater === "function"
         ? updater(state.currentOpenFolders)
         : updater,
+  }));
+
+export const setFlatTreeForScope = (
+  scope: FolderScope,
+  flat: FlatFolderNode[]
+) =>
+  useFoldersCurrentDataStore.getState().set((state) => ({
+    flatTreesByScope: {
+      ...state.flatTreesByScope,
+      [scope]: flat,
+    },
   }));

@@ -187,7 +187,7 @@ export const moveFolderRepo = async (
     process_id = null,
     parent_folder_id = null,
     ordinal,
-  } = folder;
+  } = folder; 
 
   if (!folder_id || !scope) {
     throw new Error("Invalid move payload");
