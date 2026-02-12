@@ -38,7 +38,6 @@ export const upsertFoldersRepo = async (
   project_idx: number,
   folders: FolderInput[]
 ) => {
-
   const [first] = folders as FolderInput[];
   const nextOrdinal = await getNextOrdinal(connection, "project_folders", {
     project_idx,
@@ -256,12 +255,80 @@ export const moveFolderRepo = async (
   // --------------------------------------------
   // CASE 2 — insert at specific ordinal
   // --------------------------------------------
-
   const targetOrdinal = ordinal;
+  
+  const movingWithinSameLayer =
+    current.scope === scope &&
+    (current.process_id ?? null) === (process_id ?? null) &&
+    (current.parent_folder_id ?? null) === (parent_folder_id ?? null);
 
-  // Lock new siblings
-  await connection.query(
-    `
+  if (movingWithinSameLayer) {
+    const oldOrdinal = current.ordinal;
+
+    if (oldOrdinal < targetOrdinal) {
+      // moving DOWN
+      await connection.query(
+        `
+      UPDATE project_folders
+      SET ordinal = ordinal - 1
+      WHERE project_idx = ?
+        AND scope = ?
+        AND process_id <=> ?
+        AND parent_folder_id <=> ?
+        AND ordinal > ?
+        AND ordinal <= ?
+      `,
+        [
+          project_idx,
+          scope,
+          process_id ?? null,
+          parent_folder_id ?? null,
+          oldOrdinal,
+          targetOrdinal,
+        ]
+      );
+    } else if (oldOrdinal > targetOrdinal) {
+      // moving UP
+      await connection.query(
+        `
+      UPDATE project_folders
+      SET ordinal = ordinal + 1
+      WHERE project_idx = ?
+        AND scope = ?
+        AND process_id <=> ?
+        AND parent_folder_id <=> ?
+        AND ordinal >= ?
+        AND ordinal < ?
+      `,
+        [
+          project_idx,
+          scope,
+          process_id ?? null,
+          parent_folder_id ?? null,
+          targetOrdinal,
+          oldOrdinal,
+        ]
+      );
+    }
+
+    await connection.query(
+      `
+    UPDATE project_folders
+    SET ordinal = ?
+    WHERE folder_id = ?
+      AND project_idx = ?
+    `,
+      [targetOrdinal, folder_id, project_idx]
+    );
+
+    return { success: true };
+  }
+
+  // ELSE -> move to different parent layer
+  if (!movingWithinSameLayer) {
+    // lock new siblings
+    await connection.query(
+      `
     SELECT id
     FROM project_folders
     WHERE project_idx = ?
@@ -270,17 +337,12 @@ export const moveFolderRepo = async (
       AND parent_folder_id <=> ?
     FOR UPDATE
     `,
-    [
-      project_idx,
-      scope,
-      process_id ?? null,
-      parent_folder_id ?? null,
-    ]
-  );
+      [project_idx, scope, process_id ?? null, parent_folder_id ?? null]
+    );
 
-  // Shift ordinals in new layer
-  await connection.query(
-    `
+    // shift new layer
+    await connection.query(
+      `
     UPDATE project_folders
     SET ordinal = ordinal + 1
     WHERE project_idx = ?
@@ -289,32 +351,33 @@ export const moveFolderRepo = async (
       AND parent_folder_id <=> ?
       AND ordinal >= ?
     `,
-    [
-      project_idx,
-      scope,
-      process_id ?? null,
-      parent_folder_id ?? null,
-      targetOrdinal,
-    ]
-  );
+      [
+        project_idx,
+        scope,
+        process_id ?? null,
+        parent_folder_id ?? null,
+        targetOrdinal,
+      ]
+    );
 
-  // Move folder
-  await connection.query(
-    `
+    // move folder
+    await connection.query(
+      `
     UPDATE project_folders
     SET parent_folder_id = ?,
         ordinal = ?
     WHERE folder_id = ?
       AND project_idx = ?
     `,
-    [parent_folder_id ?? null, targetOrdinal, folder_id, project_idx]
-  );
+      [parent_folder_id ?? null, targetOrdinal, folder_id, project_idx]
+    );
 
-  // Reindex new layer
-  await reindexOrdinals(connection, "project_folders", newLayer);
+    // reindex old layer
+    await reindexOrdinals(connection, "project_folders", oldLayer);
 
-  // Reindex old layer (if changed)
-  await reindexOrdinals(connection, "project_folders", oldLayer);
+    // reindex new layer
+    await reindexOrdinals(connection, "project_folders", newLayer);
 
-  return { success: true };
+    return { success: true };
+  }
 };

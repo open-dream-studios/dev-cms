@@ -73,7 +73,7 @@ export const FolderItemDisplay = ({
       </div>
 
       <Folder size={16} className="mt-[1px]" />
-      <span className="truncate select-none">{name} - {node?.ordinal ?? ""}</span>
+      <span className="truncate select-none">{name}</span>
     </div>
   );
 };

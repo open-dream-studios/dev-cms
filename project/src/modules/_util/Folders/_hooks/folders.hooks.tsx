@@ -7,21 +7,19 @@ import Modal2MultiStepModalInput, {
 } from "@/modals/Modal2MultiStepInput";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
-import { FolderInput, FolderScope, ProjectFolder } from "@open-dream/shared";
-import { useContext, useRef } from "react";
+import { FolderScope, ProjectFolder } from "@open-dream/shared";
+import { useContext } from "react";
 import { openFolder } from "../_actions/folders.actions";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
-  FolderTreeState,
   ProjectFolderNode,
   resetDragUI,
-  setFlatTreeForScope,
   setFolderTreeByScope,
   useFoldersCurrentDataStore,
 } from "../_store/folders.store";
 import {
+  buildNormalizedTree,
   closeFolderTreeBranch,
-  computeDropTarget,
   flattenFromNormalizedTree,
   moveFolderLocal,
 } from "../_helpers/folders.helpers";
@@ -148,10 +146,11 @@ export function useFolderDndHandlers() {
     setDraggingFolderId,
     setDraggingFolderDepth,
     folderTreesByScope,
-    flatFolderTreeRef,
     currentOpenFolders,
     edgeHoverFolderId,
     setEdgeHoverFolderId,
+    pendingServerSnapshot,
+    setPendingServerSnapshot,
   } = useFoldersCurrentDataStore();
 
   const folderScope: FolderScope = currentProcessId
@@ -166,7 +165,6 @@ export function useFolderDndHandlers() {
       process_id: currentProcessId,
     },
   );
-  const snapshotRef = useRef<FolderTreeState | null>(null);
 
   const hasChildren = (folderNumericId: number) => {
     const tree = folderTreesByScope[folderScope];
@@ -180,233 +178,223 @@ export function useFolderDndHandlers() {
     if (data?.kind !== "FOLDER") return;
     setDraggingFolderId(data.folder.folder_id);
     setDraggingFolderDepth(data.depth);
-    closeFolderTreeBranch(folderScope, data.folder.id);
+    if (hasChildren(data.folder.id)) {
+      closeFolderTreeBranch(folderScope, data.folder.id);
+    }
   };
 
   const onDragEnd = async (e: DragEndEvent) => {
-    const activeData = e.active.data.current;
-    if (activeData?.kind !== "FOLDER") return;
+    const DragEndFunction = async () => {
+      const returnObject = {
+        case: null as null | 1 | 2,
+        message: null as null | string,
+      };
+      if (!currentProjectId) return { ...returnObject, message: "No Proj Id" };
+      const activeData = e.active.data.current;
+      if (activeData?.kind !== "FOLDER")
+        return { ...returnObject, message: "Not a FOLDER" };
 
-    const dragged = activeData.folder;
-    const oldParentId = dragged.parent_folder_id ?? null;
+      const dragged = activeData.folder;
 
-    // --------------------------------------------
-    // CASE 1 — dropped ONTO folder (white border)
-    // --------------------------------------------
-    if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
       const tree = folderTreesByScope[folderScope];
-      if (!tree) return;
+      if (!tree) return { ...returnObject, message: "tree was undefined" };
 
       const flat = flattenFromNormalizedTree(tree, currentOpenFolders);
+      if (!flat.length)
+        return { ...returnObject, message: "flat had no length" };
 
-      // const targetFlat = flat.find(
-      //   (f) => String(f.node.folder_id) === String(edgeHoverFolderId),
-      // );
-      const targetFlat = flat.find(
-        (f): f is Extract<typeof f, { type: "folder" }> =>
-          f.type === "folder" &&
-          String(f.node.folder_id) === String(edgeHoverFolderId),
+      // --------------------------------------------
+      // CASE 1 — dropped ONTO folder (append)
+      // --------------------------------------------
+      if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
+        returnObject.case = 1;
+        const targetFlat = flat.find(
+          (f): f is Extract<typeof f, { type: "folder" }> =>
+            f.type === "folder" &&
+            String(f.node.folder_id) === String(edgeHoverFolderId),
+        );
+
+        if (!targetFlat)
+          return { ...returnObject, message: "targetFlat was null" };
+
+        const newParentId =
+          targetFlat.node.id === -1 ? null : targetFlat.node.id;
+
+        if (newParentId === dragged.id) {
+          resetDragUI();
+          return { ...returnObject, message: "Tried to assign parent as self" };
+        }
+
+        if (newParentId === dragged.parentId) {
+          resetDragUI();
+          return { ...returnObject, message: "Parent = old parent" };
+        }
+
+        // console.log({
+        //   type: "MOVE_INTO_FOLDER_APPEND",
+        //   dragged_folder_id: dragged.folder_id,
+        //   old_parent_id: oldParentId,
+        //   new_parent_id: newParentId,
+        // });
+
+        setEdgeHoverFolderId(null);
+
+        const siblings = tree.childrenByParent[newParentId ?? "root"] ?? [];
+
+        const optimisticTree = moveFolderLocal(
+          tree,
+          dragged.id,
+          newParentId,
+          siblings.length,
+        );
+
+        setFolderTreeByScope(folderScope, optimisticTree);
+
+        moveProjectFolder({
+          folder_id: dragged.folder_id,
+          project_idx: currentProjectId,
+          process_id: currentProcessId,
+          scope: folderScope,
+          parent_folder_id: newParentId,
+          name: dragged.name,
+          ordinal: null,
+        });
+
+        resetDragUI();
+        return { ...returnObject, message: "Case 1 Success" };
+      }
+
+      // --------------------------------------------
+      // CASE 2 — dropped BETWEEN (true reorder)
+      // --------------------------------------------
+      returnObject.case = 2;
+      const activeId = e.active.id;
+      const overId = e.over?.id;
+
+      if (!overId) return { ...returnObject, message: "overId was null" };
+
+      const oldIndex = flat.findIndex((f) => f.id === activeId);
+      const overIndex = flat.findIndex((f: any) => f.id === overId);
+
+      if (oldIndex === -1 || overIndex === -1)
+        return {
+          ...returnObject,
+          message: "oldIndex === -1 || overIndex === -1",
+        };
+
+      const reordered = arrayMove(flat, oldIndex, overIndex);
+      const newIndexInUI = reordered.findIndex((f: any) => f.id === activeId);
+      if (newIndexInUI === -1)
+        return { ...returnObject, message: "newIndexInUI === -1" };
+
+      const folderAboveRaw =
+        newIndexInUI === 0 ? null : reordered[newIndexInUI - 1];
+
+      let aboveFolderId: string;
+      let aboveId: number;
+
+      if (folderAboveRaw === null) {
+        // top of list → root
+        aboveFolderId = "__root__";
+        aboveId = -1;
+      } else {
+        if (folderAboveRaw.type !== "folder")
+          return { ...returnObject, message: "folderAboveRaw.type !== folder" };
+
+        aboveFolderId = folderAboveRaw.node.folder_id;
+        aboveId = folderAboveRaw.node.id;
+      }
+
+      let newParentId: number | null | undefined = undefined;
+      let newOrdinal: number | undefined = undefined;
+
+      if (hasChildren(aboveId) && currentOpenFolders.has(aboveFolderId)) {
+        newParentId = aboveId;
+      } else {
+        if (folderAboveRaw) {
+          newParentId = folderAboveRaw.parentId ?? null;
+        } else {
+          newParentId = null;
+        }
+      }
+
+      // draggedFlat.parentId = newParentId;
+      if (!folderAboveRaw) {
+        newOrdinal = 0;
+      } else if (
+        hasChildren(aboveId) &&
+        currentOpenFolders.has(aboveFolderId)
+      ) {
+        // inserting as first child inside open folder
+        newOrdinal = 0;
+      } else {
+        const aboveOrdinal = folderAboveRaw.node.ordinal ?? 0;
+        if (
+          folderAboveRaw.parentId === dragged.parentId &&
+          dragged.ordinal < folderAboveRaw.node.ordinal
+        ) {
+          newOrdinal = aboveOrdinal;
+        } else {
+          newOrdinal = aboveOrdinal + 1;
+        }
+      }
+
+      if (newParentId === undefined || newOrdinal === undefined)
+        return {
+          ...returnObject,
+          message: "newParentId === undefined || newOrdinal === undefined",
+        };
+
+      if (newParentId === dragged.id) {
+        resetDragUI();
+        return { ...returnObject, message: "Tried to assign parent as self" };
+      }
+
+      if (newParentId === dragged.parentId && newOrdinal === dragged.ordinal) {
+        resetDragUI();
+        if (pendingServerSnapshot) {
+          const tree = buildNormalizedTree(pendingServerSnapshot);
+          setFolderTreeByScope(folderScope, tree);
+          setPendingServerSnapshot(null);
+        }
+        return { ...returnObject, message: "No change -> Set tree to saved snapshot" };
+      }
+
+      // console.log({
+      //   type: "ABOVE_FOLDER",
+      //   dragged_folder_id: dragged.folder_id,
+      //   above_folder_id: aboveFolderId,
+      //   above_folder_numeric_id: aboveId,
+      //   parent_folder_id: newParentId,
+      //   ordinal: newOrdinal,
+      // });
+
+      const optimisticTree = moveFolderLocal(
+        tree,
+        dragged.id,
+        newParentId,
+        newOrdinal,
       );
 
-      if (!targetFlat) return;
+      setFolderTreeByScope(folderScope, optimisticTree);
 
-      const newParentId = targetFlat.node.id === -1 ? null : targetFlat.node.id;
-
-      // prevent self-parent
-      if (newParentId === dragged.id) {
-        setEdgeHoverFolderId(null);
-        return;
-      }
-
-      // prevent no-op (same parent)
-      if (newParentId === (dragged.parent_folder_id ?? null)) {
-        setEdgeHoverFolderId(null);
-        return;
-      }
-
-      console.log({
-        type: "MOVE_INTO_FOLDER_APPEND",
-        dragged_folder_id: dragged.folder_id,
-        old_parent_id: oldParentId,
-        new_parent_id: newParentId,
+      // then call backend
+      moveProjectFolder({
+        folder_id: dragged.folder_id,
+        project_idx: currentProjectId,
+        process_id: currentProcessId,
+        scope: folderScope,
+        name: dragged.name,
+        parent_folder_id: newParentId,
+        ordinal: newOrdinal,
       });
-
-      // useFoldersCurrentDataStore.getState().set({
-      //   edgeHoverFolderId: null,
-      // });
-
-      // const reordered = flat.filter((f) => {
-      //   if (f.type !== "folder") return true;
-      //   return f.node.folder_id !== dragged.folder_id;
-      // });
-      // setFlatTreeForScope(folderScope, reordered);
-
-      // moveProjectFolder({
-      //   folder_id: dragged.folder_id,
-      //   project_idx: currentProjectId,
-      //   process_id: currentProcessId,
-      //   scope: folderScope,
-      //   parent_folder_id: newParentId,
-      //   name: dragged.name,
-      //   ordinal: null,
-      // } as FolderInput);
       resetDragUI();
-      return;
-    }
+      return { ...returnObject, message: "Case 2 Success" };
+    };
 
-    // --------------------------------------------
-    // CASE 2 — dropped BETWEEN (true reorder)
-    // --------------------------------------------
-    const tree = folderTreesByScope[folderScope];
-    if (!tree) return;
-    const flat = flattenFromNormalizedTree(tree, currentOpenFolders);
-
-    const activeId = e.active.id;
-    const overId = e.over?.id;
-    if (!overId) return;
-
-    const oldIndex = flat.findIndex((f) => f.id === activeId);
-    const overIndex = flat.findIndex((f) => f.id === overId);
-
-    if (oldIndex === -1 || overIndex === -1) return;
-
-    // simulate final UI order exactly as dnd shows it
-    const reordered = arrayMove(flat, oldIndex, overIndex);
-    setFlatTreeForScope(folderScope, reordered);
-
-    // new index of dragged item in UI
-    const newIndex = reordered.findIndex((f) => f.id === activeId);
-    if (newIndex === -1) return;
-
-    // folder visually ABOVE dragged item in the UI
-    // const folderAbove = reordered[newIndex - 1] ?? null;
-    const folderAboveRaw = reordered[newIndex - 1] ?? null;
-    if (!folderAboveRaw || folderAboveRaw.type !== "folder") return;
-    const folderAbove = folderAboveRaw;
-
-    const aboveFolderId = folderAbove?.node.folder_id ?? null;
-    const aboveId = folderAbove?.node.id ?? null;
-    if (!aboveId || !aboveFolderId) return;
-
-    let newParentId = undefined;
-    let newOrdinal = undefined;
-
-    if (aboveId === -1) {
-      newParentId = null;
-      newOrdinal = 0;
-    } else if (
-      // folder above is open AND has children
-      currentOpenFolders.has(aboveFolderId) &&
-      hasChildren(aboveId)
-    ) {
-      newParentId = aboveId;
-      newOrdinal = 0;
-    } else {
-      newParentId = folderAbove.node.parent_folder_id;
-      newOrdinal = folderAbove.node.ordinal + 1;
-    }
-
-    if (newParentId === undefined || newOrdinal === undefined) return;
-    // prevent no-op (same parent + same ordinal)
-    if (
-      newParentId === (dragged.parent_folder_id ?? null) &&
-      newOrdinal === dragged.ordinal
-    ) {
-      return;
-    }
-
-    console.log({
-      type: "ABOVE_FOLDER",
-      dragged_folder_id: dragged.folder_id,
-      above_folder_id: folderAbove?.node.folder_id ?? null,
-      above_folder_numeric_id: folderAbove?.node.id ?? null,
-    });
-
-    // moveProjectFolder({
-    //   folder_id: dragged.folder_id,
-    //   project_idx: currentProjectId,
-    //   process_id: currentProcessId,
-    //   scope: folderScope,
-    //   name: dragged.name,
-    //   parent_folder_id: newParentId,
-    //   ordinal: newOrdinal,
-    // } as FolderInput);
-    resetDragUI();
+    const result = await DragEndFunction();
+    console.log(result);
   };
-
-  // const onDragEnd = async (e: DragEndEvent) => {
-  //   // const activeData = e.active.data.current;
-  //   console.log("DRAG_END fired", {
-  //     active: e.active?.id,
-  //     over: e.over?.id,
-  //   });
-
-  //   const activeData = e.active.data.current;
-  //   if (activeData?.kind !== "FOLDER") {
-  //     console.log("NOT_FOLDER");
-  //     return;
-  //   }
-
-  //   if (activeData?.kind !== "FOLDER") return;
-
-  //   const tree = folderTreesByScope[folderScope];
-  //   if (!tree) return;
-
-  //   const folderId = activeData.folder.id;
-
-  //   const result = computeDropTarget(e, tree, edgeHoverFolderId);
-
-  //   if (!result) return;
-
-  //   const { newParentId, newIndex } = result;
-  //   if (newIndex == null) return;
-
-  //   // ---- SNAPSHOT ----
-  //   snapshotRef.current = tree;
-
-  //   // ---- LOCAL MUTATION ----
-  //   const updatedTree = moveFolderLocal(tree, folderId, newParentId, newIndex);
-
-  //   console.log("LOCAL_MOVE", {
-  //     folderId,
-  //     newParentId,
-  //     newIndex,
-  //     before: tree.childrenByParent,
-  //     after: updatedTree.childrenByParent,
-  //   });
-
-  //   setFolderTreeByScope(folderScope, updatedTree);
-
-  //   if (!currentProjectId) return;
-  //   console.log({
-  //       folder_id: activeData.folder.folder_id,
-  //       parent_folder_id: newParentId,
-  //       ordinal: newIndex,
-  //       scope: folderScope,
-  //       process_id: currentProcessId,
-  //       project_idx: currentProjectId,
-  //       name: activeData.folder.name,
-  //     })
-
-  //   try {
-  //     await moveProjectFolder({
-  //       folder_id: activeData.folder.folder_id,
-  //       parent_folder_id: newParentId,
-  //       ordinal: newIndex,
-  //       scope: folderScope,
-  //       process_id: currentProcessId,
-  //       project_idx: currentProjectId,
-  //       name: activeData.folder.name,
-  //     });
-  //   } catch (err) {
-  //     // ---- ROLLBACK ----
-  //     if (snapshotRef.current) {
-  //       setFolderTreeByScope(folderScope, snapshotRef.current);
-  //     }
-  //   }
-
-  //   resetDragUI();
-  // };
 
   const onDragCancel = () => {
     resetDragUI();

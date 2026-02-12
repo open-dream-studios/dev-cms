@@ -25,7 +25,6 @@ export type ProjectFolderNodeItem =
   | EstimationFactDefinition
   | EstimationProcess;
 
-// NEW ATTEMPT
 export type FolderTreeState = {
   nodesById: Record<
     number,
@@ -58,40 +57,17 @@ export type FlatNode =
     };
 
 export const useFoldersCurrentDataStore = createStore({
-  // currentActiveFolder: null as MediaFolder | null,
-  currentOpenFolders: new Set<string>([ROOT_ID]),
-  folderPXFromTop: 0,
-  // selectedFolder: null as SelectedFolder | null,
-  draggingFolderId: null as string | null,
-  draggingFolderDepth: null as number | null,
-  flatFolderTreeRef: { current: null as FlatNode[] | null },
-  edgeHoverFolderId: null as string | null,
-  flatTreesByScope: {} as Record<FolderScope, FlatNode[]>,
-
-  // NEW ATTEMPT
   folderTreesByScope: {} as Record<FolderScope, FolderTreeState>,
   selectedFoldersByScope: {} as Record<FolderScope, SelectedFolder | null>,
+  currentOpenFolders: new Set<string>([ROOT_ID]),
+  draggingFolderId: null as string | null,
+  draggingFolderDepth: null as number | null,
+  edgeHoverFolderId: null as string | null,
+  folderPXFromTop: 0,
+  movePending: 0,
+  pendingServerSnapshot: null as ProjectFolder[] | null,
 });
 
-export const setCurrentOpenFolders = (
-  updater: Set<string> | ((prev: Set<string>) => Set<string>)
-) =>
-  useFoldersCurrentDataStore.getState().set((state) => ({
-    currentOpenFolders:
-      typeof updater === "function"
-        ? updater(state.currentOpenFolders)
-        : updater,
-  }));
-
-export const setFlatTreeForScope = (scope: FolderScope, flat: FlatNode[]) =>
-  useFoldersCurrentDataStore.getState().set((state) => ({
-    flatTreesByScope: {
-      ...state.flatTreesByScope,
-      [scope]: flat,
-    },
-  }));
-
-// NEW ATTEMPT
 export const setFolderTreeByScope = (
   scope: FolderScope,
   tree: FolderTreeState

@@ -73,7 +73,7 @@ const CustomerCalls = () => {
   };
 
   useEffect(() => {
-    console.log("📟 activeCall state changed:", activeCall);
+    // console.log("📟 activeCall state changed:", activeCall);
   }, [activeCall]);
 
   useEffect(() => {
