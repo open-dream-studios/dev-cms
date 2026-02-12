@@ -33,18 +33,25 @@ const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
     currentProjectId!,
     { scope: folderScope, process_id: currentProcessId },
   );
-  // const { estimationProcesses } = useEstimationProcesses(
-  //   !!currentUser,
-  //   currentProjectId,
-  // );
 
   // NEW ATTEMPT
   const { folderTreesByScope, currentOpenFolders } =
     useFoldersCurrentDataStore();
 
   useEffect(() => {
-    const treeState = buildNormalizedTree(projectFolders);
-    setFolderTreeByScope(folderScope, treeState);
+    const existing = folderTreesByScope[folderScope];
+    const next = buildNormalizedTree(projectFolders);
+    if (!existing) {
+      setFolderTreeByScope(folderScope, next);
+      return;
+    }
+    const same =
+      JSON.stringify(existing.nodesById) === JSON.stringify(next.nodesById) &&
+      JSON.stringify(existing.childrenByParent) ===
+        JSON.stringify(next.childrenByParent);
+    if (!same) {
+      setFolderTreeByScope(folderScope, next);
+    }
   }, [folderScope, projectFolders]);
 
   const tree = folderTreesByScope[folderScope];
@@ -97,7 +104,7 @@ const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
   });
 
   return (
-    <div ref={containerRef} className="px-[4px] flex-1 overflow-y-auto w-full">
+    <div ref={containerRef} className="px-[4px] flex-1 overflow-y-auto w-full pt-[1px]">
       <SortableContext
         items={flat.filter((f) => f.type === "folder").map((f) => f.id)}
         strategy={verticalListSortingStrategy}

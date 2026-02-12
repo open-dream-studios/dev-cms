@@ -107,7 +107,7 @@ export default function EstimationsLeftBar() {
             <div className="flex flex-row gap-[7px] items-center">
               <div
                 data-leftbar-button
-                onClick={handleAddFolder}
+                onClick={() => handleAddFolder(folderScope)}
                 className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
                 style={{
                   backgroundColor: currentTheme.background_1_3,
@@ -209,7 +209,7 @@ export default function EstimationsLeftBar() {
                 {variableView === "fact" && (
                   <div
                     data-leftbar-button
-                    onClick={handleAddFolder}
+                    onClick={() => handleAddFolder(folderScope)}
                     className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
                     style={{
                       backgroundColor: currentTheme.background_1_3,

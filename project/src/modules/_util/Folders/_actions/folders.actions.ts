@@ -3,7 +3,10 @@ import { deleteProjectFolderApi } from "@/api/projectFolders.api";
 import { queryClient } from "@/lib/queryClient";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { ContextMenuDefinition, ProjectFolder } from "@open-dream/shared";
-import { useFoldersCurrentDataStore } from "../_store/folders.store";
+import {
+  setSelectedFolderForScope,
+  useFoldersCurrentDataStore,
+} from "../_store/folders.store";
 
 export const createFolderContextMenu = (
   onEdit: (folder: ProjectFolder) => void
@@ -37,13 +40,8 @@ export const handleDeleteFolder = async (folder_id: string) => {
 };
 
 export const toggleFolder = (folder: ProjectFolder) => {
-  const { setSelectedFolder, set } = useFoldersCurrentDataStore.getState();
+  const { set } = useFoldersCurrentDataStore.getState();
   const id = folder.folder_id;
-  setSelectedFolder({
-    id: folder.id,
-    folder_id: folder.folder_id,
-    scope: folder.scope,
-  });
   set((state) => {
     const next = new Set(state.currentOpenFolders);
     if (next.has(id)) {
@@ -56,9 +54,9 @@ export const toggleFolder = (folder: ProjectFolder) => {
 };
 
 export const openFolder = (folder: ProjectFolder) => {
-  const { setSelectedFolder, set } = useFoldersCurrentDataStore.getState();
+  const { set } = useFoldersCurrentDataStore.getState();
   const id = folder.folder_id;
-  setSelectedFolder({
+  setSelectedFolderForScope(folder.scope, {
     id: folder.id,
     folder_id: folder.folder_id,
     scope: folder.scope,

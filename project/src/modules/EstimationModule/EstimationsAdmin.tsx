@@ -9,10 +9,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { AuthContext } from "@/contexts/authContext";
 import { FolderScope, ProjectFolder } from "@open-dream/shared";
 import { usePemdasUIStore } from "./EstimationPEMDAS/_store/pemdas.store";
-import {
-  resetEstimationDrag,
-  useEstimationsUIStore,
-} from "./_store/estimations.store";
+import { useEstimationsUIStore } from "./_store/estimations.store";
 import { usePemdasCanvas } from "./EstimationPEMDAS/_hooks/pemdas.hooks";
 import EstimationsLeftBar from "./components/EstimationsLeftBar";
 import PemdasViewport from "./EstimationPEMDAS/components/PemdasViewport";
@@ -35,7 +32,7 @@ import { FolderItemDisplay } from "../_util/Folders/FolderItemDisplay";
 import VariableDisplay from "./components/VariableDisplay";
 import EstimationProcessItem from "./components/ProcessDisplay";
 import { useFolderDndHandlers } from "../_util/Folders/_hooks/folders.hooks";
-import { useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
+import { resetDragUI, useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
 
 export type CanvasUsage = "estimation" | "variable";
 
@@ -276,7 +273,7 @@ const EstimationAdmin = () => {
       <DndContext
         sensors={activePemdas.sensors}
         onDragStart={(e) => {
-          resetEstimationDrag()
+          resetDragUI()
           const evt = e.activatorEvent as PointerEvent;
           dragStartPointerRef.current = {
             x: evt.clientX,
@@ -351,16 +348,16 @@ const EstimationAdmin = () => {
               }
             }
           }
-          resetEstimationDrag();
           dragStartPointerRef.current = null;
+          resetDragUI()
         }}
         onDragCancel={(e) => {
           activePemdas.handlers.onDragCancel(e);
           folderDnd.onDragCancel();
-          resetEstimationDrag();
           setIsOverCanvas(false);
           setIsCanvasGhostActive(false);
           dragStartPointerRef.current = null;
+          resetDragUI()
         }}
       >
         <HomeLayout left={<EstimationsLeftBar />}>
@@ -495,6 +492,7 @@ const EstimationAdmin = () => {
 
           {draggingFolder && (
             <FolderItemDisplay
+             scope={draggingFolder.scope}
               isGhost={true}
               node={null}
               name={draggingFolder.name}

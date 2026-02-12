@@ -8,19 +8,23 @@ import Modal2MultiStepModalInput, {
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { FolderInput, FolderScope, ProjectFolder } from "@open-dream/shared";
-import { useContext, useMemo } from "react";
+import { useContext, useRef } from "react";
 import { openFolder } from "../_actions/folders.actions";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
+  FolderTreeState,
   ProjectFolderNode,
+  resetDragUI,
   setFlatTreeForScope,
+  setFolderTreeByScope,
   useFoldersCurrentDataStore,
 } from "../_store/folders.store";
 import {
-  buildFolderTree,
-  collectDescendantFolderIds,
+  closeFolderTreeBranch,
+  computeDropTarget,
+  flattenFromNormalizedTree,
+  moveFolderLocal,
 } from "../_helpers/folders.helpers";
-import { useEstimationProcesses } from "@/contexts/queryContext/queries/estimations/process/estimationProcess";
 import { arrayMove } from "@dnd-kit/sortable";
 
 export function useProjectFolderHooks(scope: FolderScope) {
@@ -35,9 +39,9 @@ export function useProjectFolderHooks(scope: FolderScope) {
       process_id: currentProcessId,
     },
   );
-  const { selectedFolder } = useFoldersCurrentDataStore();
+  const { selectedFoldersByScope } = useFoldersCurrentDataStore();
 
-  const handleAddFolder = async () => {
+  const handleAddFolder = async (scope: FolderScope) => {
     if (!currentProjectId) return;
     const steps: StepConfig[] = [
       {
@@ -61,22 +65,23 @@ export function useProjectFolderHooks(scope: FolderScope) {
           steps={steps}
           key={`trigger-${Date.now()}`}
           onComplete={async (values) => {
+            const folderSelected = selectedFoldersByScope[scope];
             await upsertProjectFolders([
               {
                 folder_id: null,
                 scope,
                 parent_folder_id:
-                  selectedFolder && selectedFolder.scope === scope
-                    ? (selectedFolder?.id ?? null)
+                  folderSelected && folderSelected.id
+                    ? folderSelected.id
                     : null,
                 name: values.name,
                 ordinal: null,
                 process_id: currentProcessId,
               },
             ]);
-            if (selectedFolder && selectedFolder.id) {
+            if (folderSelected && folderSelected.id) {
               const matchedFolder = projectFolders.find(
-                (folder: ProjectFolder) => folder.id === selectedFolder.id,
+                (folder: ProjectFolder) => folder.id === folderSelected.id,
               );
               if (matchedFolder) {
                 openFolder(matchedFolder);
@@ -139,15 +144,21 @@ export function useProjectFolderHooks(scope: FolderScope) {
 export function useFolderDndHandlers() {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
-  const { setDraggingFolderId, setDraggingFolderDepth } =
-    useFoldersCurrentDataStore();
-  const { flatFolderTreeRef, currentOpenFolders } =
-    useFoldersCurrentDataStore();
+  const {
+    setDraggingFolderId,
+    setDraggingFolderDepth,
+    folderTreesByScope,
+    flatFolderTreeRef,
+    currentOpenFolders,
+    edgeHoverFolderId,
+    setEdgeHoverFolderId,
+  } = useFoldersCurrentDataStore();
 
   const folderScope: FolderScope = currentProcessId
     ? "estimation_fact_definition"
     : "estimation_process";
-  const { projectFolders, moveProjectFolder } = useProjectFolders(
+
+  const { moveProjectFolder } = useProjectFolders(
     !!currentUser,
     currentProjectId!,
     {
@@ -155,48 +166,21 @@ export function useFolderDndHandlers() {
       process_id: currentProcessId,
     },
   );
-  const { estimationProcesses } = useEstimationProcesses(
-    !!currentUser,
-    currentProjectId,
-  );
-
-  const { edgeHoverFolderId, setEdgeHoverFolderId } =
-    useFoldersCurrentDataStore();
-
-  const folderNodeById = useMemo(() => {
-    const tree = buildFolderTree(
-      projectFolders,
-      estimationProcesses,
-      folderScope,
-    );
-    const map = new Map<number, ProjectFolderNode>();
-    const walk = (node: ProjectFolderNode) => {
-      map.set(node.id, node);
-      node.children.forEach(walk);
-    };
-    tree.forEach(walk);
-    return map;
-  }, [projectFolders, estimationProcesses, folderScope]);
+  const snapshotRef = useRef<FolderTreeState | null>(null);
 
   const hasChildren = (folderNumericId: number) => {
-    const node = folderNodeById.get(folderNumericId);
-    return !!node && node.children.length > 0;
+    const tree = folderTreesByScope[folderScope];
+    if (!tree) return false;
+    const children = tree.childrenByParent[folderNumericId];
+    return !!children && children.length > 0;
   };
 
   const onDragStart = (e: DragStartEvent) => {
     const data = e.active.data.current;
     if (data?.kind !== "FOLDER") return;
-    const node = folderNodeById.get(data.folder.id);
-    if (!node) return;
     setDraggingFolderId(data.folder.folder_id);
     setDraggingFolderDepth(data.depth);
-    useFoldersCurrentDataStore.getState().set((state) => {
-      const next = new Set(state.currentOpenFolders);
-      next.delete(data.folder.folder_id);
-      const descendantIds = collectDescendantFolderIds(node);
-      descendantIds.forEach((id) => next.delete(id));
-      return { currentOpenFolders: next };
-    });
+    closeFolderTreeBranch(folderScope, data.folder.id);
   };
 
   const onDragEnd = async (e: DragEndEvent) => {
@@ -208,10 +192,12 @@ export function useFolderDndHandlers() {
 
     // --------------------------------------------
     // CASE 1 — dropped ONTO folder (white border)
-    // -------------------------------------------- 
+    // --------------------------------------------
     if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
-      const flat = flatFolderTreeRef.current;
-      if (!flat) return;
+      const tree = folderTreesByScope[folderScope];
+      if (!tree) return;
+
+      const flat = flattenFromNormalizedTree(tree, currentOpenFolders);
 
       // const targetFlat = flat.find(
       //   (f) => String(f.node.folder_id) === String(edgeHoverFolderId),
@@ -245,33 +231,35 @@ export function useFolderDndHandlers() {
         new_parent_id: newParentId,
       });
 
-      useFoldersCurrentDataStore.getState().set({
-        edgeHoverFolderId: null,
-      });
+      // useFoldersCurrentDataStore.getState().set({
+      //   edgeHoverFolderId: null,
+      // });
 
-      const reordered = flat.filter((f) => {
-        if (f.type !== "folder") return true;
-        return f.node.folder_id !== dragged.folder_id;
-      });
-      setFlatTreeForScope(folderScope, reordered);
+      // const reordered = flat.filter((f) => {
+      //   if (f.type !== "folder") return true;
+      //   return f.node.folder_id !== dragged.folder_id;
+      // });
+      // setFlatTreeForScope(folderScope, reordered);
 
-      moveProjectFolder({
-        folder_id: dragged.folder_id,
-        project_idx: currentProjectId,
-        process_id: currentProcessId,
-        scope: folderScope,
-        parent_folder_id: newParentId,
-        name: dragged.name,
-        ordinal: null,
-      } as FolderInput);
+      // moveProjectFolder({
+      //   folder_id: dragged.folder_id,
+      //   project_idx: currentProjectId,
+      //   process_id: currentProcessId,
+      //   scope: folderScope,
+      //   parent_folder_id: newParentId,
+      //   name: dragged.name,
+      //   ordinal: null,
+      // } as FolderInput);
+      resetDragUI();
       return;
     }
 
     // --------------------------------------------
     // CASE 2 — dropped BETWEEN (true reorder)
     // --------------------------------------------
-    const flat = flatFolderTreeRef.current;
-    if (!flat?.length) return;
+    const tree = folderTreesByScope[folderScope];
+    if (!tree) return;
+    const flat = flattenFromNormalizedTree(tree, currentOpenFolders);
 
     const activeId = e.active.id;
     const overId = e.over?.id;
@@ -334,24 +322,94 @@ export function useFolderDndHandlers() {
       above_folder_numeric_id: folderAbove?.node.id ?? null,
     });
 
-    moveProjectFolder({
-      folder_id: dragged.folder_id,
-      project_idx: currentProjectId,
-      process_id: currentProcessId,
-      scope: folderScope,
-      name: dragged.name,
-      parent_folder_id: newParentId,
-      ordinal: newOrdinal,
-    } as FolderInput);
-    setEdgeHoverFolderId(null);
-    setDraggingFolderId(null);
-    setDraggingFolderDepth(null);
+    // moveProjectFolder({
+    //   folder_id: dragged.folder_id,
+    //   project_idx: currentProjectId,
+    //   process_id: currentProcessId,
+    //   scope: folderScope,
+    //   name: dragged.name,
+    //   parent_folder_id: newParentId,
+    //   ordinal: newOrdinal,
+    // } as FolderInput);
+    resetDragUI();
   };
 
+  // const onDragEnd = async (e: DragEndEvent) => {
+  //   // const activeData = e.active.data.current;
+  //   console.log("DRAG_END fired", {
+  //     active: e.active?.id,
+  //     over: e.over?.id,
+  //   });
+
+  //   const activeData = e.active.data.current;
+  //   if (activeData?.kind !== "FOLDER") {
+  //     console.log("NOT_FOLDER");
+  //     return;
+  //   }
+
+  //   if (activeData?.kind !== "FOLDER") return;
+
+  //   const tree = folderTreesByScope[folderScope];
+  //   if (!tree) return;
+
+  //   const folderId = activeData.folder.id;
+
+  //   const result = computeDropTarget(e, tree, edgeHoverFolderId);
+
+  //   if (!result) return;
+
+  //   const { newParentId, newIndex } = result;
+  //   if (newIndex == null) return;
+
+  //   // ---- SNAPSHOT ----
+  //   snapshotRef.current = tree;
+
+  //   // ---- LOCAL MUTATION ----
+  //   const updatedTree = moveFolderLocal(tree, folderId, newParentId, newIndex);
+
+  //   console.log("LOCAL_MOVE", {
+  //     folderId,
+  //     newParentId,
+  //     newIndex,
+  //     before: tree.childrenByParent,
+  //     after: updatedTree.childrenByParent,
+  //   });
+
+  //   setFolderTreeByScope(folderScope, updatedTree);
+
+  //   if (!currentProjectId) return;
+  //   console.log({
+  //       folder_id: activeData.folder.folder_id,
+  //       parent_folder_id: newParentId,
+  //       ordinal: newIndex,
+  //       scope: folderScope,
+  //       process_id: currentProcessId,
+  //       project_idx: currentProjectId,
+  //       name: activeData.folder.name,
+  //     })
+
+  //   try {
+  //     await moveProjectFolder({
+  //       folder_id: activeData.folder.folder_id,
+  //       parent_folder_id: newParentId,
+  //       ordinal: newIndex,
+  //       scope: folderScope,
+  //       process_id: currentProcessId,
+  //       project_idx: currentProjectId,
+  //       name: activeData.folder.name,
+  //     });
+  //   } catch (err) {
+  //     // ---- ROLLBACK ----
+  //     if (snapshotRef.current) {
+  //       setFolderTreeByScope(folderScope, snapshotRef.current);
+  //     }
+  //   }
+
+  //   resetDragUI();
+  // };
+
   const onDragCancel = () => {
-    setEdgeHoverFolderId(null);
-    setDraggingFolderId(null);
-    setDraggingFolderDepth(null);
+    resetDragUI();
   };
 
   return {

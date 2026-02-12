@@ -4,8 +4,10 @@ import {
   FolderScope,
   EstimationFactDefinition,
   ProjectFolder,
+  folderScopes,
 } from "@open-dream/shared";
 import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
+import { useEstimationsUIStore } from "@/modules/EstimationModule/_store/estimations.store";
 
 export type SelectedFolder = {
   id: number | null;
@@ -25,15 +27,18 @@ export type ProjectFolderNodeItem =
 
 // NEW ATTEMPT
 export type FolderTreeState = {
-  nodesById: Record<number, {
-    id: number
-    folder_id: string
-    parentId: number | null
-    ordinal: number
-    name: string
-  }>
-  childrenByParent: Record<number | "root", number[]>
-}
+  nodesById: Record<
+    number,
+    {
+      id: number;
+      folder_id: string;
+      parentId: number | null;
+      ordinal: number;
+      name: string;
+    }
+  >;
+  childrenByParent: Record<number | "root", number[]>;
+};
 
 export type FlatNode =
   | {
@@ -56,7 +61,7 @@ export const useFoldersCurrentDataStore = createStore({
   // currentActiveFolder: null as MediaFolder | null,
   currentOpenFolders: new Set<string>([ROOT_ID]),
   folderPXFromTop: 0,
-  selectedFolder: null as SelectedFolder | null,
+  // selectedFolder: null as SelectedFolder | null,
   draggingFolderId: null as string | null,
   draggingFolderDepth: null as number | null,
   flatFolderTreeRef: { current: null as FlatNode[] | null },
@@ -78,17 +83,13 @@ export const setCurrentOpenFolders = (
         : updater,
   }));
 
-export const setFlatTreeForScope = (
-  scope: FolderScope,
-  flat: FlatNode[]
-) =>
+export const setFlatTreeForScope = (scope: FolderScope, flat: FlatNode[]) =>
   useFoldersCurrentDataStore.getState().set((state) => ({
     flatTreesByScope: {
       ...state.flatTreesByScope,
       [scope]: flat,
     },
   }));
-
 
 // NEW ATTEMPT
 export const setFolderTreeByScope = (
@@ -111,4 +112,34 @@ export const setSelectedFolderForScope = (
       ...state.selectedFoldersByScope,
       [scope]: folder,
     },
-  }))
+  }));
+
+export const clearSelectedFolders = () => {
+  const clearedScopes = folderScopes.reduce<Record<string, null>>(
+    (acc, scope) => {
+      acc[scope] = null;
+      return acc;
+    },
+    {}
+  );
+  useFoldersCurrentDataStore.getState().set((state) => ({
+    selectedFoldersByScope: {
+      ...state.selectedFoldersByScope,
+      ...clearedScopes,
+    },
+  }));
+};
+
+export const resetDragUI = () => {
+  const { setDraggingFolderId, setDraggingFolderDepth, setEdgeHoverFolderId } =
+    useFoldersCurrentDataStore.getState();
+  const { setDraggingFact, setDraggingProcess } =
+    useEstimationsUIStore.getState();
+
+  setDraggingFact(null);
+  setDraggingProcess(null);
+
+  setDraggingFolderId(null);
+  setDraggingFolderDepth(null);
+  setEdgeHoverFolderId(null);
+};

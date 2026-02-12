@@ -33,6 +33,7 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 import {
   setCurrentOpenFolders,
+  setSelectedFolderForScope,
   useFoldersCurrentDataStore,
 } from "../_util/Folders/_store/folders.store";
 
@@ -56,8 +57,7 @@ export default function MediaFoldersSidebar() {
   const { mediaFolders, upsertMediaFolders } = useContextQueries();
   const { hoveredFolder, setHoveredFolder, modal2, setModal2 } = useUiStore();
   const { currentProjectId } = useCurrentDataStore();
-  const { selectedFolder, setSelectedFolder, currentOpenFolders } =
-    useFoldersCurrentDataStore();
+  const { currentOpenFolders } = useFoldersCurrentDataStore();
 
   const sensors = useSensors(useSensor(PointerSensor));
   const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
@@ -140,7 +140,7 @@ export default function MediaFoldersSidebar() {
           mediaFolder.folder_id === newlyAddedFolderRef.current,
       );
       if (folderFound && folderFound.id) {
-        setSelectedFolder({
+        setSelectedFolderForScope("media" as FolderScope, {
           id: folderFound.id,
           folder_id: folderFound.folder_id,
           scope: "media" as FolderScope,
@@ -160,41 +160,41 @@ export default function MediaFoldersSidebar() {
       },
     ];
 
-    setModal2({
-      ...modal2,
-      open: true,
-      showClose: false,
-      offClickClose: true,
-      width: "w-[300px]",
-      maxWidth: "max-w-[400px]",
-      aspectRatio: "aspect-[5/2]",
-      borderRadius: "rounded-[12px] md:rounded-[15px]",
-      content: (
-        <Modal2MultiStepModalInput
-          steps={steps}
-          key={`trigger-${Date.now()}`}
-          onComplete={async (values) => {
-            const newIds = await upsertMediaFolders([
-              {
-                folder_id: null,
-                project_idx: currentProjectId,
-                parent_folder_id: selectedFolder ? selectedFolder.id : null,
-                name: values.name,
-                ordinal: null,
-              } as MediaFolder,
-            ]);
-            if (newIds && newIds.length) {
-              if (selectedFolder && selectedFolder.id) {
-                setCurrentOpenFolders((prev) =>
-                  new Set(prev).add(selectedFolder.folder_id!),
-                );
-              }
-              newlyAddedFolderRef.current = newIds[0];
-            }
-          }}
-        />
-      ),
-    });
+    // setModal2({
+    //   ...modal2,
+    //   open: true,
+    //   showClose: false,
+    //   offClickClose: true,
+    //   width: "w-[300px]",
+    //   maxWidth: "max-w-[400px]",
+    //   aspectRatio: "aspect-[5/2]",
+    //   borderRadius: "rounded-[12px] md:rounded-[15px]",
+    //   content: (
+    //     <Modal2MultiStepModalInput
+    //       steps={steps}
+    //       key={`trigger-${Date.now()}`}
+    //       onComplete={async (values) => {
+    //         const newIds = await upsertMediaFolders([
+    //           {
+    //             folder_id: null,
+    //             project_idx: currentProjectId,
+    //             parent_folder_id: selectedFolder ? selectedFolder.id : null,
+    //             name: values.name,
+    //             ordinal: null,
+    //           } as MediaFolder,
+    //         ]);
+    //         if (newIds && newIds.length) {
+    //           if (selectedFolder && selectedFolder.id) {
+    //             setCurrentOpenFolders((prev) =>
+    //               new Set(prev).add(selectedFolder.folder_id!),
+    //             );
+    //           }
+    //           newlyAddedFolderRef.current = newIds[0];
+    //         }
+    //       }}
+    //     />
+    //   ),
+    // });
   };
 
   const renderFolderIcons = (folder: MediaFolderNode) => {
@@ -286,7 +286,9 @@ export default function MediaFoldersSidebar() {
       >
         <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
           <p
-            onClick={() => setSelectedFolder(null)}
+            onClick={() =>
+              setSelectedFolderForScope("media" as FolderScope, null)
+            }
             className="cursor-pointer hover:opacity-[75%] transition-all duration-300 ease-in-out w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]"
           >
             Media

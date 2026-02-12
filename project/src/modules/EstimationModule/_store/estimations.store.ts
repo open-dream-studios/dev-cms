@@ -67,18 +67,6 @@ export const resetVariableUI = () => {
   });
 };
 
-export const resetEstimationDrag = () => {
-  const { setDraggingFolderId, setDraggingFolderDepth, setEdgeHoverFolderId } =
-    useFoldersCurrentDataStore.getState();
-  setDraggingFolderId(null);
-  setDraggingFolderDepth(null);
-  setEdgeHoverFolderId(null)
-  return useEstimationsUIStore.getState().set({
-    draggingFact: null,
-    draggingProcess: null,
-  });
-};
-
 export const openVariableIfTree = (variable: VariableKey) =>
   useEstimationsUIStore.getState().set({
     editingVariable: variable,

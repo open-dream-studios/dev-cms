@@ -5,7 +5,9 @@ import {
   FolderTreeState,
   ProjectFolderNode,
   ProjectFolderNodeItem,
+  useFoldersCurrentDataStore,
 } from "../_store/folders.store";
+import { DragEndEvent } from "@dnd-kit/core";
 
 export function buildFolderTree(
   folders: ProjectFolder[],
@@ -176,17 +178,14 @@ export function flattenFromNormalizedTree(
   tree: FolderTreeState,
   openSet: Set<string>
 ): FlatNode[] {
-  const acc: FlatNode[] = []
+  const acc: FlatNode[] = [];
 
-  function walk(
-    parentKey: number | "root",
-    depth: number
-  ) {
-    const children = tree.childrenByParent[parentKey]
-    if (!children?.length) return
+  function walk(parentKey: number | "root", depth: number) {
+    const children = tree.childrenByParent[parentKey];
+    if (!children?.length) return;
 
     for (const id of children) {
-      const node = tree.nodesById[id]
+      const node = tree.nodesById[id];
 
       acc.push({
         type: "folder",
@@ -196,18 +195,165 @@ export function flattenFromNormalizedTree(
         parentId: node.parentId,
         node: {
           ...node,
-          children: [], 
-          items: [],    
+          children: [],
+          items: [],
         } as any,
-      })
+      });
 
       if (openSet.has(node.folder_id)) {
-        walk(id, depth + 1)
+        walk(id, depth + 1);
       }
     }
   }
 
-  walk("root", 0)
+  walk("root", 0);
 
-  return acc
+  return acc;
+}
+
+export const closeFolderTreeBranch = (
+  scope: FolderScope,
+  folderNumericId: number
+) =>
+  useFoldersCurrentDataStore.getState().set((state) => {
+    const tree = state.folderTreesByScope[scope];
+    if (!tree) return {};
+    const next = new Set(state.currentOpenFolders);
+    const walk = (parentId: number) => {
+      const children = tree.childrenByParent[parentId];
+      if (!children?.length) return;
+      for (const childId of children) {
+        const childNode = tree.nodesById[childId];
+        next.delete(childNode.folder_id);
+        walk(childId);
+      }
+    };
+    const node = tree.nodesById[folderNumericId];
+    if (!node) return {};
+    next.delete(node.folder_id);
+    walk(folderNumericId);
+    return {
+      currentOpenFolders: next,
+    };
+  });
+
+export function moveFolderLocal(
+  tree: FolderTreeState,
+  folderId: number,
+  newParentId: number | null,
+  newIndex: number
+): FolderTreeState {
+  const parentKeyOld = tree.nodesById[folderId].parentId ?? "root";
+
+  const parentKeyNew = newParentId ?? "root";
+
+  const newTree: FolderTreeState = {
+    nodesById: { ...tree.nodesById },
+    childrenByParent: { ...tree.childrenByParent },
+  };
+
+  // ---- REMOVE FROM OLD PARENT ----
+  const oldChildren = [...newTree.childrenByParent[parentKeyOld]];
+  const filteredOld = oldChildren.filter((id) => id !== folderId);
+
+  newTree.childrenByParent[parentKeyOld] = filteredOld;
+
+  filteredOld.forEach((id, i) => {
+    newTree.nodesById[id] = {
+      ...newTree.nodesById[id],
+      ordinal: i,
+    };
+  });
+
+  // ---- INSERT INTO NEW PARENT ----
+  const targetChildren = [...(newTree.childrenByParent[parentKeyNew] ?? [])];
+
+  const before = targetChildren.slice(0, newIndex);
+  const after = targetChildren.slice(newIndex);
+
+  const updated = [...before, folderId, ...after];
+
+  newTree.childrenByParent[parentKeyNew] = updated;
+
+  updated.forEach((id, i) => {
+    newTree.nodesById[id] = {
+      ...newTree.nodesById[id],
+      ordinal: i,
+      parentId: newParentId,
+    };
+  });
+
+  return newTree;
+}
+
+export function computeDropTarget(
+  e: DragEndEvent,
+  tree: FolderTreeState,
+  edgeHoverFolderId: string | null
+): { newParentId: number | null; newIndex: number } | null {
+  console.log("COMPUTE_DROP_TARGET", {
+    edgeHoverFolderId,
+    over: e.over?.id,
+  });
+
+  const activeData = e.active.data.current;
+  if (activeData?.kind !== "FOLDER") return null;
+
+  const draggedId = activeData.folder.id;
+
+  // ----------------------------------
+  // CASE 1 — DROP ONTO FOLDER (append)
+  // ----------------------------------
+  if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
+    const target = Object.values(tree.nodesById).find(
+      (n) => n.folder_id === edgeHoverFolderId
+    );
+    console.log("case1", target);
+    if (!target) return null;
+    console.log("CASE_1_APPEND", { newParentId: target.id });
+
+    if (target.id === draggedId) return null;
+
+    const siblings = tree.childrenByParent[target.id] ?? [];
+
+    return {
+      newParentId: target.id,
+      newIndex: siblings.length,
+    };
+  }
+
+  // ----------------------------------
+  // CASE 2 — DROP BASED ON FLAT ORDER
+  // ----------------------------------
+
+  const overData = e.over?.data.current;
+  if (!overData || overData.kind !== "FOLDER") return null;
+
+  const overId = overData.folder.id;
+
+  // find flat list order
+  const flat = flattenFromNormalizedTree(
+    tree,
+    useFoldersCurrentDataStore.getState().currentOpenFolders
+  );
+  const overIndex = flat.findIndex(
+    (f) => f.type === "folder" && f.folder_id === overId
+  );
+
+  if (overIndex === -1) return null;
+
+  const overNode = flat[overIndex];
+
+  if (overNode.type !== "folder") return null;
+
+  const newParentId = overNode.parentId ?? null;
+
+  const siblings = tree.childrenByParent[newParentId ?? "root"] ?? [];
+
+  const newIndex = siblings.indexOf(overNode.folder_id);
+
+  return {
+    newParentId,
+    newIndex,
+  };
 }

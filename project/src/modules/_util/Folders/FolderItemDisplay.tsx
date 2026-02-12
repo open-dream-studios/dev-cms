@@ -2,9 +2,14 @@
 "use client";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { ChevronRight, ChevronDown, Folder, GripVertical } from "lucide-react";
-import { ProjectFolderNode, useFoldersCurrentDataStore } from "./_store/folders.store";
+import {
+  ProjectFolderNode,
+  useFoldersCurrentDataStore,
+} from "./_store/folders.store";
+import { FolderScope } from "@open-dream/shared";
 
 export const FolderItemDisplay = ({
+  scope,
   isGhost,
   node,
   name,
@@ -12,6 +17,7 @@ export const FolderItemDisplay = ({
   listeners,
   outline,
 }: {
+  scope: FolderScope;
   isGhost: boolean;
   node: ProjectFolderNode | null;
   name: string;
@@ -21,34 +27,28 @@ export const FolderItemDisplay = ({
 }) => {
   const currentTheme = useCurrentTheme();
   const {
-    selectedFolder,
+    selectedFoldersByScope,
     currentOpenFolders,
     setFolderPXFromTop,
     draggingFolderDepth,
   } = useFoldersCurrentDataStore();
 
-  const alteredDepth = isGhost
-    ? Math.max((draggingFolderDepth ?? 0) - 1, 0)
-    : Math.max((depth ?? 0) - 1, 0);
-
-  const isRoot = !isGhost && depth === 0;
+  const folderIndent = isGhost ? (draggingFolderDepth ?? 0) : (depth ?? 0);
   const nodeId = node ? node.id : null;
-  const nodeFolderId = node ? node.folder_id : null
+  const nodeFolderId = node ? node.folder_id : null;
   const isOpen = nodeFolderId && currentOpenFolders.has(nodeFolderId);
+  const selected = node ? selectedFoldersByScope[scope] : null;
 
   return (
     <div
       className="flex h-[34px] items-center gap-2 px-2 rounded-[5px] hover:brightness-90 dim"
       style={{
-        width: `calc(100% - ${alteredDepth} * 10px)`,
-        marginLeft: `calc(${alteredDepth} * 10px)`,
+        width: `calc(100% - ${folderIndent} * 10px)`,
+        marginLeft: `calc(${folderIndent} * 10px)`,
         outline: outline ? `1px solid ${currentTheme.text_4}` : undefined,
-        display: isRoot ? "none" : "flex",
-        marginTop: isRoot ? -30 : 0,
-        marginBottom: isRoot ? 30 : 0,
         cursor: isGhost ? "grab" : "pointer",
         backgroundColor:
-          nodeId && selectedFolder && selectedFolder.id === nodeId
+          nodeId && selected && selected.id === nodeId
             ? currentTheme.background_2_2
             : currentTheme.background_2_dim,
       }}
@@ -73,7 +73,7 @@ export const FolderItemDisplay = ({
       </div>
 
       <Folder size={16} className="mt-[1px]" />
-      <span className="truncate select-none">{name}</span>
+      <span className="truncate select-none">{name} - {node?.ordinal ?? ""}</span>
     </div>
   );
 };

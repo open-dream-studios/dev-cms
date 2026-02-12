@@ -24,7 +24,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { createFolderContextMenu } from "./_actions/media.actions";
 import { useMediaModuleUIStore } from "./_store/media.store";
-import { useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
+import { setSelectedFolderForScope, useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
 
 type FolderItemProps = {
   folder: MediaFolder & { children?: MediaFolder[] };
@@ -46,7 +46,7 @@ export default function FolderItem({
   const inputRef = useRef<HTMLInputElement>(null);
   const { openContextMenu } = useContextMenuStore();
   const { renamingFolder, setRenamingFolder } = useMediaModuleUIStore();
-  const { currentOpenFolders, selectedFolder, setSelectedFolder } =
+  const { currentOpenFolders } =
     useFoldersCurrentDataStore();
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function FolderItem({
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
     clickTimeout.current = setTimeout(() => {
       if (folder && folder.id) {
-        setSelectedFolder({
+        setSelectedFolderForScope("media" as FolderScope, {
           id: folder.id,
           folder_id: folder.folder_id,
           scope: "media" as FolderScope,
@@ -150,14 +150,14 @@ export default function FolderItem({
             menu: createFolderContextMenu(),
           });
         }}
-        animate={{
-          backgroundColor:
-            hovered || isDraggedOver
-              ? currentTheme.background_2
-              : selectedFolder && selectedFolder.id === folder.id
-                ? currentTheme.background_2
-                : currentTheme.background_1,
-        }}
+        // animate={{
+        //   backgroundColor:
+        //     hovered || isDraggedOver
+        //       ? currentTheme.background_2
+        //       : selectedFolder && selectedFolder.id === folder.id
+        //         ? currentTheme.background_2
+        //         : currentTheme.background_1,
+        // }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <span className="cursor-grab active:cursor-grabbing" {...listeners}>

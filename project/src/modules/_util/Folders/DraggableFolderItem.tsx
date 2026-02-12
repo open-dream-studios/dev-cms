@@ -12,7 +12,11 @@ import {
 } from "@/modules/_util/Folders/_actions/folders.actions";
 import { FolderItemDisplay } from "./FolderItemDisplay";
 import { useProjectFolderHooks } from "@/modules/_util/Folders/_hooks/folders.hooks";
-import { FlatNode, useFoldersCurrentDataStore } from "./_store/folders.store";
+import {
+  FlatNode,
+  setSelectedFolderForScope,
+  useFoldersCurrentDataStore,
+} from "./_store/folders.store";
 
 const DraggableFolderItem = ({
   flat,
@@ -22,14 +26,13 @@ const DraggableFolderItem = ({
   scope: FolderScope;
 }) => {
   const { openContextMenu } = useContextMenuStore();
-  const { setSelectedFolder } = useFoldersCurrentDataStore();
   const { handleEditFolder } = useProjectFolderHooks(scope);
   const { folderPXFromTop, edgeHoverFolderId, setEdgeHoverFolderId } =
     useFoldersCurrentDataStore();
   const { active } = useDndContext();
   const [isEdgeHover, setIsEdgeHover] = useState(false);
 
-  // White Edge 
+  // White Edge
   useEffect(() => {
     if (!active || active.data.current?.kind !== "FOLDER") return;
     const activeFolderId = active.data.current.folder.folder_id;
@@ -131,7 +134,7 @@ const DraggableFolderItem = ({
         {...attributes}
         className="w-[100%] h-auto rounded-[5px] "
         onClick={() => {
-          setSelectedFolder({
+          setSelectedFolderForScope(scope, {
             scope,
             folder_id: node.folder_id,
             id: node.id,
@@ -148,16 +151,16 @@ const DraggableFolderItem = ({
         }}
       >
         <FolderItemDisplay
+          scope={scope}
           isGhost={false}
           node={node}
           name={node.name}
           depth={depth}
           listeners={listeners}
           outline={
-            ((active?.data.current?.kind === "FOLDER" && isEdgeHover) ||
-              (active?.data.current?.kind?.startsWith("FOLDER-ITEM") &&
-                edgeHoverFolderId === node.folder_id)) &&
-            depth !== 0
+            (active?.data.current?.kind === "FOLDER" && isEdgeHover) ||
+            (active?.data.current?.kind?.startsWith("FOLDER-ITEM") &&
+              edgeHoverFolderId === node.folder_id)
           }
         />
       </div>
