@@ -276,6 +276,7 @@ const EstimationAdmin = () => {
       <DndContext
         sensors={activePemdas.sensors}
         onDragStart={(e) => {
+          resetEstimationDrag()
           const evt = e.activatorEvent as PointerEvent;
           dragStartPointerRef.current = {
             x: evt.clientX,
@@ -377,7 +378,7 @@ const EstimationAdmin = () => {
                   setRunInputsOpen(true);
                 }}
                 style={{ backgroundColor: currentTheme.background_2_dim }}
-                className="z-500 absolute right-[25px] top-[25px] rounded-[9px] px-[20px] py-[9px] cursor-pointer hover:brightness-95 dim"
+                className="select-none z-500 absolute right-[25px] top-[25px] rounded-[9px] px-[20px] py-[9px] cursor-pointer hover:brightness-95 dim"
               >
                 <p className="text-[14px] leading-[16px] opacity-70">
                   + Estimation Run
@@ -495,11 +496,10 @@ const EstimationAdmin = () => {
           {draggingFolder && (
             <FolderItemDisplay
               isGhost={true}
-              nodeId={null}
+              node={null}
               name={draggingFolder.name}
               depth={0}
               listeners={null}
-              isOpen={false}
               outline={false}
             />
           )}

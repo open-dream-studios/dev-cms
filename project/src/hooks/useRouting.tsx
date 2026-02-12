@@ -6,7 +6,6 @@ import { useUiStore } from "@/store/useUIStore";
 import { Screen } from "@open-dream/shared";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import {
-  setCurrentActiveFolder,
   setCurrentEmployeeData,
   setCurrentPageData,
   setCurrentProductData,
@@ -19,6 +18,7 @@ import {
   onProductFormSubmit,
   saveProducts,
 } from "@/modules/CustomerProducts/_actions/products.actions";
+import { useFoldersCurrentDataStore } from "@/modules/_util/Folders/_store/folders.store";
 
 interface ScreenHistoryItem {
   screen: Screen;
@@ -54,6 +54,7 @@ export function useRouting() {
   const { screen, setScreen, setAddingCustomer, setEditingProducts } =
     useUiStore();
   const { setSelectedProducts } = useCurrentDataStore();
+  const { setSelectedFolder } = useFoldersCurrentDataStore()
 
   const { getForm } = useFormInstanceStore();
   const productForm = getForm("product");
@@ -109,7 +110,7 @@ export function useRouting() {
       setCurrentProductData(null);
     }
     if (newScreen === "media" && screen === "media") {
-      setCurrentActiveFolder(null);
+      setSelectedFolder(null);
     }
     if (newScreen === "employees" && screen === "employees") {
       setCurrentEmployeeData(null);

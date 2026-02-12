@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useEffect, useRef, useState } from "react";
 import { useContextMenuStore } from "@/store/util/contextMenuStore";
-import { EstimationFactDefinition, FolderScope } from "@open-dream/shared";
+import { FolderScope } from "@open-dream/shared";
 import { useDndContext } from "@dnd-kit/core";
 import {
   createFolderContextMenu,
@@ -12,29 +12,24 @@ import {
 } from "@/modules/_util/Folders/_actions/folders.actions";
 import { FolderItemDisplay } from "./FolderItemDisplay";
 import { useProjectFolderHooks } from "@/modules/_util/Folders/_hooks/folders.hooks";
-import {
-  FlatFolderNode,
-  useFoldersCurrentDataStore,
-} from "./_store/folders.store";
-import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
-import ProcessDraggableItem from "@/modules/EstimationModule/components/ProcessDraggableItem";
-import VariableDraggableItem from "@/modules/EstimationModule/components/VariableDraggableItem";
+import { FlatNode, useFoldersCurrentDataStore } from "./_store/folders.store";
 
 const DraggableFolderItem = ({
   flat,
   scope,
 }: {
-  flat: FlatFolderNode;
+  flat: Extract<FlatNode, { type: "folder" }>;
   scope: FolderScope;
 }) => {
   const { openContextMenu } = useContextMenuStore();
   const { setSelectedFolder } = useFoldersCurrentDataStore();
   const { handleEditFolder } = useProjectFolderHooks(scope);
-  const { folderPXFromTop, setEdgeHoverFolderId } =
+  const { folderPXFromTop, edgeHoverFolderId, setEdgeHoverFolderId } =
     useFoldersCurrentDataStore();
   const { active } = useDndContext();
   const [isEdgeHover, setIsEdgeHover] = useState(false);
 
+  // White Edge 
   useEffect(() => {
     if (!active || active.data.current?.kind !== "FOLDER") return;
     const activeFolderId = active.data.current.folder.folder_id;
@@ -62,16 +57,12 @@ const DraggableFolderItem = ({
     if (el) refRect.current = el.getBoundingClientRect();
   };
 
-  const isDraggingOverFolder =
-    active?.data.current?.kind.startsWith("FOLDER-ITEM") ||
-    active?.data.current?.kind === "FOLDER";
-
+  // FOLDERS
   useEffect(() => {
     if (!active || active.data.current?.kind !== "FOLDER") {
       setIsEdgeHover(false);
       return;
     }
-
     const handleMove = (e: PointerEvent) => {
       if (!refRect.current) return;
       const { top, bottom } = refRect.current;
@@ -79,7 +70,6 @@ const DraggableFolderItem = ({
       const adjustedY = e.clientY - folderPXFromTop;
       const nearTop = Math.abs(adjustedY - top) <= EDGE;
       const nearBottom = Math.abs(adjustedY - bottom) <= EDGE;
-
       setIsEdgeHover(nearTop || nearBottom);
     };
 
@@ -87,12 +77,49 @@ const DraggableFolderItem = ({
     return () => window.removeEventListener("pointermove", handleMove);
   }, [active, folderPXFromTop]);
 
+  // ITEMS
+  // useEffect(() => {
+  //   if (!active) {
+  //     setEdgeHoverFolderId(null);
+  //     return;
+  //   }
+
+  //   const kind = active.data.current?.kind;
+  //   const isItem =
+  //     kind === "FOLDER-ITEM-FACT" || kind === "FOLDER-ITEM-PROCESS";
+
+  //   if (!isItem) {
+  //     setEdgeHoverFolderId(null);
+  //     return;
+  //   }
+
+  //   const handleMove = (e: PointerEvent) => {
+  //     if (!refRect.current) return;
+  //     const { top, bottom } = refRect.current;
+  //     const pointerY = e.clientY;
+  //     if (pointerY >= top && pointerY <= bottom) {
+  //       setEdgeHoverFolderId(node.folder_id);
+  //     } else if (edgeHoverFolderId === node.folder_id) {
+  //       // clear highlight when leaving folder
+  //       setEdgeHoverFolderId(null);
+  //     }
+  //   };
+
+  //   window.addEventListener("pointermove", handleMove);
+  //   return () => {
+  //     window.removeEventListener("pointermove", handleMove);
+  //     if (edgeHoverFolderId === node.folder_id) {
+  //       setEdgeHoverFolderId(null);
+  //     }
+  //   };
+  // }, [active, node.folder_id, edgeHoverFolderId]);
+
   return (
     <div
       data-draggable
       data-folder-item
       ref={setRefs}
-      className="mb-[4px] w-[100%]"
+      className={`mb-[4px] w-[100%]`}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -100,10 +127,9 @@ const DraggableFolderItem = ({
         pointerEvents: isDragging ? "none" : "auto",
       }}
     >
-      {/* Folder Row */}
       <div
         {...attributes}
-        className="w-[100%] h-auto rounded-[5px]"
+        className="w-[100%] h-auto rounded-[5px] "
         onClick={() => {
           setSelectedFolder({
             scope,
@@ -123,34 +149,18 @@ const DraggableFolderItem = ({
       >
         <FolderItemDisplay
           isGhost={false}
-          nodeId={node.id}
+          node={node}
           name={node.name}
           depth={depth}
           listeners={listeners}
-          isOpen={false}
-          outline={isEdgeHover && isDraggingOverFolder && depth !== 0}
+          outline={
+            ((active?.data.current?.kind === "FOLDER" && isEdgeHover) ||
+              (active?.data.current?.kind?.startsWith("FOLDER-ITEM") &&
+                edgeHoverFolderId === node.folder_id)) &&
+            depth !== 0
+          }
         />
       </div>
-
-      {/* Items UNDER folder */}
-      {node.items.map((item, index) => (
-        <div
-          key={item.id}
-          style={{
-            marginLeft: `${(depth + 1) * 10}px`,
-          }}
-        >
-          {scope === "estimation_fact_definition" && (
-            <VariableDraggableItem fact={item as EstimationFactDefinition} />
-          )}
-          {scope === "estimation_process" && (
-            <ProcessDraggableItem
-              estimationProcess={item as EstimationProcess}
-              index={index}
-            />
-          )}
-        </div>
-      ))}
     </div>
   );
 };

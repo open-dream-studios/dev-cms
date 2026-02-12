@@ -2,35 +2,39 @@
 "use client";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { ChevronRight, ChevronDown, Folder, GripVertical } from "lucide-react";
-import { useFoldersCurrentDataStore } from "./_store/folders.store";
+import { ProjectFolderNode, useFoldersCurrentDataStore } from "./_store/folders.store";
 
 export const FolderItemDisplay = ({
   isGhost,
-  nodeId,
+  node,
   name,
   depth,
   listeners,
-  isOpen,
-  outline, 
+  outline,
 }: {
   isGhost: boolean;
-  nodeId: number | null;
+  node: ProjectFolderNode | null;
   name: string;
   depth: number;
   listeners: any | null;
-  isOpen: boolean;
-  outline: boolean; 
+  outline: boolean;
 }) => {
   const currentTheme = useCurrentTheme();
-  const { selectedFolder } = useFoldersCurrentDataStore();
-  const { setFolderPXFromTop, draggingFolderDepth } =
-    useFoldersCurrentDataStore();
+  const {
+    selectedFolder,
+    currentOpenFolders,
+    setFolderPXFromTop,
+    draggingFolderDepth,
+  } = useFoldersCurrentDataStore();
 
   const alteredDepth = isGhost
     ? Math.max((draggingFolderDepth ?? 0) - 1, 0)
     : Math.max((depth ?? 0) - 1, 0);
 
-  const isRoot =  !isGhost && depth === 0
+  const isRoot = !isGhost && depth === 0;
+  const nodeId = node ? node.id : null;
+  const nodeFolderId = node ? node.folder_id : null
+  const isOpen = nodeFolderId && currentOpenFolders.has(nodeFolderId);
 
   return (
     <div

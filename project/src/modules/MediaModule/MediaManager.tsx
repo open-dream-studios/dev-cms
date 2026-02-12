@@ -7,14 +7,16 @@ import MediaGrid from "./MediaGrid";
 import MediaToolbar from "./MediaToolbar";
 import { Media, MediaFolder } from "@open-dream/shared";
 import { collectParentIds } from "@/util/functions/Tree";
-import { setCurrentMediaItemsSelected, setCurrentOpenFolders, useCurrentDataStore } from "@/store/currentDataStore";
+import {
+  setCurrentMediaItemsSelected,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
+import { useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
 
 const MediaManager = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-  const {
-    currentActiveFolder,
-  } = useCurrentDataStore();
+  const { selectedFolder } = useFoldersCurrentDataStore();
 
   const { media, mediaFolders } = useContextQueries();
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -22,22 +24,22 @@ const MediaManager = () => {
 
   function openAllParents(folder: MediaFolder) {
     const parentIds = collectParentIds(folder, mediaFolders);
-    setCurrentOpenFolders((prev) => {
-      const next = new Set(prev);
-      parentIds.forEach((id) => next.add(id));
-      return next;
-    });
+    // setCurrentOpenFolders((prev) => {
+    //   const next = new Set(prev);
+    //   parentIds.forEach((id) => next.add(id));
+    //   return next;
+    // });
   }
 
   useEffect(() => {
     setCurrentMediaItemsSelected([]);
-  }, [currentActiveFolder]);
+  }, [selectedFolder]);
 
   const filteredMedia: Media[] = useMemo(() => {
-    return currentActiveFolder
-      ? media.filter((m: Media) => m.folder_id === currentActiveFolder.id)
+    return selectedFolder
+      ? media.filter((m: Media) => m.folder_id === selectedFolder.id)
       : media.filter((m: Media) => m.folder_id === null);
-  }, [media, currentActiveFolder]);
+  }, [media, selectedFolder]);
 
   if (!currentUser || !currentProjectId) return null;
 

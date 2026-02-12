@@ -197,7 +197,6 @@ export function useFolderDndHandlers() {
       descendantIds.forEach((id) => next.delete(id));
       return { currentOpenFolders: next };
     });
-    setEdgeHoverFolderId(null);
   };
 
   const onDragEnd = async (e: DragEndEvent) => {
@@ -209,20 +208,31 @@ export function useFolderDndHandlers() {
 
     // --------------------------------------------
     // CASE 1 — dropped ONTO folder (white border)
-    // --------------------------------------------
-
+    // -------------------------------------------- 
     if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
       const flat = flatFolderTreeRef.current;
       if (!flat) return;
 
+      // const targetFlat = flat.find(
+      //   (f) => String(f.node.folder_id) === String(edgeHoverFolderId),
+      // );
       const targetFlat = flat.find(
-        (f) => String(f.node.folder_id) === String(edgeHoverFolderId),
+        (f): f is Extract<typeof f, { type: "folder" }> =>
+          f.type === "folder" &&
+          String(f.node.folder_id) === String(edgeHoverFolderId),
       );
 
       if (!targetFlat) return;
 
       const newParentId = targetFlat.node.id === -1 ? null : targetFlat.node.id;
-      // prevent no-op (same parent, append case)
+
+      // prevent self-parent
+      if (newParentId === dragged.id) {
+        setEdgeHoverFolderId(null);
+        return;
+      }
+
+      // prevent no-op (same parent)
       if (newParentId === (dragged.parent_folder_id ?? null)) {
         setEdgeHoverFolderId(null);
         return;
@@ -239,9 +249,10 @@ export function useFolderDndHandlers() {
         edgeHoverFolderId: null,
       });
 
-      const reordered = flat.filter(
-        (f) => f.node.folder_id !== dragged.folder_id,
-      );
+      const reordered = flat.filter((f) => {
+        if (f.type !== "folder") return true;
+        return f.node.folder_id !== dragged.folder_id;
+      });
       setFlatTreeForScope(folderScope, reordered);
 
       moveProjectFolder({
@@ -280,7 +291,10 @@ export function useFolderDndHandlers() {
     if (newIndex === -1) return;
 
     // folder visually ABOVE dragged item in the UI
-    const folderAbove = reordered[newIndex - 1] ?? null;
+    // const folderAbove = reordered[newIndex - 1] ?? null;
+    const folderAboveRaw = reordered[newIndex - 1] ?? null;
+    if (!folderAboveRaw || folderAboveRaw.type !== "folder") return;
+    const folderAbove = folderAboveRaw;
 
     const aboveFolderId = folderAbove?.node.folder_id ?? null;
     const aboveId = folderAbove?.node.id ?? null;
@@ -329,11 +343,15 @@ export function useFolderDndHandlers() {
       parent_folder_id: newParentId,
       ordinal: newOrdinal,
     } as FolderInput);
+    setEdgeHoverFolderId(null);
+    setDraggingFolderId(null);
+    setDraggingFolderDepth(null);
   };
 
   const onDragCancel = () => {
     setEdgeHoverFolderId(null);
     setDraggingFolderId(null);
+    setDraggingFolderDepth(null);
   };
 
   return {

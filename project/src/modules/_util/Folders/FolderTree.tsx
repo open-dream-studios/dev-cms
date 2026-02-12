@@ -1,65 +1,87 @@
 // project/src/modules/_util/Folders/FolderTree.tsx
 "use client";
 import { AuthContext } from "@/contexts/authContext";
-import { useEstimationProcesses } from "@/contexts/queryContext/queries/estimations/process/estimationProcess";
 import { useProjectFolders } from "@/contexts/queryContext/queries/projectFolders";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import {
-  buildFolderTree,
-  flattenFolderTree,
+  buildNormalizedTree,
+  flattenFromNormalizedTree,
 } from "@/modules/_util/Folders/_helpers/folders.helpers";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { FolderScope } from "@open-dream/shared";
+import { EstimationFactDefinition, FolderScope } from "@open-dream/shared";
 import React, { useContext, useEffect, useMemo, useRef } from "react";
 import {
-  setFlatTreeForScope,
+  setFolderTreeByScope,
+  setSelectedFolderForScope,
   useFoldersCurrentDataStore,
 } from "./_store/folders.store";
 import DraggableFolderItem from "@/modules/_util/Folders/DraggableFolderItem";
+import VariableDraggableItem from "@/modules/EstimationModule/components/VariableDraggableItem";
+import ProcessDraggableItem from "@/modules/EstimationModule/components/ProcessDraggableItem";
+import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
 
 const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
-  const {
-    currentOpenFolders,
-    setSelectedFolder,
-    flatFolderTreeRef,
-    flatTreesByScope,
-  } = useFoldersCurrentDataStore();
 
   const { projectFolders } = useProjectFolders(
     !!currentUser,
     currentProjectId!,
     { scope: folderScope, process_id: currentProcessId },
   );
+  // const { estimationProcesses } = useEstimationProcesses(
+  //   !!currentUser,
+  //   currentProjectId,
+  // );
 
-  const { estimationProcesses } = useEstimationProcesses(
-    !!currentUser,
-    currentProjectId,
-  );
-
-  const computedFlat = useMemo(() => {
-    const tree = buildFolderTree(
-      projectFolders,
-      estimationProcesses,
-      folderScope,
-    );
-    return flattenFolderTree(tree, currentOpenFolders);
-  }, [projectFolders, estimationProcesses, folderScope, currentOpenFolders]);
-
-  const flat = flatTreesByScope[folderScope] ?? computedFlat;
+  // NEW ATTEMPT
+  const { folderTreesByScope, currentOpenFolders } =
+    useFoldersCurrentDataStore();
 
   useEffect(() => {
-    flatFolderTreeRef.current = flat;
-  }, [flat]);
+    const treeState = buildNormalizedTree(projectFolders);
+    setFolderTreeByScope(folderScope, treeState);
+  }, [folderScope, projectFolders]);
 
-  useEffect(() => {
-    setFlatTreeForScope(folderScope, computedFlat);
-  }, [computedFlat, folderScope]);
+  const tree = folderTreesByScope[folderScope];
+
+  const flat = useMemo(() => {
+    if (!tree) return [];
+    return flattenFromNormalizedTree(tree, currentOpenFolders);
+  }, [tree, currentOpenFolders]);
+
+  // const { setSelectedFolder, flatFolderTreeRef, flatTreesByScope } =
+  //   useFoldersCurrentDataStore();
+  // const computedFlat = useMemo(() => {
+  //   const tree = buildFolderTree(
+  //     projectFolders,
+  //     estimationProcesses,
+  //     folderScope,
+  //   );
+  //   return flattenFolderTree(tree, currentOpenFolders);
+  // }, [projectFolders, estimationProcesses, folderScope, currentOpenFolders]);
+
+  // const flat = flatTreesByScope[folderScope] ?? computedFlat;
+
+  // useEffect(() => {
+  //   flatFolderTreeRef.current = flat;
+  // }, [flat]);
+
+  // useEffect(() => {
+  //   const current = flatTreesByScope[folderScope];
+  //   if (
+  //     current &&
+  //     current.length === computedFlat.length &&
+  //     current.every((f, i) => f.id === computedFlat[i].id)
+  //   ) {
+  //     return;
+  //   }
+  //   setFlatTreeForScope(folderScope, computedFlat);
+  // }, [computedFlat, folderScope]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   useOutsideClick(containerRef, (e: React.PointerEvent) => {
@@ -71,18 +93,41 @@ const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
     ) {
       return;
     }
-    setSelectedFolder(null);
+    setSelectedFolderForScope(folderScope, null);
   });
 
   return (
     <div ref={containerRef} className="px-[4px] flex-1 overflow-y-auto w-full">
       <SortableContext
-        items={flat.map((f) => f.id)}
+        items={flat.filter((f) => f.type === "folder").map((f) => f.id)}
         strategy={verticalListSortingStrategy}
       >
-        {flat.map((f) => (
-          <DraggableFolderItem key={f.id} flat={f} scope={folderScope} />
-        ))}
+        {flat.map((f, index) => {
+          if (f.type === "folder") {
+            return (
+              <DraggableFolderItem key={f.id} flat={f} scope={folderScope} />
+            );
+          }
+
+          return (
+            <div
+              key={f.id}
+              style={{ marginLeft: `${Math.max(f.depth - 1, 0) * 10}px` }}
+            >
+              {folderScope === "estimation_fact_definition" && (
+                <VariableDraggableItem
+                  fact={f.item as EstimationFactDefinition}
+                />
+              )}
+              {folderScope === "estimation_process" && (
+                <ProcessDraggableItem
+                  index={index}
+                  estimationProcess={f.item as EstimationProcess}
+                />
+              )}
+            </div>
+          );
+        })}
       </SortableContext>
     </div>
   );

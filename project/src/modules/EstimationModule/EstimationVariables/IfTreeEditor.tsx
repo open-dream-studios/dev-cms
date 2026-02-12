@@ -14,7 +14,6 @@ import {
   EditorMode,
   Value,
 } from "./types";
-import { VariableDisplayItem } from "../components/VariableDraggableItem";
 import { BsArrowRight } from "react-icons/bs";
 import { nodeColors } from "../EstimationPEMDAS/_constants/pemdas.constants";
 import {
@@ -42,6 +41,7 @@ import {
   compileIfTree,
 } from "./_helpers/compilerTrees.helpers";
 import { rebuildIfTree } from "./_helpers/rebuildTree.helpers";
+import VariableDisplay from "../components/VariableDisplay";
 
 function AdjustmentBranchEditor({
   branch,
@@ -1277,7 +1277,7 @@ export default function IfTreeEditor() {
         />
       </div>
       {editingVariable && (
-        <VariableDisplayItem
+        <VariableDisplay
           fact_key={editingVariable.var_key}
           fact_type={"number"}
           variable_scope={editingVariable.var_type}
