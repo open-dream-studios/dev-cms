@@ -1,6 +1,11 @@
 // project/src/modules/EstimationModule/EstimationsAdmin.tsx
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { closestCenter, DndContext, DragOverlay, useDroppable } from "@dnd-kit/core";
+import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
+  useDroppable,
+} from "@dnd-kit/core";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { HomeLayout } from "@/layouts/homeLayout";
@@ -275,14 +280,60 @@ const EstimationAdmin = () => {
 
       <DndContext
         sensors={activePemdas.sensors}
+        // collisionDetection={(args) => {
+        //   const filtered = {
+        //     ...args,
+        //     droppableContainers: args.droppableContainers.filter(
+        //       (container) => container.data.current?.kind === "FOLDER",
+        //     ),
+        //   };
+        //   return closestCenter(filtered);
+        // }}
         collisionDetection={(args) => {
-          const filtered = {
-            ...args,
-            droppableContainers: args.droppableContainers.filter(
-              (container) => container.data.current?.kind === "FOLDER",
-            ),
-          };
-          return closestCenter(filtered);
+          const { droppableContainers, pointerCoordinates } = args;
+
+          if (!pointerCoordinates) return [];
+
+          const folders = droppableContainers.filter(
+            (c) => c.data.current?.kind === "FOLDER",
+          );
+
+          if (!folders.length) return [];
+          const insideFolder = folders.filter((c) => {
+            const rect = c.rect.current;
+            if (!rect) return false;
+            return (
+              pointerCoordinates.y >= rect.top &&
+              pointerCoordinates.y <= rect.bottom
+            );
+          });
+
+          if (insideFolder.length) {
+            return closestCenter({
+              ...args,
+              droppableContainers: insideFolder,
+            });
+          }
+
+          // Otherwise: lock to folder ABOVE pointer (never switch halfway)
+          const sorted = folders
+            .map((c) => ({
+              id: c.id,
+              rect: c.rect.current!,
+            }))
+            .sort((a, b) => a.rect.top - b.rect.top);
+
+          let target = sorted[0];
+
+          for (let i = 0; i < sorted.length; i++) {
+            if (pointerCoordinates.y < sorted[i].rect.top) {
+              target = sorted[Math.max(0, i - 1)];
+              break;
+            }
+            target = sorted[i];
+          }
+
+          return target ? [{ id: target.id }] : [];
         }}
         onDragStart={(e) => {
           resetDragUI();

@@ -94,16 +94,6 @@ export function useSyncFolderTree(scope: FolderScope) {
   }, [projectFolders, treeItems, draggingFolderId, scope]);
 }
 
-// const isBlocked = draggingFolderId || folderMoveBlockRef.current > 0;
-// if (isBlocked) {
-//   setPendingServerSnapshot(newFolders);
-// } else {
-//   console.log(treeItems);
-//   const tree = buildNormalizedTree(newFolders, treeItems);
-//   setFolderTreeByScope(params.scope, tree);
-//   setPendingServerSnapshot(null);
-// }
-
 export function useProjectFolderHooks(scope: FolderScope) {
   const { currentUser } = useContext(AuthContext);
   const { modal2, setModal2 } = useUiStore();
@@ -288,9 +278,7 @@ export function useFolderDndHandlers() {
       // --------------------------------------------
       // CASE 1 — dropped ONTO folder (append)
       // --------------------------------------------
-      // if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
       const dropTargetId = edgeHoverFolderRef.current;
-      console.log(dropTargetId)
 
       if (dropTargetId && dropTargetId !== "__root__") {
         returnObject.case = 1;
@@ -357,42 +345,6 @@ export function useFolderDndHandlers() {
 
       if (!overId) return { ...returnObject, message: "overId was null" };
 
-      // const oldIndex = flat.findIndex((f) => f.id === activeId);
-      // const overIndex = flat.findIndex((f: any) => f.id === overId);
-
-      // if (oldIndex === -1 || overIndex === -1)
-      //   return {
-      //     ...returnObject,
-      //     message: "oldIndex === -1 || overIndex === -1",
-      //   };
-
-      // const reordered = arrayMove(flat, oldIndex, overIndex);
-      // const newIndexInUI = reordered.findIndex((f: any) => f.id === activeId);
-      // if (newIndexInUI === -1)
-      //   return { ...returnObject, message: "newIndexInUI === -1" };
-
-      // const folderAboveRaw =
-      //   newIndexInUI === 0 ? null : reordered[newIndexInUI - 1];
-
-      // const folderFlat = flat.filter(
-      //   (f): f is Extract<typeof f, { type: "folder" }> => f.type === "folder",
-      // );
-
-      // const oldIndex = folderFlat.findIndex((f) => f.id === activeId);
-      // const overIndex = folderFlat.findIndex((f) => f.id === overId);
-
-      // if (oldIndex === -1 || overIndex === -1)
-      //   return {
-      //     ...returnObject,
-      //     message: "oldIndex === -1 || overIndex === -1",
-      //   };
-
-      // const reordered = arrayMove(folderFlat, oldIndex, overIndex);
-      // const newIndexInUI = reordered.findIndex((f) => f.id === activeId);
-
-      // if (newIndexInUI === -1)
-      //   return { ...returnObject, message: "newIndexInUI === -1" };
-
       const oldIndex = flat.findIndex((f) => f.id === activeId);
       const overIndex = flat.findIndex((f) => f.id === overId);
 
@@ -407,9 +359,6 @@ export function useFolderDndHandlers() {
 
       if (newIndexInUI === -1)
         return { ...returnObject, message: "newIndexInUI === -1" };
-
-      // const folderAboveRaw =
-      //   newIndexInUI === 0 ? null : reordered[newIndexInUI - 1];
 
       let folderAboveRaw: Extract<
         (typeof flat)[number],
