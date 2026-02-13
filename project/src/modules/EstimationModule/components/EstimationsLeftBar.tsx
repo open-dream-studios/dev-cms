@@ -118,7 +118,7 @@ export default function EstimationsLeftBar() {
 
               <div
                 data-leftbar-button
-                onClick={handleAddEstimationProcess}
+                onClick={() => handleAddEstimationProcess(folderScope)}
                 className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
                 style={{
                   backgroundColor: currentTheme.background_1_3,
@@ -221,7 +221,7 @@ export default function EstimationsLeftBar() {
 
                 <div
                   data-leftbar-button
-                  onClick={handleAddEstimationVariable}
+                  onClick={() => handleAddEstimationVariable(folderScope)}
                   className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
                   style={{
                     backgroundColor: currentTheme.background_1_3,

@@ -7,12 +7,7 @@ import {
   moveProjectFolderApi,
 } from "@/api/projectFolders.api";
 import type { FolderInput, FolderScope } from "@open-dream/shared";
-import {
-  setFolderTreeByScope,
-  useFoldersCurrentDataStore,
-} from "@/modules/_util/Folders/_store/folders.store";
-import { buildNormalizedTree } from "@/modules/_util/Folders/_helpers/folders.helpers";
-import { useRef } from "react";
+import { folderMoveBlockRef } from "@/modules/_util/Folders/_store/folders.store";
 
 export function useProjectFolders(
   isLoggedIn: boolean,
@@ -23,13 +18,6 @@ export function useProjectFolders(
   }
 ) {
   const qc = useQueryClient();
-  const {
-    movePending,
-    setMovePending,
-    draggingFolderId,
-    setPendingServerSnapshot,
-  } = useFoldersCurrentDataStore();
-  const movePendingRef = useRef<number>(0);
 
   // ---------- FETCH ----------
   const { data: projectFolders = [], isLoading } = useQuery({
@@ -39,25 +27,15 @@ export function useProjectFolders(
       params.scope,
       params.process_id ?? null,
     ],
-    queryFn: async () => {
-      const newFolders = await fetchProjectFoldersApi(currentProjectId!, {
+    queryFn: async () =>
+      fetchProjectFoldersApi(currentProjectId!, {
         scope: params.scope,
         process_id: params.process_id ?? null,
-      }); 
-      const isBlocked = draggingFolderId || movePendingRef.current > 0;
-      if (isBlocked) {
-        setPendingServerSnapshot(newFolders);
-      } else {
-        const tree = buildNormalizedTree(newFolders);
-        setFolderTreeByScope(params.scope, tree);
-        setPendingServerSnapshot(null);
-      }
-      return newFolders;
-    },
+      }),
     enabled: isLoggedIn && !!currentProjectId,
   });
 
-  // ---------- UPSERT ---------- 
+  // ---------- UPSERT ----------
   const upsertFoldersMutation = useMutation({
     mutationFn: (folders: FolderInput[]) =>
       upsertProjectFoldersApi(currentProjectId!, folders),
@@ -90,19 +68,16 @@ export function useProjectFolders(
   // ---------- MOVE ----------
   const moveProjectFolderMutation = useMutation({
     mutationFn: (folder: FolderInput) => {
-      movePendingRef.current += 1;
-      setMovePending(movePending + 1);
+      folderMoveBlockRef.current += 1;
       return moveProjectFolderApi(currentProjectId!, folder);
     },
 
     onSettled: () => {
-      movePendingRef.current -= 1;
-      setMovePending(movePending - 1);
+      folderMoveBlockRef.current -= 1;
 
       // only mark false when truly zero
-      if (movePendingRef.current <= 0) {
-        movePendingRef.current = 0;
-        setMovePending(0);
+      if (folderMoveBlockRef.current <= 0) {
+        folderMoveBlockRef.current = 0;
       }
 
       qc.invalidateQueries({

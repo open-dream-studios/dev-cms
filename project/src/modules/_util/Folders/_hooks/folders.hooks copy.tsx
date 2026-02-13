@@ -16,7 +16,7 @@ import { useContext, useEffect } from "react";
 import { openFolder } from "../_actions/folders.actions";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
-  edgeHoverFolderRef,
+  FlatNode,
   folderMoveBlockRef,
   ProjectFolderNode,
   resetDragUI,
@@ -226,6 +226,7 @@ export function useFolderDndHandlers() {
     setDraggingFolderDepth,
     folderTreesByScope,
     currentOpenFolders,
+    edgeHoverFolderId,
     setEdgeHoverFolderId,
     pendingServerSnapshot,
     setPendingServerSnapshot,
@@ -278,26 +279,24 @@ export function useFolderDndHandlers() {
       const tree = folderTreesByScope[folderScope];
       if (!tree) return { ...returnObject, message: "tree was undefined" };
 
+      // const flat = flattenFromNormalizedTree(tree, currentOpenFolders);
       const flat = flattenFromNormalizedTree(tree, currentOpenFolders);
+      // const folderFlat = flat.filter((f) => f.type === "folder");
+
+      const parentKey = dragged.parentId ?? "root";
+      const siblings = tree.childrenByParent[parentKey] ?? [];
       if (!flat.length)
         return { ...returnObject, message: "flat had no length" };
-
-      const activeId = e.active.id;
-      const overId = e.over?.id;
 
       // --------------------------------------------
       // CASE 1 — dropped ONTO folder (append)
       // --------------------------------------------
-      // if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
-      const dropTargetId = edgeHoverFolderRef.current;
-      console.log(dropTargetId)
-
-      if (dropTargetId && dropTargetId !== "__root__") {
+      if (edgeHoverFolderId && edgeHoverFolderId !== "__root__") {
         returnObject.case = 1;
         const targetFlat = flat.find(
           (f): f is Extract<typeof f, { type: "folder" }> =>
             f.type === "folder" &&
-            String(f.node.folder_id) === String(dropTargetId),
+            String(f.node.folder_id) === String(edgeHoverFolderId),
         );
 
         if (!targetFlat)
@@ -354,47 +353,33 @@ export function useFolderDndHandlers() {
       // CASE 2 — dropped BETWEEN (true reorder)
       // --------------------------------------------
       returnObject.case = 2;
+      const activeId = e.active.id;
+      const overId = e.over?.id;
 
       if (!overId) return { ...returnObject, message: "overId was null" };
 
       // const oldIndex = flat.findIndex((f) => f.id === activeId);
       // const overIndex = flat.findIndex((f: any) => f.id === overId);
 
-      // if (oldIndex === -1 || overIndex === -1)
-      //   return {
-      //     ...returnObject,
-      //     message: "oldIndex === -1 || overIndex === -1",
-      //   };
-
-      // const reordered = arrayMove(flat, oldIndex, overIndex);
-      // const newIndexInUI = reordered.findIndex((f: any) => f.id === activeId);
-      // if (newIndexInUI === -1)
-      //   return { ...returnObject, message: "newIndexInUI === -1" };
-
-      // const folderAboveRaw =
-      //   newIndexInUI === 0 ? null : reordered[newIndexInUI - 1];
-
-      // const folderFlat = flat.filter(
-      //   (f): f is Extract<typeof f, { type: "folder" }> => f.type === "folder",
-      // );
-
       // const oldIndex = folderFlat.findIndex((f) => f.id === activeId);
       // const overIndex = folderFlat.findIndex((f) => f.id === overId);
 
-      // if (oldIndex === -1 || overIndex === -1)
-      //   return {
-      //     ...returnObject,
-      //     message: "oldIndex === -1 || overIndex === -1",
-      //   };
+      const oldIndex = siblings.findIndex((id) => id === dragged.id);
 
-      // const reordered = arrayMove(folderFlat, oldIndex, overIndex);
-      // const newIndexInUI = reordered.findIndex((f) => f.id === activeId);
+      // const overFolder = flat.find(
+      //   (f) => f.id === overId && f.type === "folder",
+      // );
 
-      // if (newIndexInUI === -1)
-      //   return { ...returnObject, message: "newIndexInUI === -1" };
+      // if (!overFolder) return;
 
-      const oldIndex = flat.findIndex((f) => f.id === activeId);
-      const overIndex = flat.findIndex((f) => f.id === overId);
+      const overFolder = flat.find(
+        (f): f is Extract<FlatNode, { type: "folder" }> =>
+          f.id === overId && f.type === "folder",
+      );
+      if (!overFolder)
+        return { ...returnObject, message: "overFolder not folder" };
+
+      const overIndex = siblings.findIndex((id) => id === overFolder.node.id);
 
       if (oldIndex === -1 || overIndex === -1)
         return {
@@ -402,75 +387,71 @@ export function useFolderDndHandlers() {
           message: "oldIndex === -1 || overIndex === -1",
         };
 
-      const reordered = arrayMove(flat, oldIndex, overIndex);
-      const newIndexInUI = reordered.findIndex((f) => f.id === activeId);
+      // reorder only within same parent
+      const reorderedSiblings = arrayMove(siblings, oldIndex, overIndex);
 
-      if (newIndexInUI === -1)
-        return { ...returnObject, message: "newIndexInUI === -1" };
+      // determine new ordinal directly
+      const newOrdinal = overIndex;
+      const newParentId = dragged.parentId ?? null;
+
+      // const reordered = arrayMove(flat, oldIndex, overIndex);
+      // const reordered = arrayMove(folderFlat, oldIndex, overIndex);
+
+      // const newIndexInUI = reordered.findIndex((f: any) => f.id === activeId);
+      // if (newIndexInUI === -1)
+      //   return { ...returnObject, message: "newIndexInUI === -1" };
 
       // const folderAboveRaw =
       //   newIndexInUI === 0 ? null : reordered[newIndexInUI - 1];
 
-      let folderAboveRaw: Extract<
-        (typeof flat)[number],
-        { type: "folder" }
-      > | null = null;
+      // let aboveFolderId: string;
+      // let aboveId: number;
 
-      for (let i = newIndexInUI - 1; i >= 0; i--) {
-        if (reordered[i].type === "folder") {
-          folderAboveRaw = reordered[i] as any;
-          break;
-        }
-      }
+      // if (folderAboveRaw === null) {
+      //   // top of list → root
+      //   aboveFolderId = "__root__";
+      //   aboveId = -1;
+      // } else {
+      //   if (folderAboveRaw.type !== "folder")
+      //     return { ...returnObject, message: "folderAboveRaw.type !== folder" };
 
-      let aboveFolderId: string;
-      let aboveId: number;
+      //   aboveFolderId = folderAboveRaw.node.folder_id;
+      //   aboveId = folderAboveRaw.node.id;
+      // }
 
-      if (folderAboveRaw === null) {
-        // top of list → root
-        aboveFolderId = "__root__";
-        aboveId = -1;
-      } else {
-        if (folderAboveRaw.type !== "folder")
-          return { ...returnObject, message: "folderAboveRaw.type !== folder" };
+      // let newParentId: number | null | undefined = undefined;
+      // let newOrdinal: number | undefined = undefined;
 
-        aboveFolderId = folderAboveRaw.node.folder_id;
-        aboveId = folderAboveRaw.node.id;
-      }
+      // if (hasChildren(aboveId) && currentOpenFolders.has(aboveFolderId)) {
+      //   newParentId = aboveId;
+      // } else {
+      //   if (folderAboveRaw) {
+      //     newParentId = folderAboveRaw.parentId ?? null;
+      //   } else {
+      //     newParentId = null;
+      //   }
+      // }
 
-      let newParentId: number | null | undefined = undefined;
-      let newOrdinal: number | undefined = undefined;
-
-      if (hasChildren(aboveId) && currentOpenFolders.has(aboveFolderId)) {
-        newParentId = aboveId;
-      } else {
-        if (folderAboveRaw) {
-          newParentId = folderAboveRaw.parentId ?? null;
-        } else {
-          newParentId = null;
-        }
-      }
-
-      // draggedFlat.parentId = newParentId;
-      if (!folderAboveRaw) {
-        newOrdinal = 0;
-      } else if (
-        hasChildren(aboveId) &&
-        currentOpenFolders.has(aboveFolderId)
-      ) {
-        // inserting as first child inside open folder
-        newOrdinal = 0;
-      } else {
-        const aboveOrdinal = folderAboveRaw.node.ordinal ?? 0;
-        if (
-          folderAboveRaw.parentId === dragged.parentId &&
-          dragged.ordinal < folderAboveRaw.node.ordinal
-        ) {
-          newOrdinal = aboveOrdinal;
-        } else {
-          newOrdinal = aboveOrdinal + 1;
-        }
-      }
+      // // draggedFlat.parentId = newParentId;
+      // if (!folderAboveRaw) {
+      //   newOrdinal = 0;
+      // } else if (
+      //   hasChildren(aboveId) &&
+      //   currentOpenFolders.has(aboveFolderId)
+      // ) {
+      //   // inserting as first child inside open folder
+      //   newOrdinal = 0;
+      // } else {
+      //   const aboveOrdinal = folderAboveRaw.node.ordinal ?? 0;
+      //   if (
+      //     folderAboveRaw.parentId === dragged.parentId &&
+      //     dragged.ordinal < folderAboveRaw.node.ordinal
+      //   ) {
+      //     newOrdinal = aboveOrdinal;
+      //   } else {
+      //     newOrdinal = aboveOrdinal + 1;
+      //   }
+      // }
 
       if (newParentId === undefined || newOrdinal === undefined)
         return {
@@ -486,13 +467,14 @@ export function useFolderDndHandlers() {
       if (newParentId === dragged.parentId && newOrdinal === dragged.ordinal) {
         resetDragUI();
         if (pendingServerSnapshot) {
+          console.log(treeItems);
           const tree = buildNormalizedTree(pendingServerSnapshot, treeItems);
           setFolderTreeByScope(folderScope, tree);
           setPendingServerSnapshot(null);
         }
         return {
           ...returnObject,
-          message: "No change -> Set tree to saved snapshot if available",
+          message: "No change -> Set tree to saved snapshot",
         };
       }
 
@@ -512,7 +494,6 @@ export function useFolderDndHandlers() {
         newOrdinal,
       );
 
-      folderMoveBlockRef.current++;
       setFolderTreeByScope(folderScope, optimisticTree);
 
       // then call backend
@@ -524,8 +505,6 @@ export function useFolderDndHandlers() {
         name: dragged.name,
         parent_folder_id: newParentId,
         ordinal: newOrdinal,
-      }).finally(() => {
-        folderMoveBlockRef.current--;
       });
       resetDragUI();
       return { ...returnObject, message: "Case 2 Success" };

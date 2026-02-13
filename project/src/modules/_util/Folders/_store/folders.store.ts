@@ -37,6 +37,7 @@ export type FolderTreeState = {
     }
   >;
   childrenByParent: Record<number | "root", number[]>;
+  itemsByParent: Record<number | "root", ProjectFolderNodeItem[]>;
 };
 
 export type FlatNode =
@@ -64,9 +65,13 @@ export const useFoldersCurrentDataStore = createStore({
   draggingFolderDepth: null as number | null,
   edgeHoverFolderId: null as string | null,
   folderPXFromTop: 0,
-  movePending: 0,
   pendingServerSnapshot: null as ProjectFolder[] | null,
 });
+
+export const edgeHoverFolderRef = { current: null as string | null };
+export const folderMoveBlockRef = {
+  current: 0,
+};
 
 export const setFolderTreeByScope = (
   scope: FolderScope,

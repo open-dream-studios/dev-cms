@@ -2,20 +2,29 @@
 import { FolderScope, ProjectFolder } from "@open-dream/shared";
 import {
   FlatNode,
-  FolderTreeState, 
+  FolderTreeState,
+  ProjectFolderNodeItem,
   useFoldersCurrentDataStore,
-} from "../_store/folders.store"; 
+} from "../_store/folders.store";
 
-export function buildNormalizedTree(folders: ProjectFolder[]): FolderTreeState {
+export function treesEqual(a: any, b: any) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export function buildNormalizedTree(
+  folders: ProjectFolder[],
+  items: ProjectFolderNodeItem[]
+): FolderTreeState {
   const nodesById: FolderTreeState["nodesById"] = {};
-  const childrenByParent = {
+  const childrenByParent: Record<number | "root", number[]> = {
     root: [],
-  } as Record<number | "root", number[]>;
+  };
 
-  // ensure root bucket exists
-  childrenByParent["root"] = [];
+  const itemsByParent: Record<number | "root", ProjectFolderNodeItem[]> = {
+    root: [],
+  };
 
-  // 1️⃣ create nodes
+  // 1️⃣ create folder nodes
   for (const f of folders) {
     nodesById[f.id] = {
       id: f.id,
@@ -26,28 +35,40 @@ export function buildNormalizedTree(folders: ProjectFolder[]): FolderTreeState {
     };
   }
 
-  // 2️⃣ initialize parent buckets
+  // 2️⃣ ensure parent buckets exist
   for (const f of folders) {
     const parentKey = f.parent_folder_id ?? "root";
     if (!childrenByParent[parentKey]) {
       childrenByParent[parentKey] = [];
     }
+    if (!itemsByParent[parentKey]) {
+      itemsByParent[parentKey] = [];
+    }
   }
 
-  // 3️⃣ push children into parents
+  // 3️⃣ attach folders to parents
   for (const f of folders) {
     const parentKey = f.parent_folder_id ?? "root";
     childrenByParent[parentKey].push(f.id);
   }
 
-  // 4️⃣ sort each parent's children by ordinal
+  // 4️⃣ attach items to parents
+  for (const item of items) {
+    const parentKey = item.folder_id ?? "root";
+    if (!itemsByParent[parentKey]) {
+      itemsByParent[parentKey] = [];
+    }
+    itemsByParent[parentKey].push(item);
+  }
+
+  // 5️⃣ sort folders by ordinal
   for (const key in childrenByParent) {
     childrenByParent[key].sort((a, b) => {
       return nodesById[a].ordinal - nodesById[b].ordinal;
     });
   }
 
-  // 5️⃣ reindex ordinals safely (guarantee no gaps)
+  // 6️⃣ reindex ordinals safely
   for (const key in childrenByParent) {
     childrenByParent[key].forEach((id, index) => {
       nodesById[id].ordinal = index;
@@ -57,6 +78,7 @@ export function buildNormalizedTree(folders: ProjectFolder[]): FolderTreeState {
   return {
     nodesById,
     childrenByParent,
+    itemsByParent,
   };
 }
 
@@ -68,9 +90,10 @@ export function flattenFromNormalizedTree(
 
   function walk(parentKey: number | "root", depth: number) {
     const children = tree.childrenByParent[parentKey];
-    if (!children?.length) return;
+    if (!children?.length && !tree.itemsByParent[parentKey]?.length) return;
 
-    for (const id of children) {
+    // 1️⃣ folders first
+    for (const id of children ?? []) {
       const node = tree.nodesById[id];
 
       acc.push({
@@ -81,14 +104,23 @@ export function flattenFromNormalizedTree(
         parentId: node.parentId,
         node: {
           ...node,
-          children: [],
-          items: [],
         } as any,
       });
 
       if (openSet.has(node.folder_id)) {
         walk(id, depth + 1);
       }
+    }
+
+    // 2️⃣ then items
+    for (const item of tree.itemsByParent?.[parentKey] ?? []) {
+      acc.push({
+        type: "item",
+        id: `item-${item.id}`,
+        depth,
+        parentId: parentKey === "root" ? null : parentKey,
+        item,
+      });
     }
   }
 
@@ -138,6 +170,7 @@ export function moveFolderLocal(
   const newTree: FolderTreeState = {
     nodesById: { ...tree.nodesById },
     childrenByParent: { ...tree.childrenByParent },
+    itemsByParent: { ...tree.itemsByParent },
   };
 
   const oldSiblings = [...(newTree.childrenByParent[oldParentKey] ?? [])];
@@ -166,10 +199,7 @@ export function moveFolderLocal(
   // ----------------------------
   // INSERT INTO TARGET LAYER
   // ----------------------------
-  const targetChildren =
-    movingWithinSameLayer
-      ? filteredOld
-      : newSiblings;
+  const targetChildren = movingWithinSameLayer ? filteredOld : newSiblings;
 
   const before = targetChildren.slice(0, targetOrdinal);
   const after = targetChildren.slice(targetOrdinal);
@@ -188,5 +218,3 @@ export function moveFolderLocal(
 
   return newTree;
 }
-
- 

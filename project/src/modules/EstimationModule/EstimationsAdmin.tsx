@@ -1,6 +1,6 @@
 // project/src/modules/EstimationModule/EstimationsAdmin.tsx
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { DndContext, DragOverlay, useDroppable } from "@dnd-kit/core";
+import { closestCenter, DndContext, DragOverlay, useDroppable } from "@dnd-kit/core";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 import { HomeLayout } from "@/layouts/homeLayout";
@@ -32,7 +32,10 @@ import { FolderItemDisplay } from "../_util/Folders/FolderItemDisplay";
 import VariableDisplay from "./components/VariableDisplay";
 import EstimationProcessItem from "./components/ProcessDisplay";
 import { useFolderDndHandlers } from "../_util/Folders/_hooks/folders.hooks";
-import { resetDragUI, useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
+import {
+  resetDragUI,
+  useFoldersCurrentDataStore,
+} from "../_util/Folders/_store/folders.store";
 
 export type CanvasUsage = "estimation" | "variable";
 
@@ -272,8 +275,17 @@ const EstimationAdmin = () => {
 
       <DndContext
         sensors={activePemdas.sensors}
+        collisionDetection={(args) => {
+          const filtered = {
+            ...args,
+            droppableContainers: args.droppableContainers.filter(
+              (container) => container.data.current?.kind === "FOLDER",
+            ),
+          };
+          return closestCenter(filtered);
+        }}
         onDragStart={(e) => {
-          resetDragUI()
+          resetDragUI();
           const evt = e.activatorEvent as PointerEvent;
           dragStartPointerRef.current = {
             x: evt.clientX,
@@ -349,7 +361,7 @@ const EstimationAdmin = () => {
             }
           }
           dragStartPointerRef.current = null;
-          resetDragUI()
+          resetDragUI();
         }}
         onDragCancel={(e) => {
           activePemdas.handlers.onDragCancel(e);
@@ -357,7 +369,7 @@ const EstimationAdmin = () => {
           setIsOverCanvas(false);
           setIsCanvasGhostActive(false);
           dragStartPointerRef.current = null;
-          resetDragUI()
+          resetDragUI();
         }}
       >
         <HomeLayout left={<EstimationsLeftBar />}>
@@ -492,7 +504,7 @@ const EstimationAdmin = () => {
 
           {draggingFolder && (
             <FolderItemDisplay
-             scope={draggingFolder.scope}
+              scope={draggingFolder.scope}
               isGhost={true}
               node={null}
               name={draggingFolder.name}

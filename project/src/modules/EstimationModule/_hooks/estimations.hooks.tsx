@@ -9,7 +9,7 @@ import Modal2MultiStepModalInput, {
   StepConfig,
 } from "@/modals/Modal2MultiStepInput";
 import { useUiStore } from "@/store/useUIStore";
-import { EstimationFactDefinition } from "@open-dream/shared";
+import { EstimationFactDefinition, FolderScope } from "@open-dream/shared";
 import { useEstimationFactDefinitions } from "@/contexts/queryContext/queries/estimations/estimationFactDefinitions";
 import { displayToKey } from "@/util/functions/Data";
 import { useFoldersCurrentDataStore } from "@/modules/_util/Folders/_store/folders.store";
@@ -27,9 +27,9 @@ export function useEstimations() {
     currentProjectId!,
     currentProcessId,
   );
-  const { selectedFolder } = useFoldersCurrentDataStore();
+  const { selectedFoldersByScope } = useFoldersCurrentDataStore();
 
-  const handleAddEstimationProcess = async () => {
+  const handleAddEstimationProcess = async (scope: FolderScope) => {
     if (!currentProjectId) return;
     const steps: StepConfig[] = [
       {
@@ -56,7 +56,7 @@ export function useEstimations() {
             await upsertEstimationProcess({
               process_id: null,
               label: values.label,
-              folder_id: selectedFolder?.id ?? null,
+              folder_id: selectedFoldersByScope[scope]?.id ?? null,
             });
           }}
         />
@@ -105,7 +105,7 @@ export function useEstimations() {
     });
   };
 
-  const handleAddEstimationVariable = () => {
+  const handleAddEstimationVariable = (scope: FolderScope) => {
     const EditVariableSteps: StepConfig[] = [
       {
         name: "name",
@@ -123,7 +123,7 @@ export function useEstimations() {
         fact_type: "number",
         variable_scope: variableView,
         description: null,
-        folder_id: selectedFolder?.id ?? null,
+        folder_id: selectedFoldersByScope[scope]?.id ?? null,
         process_id: currentProcessId!,
       });
       if (res.fact_id) {

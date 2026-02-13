@@ -13,6 +13,7 @@ import {
 import { FolderItemDisplay } from "./FolderItemDisplay";
 import { useProjectFolderHooks } from "@/modules/_util/Folders/_hooks/folders.hooks";
 import {
+  edgeHoverFolderRef,
   FlatNode,
   setSelectedFolderForScope,
   useFoldersCurrentDataStore,
@@ -31,14 +32,6 @@ const DraggableFolderItem = ({
     useFoldersCurrentDataStore();
   const { active } = useDndContext();
   const [isEdgeHover, setIsEdgeHover] = useState(false);
-
-  // White Edge
-  useEffect(() => {
-    if (!active || active.data.current?.kind !== "FOLDER") return;
-    const activeFolderId = active.data.current.folder.folder_id;
-    if (activeFolderId === node.folder_id) return;
-    setEdgeHoverFolderId(isEdgeHover ? node.folder_id : null);
-  }, [isEdgeHover, active]);
 
   const refRect = useRef<DOMRect | null>(null);
 
@@ -60,62 +53,107 @@ const DraggableFolderItem = ({
     if (el) refRect.current = el.getBoundingClientRect();
   };
 
+  // // White Edge
+  // useEffect(() => {
+  //   if (!active || active.data.current?.kind !== "FOLDER") return;
+  //   const activeFolderId = active.data.current.folder.folder_id;
+  //   if (activeFolderId === node.folder_id) return;
+  //   setEdgeHoverFolderId(isEdgeHover ? node.folder_id : null);
+  // }, [isEdgeHover, active]);
+
   // FOLDERS
+  // useEffect(() => {
+  //   if (!active || active.data.current?.kind !== "FOLDER") {
+  //     // setIsEdgeHover(false);
+  //     return;
+  //   }
+  //   const handleMove = (e: PointerEvent) => {
+  //     if (!refRect.current) return;
+  //     const { top, bottom } = refRect.current;
+  //     const EDGE = 17;
+  //     const adjustedY = e.clientY - folderPXFromTop;
+  //     const nearTop = Math.abs(adjustedY - top) <= EDGE;
+  //     const nearBottom = Math.abs(adjustedY - bottom) <= EDGE;
+  //     setIsEdgeHover(nearTop || nearBottom);
+  //   };
+
+  //   window.addEventListener("pointermove", handleMove);
+  //   return () => window.removeEventListener("pointermove", handleMove);
+  // }, [active, folderPXFromTop]);
+
   useEffect(() => {
-    if (!active || active.data.current?.kind !== "FOLDER") {
-      setIsEdgeHover(false);
-      return;
-    }
+    if (!active || active.data.current?.kind !== "FOLDER") return;
+
+    const activeFolderId = active.data.current.folder.folder_id;
+
     const handleMove = (e: PointerEvent) => {
       if (!refRect.current) return;
+      if (activeFolderId === node.folder_id) return;
+
       const { top, bottom } = refRect.current;
       const EDGE = 17;
       const adjustedY = e.clientY - folderPXFromTop;
+
       const nearTop = Math.abs(adjustedY - top) <= EDGE;
       const nearBottom = Math.abs(adjustedY - bottom) <= EDGE;
-      setIsEdgeHover(nearTop || nearBottom);
+
+      const isEdge = nearTop || nearBottom;
+
+      setIsEdgeHover(isEdge);
+
+      // IMPORTANT: set global drop intent HERE
+      if (isEdge) {
+        edgeHoverFolderRef.current = node.folder_id;
+        setEdgeHoverFolderId(node.folder_id);
+      } else {
+        // Always clear if not edge
+        if (edgeHoverFolderRef.current === node.folder_id) {
+          edgeHoverFolderRef.current = null;
+          setEdgeHoverFolderId(null);
+        }
+      }
     };
 
     window.addEventListener("pointermove", handleMove);
     return () => window.removeEventListener("pointermove", handleMove);
-  }, [active, folderPXFromTop]);
+  }, [active, folderPXFromTop, node.folder_id, edgeHoverFolderId]);
 
   // ITEMS
-  // useEffect(() => {
-  //   if (!active) {
-  //     setEdgeHoverFolderId(null);
-  //     return;
-  //   }
+  useEffect(() => {
+    if (!active) {
+      // setEdgeHoverFolderId(null);
+      return;
+    }
 
-  //   const kind = active.data.current?.kind;
-  //   const isItem =
-  //     kind === "FOLDER-ITEM-FACT" || kind === "FOLDER-ITEM-PROCESS";
+    const kind = active.data.current?.kind;
+    const isItem =
+      kind === "FOLDER-ITEM-FACT" || kind === "FOLDER-ITEM-PROCESS";
 
-  //   if (!isItem) {
-  //     setEdgeHoverFolderId(null);
-  //     return;
-  //   }
+    if (!isItem) {
+      setEdgeHoverFolderId(null);
+      return;
+    }
 
-  //   const handleMove = (e: PointerEvent) => {
-  //     if (!refRect.current) return;
-  //     const { top, bottom } = refRect.current;
-  //     const pointerY = e.clientY;
-  //     if (pointerY >= top && pointerY <= bottom) {
-  //       setEdgeHoverFolderId(node.folder_id);
-  //     } else if (edgeHoverFolderId === node.folder_id) {
-  //       // clear highlight when leaving folder
-  //       setEdgeHoverFolderId(null);
-  //     }
-  //   };
+    const handleMove = (e: PointerEvent) => {
+      if (!refRect.current) return;
+      const { top, bottom } = refRect.current;
+      const pointerY = e.clientY;
+      if (pointerY >= top && pointerY <= bottom) {
+        setEdgeHoverFolderId(node.folder_id);
+      } else if (edgeHoverFolderId === node.folder_id) {
+        // clear highlight when leaving folder
+        setEdgeHoverFolderId(null);
+      }
+    };
 
-  //   window.addEventListener("pointermove", handleMove);
-  //   return () => {
-  //     window.removeEventListener("pointermove", handleMove);
-  //     if (edgeHoverFolderId === node.folder_id) {
-  //       setEdgeHoverFolderId(null);
-  //     }
-  //   };
-  // }, [active, node.folder_id, edgeHoverFolderId]);
+    window.addEventListener("pointermove", handleMove);
+    return () => {
+      window.removeEventListener("pointermove", handleMove);
+      if (edgeHoverFolderId === node.folder_id) {
+        setEdgeHoverFolderId(null);
+      }
+    };
+  }, [active, node.folder_id, edgeHoverFolderId]);
 
   return (
     <div
