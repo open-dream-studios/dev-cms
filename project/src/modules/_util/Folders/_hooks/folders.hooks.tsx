@@ -12,7 +12,7 @@ import {
   FolderScope,
   ProjectFolder,
 } from "@open-dream/shared";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { openFolder } from "../_actions/folders.actions";
 import { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
@@ -54,14 +54,26 @@ export function useFolderTreeItems(scope: FolderScope) {
     currentProcessId,
   );
 
-  const itemsByScope: Record<FolderScope, any[]> = {
-    estimation_fact_definition: factDefinitions ?? [],
-    estimation_process: estimationProcesses ?? [],
-    estimation_variable: [],
-    media: [],
-  };
+  // const itemsByScope: Record<FolderScope, any[]> = {
+  //   estimation_fact_definition: factDefinitions.filter((item)=> item.variable_scope === "fact") ?? [],
+  //   estimation_process: estimationProcesses ?? [],
+  //   estimation_variable: [],
+  //   media: [],
+  // };
 
-  return itemsByScope[scope] ?? [];
+  // return itemsByScope[scope] ?? [];
+
+  const itemsByScope = useMemo<Record<FolderScope, any[]>>(
+    () => ({
+      estimation_fact_definition: factDefinitions ?? [],
+      estimation_process: estimationProcesses ?? [],
+      estimation_variable: [],
+      media: [],
+    }),
+    [factDefinitions, estimationProcesses],
+  );
+
+  return itemsByScope[scope];
 }
 
 export function useSyncFolderTree(scope: FolderScope) {
@@ -75,6 +87,11 @@ export function useSyncFolderTree(scope: FolderScope) {
   const treeItems = useFolderTreeItems(scope);
   const { draggingFolderId, setPendingServerSnapshot } =
     useFoldersCurrentDataStore();
+
+  const relevantItems =
+    scope === "estimation_fact_definition" || scope === "estimation_process"
+      ? treeItems
+      : null;
 
   useEffect(() => {
     if (!projectFolders) return;
@@ -91,7 +108,7 @@ export function useSyncFolderTree(scope: FolderScope) {
     }
     setFolderTreeByScope(scope, newTree);
     setPendingServerSnapshot(null);
-  }, [projectFolders, treeItems, draggingFolderId, scope]);
+  }, [projectFolders, relevantItems, draggingFolderId, scope]);
 }
 
 export function useProjectFolderHooks(scope: FolderScope) {
@@ -208,7 +225,7 @@ export function useProjectFolderHooks(scope: FolderScope) {
   };
 }
 
-export function useFolderDndHandlers() {
+export function useFolderDndHandlers(folderScope: FolderScope) {
   const { currentUser } = useContext(AuthContext);
   const { currentProjectId, currentProcessId } = useCurrentDataStore();
   const {
@@ -221,9 +238,9 @@ export function useFolderDndHandlers() {
     setPendingServerSnapshot,
   } = useFoldersCurrentDataStore();
 
-  const folderScope: FolderScope = currentProcessId
-    ? "estimation_fact_definition"
-    : "estimation_process";
+  // const folderScope: FolderScope = currentProcessId
+  //   ? "estimation_fact_definition"
+  //   : "estimation_process";
   const treeItems = useFolderTreeItems(folderScope);
 
   const { moveProjectFolder } = useProjectFolders(
@@ -265,7 +282,7 @@ export function useFolderDndHandlers() {
 
       const dragged = activeData.folder;
 
-      const tree = folderTreesByScope[folderScope];
+      const tree = folderTreesByScope[folderScope]; 
       if (!tree) return { ...returnObject, message: "tree was undefined" };
 
       const flat = flattenFromNormalizedTree(tree, currentOpenFolders);
@@ -481,7 +498,7 @@ export function useFolderDndHandlers() {
     };
 
     const result = await DragEndFunction();
-    console.log(result);
+    // console.log(result);
   };
 
   const onDragCancel = () => {

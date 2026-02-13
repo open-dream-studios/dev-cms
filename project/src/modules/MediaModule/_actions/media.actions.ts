@@ -1,18 +1,14 @@
 // project/src/modules/MediaModule/_actions/media.actions.ts
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import {
-  ContextMenuDefinition,
   Job,
   Media,
-  MediaFolder,
   MediaLink,
   Product,
   ProjectPage,
 } from "@open-dream/shared";
-import { useMediaModuleUIStore } from "../_store/media.store";
-import { deleteMediaFolderApi } from "@/api/mediaFolders.api";
 import { setUploadContext, useUiStore } from "@/store/useUIStore";
-import { getCurrentTimestamp } from "@/util/functions/Data"; 
+import { getCurrentTimestamp } from "@/util/functions/Data";
 import { deleteMediaLinksApi, upsertMediaLinksApi } from "@/api/mediaLinks.api";
 import { deleteProjectMediaApi, rotateProjectMediaApi } from "@/api/media.api";
 import { showSuccessToast } from "@/util/functions/UI";
@@ -26,48 +22,6 @@ import axios from "axios";
 export type FileImage = {
   name: string;
   file: File;
-};
-
-export const createFolderContextMenu =
-  (): ContextMenuDefinition<MediaFolder> => ({
-    items: [
-      {
-        id: "delete-folder",
-        label: "Delete Folder",
-        danger: true,
-        onClick: async (folder) => {
-          await handleDeleteFolder(folder.folder_id);
-        },
-      },
-      {
-        id: "rename-folder",
-        label: "Rename Folder",
-        danger: true,
-        onClick: async (folder) => {
-          await handleRenameFolder(folder.folder_id);
-        },
-      },
-    ],
-  });
-
-export const handleDeleteFolder = async (folder_id: string | null) => {
-  const { currentProjectId, setCurrentActiveFolder, currentActiveFolder } =
-    useCurrentDataStore.getState();
-  if (!currentProjectId || !folder_id) return;
-  await deleteMediaFolderApi(currentProjectId, folder_id);
-  if (currentActiveFolder && currentActiveFolder.folder_id === folder_id) {
-    setCurrentActiveFolder(null);
-  }
-  queryClient.invalidateQueries({ queryKey: ["media", currentProjectId] });
-  queryClient.invalidateQueries({
-    queryKey: ["mediaFolders", currentProjectId],
-  });
-};
-
-const handleRenameFolder = async (folder_id: string | null) => {
-  if (!folder_id) return;
-  const { setRenamingFolder } = useMediaModuleUIStore.getState();
-  setRenamingFolder(folder_id);
 };
 
 export const handleFileProcessing = async (
@@ -102,10 +56,14 @@ export const handleFileProcessing = async (
     formData.append("folder_id", String(folder_id));
     images.forEach((fileImage) => {
       formData.append("files", fileImage.file, fileImage.name);
-    }); 
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/media/upload`, formData, {
-      withCredentials: true,
     });
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/media/upload`,
+      formData,
+      {
+        withCredentials: true,
+      }
+    );
 
     if (response.status === 200) {
       return response.data.media;

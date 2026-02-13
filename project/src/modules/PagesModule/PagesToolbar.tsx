@@ -1,10 +1,13 @@
 // project/src/modules/PagesModule/PagesToolbar.tsx
 import { Button } from "@/components/ui/button";
-import { AuthContext } from "@/contexts/authContext";
-import { MediaFolder } from "@open-dream/shared"; 
+import { AuthContext } from "@/contexts/authContext"; 
 import { Grid, List, Upload } from "lucide-react";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { FiEdit } from "react-icons/fi";
+import { useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
+import { ProjectFolder } from "@open-dream/shared";
+import { useProjectFolders } from "@/contexts/queryContext/queries/projectFolders";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 type Props = {
   view: "grid" | "list";
@@ -12,7 +15,6 @@ type Props = {
   onUploadClick: () => void;
   editeMode: boolean;
   setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
-  activeFolder: MediaFolder | null;
 };
 
 const PagesToolbar = ({
@@ -21,9 +23,24 @@ const PagesToolbar = ({
   onUploadClick,
   editeMode,
   setEditMode,
-  activeFolder
 }: Props) => {
+  // const folderScope = "media"
   const { currentUser } = useContext(AuthContext);
+  // const { selectedFoldersByScope } = useFoldersCurrentDataStore()
+  // const { currentProjectId } = useCurrentDataStore()
+  // const { projectFolders } = useProjectFolders(!!currentUser, currentProjectId,  {
+  //   scope: folderScope,
+  //   process_id: null
+  // })
+
+  // const selectedFolder = useMemo(()=>{
+  //   const selected = selectedFoldersByScope[folderScope]
+  //   if (selected && selected?.id) {
+  //     return projectFolders.find((folder: ProjectFolder )=> folder.id === selected.id)
+  //   }
+  //   return null
+  // },[]) 
+
   if (!currentUser) return null;
 
   return (
@@ -43,22 +60,22 @@ const PagesToolbar = ({
         >
           <List size={16} className="mr-1" /> List
         </Button>
-        <p className="text-[24px] font-[700] mt-[-2px] px-[10.5px]">{activeFolder ? activeFolder.name : "All Media" }</p>
+        {/* <p className="text-[24px] font-[700] mt-[-2px] px-[10.5px]">{selectedFolder ? selectedFolder.name : "All Media" }</p> */}
       </div>
       <div className="flex gap-2">
-        {activeFolder && <Button
+        {/* {selectedFolder && <Button
           variant={editeMode ? "default" : "outline"}
           className="cursor-pointer hover:brightness-90 dim"
           onClick={() => setEditMode((prev: boolean) => !prev)}
         >
           <FiEdit />
-        </Button>}
-        <Button
+        </Button>} */}
+        {/* <Button
           className="cursor-pointer hover:brightness-90 dim"
           onClick={onUploadClick}
         >
           <Upload size={16} className="mr-1" /> Upload
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

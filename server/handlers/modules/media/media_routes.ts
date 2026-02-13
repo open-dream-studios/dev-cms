@@ -5,10 +5,7 @@ import {
   getMedia,
   upsertMedia,
   deleteMedia,
-  rotateMedia,
-  getMediaFolders,
-  upsertMediaFolders,
-  deleteMediaFolder,
+  rotateMedia, 
   getMediaLinks,
   upsertMediaLinks,
   deleteMediaLinks,
@@ -52,29 +49,6 @@ router.post(
   authenticateUser,
   checkProjectPermission(3),
   transactionHandler(rotateMedia)
-);
-
-// ---- MEDIA FOLDERS ----
-router.post(
-  "/folders",
-  verifyVercelProxy,
-  authenticateUser,
-  checkProjectPermission(1),
-  errorHandler(getMediaFolders)
-);
-router.post(
-  "/folders/upsert",
-  verifyVercelProxy,
-  authenticateUser,
-  checkProjectPermission(3),
-  transactionHandler(upsertMediaFolders)
-);
-router.post(
-  "/folders/delete",
-  verifyVercelProxy,
-  authenticateUser,
-  checkProjectPermission(3),
-  transactionHandler(deleteMediaFolder)
 );
 
 // ---- MEDIA LINKS ----

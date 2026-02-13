@@ -159,6 +159,7 @@ const DraggableFolderItem = ({
     <div
       data-draggable
       data-folder-item
+      data-folder-id={node.id}
       ref={setRefs}
       className={`mb-[4px] w-[100%]`}
       style={{

@@ -4,9 +4,6 @@ import {
   upsertMediaFunction,
   deleteMediaFunction,
   rotateMediaFunction,
-  deleteMediaFolderFunction,
-  getMediaFoldersFunction,
-  upsertMediaFoldersFunction,
   getMediaLinksFunction,
   upsertMediaLinksFunction,
   deleteMediaLinksFunction,
@@ -14,7 +11,7 @@ import {
 } from "./media_repositories.js";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
-import { Media, MediaFolder, MediaLink } from "@open-dream/shared";
+import { Media, MediaLink } from "@open-dream/shared";
 
 // ---------- MEDIA CONTROLLERS ----------
 export const getMedia = async (req: Request, res: Response) => {
@@ -57,39 +54,6 @@ export const rotateMedia = async (
   if (!project_idx || !media_id || !url || !rotations)
     throw new Error("Missing required fields");
   return await rotateMediaFunction(connection, project_idx, req.body);
-};
-
-// ---------- MEDIA FOLDER CONTROLLERS ----------
-export const getMediaFolders = async (req: Request, res: Response) => {
-  const project_idx = req.user?.project_idx;
-  if (!project_idx) throw new Error("Missing project_idx");
-  const mediaFolders: MediaFolder[] = await getMediaFoldersFunction(
-    project_idx
-  );
-  return { success: true, mediaFolders };
-};
-
-export const upsertMediaFolders = async (
-  req: Request,
-  res: Response,
-  connection: PoolConnection
-) => {
-  const project_idx = req.user?.project_idx;
-  const { folders } = req.body;
-  if (!project_idx || !Array.isArray(folders) || folders.length === 0)
-    throw new Error("Invalid request");
-  return await upsertMediaFoldersFunction(connection, project_idx, folders);
-};
-
-export const deleteMediaFolder = async (
-  req: Request,
-  res: Response,
-  connection: PoolConnection
-) => {
-  const { folder_id } = req.body;
-  const project_idx = req.user?.project_idx;
-  if (!project_idx || !folder_id) throw new Error("Missing required fields");
-  return await deleteMediaFolderFunction(connection, project_idx, folder_id);
 };
 
 // ---------- MEDIA LINK CONTROLLERS ----------

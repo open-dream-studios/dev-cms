@@ -6,7 +6,7 @@ import {
   getNextOrdinal,
   reindexOrdinals,
 } from "../../../lib/ordinals.js";
-import { Media, MediaFolder, MediaLink } from "@open-dream/shared";
+import { Media, MediaLink } from "@open-dream/shared";
 import type { RowDataPacket, PoolConnection } from "mysql2/promise";
 import fs from "fs/promises";
 import { existsSync } from "fs";
@@ -24,131 +24,6 @@ import {
   signPrivateMedia,
 } from "../../private/media.js";
 import { ulid } from "ulid";
-
-// ---------- MEDIA FOLDER FUNCTIONS ----------
-export const getMediaFoldersFunction = async (
-  project_idx: number
-): Promise<MediaFolder[]> => {
-  const q = `
-    SELECT *
-    FROM media_folders
-    WHERE project_idx = ?
-    ORDER BY ordinal ASC
-  `;
-  const [rows] = await db
-    .promise()
-    .query<(MediaFolder & RowDataPacket)[]>(q, [project_idx]);
-  return rows;
-};
-
-export const upsertMediaFoldersFunction = async (
-  connection: PoolConnection,
-  project_idx: number,
-  folders: any
-) => {
-  if (!Array.isArray(folders) || folders.length === 0) {
-    throw new Error("No folders provided");
-  }
-
-  let nextOrdinal = await getNextOrdinal(connection, "media_folders", {
-    project_idx,
-    parent_folder_id: folders[0].parent_folder_id,
-  });
-
-  const values = [];
-  const folderIds = [];
-  for (let i = 0; i < folders.length; i++) {
-    const f = folders[i];
-    const finalFolderId = f.folder_id?.trim() || `FOLDER-${ulid()}`;
-    folderIds.push(finalFolderId);
-    let finalOrdinal = f.ordinal;
-    if (f.ordinal === null) {
-      finalOrdinal = nextOrdinal;
-      nextOrdinal += 1;
-    }
-    values.push(
-      finalFolderId,
-      project_idx,
-      f.parent_folder_id ?? null,
-      f.name ?? "",
-      finalOrdinal
-    );
-    f.folder_id = finalFolderId;
-    f.ordinal = finalOrdinal;
-  }
-
-  const placeholders = folders.map(() => `(?, ?, ?, ?, ?)`).join(", ");
-  const query = `
-      INSERT INTO media_folders (
-        folder_id, project_idx, parent_folder_id, name, ordinal
-      )
-      VALUES ${placeholders}
-      ON DUPLICATE KEY UPDATE
-        parent_folder_id = VALUES(parent_folder_id),
-        name = VALUES(name),
-        ordinal = VALUES(ordinal),
-        updated_at = NOW()
-    `;
-  await connection.query(query, values);
-
-  const parentIds = Array.from(
-    new Set(folders.map((f) => f.parent_folder_id ?? null))
-  );
-  for (const parentId of parentIds) {
-    await reindexOrdinals(connection, "media_folders", {
-      project_idx,
-      parent_folder_id: parentId,
-    });
-  }
-
-  return {
-    success: true,
-    folderIds,
-  };
-};
-
-export const deleteMediaFolderFunction = async (
-  connection: PoolConnection,
-  project_idx: number,
-  folder_id: string
-) => {
-  // Recursively delete from storage
-  // const [[folder]] = await connection.query(
-  //   `SELECT parent_folder_id FROM media_folders WHERE project_idx = ? AND folder_id = ?`,
-  //   [project_idx, folder_id]
-  // );
-  // if (!folder) throw new Error("Folder not found");
-  // const { parent_folder_id } = folder;
-  // const recursiveQuery = `
-  //   WITH RECURSIVE subfolders AS (
-  //     SELECT id FROM media_folders WHERE folder_id = ?
-  //     UNION ALL
-  //     SELECT mf.id
-  //     FROM media_folders mf
-  //     INNER JOIN subfolders sf ON mf.parent_folder_id = sf.id
-  //   )
-  //   SELECT m.public_id, m.type
-  //   FROM media m
-  //   WHERE m.folder_id IN (SELECT id FROM subfolders) AND m.project_idx = ?
-  // `;
-  // const [mediaResults] = await connection.query(recursiveQuery, [
-  //   folder_id,
-  //   project_idx,
-  // ]);
-  // if (mediaResults.length > 0) {
-  //   await deleteFromAWS(mediaResults);
-  // }
-
-  const result = await deleteAndReindex(
-    connection,
-    "media_folders",
-    "folder_id",
-    folder_id,
-    ["project_idx", "parent_folder_id"]
-  );
-
-  return result;
-};
 
 // ---------- MEDIA FUNCTIONS ----------
 export const getMediaFunction = async (project_idx: number) => {

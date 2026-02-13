@@ -1,228 +1,43 @@
 // project/src/modules/MediaModule/MediaFoldersSidebar.tsx
 "use client";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import {
   DndContext,
-  DragEndEvent,
   PointerSensor,
   useSensor,
   useSensors,
   DragOverlay,
-  rectIntersection,
 } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import {
-  Folder,
-  FolderOpen,
-  GripVertical,
-  ChevronRight,
-  ChevronDown,
-} from "lucide-react";
-import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { buildFolderTree, MediaFolderNode } from "@/util/functions/Tree";
-import { FolderScope, MediaFolder } from "@open-dream/shared";
-import Modal2MultiStepModalInput, {
-  StepConfig,
-} from "@/modals/Modal2MultiStepInput";
+import { Folder } from "lucide-react"; 
+import { FolderScope, ProjectFolder } from "@open-dream/shared";
 import { AuthContext } from "@/contexts/authContext";
-import { FaPlus } from "react-icons/fa6";
 import Divider from "@/lib/blocks/Divider";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { motion } from "framer-motion";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 import {
-  setCurrentOpenFolders,
+  resetDragUI,
   setSelectedFolderForScope,
   useFoldersCurrentDataStore,
 } from "../_util/Folders/_store/folders.store";
-
-function findNode(
-  nodes: MediaFolderNode[],
-  id: number,
-): MediaFolderNode | null {
-  for (const node of nodes) {
-    if (node.id === id) return node;
-    if (node.children?.length) {
-      const found = findNode(node.children, id);
-      if (found) return found;
-    }
-  }
-  return null;
-}
+import { folderDndCollisions } from "../_util/Folders/_helpers/folders.helpers";
+import {
+  useFolderDndHandlers,
+  useProjectFolderHooks,
+} from "../_util/Folders/_hooks/folders.hooks";
+import { openFolder } from "../_util/Folders/_actions/folders.actions";
+import { useProjectFolders } from "@/contexts/queryContext/queries/projectFolders";
+import FolderTree from "../_util/Folders/FolderTree";
+import { FolderItemDisplay } from "../_util/Folders/FolderItemDisplay";
 
 export default function MediaFoldersSidebar() {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { mediaFolders, upsertMediaFolders } = useContextQueries();
-  const { hoveredFolder, setHoveredFolder, modal2, setModal2 } = useUiStore();
+  const { hoveredFolder, setHoveredFolder } = useUiStore();
   const { currentProjectId } = useCurrentDataStore();
-  const { currentOpenFolders } = useFoldersCurrentDataStore();
+  const { draggingFolderId } = useFoldersCurrentDataStore();
 
-  const sensors = useSensors(useSensor(PointerSensor));
-  const [localFolders, setLocalFolders] = useState<MediaFolder[]>([]);
-  useEffect(() => {
-    if (mediaFolders) {
-      setLocalFolders(
-        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)),
-      );
-    }
-  }, [mediaFolders]);
-
-  const folderTree: MediaFolderNode[] = buildFolderTree(localFolders);
-
-  const findParentId = (
-    id: number,
-    nodes: MediaFolderNode[],
-    parentId: number | null = null,
-  ): number | null => {
-    for (const n of nodes) {
-      if (n.id === id) return parentId;
-      if (n.children && n.children.length) {
-        const childResult = findParentId(id, n.children, n.id);
-        if (childResult !== null) return childResult;
-      }
-    }
-    return null;
-  };
-
-  const originalFoldersRef = useRef<MediaFolder[]>([]);
-  useEffect(() => {
-    if (mediaFolders) {
-      originalFoldersRef.current = mediaFolders;
-      setLocalFolders(
-        [...mediaFolders].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0)),
-      );
-    }
-  }, [mediaFolders]);
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const parentId = findParentId(active.id as number, folderTree);
-    const siblings: MediaFolder[] = parentId
-      ? localFolders.filter((f) => f.parent_folder_id === parentId)
-      : localFolders.filter((f) => f.parent_folder_id === null);
-
-    const oldIndex = siblings.findIndex((f) => f.id === active.id);
-    const newIndex = siblings.findIndex((f) => f.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const newSiblingsOrder = arrayMove(siblings, oldIndex, newIndex);
-
-    setLocalFolders((prev) =>
-      prev.map((folder) => {
-        const idx = newSiblingsOrder.findIndex((f) => f.id === folder.id);
-        return idx > -1 ? { ...folder, ordinal: idx } : folder;
-      }),
-    );
-
-    const updatedFolders = newSiblingsOrder
-      .map((f, idx) => ({ ...f, ordinal: idx }))
-      .filter((f) => {
-        const original = originalFoldersRef.current.find(
-          (of) => of.id === f.id,
-        );
-        return original && original.ordinal !== f.ordinal;
-      });
-
-    if (updatedFolders.length > 0) {
-      await upsertMediaFolders(updatedFolders);
-    }
-  };
-
-  const newlyAddedFolderRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (newlyAddedFolderRef.current) {
-      const folderFound = mediaFolders.find(
-        (mediaFolder: MediaFolder) =>
-          mediaFolder.folder_id === newlyAddedFolderRef.current,
-      );
-      if (folderFound && folderFound.id) {
-        setSelectedFolderForScope("media" as FolderScope, {
-          id: folderFound.id,
-          folder_id: folderFound.folder_id,
-          scope: "media" as FolderScope,
-        });
-      }
-      newlyAddedFolderRef.current = null;
-    }
-  }, [mediaFolders]);
-
-  const handleAddFolder = async () => {
-    if (!currentProjectId) return;
-    const steps: StepConfig[] = [
-      {
-        name: "name",
-        placeholder: "Folder Name...",
-        validate: (val) => (val.length > 1 ? true : "2+ chars"),
-      },
-    ];
-
-    // setModal2({
-    //   ...modal2,
-    //   open: true,
-    //   showClose: false,
-    //   offClickClose: true,
-    //   width: "w-[300px]",
-    //   maxWidth: "max-w-[400px]",
-    //   aspectRatio: "aspect-[5/2]",
-    //   borderRadius: "rounded-[12px] md:rounded-[15px]",
-    //   content: (
-    //     <Modal2MultiStepModalInput
-    //       steps={steps}
-    //       key={`trigger-${Date.now()}`}
-    //       onComplete={async (values) => {
-    //         const newIds = await upsertMediaFolders([
-    //           {
-    //             folder_id: null,
-    //             project_idx: currentProjectId,
-    //             parent_folder_id: selectedFolder ? selectedFolder.id : null,
-    //             name: values.name,
-    //             ordinal: null,
-    //           } as MediaFolder,
-    //         ]);
-    //         if (newIds && newIds.length) {
-    //           if (selectedFolder && selectedFolder.id) {
-    //             setCurrentOpenFolders((prev) =>
-    //               new Set(prev).add(selectedFolder.folder_id!),
-    //             );
-    //           }
-    //           newlyAddedFolderRef.current = newIds[0];
-    //         }
-    //       }}
-    //     />
-    //   ),
-    // });
-  };
-
-  const renderFolderIcons = (folder: MediaFolderNode) => {
-    if (!folder.folder_id) return;
-    const isOpen = currentOpenFolders.has(folder.folder_id);
-
-    return (
-      <>
-        {folder.children?.length ? (
-          isOpen ? (
-            <ChevronDown size={15} className="w-[13px]" />
-          ) : (
-            <ChevronRight size={15} className="w-[13px]" />
-          )
-        ) : (
-          <span className="w-[13px]" />
-        )}
-
-        {isOpen ? (
-          <FolderOpen size={16} className="w-[17px]" />
-        ) : (
-          <Folder size={16} className="w-[17px]" />
-        )}
-      </>
-    );
-  };
-
-  const [activeId, setActiveId] = useState<number | null>(null);
   const isDraggedOver = hoveredFolder === "-1";
 
   useEffect(() => {
@@ -263,6 +78,29 @@ export default function MediaFoldersSidebar() {
     return () => window.removeEventListener("mousemove", handleMove);
   }, []);
 
+  const folderScope = "media" as FolderScope;
+  const folderDnd = useFolderDndHandlers(folderScope);
+  const { handleAddFolder } = useProjectFolderHooks(folderScope);
+  const dragStartPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
+  );
+  const { projectFolders } = useProjectFolders(
+    !!currentUser,
+    currentProjectId!,
+    {
+      scope: folderScope as FolderScope,
+      process_id: null,
+    },
+  );
+
+  const draggingFolder = useMemo(() => {
+    const result = projectFolders.find(
+      (folder: ProjectFolder) => folder.folder_id === draggingFolderId,
+    );
+    return result;
+  }, [projectFolders, draggingFolderId]);
+
   if (!currentUser) return null;
 
   return (
@@ -287,7 +125,7 @@ export default function MediaFoldersSidebar() {
         <div className="flex flex-row gap-[13.5px] items-center w-[100%]">
           <p
             onClick={() =>
-              setSelectedFolderForScope("media" as FolderScope, null)
+              setSelectedFolderForScope(folderScope as FolderScope, null)
             }
             className="cursor-pointer hover:opacity-[75%] transition-all duration-300 ease-in-out w-[100%] font-[600] h-[40px] truncate text-[24px] leading-[30px] mt-[1px]"
           >
@@ -296,13 +134,14 @@ export default function MediaFoldersSidebar() {
         </div>
 
         <div
-          onClick={handleAddFolder}
+          data-leftbar-button
+          onClick={() => handleAddFolder(folderScope)}
           className="dim cursor-pointer hover:brightness-[85%] min-w-[30px] w-[30px] h-[30px] mt-[-5px] rounded-full flex justify-center items-center"
           style={{
             backgroundColor: currentTheme.background_1_3,
           }}
         >
-          <FaPlus size={12} />
+          <Folder size={13} />
         </div>
       </motion.div>
 
@@ -313,46 +152,71 @@ export default function MediaFoldersSidebar() {
       <div className="px-[15px] flex-1 overflow-y-auto">
         <DndContext
           sensors={sensors}
-          collisionDetection={rectIntersection}
-          onDragStart={(event) => {
-            setActiveId(event.active.id as number);
+          collisionDetection={folderDndCollisions}
+          onDragStart={(e) => {
+            resetDragUI();
+            const evt = e.activatorEvent as PointerEvent;
+            dragStartPointerRef.current = {
+              x: evt.clientX,
+              y: evt.clientY,
+            };
+            const data = e.active.data.current;
+            if (data?.kind === "FOLDER") {
+              folderDnd.onDragStart(e);
+            }
           }}
-          onDragEnd={(event) => {
-            setActiveId(null);
-            handleDragEnd(event);
+          onDragEnd={async (e) => {
+            const activeData = e.active.data.current;
+            const overData = e.over?.data.current;
+
+            if (activeData?.kind === "FOLDER" && overData?.kind === "FOLDER") {
+              folderDnd.onDragEnd(e);
+              return;
+            }
+
+            const active = e.active.data.current;
+            const over = e.over?.data.current;
+
+            if (
+              active?.kind.startsWith("FOLDER-ITEM") &&
+              over?.kind === "FOLDER" &&
+              over.folder.id !== active.item.folder_id
+            ) {
+              const normalizedFolderId =
+                over.folder.id === -1 ? null : over.folder.id;
+
+              if (normalizedFolderId) {
+                const foundFolder = projectFolders.find(
+                  (folder: ProjectFolder) => folder.id === normalizedFolderId,
+                );
+                if (foundFolder) {
+                  openFolder(foundFolder);
+                }
+              }
+            }
+            dragStartPointerRef.current = null;
+            resetDragUI();
           }}
-          onDragCancel={() => setActiveId(null)}
+          onDragCancel={(e) => {
+            folderDnd.onDragCancel();
+            dragStartPointerRef.current = null;
+            resetDragUI();
+          }}
         >
-          {/* <SortableContext
-            items={folderTree.map((f) => f.id!)}
-            strategy={verticalListSortingStrategy}
-          >
-            {folderTree.map((folder, index) => (
-              // <FolderItem key={folder.id} folder={folder} depth={0} />
-              <DraggableFolderItem key={index} />
-            ))}
-          </SortableContext> */}
+          <FolderTree folderScope={folderScope} />
 
           <DragOverlay>
-            {activeId
-              ? (() => {
-                  const activeNode = findNode(folderTree, activeId);
-                  if (!activeNode) return null;
-
-                  return (
-                    <div
-                      style={{
-                        backgroundColor: currentTheme.background_2,
-                      }}
-                      className="flex items-center gap-2 px-2 py-1 shadow rounded max-h-[32px]"
-                    >
-                      <GripVertical size={14} className="text-gray-400" />
-                      {renderFolderIcons(activeNode)}
-                      <span className="truncate">{activeNode.name}</span>
-                    </div>
-                  );
-                })()
-              : null}
+            {draggingFolder && (
+              <FolderItemDisplay
+                scope={draggingFolder.scope}
+                isGhost={true}
+                node={null}
+                name={draggingFolder.name}
+                depth={0}
+                listeners={null}
+                outline={false}
+              />
+            )}
           </DragOverlay>
         </DndContext>
       </div>

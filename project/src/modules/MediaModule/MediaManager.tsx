@@ -1,45 +1,30 @@
 // project/src/modules/MediaModule/MediaManager.tsx
-import { useState, useContext, useMemo, useEffect } from "react";
+import { useState, useContext, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import MediaFoldersSidebar from "./MediaFoldersSidebar";
 import MediaGrid from "./MediaGrid";
 import MediaToolbar from "./MediaToolbar";
-import { Media, MediaFolder } from "@open-dream/shared";
-import { collectParentIds } from "@/util/functions/Tree";
-import {
-  setCurrentMediaItemsSelected,
-  useCurrentDataStore,
-} from "@/store/currentDataStore";
+import { Media } from "@open-dream/shared";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
 
 const MediaManager = () => {
   const { currentProjectId } = useCurrentDataStore();
   const { currentUser } = useContext(AuthContext);
-  const { selectedFolder } = useFoldersCurrentDataStore();
+  const { selectedFoldersByScope } = useFoldersCurrentDataStore();
 
-  const { media, mediaFolders } = useContextQueries();
+  const { media } = useContextQueries();
   const [view, setView] = useState<"grid" | "list">("grid");
   const [editMode, setEditMode] = useState<boolean>(false);
 
-  function openAllParents(folder: MediaFolder) {
-    const parentIds = collectParentIds(folder, mediaFolders);
-    // setCurrentOpenFolders((prev) => {
-    //   const next = new Set(prev);
-    //   parentIds.forEach((id) => next.add(id));
-    //   return next;
-    // });
-  }
-
-  useEffect(() => {
-    setCurrentMediaItemsSelected([]);
-  }, [selectedFolder]);
-
   const filteredMedia: Media[] = useMemo(() => {
-    return selectedFolder
-      ? media.filter((m: Media) => m.folder_id === selectedFolder.id)
-      : media.filter((m: Media) => m.folder_id === null);
-  }, [media, selectedFolder]);
+    const selected = selectedFoldersByScope?.["media"];
+    if (selected?.id) {
+      return media.filter((m: Media) => m.folder_id === selected.id);
+    }
+    return media.filter((m: Media) => m.folder_id === null);
+  }, [media, selectedFoldersByScope]);
 
   if (!currentUser || !currentProjectId) return null;
 
@@ -60,7 +45,6 @@ const MediaManager = () => {
           view={view}
           projectId={currentProjectId}
           editMode={editMode}
-          openAllParents={openAllParents}
         />
       </div>
     </div>

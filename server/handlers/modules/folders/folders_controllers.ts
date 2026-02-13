@@ -11,8 +11,8 @@ import { folderScopes } from "@open-dream/shared";
 
 export const getFolders = async (req: Request) => {
   const project_idx = req.user?.project_idx;
-  const { scope, process_id } = req.body;
-
+  const { scope, process_id } = req.body; 
+  
   if (!project_idx || !scope || !folderScopes.includes(scope)) {
     throw new Error("Invalid scope");
   }

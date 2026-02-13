@@ -6,6 +6,7 @@ import {
   ProjectFolderNodeItem,
   useFoldersCurrentDataStore,
 } from "../_store/folders.store";
+import { closestCenter } from "@dnd-kit/core";
 
 export function treesEqual(a: any, b: any) {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -218,3 +219,49 @@ export function moveFolderLocal(
 
   return newTree;
 }
+
+export const folderDndCollisions = (args: any) => {
+  const { droppableContainers, pointerCoordinates } = args;
+
+  if (!pointerCoordinates) return [];
+
+  const folders = droppableContainers.filter(
+    (c: any) => c.data.current?.kind === "FOLDER"
+  );
+
+  if (!folders.length) return [];
+  const insideFolder = folders.filter((c: any) => {
+    const rect = c.rect.current;
+    if (!rect) return false;
+    return (
+      pointerCoordinates.y >= rect.top && pointerCoordinates.y <= rect.bottom
+    );
+  });
+
+  if (insideFolder.length) {
+    return closestCenter({
+      ...args,
+      droppableContainers: insideFolder,
+    });
+  }
+
+  // Otherwise: lock to folder ABOVE pointer (never switch halfway)
+  const sorted = folders
+    .map((c: any) => ({
+      id: c.id,
+      rect: c.rect.current!,
+    }))
+    .sort((a: any, b: any) => a.rect.top - b.rect.top);
+
+  let target = sorted[0];
+
+  for (let i = 0; i < sorted.length; i++) {
+    if (pointerCoordinates.y < sorted[i].rect.top) {
+      target = sorted[Math.max(0, i - 1)];
+      break;
+    }
+    target = sorted[i];
+  }
+
+  return target ? [{ id: target.id }] : [];
+};

@@ -52,7 +52,7 @@ export type Modal =
 export type UIState = {
   screen: Screen;
   modals: Modal[];
-  sidebar: "none" | "mediaFolders" | "settings";
+  sidebar: "none" | "settings";
   setScreen: (s: Screen) => void;
   pushModal: (m: Modal) => void;
   popModal: () => void;

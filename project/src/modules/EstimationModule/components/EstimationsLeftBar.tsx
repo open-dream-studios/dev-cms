@@ -130,11 +130,9 @@ export default function EstimationsLeftBar() {
           </div>
 
           <div className="w-[100%] h-[100%] overflow-y-auto flex flex-col gap-[4px]">
-            {variableView === "fact" && (
-              <div className={`px-[12px] flex-1 overflow-y-auto w-[100%]`}>
-                <FolderTree folderScope={"estimation_process"}/>
-              </div>
-            )}
+            <div className={`px-[12px] flex-1 overflow-y-auto w-[100%]`}>
+              <FolderTree folderScope={"estimation_process"} />
+            </div>
           </div>
         </div>
       ) : (
@@ -239,7 +237,7 @@ export default function EstimationsLeftBar() {
             </div>
           )}
 
-          <div className="select-none w-[100%] flex flex-row gap-[7px] justify-center pb-[8px] mb-[0px] px-3 text-[12px] font-[400]">
+          <div className="select-none w-[100%] flex flex-row gap-[7px] justify-center pb-[8px] px-3 text-[12px] font-[400]">
             <div
               onClick={() => handleFolderTypeClick("fact")}
               style={{
@@ -279,28 +277,37 @@ export default function EstimationsLeftBar() {
           </div>
 
           {variableView === "fact" && (
-            <div className={`px-3 flex-1 overflow-y-auto w-[100%]`}>
-              {/* {tree.map((node) => (
-                <SortableContext
-                  key={node.folder_id}
-                  items={node.children.map((f) => `folder-${f.folder_id}`)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <DraggableFolderItem node={node} depth={0} scope={folderScope} />
-                </SortableContext>
-              ))} */}
+            // <div className={`px-3 flex-1 overflow-y-auto w-[100%]`}>
+            //   {tree.map((node) => (
+            //     <SortableContext
+            //       key={node.folder_id}
+            //       items={node.children.map((f) => `folder-${f.folder_id}`)}
+            //       strategy={verticalListSortingStrategy}
+            //     >
+            //       <DraggableFolderItem node={node} depth={0} scope={folderScope} />
+            //     </SortableContext>
+            //   ))}
+            // </div>
+            <div className="w-[100%] h-[100%] overflow-y-auto flex flex-col gap-[4px]">
+              <div className={`px-[12px] flex-1 overflow-y-auto w-[100%]`}>
+                <FolderTree folderScope={"estimation_fact_definition"} />
+              </div>
             </div>
           )}
 
           {variableView !== "fact" && (
             <div className="px-3 flex-1 overflow-y-auto pb-[15px]">
               {folderScope === "estimation_fact_definition" &&
-                scopedListItems.map((fact) => (
-                  <FactDraggableItem
-                    key={fact.id}
-                    fact={fact as EstimationFactDefinition}
-                  />
-                ))}
+                scopedListItems.map((fact, index) => {
+                  return (
+                    <div key={index}>
+                      <FactDraggableItem
+                        key={fact.id}
+                        fact={fact as EstimationFactDefinition}
+                      />
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>

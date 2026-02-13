@@ -15,7 +15,7 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Media, MediaFolder } from "@open-dream/shared";
+import { Media } from "@open-dream/shared";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { IoCloseOutline } from "react-icons/io5";
@@ -38,7 +38,6 @@ type SortableMediaItemProps = {
   disabled?: boolean;
   editMode: boolean;
   activeMedia: Media | null;
-  openAllParents: (folder: MediaFolder) => void;
 };
 
 function SortableMediaItem({
@@ -46,7 +45,6 @@ function SortableMediaItem({
   disabled = false,
   editMode,
   activeMedia,
-  openAllParents,
 }: SortableMediaItemProps) {
   const {
     attributes,
@@ -241,14 +239,12 @@ type MediaGridProps = {
   view: "grid" | "list";
   projectId: number;
   editMode: boolean;
-  openAllParents: (folder: MediaFolder) => void;
 };
 
 export default function MediaGrid({
   filteredMedia,
   view,
   editMode,
-  openAllParents,
 }: MediaGridProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -267,7 +263,7 @@ export default function MediaGrid({
   } = useCurrentDataStore();
   const { dragItemSize, setDraggingItem, hoveredFolder, setHoveredFolder } =
     useUiStore();
-  const { selectedFolder } = useFoldersCurrentDataStore();
+  const { selectedFoldersByScope } = useFoldersCurrentDataStore();
 
   const [localMedia, setLocalMedia] = useState<Media[]>([]);
   const [activeMedia, setActiveMedia] = useState<Media | null>(null);
@@ -285,7 +281,7 @@ export default function MediaGrid({
     const { active, over } = event;
 
     setDraggingItem(null);
-    setHoveredFolder(null);
+    setHoveredFolder(null); 
 
     if (hoveredFolder) {
       const draggedMediaId = active.id;
@@ -312,7 +308,7 @@ export default function MediaGrid({
     }
     if (!over || active.id === over.id) return;
 
-    const folderId = selectedFolder ? selectedFolder.id : null;
+    const folderId = selectedFoldersByScope["media"]?.id ?? null;
     const siblings = folderId
       ? localMedia.filter((m) => m.folder_id === folderId)
       : localMedia.filter((m) => m.folder_id === null);
@@ -393,7 +389,6 @@ export default function MediaGrid({
                 disabled={false}
                 editMode={editMode}
                 activeMedia={activeMedia}
-                openAllParents={openAllParents}
               />
             ))}
           </div>

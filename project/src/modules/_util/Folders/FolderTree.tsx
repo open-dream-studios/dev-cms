@@ -20,10 +20,12 @@ import {
 } from "@dnd-kit/sortable";
 import { useSyncFolderTree } from "./_hooks/folders.hooks";
 import { CSS } from "@dnd-kit/utilities";
+import { useUiStore } from "@/store/useUIStore";
 
 const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
   const { folderTreesByScope, currentOpenFolders } =
     useFoldersCurrentDataStore();
+  const { screen } = useUiStore()
 
   useSyncFolderTree(folderScope);
 
@@ -46,7 +48,9 @@ const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
     ) {
       return;
     }
-    setSelectedFolderForScope(folderScope, null);
+    if (screen === "estimations-calculation") {
+      setSelectedFolderForScope(folderScope, null);
+    }
   });
 
   return (
@@ -97,6 +101,7 @@ const SortableStaticItem = ({
         transform: CSS.Transform.toString(transform),
         transition,
         marginLeft: `${flat.depth * 10}px`,
+        marginBottom: 4,
       }}
     >
       {scope === "estimation_fact_definition" && (

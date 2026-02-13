@@ -19,7 +19,6 @@ import {
   useProjectUsers,
   useIntegrations,
   useModuleFunctions,
-  useMediaFolders,
   useMedia,
   usePageDefinitions,
   useProjectPages,
@@ -37,7 +36,6 @@ import {
   Job,
   JobDefinition,
   Task,
-  MediaFolder,
   MediaLink,
   Integration,
   Project,
@@ -137,14 +135,8 @@ export type QueryContextType = {
   rotateMedia: (
     media_id: string,
     url: string,
-    rotations: number
+    rotations: number,
   ) => Promise<any>;
-
-  mediaFolders: MediaFolder[];
-  isLoadingMediaFolders: boolean;
-  refetchMediaFolders: () => void;
-  upsertMediaFolders: (data: MediaFolder[]) => Promise<number[]>;
-  deleteMediaFolder: (folder_id: string) => Promise<void>;
 
   // ---- Media Links ----
   mediaLinks: MediaLink[];
@@ -168,7 +160,7 @@ export type QueryContextType = {
   deleteProjectPage: (page_id: string) => Promise<void>;
   reorderProjectPages: (
     parent_page_id: number | null,
-    orderedIds: string[]
+    orderedIds: string[],
   ) => Promise<any>;
 
   // ---- SECTIONS ----
@@ -262,7 +254,7 @@ export type QueryContextType = {
   isLoadingActionDefinitions: boolean;
   refetchActionDefinitions: () => Promise<any>;
   upsertActionDefinition: (
-    actionDefinition: ActionDefinitionInput
+    actionDefinition: ActionDefinitionInput,
   ) => Promise<void>;
   deleteActionDefinition: (action_definition_id: string) => Promise<void>;
 
@@ -286,7 +278,9 @@ export type QueryContextType = {
   scheduleRequests: ScheduleRequest[];
   isLoadingScheduleRequests: boolean;
   refetchScheduleRequests: () => Promise<any>;
-  upsertScheduleRequest: (scheduleRequest: ScheduleRequestInput) => Promise<void>;
+  upsertScheduleRequest: (
+    scheduleRequest: ScheduleRequestInput,
+  ) => Promise<void>;
   deleteScheduleRequest: (schedule_request_id: string) => Promise<void>;
   markConfirmationSent: (schedule_request_id: string) => Promise<void>;
   rescheduleScheduleRequest: (request: ScheduleRequestInput) => Promise<void>;
@@ -301,7 +295,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
   const { currentUser } = useContext(AuthContext);
   const isLoggedIn = useMemo(
     () => !!currentUser?.user_id,
-    [currentUser?.user_id]
+    [currentUser?.user_id],
   );
   const isOptimisticUpdate = useRef(false);
 
@@ -364,13 +358,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     upsertMediaLinks,
     deleteMediaLinks,
   } = useMediaLinks(isLoggedIn, currentProjectId);
-  const {
-    mediaFolders,
-    isLoadingMediaFolders,
-    refetchMediaFolders,
-    upsertMediaFolders,
-    deleteMediaFolder,
-  } = useMediaFolders(isLoggedIn, currentProjectId);
   const {
     pageDefinitions,
     isLoadingPageDefinitions,
@@ -436,7 +423,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const { upsertUpdate, addRequest, deleteUpdate, toggleComplete } = useUpdates(
     isLoggedIn,
-    currentProjectId
+    currentProjectId,
   );
 
   const { projectCalls, isLoadingProjectCalls, refetchProjectCalls } =
@@ -486,7 +473,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     upsertScheduleRequest,
     deleteScheduleRequest,
     markConfirmationSent,
-    rescheduleScheduleRequest
+    rescheduleScheduleRequest,
   } = useScheduleRequests(isLoggedIn);
 
   return (
@@ -526,11 +513,8 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         runModule,
         isRunningModule,
         media,
-        mediaFolders,
         isLoadingMedia,
-        isLoadingMediaFolders,
         refetchMedia,
-        refetchMediaFolders,
         upsertMedia,
         deleteMedia,
         rotateMedia,
@@ -539,8 +523,6 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchMediaLinks,
         upsertMediaLinks,
         deleteMediaLinks,
-        upsertMediaFolders,
-        deleteMediaFolder,
         pageDefinitions,
         isLoadingPageDefinitions,
         refetchPageDefinitions,
@@ -634,7 +616,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
         upsertScheduleRequest,
         deleteScheduleRequest,
         markConfirmationSent,
-        rescheduleScheduleRequest
+        rescheduleScheduleRequest,
       }}
     >
       {children}
