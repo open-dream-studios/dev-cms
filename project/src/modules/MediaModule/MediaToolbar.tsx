@@ -23,7 +23,7 @@ type Props = {
 
 const MediaToolbar = ({ view, setView, editeMode, setEditMode }: Props) => {
   const folderScope = "media";
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
   const { selectedFoldersByScope } = useFoldersCurrentDataStore();
   const { currentProjectId } = useCurrentDataStore();
@@ -44,7 +44,7 @@ const MediaToolbar = ({ view, setView, editeMode, setEditMode }: Props) => {
       );
     }
     return null;
-  }, []);
+  }, [selectedFoldersByScope, projectFolders]);
 
   const onUploadClick = () => {
     setUploadContext({

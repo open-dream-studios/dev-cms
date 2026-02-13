@@ -80,8 +80,7 @@ export default function MediaFoldersSidebar() {
 
   const folderScope = "media" as FolderScope;
   const folderDnd = useFolderDndHandlers(folderScope);
-  const { handleAddFolder } = useProjectFolderHooks(folderScope);
-  const dragStartPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const { handleAddFolder } = useProjectFolderHooks(folderScope); 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
   );
@@ -154,12 +153,7 @@ export default function MediaFoldersSidebar() {
           sensors={sensors}
           collisionDetection={folderDndCollisions}
           onDragStart={(e) => {
-            resetDragUI();
-            const evt = e.activatorEvent as PointerEvent;
-            dragStartPointerRef.current = {
-              x: evt.clientX,
-              y: evt.clientY,
-            };
+            resetDragUI(); 
             const data = e.active.data.current;
             if (data?.kind === "FOLDER") {
               folderDnd.onDragStart(e);
@@ -168,38 +162,14 @@ export default function MediaFoldersSidebar() {
           onDragEnd={async (e) => {
             const activeData = e.active.data.current;
             const overData = e.over?.data.current;
-
             if (activeData?.kind === "FOLDER" && overData?.kind === "FOLDER") {
               folderDnd.onDragEnd(e);
               return;
             }
-
-            const active = e.active.data.current;
-            const over = e.over?.data.current;
-
-            if (
-              active?.kind.startsWith("FOLDER-ITEM") &&
-              over?.kind === "FOLDER" &&
-              over.folder.id !== active.item.folder_id
-            ) {
-              const normalizedFolderId =
-                over.folder.id === -1 ? null : over.folder.id;
-
-              if (normalizedFolderId) {
-                const foundFolder = projectFolders.find(
-                  (folder: ProjectFolder) => folder.id === normalizedFolderId,
-                );
-                if (foundFolder) {
-                  openFolder(foundFolder);
-                }
-              }
-            }
-            dragStartPointerRef.current = null;
             resetDragUI();
           }}
           onDragCancel={(e) => {
-            folderDnd.onDragCancel();
-            dragStartPointerRef.current = null;
+            folderDnd.onDragCancel(); 
             resetDragUI();
           }}
         >
