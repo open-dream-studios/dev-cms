@@ -6,12 +6,12 @@ import {
   setCurrentMediaItemsSelected,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
-import { setUploadContext, useUiStore } from "@/store/useUIStore";
+import { setUploadContext } from "@/store/useUIStore";
 import { Grid, List, Upload } from "lucide-react";
 import { useContext, useMemo } from "react";
 import { FiEdit } from "react-icons/fi";
 import { useFoldersCurrentDataStore } from "../_util/Folders/_store/folders.store";
-import { FolderScope, ProjectFolder } from "@open-dream/shared";
+import { ProjectFolder } from "@open-dream/shared";
 import { useProjectFolders } from "@/contexts/queryContext/queries/projectFolders";
 
 type Props = {

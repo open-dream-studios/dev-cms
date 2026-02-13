@@ -72,7 +72,7 @@ export default function EstimationsLeftBar() {
       );
     } else if (folderScope === "estimation_process") {
       scopedFacts = estimationProcesses;
-    }
+    } 
     return scopedFacts;
   }, [factDefinitions, variableView, folderScope, estimationProcesses]);
 
@@ -277,17 +277,6 @@ export default function EstimationsLeftBar() {
           </div>
 
           {variableView === "fact" && (
-            // <div className={`px-3 flex-1 overflow-y-auto w-[100%]`}>
-            //   {tree.map((node) => (
-            //     <SortableContext
-            //       key={node.folder_id}
-            //       items={node.children.map((f) => `folder-${f.folder_id}`)}
-            //       strategy={verticalListSortingStrategy}
-            //     >
-            //       <DraggableFolderItem node={node} depth={0} scope={folderScope} />
-            //     </SortableContext>
-            //   ))}
-            // </div>
             <div className="w-[100%] h-[100%] overflow-y-auto flex flex-col gap-[4px]">
               <div className={`px-[12px] flex-1 overflow-y-auto w-[100%]`}>
                 <FolderTree folderScope={"estimation_fact_definition"} />

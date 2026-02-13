@@ -54,26 +54,14 @@ export function useFolderTreeItems(scope: FolderScope) {
     currentProcessId,
   );
 
-  // const itemsByScope: Record<FolderScope, any[]> = {
-  //   estimation_fact_definition: factDefinitions.filter((item)=> item.variable_scope === "fact") ?? [],
-  //   estimation_process: estimationProcesses ?? [],
-  //   estimation_variable: [],
-  //   media: [],
-  // };
+  const itemsByScope: Record<FolderScope, any[]> = {
+    estimation_fact_definition: factDefinitions.filter((item)=> item.variable_scope === "fact") ?? [],
+    estimation_process: estimationProcesses ?? [],
+    estimation_variable: [],
+    media: [],
+  };
 
-  // return itemsByScope[scope] ?? [];
-
-  const itemsByScope = useMemo<Record<FolderScope, any[]>>(
-    () => ({
-      estimation_fact_definition: factDefinitions ?? [],
-      estimation_process: estimationProcesses ?? [],
-      estimation_variable: [],
-      media: [],
-    }),
-    [factDefinitions, estimationProcesses],
-  );
-
-  return itemsByScope[scope];
+  return itemsByScope[scope] ?? [];
 }
 
 export function useSyncFolderTree(scope: FolderScope) {

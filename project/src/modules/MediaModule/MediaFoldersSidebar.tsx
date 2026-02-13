@@ -1,6 +1,6 @@
 // project/src/modules/MediaModule/MediaFoldersSidebar.tsx
 "use client";
-import { useContext, useEffect, useMemo, useRef } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -8,7 +8,7 @@ import {
   useSensors,
   DragOverlay,
 } from "@dnd-kit/core";
-import { Folder } from "lucide-react"; 
+import { Folder } from "lucide-react";
 import { FolderScope, ProjectFolder } from "@open-dream/shared";
 import { AuthContext } from "@/contexts/authContext";
 import Divider from "@/lib/blocks/Divider";
@@ -26,7 +26,6 @@ import {
   useFolderDndHandlers,
   useProjectFolderHooks,
 } from "../_util/Folders/_hooks/folders.hooks";
-import { openFolder } from "../_util/Folders/_actions/folders.actions";
 import { useProjectFolders } from "@/contexts/queryContext/queries/projectFolders";
 import FolderTree from "../_util/Folders/FolderTree";
 import { FolderItemDisplay } from "../_util/Folders/FolderItemDisplay";
@@ -80,7 +79,7 @@ export default function MediaFoldersSidebar() {
 
   const folderScope = "media" as FolderScope;
   const folderDnd = useFolderDndHandlers(folderScope);
-  const { handleAddFolder } = useProjectFolderHooks(folderScope); 
+  const { handleAddFolder } = useProjectFolderHooks(folderScope);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
   );
@@ -153,7 +152,7 @@ export default function MediaFoldersSidebar() {
           sensors={sensors}
           collisionDetection={folderDndCollisions}
           onDragStart={(e) => {
-            resetDragUI(); 
+            resetDragUI();
             const data = e.active.data.current;
             if (data?.kind === "FOLDER") {
               folderDnd.onDragStart(e);
@@ -169,7 +168,7 @@ export default function MediaFoldersSidebar() {
             resetDragUI();
           }}
           onDragCancel={(e) => {
-            folderDnd.onDragCancel(); 
+            folderDnd.onDragCancel();
             resetDragUI();
           }}
         >
