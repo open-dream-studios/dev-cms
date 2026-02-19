@@ -132,6 +132,7 @@
 # BUILD STAGE
 # =========================
 FROM node:20-bookworm AS build
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
 RUN apt-get update && apt-get install -y \
   build-essential \
@@ -195,7 +196,6 @@ RUN npm run build --workspace=server
 # RUNTIME STAGE
 # =========================
 FROM node:20-bookworm
-
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
 WORKDIR /usr/src/app
