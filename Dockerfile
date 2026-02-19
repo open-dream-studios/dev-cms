@@ -61,14 +61,6 @@ FROM node:20-bookworm AS build
 #   && make -j"$(nproc)" && make install && ldconfig \
 #   && rm -rf /tmp/libheif
 
-RUN apt-get update && apt-get install -y \
-  build-essential ca-certificates gcc g++ make python3 pkg-config cmake git curl \
-  libvips-dev \
-  libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev \
-  libglib2.0-dev libpango1.0-dev libgirepository1.0-dev \
-  libheif-dev \
-  && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /usr/src/app
 
 COPY server ./server
@@ -76,8 +68,6 @@ COPY shared ./shared
 COPY package.json package-lock.json ./
 
 RUN npm ci --workspaces
-
-RUN npm rebuild sharp --build-from-source
 
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=server
@@ -93,8 +83,9 @@ FROM node:20-bookworm-slim
 #   && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
-  libjpeg62-turbo libpng16-16 libtiff6 libavif15 libde265-0 libx265-199 \
-  libglib2.0-0 libpango-1.0-0 libheif1 \
+  libheif1 \
+  libde265-0 \
+  libx265-199 \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
