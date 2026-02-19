@@ -1,14 +1,17 @@
 // project/src/modules/MediaModule/MediaPlayer.tsx
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { setCurrentMediaSelected, useCurrentDataStore } from "@/store/currentDataStore"; 
+import {
+  setCurrentMediaSelected,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import React, { useRef, useState } from "react";
 
 const MediaPlayer = () => {
-  const currentTheme = useCurrentTheme()
-  const { currentMediaSelected } =
-    useCurrentDataStore();
+  const currentTheme = useCurrentTheme();
+  const { currentMediaSelected } = useCurrentDataStore();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTime, setVideoTime] = useState({ current: 0, duration: 0 });
+  const [isLoading, setIsLoading] = useState(true);
 
   if (!currentMediaSelected) return null;
   return (
@@ -21,6 +24,13 @@ const MediaPlayer = () => {
     >
       {currentMediaSelected.type === "video" ? (
         <div className="relative max-w-[100%] max-h-[100%]">
+          {/* Spinner */}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 border-4 border-gray-300 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+
           <video
             ref={videoRef}
             src={currentMediaSelected.url}
@@ -29,6 +39,11 @@ const MediaPlayer = () => {
             loop
             autoPlay
             onClick={() => setCurrentMediaSelected(null)}
+            onLoadStart={() => setIsLoading(true)}
+            onCanPlay={() => setIsLoading(false)}
+            onPlaying={() => setIsLoading(false)}
+            onWaiting={() => setIsLoading(true)}
+            onStalled={() => setIsLoading(true)}
             onTimeUpdate={(e) => {
               const v = e.currentTarget;
               setVideoTime({

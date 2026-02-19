@@ -220,7 +220,7 @@ const Navbar = () => {
           {updatingLock && (
             <div
               style={{
-                opacity: currentUser.theme === "dark" ? 0.1 : 0.7,
+                opacity: currentUser.theme === "dark" ? 0.3 : 0.7,
                 border:
                   currentUser.theme === "light"
                     ? "2px solid #dddddd"

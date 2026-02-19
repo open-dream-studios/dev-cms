@@ -38,18 +38,6 @@
 # =========================
 FROM node:20-bookworm AS build
 
-RUN apt-get update && apt-get install -y \
-  build-essential \
-  python3 \
-  pkg-config \
-  libvips-dev \
-  libheif-dev \
-  libde265-dev \
-  libx265-dev \
-  libglib2.0-dev \
-  libglib2.0-dev-bin \
-  && rm -rf /var/lib/apt/lists/*
-
 # RUN apt-get update && apt-get install -y \
 #   build-essential ca-certificates gcc g++ make python3 pkg-config cmake git curl \
 #   libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev \
@@ -73,23 +61,24 @@ RUN apt-get update && apt-get install -y \
 #   && make -j"$(nproc)" && make install && ldconfig \
 #   && rm -rf /tmp/libheif
 
+RUN apt-get update && apt-get install -y \
+  build-essential ca-certificates gcc g++ make python3 pkg-config cmake git curl \
+  libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev \
+  libglib2.0-dev libpango1.0-dev libgirepository1.0-dev \
+  libheif-dev \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /usr/src/app
 
-# IMPORTANT: copy only what server needs
 COPY server ./server
 COPY shared ./shared
 COPY package.json package-lock.json ./
 
 RUN npm ci --workspaces
 
-RUN npm rebuild sharp --build-from-source --sharp-libvips=system
+RUN npm rebuild sharp --build-from-source
 
-# RUN npm rebuild sharp --build-from-source --sharp-libvips=system
-
-# build shared FIRST
 RUN npm run build --workspace=shared
-
-# then build server
 RUN npm run build --workspace=server
 
 # =========================
@@ -97,18 +86,23 @@ RUN npm run build --workspace=server
 # =========================
 FROM node:20-bookworm-slim
 
+# RUN apt-get update && apt-get install -y \
+#   libjpeg62-turbo libpng16-16 libtiff6 libavif15 libde265-0 libx265-199 \
+#   libglib2.0-0 libpango-1.0-0 \
+#   && rm -rf /var/lib/apt/lists/*
+
 RUN apt-get update && apt-get install -y \
   libjpeg62-turbo libpng16-16 libtiff6 libavif15 libde265-0 libx265-199 \
-  libglib2.0-0 libpango-1.0-0 \
+  libglib2.0-0 libpango-1.0-0 libheif1 \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
+# Copy only runtime artifacts
 # COPY --from=build /usr/lib /usr/lib
 # COPY --from=build /usr/local/lib /usr/local/lib
 COPY --from=build /usr/src/app/server/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/package.json ./
-COPY --from=build /usr/src/app/shared ./shared
 
 CMD ["node", "dist/index.js"]
