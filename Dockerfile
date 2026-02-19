@@ -39,11 +39,14 @@
 FROM node:20-bookworm AS build
 
 RUN apt-get update && apt-get install -y \
-  build-essential python3 pkg-config \
+  build-essential \
+  python3 \
+  pkg-config \
   libvips-dev \
   libheif-dev \
   libde265-dev \
   libx265-dev \
+  libglib2.0-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # RUN apt-get update && apt-get install -y \
