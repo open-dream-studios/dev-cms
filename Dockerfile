@@ -156,7 +156,7 @@ RUN apt-get update && apt-get install -y \
 RUN git clone --branch v8.17.3 https://github.com/libvips/libvips.git /tmp/libvips \
   && cd /tmp/libvips \
   && meson setup builddir --prefix=/usr \
-     -Dheif=true \
+     -Dheif=enabled \
   && ninja -C builddir \
   && ninja -C builddir install \
   && ldconfig \
