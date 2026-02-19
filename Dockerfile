@@ -94,7 +94,7 @@ COPY package.json package-lock.json ./
 
 RUN npm ci --workspaces
 
-RUN npm rebuild sharp --build-from-source
+# RUN npm rebuild sharp --build-from-source
 
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=server
