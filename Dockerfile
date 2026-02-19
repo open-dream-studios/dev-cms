@@ -128,17 +128,33 @@
 
 # CMD ["node", "dist/index.js"]
 
+# =========================
+# BUILD STAGE
+# =========================
+FROM node:20-bookworm AS build
+
+WORKDIR /usr/src/app
+
+COPY server ./server
+COPY shared ./shared
+COPY package.json package-lock.json ./
+
+RUN npm ci --workspaces
+
+RUN npm run build --workspace=shared
+RUN npm run build --workspace=server
+
+
+# =========================
+# RUNTIME STAGE
+# =========================
 FROM node:20-bookworm-slim
 
 WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
-RUN npm ci --workspaces
-
-COPY server ./server
-COPY shared ./shared
-
-RUN npm run build --workspace=shared
-RUN npm run build --workspace=server
+COPY --from=build /usr/src/app/server/dist ./dist
+COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/package.json ./
+COPY --from=build /usr/src/app/shared ./shared
 
 CMD ["node", "dist/index.js"]
