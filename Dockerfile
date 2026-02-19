@@ -135,11 +135,15 @@ FROM node:20-bookworm AS build
 
 WORKDIR /usr/src/app
 
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
+ENV npm_config_sharp_binary_host=https://npmmirror.com/mirrors/sharp-libvips
+
 COPY server ./server
 COPY shared ./shared
 COPY package.json package-lock.json ./
 
-RUN npm ci --workspaces
+RUN npm ci --workspaces --include=optional
+RUN npm rebuild sharp
 
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=server
@@ -156,6 +160,5 @@ COPY --from=build /usr/src/app/server/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/package.json ./
 COPY --from=build /usr/src/app/shared ./shared
-
 
 CMD ["node", "dist/index.js"]
