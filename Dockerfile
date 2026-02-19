@@ -99,7 +99,6 @@ FROM node:20-bookworm-slim
 #   && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
-  libvips42 \
   libheif1 \
   libde265-0 \
   libx265-199 \
