@@ -77,7 +77,7 @@ RUN apt-get update && apt-get install -y \
   libde265-dev \
   libx265-dev \
   && rm -rf /var/lib/apt/lists/*
-  
+
 RUN git clone --branch v8.17.3 https://github.com/libvips/libvips.git /tmp/libvips \
   && cd /tmp/libvips \
   && meson setup builddir --prefix=/usr \
@@ -110,7 +110,7 @@ FROM node:20-bookworm-slim
 #   && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
-  libvips42 \
+  # libvips42 \
   libheif1 \
   libde265-0 \
   libx265-199 \
@@ -119,8 +119,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /usr/src/app
 
 # Copy only runtime artifacts
-# COPY --from=build /usr/lib /usr/lib
-# COPY --from=build /usr/local/lib /usr/local/lib
+COPY --from=build /usr/lib /usr/lib
+COPY --from=build /usr/local/lib /usr/local/lib
 COPY --from=build /usr/src/app/server/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/package.json ./
