@@ -61,19 +61,20 @@ FROM node:20-bookworm AS build
 #   && make -j"$(nproc)" && make install && ldconfig \
 #   && rm -rf /tmp/libheif
 
-# RUN apt-get update && apt-get install -y \
-#   build-essential \
-#   python3 \
-#   pkg-config \
-#   libvips-dev \
-#   libheif-dev \
-#   libde265-dev \
-#   libx265-dev \
-#   libglib2.0-dev \
-#   libexpat1-dev \
-#   liborc-0.4-dev \
-#   && rm -rf /var/lib/apt/lists/*
-ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  python3 \
+  pkg-config \
+  libvips-dev \
+  libheif-dev \
+  libde265-dev \
+  libx265-dev \
+  libglib2.0-dev \
+  libgobject-2.0-dev \
+  libgio2.0-dev \
+  libexpat1-dev \
+  liborc-0.4-dev \
+  && rm -rf /var/lib/apt/lists/* 
 
 WORKDIR /usr/src/app
 
@@ -83,7 +84,7 @@ COPY package.json package-lock.json ./
 
 RUN npm ci --workspaces
 
-# RUN npm rebuild sharp --build-from-source
+RUN npm rebuild sharp --build-from-source
 
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=server
@@ -99,6 +100,7 @@ FROM node:20-bookworm-slim
 #   && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y \
+  libvips42 \
   libheif1 \
   libde265-0 \
   libx265-199 \
