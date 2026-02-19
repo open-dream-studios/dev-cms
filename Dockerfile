@@ -47,6 +47,7 @@ RUN apt-get update && apt-get install -y \
   libde265-dev \
   libx265-dev \
   libglib2.0-dev \
+  libglib2.0-dev-bin \
   && rm -rf /var/lib/apt/lists/*
 
 # RUN apt-get update && apt-get install -y \
