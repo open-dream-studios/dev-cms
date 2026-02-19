@@ -70,11 +70,9 @@ RUN apt-get update && apt-get install -y \
   libde265-dev \
   libx265-dev \
   libglib2.0-dev \
-  libgobject-2.0-dev \
-  libgio2.0-dev \
   libexpat1-dev \
   liborc-0.4-dev \
-  && rm -rf /var/lib/apt/lists/* 
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
