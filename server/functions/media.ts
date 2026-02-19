@@ -60,6 +60,7 @@ export async function compressImage_Q5_SP10({
     metadata = await sharp(inputPath).metadata();
   } catch (err) {
     // sharp couldn't read the file — return original
+     console.error("SHARP HEIC METADATA FAILED:", err);
     return {
       outputPath: inputPath,
       width: null,
