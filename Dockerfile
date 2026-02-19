@@ -65,14 +65,26 @@ RUN apt-get update && apt-get install -y \
   build-essential \
   python3 \
   pkg-config \
-  libvips-dev \
+  meson \
+  ninja-build \
+  libglib2.0-dev \
+  libexpat1-dev \
+  liborc-0.4-dev \
+  libjpeg-dev \
+  libpng-dev \
+  libtiff-dev \
   libheif-dev \
   libde265-dev \
   libx265-dev \
-  libglib2.0-dev \
-  libgirepository1.0-dev \
-  libcairo2-dev \
   && rm -rf /var/lib/apt/lists/*
+  
+RUN git clone --branch v8.17.3 https://github.com/libvips/libvips.git /tmp/libvips \
+  && cd /tmp/libvips \
+  && meson setup builddir --prefix=/usr \
+  && ninja -C builddir \
+  && ninja -C builddir install \
+  && ldconfig \
+  && rm -rf /tmp/libvips
 
 WORKDIR /usr/src/app
 
