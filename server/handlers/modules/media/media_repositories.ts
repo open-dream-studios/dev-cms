@@ -319,14 +319,33 @@ export async function uploadMediaFunction(
     const origPath = file.path;
     const origName = file.originalname || path.basename(origPath);
 
-    const kind = await fileTypeFromFile(origPath);
-    if (!kind || !allSupportedExts.includes(kind.ext)) {
-      console.warn(`Skipping unsupported or corrupted file: ${origName}`);
+    // const kind = await fileTypeFromFile(origPath);
+    // if (!kind || !allSupportedExts.includes(kind.ext)) {
+    //   console.warn(`Skipping unsupported or corrupted file: ${origName}`);
+    //   continue;
+    // }
+
+    // const origExt = kind.ext;
+    // const origMime = mime.lookup(kind.ext) || "application/octet-stream";
+    const detected = await fileTypeFromFile(origPath);
+
+    let origExt =
+      detected?.ext || path.extname(origName).replace(".", "").toLowerCase();
+
+    if (origExt === "heif") origExt = "heic";
+
+    if (!allSupportedExts.includes(origExt)) {
+      console.warn(`Skipping unsupported file: ${origName}`);
       continue;
     }
 
-    const origExt = kind.ext;
-    const origMime = mime.lookup(kind.ext) || "application/octet-stream";
+    const origMime =
+      detected?.mime || mime.lookup(origExt) || "application/octet-stream";
+
+
+
+      
+
     // const { ext: origExt, mimeType: origMime } = getContentTypeAndExt(origName);
     // const kind = await fileTypeFromFile(origPath);
     // if (!kind || !allSupportedExts.includes(kind.ext)) {
