@@ -142,8 +142,7 @@ COPY shared ./shared
 COPY package.json package-lock.json ./
 
 RUN npm ci --workspaces --include=optional
-
-RUN node -e "require('sharp'); console.log(require('sharp').versions)"
+RUN npm rebuild sharp
 
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=server
@@ -161,4 +160,4 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/package.json ./
 COPY --from=build /usr/src/app/shared ./shared
 
-CMD ["node", "dist/index.js"] 
+CMD ["node", "dist/index.js"]
