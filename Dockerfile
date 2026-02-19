@@ -63,6 +63,7 @@ FROM node:20-bookworm AS build
 
 RUN apt-get update && apt-get install -y \
   build-essential ca-certificates gcc g++ make python3 pkg-config cmake git curl \
+  libvips-dev \
   libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev \
   libglib2.0-dev libpango1.0-dev libgirepository1.0-dev \
   libheif-dev \
