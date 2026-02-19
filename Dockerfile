@@ -196,6 +196,8 @@ RUN npm run build --workspace=server
 # =========================
 FROM node:20-bookworm
 
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
 WORKDIR /usr/src/app
 
 COPY --from=build /usr/lib /usr/lib
@@ -204,5 +206,7 @@ COPY --from=build /usr/src/app/server/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/package.json ./
 COPY --from=build /usr/src/app/shared ./shared
+
+RUN ldconfig
 
 CMD ["node", "dist/index.js"]
