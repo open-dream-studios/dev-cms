@@ -563,10 +563,7 @@ const ProductView = ({ serialNumber }: { serialNumber?: string }) => {
                     <div
                       onClick={zipDownload}
                       style={{
-                        backgroundColor: currentTheme.background_2,
-                        border: editMediaLinks
-                          ? "1px solid " + currentTheme.text_2
-                          : "none",
+                        backgroundColor: currentTheme.background_2, 
                       }}
                       className="w-[38px] h-[38px] rounded-full flex items-center justify-center dim hover:brightness-90 cursor-pointer"
                     >

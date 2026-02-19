@@ -38,6 +38,14 @@
 # =========================
 FROM node:20-bookworm AS build
 
+RUN apt-get update && apt-get install -y \
+  build-essential python3 pkg-config \
+  libvips-dev \
+  libheif-dev \
+  libde265-dev \
+  libx265-dev \
+  && rm -rf /var/lib/apt/lists/*
+
 # RUN apt-get update && apt-get install -y \
 #   build-essential ca-certificates gcc g++ make python3 pkg-config cmake git curl \
 #   libjpeg-dev libpng-dev libtiff-dev libavif-dev libde265-dev libx265-dev \
@@ -70,6 +78,8 @@ COPY package.json package-lock.json ./
 
 RUN npm ci --workspaces
 
+RUN npm rebuild sharp --build-from-source --sharp-libvips=system
+
 # RUN npm rebuild sharp --build-from-source --sharp-libvips=system
 
 # build shared FIRST
@@ -90,8 +100,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /usr/src/app
 
-COPY --from=build /usr/lib /usr/lib
-COPY --from=build /usr/local/lib /usr/local/lib
+# COPY --from=build /usr/lib /usr/lib
+# COPY --from=build /usr/local/lib /usr/local/lib
 COPY --from=build /usr/src/app/server/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/package.json ./
