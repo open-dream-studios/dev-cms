@@ -136,14 +136,14 @@ FROM node:20-bookworm AS build
 WORKDIR /usr/src/app
 
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
-ENV npm_config_sharp_binary_host=https://npmmirror.com/mirrors/sharp-libvips
 
 COPY server ./server
 COPY shared ./shared
 COPY package.json package-lock.json ./
 
 RUN npm ci --workspaces --include=optional
-RUN npm rebuild sharp
+
+RUN node -e "require('sharp'); console.log(require('sharp').versions)"
 
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=server
@@ -152,7 +152,7 @@ RUN npm run build --workspace=server
 # =========================
 # RUNTIME STAGE
 # =========================
-FROM node:20-bookworm-slim
+FROM node:20-bookworm
 
 WORKDIR /usr/src/app
 
