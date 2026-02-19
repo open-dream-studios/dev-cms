@@ -147,10 +147,23 @@ RUN apt-get update && apt-get install -y \
   libjpeg-dev \
   libpng-dev \
   libtiff-dev \
-  libheif-dev \
+  # libheif-dev \ 
   libde265-dev \
   libx265-dev \
   && rm -rf /var/lib/apt/lists/*
+
+# Build modern libheif
+RUN git clone https://github.com/strukturag/libheif.git /tmp/libheif \
+  && cd /tmp/libheif \
+  && mkdir build && cd build \
+  && cmake .. \
+     -DENABLE_PLUGIN_LOADING=ON \
+     -DENABLE_X265=ON \
+     -DENABLE_LIBDE265=ON \
+  && make -j$(nproc) \
+  && make install \
+  && ldconfig \
+  && rm -rf /tmp/libheif
 
 # Build libvips WITH HEIF + x265
 RUN git clone --branch v8.17.3 https://github.com/libvips/libvips.git /tmp/libvips \
