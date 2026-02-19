@@ -56,7 +56,9 @@ import estimationBindingRoutes from "./handlers/modules/estimations/if_trees/bin
 import estimationPemdasRoutes from "./handlers/modules/estimations/pemdas/pemdas_routes.js"
 import estimationProcessRoutes from "./handlers/modules/estimations/process/process_routes.js"
 import projectFolderRoutes from "./handlers/modules/folders/folders_routes.js"
-
+// import paymentRoutes from "./handlers/payments/payments_routes.js";
+import { initializeWebSocket, getIO } from "./connection/websocket.js";
+// import { stripeWebhookListener } from "handlers/webhooks/stripe/stripe_controllers.js";
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -97,6 +99,18 @@ if (isLocalHttps) {
   server = http.createServer(app);
   console.log("Running with HTTP (Railway will provide HTTPS)");
 }
+
+const io = initializeWebSocket(server);
+// STRIPE Webhooks
+// TEST COMMAND
+// Terminal 1: ngrok http http://localhost:8080
+// Terminal 2: stripe listen --forward-to localhost:8080/webhook
+// Terminal 3: stripe trigger invoice.payment_succeeded
+// app.post(
+//   "/webhook",
+//   express.raw({ type: "application/json" }),
+//   async (req, res) => stripeWebhookListener(req, res)
+// );
 
 // App
 app.use((req, res, next) => {
@@ -192,6 +206,7 @@ app.use("/api/estimations/process", estimationProcessRoutes);
 
 
 app.use("/api/ai", AIRoutes)
+// app.use("/api/payment", paymentRoutes);
 
 
 
@@ -203,6 +218,23 @@ initCallState(wss);
 handleTwilioStream(wss);
 
 app.use(errorMiddleware);
+
+// Process signals for web socket
+const shutdown = () => {
+  console.log("Shutting down server...");
+  io.sockets.sockets.forEach((socket) => {
+    socket.disconnect(true);
+  });
+  io.close(() => {
+    console.log("WebSocket server closed.");
+  });
+  server.close(() => {
+    console.log("HTTP server closed.");
+    process.exit(0);
+  });
+};
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 // Database
 db.getConnection((err, connection) => {

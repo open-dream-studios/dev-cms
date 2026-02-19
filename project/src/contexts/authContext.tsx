@@ -9,12 +9,14 @@ import { User } from "@open-dream/shared";
 
 interface AuthContextType {
   currentUser: User | null;
+  currentUserSubscription: any;
   handleLogout: () => void;
   isLoadingCurrentUserData: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType>({
   currentUser: null,
+  currentUserSubscription: null,
   handleLogout: () => {},
   isLoadingCurrentUserData: false,
 });
@@ -45,13 +47,27 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
       queryKey: ["currentUser"],
       queryFn: async () => {
         const res = await makeRequest.get("/auth/me");
-        return res.data && res.data.user && Object.keys(res.data.user).length ? res.data.user : null;
+        return res.data && res.data.user && Object.keys(res.data.user).length
+          ? res.data.user
+          : null;
       },
       staleTime: 1000 * 60 * 5,
       gcTime: 1000 * 60 * 5,
       refetchOnMount: true,
     });
   const currentUser = currentUserData ?? null;
+
+  const { data: currentUserSubscriptionData } = useQuery<any>({
+    queryKey: ["currentUserSubscription"],
+    queryFn: async () => {
+      const res = await makeRequest.get("/api/users/current-subscription");
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 5,
+    refetchOnMount: true,
+  });
+  const currentUserSubscription = currentUserSubscriptionData ?? null;
 
   const handleLogout = async () => {
     // if (typeof window !== "undefined") {
@@ -79,6 +95,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
       value={{
         currentUser,
         handleLogout,
+        currentUserSubscription,
         isLoadingCurrentUserData,
       }}
     >

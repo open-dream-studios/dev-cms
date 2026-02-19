@@ -48,7 +48,7 @@ const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
     ) {
       return;
     }
-    if (screen === "estimations-calculation") {
+    if (screen === "estimations-pricing") {
       setSelectedFolderForScope(folderScope, null);
     }
   });

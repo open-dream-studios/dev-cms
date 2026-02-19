@@ -151,9 +151,9 @@ export default function EstimationsLeftBar() {
                   <LuPanelLeftClose
                     style={{ color: currentTheme.text_4 }}
                     className="mt-[15px] ml-[85px] dim cursor-pointer brightness-75 hover:brightness-50 w-[22px] h-[22px]"
-                    onClick={() => {
+                    onClick={() => { 
                       setRunInputsOpen(false);
-                    }}
+                    }} 
                   />
                 </div>
               ) : (

@@ -23,7 +23,7 @@ const RenderedImage = ({
           className="dim hover:brightness-90 object-cover w-full aspect-[1/1]"
         />
       ) : (
-        <>
+        <div className="w-[100%] h-[100%] relative">
           <video
             key={media.version}
             src={media.url}
@@ -33,9 +33,9 @@ const RenderedImage = ({
             loop
           />
           <div className="absolute top-0 left-0 w-[100%] h-[100%] flex items-center justify-center pb-[4px]">
-            <IoPlayCircleOutline size={35} color={"white"} />
+            <IoPlayCircleOutline className="w-[20%] h-[20%] min-w-[20px] min-h-[20px] mt-[2px] ml-[1px]" color={"white"} />
           </div>
-        </>
+        </div>
       )}
     </div>
   );

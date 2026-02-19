@@ -20,7 +20,7 @@ import "../../components/Calendar/Calendar.css";
 import { useJobForm, useTaskForm } from "@/hooks/forms/useJobForm";
 import { JobFormData, TaskFormData } from "@/util/schemas/jobSchema";
 import { useWatch } from "react-hook-form";
-import { dateToString } from "@/util/functions/Time"; 
+import { dateToString } from "@/util/functions/Time";
 import {
   PriorityBadge,
   StatusBadge,
@@ -31,7 +31,7 @@ import { useRouting } from "@/hooks/useRouting";
 import { setCurrentProductData } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "./RenderedImage";
-import NoProductImage from "./NoProductImage"; 
+import NoProductImage from "./NoProductImage";
 import { useTimer } from "@/store/util/useTimer";
 
 // ---------- TaskCard ----------
@@ -44,7 +44,7 @@ const MiniTaskCard: React.FC<{
   const { currentUser } = React.useContext(AuthContext);
   const { upsertTask } = useContextQueries();
   const currentTheme = useCurrentTheme();
-  const { leftBarOpen } = useUiStore()
+  const { leftBarOpen } = useUiStore();
   const taskForm = useTaskForm();
   const taskStatus = useWatch({ control: taskForm.control, name: "status" });
 
@@ -66,7 +66,7 @@ const MiniTaskCard: React.FC<{
   };
 
   const callSubmitForm = async () => {
-    useTimer.getState().cancelTimer(`task-${task.task_id}`)
+    useTimer.getState().cancelTimer(`task-${task.task_id}`);
     await taskForm.handleSubmit(onFormSubmitButton)();
   };
 
@@ -130,7 +130,7 @@ const CustomerProductFrame = ({
   index: number;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const currentTheme = useCurrentTheme(); 
+  const currentTheme = useCurrentTheme();
   const {
     tasks,
     upsertJob,
@@ -149,7 +149,7 @@ const CustomerProductFrame = ({
   const handleClick = async () => {
     await screenClick(
       "customer-products",
-      `/products/${product.serial_number}`
+      `/products/${product.serial_number}`,
     );
     setCurrentProductData(product);
   };
@@ -157,14 +157,14 @@ const CustomerProductFrame = ({
   const productCustomer = useMemo(() => {
     if (!product || !product.customer_id) return null;
     return customers.find(
-      (customer: Customer) => customer.id === product.customer_id
+      (customer: Customer) => customer.id === product.customer_id,
     );
   }, [customers, product]);
 
   const mediaFound = useMemo(() => {
     const mediaLinksFound = mediaLinks.filter(
       (m: MediaLink) =>
-        m.entity_type === "product" && m.entity_id === product.id
+        m.entity_type === "product" && m.entity_id === product.id,
     );
     const firstImage = mediaLinksFound.length > 0 ? mediaLinksFound[0] : null;
     if (!firstImage) return null;
@@ -173,7 +173,7 @@ const CustomerProductFrame = ({
 
   const productJob = useMemo(() => {
     const filteredJobs = jobs.filter(
-      (job: Job) => job.product_id === product.id
+      (job: Job) => job.product_id === product.id,
     );
     if (filteredJobs.length > 0) {
       return filteredJobs[0];
@@ -185,11 +185,11 @@ const CustomerProductFrame = ({
     if (!productJob) return null;
     return jobDefinitions.find(
       (definition: JobDefinition) =>
-        productJob.job_definition_id === definition.id
+        productJob.job_definition_id === definition.id,
     );
   }, [productJob, jobDefinitions]);
 
-  const { leftBarOpen } = useUiStore()
+  const { leftBarOpen } = useUiStore();
 
   useEffect(() => {
     if (productJob?.job_id) {
@@ -198,8 +198,8 @@ const CustomerProductFrame = ({
   }, [productJob?.job_id, jobForm, productJob]);
 
   const callSubmitForm = async () => {
-    if (!productJob) return
-    useTimer.getState().cancelTimer(`job-${productJob.job_id}`)
+    if (!productJob) return;
+    useTimer.getState().cancelTimer(`job-${productJob.job_id}`);
     await jobForm.handleSubmit(onFormSubmitButton, (errors) => {
       console.error("Submit blocked by validation errors:", errors);
     })();
@@ -221,7 +221,7 @@ const CustomerProductFrame = ({
     const matchedCustomer =
       product && product.customer_id
         ? customers.find(
-            (customer: Customer) => customer.id === product.customer_id
+            (customer: Customer) => customer.id === product.customer_id,
           )
         : null;
 
@@ -265,7 +265,8 @@ const CustomerProductFrame = ({
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-[calc(3px+0.2vw)] w-[100%] h-[100%]">
+        {/* <div className="flex flex-col gap-[calc(3px+0.2vw)] w-[100%] h-[100%]"> */}
+        <div className="flex flex-col gap-[calc(3px+0.2vw)] w-[100%] h-[100%] min-w-0">
           {/* <div className="w-[100%] h-[100%] gap-[2.5px] flex flex-col ml-[2.5px]">
             <div
               className="font-[600] text-[18.5px] leading-[25px]"
@@ -281,8 +282,13 @@ const CustomerProductFrame = ({
             </div>
           </div> */}
           <div className="w-[100%] flex flex-col gap-[8px] min-[800px]:gap-[calc(3px+0.2vw)]">
-            <div className="font-[600] text-[calc(12px+0.3vw)] leading-[calc(15px+0.3vw)]">
-              {product.name}
+            <div className="min-w-0">
+              <div className="font-[600] text-[calc(12px+0.3vw)] leading-[calc(15px+0.3vw)] truncate">
+                {product.name}
+              </div>
+              <div className="opacity-[0.38] mt-[4px] font-[600] text-[calc(10px+0.25vw)] leading-[calc(12px+0.25vw)] truncate">
+                {product.serial_number}
+              </div>
             </div>
 
             <CustomerTag
@@ -292,7 +298,9 @@ const CustomerProductFrame = ({
             />
           </div>
           <div
-            className={`mt-[8px] min-[800px]:mt-[4px] flex flex-col min-[750px]:flex-row min-[870px]:flex-col min-[990px]:flex-row ${
+            style={{ ...getInnerCardStyle(currentUser.theme, currentTheme), backgroundColor: currentTheme.header_1_1}}
+            // style={{border: "1px solid " + currentTheme.header_1_1}}
+            className={`mb-[-3px] rounded-[9px] px-[6px] py-[4px] flex flex-col min-[750px]:flex-row min-[870px]:flex-col min-[990px]:flex-row ${
               leftBarOpen ? "min-[1024px]:flex-col min-[1220px]:flex-row" : ""
             } items-start justify-between w-full`}
           >

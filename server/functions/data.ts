@@ -26,6 +26,12 @@ export const formatSQLDate = (value: string | Date) => {
   return `${month}/${day}/${year}`;
 };
 
+export const formatStripeDateForMySQL = (date: any) => {
+  return date
+    ? new Date(date * 1000).toISOString().slice(0, 19).replace("T", " ")
+    : null;
+};
+
 export function formatDateToMySQL(dateInput: string | Date) {
   const date =
     typeof dateInput === "string"

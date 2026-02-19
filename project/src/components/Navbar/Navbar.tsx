@@ -17,11 +17,13 @@ import {
   setCurrentProjectData,
   useCurrentDataStore,
 } from "@/store/currentDataStore";
-import { useUiStore } from "@/store/useUIStore"; 
+import { useUiStore } from "@/store/useUIStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { Media } from "@open-dream/shared";
 import { saveProducts } from "@/modules/CustomerProducts/_actions/products.actions";
 import { useModules } from "@/modules/_hooks/modules.hooks";
+import { BsSuitDiamondFill } from "react-icons/bs";
+import PaymentSettings from "@/modules/PaymentModule/PaymentSettings";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -116,7 +118,7 @@ const Navbar = () => {
   const currentLogo = useMemo(() => {
     if (currentProject && currentProject.logo_media_id) {
       const foundMedia = media.find(
-        (m: Media) => m.media_id === currentProject.logo_media_id
+        (m: Media) => m.media_id === currentProject.logo_media_id,
       );
       return foundMedia && foundMedia.url ? foundMedia.url : null;
     }
@@ -125,6 +127,20 @@ const Navbar = () => {
     }
     return null;
   }, [currentProject, media, currentUser]);
+
+  const handleTokensClick = () => {
+    setModal1({
+      ...modal1,
+      open: !modal1.open,
+      showClose: true,
+      offClickClose: true,
+      width: "w-[90vw] md:w-[80vw]",
+      maxWidth: "md:max-w-[1000px]",
+      aspectRatio: "aspect-[2/2.1] md:aspect-[3/2]",
+      borderRadius: "rounded-[15px] md:rounded-[20px]",
+      content: <PaymentSettings initialPage={"Subscription"} />,
+    });
+  };
 
   if (!currentUser) return null;
 
@@ -171,8 +187,8 @@ const Navbar = () => {
                 !currentProject
                   ? ""
                   : !leftBarOpen
-                  ? "hidden"
-                  : "hidden lg:block"
+                    ? "hidden"
+                    : "hidden lg:block"
               }  select-none ml-[3px] mt-[-1px] w-[31px] h-[31px] object-cover rounded-[5px]`}
             />
 
@@ -186,15 +202,15 @@ const Navbar = () => {
                 {currentProject
                   ? currentProject.short_name
                   : currentUser.type === "internal"
-                  ? "Project CMS"
-                  : "Customer Portal"}
+                    ? "Project CMS"
+                    : "Customer Portal"}
               </p>
               <p className="block sm:hidden">
                 {currentProject
                   ? currentProject.short_name
                   : currentUser.type === "internal"
-                  ? "CMS"
-                  : "Portal"}
+                    ? "CMS"
+                    : "Portal"}
               </p>
             </div>
           </div>
@@ -235,6 +251,25 @@ const Navbar = () => {
               </div>
             </div>
           )}
+
+          {/* <div
+            onClick={handleTokensClick}
+            className="w-[75px] h-[42px] flex flex-row justify-center items-center gap-[8px] dim cursor-pointer hover:brightness-75 rounded-[4px]"
+            style={{
+              backgroundColor: currentTheme.background_2,
+            }}
+            title="tokens"
+          >
+            <BsSuitDiamondFill size={16} color={currentTheme.text_1} />
+            <p
+              className="select-none font-[500] text-[15px] rounded-[7px]"
+              style={{
+                color: currentTheme.text_1,
+              }}
+            >
+              {currentUser.credits}
+            </p>
+          </div> */}
 
           {currentProject !== null &&
             (projectsData.length > 1 || currentUser.admin === 1) && (

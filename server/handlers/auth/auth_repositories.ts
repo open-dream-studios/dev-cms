@@ -22,6 +22,15 @@ export const getUserFunction = async (
   return rows.length ? rows[0] : null;
 };
 
+export const getUserByIdFunction = async (
+  connection: PoolConnection,
+  user_id: string
+) => {
+  const q = "SELECT * FROM users WHERE user_id = ?";
+  const [rows] = await connection.query<RowDataPacket[]>(q, [user_id]);
+  return rows.length ? rows[0] : null;
+};
+
 export const googleAuthFunction = async (
   connection: PoolConnection,
   idToken: any,
@@ -483,3 +492,127 @@ export const acceptProjectInviteAfterAuth = async (
     [invite.id]
   );
 };
+
+// export const getCurrentUserSubscription = (req, res) => {
+//   const token = req.cookies.accessToken;
+//   if (!token) return res.json(null);
+
+//   jwt.verify(token, process.env.JWT_SECRET, async (err, userInfo) => {
+//     if (err) return res.status(403).json(null);
+
+//     try {
+//       const currentUser = await new Promise((resolve, reject) => {
+//         db.query(
+//           "SELECT * FROM users WHERE user_id = ?",
+//           [userInfo.id],
+//           (err, data) => {
+//             if (err) {
+//               console.error(
+//                 "DB Query Error: Could not fetch current user",
+//                 err
+//               );
+//               return reject(err);
+//             }
+//             resolve(data.length > 0 ? data[0] : null);
+//           }
+//         );
+//       });
+//       if (currentUser && currentUser.stripe_customer_id) {
+//         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+//         const subscriptionList = await stripe.subscriptions.list({
+//           customer: currentUser.stripe_customer_id,
+//           limit: 1,
+//           expand: ["data.items.data.price"],
+//         });
+//         if (!subscriptionList.data.length) {
+//           return res.status(200).json(null);
+//         }
+//         const subscription = subscriptionList.data[0];
+//         if (
+//           !subscription ||
+//           !subscription.items ||
+//           !subscription.items.data.length ||
+//           !subscription.items.data[0].price ||
+//           !subscription.items.data[0].price.id
+//         ) {
+//           return res.status(200).json(null);
+//         }
+//         const subscription_item = Object.keys(products).find(
+//           (key) =>
+//             products[key].price_id === subscription.items.data[0].price.id
+//         );
+//         return res.status(200).json({
+//           current_period_start: formatDateForMySQL(
+//             subscription.current_period_start
+//           ),
+//           current_period_end: formatDateForMySQL(
+//             subscription.current_period_end
+//           ),
+//           status: subscription.status,
+//           subscription_item: subscription_item,
+//         });
+//       }
+//       return res.status(200).json(null);
+//     } catch (error) {
+//       return res.status(500).json(null);
+//     }
+//   });
+// };
+
+// export const getCurrentUserBilling = (req, res) => {
+//   const token = req.cookies.accessToken;
+//   if (!token) return res.json(null);
+
+//   jwt.verify(token, process.env.JWT_SECRET, async (err, userInfo) => {
+//     if (err) return res.status(403).json(null);
+
+//     try {
+//       const transactions = await new Promise((resolve, reject) => {
+//         db.query(
+//           "SELECT `payment_mode`, `stripe_latest_payment_status`, `stripe_amount`, `stripe_created_at` FROM transactions WHERE user_id = ?",
+//           [userInfo.id],
+//           (err, data) => {
+//             if (err) {
+//               console.error(
+//                 "DB Query Error: Could not fetch transactions",
+//                 err
+//               );
+//               return reject(err);
+//             }
+//             resolve(data);
+//           }
+//         );
+//       });
+
+//       const subscription_transactions = await new Promise((resolve, reject) => {
+//         db.query(
+//           "SELECT `payment_mode`, `stripe_latest_payment_status`, `stripe_amount`, `stripe_created_at` FROM subscription_transactions WHERE user_id = ?",
+//           [userInfo.id],
+//           (err, data) => {
+//             if (err) {
+//               console.error(
+//                 "DB Query Error: Could not fetch subscription transactions",
+//                 err
+//               );
+//               return reject(err);
+//             }
+//             resolve(data);
+//           }
+//         );
+//       });
+
+//       const sorted_transactions = [
+//         ...transactions,
+//         ...subscription_transactions,
+//       ];
+//       sorted_transactions.sort(
+//         (a, b) =>
+//           new Date(formatDateForMySQL(b.stripe_created_at)) -
+//           new Date(formatDateForMySQL(a.stripe_created_at))
+//       );
+//       return res.status(200).json(sorted_transactions);
+//     } catch (error) {
+//       return res.status(500).json(null);
+//     }
+//   });
+// };

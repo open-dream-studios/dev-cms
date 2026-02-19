@@ -238,12 +238,22 @@ export const folderDndCollisions = (args: any) => {
     );
   });
 
+  // if (insideFolder.length) {
+  //   return closestCenter({
+  //     ...args,
+  //     droppableContainers: insideFolder,
+  //   });
+  // }
+
   if (insideFolder.length) {
     return closestCenter({
       ...args,
       droppableContainers: insideFolder,
     });
   }
+
+  // If pointer is not inside ANY folder, do not force a target
+  return [];
 
   // Otherwise: lock to folder ABOVE pointer (never switch halfway)
   const sorted = folders
