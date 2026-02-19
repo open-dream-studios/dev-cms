@@ -133,16 +133,46 @@
 # =========================
 FROM node:20-bookworm AS build
 
-WORKDIR /usr/src/app
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  python3 \
+  pkg-config \
+  meson \
+  ninja-build \
+  cmake \
+  git \
+  libglib2.0-dev \
+  libexpat1-dev \
+  liborc-0.4-dev \
+  libjpeg-dev \
+  libpng-dev \
+  libtiff-dev \
+  libheif-dev \
+  libde265-dev \
+  libx265-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
+# Build libvips WITH HEIF + x265
+RUN git clone --branch v8.17.3 https://github.com/libvips/libvips.git /tmp/libvips \
+  && cd /tmp/libvips \
+  && meson setup builddir --prefix=/usr \
+     -Dheif=true \
+  && ninja -C builddir \
+  && ninja -C builddir install \
+  && ldconfig \
+  && rm -rf /tmp/libvips
+
+WORKDIR /usr/src/app
 
 COPY server ./server
 COPY shared ./shared
 COPY package.json package-lock.json ./
 
+# IMPORTANT: do NOT ignore global libvips
 RUN npm ci --workspaces --include=optional
-RUN npm rebuild sharp
+
+# IMPORTANT: rebuild sharp against system libvips
+RUN npm rebuild sharp --build-from-source --sharp-libvips=system
 
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=server
@@ -155,6 +185,8 @@ FROM node:20-bookworm
 
 WORKDIR /usr/src/app
 
+COPY --from=build /usr/lib /usr/lib
+COPY --from=build /usr/local/lib /usr/local/lib
 COPY --from=build /usr/src/app/server/dist ./dist
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/package.json ./
