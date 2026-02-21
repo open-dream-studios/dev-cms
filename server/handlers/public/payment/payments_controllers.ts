@@ -1,47 +1,93 @@
 // server/handlers/public/payment/payments_controllers.ts
+import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
-import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
-import { getProjectIdByDomain } from "../../projects/projects_repositories.js";
+import { stripeProducts, StripeProductKey } from "@open-dream/shared"
 
-// ---------- WIX PAYMENT CONTROLLERS ----------
 export const getStripeCheckoutLink = async (
   req: Request,
   res: Response,
   connection: PoolConnection
 ) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
   const {
-    customer,
-    selectedDay
+    name,
+    email,
+    phone,
+    product_type,
   } = req.body;
 
-  console.log(req.body, customer, selectedDay)
+  if (!name || !email || !product_type) {
+    return { success: false, message: "Missing required fields" };
+  }
 
-  // if (!source_type || !request_type) {
-  //   throw new Error("Missing required fields");
-  // }
+  if (!Object.keys(stripeProducts).includes(product_type)) {
+    return { success: false, message: "Invalid product type" };
+  }
 
-  // const projectDomain = getProjectDomainFromWixRequest(req);
-  // const project_idx = await getProjectIdByDomain(projectDomain);
+  const product = stripeProducts[product_type as StripeProductKey];
 
-  // if (!project_idx) throw new Error("Missing required fields");
+  // 1️⃣ Find or create Stripe customer
+  const existingCustomers = await stripe.customers.list({
+    email,
+    limit: 1,
+  });
 
-  // await upsertScheduleRequestFunction(
-  //   connection,
-  //   project_idx,
-  //   {
-  //     source_type,
-  //     request_type,
-  //     proposed_start,
-  //     proposed_end,
-  //     proposed_location,
-  //     ai_reasoning: null,
-  //     event_title,
-  //     event_description,
-  //     metadata,
-  //   },
-  //   null
-  // );
+  let stripeCustomerId: string;
 
-  return { success: true, url: "https://google.com" };
+  if (existingCustomers.data.length > 0) {
+    stripeCustomerId = existingCustomers.data[0].id;
+  } else {
+    const newCustomer = await stripe.customers.create({
+      name,
+      email,
+      phone,
+    });
+    stripeCustomerId = newCustomer.id;
+  }
+
+  // 2️⃣ Prevent duplicate active subscriptions (recommended)
+  if (product.mode === "subscription") {
+    const activeSubs = await stripe.subscriptions.list({
+      customer: stripeCustomerId,
+      status: "active",
+      limit: 1,
+    });
+
+    if (activeSubs.data.length > 0) {
+      return {
+        success: false,
+        message: "Active subscription already exists for this email",
+      };
+    }
+  }
+
+  // 3️⃣ Create Checkout Session
+  const session: Stripe.Checkout.Session =
+    await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      customer: stripeCustomerId,
+      line_items: [
+        {
+          price: product.price_id,
+          quantity: 1,
+        },
+      ],
+      mode: product.mode,
+      success_url: process.env.WIX_SUCCESS_URL!,
+      cancel_url: process.env.WIX_CANCEL_URL!,
+      metadata: {
+        email,
+        name,
+        phone: phone ?? "",
+        product_type,
+        source: "wix_public",
+      },
+    });
+
+  return {
+    success: true,
+    url: session.url,
+  };
 };

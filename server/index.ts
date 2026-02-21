@@ -209,7 +209,6 @@ app.use("/api/public/schedule-request", scheduleRequestRoutes);
 app.use("/api/public/payment", publicPaymentRoutes)
 
 
-
 // WebSocket
 const wss = new WebSocketServer({ server });
 app.set("wss", wss);
