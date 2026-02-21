@@ -206,7 +206,7 @@ app.use("/api/estimations/process", estimationProcessRoutes);
 app.use("/api/public/messages", messagesRoutes);
 app.use("/api/public/customer-data", customerDataRoutes);
 app.use("/api/public/schedule-request", scheduleRequestRoutes);
-app.use("/api/public/payment/wix-stripe-checkout", publicPaymentRoutes)
+app.use("/api/public/payment", publicPaymentRoutes)
 
 
 
