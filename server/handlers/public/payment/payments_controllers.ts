@@ -3,11 +3,11 @@ import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
 import { stripeProducts, StripeProductKey } from "@open-dream/shared";
-import { getProjectDomainFromWixRequest } from "util/verifyWixRequest.js";
+import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
 import {
   getProjectByIdFunction,
   getProjectIdByDomain,
-} from "handlers/projects/projects_repositories.js";
+} from "../../projects/projects_repositories.js";
 
 export const getStripeCheckoutLink = async (
   req: Request,
