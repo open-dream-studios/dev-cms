@@ -24,7 +24,7 @@ export const getStripeCheckoutLink = async (
   const currentProject = await getProjectByIdFunction(project_idx);
   if (!currentProject || !currentProject.domain) {
     return { success: false, message: "No project domain found" };
-  } 
+  }
 
   const { selectedDay, customer, product_type, return_page } = req.body;
   if (!selectedDay || !customer || !product_type) {
@@ -77,6 +77,10 @@ export const getStripeCheckoutLink = async (
   }
 
   // 3️⃣ Create Checkout Session
+  const baseUrl = changeToHTTPSDomain(
+    `${currentProject.domain}${return_page ?? ""}`
+  );
+
   const session: Stripe.Checkout.Session =
     await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -88,8 +92,8 @@ export const getStripeCheckoutLink = async (
         },
       ],
       mode: product.mode,
-      success_url: changeToHTTPSDomain(`${currentProject.domain}${return_page ?? ""}`),
-      cancel_url: changeToHTTPSDomain(`${currentProject.domain}${return_page ?? ""}`),
+      success_url: `${baseUrl}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}?checkout=cancel`,
       metadata: {
         email,
         name,
