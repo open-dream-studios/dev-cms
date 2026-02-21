@@ -3,6 +3,11 @@ import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
 import { stripeProducts, StripeProductKey } from "@open-dream/shared";
+import { getProjectDomainFromWixRequest } from "util/verifyWixRequest.js";
+import {
+  getProjectByIdFunction,
+  getProjectIdByDomain,
+} from "handlers/projects/projects_repositories.js";
 
 export const getStripeCheckoutLink = async (
   req: Request,
@@ -10,8 +15,17 @@ export const getStripeCheckoutLink = async (
   connection: PoolConnection
 ) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const projectDomain = getProjectDomainFromWixRequest(req);
+  const project_idx = await getProjectIdByDomain(projectDomain);
+  if (!project_idx) {
+    return { success: false, message: "No project id found" };
+  }
+  const currentProject = await getProjectByIdFunction(project_idx);
+  if (!currentProject || !currentProject.domain) {
+    return { success: false, message: "No project domain found" };
+  }
+  console.log(currentProject.domain)
 
-  console.log("TEST", req.body);
   const { selectedDay, customer, product_type } = req.body;
   if (!selectedDay || !customer || !product_type) {
     return { success: false, message: "Missing required fields" };
@@ -74,8 +88,8 @@ export const getStripeCheckoutLink = async (
         },
       ],
       mode: product.mode,
-      success_url: process.env.WIX_SUCCESS_URL!,
-      cancel_url: process.env.WIX_CANCEL_URL!,
+      success_url: currentProject.domain,
+      cancel_url: currentProject.domain,
       metadata: {
         email,
         name,
