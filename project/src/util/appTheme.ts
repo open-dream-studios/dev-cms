@@ -19,7 +19,7 @@ const themeColors = {
   background_3: c("#BBBBBB", "#333333"),
   background_3_2: c("#AAAAAA", "#494949"),
   background_4: c("#AAAAAA", "#666666"),
-  background_1_2: c("#F3F3F3", "#191919"), 
+  background_1_2: c("#F3F3F3", "#191919"),
   background_1_3: c("#EFEFEF", "#252525"),
   background_2_dim: c("#F0F0F0", "#1e1e1e"),
   background_2_selected: c("#D9D9D9", "#343434"),
@@ -90,7 +90,8 @@ const themeColors = {
   // google_calendar_event: c("rgba(224, 82, 14, 1)", "rgba(224, 82, 14, 1)"),
   google_calendar_event: c("#2FA9DB", "#2FA9DB"),
   new_google_calendar_event: c("#1fbf6a", "#1fbf6a"),
-  rescheduled_google_calendar_event: c("#7B5CFF", "#7B5CFF")
+  rescheduled_google_calendar_event: c("#7B5CFF", "#7B5CFF"),
+  innerCard: c("#FFFFFF", "#1b1b1b"),
 } as const;
 
 export const appTextSizes = {

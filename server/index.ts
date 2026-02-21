@@ -56,8 +56,9 @@ import estimationBindingRoutes from "./handlers/modules/estimations/if_trees/bin
 import estimationPemdasRoutes from "./handlers/modules/estimations/pemdas/pemdas_routes.js"
 import estimationProcessRoutes from "./handlers/modules/estimations/process/process_routes.js"
 import projectFolderRoutes from "./handlers/modules/folders/folders_routes.js"
-// import paymentRoutes from "./handlers/payments/payments_routes.js";
+import paymentRoutes from "./handlers/payments/payments_routes.js";
 import { initializeWebSocket, getIO } from "./connection/websocket.js";
+import publicPaymentRoutes from "./handlers/public/payment/payment_routes.js"
 // import { stripeWebhookListener } from "handlers/webhooks/stripe/stripe_controllers.js";
 dotenv.config();
 
@@ -179,14 +180,9 @@ app.use("/api/calls/aircall", aircallRoutes);
 app.use("/api/updates", updatesRoutes);
 app.use("/api/wix", wixRoutes);
 app.use("/api/leads", leadRoutes);
-
 app.use("/api/folders", projectFolderRoutes);
-
-
-// Public Routes
-app.use("/api/public/messages", messagesRoutes);
-app.use("/api/public/customer-data", customerDataRoutes);
-app.use("/api/public/schedule-request", scheduleRequestRoutes);
+app.use("/api/ai", AIRoutes)
+app.use("/api/payment", paymentRoutes);
 
 // Estimations
 app.use("/api/estimations/fact-definitions", estimationFactDefinitionRoutes);
@@ -205,9 +201,12 @@ app.use("/api/estimations/pemdas", estimationPemdasRoutes);
 app.use("/api/estimations/process", estimationProcessRoutes);
 
 
-app.use("/api/ai", AIRoutes)
-// app.use("/api/payment", paymentRoutes);
 
+// Public Routes
+app.use("/api/public/messages", messagesRoutes);
+app.use("/api/public/customer-data", customerDataRoutes);
+app.use("/api/public/schedule-request", scheduleRequestRoutes);
+app.use("/api/public/payment/wix-stripe-checkout", publicPaymentRoutes)
 
 
 

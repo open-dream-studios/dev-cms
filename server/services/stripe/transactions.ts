@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 import { db } from "connection/connect.js";
 import { getIO } from "connection/websocket.js";
 import { formatStripeDateForMySQL } from "functions/data.js";
-import { getUserByIdFunction } from "handlers/auth/auth_repositories.js";
+import { getUserByUserIdFunction } from "handlers/auth/auth_repositories.js";
 import { PoolConnection } from "mysql2/promise";
 import { Response } from "express"
 dotenv.config();
@@ -704,7 +704,7 @@ export const handleSubscriptionRenewal = async (
 
 export const updateUserCredits = async (credits: any, user_id: string) => {
   const connection = await db.promise().getConnection();
-  const user = await getUserByIdFunction(connection, user_id)
+  const user = await getUserByUserIdFunction(connection, user_id)
   if (!user || !user.credits) return;
 
   const updatedCredits = parseInt(user.credits) + parseInt(credits);

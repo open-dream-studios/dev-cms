@@ -1,40 +1,43 @@
-// // server/handlers/payments/payments_routes.ts
-// import express from "express";
-// import {
-//   checkoutSession,
-//   customerPortalSession,
-//   customerUpdateSubscription,
-// } from "./payments_controllers.js";
-// import { verifyVercelProxy } from "util/verifyProxy.js";
-// import { authenticateUser } from "connection/middlewares.js";
-// import { checkProjectPermission } from "util/permissions.js";
-// import { transactionHandler } from "util/handlerWrappers.js";
+// server/handlers/payments/payments_routes.ts
+import express from "express";
+import {
+  checkoutSession,
+  customerPortalSession,
+  customerUpdateSubscription,
+} from "./payments_controllers.js";
+import { verifyVercelProxy } from "../../util/verifyProxy.js";
+import { authenticateUser } from "../../connection/middlewares.js";
+import { transactionHandler } from "../../util/handlerWrappers.js";
 
-// const router = express.Router();
+const router = express.Router();
 
-// // ---- PAYMENTS ----
-// router.post(
-//   "/checkout-session",
-//   verifyVercelProxy,
-//   authenticateUser,
-//   checkProjectPermission(3),
-//   transactionHandler(checkoutSession)
-// );
+// ---- PAYMENTS ----
+router.post(
+  "/checkout-session",
+  verifyVercelProxy,
+  authenticateUser,
+  transactionHandler(checkoutSession)
+);
 
-// router.post(
-//   "/stripe-portal",
-//   verifyVercelProxy,
-//   authenticateUser,
-//   checkProjectPermission(3),
-//   transactionHandler(customerPortalSession)
-// );
+router.post(
+  "/stripe-portal",
+  verifyVercelProxy,
+  authenticateUser,
+  transactionHandler(customerPortalSession)
+);
 
-// router.post(
-//   "/stripe-update-sub",
-//   verifyVercelProxy,
-//   authenticateUser,
-//   checkProjectPermission(3),
-//   transactionHandler(customerUpdateSubscription)
-// );
+router.post(
+  "/stripe-update-sub",
+  verifyVercelProxy,
+  authenticateUser,
+  transactionHandler(customerUpdateSubscription)
+);
 
-// export default router;
+router.post(
+  "/wix-stripe-checkout",
+  verifyVercelProxy,
+  authenticateUser,
+  // transactionHandler()
+);
+
+export default router;

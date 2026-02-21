@@ -4,24 +4,22 @@ import { useContext } from "react";
 import StripeProvider from "./Stripe/StripeProvider";
 import { AuthContext } from "../../contexts/authContext";
 import Modal2Close from "../../modals/Modal2Close";
-import {
-  CreditTypes,
-  SubscriptionTypes,
-  credit_products,
-  subscription_products,
-} from "../../util/payments/Stripe";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import Modal2Continue from "@/modals/Modal2Continue";
 import { useUiStore } from "@/store/useUIStore";
-
-const BACKEND_URL = "http://localhost:8080";
+import { makeRequest } from "@/util/axios";
+import {
+  CreditType,
+  stripeProducts,
+  SubscriptionType,
+} from "@open-dream/shared"; 
 
 const Subscription = () => {
   const currentTheme = useCurrentTheme();
   const { currentUser, currentUserSubscription } = useContext(AuthContext);
   const { modal2, setModal2 } = useUiStore();
 
-  const handleCheckout = async (product: CreditTypes | SubscriptionTypes) => {
+  const handleCheckout = async (product: CreditType | SubscriptionType) => {
     if (!currentUser) return;
     if (currentUserSubscription) {
       setModal2({
@@ -37,29 +35,16 @@ const Subscription = () => {
       });
       return;
     }
-
-    const response = await fetch(
-      `${BACKEND_URL}/api/payment/checkout-session`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: currentUser.user_id,
-          user_email: currentUser.email,
-          user_first_name: currentUser.first_name,
-          user_last_name: currentUser.last_name,
-          product_type: product,
-        }),
-      },
-    );
-
-    const { url } = await response.json();
+    const res = await makeRequest.post(`/payment/checkout-session`, {
+      product_type: product,
+    });
+    const { url } = res.data;
     if (url) {
       window.location.href = url;
     }
   };
 
-  const handleChangeSubscription = async (product: SubscriptionTypes) => {
+  const handleChangeSubscription = async (product: SubscriptionType) => {
     if (!currentUser || !currentUserSubscription) return;
 
     const current_timeline =
@@ -84,19 +69,11 @@ const Subscription = () => {
         ...modal2,
         open: false,
       });
-      const response = await fetch(
-        `${BACKEND_URL}/api/payment/stripe-update-sub`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: currentUser.user_id,
-            product_type: product,
-          }),
-        },
-      );
+      const res = await makeRequest.post(`/payment/stripe-update-sub`, {
+        product_type: product,
+      });
 
-      const responseData = await response.json();
+      const responseData = await res.data
       if (responseData.message) {
         setModal2({
           ...modal2,
@@ -141,14 +118,11 @@ const Subscription = () => {
 
   const handlePortal = async () => {
     if (!currentUser) return;
-    const response = await fetch(`${BACKEND_URL}/api/payment/stripe-portal`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: currentUser.user_id }),
-    });
+    const res = await makeRequest.post(`/payment/stripe-portal`, {});
 
-    const responseData = await response.json();
-    if (response.status === 400 || response.status === 500) {
+    const responseData = await res.data
+    if (!responseData.success) {
+      if (!responseData.message) return
       setModal2({
         ...modal2,
         open: !modal2.open,
@@ -175,9 +149,10 @@ const Subscription = () => {
             {currentUserSubscription ? "Change Plan" : "Explore Plans"}
           </p>
           <div className="w-[100%] aspect-[1.5/1] md:aspect-[2.5/1] flex justify-between flex-row gap-[10px] md:gap-[15px]">
-            {(Object.keys(subscription_products) as SubscriptionTypes[]).map(
-              (subscription: SubscriptionTypes, index: number) => {
-                const product = subscription_products[subscription];
+            {(Object.keys(stripeProducts) as SubscriptionType[])
+              .filter((item) => stripeProducts[item].mode === "subscription")
+              .map((subscription: SubscriptionType, index: number) => {
+                const product = stripeProducts[subscription];
                 if (!product) return;
                 return (
                   <div
@@ -203,13 +178,13 @@ const Subscription = () => {
                     </div>
                   </div>
                 );
-              },
-            )}
+              })}
           </div>
           <div className="w-[100%] aspect-[2/1] md:aspect-[3.5/1] mt-[15px] lg:mt-[20px] flex flex-row justify-center gap-[10px] md:gap-[15px]">
-            {(Object.keys(credit_products) as CreditTypes[]).map(
-              (credit: CreditTypes, index: number) => {
-                const product = credit_products[credit];
+            {(Object.keys(stripeProducts) as CreditType[])
+              .filter((item) => stripeProducts[item].mode === "payment")
+              .map((credit: CreditType, index: number) => {
+                const product = stripeProducts[credit];
                 if (!product) return;
                 return (
                   <div
@@ -225,8 +200,7 @@ const Subscription = () => {
                     {product.title}
                   </div>
                 );
-              },
-            )}
+              })}
           </div>
         </div>
         {currentUserSubscription && (

@@ -24,7 +24,6 @@ const MediaPlayer = () => {
     >
       {currentMediaSelected.type === "video" ? (
         <div className="relative max-w-[100%] max-h-[100%]">
-          {/* Spinner */}
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-12 h-12 border-4 border-gray-300 border-t-transparent rounded-full animate-spin" />

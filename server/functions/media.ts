@@ -46,8 +46,7 @@ export async function compressImage_Q5_SP10({
   maxWidth?: number;
   quality?: number;
   convertToWebp?: boolean;
-}) {
-  console.log("SHARP FORMATS:", sharp.format)
+}) { 
   let inputExt = path.extname(inputPath).toLowerCase().replace(".", "");
 
   const origStats = await fsp.stat(inputPath).catch(() => null);

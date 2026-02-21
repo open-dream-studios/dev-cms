@@ -8,8 +8,13 @@ import {
 } from "./_helpers/payments.helpers";
 import { AuthContext } from "../../contexts/authContext";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { BillingTransaction } from "./PaymentSettings";
 
-const Billing = ({ currentUserBilling }: { currentUserBilling: any }) => {
+type BillingProps = {
+  currentUserBilling: BillingTransaction[] | null | undefined;
+};
+
+const Billing = ({ currentUserBilling }: BillingProps) => {
   const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
   if (!currentUser) return;
@@ -20,34 +25,35 @@ const Billing = ({ currentUserBilling }: { currentUserBilling: any }) => {
           Billing
         </p>
       </div>
-      {(!currentUserBilling || currentUserBilling.length === 0) && (
+      {currentUserBilling && currentUserBilling.length > 0 && (
         <div className="flex h-[calc(100%-55px)] pl-[20px] w-full flex-col gap-[10px] mt-[15px] overflow-auto pb-[40px] pr-[50px]">
-          {[...currentUserBilling].map((billingItem: any, index: number) => {
-            const billingDate = formatStripeDate(billingItem.stripe_created_at);
-            return (
-              <div
-                key={index}
-                className="w-full min-h-[40px] px-[10px] rounded-[5px] flex flex-row justify-between items-center"
-                style={{
-                  backgroundColor: currentTheme.background_2_2,
-                  color: currentTheme.text_1,
-                }}
-              >
-                <div>
-                  {capitalizeFirstLetter(billingItem.payment_mode)} |{" "}
-                  {billingDate && formatDate(billingDate)}
+          {[...currentUserBilling].map(
+            (billingItem: BillingTransaction, index: number) => {
+              // const billingDate = formatStripeDate(billingItem.stripe_created_at);
+              const billingDate = new Date(
+                billingItem.created,
+              ).toLocaleDateString();
+
+              return (
+                <div
+                  key={index}
+                  className="w-full min-h-[40px] px-[10px] rounded-[5px] flex flex-row justify-between items-center"
+                  style={{
+                    backgroundColor: currentTheme.background_2_2,
+                    color: currentTheme.text_1,
+                  }}
+                >
+                  <div>
+                    {capitalizeFirstLetter(billingItem.type)} | {billingDate}
+                  </div>
+                  <div>
+                    <>${billingItem.amount.toFixed(2)} | </>
+                    <>{capitalizeFirstLetter(billingItem.status)}</>
+                  </div>
                 </div>
-                <div>
-                  <>${formatStripeAmount(billingItem.stripe_amount)} | </>
-                  <>
-                    {capitalizeFirstLetter(
-                      billingItem.stripe_latest_payment_status,
-                    )}
-                  </>
-                </div>
-              </div>
-            );
-          })}
+              );
+            },
+          )}
         </div>
       )}
     </div>

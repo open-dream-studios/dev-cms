@@ -8,9 +8,9 @@ export interface User {
   last_name: string;
   profile_img_src: string | null;
   theme: ThemeType;
-  credits: string;
   auth_provider: string;
-  created_at: string;
   admin?: number;
   type: "internal" | "external";
+  credits: string;
+  created_at: string;
 }

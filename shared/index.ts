@@ -27,5 +27,6 @@ export * from "./types/models/googleCalendar.js";
 export * from "./types/models/estimations/estimations.js";
 export * from "./types/models/estimations/if_trees.js";
 export * from "./types/models/folders.js";
+export * from "./types/models/payments.js";
 
 // export * from "./definitions/google";

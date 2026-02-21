@@ -1,9 +1,8 @@
 // project/src/modules/PaymentModule/Settings.tsx
-"use client"
-import React, { useContext, useState } from "react"; 
+"use client";
+import React, { useContext, useState } from "react";
 import { AuthContext } from "../../contexts/authContext";
 import Subscription from "./Subscription";
-import Account from "./Account";
 import Billing from "./Billing";
 import { makeRequest } from "../../util/axios";
 import { useQuery } from "@tanstack/react-query";
@@ -13,26 +12,37 @@ type SettingsProps = {
   initialPage: SettingsPages | null;
 };
 
-type SettingsPages = "Account" | "Subscription" | "Billing" | "Settings";
+type SettingsPages = "Subscription" | "Billing";
+export type BillingTransaction = {
+  id: string;
+  type: "payment" | "subscription";
+  amount: number;
+  currency: string;
+  status: string;
+  created: string; // ISO string
+  hosted_invoice_url?: string | null;
+};
 
 const PaymentSettings = ({ initialPage }: SettingsProps) => {
-  const currentTheme = useCurrentTheme()
+  const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
   const [selectedPage, setSelectedPage] = useState<SettingsPages>(
-    initialPage === null ? "Account" : initialPage
+    initialPage === null ? "Subscription" : initialPage,
   );
   const settingsPages: SettingsPages[] = [
-    "Account",
     "Subscription",
     "Billing",
-    "Settings",
   ];
 
-  const { data: currentUserBillingData } = useQuery<any>({
+  const { data: currentUserBillingData } = useQuery<BillingTransaction[]>({
     queryKey: ["currentUserBilling"],
     queryFn: async () => {
-      const res = await makeRequest.get("/api/users/current-billing");
-      return res.data;
+      const res = await makeRequest.post("/auth/current-billing");
+      console.log(res.data)
+      if (res.data.success) {
+        return res.data.transactions
+      }
+      return null
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 5,
@@ -80,7 +90,6 @@ const PaymentSettings = ({ initialPage }: SettingsProps) => {
         </div>
       </div>
       <div className="w-[75%] h-full max-w-[calc(100%-200px)]">
-        {selectedPage === "Account" && <Account />}
         {selectedPage === "Subscription" && <Subscription />}
         {selectedPage === "Billing" && (
           <Billing currentUserBilling={currentUserBillingData} />

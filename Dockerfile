@@ -191,7 +191,6 @@ RUN npm rebuild sharp --build-from-source --sharp-libvips=system
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=server
 
-
 # =========================
 # RUNTIME STAGE
 # =========================

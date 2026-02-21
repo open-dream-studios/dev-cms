@@ -4,19 +4,22 @@ import dotenv from "dotenv";
 import {
   acceptProjectInviteAfterAuth,
   checkCodeFunction,
+  getCurrentUserBillingFunction,
+  getCurrentUserSubscriptionFunction,
+  getUserByUserIdFunction,
   googleAuthFunction,
   loginFunction,
   passwordResetFunction,
   registerFunction,
   sendCodeFunction,
 } from "./auth_repositories.js";
-dotenv.config();
 import type {
   PoolConnection,
   ResultSetHeader,
   RowDataPacket,
 } from "mysql2/promise";
 import type { Request, Response } from "express";
+dotenv.config();
 
 export const googleAuth = async (
   req: Request,
@@ -117,7 +120,7 @@ export const getCurrentUser = async (
   connection: PoolConnection
 ) => {
   const token = req.cookies.accessToken;
-  if (!token) return { user: null};
+  if (!token) return { user: null };
   const userInfo: any = await new Promise((resolve, reject) => {
     jwt.verify(token, process.env.JWT_SECRET!, (err: any, decoded: any) => {
       if (err) reject(err);
@@ -127,8 +130,13 @@ export const getCurrentUser = async (
   const q = "SELECT * FROM users WHERE user_id = ?";
   const [rows] = await connection.query<RowDataPacket[]>(q, [userInfo.user_id]);
   if (!rows.length) return null;
-  const { password, password_reset, password_reset_timestamp, ...user } =
-    rows[0];
+  const {
+    password,
+    password_reset,
+    password_reset_timestamp,
+    stripe_customer_id,
+    ...user
+  } = rows[0];
   return { user };
 };
 
@@ -186,4 +194,26 @@ export const acceptInvite = async (
     },
   });
   return { status: 200, success: true };
+};
+
+export const getCurrentUserSubscription = async (
+  req: Request,
+  res: Response,
+  connection: PoolConnection
+) => {
+  const userId = req.user?.user_id;
+  if (!userId) return { success: false };
+  return await getCurrentUserSubscriptionFunction(connection, userId);
+};
+
+export const getCurrentUserBilling = async (
+  req: Request,
+  res: Response,
+  connection: PoolConnection
+) => {
+  const userId = req.user?.user_id;
+  if (!userId) return { success: false };
+  const user = await getUserByUserIdFunction(connection, userId);
+  if (!user || !user.stripe_customer_id) return { success: false };
+  return await getCurrentUserBillingFunction(user.stripe_customer_id);
 };

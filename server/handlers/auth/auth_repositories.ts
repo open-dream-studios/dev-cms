@@ -1,11 +1,14 @@
 // server/handlers/auth/auth_repositories.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { generateId } from "../../functions/data.js"; 
+import { formatStripeDateForMySQL, generateId } from "../../functions/data.js";
 import admin from "../../connection/firebaseAdmin.js";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { sendEmail } from "../../util/email.js";
 import { ulid } from "ulid";
+import Stripe from "stripe";
+import { StripeProductKey, stripeProducts } from "@open-dream/shared";
+import { User } from "@open-dream/shared";
 
 export const getValidEmails = async (connection: PoolConnection) => {
   const q = "SELECT email FROM project_users";
@@ -13,7 +16,7 @@ export const getValidEmails = async (connection: PoolConnection) => {
   return rows.map((row) => row.email);
 };
 
-export const getUserFunction = async (
+export const getUserByEmailFunction = async (
   connection: PoolConnection,
   email: string
 ) => {
@@ -24,10 +27,19 @@ export const getUserFunction = async (
 
 export const getUserByIdFunction = async (
   connection: PoolConnection,
+  id: number
+) => {
+  const q = "SELECT * FROM users WHERE id = ?";
+  const [rows] = await connection.query<(User & RowDataPacket)[]>(q, [id]);
+  return rows.length ? rows[0] : null;
+};
+
+export const getUserByUserIdFunction = async (
+  connection: PoolConnection,
   user_id: string
 ) => {
   const q = "SELECT * FROM users WHERE user_id = ?";
-  const [rows] = await connection.query<RowDataPacket[]>(q, [user_id]);
+  const [rows] = await connection.query<(User & RowDataPacket)[]>(q, [user_id]);
   return rows.length ? rows[0] : null;
 };
 
@@ -52,7 +64,7 @@ export const googleAuthFunction = async (
       success: "false",
       message: "Gmail auth error, please contact host",
     };
-  const user = await getUserFunction(connection, email);
+  const user = await getUserByEmailFunction(connection, email);
 
   let [first_name, ...rest] = name.split(" ");
   let last_name = rest.join(" ") || null;
@@ -79,7 +91,7 @@ export const googleAuthFunction = async (
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
-   
+
     return {
       status: 200,
       message: "Google login successful",
@@ -155,7 +167,7 @@ export const registerFunction = async (
   const { email, password, first_name, last_name, invite_token } = reqBody;
 
   // 1. Prevent duplicate users
-  const existing = await getUserFunction(connection, email);
+  const existing = await getUserByEmailFunction(connection, email);
   if (existing) {
     await connection.rollback();
     return { status: 400, success: false, message: "User already exists" };
@@ -225,7 +237,7 @@ export const loginFunction = async (
   //     message: "Unauthorized email, please ask host for permission",
   //   };
   // }
-  const user = await getUserFunction(connection, email);
+  const user = await getUserByEmailFunction(connection, email);
   if (!user)
     return {
       status: 401,
@@ -294,7 +306,7 @@ export const sendCodeFunction = async (
   const { email } = reqBody;
   const resetCode = Math.floor(100000 + Math.random() * 900000);
 
-  const user = await getUserFunction(connection, email);
+  const user = await getUserByEmailFunction(connection, email);
   if (!user || user.auth_provider !== "local") {
     return { status: 400, success: false, message: "Send code failed" };
   }
@@ -332,7 +344,7 @@ export const checkCodeFunction = async (
   reqBody: any
 ) => {
   const { code, email } = reqBody;
-  const user = await getUserFunction(connection, email);
+  const user = await getUserByEmailFunction(connection, email);
   if (!user || user.auth_provider !== "local") {
     return {
       status: 400,
@@ -390,7 +402,7 @@ export const passwordResetFunction = async (
   if (!accessToken)
     return { status: 401, success: false, message: "Password reset failed" };
 
-  const user = await getUserFunction(connection, email);
+  const user = await getUserByEmailFunction(connection, email);
   if (!user || user.auth_provider !== "local") {
     return { status: 401, success: false, message: "Password reset failed" };
   }
@@ -492,127 +504,151 @@ export const acceptProjectInviteAfterAuth = async (
     [invite.id]
   );
 };
+ 
+export const getCurrentUserSubscriptionFunction = async (
+  connection: PoolConnection,
+  user_id: string
+) => {
+  const currentUser = await getUserByUserIdFunction(connection, user_id);
+  if (!currentUser || !currentUser.stripe_customer_id) {
+    return { success: false, subscription: null };
+  }
 
-// export const getCurrentUserSubscription = (req, res) => {
-//   const token = req.cookies.accessToken;
-//   if (!token) return res.json(null);
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-//   jwt.verify(token, process.env.JWT_SECRET, async (err, userInfo) => {
-//     if (err) return res.status(403).json(null);
+  const subscriptionList = await stripe.subscriptions.list({
+    customer: currentUser.stripe_customer_id,
+    limit: 1,
+    expand: ["data.items.data.price"],
+  });
 
-//     try {
-//       const currentUser = await new Promise((resolve, reject) => {
-//         db.query(
-//           "SELECT * FROM users WHERE user_id = ?",
-//           [userInfo.id],
-//           (err, data) => {
-//             if (err) {
-//               console.error(
-//                 "DB Query Error: Could not fetch current user",
-//                 err
-//               );
-//               return reject(err);
-//             }
-//             resolve(data.length > 0 ? data[0] : null);
-//           }
-//         );
-//       });
-//       if (currentUser && currentUser.stripe_customer_id) {
-//         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-//         const subscriptionList = await stripe.subscriptions.list({
-//           customer: currentUser.stripe_customer_id,
-//           limit: 1,
-//           expand: ["data.items.data.price"],
-//         });
-//         if (!subscriptionList.data.length) {
-//           return res.status(200).json(null);
-//         }
-//         const subscription = subscriptionList.data[0];
-//         if (
-//           !subscription ||
-//           !subscription.items ||
-//           !subscription.items.data.length ||
-//           !subscription.items.data[0].price ||
-//           !subscription.items.data[0].price.id
-//         ) {
-//           return res.status(200).json(null);
-//         }
-//         const subscription_item = Object.keys(products).find(
-//           (key) =>
-//             products[key].price_id === subscription.items.data[0].price.id
-//         );
-//         return res.status(200).json({
-//           current_period_start: formatDateForMySQL(
-//             subscription.current_period_start
-//           ),
-//           current_period_end: formatDateForMySQL(
-//             subscription.current_period_end
-//           ),
-//           status: subscription.status,
-//           subscription_item: subscription_item,
-//         });
-//       }
-//       return res.status(200).json(null);
-//     } catch (error) {
-//       return res.status(500).json(null);
-//     }
-//   });
+  if (!subscriptionList.data.length) {
+    return { success: false, subscription: null };
+  }
+
+  const subscription = subscriptionList.data[0];
+
+  if (
+    !subscription ||
+    !subscription.items ||
+    !subscription.items.data.length ||
+    !subscription.items.data[0].price ||
+    !subscription.items.data[0].price.id
+  ) {
+    return { success: false, subscription: null };
+  }
+
+  const subscription_item = (
+    Object.keys(stripeProducts) as StripeProductKey[]
+  ).find(
+    (key) =>
+      stripeProducts[key].price_id === subscription.items.data[0].price.id
+  );
+
+  // return {
+  //   current_period_start: formatStripeDateForMySQL(
+  //     subscription.current_period_start
+  //   ),
+  //   current_period_end: formatStripeDateForMySQL(
+  //     subscription.current_period_end
+  //   ),
+  //   status: subscription.status,
+  //   subscription_item,
+  // };
+
+  return {
+    subscription: {
+      current_period_start: formatStripeDateForMySQL(
+        subscription.items.data[0].current_period_start
+      ),
+      current_period_end: formatStripeDateForMySQL(
+        subscription.items.data[0].current_period_end
+      ),
+      status: subscription.status,
+      subscription_item,
+    },
+    success: true,
+  };
+};
+
+// ===== BILLING REPO =====
+// export const getCurrentUserBillingFunction1 = async (
+//   connection: PoolConnection,
+//   stripe_customer_id: string
+// ) => {
+
+
+//   const q1 =
+//     "SELECT payment_mode, stripe_latest_payment_status, stripe_amount, stripe_created_at FROM transactions WHERE user_id = ?";
+//   const [transactions] = await connection.query<RowDataPacket[]>(q1, [user_id]);
+
+//   const q2 =
+//     "SELECT payment_mode, stripe_latest_payment_status, stripe_amount, stripe_created_at FROM subscription_transactions WHERE user_id = ?";
+//   const [subscription_transactions] = await connection.query<RowDataPacket[]>(
+//     q2,
+//     [user_id]
+//   );
+
+//   const sorted_transactions = [...transactions, ...subscription_transactions];
+
+//   // sorted_transactions.sort(
+//   //   (a: any, b: any) =>
+//   //     new Date(formatStripeDateForMySQL(b.stripe_created_at)).getTime() -
+//   //     new Date(formatStripeDateForMySQL(a.stripe_created_at)).getTime()
+//   // );
+//   sorted_transactions.sort(
+//     (a: any, b: any) =>
+//       new Date(b.stripe_created_at).getTime() -
+//       new Date(a.stripe_created_at).getTime()
+//   );
+
+//   return {
+//     success: true,
+//     transactions: sorted_transactions,
+//   };
 // };
 
-// export const getCurrentUserBilling = (req, res) => {
-//   const token = req.cookies.accessToken;
-//   if (!token) return res.json(null);
+export const getCurrentUserBillingFunction = async (
+  stripe_customer_id: string
+) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-//   jwt.verify(token, process.env.JWT_SECRET, async (err, userInfo) => {
-//     if (err) return res.status(403).json(null);
+  // Subscription invoices
+  const invoices = await stripe.invoices.list({
+    customer: stripe_customer_id,
+    limit: 100,
+  });
 
-//     try {
-//       const transactions = await new Promise((resolve, reject) => {
-//         db.query(
-//           "SELECT `payment_mode`, `stripe_latest_payment_status`, `stripe_amount`, `stripe_created_at` FROM transactions WHERE user_id = ?",
-//           [userInfo.id],
-//           (err, data) => {
-//             if (err) {
-//               console.error(
-//                 "DB Query Error: Could not fetch transactions",
-//                 err
-//               );
-//               return reject(err);
-//             }
-//             resolve(data);
-//           }
-//         );
-//       });
+  // One-time payments
+  const paymentIntents = await stripe.paymentIntents.list({
+    customer: stripe_customer_id,
+    limit: 100,
+  }); 
 
-//       const subscription_transactions = await new Promise((resolve, reject) => {
-//         db.query(
-//           "SELECT `payment_mode`, `stripe_latest_payment_status`, `stripe_amount`, `stripe_created_at` FROM subscription_transactions WHERE user_id = ?",
-//           [userInfo.id],
-//           (err, data) => {
-//             if (err) {
-//               console.error(
-//                 "DB Query Error: Could not fetch subscription transactions",
-//                 err
-//               );
-//               return reject(err);
-//             }
-//             resolve(data);
-//           }
-//         );
-//       });
+  const invoiceTransactions = invoices.data.map((invoice) => ({
+    id: invoice.id,
+    type: "subscription",
+    amount: invoice.amount_paid / 100,
+    currency: invoice.currency,
+    status: invoice.status,
+    created: new Date(invoice.created * 1000),
+    hosted_invoice_url: invoice.hosted_invoice_url,
+  }));
 
-//       const sorted_transactions = [
-//         ...transactions,
-//         ...subscription_transactions,
-//       ];
-//       sorted_transactions.sort(
-//         (a, b) =>
-//           new Date(formatDateForMySQL(b.stripe_created_at)) -
-//           new Date(formatDateForMySQL(a.stripe_created_at))
-//       );
-//       return res.status(200).json(sorted_transactions);
-//     } catch (error) {
-//       return res.status(500).json(null);
-//     }
-//   });
-// };
+  const paymentTransactions = paymentIntents.data.map((pi) => ({
+    id: pi.id,
+    type: "payment",
+    amount: pi.amount / 100,
+    currency: pi.currency,
+    status: pi.status,
+    created: new Date(pi.created * 1000),
+  }));
+
+  const transactions = [...invoiceTransactions, ...paymentTransactions]
+    .sort((a, b) => b.created.getTime() - a.created.getTime());
+
+  return {
+    success: true,
+    transactions,
+  };
+};

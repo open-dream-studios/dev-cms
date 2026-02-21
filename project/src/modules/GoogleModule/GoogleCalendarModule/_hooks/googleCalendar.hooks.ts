@@ -35,7 +35,7 @@ export function useGoogleCalendar(
 
         pageToken = res?.data?.nextPageToken ?? null;
       } while (pageToken);
-      console.log(allEvents)
+      // console.log(allEvents)
       return allEvents;
     },
     staleTime: 1000 * 60 * 3,

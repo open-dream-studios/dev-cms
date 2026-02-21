@@ -252,24 +252,26 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* <div
-            onClick={handleTokensClick}
-            className="w-[75px] h-[42px] flex flex-row justify-center items-center gap-[8px] dim cursor-pointer hover:brightness-75 rounded-[4px]"
-            style={{
-              backgroundColor: currentTheme.background_2,
-            }}
-            title="tokens"
-          >
-            <BsSuitDiamondFill size={16} color={currentTheme.text_1} />
-            <p
-              className="select-none font-[500] text-[15px] rounded-[7px]"
+          {currentUser.admin === 1 && (
+            <div
+              onClick={handleTokensClick}
+              className="w-[75px] h-[42px] flex flex-row justify-center items-center gap-[8px] dim cursor-pointer hover:brightness-75 rounded-[4px]"
               style={{
-                color: currentTheme.text_1,
+                backgroundColor: currentTheme.background_2,
               }}
+              title="tokens"
             >
-              {currentUser.credits}
-            </p>
-          </div> */}
+              <BsSuitDiamondFill size={16} color={currentTheme.text_1} />
+              <p
+                className="select-none font-[500] text-[15px] rounded-[7px]"
+                style={{
+                  color: currentTheme.text_1,
+                }}
+              >
+                {currentUser.credits}
+              </p>
+            </div>
+          )}
 
           {currentProject !== null &&
             (projectsData.length > 1 || currentUser.admin === 1) && (

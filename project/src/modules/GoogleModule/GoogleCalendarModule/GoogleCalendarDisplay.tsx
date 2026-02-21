@@ -80,7 +80,7 @@ export const GoogleCalendarDisplay = ({
   const effectiveStart = useMemo(() => new Date(), []);
   const effectiveEnd = useMemo(
     () => new Date(new Date().getTime() + 4 * 60 * 60 * 1000),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -201,11 +201,11 @@ export const GoogleCalendarDisplay = ({
   }>(() => {
     const start = Math.max(
       0,
-      CENTER_INDEX - Math.floor(VISIBLE_DAYS / 2) - SIDE_BUFFER
+      CENTER_INDEX - Math.floor(VISIBLE_DAYS / 2) - SIDE_BUFFER,
     );
     const end = Math.min(
       BUFFER_DAYS - 1,
-      start + VISIBLE_DAYS + SIDE_BUFFER * 2 - 1
+      start + VISIBLE_DAYS + SIDE_BUFFER * 2 - 1,
     );
     return { start, end };
   });
@@ -231,7 +231,7 @@ export const GoogleCalendarDisplay = ({
         const dt = indexToDate(idx);
         return dt;
       }),
-    [daysCount, indexToDate]
+    [daysCount, indexToDate],
   );
 
   // column width: we want 7 columns occupying the visible width
@@ -288,10 +288,10 @@ export const GoogleCalendarDisplay = ({
       dayEnd.setHours(DAY_END_HOUR, 0, 0, 0);
 
       const overlapStart = new Date(
-        Math.max(effectiveStart.getTime(), dayStart.getTime())
+        Math.max(effectiveStart.getTime(), dayStart.getTime()),
       );
       const overlapEnd = new Date(
-        Math.min(effectiveEnd.getTime(), dayEnd.getTime())
+        Math.min(effectiveEnd.getTime(), dayEnd.getTime()),
       );
       // if (!scheduled_start_date) {
       //   map.set(i, null);
@@ -357,7 +357,7 @@ export const GoogleCalendarDisplay = ({
             start: Math.max(0, sundayIndex - SIDE_BUFFER),
             end: Math.min(
               BUFFER_DAYS - 1,
-              sundayIndex + VISIBLE_DAYS + SIDE_BUFFER
+              sundayIndex + VISIBLE_DAYS + SIDE_BUFFER,
             ),
           };
         }
@@ -370,7 +370,7 @@ export const GoogleCalendarDisplay = ({
 
       setWeekCenteredIndex(sundayIndex);
     },
-    [indexToDate, dateToIndex]
+    [indexToDate, dateToIndex],
   );
 
   const prevCollapsedRef = useRef<boolean>(calendarCollapsed);
@@ -458,7 +458,7 @@ export const GoogleCalendarDisplay = ({
       scroller.scrollTo({ left: targetLeft, behavior });
       setWeekCenteredIndex(idx);
     },
-    []
+    [],
   );
 
   // debounce wrapper for onScroll (we still keep snap behavior)
@@ -503,7 +503,7 @@ export const GoogleCalendarDisplay = ({
         const newStart = Math.max(0, firstVisibleIdx - SIDE_BUFFER);
         const newEnd = Math.min(
           BUFFER_DAYS - 1,
-          firstVisibleIdx + VISIBLE_DAYS + SIDE_BUFFER
+          firstVisibleIdx + VISIBLE_DAYS + SIDE_BUFFER,
         );
         // Only update if changed
         if (newStart !== renderRange.start || newEnd !== renderRange.end) {
@@ -536,13 +536,13 @@ export const GoogleCalendarDisplay = ({
   const handlePrevWeek = () => {
     if (!scrollerRef.current || !columnWidthRef.current) return;
     const currentIndex = Math.floor(
-      scrollerRef.current.scrollLeft / columnWidthRef.current
+      scrollerRef.current.scrollLeft / columnWidthRef.current,
     );
     const firstVisibleDate = indexToDate(currentIndex);
     const currentWeekSunday = new Date(firstVisibleDate);
     currentWeekSunday.setHours(0, 0, 0, 0);
     currentWeekSunday.setDate(
-      currentWeekSunday.getDate() - currentWeekSunday.getDay()
+      currentWeekSunday.getDate() - currentWeekSunday.getDay(),
     );
     const targetSunday = new Date(currentWeekSunday);
     if (firstVisibleDate.getDay() === 0) {
@@ -555,7 +555,7 @@ export const GoogleCalendarDisplay = ({
   const handleNextWeek = () => {
     if (!scrollerRef.current || !columnWidthRef.current) return;
     const currentIndex = Math.round(
-      scrollerRef.current.scrollLeft / columnWidthRef.current
+      scrollerRef.current.scrollLeft / columnWidthRef.current,
     );
     const currentDate = indexToDate(currentIndex);
     const sunday = new Date(currentDate);
@@ -607,7 +607,7 @@ export const GoogleCalendarDisplay = ({
           });
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(scroller);
@@ -799,8 +799,13 @@ export const GoogleCalendarDisplay = ({
               >
                 {/* Header row — we only render the visible slice, each absolutely positioned */}
                 <div
-                  className="flex  items-center ml-[1px] border-b-gray-700 border-b-[0.5px]"
-                  style={{ zIndex: 20, position: "absolute", left: 0, top: 0 }}
+                  className="flex items-center ml-[1px] border-b-gray-700 border-b-[0.5px]"
+                  style={{
+                    zIndex: 20,
+                    position: "absolute",
+                    left: 0,
+                    top: 0, 
+                  }}
                 >
                   {renderedIndices.map((idx) => {
                     const d = daysArray[idx];
@@ -808,7 +813,7 @@ export const GoogleCalendarDisplay = ({
                       columnWidthRef.current ||
                       Math.max(
                         90,
-                        Math.floor((containerWidthRef.current || 700) / 7)
+                        Math.floor((containerWidthRef.current || 700) / 7),
                       );
                     return (
                       <div
@@ -820,6 +825,7 @@ export const GoogleCalendarDisplay = ({
                           padding: "6px 4px",
                           position: "absolute",
                           left: `${idx * colW}px`,
+                          backgroundColor: currentTheme.innerCard,
                         }}
                       >
                         <div className="text-center font-semibold text-[11px] leading-[13px]">
@@ -836,8 +842,9 @@ export const GoogleCalendarDisplay = ({
 
                 {/* Grid area — each day column absolutely positioned */}
                 <div
-                  className="relative"
+                  className="relative z-[19]"
                   style={{
+                    zIndex: 19,
                     height: `${gridHeight}px`,
                     position: "absolute",
                     left: 0,
@@ -851,7 +858,7 @@ export const GoogleCalendarDisplay = ({
                       columnWidthRef.current ||
                       Math.max(
                         90,
-                        Math.floor((containerWidthRef.current || 700) / 7)
+                        Math.floor((containerWidthRef.current || 700) / 7),
                       );
                     const blk = blocksByIndex.get(idx);
                     return (
@@ -940,7 +947,7 @@ export const GoogleCalendarDisplay = ({
 
                         {googleEvents
                           .filter(
-                            (ev) => idx >= ev.startIndex && idx <= ev.endIndex
+                            (ev) => idx >= ev.startIndex && idx <= ev.endIndex,
                           )
                           .map((ev: CalendarEvent) => {
                             const isStartDay = idx === ev.startIndex;
@@ -968,7 +975,7 @@ export const GoogleCalendarDisplay = ({
                                   "mt-[1px] absolute rounded-[3px] text-[10px] px-1 pb-[2px] pt-[1.5px] text-white overflow-hidden cursor-pointer transition dim hover:brightness-80",
                                   selectedCalendarEvent &&
                                     selectedCalendarEvent.id !== ev.id &&
-                                    "brightness-40"
+                                    "brightness-40",
                                 )}
                                 style={{
                                   top: `${top}%`,
@@ -999,14 +1006,14 @@ export const GoogleCalendarDisplay = ({
                             const overlapStart = new Date(
                               Math.max(
                                 newScheduleEventStart.getTime(),
-                                dayStart.getTime()
-                              )
+                                dayStart.getTime(),
+                              ),
                             );
                             const overlapEnd = new Date(
                               Math.min(
                                 newScheduleEventEnd.getTime(),
-                                dayEnd.getTime()
-                              )
+                                dayEnd.getTime(),
+                              ),
                             );
 
                             if (overlapEnd <= overlapStart) return null;
@@ -1060,10 +1067,10 @@ export const GoogleCalendarDisplay = ({
                                 rescheduleEnd
                               ) {
                                 selectedScheduleRequestProposedStart = new Date(
-                                  rescheduleStart
+                                  rescheduleStart,
                                 );
                                 selectedScheduleRequestProposedEnd = new Date(
-                                  rescheduleEnd
+                                  rescheduleEnd,
                                 );
                                 isReschedule = true;
                               } else {
@@ -1073,19 +1080,19 @@ export const GoogleCalendarDisplay = ({
                                 ) {
                                   selectedScheduleRequestProposedStart =
                                     new Date(
-                                      selectedScheduleRequest.proposed_reschedule_start
+                                      selectedScheduleRequest.proposed_reschedule_start,
                                     );
                                   selectedScheduleRequestProposedEnd = new Date(
-                                    selectedScheduleRequest.proposed_reschedule_end
+                                    selectedScheduleRequest.proposed_reschedule_end,
                                   );
                                   isReschedule = true;
                                 } else {
                                   selectedScheduleRequestProposedStart =
                                     new Date(
-                                      selectedScheduleRequest.proposed_start
+                                      selectedScheduleRequest.proposed_start,
                                     );
                                   selectedScheduleRequestProposedEnd = new Date(
-                                    selectedScheduleRequest.proposed_end
+                                    selectedScheduleRequest.proposed_end,
                                   );
                                 }
                               }
@@ -1107,14 +1114,14 @@ export const GoogleCalendarDisplay = ({
                             const overlapStart = new Date(
                               Math.max(
                                 selectedScheduleRequestProposedStart.getTime(),
-                                dayStart.getTime()
-                              )
+                                dayStart.getTime(),
+                              ),
                             );
                             const overlapEnd = new Date(
                               Math.min(
                                 selectedScheduleRequestProposedEnd.getTime(),
-                                dayEnd.getTime()
-                              )
+                                dayEnd.getTime(),
+                              ),
                             );
 
                             if (overlapEnd <= overlapStart) return null;
@@ -1138,7 +1145,7 @@ export const GoogleCalendarDisplay = ({
                               >
                                 {idx ===
                                   dateToIndex(
-                                    selectedScheduleRequestProposedStart
+                                    selectedScheduleRequestProposedStart,
                                   ) && (
                                   <div>
                                     {selectedScheduleRequest.event_title &&
