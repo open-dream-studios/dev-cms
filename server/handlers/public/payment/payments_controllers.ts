@@ -8,7 +8,7 @@ import {
   getProjectByIdFunction,
   getProjectIdByDomain,
 } from "../../projects/projects_repositories.js";
-import { changeToHTTPSDomain } from "functions/data.js";
+import { changeToHTTPSDomain } from "../../../functions/data.js";
 
 export const getStripeCheckoutLink = async (
   req: Request,
