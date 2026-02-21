@@ -15,9 +15,19 @@ export const getStripeCheckoutLink = async (
   connection: PoolConnection
 ) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const projectDomain = getProjectDomainFromWixRequest(req);
+  const project_idx = await getProjectIdByDomain(projectDomain);
+  if (!project_idx) {
+    return { success: false, message: "No project id found" };
+  }
+  const currentProject = await getProjectByIdFunction(project_idx);
+  if (!currentProject || !currentProject.domain) {
+    return { success: false, message: "No project domain found" };
+  }
+  console.log(currentProject.domain)
 
-  const { selectedDay, customer, product_type, return_domain } = req.body;
-  if (!selectedDay || !customer || !product_type || !return_domain) {
+  const { selectedDay, customer, product_type, return_page } = req.body;
+  if (!selectedDay || !customer || !product_type) {
     return { success: false, message: "Missing required fields" };
   }
   const { name, email, phone, address } = customer;
@@ -78,8 +88,8 @@ export const getStripeCheckoutLink = async (
         },
       ],
       mode: product.mode,
-      success_url: return_domain,
-      cancel_url: return_domain,
+      success_url: `${currentProject.domain}${return_page ?? ""}`,
+      cancel_url: `${currentProject.domain}${return_page ?? ""}`,
       metadata: {
         email,
         name,

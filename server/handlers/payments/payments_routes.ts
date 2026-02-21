@@ -33,11 +33,4 @@ router.post(
   transactionHandler(customerUpdateSubscription)
 );
 
-router.post(
-  "/wix-stripe-checkout",
-  verifyVercelProxy,
-  authenticateUser,
-  // transactionHandler()
-);
-
 export default router;
