@@ -1,8 +1,8 @@
-// server/handlers/public/payment/payment_controllers.ts
+// server/handlers/public/payment/payments_controllers.ts
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
 import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
-import { getProjectIdByDomain } from "../../../handlers/projects/projects_repositories.js";
+import { getProjectIdByDomain } from "../../projects/projects_repositories.js";
 
 // ---------- WIX PAYMENT CONTROLLERS ----------
 export const getStripeCheckoutLink = async (
