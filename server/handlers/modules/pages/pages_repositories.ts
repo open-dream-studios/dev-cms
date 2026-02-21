@@ -270,7 +270,7 @@ export const getPageDataFunction = async (
     domain,
   ]);
   if (!rows || !rows.length) {
-    throw new Error("No project found");
+    return { success: false, message: "No project found" };
   }
   const project_idx = rows[0].id;
   const pageQuery = `
@@ -285,7 +285,7 @@ export const getPageDataFunction = async (
     slug,
   ]);
   if (!pageRows || !pageRows.length) {
-    throw new Error("No page found");
+    return { success: false, message: "No page found" };
   }
   const projectPage = pageRows[0];
   const sectionsQuery = `
@@ -304,10 +304,6 @@ export const getPageDataFunction = async (
     projectPage.id,
   ]);
 
-  if (!Array.isArray(sectionRows)) {
-    throw new Error("Invalid section rows");
-  }
-
   const formattedSections = sectionRows.map((s) => ({
     id: s.id,
     identifier: s.identifier,
@@ -318,8 +314,11 @@ export const getPageDataFunction = async (
   }));
 
   return {
-    title: projectPage.title,
-    slug: projectPage.slug,
-    sections: formattedSections,
+    success: true,
+    page: {
+      title: projectPage.title,
+      slug: projectPage.slug,
+      sections: formattedSections,
+    },
   };
 };

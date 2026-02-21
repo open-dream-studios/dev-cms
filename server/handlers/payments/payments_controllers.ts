@@ -4,10 +4,7 @@ import dotenv from "dotenv";
 import { FRONTEND_URL } from "../../config.js";
 import { Request, Response } from "express";
 import { PoolConnection, ResultSetHeader } from "mysql2/promise";
-import {
-  getUserByIdFunction,
-  getUserByUserIdFunction,
-} from "../auth/auth_repositories.js";
+import { getUserByUserIdFunction } from "../auth/auth_repositories.js";
 import { StripeProductKey, stripeProducts } from "@open-dream/shared";
 dotenv.config();
 

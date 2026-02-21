@@ -2,7 +2,7 @@
 import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
-import { stripeProducts, StripeProductKey } from "@open-dream/shared"
+import { stripeProducts, StripeProductKey } from "@open-dream/shared";
 
 export const getStripeCheckoutLink = async (
   req: Request,
@@ -11,14 +11,13 @@ export const getStripeCheckoutLink = async (
 ) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-  const {
-    name,
-    email,
-    phone,
-    product_type,
-  } = req.body;
-
-  if (!name || !email || !product_type) {
+  console.log("TEST", req.body);
+  const { selectedDay, customer, product_type } = req.body;
+  if (!selectedDay || !customer || !product_type) {
+    return { success: false, message: "Missing required fields" };
+  }
+  const { name, email, phone, address } = customer;
+  if (!name || !email) {
     return { success: false, message: "Missing required fields" };
   }
 
