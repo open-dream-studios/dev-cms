@@ -8,6 +8,7 @@ import {
   getProjectByIdFunction,
   getProjectIdByDomain,
 } from "../../projects/projects_repositories.js";
+import { changeToHTTPSDomain } from "functions/data.js";
 
 export const getStripeCheckoutLink = async (
   req: Request,
@@ -23,8 +24,7 @@ export const getStripeCheckoutLink = async (
   const currentProject = await getProjectByIdFunction(project_idx);
   if (!currentProject || !currentProject.domain) {
     return { success: false, message: "No project domain found" };
-  }
-  console.log(currentProject.domain)
+  } 
 
   const { selectedDay, customer, product_type, return_page } = req.body;
   if (!selectedDay || !customer || !product_type) {
@@ -88,8 +88,8 @@ export const getStripeCheckoutLink = async (
         },
       ],
       mode: product.mode,
-      success_url: `${currentProject.domain}${return_page ?? ""}`,
-      cancel_url: `${currentProject.domain}${return_page ?? ""}`,
+      success_url: changeToHTTPSDomain(`${currentProject.domain}${return_page ?? ""}`),
+      cancel_url: changeToHTTPSDomain(`${currentProject.domain}${return_page ?? ""}`),
       metadata: {
         email,
         name,
