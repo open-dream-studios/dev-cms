@@ -4,8 +4,7 @@
     "moduleResolution": "NodeNext",
     "target": "ESNext",
     "rootDir": ".",
-    "outDir": "./dist",
-    "baseUrl": ".",
+    "outDir": "./dist", 
     "paths": {
       "@open-dream/shared": ["../shared/index.ts"],
       "@open-dream/shared/*": ["../shared/*"],
