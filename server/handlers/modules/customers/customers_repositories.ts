@@ -90,7 +90,7 @@ export const upsertCustomerFunction = async (
     state,
     zip,
     notes,
-    preferred_visit_day
+    preferred_visit_day ?? null
   ];
 
   const [result] = await connection.query<ResultSetHeader>(query, values);
