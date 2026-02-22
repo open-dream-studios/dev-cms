@@ -234,20 +234,6 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
 
     const connection = await db.promise().getConnection();
 
-    console.log("UPSERTING CUSTOMER", Number(metadata.project_id), {
-      first_name: metadata.first_name,
-      last_name: metadata.last_name,
-      email: metadata.email,
-      phone: metadata.phone,
-      address_line1: metadata.address_line1,
-      address_line2: metadata.address_line2,
-      city: metadata.city,
-      state: metadata.state,
-      zip: metadata.zip,
-      preferred_visit_day: Number(metadata.preferred_visit_day),
-      notes: "Subscribed via Wix Checkout",
-    });
-
     await upsertCustomerFunction(connection, Number(metadata.project_id), {
       first_name: metadata.first_name,
       last_name: metadata.last_name,
