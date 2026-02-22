@@ -1,5 +1,4 @@
 // import { getIO } from "connection/websocket.js";
-
 // export const stripeWebhookListener = async (req: Request, res: Response) => {
 //   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -182,70 +181,6 @@
 //   } else if (event.type === "customer.subscription.deleted") {
 //     console.log("SUB CANCELED");
 //     getIO().emit("update-user");
-//   }
-// };
-
-// export const stripeWebhookListener = async (
-//   req: Request,
-//   res: Response
-// ) => {
-//   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-//   const signature = req.headers["stripe-signature"];
-
-//   if (!signature || typeof signature !== "string") {
-//     return res.status(400).send("Missing Stripe signature");
-//   }
-
-//   let event: Stripe.Event;
-
-//   try {
-//     event = stripe.webhooks.constructEvent(
-//       req.body,
-//       signature,
-//       process.env.STRIPE_WEBHOOK_SECRET!
-//     );
-//   } catch (err: any) {
-//     console.error("Webhook signature verification failed:", err.message);
-//     return res.status(400).send(`Webhook Error: ${err.message}`);
-//   }
-
-//   // Immediately acknowledge receipt
-//   res.status(200).json({ received: true });
-
-//   // We only care about subscription checkout completion
-//   if (event.type !== "checkout.session.completed") {
-//     return;
-//   }
-
-//   const session = event.data.object as Stripe.Checkout.Session;
-
-//   if (session.mode !== "subscription") {
-//     return;
-//   }
-
-//   if (!session.subscription) {
-//     console.error("Missing subscription ID on session");
-//     return;
-//   }
-
-//   try {
-//     const subscription = await stripe.subscriptions.retrieve(
-//       session.subscription as string
-//     );
-
-//     const metadata = subscription.metadata;
-
-//     console.log("SUBSCRIPTION CREATED");
-//     console.log("Metadata:", metadata);
-
-//     await handleSubscriptionCheckoutTransaction(
-//       metadata,
-//       subscription
-//     );
-
-//   } catch (err) {
-//     console.error("Error handling subscription checkout:", err);
 //   }
 // };
 
