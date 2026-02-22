@@ -94,13 +94,33 @@ export const getStripeCheckoutLink = async (
       mode: product.mode,
       success_url: `${baseUrl}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}?checkout=cancel`,
+
       metadata: {
         email,
         name,
         phone: phone ?? "",
+        address: address ? JSON.stringify(address) : "",
+        selected_day: String(selectedDay),
         product_type,
+        project_id: String(project_idx),
         source: "wix_public",
       },
+
+      // 🔑 REQUIRED for subscriptions
+      ...(product.mode === "subscription" && {
+        subscription_data: {
+          metadata: {
+            email,
+            name,
+            phone: phone ?? "",
+            address: address ? JSON.stringify(address) : "",
+            selected_day: String(selectedDay),
+            product_type,
+            project_id: String(project_idx),
+            source: "wix_public",
+          },
+        },
+      }),
     });
 
   return {
