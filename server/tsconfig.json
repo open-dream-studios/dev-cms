@@ -16,7 +16,8 @@
     "esModuleInterop": true,
     "isolatedModules": false,
     "allowJs": false,
-    "noEmit": false
+    "noEmit": false,
+    "noEmitOnError": true
   },
   "include": ["**/*.ts"],
   "exclude": ["dist", "node_modules"],
