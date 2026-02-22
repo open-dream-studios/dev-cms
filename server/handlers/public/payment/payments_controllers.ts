@@ -30,8 +30,18 @@ export const getStripeCheckoutLink = async (
   if (!selectedDay || !customer || !product_type) {
     return { success: false, message: "Missing required fields" };
   }
-  const { name, email, phone, address } = customer;
-  if (!name || !email) {
+  const {
+    first_name,
+    last_name,
+    email,
+    phone,
+    address_line1,
+    address_line2,
+    city,
+    state,
+    zip,
+  } = customer;
+  if (!first_name || !last_name || !email) {
     return { success: false, message: "Missing required fields" };
   }
 
@@ -53,7 +63,7 @@ export const getStripeCheckoutLink = async (
     stripeCustomerId = existingCustomers.data[0].id;
   } else {
     const newCustomer = await stripe.customers.create({
-      name,
+      name: `${first_name}${last_name ? " " + last_name : ""}`,
       email,
       phone,
     });
@@ -81,8 +91,8 @@ export const getStripeCheckoutLink = async (
     `${currentProject.domain}${return_page ?? ""}`
   );
 
-  const formattedAddress = address?.formatted ?? "";
-  console.log(address, formattedAddress)
+  // const formattedAddress = address?.formatted ?? "";
+  // console.log(address, formattedAddress);
 
   const session: Stripe.Checkout.Session =
     await stripe.checkout.sessions.create({
@@ -99,12 +109,16 @@ export const getStripeCheckoutLink = async (
       cancel_url: `${baseUrl}?checkout=cancel`,
 
       metadata: {
+        first_name,
+        last_name,
         email,
-        name,
         phone: phone ?? "",
-        address: formattedAddress,
-        selected_day: String(selectedDay),
-        product_type,
+        address_line1: address_line1 ?? "",
+        address_line2: address_line2 ?? "",
+        city: city ?? "",
+        state: state ?? "",
+        zip: zip ?? "",
+        preferred_visit_day: String(selectedDay),
         project_id: String(project_idx),
         source: "wix_public",
       },
@@ -113,12 +127,16 @@ export const getStripeCheckoutLink = async (
       ...(product.mode === "subscription" && {
         subscription_data: {
           metadata: {
+            first_name,
+            last_name,
             email,
-            name,
             phone: phone ?? "",
-            address: formattedAddress,
-            selected_day: String(selectedDay),
-            product_type,
+            address_line1: address_line1 ?? "",
+            address_line2: address_line2 ?? "",
+            city: city ?? "",
+            state: state ?? "",
+            zip: zip ?? "",
+            preferred_visit_day: String(selectedDay),
             project_id: String(project_idx),
             source: "wix_public",
           },

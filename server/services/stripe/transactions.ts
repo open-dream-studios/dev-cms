@@ -2,10 +2,10 @@
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
-import { db } from "connection/connect.js";
-import { getIO } from "connection/websocket.js";
-import { formatStripeDateForMySQL } from "functions/data.js";
-import { getUserByUserIdFunction } from "handlers/auth/auth_repositories.js";
+// import { db } from "connection/connect.js";
+// import { getIO } from "connection/websocket.js";
+// import { formatStripeDateForMySQL } from "functions/data.js";
+// import { getUserByUserIdFunction } from "handlers/auth/auth_repositories.js";
 import { PoolConnection } from "mysql2/promise";
 import { Response } from "express"
 dotenv.config();
@@ -702,23 +702,23 @@ export const handleSubscriptionRenewal = async (
   // }
 };
 
-export const updateUserCredits = async (credits: any, user_id: string) => {
-  const connection = await db.promise().getConnection();
-  const user = await getUserByUserIdFunction(connection, user_id)
-  if (!user || !user.credits) return;
+// export const updateUserCredits = async (credits: any, user_id: string) => {
+//   const connection = await db.promise().getConnection();
+//   const user = await getUserByUserIdFunction(connection, user_id)
+//   if (!user || !user.credits) return;
 
-  const updatedCredits = parseInt(user.credits) + parseInt(credits);
-  await new Promise((resolve, reject) => {
-    db.query(
-      "UPDATE users SET `credits`=? WHERE user_id=?",
-      [updatedCredits, user_id],
-      (err, data) => {
-        if (err) {
-          console.error("DB Query Error: Could not update user", err);
-          return reject(err);
-        }
-        resolve(true);
-      }
-    );
-  });
-};
+//   const updatedCredits = parseInt(user.credits) + parseInt(credits);
+//   await new Promise((resolve, reject) => {
+//     db.query(
+//       "UPDATE users SET `credits`=? WHERE user_id=?",
+//       [updatedCredits, user_id],
+//       (err, data) => {
+//         if (err) {
+//           console.error("DB Query Error: Could not update user", err);
+//           return reject(err);
+//         }
+//         resolve(true);
+//       }
+//     );
+//   });
+// };
