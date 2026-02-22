@@ -59,7 +59,7 @@ import projectFolderRoutes from "./handlers/modules/folders/folders_routes.js"
 import paymentRoutes from "./handlers/payments/payments_routes.js";
 import { initializeWebSocket } from "./connection/websocket.js";
 import publicPaymentRoutes from "./handlers/public/payment/payments_routes.js"
-import { stripeWebhookListener } from "handlers/webhooks/stripe/stripe_controllers.js";
+import { stripeWebhookListener } from "./handlers/webhooks/stripe/stripe_controllers.js";
 // import { stripeWebhookListener } from "handlers/webhooks/stripe/stripe_controllers.js";
 dotenv.config();
 
