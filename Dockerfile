@@ -64,8 +64,6 @@ RUN npm run build --workspace=shared
 # RUN npm run build --workspace=server
 RUN npx tsc -b server --force
 
-RUN node server/dist/index.js
-
 # =========================
 # RUNTIME STAGE
 # =========================
