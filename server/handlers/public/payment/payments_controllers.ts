@@ -81,6 +81,9 @@ export const getStripeCheckoutLink = async (
     `${currentProject.domain}${return_page ?? ""}`
   );
 
+  const formattedAddress = address?.formatted ?? "";
+  console.log(address, formattedAddress)
+
   const session: Stripe.Checkout.Session =
     await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -99,7 +102,7 @@ export const getStripeCheckoutLink = async (
         email,
         name,
         phone: phone ?? "",
-        address: address ? JSON.stringify(address) : "",
+        address: formattedAddress,
         selected_day: String(selectedDay),
         product_type,
         project_id: String(project_idx),
@@ -113,7 +116,7 @@ export const getStripeCheckoutLink = async (
             email,
             name,
             phone: phone ?? "",
-            address: address ? JSON.stringify(address) : "",
+            address: formattedAddress,
             selected_day: String(selectedDay),
             product_type,
             project_id: String(project_idx),
