@@ -40,7 +40,6 @@ export const upsertCustomerFunction = async (
     state,
     zip,
     notes,
-    preferred_visit_day
   } = reqBody;
 
   const finalCustomerId = customer_id?.trim() || `CUST-${ulid()}`;
@@ -58,10 +57,9 @@ export const upsertCustomerFunction = async (
       city,
       state,
       zip,
-      notes,
-      preferred_visit_day
+      notes
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       first_name = VALUES(first_name),
       last_name = VALUES(last_name),
@@ -73,7 +71,6 @@ export const upsertCustomerFunction = async (
       state = VALUES(state),
       zip = VALUES(zip),
       notes = VALUES(notes),
-      preferred_visit_day = VALUES(preferred_visit_day),
       updated_at = NOW()
   `;
 
@@ -90,7 +87,6 @@ export const upsertCustomerFunction = async (
     state,
     zip,
     notes,
-    preferred_visit_day ?? null
   ];
 
   const [result] = await connection.query<ResultSetHeader>(query, values);
