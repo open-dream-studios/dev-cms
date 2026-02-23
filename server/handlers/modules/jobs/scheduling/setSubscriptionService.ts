@@ -170,8 +170,12 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     }
   }
 
+  // console.log("📋 VALID CLEANINGS:");
+  // console.log(JSON.stringify(validCleanings, null, 2));
   console.log("📋 VALID CLEANINGS:");
-  console.log(JSON.stringify(validCleanings, null, 2));
+  for (const c of validCleanings) {
+    console.log(JSON.stringify(c));
+  }
 
   const decryptedKeys = await getGoogleKeys(PROJECT_IDX);
 

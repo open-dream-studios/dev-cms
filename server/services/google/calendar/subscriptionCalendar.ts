@@ -48,9 +48,6 @@ export async function deleteSubscriptionEvents(
   } while (pageToken);
 }
 
-/**
- * Create subscription cleaning events at 8:00 AM
- */
 export async function createSubscriptionEvents(
   GOOGLE_CLIENT_SECRET_OBJECT: string,
   GOOGLE_REFRESH_TOKEN_OBJECT: string,
