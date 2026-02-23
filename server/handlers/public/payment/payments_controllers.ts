@@ -9,6 +9,12 @@ import {
 } from "../../projects/projects_repositories.js";
 import { changeToHTTPSDomain } from "../../../functions/data.js";
 import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
+import { getUserByEmailFunction } from "../../auth/auth_repositories.js";
+import {
+  getGmailClient,
+  getGmailKeys,
+  sendGmail,
+} from "../../../services/google/gmail/gmail.js";
 
 export const getStripeCheckoutLink = async (
   req: Request,
@@ -162,4 +168,57 @@ export const getStripeCheckoutLink = async (
     success: true,
     url: session.url,
   };
+};
+
+export const getStripePortalLink = async (
+  req: Request,
+  res: Response,
+  connection: PoolConnection
+) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const projectDomain = getProjectDomainFromWixRequest(req);
+  const project_idx = await getProjectIdByDomain(projectDomain);
+  if (!project_idx) {
+    return { success: true };
+  }
+  const currentProject = await getProjectByIdFunction(project_idx);
+  if (!currentProject || !currentProject.domain) {
+    return { success: true };
+  }
+
+  const { email } = req.body;
+  if (!email) {
+    return { success: true };
+  }
+
+  const existingUser = await getUserByEmailFunction(connection, email);
+  if (!existingUser || !existingUser.stripe_customer_id) {
+    return { success: true };
+  }
+
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: existingUser.stripe_customer_id,
+    return_url: currentProject.domain,
+  });
+
+  console.log(portalSession.url);
+  const decryptedKeys = await getGmailKeys(project_idx);
+
+  if (
+    decryptedKeys?.GOOGLE_CLIENT_SECRET_OBJECT &&
+    decryptedKeys?.GOOGLE_REFRESH_TOKEN_OBJECT
+  ) {
+    const gmailClient = await getGmailClient(
+      decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
+      decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT
+    );
+    return await sendGmail(
+      gmailClient,
+      email,
+      "TSA - Manage Your Subscription",
+      portalSession.url
+    );
+  } else {
+    return { success: true };
+  }
 };

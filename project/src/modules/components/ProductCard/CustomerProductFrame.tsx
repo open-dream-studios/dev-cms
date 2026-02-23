@@ -298,7 +298,7 @@ const CustomerProductFrame = ({
             />
           </div>
           <div
-            style={{ ...getInnerCardStyle(currentUser.theme, currentTheme), backgroundColor: currentTheme.header_1_1}}
+            style={{ ...getInnerCardStyle(currentUser.theme, currentTheme), backgroundColor: currentTheme.header_1_1, opacity: matchedDefinition ? 1 : 0}}
             // style={{border: "1px solid " + currentTheme.header_1_1}}
             className={`mb-[-3px] rounded-[9px] px-[6px] py-[4px] flex flex-col min-[750px]:flex-row min-[870px]:flex-col min-[990px]:flex-row ${
               leftBarOpen ? "min-[1024px]:flex-col min-[1220px]:flex-row" : ""

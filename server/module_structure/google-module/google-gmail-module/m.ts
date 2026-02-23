@@ -4,6 +4,7 @@ import {
   fetchGmailPage,
   fetchGmailSearchPage,
   getGmailClient,
+  sendGmail,
 } from "../../../services/google/gmail/gmail.js";
 import { getGoogleProfile } from "../../../services/google/google.js";
 
@@ -135,30 +136,11 @@ export const run = async ({
     // SEND NEW EMAIL
     // ----------------------------
     if (requestType === "SEND_EMAIL") {
-      const gmail = await getGmailClient(
+      const gmailClient = await getGmailClient(
         GOOGLE_CLIENT_SECRET_OBJECT,
         GOOGLE_REFRESH_TOKEN_OBJECT
       );
-
-      const raw = Buffer.from(
-        [
-          `To: ${body.to}`,
-          `Subject: ${body.subject}`,
-          "Content-Type: text/html; charset=UTF-8",
-          "",
-          body.body,
-        ].join("\n")
-      )
-        .toString("base64")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_");
-
-      await gmail.users.messages.send({
-        userId: "me",
-        requestBody: { raw },
-      });
-
-      return { success: true };
+      return await sendGmail(gmailClient, body.to, body.subject, body.body);
     }
 
     // ----------------------------

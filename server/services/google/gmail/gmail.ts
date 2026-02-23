@@ -1,6 +1,7 @@
 // service/services/google/gmail/gmail.ts
 import { google, gmail_v1 } from "googleapis";
-import { AuthoirizeOAuth2Client } from "../google.js"; 
+import { AuthoirizeOAuth2Client } from "../google.js";
+import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
 
 /**
  * Returned shape from fetchGmailMessages
@@ -95,7 +96,9 @@ export async function fetchGmailPage(
         snippet: data.data.snippet,
         internalDate: data.data.internalDate,
         labelIds: data.data.labelIds || [],
-        headers: (data.data.payload?.headers || []).reduce<Record<string, string>>((acc, h) => {
+        headers: (data.data.payload?.headers || []).reduce<
+          Record<string, string>
+        >((acc, h) => {
           const name = h.name ?? null;
           if (name) acc[name] = h.value ?? "";
           return acc;
@@ -155,13 +158,12 @@ export async function fetchGmailSearchPage(
         snippet: data.data.snippet,
         internalDate: data.data.internalDate,
         labelIds: data.data.labelIds || [],
-        headers: (data.data.payload?.headers || []).reduce<Record<string, string>>(
-          (acc, h) => {
-            if (h.name) acc[h.name] = h.value ?? "";
-            return acc;
-          },
-          {}
-        ),
+        headers: (data.data.payload?.headers || []).reduce<
+          Record<string, string>
+        >((acc, h) => {
+          if (h.name) acc[h.name] = h.value ?? "";
+          return acc;
+        }, {}),
       };
     })
   );
@@ -171,4 +173,41 @@ export async function fetchGmailSearchPage(
     nextPageToken: listRes.data.nextPageToken ?? null,
     resultSizeEstimate: listRes.data.resultSizeEstimate,
   };
+}
+
+export async function getGmailKeys(PROJECT_IDX: number) {
+  const keys = ["GOOGLE_CLIENT_SECRET_OBJECT", "GOOGLE_REFRESH_TOKEN_OBJECT"];
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    PROJECT_IDX,
+    keys,
+    keys
+  );
+  return decryptedKeys;
+}
+
+export async function sendGmail(
+  gmailClient: any,
+  to: string,
+  subject: string,
+  body: string
+) {
+  const raw = Buffer.from(
+    [
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      "Content-Type: text/html; charset=UTF-8",
+      "",
+      body,
+    ].join("\n")
+  )
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+
+  await gmailClient.users.messages.send({
+    userId: "me",
+    requestBody: { raw },
+  });
+
+  return { success: true };
 }
