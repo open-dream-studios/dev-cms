@@ -1,0 +1,16 @@
+name: Daily Subscription Schedule
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # 9am UTC (adjust as needed)
+  workflow_dispatch:
+
+jobs:
+  run-schedule:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Railway schedule endpoint
+        run: |
+          curl -X POST https://dev-cms-production.up.railway.app/api/webhooks/schedule/run-subscription-schedule \
+          -H "Authorization: Bearer ${{ secrets.INTERNAL_CRON_SECRET }}"

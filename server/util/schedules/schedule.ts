@@ -4,8 +4,8 @@ import moment from "moment-timezone";
 
 // Your desired backup time in local timezone
 const LOCAL_TIMEZONE = "America/New_York";
-const LOCAL_HOUR = 21;
-const LOCAL_MINUTE = 19;
+const LOCAL_HOUR = 16;
+const LOCAL_MINUTE = 56;
 
 let schedule: string;
 

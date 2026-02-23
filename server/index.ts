@@ -59,8 +59,8 @@ import projectFolderRoutes from "./handlers/modules/folders/folders_routes.js"
 import paymentRoutes from "./handlers/payments/payments_routes.js";
 import { initializeWebSocket } from "./connection/websocket.js";
 import publicPaymentRoutes from "./handlers/public/payment/payments_routes.js"
-import { stripeWebhookListener } from "./handlers/webhooks/stripe/stripe_controllers.js";
-// import { stripeWebhookListener } from "handlers/webhooks/stripe/stripe_controllers.js";
+import { stripeWebhookListener } from "./handlers/webhooks/stripe/stripe_controllers.js"; 
+import scheduleRoutes from "./handlers/webhooks/schedule/schedule_routes.js";
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -70,8 +70,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Import scheduled tasks
-import(path.join(__dirname, "util/schedules/sql_backup_schedule.js"));
-import(path.join(__dirname, "util/schedules/scraper_schedule.js"));
+// import(path.join(__dirname, "util/schedules/sql_backup_schedule.js"));
+// import(path.join(__dirname, "util/schedules/scraper_schedule.js"));
+// import(path.join(__dirname, "util/schedules/service_schedule.js"));
 
 const app = express();
 app.set("trust proxy", 1);
@@ -209,6 +210,8 @@ app.use("/api/public/customer-data", customerDataRoutes);
 app.use("/api/public/schedule-request", scheduleRequestRoutes);
 app.use("/api/public/payment", publicPaymentRoutes)
 
+// Webhooks
+app.use("/api/webhooks/schedule", scheduleRoutes);
 
 // WebSocket
 const wss = new WebSocketServer({ server });

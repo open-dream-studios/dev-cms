@@ -1,4 +1,4 @@
-// server/util/schedules/sql_backup_schedule.ts
+// server/util/schedules/scraper_schedule.ts
 import cron from "node-cron";
 import { exec } from "child_process";
 import { IS_PRODUCTION } from "../../index.js";
