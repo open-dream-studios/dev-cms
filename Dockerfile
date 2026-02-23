@@ -6,6 +6,9 @@
 FROM node:20-bookworm AS build
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
+RUN apt-get update && apt-get install -y default-mysql-client \
+  && rm -rf /var/lib/apt/lists/*
+  
 RUN apt-get update && apt-get install -y \
   build-essential \
   python3 \
