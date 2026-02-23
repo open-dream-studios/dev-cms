@@ -108,14 +108,16 @@ export default function CustomerManager() {
 
   const [rangeStart, setRangeStart] = useState(() => {
     const d = new Date();
-    d.setDate(d.getDate() - 14);
+    // d.setDate(d.getDate() - 14);
+    d.setMonth(d.getMonth() - 2);
     d.setHours(0, 0, 0, 0);
     return d;
   });
 
   const [rangeEnd, setRangeEnd] = useState(() => {
     const d = new Date();
-    d.setDate(d.getDate() + 14);
+    // d.setDate(d.getDate() + 14);
+    d.setMonth(d.getMonth() + 2);
     d.setHours(23, 59, 59, 999);
     return d;
   });
@@ -123,7 +125,7 @@ export default function CustomerManager() {
   const { events, isLoading, isFetching, refresh } = useGoogleCalendar(
     "primary",
     rangeStart.toISOString(),
-    rangeEnd.toISOString()
+    rangeEnd.toISOString(),
   );
 
   function loadMorePast() {
@@ -145,7 +147,12 @@ export default function CustomerManager() {
   return (
     <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
       {hasProjectModule("google-calendar-module") && (
-        <GoogleCalendarDisplay events={events} refreshCalendar={refresh} />
+        <GoogleCalendarDisplay
+          events={events}
+          refreshCalendar={refresh}
+          fetchStart={rangeStart}
+          fetchEnd={rangeEnd}
+        />
       )}
       {(hasProjectModule("customer-schedule-requests-module") ||
         hasProjectModule("customer-leads-module")) && (

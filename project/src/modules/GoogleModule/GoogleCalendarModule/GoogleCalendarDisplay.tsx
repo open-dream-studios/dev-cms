@@ -33,6 +33,7 @@ import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
 import clsx from "clsx";
 import { openWindow } from "@/util/functions/Handlers";
 import { nanoid } from "nanoid";
+import { DateTime } from "luxon";
 
 export const DAY_START_HOUR = 6;
 export const DAY_END_HOUR = 22;
@@ -42,13 +43,22 @@ export const BUFFER_DAYS = 1500; // => ~4 years forward/back (adjust if desired)
 export const CENTER_INDEX = Math.floor(BUFFER_DAYS / 2); // index for "today" week center
 export const SNAP_DEBOUNCE = 80; // ms
 
+export const timeToPctLuxon = (dt: DateTime) => {
+  const h = dt.hour + dt.minute / 60;
+  return ((h - DAY_START_HOUR) / HOURS) * 100;
+};
+
 // ---------- GoogleCalendarDisplay ----------
 export const GoogleCalendarDisplay = ({
   events,
   refreshCalendar,
+  fetchStart,
+  fetchEnd,
 }: {
   events: GoogleCalendarEventRaw[];
   refreshCalendar: () => void;
+  fetchStart: Date;
+  fetchEnd: Date;
 }) => {
   const { currentUser } = React.useContext(AuthContext);
   const currentTheme = useCurrentTheme();
@@ -85,23 +95,33 @@ export const GoogleCalendarDisplay = ({
 
   useEffect(() => {
     if (!events || events.length === 0) return;
-
     const normalized: CalendarEvent[] = (
       events as GoogleCalendarEventRaw[]
     ).map((ev) => {
-      const start = new Date(ev.start.dateTime || ev.start.date!);
-      const end = new Date(ev.end.dateTime || ev.end.date!);
+      const startDT = DateTime.fromISO(ev.start.dateTime || ev.start.date!, {
+        zone: ev.start.timeZone,
+      });
+
+      const endDT = DateTime.fromISO(ev.end.dateTime || ev.end.date!, {
+        zone: ev.end.timeZone,
+      });
 
       return {
         id: ev.id,
         raw: ev,
         title: ev.summary || "(no title)",
-        start,
-        end,
-        startIndex: dateToIndex(start),
-        endIndex: dateToIndex(end),
-        topPct: timeToPct(start),
-        heightPct: timeToPct(end) - timeToPct(start),
+
+        // store as JS Date (required by type)
+        start: startDT.toJSDate(),
+        end: endDT.toJSDate(),
+
+        // day index can use JS date safely
+        startIndex: dateToIndex(startDT.toJSDate()),
+        endIndex: dateToIndex(endDT.toJSDate()),
+
+        // 🔥 CRITICAL: use Luxon for hour math
+        topPct: timeToPctLuxon(startDT),
+        heightPct: timeToPctLuxon(endDT) - timeToPctLuxon(startDT),
       };
     });
 
@@ -804,11 +824,16 @@ export const GoogleCalendarDisplay = ({
                     zIndex: 20,
                     position: "absolute",
                     left: 0,
-                    top: 0, 
+                    top: 0,
                   }}
                 >
                   {renderedIndices.map((idx) => {
                     const d = daysArray[idx];
+
+                    const isOutsideFetch =
+                      d.getTime() < fetchStart.getTime() ||
+                      d.getTime() > fetchEnd.getTime();
+
                     const colW =
                       columnWidthRef.current ||
                       Math.max(
@@ -826,6 +851,7 @@ export const GoogleCalendarDisplay = ({
                           position: "absolute",
                           left: `${idx * colW}px`,
                           backgroundColor: currentTheme.innerCard,
+                          opacity: isOutsideFetch ? 0.4 : 1
                         }}
                       >
                         <div className="text-center font-semibold text-[11px] leading-[13px]">
@@ -854,6 +880,11 @@ export const GoogleCalendarDisplay = ({
                 >
                   {renderedIndices.map((idx) => {
                     const d = daysArray[idx];
+
+                    const isOutsideFetch =
+                      d.getTime() < fetchStart.getTime() ||
+                      d.getTime() > fetchEnd.getTime();
+
                     const colW =
                       columnWidthRef.current ||
                       Math.max(
@@ -872,6 +903,7 @@ export const GoogleCalendarDisplay = ({
                           left: `${idx * colW}px`,
                           scrollSnapAlign: "start",
                           padding: "0 8px",
+                          opacity: isOutsideFetch ? 0.4 : 1,
                         }}
                       >
                         {/* {Array.from({ length: HOURS + 1 }).map((_, h) => {

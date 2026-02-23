@@ -1,24 +1,19 @@
 // server/module_structure/google-module/google-calendar-module/m.ts
 import type { ModuleFunctionInputs } from "@open-dream/shared";
 import {
-  getCalendarClient,
   fetchCalendarPage,
   getEvent,
   createEvent,
   updateEvent,
   deleteEvent,
   listCalendars,
-  eventsByAttendee,
 } from "../../../services/google/calendar/calendar.js";
 import { getGoogleProfile } from "../../../services/google/google.js";
-import type {
-  GoogleCalendarRequest,
-} from "@open-dream/shared";
 
 export const keys = {
   GOOGLE_CLIENT_SECRET_OBJECT: true,
   GOOGLE_REFRESH_TOKEN_OBJECT: true,
-  GOOGLE_CALENDAR_ID: true
+  GOOGLE_CALENDAR_ID: true,
 };
 
 export const run = async ({
@@ -31,9 +26,16 @@ export const run = async ({
 }: ModuleFunctionInputs) => {
   try {
     const { requestType } = body;
-    const { GOOGLE_CLIENT_SECRET_OBJECT, GOOGLE_REFRESH_TOKEN_OBJECT, GOOGLE_CALENDAR_ID } =
-      decryptedKeys;
-    if (!GOOGLE_CLIENT_SECRET_OBJECT || !GOOGLE_REFRESH_TOKEN_OBJECT || !GOOGLE_CALENDAR_ID) {
+    const {
+      GOOGLE_CLIENT_SECRET_OBJECT,
+      GOOGLE_REFRESH_TOKEN_OBJECT,
+      GOOGLE_CALENDAR_ID,
+    } = decryptedKeys;
+    if (
+      !GOOGLE_CLIENT_SECRET_OBJECT ||
+      !GOOGLE_REFRESH_TOKEN_OBJECT ||
+      !GOOGLE_CALENDAR_ID
+    ) {
       return { success: false };
     }
 
