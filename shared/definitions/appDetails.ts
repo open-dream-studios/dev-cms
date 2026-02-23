@@ -1,4 +1,5 @@
-{
+// shared/definitions/appDetails.ts
+export const appDetails = {
   "default_theme": "dark",
   "left_bar_full": false,
   "left_bar_width": "150px + 6vw",
@@ -71,4 +72,4 @@
       }
     }
   ]
-}
+} as const;

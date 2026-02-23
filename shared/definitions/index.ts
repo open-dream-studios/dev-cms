@@ -1,5 +1,5 @@
 // shared/definitions/index.ts
-export * from "./appDetails/appDetails.js";
+export * from "./appDetails.js";
 
 export * from "./google.js";
 
