@@ -8,8 +8,7 @@ import {
   getProjectIdByDomain,
 } from "../../projects/projects_repositories.js";
 import { changeToHTTPSDomain } from "../../../functions/data.js";
-import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
-import { getUserByEmailFunction } from "../../auth/auth_repositories.js";
+import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js"; 
 import {
   getGmailClient,
   getGmailKeys,
@@ -90,20 +89,20 @@ export const getStripeCheckoutLink = async (
   }
 
   // 2️⃣ Prevent duplicate active subscriptions (recommended)
-  if (product.mode === "subscription") {
-    const activeSubs = await stripe.subscriptions.list({
-      customer: stripeCustomerId,
-      status: "active",
-      limit: 1,
-    });
+  // if (product.mode === "subscription") {
+  //   const activeSubs = await stripe.subscriptions.list({
+  //     customer: stripeCustomerId,
+  //     status: "active",
+  //     limit: 1,
+  //   });
 
-    if (activeSubs.data.length > 0) {
-      return {
-        success: false,
-        message: "Active subscription already exists for this email",
-      };
-    }
-  }
+  //   if (activeSubs.data.length > 0) {
+  //     return {
+  //       success: false,
+  //       message: "Active subscription already exists for this email",
+  //     };
+  //   }
+  // }
 
   // 3️⃣ Create Checkout Session
   const baseUrl = changeToHTTPSDomain(
