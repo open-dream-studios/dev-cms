@@ -3,11 +3,17 @@ import { Router } from "express";
 import { runSubscriptionSchedule } from "../../modules/jobs/scheduling/setSubscriptionService.js";
 import { runScraperJob } from "../../../services/scraper/runScrapeGoogle.js";
 import { runSqlBackupJob } from "../../../sql/sql_backup.js";
+import { getProjectIdByDomain } from "../../projects/projects_repositories.js";
 
 const router = Router();
 
 router.post("/run-subscription-schedule", async (req, res) => {
   const authHeader = req.headers.authorization;
+  const PROJECT_IDX = await getProjectIdByDomain("tannyspaacquisitions.com");
+  console.log(PROJECT_IDX);
+  if (!PROJECT_IDX) {
+    return res.status(401).json({ error: "No Project Assigned" });
+  }
 
   if (
     !authHeader ||
@@ -25,7 +31,7 @@ router.post("/run-subscription-schedule", async (req, res) => {
     console.log("▶️ Running subscription schedule...");
     const servicesStart = new Date();
 
-    const result = await runSubscriptionSchedule();
+    const result = await runSubscriptionSchedule(PROJECT_IDX);
 
     const servicesEnd = new Date();
     console.log(
@@ -41,7 +47,7 @@ router.post("/run-subscription-schedule", async (req, res) => {
     console.log("▶️ Running scraper job...");
     const scraperStart = new Date();
 
-    await runScraperJob();
+    await runScraperJob(PROJECT_IDX);
 
     const scraperEnd = new Date();
     console.log(

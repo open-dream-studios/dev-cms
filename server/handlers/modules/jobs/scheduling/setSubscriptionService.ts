@@ -3,6 +3,11 @@ import Stripe from "stripe";
 import moment from "moment-timezone";
 import { db } from "../../../../connection/connect.js";
 import type { RowDataPacket } from "mysql2";
+import {
+  deleteSubscriptionEvents,
+  createSubscriptionEvents,
+} from "../../../../services/google/calendar/subscriptionCalendar.js";
+import { getDecryptedIntegrationsFunction } from "../../../integrations/integrations_repositories.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -16,6 +21,20 @@ interface CleaningItem {
   email: string | null;
   preferred_day: number;
   cleaning_date: string;
+}
+
+async function getGoogleKeys(PROJECT_IDX: number) {
+  const keys = [
+    "GOOGLE_CLIENT_SECRET_OBJECT",
+    "GOOGLE_REFRESH_TOKEN_OBJECT",
+    "GOOGLE_CALENDAR_ID",
+  ];
+  const decryptedKeys = await getDecryptedIntegrationsFunction(
+    PROJECT_IDX,
+    keys,
+    keys
+  );
+  return decryptedKeys;
 }
 
 async function getActiveSubscriptions() {
@@ -78,7 +97,7 @@ async function getCheckoutData(
   return rows.length ? rows[0] : null;
 }
 
-export async function runSubscriptionSchedule() {
+export async function runSubscriptionSchedule(PROJECT_IDX: number) {
   console.log("🔍 Fetching active Stripe subscriptions...");
 
   const subscriptions = await getActiveSubscriptions();
@@ -119,6 +138,31 @@ export async function runSubscriptionSchedule() {
 
   console.log("📋 VALID CLEANINGS:");
   console.log(JSON.stringify(validCleanings, null, 2));
+
+  const decryptedKeys = await getGoogleKeys(PROJECT_IDX);
+
+  if (
+    decryptedKeys?.GOOGLE_CLIENT_SECRET_OBJECT &&
+    decryptedKeys?.GOOGLE_REFRESH_TOKEN_OBJECT &&
+    decryptedKeys?.GOOGLE_CALENDAR_ID
+  ) {
+    console.log("🗑 Deleting old subscription events...");
+    await deleteSubscriptionEvents(
+      decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
+      decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
+      decryptedKeys.GOOGLE_CALENDAR_ID
+    );
+
+    console.log("📅 Creating subscription events...");
+    await createSubscriptionEvents(
+      decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
+      decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
+      decryptedKeys.GOOGLE_CALENDAR_ID,
+      validCleanings
+    );
+  } else {
+    console.warn("⚠️ Google integration keys not found.");
+  }
 
   return validCleanings;
 }

@@ -3,9 +3,7 @@ import { scrapeGoogle } from "./scrapeGoogle.js";
 import { upsertBusinessDataFunction } from "../../handlers/modules/business_data/business_data_repositories.js";
 import { internalTransaction } from "../../util/handlerWrappers.js";
 
-const PROJECT_IDX = 25;
-
-export async function runScraperJob() {
+export async function runScraperJob(PROJECT_IDX: number) {
   const result = await scrapeGoogle();
 
   if (!result) {
