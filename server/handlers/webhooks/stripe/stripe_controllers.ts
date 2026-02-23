@@ -28,7 +28,7 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
   }
 
   res.status(200).json({ received: true }); 
-  
+
   if (event.type !== "checkout.session.completed") return;
 
   const session = event.data.object as Stripe.Checkout.Session;
@@ -51,8 +51,14 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
     const projectId = Number(metadata.project_id);
     const email = metadata.email ?? null;
     const phone = metadata.phone ?? null;
-    const preferredDay = metadata.preferred_visit_day
-      ? Number(metadata.preferred_visit_day)
+    const day_instance = metadata.selected_day
+      ? Number(metadata.selected_day)
+      : null;
+    const selected_day = metadata.selected_day
+      ? Number(metadata.selected_day)
+      : null;
+    const selected_slot = metadata.selected_day
+      ? Number(metadata.selected_day)
       : null;
 
     // 1️⃣ Find existing customer
@@ -116,11 +122,15 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
         meta_city,
         meta_state,
         meta_zip,
-        meta_preferred_visit_day
+        meta_day_instance,
+        meta_selected_day,
+        meta_selected_slot
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
-        meta_preferred_visit_day = VALUES(meta_preferred_visit_day)
+        meta_day_instance = VALUES(meta_day_instance),
+        meta_selected_day = VALUES(meta_selected_day),
+        meta_selected_slot = VALUES(meta_selected_slot)
       `,
       [
         projectId,
@@ -136,7 +146,9 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
         metadata.city ?? null,
         metadata.state ?? null,
         metadata.zip ?? null,
-        preferredDay,
+        day_instance,
+        selected_day,
+        selected_slot
       ]
     );
 

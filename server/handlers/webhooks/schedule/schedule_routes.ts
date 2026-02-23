@@ -10,7 +10,7 @@ const router = Router();
 router.post("/run-subscription-schedule", async (req, res) => {
   const authHeader = req.headers.authorization;
   const PROJECT_IDX = await getProjectIdByDomain("tannyspaacquisitions.com");
-  console.log(PROJECT_IDX);
+ 
   if (!PROJECT_IDX) {
     return res.status(401).json({ error: "No Project Assigned" });
   }

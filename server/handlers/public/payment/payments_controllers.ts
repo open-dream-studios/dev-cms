@@ -2,7 +2,7 @@
 import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
-import { stripeProducts, StripeProductKey } from "@open-dream/shared"; 
+import { stripeProducts, StripeProductKey } from "@open-dream/shared";
 import {
   getProjectByIdFunction,
   getProjectIdByDomain,
@@ -26,8 +26,21 @@ export const getStripeCheckoutLink = async (
     return { success: false, message: "No project domain found" };
   }
 
-  const { selectedDay, customer, product_type, return_page } = req.body;
-  if (!selectedDay || !customer || !product_type) {
+  const {
+    day_instance,
+    selected_day,
+    selected_slot,
+    customer,
+    product_type,
+    return_page,
+  } = req.body;
+  if (
+    !day_instance ||
+    !selected_day ||
+    !selected_slot ||
+    !customer ||
+    !product_type
+  ) {
     return { success: false, message: "Missing required fields" };
   }
   const {
@@ -91,9 +104,6 @@ export const getStripeCheckoutLink = async (
     `${currentProject.domain}${return_page ?? ""}`
   );
 
-  // const formattedAddress = address?.formatted ?? "";
-  // console.log(address, formattedAddress);
-
   const session: Stripe.Checkout.Session =
     await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -118,7 +128,9 @@ export const getStripeCheckoutLink = async (
         city: city ?? "",
         state: state ?? "",
         zip: zip ?? "",
-        preferred_visit_day: String(selectedDay),
+        day_instance: String(day_instance),
+        selected_day: String(selected_day),
+        selected_slot: String(selected_slot),
         project_id: String(project_idx),
         source: "wix_public",
       },
@@ -136,7 +148,9 @@ export const getStripeCheckoutLink = async (
             city: city ?? "",
             state: state ?? "",
             zip: zip ?? "",
-            preferred_visit_day: String(selectedDay),
+            day_instance: String(day_instance),
+            selected_day: String(selected_day),
+            selected_slot: String(selected_slot),
             project_id: String(project_idx),
             source: "wix_public",
           },
