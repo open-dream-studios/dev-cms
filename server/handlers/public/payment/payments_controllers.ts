@@ -221,21 +221,10 @@ export const getStripePortalLink = async (
     return { success: true };
   }
 
-  // const existingUser = await getUserByEmailFunction(connection, email);
-  // if (!existingUser || !existingUser.stripe_customer_id) {
-  //   console.log("⚠️ Portal Email Failed ", "Email has no subscription history");
-  //   return { success: true };
-  // }
-
-  // const portalSession = await stripe.billingPortal.sessions.create({
-  //   customer: existingUser.stripe_customer_id,
-  //   return_url: currentProject.domain,
-  // });
-
   // 3️⃣ Create ONE portal session (customer-scoped)
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: customer.id,
-    return_url: currentProject.domain,
+    return_url: changeToHTTPSDomain(currentProject.domain),
   });
 
   console.log(portalSession.url);
