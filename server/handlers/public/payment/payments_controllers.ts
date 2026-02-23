@@ -179,29 +179,62 @@ export const getStripePortalLink = async (
   const projectDomain = getProjectDomainFromWixRequest(req);
   const project_idx = await getProjectIdByDomain(projectDomain);
   if (!project_idx) {
-    return { success: false, message: "No project id found" };
+    console.log("⚠️ Portal Email Failed ", "No project id found");
+    return { success: true };
   }
   const currentProject = await getProjectByIdFunction(project_idx);
   if (!currentProject || !currentProject.domain) {
-    return { success: false, message: "No project domain found" };
+    console.log("⚠️ Portal Email Failed ", "No project domain found");
+    return { success: true };
   }
 
   const { email } = req.body;
   if (!email) {
-    return { success: false, code: "missing-email", message: "Missing email" };
+    console.log("⚠️ Portal Email Failed ", "Missing email");
+    return { success: true };
   }
 
-  const existingUser = await getUserByEmailFunction(connection, email);
-  if (!existingUser || !existingUser.stripe_customer_id) {
-    return {
-      success: false,
-      code: "no-email",
-      message: "Email has no subscription history",
-    };
+  // 1️⃣ Find Stripe customer by email
+  const customers = await stripe.customers.list({
+    email,
+    limit: 1,
+  });
+
+  if (!customers.data.length) {
+    console.log("⚠️ Portal Email Failed ", "Stripe customer not found");
+    return { success: true };
+  }
+  const customer = customers.data[0];
+
+  // 2️⃣ Optional: ensure they actually have active subscriptions
+  const subscriptions = await stripe.subscriptions.list({
+    customer: customer.id,
+    status: "active",
+    limit: 1,
+  });
+
+  if (!subscriptions.data.length) {
+    console.log(
+      "⚠️ Portal Email Failed ",
+      "Stripe customer has no active subscriptions"
+    );
+    return { success: true };
   }
 
+  // const existingUser = await getUserByEmailFunction(connection, email);
+  // if (!existingUser || !existingUser.stripe_customer_id) {
+  //   console.log("⚠️ Portal Email Failed ", "Email has no subscription history");
+  //   return { success: true };
+  // }
+
+  // const portalSession = await stripe.billingPortal.sessions.create({
+  //   customer: existingUser.stripe_customer_id,
+  //   return_url: currentProject.domain,
+  // });
+
+  // 3️⃣ Create ONE portal session (customer-scoped)
   const portalSession = await stripe.billingPortal.sessions.create({
-    customer: existingUser.stripe_customer_id,
+    customer: customer.id,
     return_url: currentProject.domain,
   });
 
@@ -223,6 +256,7 @@ export const getStripePortalLink = async (
       portalSession.url
     );
   } else {
-    return { success: false, code: "server-error", message: "Server error" };
+    console.log("⚠️ Portal Email Failed ", "Keys not found");
+    return { success: true };
   }
 };
