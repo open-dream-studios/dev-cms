@@ -56,6 +56,7 @@ export async function createSubscriptionEvents(
     stripe_subscription_id: string;
     customer_id: string;
     email: string | null;
+    event_description: string;
     day_instance: number;
     selected_day: number;
     selected_slot: number;
@@ -82,10 +83,7 @@ export async function createSubscriptionEvents(
 
     const event: calendar_v3.Schema$Event = {
       summary: "Cleaning Subscription",
-      description:
-        `Customer: ${cleaning.customer_id}\n` +
-        `Stripe: ${cleaning.stripe_subscription_id}\n` +
-        `Pattern: ${cleaning.day_instance} / ${cleaning.selected_day} / ${cleaning.selected_slot}`,
+      description: cleaning.event_description,
       start: {
         dateTime: start,
         timeZone: TIMEZONE,
@@ -97,6 +95,7 @@ export async function createSubscriptionEvents(
       extendedProperties: {
         private: {
           [TAG_KEY]: TAG_VALUE,
+          email: cleaning.email ?? "N/A",
           customerId: cleaning.customer_id,
           stripeSubscriptionId: cleaning.stripe_subscription_id,
         },

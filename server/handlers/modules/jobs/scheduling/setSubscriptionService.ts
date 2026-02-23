@@ -19,6 +19,7 @@ interface CleaningItem {
   stripe_subscription_id: string;
   customer_id: string;
   email: string | null;
+  event_description: string;
   day_instance: number;
   selected_day: number;
   selected_slot: number;
@@ -114,7 +115,20 @@ async function getCheckoutData(
 ): Promise<RowDataPacket | null> {
   const [rows] = await db.promise().query<RowDataPacket[]>(
     `
-    SELECT customer_id, meta_email, meta_day_instance, meta_selected_day, meta_selected_slot 
+    SELECT 
+      customer_id,
+      meta_first_name,
+      meta_last_name,
+      meta_email,
+      meta_phone,
+      meta_address_line1,
+      meta_address_line2,
+      meta_city,
+      meta_state,
+      meta_zip,
+      meta_day_instance,
+      meta_selected_day,
+      meta_selected_slot
     FROM subscription_checkouts
     WHERE stripe_subscription_id = ?
     ORDER BY created_at DESC
@@ -124,6 +138,40 @@ async function getCheckoutData(
   );
 
   return rows.length ? rows[0] : null;
+}
+
+function ordinal(n: number): string {
+  if (n % 100 >= 11 && n % 100 <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}
+
+function weekdayLabel(day: number): string {
+  const map: Record<number, string> = {
+    1: "Monday",
+    2: "Tuesday",
+    3: "Wednesday",
+    4: "Thursday",
+    5: "Friday",
+  };
+  return map[day] ?? "";
+}
+
+function slotLabel(slot: number): string {
+  const map: Record<number, string> = {
+    1: "SLOT 1 (9am–11am)",
+    2: "SLOT 2 (11am–2pm)",
+    3: "SLOT 3 (2pm–5pm)",
+  };
+  return map[slot] ?? "";
 }
 
 export async function runSubscriptionSchedule(PROJECT_IDX: number) {
@@ -137,6 +185,33 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
 
     const checkout = await getCheckoutData(sub.id);
     if (!checkout) continue;
+
+    const customerId = checkout.customer_id;
+
+    const customerName = `${checkout.meta_first_name ?? ""} ${
+      checkout.meta_last_name ?? ""
+    }`.trim();
+
+    const customerEmail = checkout.meta_email ?? "N/A";
+    const customerPhone = checkout.meta_phone ?? "N/A";
+
+    const customerAddress = [
+      checkout.meta_address_line1,
+      checkout.meta_address_line2,
+      checkout.meta_city,
+      checkout.meta_state,
+      checkout.meta_zip,
+    ]
+      .filter(Boolean)
+      .join(", ");
+    const stripeSubscriptionId = sub.id;
+    const subscriptionRenewalDate = moment
+      .unix(
+        (sub as Stripe.Subscription & { current_period_end: number })
+          .current_period_end
+      )
+      .tz(TIMEZONE)
+      .format("MMMM D, YYYY");
 
     const day_instance = checkout.meta_day_instance;
     const selected_day = checkout.meta_selected_day;
@@ -158,10 +233,32 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
         }
       }
 
+      const subscriptionSlot = `${ordinal(day_instance)} ${weekdayLabel(
+        selected_day
+      )} each month, ${slotLabel(selected_slot)}`;
+      const event_description = `Scheduled Cleaning
+
+      Customer: 
+        Name: ${customerName}
+        Email: ${customerEmail}
+        Phone: ${customerPhone}
+        Address: ${customerAddress}
+
+        Customer ID: ${customerId}
+        Stripe Subscription ID: ${stripeSubscriptionId}
+       
+        ✅ Active Subscription -> Renews ${subscriptionRenewalDate}
+
+        Subscription Slot ->  ${subscriptionSlot}
+
+        Notes: 
+      `;
+
       validCleanings.push({
-        stripe_subscription_id: sub.id,
-        customer_id: checkout.customer_id,
-        email: checkout.meta_email ?? null,
+        stripe_subscription_id: stripeSubscriptionId,
+        customer_id: customerId,
+        email: customerEmail,
+        event_description,
         day_instance,
         selected_day,
         selected_slot,
@@ -170,8 +267,6 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     }
   }
 
-  // console.log("📋 VALID CLEANINGS:");
-  // console.log(JSON.stringify(validCleanings, null, 2));
   console.log("📋 VALID CLEANINGS:");
   for (const c of validCleanings) {
     console.log(JSON.stringify(c));
