@@ -6,6 +6,7 @@ import type { RowDataPacket } from "mysql2";
 import {
   deleteSubscriptionEvents,
   createSubscriptionEvents,
+  syncSubscriptionEvents,
 } from "../../../../services/google/calendar/subscriptionCalendar.js";
 import { getDecryptedIntegrationsFunction } from "../../../integrations/integrations_repositories.js";
 import { formatPhoneNumber } from "@open-dream/shared";
@@ -16,7 +17,18 @@ const TIMEZONE = "America/New_York";
 // const LOOKAHEAD_DAYS = 21;
 const LOOKAHEAD_DAYS = 60;
 
-interface CleaningItem {
+// interface CleaningItem {
+//   stripe_subscription_id: string;
+//   customer_id: string;
+//   email: string | null;
+//   event_description: string;
+//   day_instance: number;
+//   selected_day: number;
+//   selected_slot: number;
+//   cleaning_date: string;
+// }
+
+export interface CleaningItem {
   stripe_subscription_id: string;
   customer_id: string;
   email: string | null;
@@ -25,6 +37,8 @@ interface CleaningItem {
   selected_day: number;
   selected_slot: number;
   cleaning_date: string;
+  event_key: string;
+  status: "active" | "invalid";
 }
 
 async function getGoogleKeys(PROJECT_IDX: number) {
@@ -226,14 +240,28 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     const cleaningDates = computeCleaningDates(day_instance, selected_day);
 
     for (const date of cleaningDates) {
+      const m = moment(date);
+      const event_key = `${stripeSubscriptionId}_${m.month() + 1}_${m.year()}`;
+
       const cancelAt = (sub as any).cancel_at as number | undefined;
+
+      // if (cancelAt) {
+      //   const cancelDate = moment.unix(cancelAt).tz(TIMEZONE).startOf("day");
+      //   const cleaningMoment = moment(date).tz(TIMEZONE);
+
+      //   if (cleaningMoment.isAfter(cancelDate)) {
+      //     continue;
+      //   }
+      // }
+
+      let status: "active" | "invalid" = "active";
 
       if (cancelAt) {
         const cancelDate = moment.unix(cancelAt).tz(TIMEZONE).startOf("day");
         const cleaningMoment = moment(date).tz(TIMEZONE);
 
         if (cleaningMoment.isAfter(cancelDate)) {
-          continue;
+          status = "invalid";
         }
       }
 
@@ -254,6 +282,17 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
         Notes: 
       `;
 
+      // validCleanings.push({
+      //   stripe_subscription_id: stripeSubscriptionId,
+      //   customer_id: customerId,
+      //   email: customerEmail,
+      //   event_description,
+      //   day_instance,
+      //   selected_day,
+      //   selected_slot,
+      //   cleaning_date: date,
+      // });
+
       validCleanings.push({
         stripe_subscription_id: stripeSubscriptionId,
         customer_id: customerId,
@@ -263,6 +302,8 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
         selected_day,
         selected_slot,
         cleaning_date: date,
+        event_key,
+        status,
       });
     }
   }
@@ -279,15 +320,21 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     decryptedKeys?.GOOGLE_REFRESH_TOKEN_OBJECT &&
     decryptedKeys?.GOOGLE_CALENDAR_ID
   ) {
-    console.log("🗑 Deleting old subscription events...");
-    await deleteSubscriptionEvents(
-      decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
-      decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
-      decryptedKeys.GOOGLE_CALENDAR_ID
-    );
+    // console.log("🗑 Deleting old subscription events...");
+    // await deleteSubscriptionEvents(
+    //   decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
+    //   decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
+    //   decryptedKeys.GOOGLE_CALENDAR_ID
+    // );
 
-    console.log("📅 Creating subscription events...");
-    await createSubscriptionEvents(
+    console.log("📅 Syncing subscription events...");
+    // await createSubscriptionEvents(
+    //   decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
+    //   decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
+    //   decryptedKeys.GOOGLE_CALENDAR_ID,
+    //   validCleanings
+    // );
+    await syncSubscriptionEvents(
       decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
       decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
       decryptedKeys.GOOGLE_CALENDAR_ID,
