@@ -1,5 +1,5 @@
 // shared/functions/application.ts
-import appDetails from "../appDetails.json";
+import appDetails from "../definitions/appDetails/appDetails.json";
 
 export const appDetailsProjectByDomain = (domain: string | null) => {
   if (!domain) return null
