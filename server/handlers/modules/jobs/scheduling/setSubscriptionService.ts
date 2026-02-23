@@ -74,9 +74,9 @@ function computeCleaningDates(
   const weekdayMap: Record<number, number> = {
     1: 1, // Monday
     2: 2, // Tuesday
-    3: 3,
-    4: 4,
-    5: 5,
+    3: 3, // Wednesday
+    4: 4, // Thursday
+    5: 5, // Friday
   };
 
   const targetWeekday = weekdayMap[selected_day];

@@ -64,8 +64,8 @@ export async function createSubscriptionEvents(
 ) {
   const slotMap: Record<number, { start: string; end: string }> = {
     1: { start: "09:00", end: "11:00" }, // 9–11
-    2: { start: "11:00", end: "14:00" }, // 11–2
-    3: { start: "14:00", end: "17:00" }, // 2–5
+    2: { start: "12:00", end: "14:00" }, // 12–2
+    3: { start: "15:00", end: "17:00" }, // 3–5
   };
 
   for (const cleaning of cleanings) {
