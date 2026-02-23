@@ -18,8 +18,7 @@ import {
   getGmailClient,
   getGmailKeys,
   sendGmail,
-} from "../../../services/google/gmail/gmail.js";
-import { config } from "dotenv";
+} from "../../../services/google/gmail/gmail.js"; 
 
 export const getStripeCheckoutLink = async (
   req: Request,
@@ -202,6 +201,7 @@ export const getStripePortalLink = async (
     console.log("⚠️ Portal Email Failed ", "Missing email");
     return { success: true };
   }
+  console.log(email)
 
   // 1️⃣ Find Stripe customer by email
   const customers = await stripe.customers.list({
@@ -235,6 +235,7 @@ export const getStripePortalLink = async (
     customer: customer.id,
     return_url: changeToHTTPSDomain(currentProject.domain),
   });
+   console.log(customer.name)
 
   const decryptedKeys = await getGmailKeys(project_idx);
 
@@ -262,6 +263,8 @@ export const getStripePortalLink = async (
       primaryColor: config.primaryColor,
       phoneNumber: config.phoneNumber,
     });
+
+    console.log(body)
 
     return await sendGmail(
       gmailClient,
