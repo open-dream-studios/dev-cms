@@ -247,13 +247,9 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
         Email: ${customerEmail}
         Phone: ${customerPhone}
         Address: ${customerAddress}
-
-        Customer ID: ${customerId}
-        Stripe Subscription ID: ${stripeSubscriptionId}
        
         ✅ Active Subscription -> Renews ${subscriptionRenewalDate}
-
-        Subscription Slot ->  ${subscriptionSlot}
+        ${subscriptionSlot}
 
         Notes: 
       `;
