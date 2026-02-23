@@ -2,7 +2,12 @@
 import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
-import { stripeProducts, StripeProductKey, manageSubscriptionEmail, appDetailsProjectByKey } from "@open-dream/shared";
+import {
+  stripeProducts,
+  StripeProductKey,
+  manageSubscriptionEmail,
+  appDetailsProjectByDomain,
+} from "@open-dream/shared";
 import {
   getProjectByIdFunction,
   getProjectIdByDomain,
@@ -183,7 +188,11 @@ export const getStripePortalLink = async (
     return { success: true };
   }
   const currentProject = await getProjectByIdFunction(project_idx);
-  if (!currentProject || !currentProject.domain) {
+  if (
+    !currentProject ||
+    !currentProject.domain ||
+    !currentProject.backend_domain
+  ) {
     console.log("⚠️ Portal Email Failed ", "No project domain found");
     return { success: true };
   }
@@ -226,7 +235,7 @@ export const getStripePortalLink = async (
     customer: customer.id,
     return_url: changeToHTTPSDomain(currentProject.domain),
   });
- 
+
   const decryptedKeys = await getGmailKeys(project_idx);
 
   if (
@@ -238,10 +247,12 @@ export const getStripePortalLink = async (
       decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT
     );
 
-    const foundProject = appDetailsProjectByKey("tsa")
-    if (!foundProject || !foundProject.email_config) return
+    const foundProject = appDetailsProjectByDomain(
+      currentProject.backend_domain
+    );
+    if (!foundProject || !foundProject.email_config) return;
 
-    const config = foundProject.email_config
+    const config = foundProject.email_config;
 
     const body = manageSubscriptionEmail({
       businessName: config.businessName,
