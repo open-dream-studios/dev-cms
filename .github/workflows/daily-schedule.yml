@@ -2,8 +2,8 @@ name: Daily Subscription Schedule
 
 on:
   schedule:
-    - cron: "20 14 * * *"
-    # 20 14 = 2:20 UTC = 9:20 pm est
+    - cron: "22 2 * * *"
+    # UTC -> - 5 hours is EST
   workflow_dispatch:
 
 jobs:
