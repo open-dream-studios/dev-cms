@@ -209,5 +209,5 @@ export async function sendGmail(
     requestBody: { raw },
   });
 
-  return { success: true };
+  return { success: true, message: raw };
 }

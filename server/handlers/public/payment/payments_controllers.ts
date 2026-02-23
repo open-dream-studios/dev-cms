@@ -179,21 +179,25 @@ export const getStripePortalLink = async (
   const projectDomain = getProjectDomainFromWixRequest(req);
   const project_idx = await getProjectIdByDomain(projectDomain);
   if (!project_idx) {
-    return { success: true };
+    return { success: false, message: "No project id found" };
   }
   const currentProject = await getProjectByIdFunction(project_idx);
   if (!currentProject || !currentProject.domain) {
-    return { success: true };
+    return { success: false, message: "No project domain found" };
   }
 
   const { email } = req.body;
   if (!email) {
-    return { success: true };
+    return { success: false, code: "missing-email", message: "Missing email" };
   }
 
   const existingUser = await getUserByEmailFunction(connection, email);
   if (!existingUser || !existingUser.stripe_customer_id) {
-    return { success: true };
+    return {
+      success: false,
+      code: "no-email",
+      message: "Email has no subscription history",
+    };
   }
 
   const portalSession = await stripe.billingPortal.sessions.create({
@@ -219,6 +223,6 @@ export const getStripePortalLink = async (
       portalSession.url
     );
   } else {
-    return { success: true };
+    return { success: false, code: "server-error", message: "Server error" };
   }
 };
