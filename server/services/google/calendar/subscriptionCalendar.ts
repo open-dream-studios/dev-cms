@@ -59,19 +59,36 @@ export async function createSubscriptionEvents(
     stripe_subscription_id: string;
     customer_id: string;
     email: string | null;
+    day_instance: number;
+    selected_day: number;
+    selected_slot: number;
     cleaning_date: string;
   }[]
 ) {
+  const slotMap: Record<number, { start: string; end: string }> = {
+    1: { start: "09:00", end: "11:00" }, // 9–11
+    2: { start: "11:00", end: "14:00" }, // 11–2
+    3: { start: "14:00", end: "17:00" }, // 2–5
+  };
+
   for (const cleaning of cleanings) {
+    const slot = slotMap[cleaning.selected_slot];
+    if (!slot) continue;
+
     const start = moment
-      .tz(`${cleaning.cleaning_date} 08:00`, TIMEZONE)
+      .tz(`${cleaning.cleaning_date} ${slot.start}`, TIMEZONE)
       .toISOString();
 
-    const end = moment(start).add(1, "hour").toISOString();
+    const end = moment
+      .tz(`${cleaning.cleaning_date} ${slot.end}`, TIMEZONE)
+      .toISOString();
 
     const event: calendar_v3.Schema$Event = {
       summary: "Cleaning Subscription",
-      description: `Customer: ${cleaning.customer_id}\nStripe: ${cleaning.stripe_subscription_id}`,
+      description:
+        `Customer: ${cleaning.customer_id}\n` +
+        `Stripe: ${cleaning.stripe_subscription_id}\n` +
+        `Pattern: ${cleaning.day_instance} / ${cleaning.selected_day} / ${cleaning.selected_slot}`,
       start: {
         dateTime: start,
         timeZone: TIMEZONE,

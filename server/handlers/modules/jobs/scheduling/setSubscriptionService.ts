@@ -19,7 +19,9 @@ interface CleaningItem {
   stripe_subscription_id: string;
   customer_id: string;
   email: string | null;
-  preferred_day: number;
+  day_instance: number;
+  selected_day: number;
+  selected_slot: number;
   cleaning_date: string;
 }
 
@@ -60,21 +62,48 @@ async function getActiveSubscriptions() {
 }
 
 function computeCleaningDates(
-  preferredDay: number,
-  subscription: Stripe.Subscription
+  day_instance: number, // 1–3 (1st, 2nd, 3rd)
+  selected_day: number // 1–5 (Mon–Fri)
 ): string[] {
   const dates: string[] = [];
 
   const today = moment().tz(TIMEZONE).startOf("day");
   const end = today.clone().add(LOOKAHEAD_DAYS, "days");
 
-  let cursor = today.clone();
+  // Convert your 1–5 (Mon–Fri) to moment weekday (0–6, Sun–Sat)
+  const weekdayMap: Record<number, number> = {
+    1: 1, // Monday
+    2: 2, // Tuesday
+    3: 3,
+    4: 4,
+    5: 5,
+  };
 
-  while (cursor.isSameOrBefore(end)) {
-    if (cursor.date() === preferredDay) {
-      dates.push(cursor.format("YYYY-MM-DD"));
+  const targetWeekday = weekdayMap[selected_day];
+  if (!targetWeekday) return dates;
+
+  let cursorMonth = today.clone().startOf("month");
+
+  while (cursorMonth.isSameOrBefore(end)) {
+    let firstOfMonth = cursorMonth.clone().startOf("month");
+
+    // Find first occurrence of that weekday in the month
+    let firstWeekday = firstOfMonth.clone();
+    while (firstWeekday.day() !== targetWeekday) {
+      firstWeekday.add(1, "day");
     }
-    cursor.add(1, "day");
+
+    // Add (day_instance - 1) weeks
+    const targetDate = firstWeekday.clone().add(day_instance - 1, "weeks");
+
+    // Make sure it’s still in same month
+    if (targetDate.month() === firstOfMonth.month()) {
+      if (targetDate.isSameOrAfter(today) && targetDate.isSameOrBefore(end)) {
+        dates.push(targetDate.format("YYYY-MM-DD"));
+      }
+    }
+
+    cursorMonth.add(1, "month");
   }
 
   return dates;
@@ -85,7 +114,7 @@ async function getCheckoutData(
 ): Promise<RowDataPacket | null> {
   const [rows] = await db.promise().query<RowDataPacket[]>(
     `
-    SELECT customer_id, meta_email, meta_preferred_visit_day
+    SELECT customer_id, meta_email, meta_day_instance, meta_selected_day, meta_selected_slot 
     FROM subscription_checkouts
     WHERE stripe_subscription_id = ?
     ORDER BY created_at DESC
@@ -109,10 +138,13 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     const checkout = await getCheckoutData(sub.id);
     if (!checkout) continue;
 
-    const preferredDay = checkout.meta_preferred_visit_day;
-    if (!preferredDay) continue;
+    const day_instance = checkout.meta_day_instance;
+    const selected_day = checkout.meta_selected_day;
+    const selected_slot = checkout.meta_selected_slot;
 
-    const cleaningDates = computeCleaningDates(preferredDay, sub);
+    if (!day_instance || !selected_day || !selected_slot) continue;
+
+    const cleaningDates = computeCleaningDates(day_instance, selected_day);
 
     for (const date of cleaningDates) {
       const cancelAt = (sub as any).cancel_at as number | undefined;
@@ -130,7 +162,9 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
         stripe_subscription_id: sub.id,
         customer_id: checkout.customer_id,
         email: checkout.meta_email ?? null,
-        preferred_day: preferredDay,
+        day_instance,
+        selected_day,
+        selected_slot,
         cleaning_date: date,
       });
     }
