@@ -2,7 +2,8 @@ name: Daily Subscription Schedule
 
 on:
   schedule:
-    - cron: "45 13 * * *"
+    - cron: "13 14 * * *"
+    # 14:13 = 9:11 pm est
   workflow_dispatch:
 
 jobs:

@@ -69,11 +69,6 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Import scheduled tasks
-// import(path.join(__dirname, "util/schedules/sql_backup_schedule.js"));
-// import(path.join(__dirname, "util/schedules/scraper_schedule.js"));
-// import(path.join(__dirname, "util/schedules/service_schedule.js"));
-
 const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 8080;
