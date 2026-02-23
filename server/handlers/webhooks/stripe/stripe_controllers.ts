@@ -51,14 +51,14 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
     const projectId = Number(metadata.project_id);
     const email = metadata.email ?? null;
     const phone = metadata.phone ?? null;
-    const day_instance = metadata.selected_day
-      ? Number(metadata.selected_day)
+    const day_instance = metadata.day_instance
+      ? Number(metadata.day_instance)
       : null;
     const selected_day = metadata.selected_day
       ? Number(metadata.selected_day)
       : null;
-    const selected_slot = metadata.selected_day
-      ? Number(metadata.selected_day)
+    const selected_slot = metadata.selected_slot
+      ? Number(metadata.selected_slot)
       : null;
 
     // 1️⃣ Find existing customer
