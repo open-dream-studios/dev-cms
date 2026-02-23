@@ -22,7 +22,7 @@ import {
 import { formatDateTime } from "@/util/functions/Time";
 import { useCustomerDataUIStore } from "./_store/customerData.store";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { formatPhoneNumber } from "@/util/functions/Customers";
+import { formatPhoneNumber } from "@open-dream/shared";
 import { useRouting } from "@/hooks/useRouting";
 import { useLeadForm } from "@/hooks/forms/useLeadForm";
 import { LeadFormData, leadToForm } from "@/util/schemas/leadSchema";

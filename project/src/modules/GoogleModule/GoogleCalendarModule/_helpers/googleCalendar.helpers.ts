@@ -7,7 +7,7 @@ import type {
   LocalDateTimeInput,
   ScheduleRequest,
 } from "@open-dream/shared";
-import { formatPhoneNumber } from "@/util/functions/Customers";
+import { formatPhoneNumber } from "@open-dream/shared";
 
 // Convert a Date to buffer index
 export const dateToIndex = (date: Date) => {

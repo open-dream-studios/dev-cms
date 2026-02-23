@@ -8,6 +8,7 @@ import {
   createSubscriptionEvents,
 } from "../../../../services/google/calendar/subscriptionCalendar.js";
 import { getDecryptedIntegrationsFunction } from "../../../integrations/integrations_repositories.js";
+import { formatPhoneNumber } from "@open-dream/shared";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -180,8 +181,10 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
   const subscriptions = await getActiveSubscriptions();
   const validCleanings: CleaningItem[] = [];
 
-  for (const sub of subscriptions) {
-    if (sub.status !== "active") continue;
+  for (const subLite of subscriptions) {
+    if (subLite.status !== "active") continue;
+    const subResponse = await stripe.subscriptions.retrieve(subLite.id);
+    const sub = subResponse as Stripe.Subscription;
 
     const checkout = await getCheckoutData(sub.id);
     if (!checkout) continue;
@@ -193,7 +196,9 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     }`.trim();
 
     const customerEmail = checkout.meta_email ?? "N/A";
-    const customerPhone = checkout.meta_phone ?? "N/A";
+    const customerPhone = checkout.meta_phone
+      ? formatPhoneNumber(checkout.meta_phone)
+      : "N/A";
 
     const customerAddress = [
       checkout.meta_address_line1,
@@ -205,13 +210,12 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
       .filter(Boolean)
       .join(", ");
     const stripeSubscriptionId = sub.id;
-    const subscriptionRenewalDate = moment
-      .unix(
-        (sub as Stripe.Subscription & { current_period_end: number })
-          .current_period_end
-      )
-      .tz(TIMEZONE)
-      .format("MMMM D, YYYY");
+    const subscriptionRenewalDate = sub.items.data.length
+      ? moment
+          .unix(sub.items.data[0].current_period_end)
+          .tz(TIMEZONE)
+          .format("MMMM D, YYYY")
+      : "Unknown";
 
     const day_instance = checkout.meta_day_instance;
     const selected_day = checkout.meta_selected_day;

@@ -1,16 +1,5 @@
 // project/src/util/functions/Customers.tsx
 
-export function formatPhoneNumber(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length !== 10) {
-    return phone
-  }
-  const areaCode = digits.slice(0, 3);
-  const prefix = digits.slice(3, 6);
-  const lineNumber = digits.slice(6);
-  return `(${areaCode}) ${prefix}-${lineNumber}`;
-}
-
 export function formatPhone(value: string) {
   if (value.length <= 3) return value;
   if (value.length <= 6) return `${value.slice(0, 3)}-${value.slice(3)}`;

@@ -4,6 +4,7 @@ import { Calendar, Clock, Check, X, Brain, MapPin } from "lucide-react";
 import {
   Customer,
   CustomerInput,
+  formatPhoneNumber,
   GoogleCalendarEventRaw,
   ScheduleRequest,
   ScheduleRequestInput,
@@ -15,7 +16,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { MdOutlineRefresh, MdSchedule } from "react-icons/md";
 import { dateToString, formatTimeDate } from "@/util/functions/Time";
 import { useGoogleCalendarUIStore } from "../_store/googleCalendar.store";
-import { formatPhoneNumber, parseUSAddress } from "@/util/functions/Customers";
+import { parseUSAddress } from "@/util/functions/Customers";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import {
   setCurrentCustomerData,

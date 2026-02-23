@@ -11,7 +11,7 @@ import { AuthContext } from "@/contexts/authContext";
 import "./CustomerCalls.css";
 import { Customer } from "@open-dream/shared";
 import { normalizeUSNumber } from "@/util/functions/Calls";
-import { formatPhoneNumber } from "@/util/functions/Customers";
+import { formatPhoneNumber } from "@open-dream/shared";
 import { makeRequest } from "@/util/axios";
 import {
   setCurrentCustomerData,

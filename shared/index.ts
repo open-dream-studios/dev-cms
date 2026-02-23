@@ -1,3 +1,4 @@
+// shared/index.ts
 export * from "./types/models/project.js";
 export * from "./types/models/customers.js";
 export * from "./types/models/employees.js";
@@ -29,4 +30,5 @@ export * from "./types/models/estimations/if_trees.js";
 export * from "./types/models/folders.js";
 export * from "./types/models/payments.js";
 
-// export * from "./definitions/google";
+export * from "./functions/data.js";
+export * from "./definitions/google.js";
