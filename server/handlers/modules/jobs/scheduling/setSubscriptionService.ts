@@ -3,11 +3,7 @@ import Stripe from "stripe";
 import moment from "moment-timezone";
 import { db } from "../../../../connection/connect.js";
 import type { RowDataPacket } from "mysql2";
-import {
-  deleteSubscriptionEvents,
-  createSubscriptionEvents,
-  syncSubscriptionEvents,
-} from "../../../../services/google/calendar/subscriptionCalendar.js";
+import { syncSubscriptionEvents } from "../../../../services/google/calendar/subscriptionCalendar.js";
 import { getDecryptedIntegrationsFunction } from "../../../integrations/integrations_repositories.js";
 import { formatPhoneNumber } from "@open-dream/shared";
 
@@ -16,17 +12,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const TIMEZONE = "America/New_York";
 // const LOOKAHEAD_DAYS = 21;
 const LOOKAHEAD_DAYS = 60;
-
-// interface CleaningItem {
-//   stripe_subscription_id: string;
-//   customer_id: string;
-//   email: string | null;
-//   event_description: string;
-//   day_instance: number;
-//   selected_day: number;
-//   selected_slot: number;
-//   cleaning_date: string;
-// }
 
 export interface CleaningItem {
   stripe_subscription_id: string;
@@ -190,7 +175,7 @@ function slotLabel(slot: number): string {
 }
 
 export async function runSubscriptionSchedule(PROJECT_IDX: number) {
-  console.log("🔍 Fetching active Stripe subscriptions...");
+  // console.log("🔍 Fetching active Stripe subscriptions...");
 
   const subscriptions = await getActiveSubscriptions();
   const validCleanings: CleaningItem[] = [];
@@ -245,15 +230,6 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
 
       const cancelAt = (sub as any).cancel_at as number | undefined;
 
-      // if (cancelAt) {
-      //   const cancelDate = moment.unix(cancelAt).tz(TIMEZONE).startOf("day");
-      //   const cleaningMoment = moment(date).tz(TIMEZONE);
-
-      //   if (cleaningMoment.isAfter(cancelDate)) {
-      //     continue;
-      //   }
-      // }
-
       let status: "active" | "invalid" = "active";
 
       if (cancelAt) {
@@ -282,17 +258,6 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
         Notes: 
       `;
 
-      // validCleanings.push({
-      //   stripe_subscription_id: stripeSubscriptionId,
-      //   customer_id: customerId,
-      //   email: customerEmail,
-      //   event_description,
-      //   day_instance,
-      //   selected_day,
-      //   selected_slot,
-      //   cleaning_date: date,
-      // });
-
       validCleanings.push({
         stripe_subscription_id: stripeSubscriptionId,
         customer_id: customerId,
@@ -308,10 +273,10 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     }
   }
 
-  console.log("📋 VALID CLEANINGS:");
-  for (const c of validCleanings) {
-    console.log(JSON.stringify(c));
-  }
+  // console.log("📋 VALID CLEANINGS:");
+  // for (const c of validCleanings) {
+  //   console.log(JSON.stringify(c));
+  // }
 
   const decryptedKeys = await getGoogleKeys(PROJECT_IDX);
 
@@ -320,20 +285,7 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     decryptedKeys?.GOOGLE_REFRESH_TOKEN_OBJECT &&
     decryptedKeys?.GOOGLE_CALENDAR_ID
   ) {
-    // console.log("🗑 Deleting old subscription events...");
-    // await deleteSubscriptionEvents(
-    //   decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
-    //   decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
-    //   decryptedKeys.GOOGLE_CALENDAR_ID
-    // );
-
-    console.log("📅 Syncing subscription events...");
-    // await createSubscriptionEvents(
-    //   decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
-    //   decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
-    //   decryptedKeys.GOOGLE_CALENDAR_ID,
-    //   validCleanings
-    // );
+    // console.log("📅 Syncing subscription events...");
     await syncSubscriptionEvents(
       decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
       decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
