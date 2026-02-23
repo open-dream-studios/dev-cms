@@ -168,8 +168,8 @@ function weekdayLabel(day: number): string {
 function slotLabel(slot: number): string {
   const map: Record<number, string> = {
     1: "SLOT 1 (9am–11am)",
-    2: "SLOT 2 (11am–2pm)",
-    3: "SLOT 3 (2pm–5pm)",
+    2: "SLOT 2 (12am–2pm)",
+    3: "SLOT 3 (3pm–5pm)",
   };
   return map[slot] ?? "";
 }
