@@ -3,6 +3,6 @@ export * from "./appDetails/appDetails.js";
 
 export * from "./google.js";
 
-export * from "./email_templates/booking.template";
-export * from "./email_templates/reschedule.template";
-export * from "./email_templates/manageSubscription.template";
+export * from "./email_templates/booking.template.js";
+export * from "./email_templates/reschedule.template.js";
+export * from "./email_templates/manageSubscription.template.js";
