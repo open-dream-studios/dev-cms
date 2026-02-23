@@ -2,7 +2,7 @@ name: Daily Subscription Schedule
 
 on:
   schedule:
-    - cron: "22 2 * * *"
+    - cron: "45 2 * * *"
     # UTC -> - 5 hours is EST
   workflow_dispatch:
 
