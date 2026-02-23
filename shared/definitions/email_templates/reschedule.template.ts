@@ -1,4 +1,4 @@
-// src/modules/GoogleModule/GmailModule/_templates/reschedule.template.ts
+// shared/definitions/email_templates/reschedule.template.ts 
 interface BookingConfirmationEmailProps {
   businessName: string;
   customerName: string;
@@ -164,32 +164,4 @@ export function rescheduleConfirmationEmail({
 `;
 }
 
-// To view this booking in our system or request service in the future, create an account in our customer portal using the same email this message was sent to
-  //  ${
-  //               manageBookingUrl
-  //                 ? `
-  //             <!-- CTA Button -->
-  //             <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
-  //               <tr>
-  //                 <td align="center">
-  //                   <a
-  //                     href="${manageBookingUrl}"
-  //                     style="
-  //                       background-color:${primaryColor};
-  //                       color:#ffffff;
-  //                       text-decoration:none;
-  //                       padding:12px 22px;
-  //                       border-radius:6px;
-  //                       font-size:14px;
-  //                       font-weight:bold;
-  //                       display:inline-block;
-  //                     "
-  //                   >
-  //                     Manage your booking
-  //                   </a>
-  //                 </td>
-  //               </tr>
-  //             </table>
-  //             `
-  //                 : ""
-  //             }
+ 

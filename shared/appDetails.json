@@ -17,6 +17,7 @@
   ],
   "projects": [
     {
+      "key": "tsa",
       "brand": "TSA",
       "darken_landing": true,
       "landing_color": "#000000",
@@ -32,9 +33,18 @@
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/projects/tsa/slide1.png",
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/projects/tsa/slide2.png",
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/projects/tsa/slide3.png"
-      ]
+      ],
+      "email_config": {
+        "businessName": "Tanny Spa Acquisitions",
+        "logoUrl":
+          "https://tsa-cms-data.s3.us-east-2.amazonaws.com/global/full-logo2.png",
+        "manageBookingUrl": "https://tannyspaacquisitions.shop",
+        "primaryColor": "#5CADD8",
+        "phoneNumber": "(585) 666-8794"
+      }
     },
     {
+      "key": "tcr",
       "brand": "Tri Cities",
       "darken_landing": false,
       "landing_color": "#181717",
@@ -50,7 +60,15 @@
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/1.jpeg",
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/2.jpeg",
         "https://dev-cms-project-media.s3.us-east-1.amazonaws.com/projects-global/Tri-Cities/3.jpeg"
-      ]
+      ],
+      "email_config": {
+        "businessName": "Tri Cities Remodeling",
+        "logoUrl":
+          "https://tsa-cms-data.s3.us-east-2.amazonaws.com/global/full-logo2.png",
+        "manageBookingUrl": "tricitiesremodeling.shop",
+        "primaryColor": "#5CADD8",
+        "phoneNumber": "(585) 666-8794"
+      }
     }
   ]
 }

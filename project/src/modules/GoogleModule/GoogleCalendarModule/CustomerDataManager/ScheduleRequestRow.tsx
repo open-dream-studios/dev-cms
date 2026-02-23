@@ -8,6 +8,10 @@ import {
   GoogleCalendarEventRaw,
   ScheduleRequest,
   ScheduleRequestInput,
+  bookingConfirmationEmail,
+  rescheduleConfirmationEmail,
+  appDetails,
+  appDetailsProjectByDomain
 } from "@open-dream/shared";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { AuthContext } from "@/contexts/authContext";
@@ -23,7 +27,6 @@ import {
   useCurrentDataStore,
 } from "@/store/currentDataStore";
 import { useSendGmailEmail } from "../../GmailModule/_hooks/gmail.hooks";
-import { bookingConfirmationEmail } from "../../GmailModule/_templates/booking.template";
 import {
   approveAndCreateScheduleEvent,
   handleRescheduleEndChange,
@@ -32,10 +35,9 @@ import {
 import { promptContinue } from "@/modals/_actions/modals.actions";
 import { showSuccessToast } from "@/util/functions/UI";
 import DatePicker from "react-datepicker";
-import "../../../components/Calendar/Calendar.css";
-import appDetails from "../../../../util/appDetails.json";
-import { rescheduleConfirmationEmail } from "../../GmailModule/_templates/reschedule.template";
+import "../../../components/Calendar/Calendar.css"; 
 import { toast } from "react-toastify";
+import { useUiStore } from "@/store/useUIStore"; 
 
 export const statusColors = {
   approved: "rgba(52, 211, 153, 0.22)",
@@ -109,6 +111,7 @@ const ScheduleRequestRow = ({
   } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
   const { sendNewEmail } = useSendGmailEmail();
+  const { domain } = useUiStore();
 
   const isOpen =
     selectedScheduleRequest &&
@@ -118,7 +121,7 @@ const ScheduleRequestRow = ({
     if (request?.metadata?.customer?.email) {
       const email = request?.metadata?.customer?.email;
       const foundCustomer = customers.find(
-        (customer: Customer) => customer.email === email
+        (customer: Customer) => customer.email === email,
       );
       return foundCustomer;
     }
@@ -136,21 +139,24 @@ const ScheduleRequestRow = ({
     time: string,
     customerName: string,
     customerEmail: string,
-    location: string
+    location: string,
   ) => {
     const onConfirm = async () => {
+      const foundProject = appDetailsProjectByDomain(domain);
+      if (!foundProject || !foundProject.email_config) return;
+      const config = foundProject.email_config;
+
       const html = bookingConfirmationEmail({
-        businessName: "Tanny Spa Acquisitions",
+        businessName: config.businessName,
         customerName,
         serviceName: request.event_title ?? "Service Call",
         date,
         time,
         location,
-        logoUrl:
-          "https://tsa-cms-data.s3.us-east-2.amazonaws.com/global/full-logo2.png",
-        manageBookingUrl: "https://tannyspaacquisitions.shop",
-        primaryColor: "#5CADD8",
-        phoneNumber: "(585) 666-8794",
+        logoUrl: config.logoUrl,
+        manageBookingUrl: config.manageBookingUrl,
+        primaryColor: config.phoneNumber,
+        phoneNumber: config.phoneNumber,
       });
 
       const res = await sendNewEmail({
@@ -165,7 +171,7 @@ const ScheduleRequestRow = ({
       if (res.ok && res.data.success === true) {
         showSuccessToast(
           "schedule-request-approved",
-          "Confirmation email sent"
+          "Confirmation email sent",
         );
         await markConfirmationSent(request.schedule_request_id);
       }
@@ -175,7 +181,7 @@ const ScheduleRequestRow = ({
       `Send confirmation email to ${customerEmail}?`,
       false,
       () => {},
-      onConfirm
+      onConfirm,
     );
   };
   const isProd = process.env.NEXT_PUBLIC_IS_PRODUCTION === "true";
@@ -184,21 +190,24 @@ const ScheduleRequestRow = ({
     time: string,
     customerName: string,
     customerEmail: string,
-    location: string
+    location: string,
   ) => {
     const onConfirm = async () => {
+      const foundProject = appDetailsProjectByDomain(domain);
+      if (!foundProject || !foundProject.email_config) return;
+      const config = foundProject.email_config;
+
       const html = rescheduleConfirmationEmail({
-        businessName: "Tanny Spa Acquisitions",
+        businessName: config.businessName,
         customerName,
         serviceName: request.event_title ?? "Service Call",
         date,
         time,
         location,
-        logoUrl:
-          "https://tsa-cms-data.s3.us-east-2.amazonaws.com/global/full-logo2.png",
-        manageBookingUrl: "https://tannyspaacquisitions.shop",
-        primaryColor: "#5CADD8",
-        phoneNumber: "(585) 666-8794",
+        logoUrl: config.logoUrl,
+        manageBookingUrl: config.manageBookingUrl,
+        primaryColor: config.phoneNumber,
+        phoneNumber: config.phoneNumber,
       });
 
       const res = await sendNewEmail({
@@ -210,7 +219,7 @@ const ScheduleRequestRow = ({
       if (res.ok && res.data.success === true) {
         showSuccessToast(
           "schedule-request-approved",
-          "Reschedule request sent"
+          "Reschedule request sent",
         );
         await markConfirmationSent(request.schedule_request_id);
       }
@@ -220,7 +229,7 @@ const ScheduleRequestRow = ({
       `Send reschedule request to ${customerEmail}?`,
       false,
       () => {},
-      onConfirm
+      onConfirm,
     );
   };
 
@@ -235,7 +244,7 @@ const ScheduleRequestRow = ({
       request,
       runModule,
       refreshCalendar,
-      events
+      events,
     );
 
     if (!result) return;
@@ -273,7 +282,7 @@ const ScheduleRequestRow = ({
         time,
         customerName,
         customerEmail,
-        location
+        location,
       );
     } else {
       await sendConfirmationEmail(
@@ -281,7 +290,7 @@ const ScheduleRequestRow = ({
         time,
         customerName,
         customerEmail,
-        location
+        location,
       );
     }
   };
@@ -344,19 +353,19 @@ const ScheduleRequestRow = ({
       setRescheduleStart(
         request.proposed_reschedule_start
           ? new Date(request.proposed_reschedule_start)
-          : null
+          : null,
       );
       setRescheduleEnd(
         request.proposed_reschedule_end
           ? new Date(request.proposed_reschedule_end)
-          : null
+          : null,
       );
     } else {
       setRescheduleStart(
-        request.proposed_start ? new Date(request.proposed_start) : null
+        request.proposed_start ? new Date(request.proposed_start) : null,
       );
       setRescheduleEnd(
-        request.proposed_end ? new Date(request.proposed_end) : null
+        request.proposed_end ? new Date(request.proposed_end) : null,
       );
     }
   };

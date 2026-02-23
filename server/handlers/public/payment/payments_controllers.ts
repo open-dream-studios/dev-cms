@@ -2,18 +2,19 @@
 import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
-import { stripeProducts, StripeProductKey } from "@open-dream/shared";
+import { stripeProducts, StripeProductKey, manageSubscriptionEmail, appDetailsProjectByKey } from "@open-dream/shared";
 import {
   getProjectByIdFunction,
   getProjectIdByDomain,
 } from "../../projects/projects_repositories.js";
 import { changeToHTTPSDomain } from "../../../functions/data.js";
-import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js"; 
+import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
 import {
   getGmailClient,
   getGmailKeys,
   sendGmail,
 } from "../../../services/google/gmail/gmail.js";
+import { config } from "dotenv";
 
 export const getStripeCheckoutLink = async (
   req: Request,
@@ -225,8 +226,7 @@ export const getStripePortalLink = async (
     customer: customer.id,
     return_url: changeToHTTPSDomain(currentProject.domain),
   });
-
-  console.log(portalSession.url);
+ 
   const decryptedKeys = await getGmailKeys(project_idx);
 
   if (
@@ -237,11 +237,26 @@ export const getStripePortalLink = async (
       decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
       decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT
     );
+
+    const foundProject = appDetailsProjectByKey("tsa")
+    if (!foundProject || !foundProject.email_config) return
+
+    const config = foundProject.email_config
+
+    const body = manageSubscriptionEmail({
+      businessName: config.businessName,
+      customerName: customer.name ?? null,
+      logoUrl: config.logoUrl,
+      manageSubscriptionUrl: portalSession.url,
+      primaryColor: config.primaryColor,
+      phoneNumber: config.phoneNumber,
+    });
+
     return await sendGmail(
       gmailClient,
       email,
-      "TSA - Manage Your Subscription",
-      portalSession.url
+      "Manage Your Subscription",
+      body
     );
   } else {
     console.log("⚠️ Portal Email Failed ", "Keys not found");

@@ -30,5 +30,7 @@ export * from "./types/models/estimations/if_trees.js";
 export * from "./types/models/folders.js";
 export * from "./types/models/payments.js";
 
-export * from "./functions/data.js";
-export * from "./definitions/google.js";
+export * from "./functions/index.js";
+export * from "./definitions/index.js";
+
+export { default as appDetails } from "./appDetails.json";

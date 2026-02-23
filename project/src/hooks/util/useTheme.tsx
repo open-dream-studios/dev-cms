@@ -2,7 +2,7 @@
 import { useContext, useMemo } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { makeTheme } from "@/util/appTheme";
-import appDetails from "@/util/appDetails.json";
+import { appDetails } from "@open-dream/shared"
 
 export function useCurrentTheme() {
   const { currentUser } = useContext(AuthContext);

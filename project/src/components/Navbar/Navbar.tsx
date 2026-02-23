@@ -3,7 +3,6 @@
 import { useContext, useMemo } from "react";
 import { AuthContext } from "../../contexts/authContext";
 import { HiBars3 } from "react-icons/hi2";
-import appDetails from "../../util/appDetails.json";
 import { removeWhiteSpace } from "../../util/functions/Data";
 import "./Navbar.css";
 import { IoMdSettings } from "react-icons/io";
@@ -19,7 +18,7 @@ import {
 } from "@/store/currentDataStore";
 import { useUiStore } from "@/store/useUIStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { Media } from "@open-dream/shared";
+import { Media, appDetails } from "@open-dream/shared";
 import { saveProducts } from "@/modules/CustomerProducts/_actions/products.actions";
 import { useModules } from "@/modules/_hooks/modules.hooks";
 import { BsSuitDiamondFill } from "react-icons/bs";

@@ -3,10 +3,10 @@
 import { useContext, useEffect, useMemo } from "react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
-import { Media } from "@open-dream/shared"; 
-import appDetails from "../util/appDetails.json";
+import { appDetails, Media } from "@open-dream/shared"; 
 import { AuthContext } from "@/contexts/authContext";
 import { useUiStore } from "@/store/useUIStore";
+import { appDetailsProjectByDomain } from "@open-dream/shared"
 
 export default function DynamicTitle() {
   const { currentProjectId } = useCurrentDataStore();
@@ -31,9 +31,7 @@ export default function DynamicTitle() {
   useEffect(() => {
     let landing_logo = appDetails.default_logo;
     let landing_title = appDetails.default_title;
-    const foundProject = appDetails.projects.find(
-      (item) => item.domain === domain
-    );
+    const foundProject = appDetailsProjectByDomain(domain)
     if (foundProject) {
       landing_logo = foundProject.landing_logo;
       landing_title = foundProject.landing_title

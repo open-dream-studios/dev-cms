@@ -1,12 +1,10 @@
 // project/src/screens/Landing/LandingLeftBar/LandingLeftBar.tsx
 "use client";
-import { useEffect, RefObject, useRef, useState } from "react";
-import appDetails from "../../../util/appDetails.json";
+import { useEffect, RefObject, useRef, useState } from "react"; 
 import { login } from "@/util/auth";
-import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { useRouter } from "next/navigation"; 
 import { useUiStore } from "@/store/useUIStore";
+import { appDetails } from "@open-dream/shared"
 
 const LandingLeftBar = () => {
   const router = useRouter();

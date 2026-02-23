@@ -7,9 +7,16 @@
     "outDir": "./dist",
     "rootDir": "./",
     "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true
   },
-  "include": ["index.ts", "types/**/*.ts",  "definitions/*.ts", "functions/*.ts"]
+  "include": [
+    "index.ts", 
+    "types/**/*.ts",  
+    "definitions/**/*.ts", 
+    "functions/*.ts", 
+    "**/*.json"
+  ]
 }

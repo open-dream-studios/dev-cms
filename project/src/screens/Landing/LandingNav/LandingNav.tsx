@@ -1,10 +1,10 @@
 // project/src/screens/landing/LandingNav/LandingNav.tsx
-"use client"; 
-import appDetails from "../../../util/appDetails.json";
+"use client";
 import Login from "../Login/Login";
 import { removeWhiteSpace } from "@/util/functions/Data";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
+import { appDetails, appDetailsProjectByDomain } from "@open-dream/shared";
 
 const LandingNav = () => {
   const currentTheme = useCurrentTheme();
@@ -23,9 +23,7 @@ const LandingNav = () => {
   let app_color = appDetails.default_color;
   let nav_color = appDetails.default_landing_color;
 
-  const foundProject = appDetails.projects.find(
-    (item) => item.domain === domain
-  );
+  const foundProject = appDetailsProjectByDomain(domain);
 
   if (foundProject) {
     landing_title = foundProject.landing_title;

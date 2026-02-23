@@ -1,7 +1,7 @@
 // project/src/util/functions/UI.tsx
 import { toast } from "react-toastify";
 import { capitalizeFirstLetter } from "./Data";
-import appDetails from "@/util/appDetails.json";
+import { appDetails } from "@open-dream/shared"
 
 export const formatDropdownOption = (option: string) => {
   return option

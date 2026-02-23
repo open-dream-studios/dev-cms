@@ -1,4 +1,4 @@
-// src/modules/GoogleModule/GmailModule/_templates/booking.template.ts
+// shared/definitions/email_templates/booking.template.ts
 interface BookingConfirmationEmailProps {
   businessName: string;
   customerName: string;

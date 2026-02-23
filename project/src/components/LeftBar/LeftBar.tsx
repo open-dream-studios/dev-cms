@@ -7,16 +7,15 @@ import {
   useState,
   useContext,
   useMemo,
-  ReactNode, 
+  ReactNode,
 } from "react";
 import Modal2Continue from "../../modals/Modal2Continue";
-import appDetails from "../../util/appDetails.json";
 import { AuthContext } from "@/contexts/authContext";
 import { LuPanelLeftClose } from "react-icons/lu";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
 import HoverBox from "@/lib/blocks/HoverBox";
-import { Media, Screen } from "@open-dream/shared";
+import { Media, Screen, appDetails } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
@@ -63,7 +62,7 @@ const LeftBar = () => {
     leftBarOpen,
     setLeftBarOpen,
     leftBarRef,
-    setLeftBarRef, 
+    setLeftBarRef,
     modal2,
     setModal2,
   } = useUiStore();
@@ -72,7 +71,7 @@ const LeftBar = () => {
   const windowLargeRef = useRef<boolean | null>(null);
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
   const currentTheme = useCurrentTheme();
-  const { handleLogoClick, clickableModules, closeLeftBar } = useModules()
+  const { handleLogoClick, clickableModules, closeLeftBar } = useModules();
 
   const currentProject = useMemo(() => {
     return projectsData.find((p) => p.id === currentProjectId) ?? null;
@@ -81,7 +80,7 @@ const LeftBar = () => {
   const currentLogo = useMemo(() => {
     if (currentProject && currentProject.logo_media_id) {
       const foundMedia = media.find(
-        (m: Media) => m.media_id === currentProject.logo_media_id
+        (m: Media) => m.media_id === currentProject.logo_media_id,
       );
       return foundMedia && foundMedia.url ? foundMedia.url : null;
     }

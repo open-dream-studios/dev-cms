@@ -1,36 +1,31 @@
 // project/src/screens/Landing/LandingPage/LandingPage.tsx
 "use client";
-import appDetails from "../../../util/appDetails.json";
 import { preloadImages } from "@/util/functions/Images";
 import { useEffect } from "react";
 import Image from "next/image";
 import { useUiStore } from "@/store/useUIStore";
 import { useUI } from "@/hooks/util/useUI";
+import { appDetails, appDetailsProjectByDomain } from "@open-dream/shared";
 
 const LandingPage = () => {
-  const {
-    domain, 
-    setLandingImageLoaded,
-  } = useUiStore();
+  const { domain, setLandingImageLoaded } = useUiStore();
   const { breakpoint } = useUI();
 
   let landing_hero_sm = appDetails.default_hero;
   let landing_hero_md = appDetails.default_hero;
   let landing_hero_lg = appDetails.default_hero;
-  let landing_hero_style = appDetails.default_landing_hero_style
-  const foundProject = appDetails.projects.find(
-    (item) => item.domain === domain
-  );
+  let landing_hero_style = appDetails.default_landing_hero_style;
+  const foundProject = appDetailsProjectByDomain(domain);
   if (foundProject) {
     landing_hero_sm = foundProject.landing_hero_sm;
     landing_hero_md = foundProject.landing_hero_md;
     landing_hero_lg = foundProject.landing_hero_lg;
-    landing_hero_style = foundProject.landing_hero_style
+    landing_hero_style = foundProject.landing_hero_style;
   }
 
   useEffect(() => {
-    const project = appDetails.projects.find((item) => item.domain === domain);
-    const slides = project?.landing_slides ?? appDetails.default_slides;
+    const foundProject = appDetailsProjectByDomain(domain);
+    const slides = foundProject?.landing_slides ?? appDetails.default_slides;
     preloadImages(slides);
 
     if (foundProject) {
@@ -50,8 +45,8 @@ const LandingPage = () => {
     breakpoint === "sm"
       ? landing_hero_sm
       : breakpoint === "md"
-      ? landing_hero_md
-      : landing_hero_lg;
+        ? landing_hero_md
+        : landing_hero_lg;
 
   return (
     <div
