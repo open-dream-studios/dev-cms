@@ -17,22 +17,7 @@ import { CustomerDataManager } from "../GoogleModule/GoogleCalendarModule/Custom
 import { useGoogleCalendar } from "../GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks";
 
 export default function CustomerManager() {
-  const {
-    projectCalls,
-    leads,
-    upsertLead,
-    deleteLead,
-    actions,
-    upsertAction,
-    deleteAction,
-    actionDefinitions,
-    upsertActionDefinition,
-    deleteActionDefinition,
-    customerData,
-    scheduleRequests,
-    upsertScheduleRequest,
-    hasProjectModule,
-  } = useContextQueries();
+  const { upsertLead, customerData, hasProjectModule } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
 
   const { setLayout, registerModules, updateSection, updateShape } =

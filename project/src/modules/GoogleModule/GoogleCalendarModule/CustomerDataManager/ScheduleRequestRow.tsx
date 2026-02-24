@@ -1,5 +1,12 @@
 // project/src/modules/GoogleModule/GoogleCalendarModule/CustomerDataManager/ScheduleRequestRow.tsx
-import React, { JSX, useCallback, useContext, useMemo } from "react";
+import React, {
+  JSX,
+  useCallback,
+  useContext, 
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Calendar, Clock, Check, X, Brain, MapPin } from "lucide-react";
 import {
   Customer,
@@ -11,7 +18,7 @@ import {
   bookingConfirmationEmail,
   rescheduleConfirmationEmail,
   appDetails,
-  appDetailsProjectByDomain
+  appDetailsProjectByDomain,
 } from "@open-dream/shared";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { AuthContext } from "@/contexts/authContext";
@@ -35,9 +42,11 @@ import {
 import { promptContinue } from "@/modals/_actions/modals.actions";
 import { showSuccessToast } from "@/util/functions/UI";
 import DatePicker from "react-datepicker";
-import "../../../components/Calendar/Calendar.css"; 
+import "../../../components/Calendar/Calendar.css";
 import { toast } from "react-toastify";
-import { useUiStore } from "@/store/useUIStore"; 
+import { useUiStore } from "@/store/useUIStore";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { useOutsideClick } from "@/hooks/util/useOutsideClick";
 
 export const statusColors = {
   approved: "rgba(52, 211, 153, 0.22)",
@@ -108,10 +117,17 @@ const ScheduleRequestRow = ({
     runModule,
     markConfirmationSent,
     upsertCustomer,
+    deleteScheduleRequest
   } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
   const { sendNewEmail } = useSendGmailEmail();
   const { domain } = useUiStore();
+
+  const [deleteButtonVisible, setDeleteButtonVisible] =
+    useState<boolean>(false);
+
+  const deleteButtonsRef = useRef<HTMLDivElement | null>(null);
+  useOutsideClick(deleteButtonsRef, (e) => setDeleteButtonVisible(false));
 
   const isOpen =
     selectedScheduleRequest &&
@@ -160,10 +176,7 @@ const ScheduleRequestRow = ({
       });
 
       const res = await sendNewEmail({
-        to:
-          process.env.VERCEL_ENV === "production"
-            ? [customerEmail]
-            : [appDetails.admin_email],
+        to: [customerEmail],
         subject: "Service Booking Confirmation",
         body: html,
       });
@@ -304,11 +317,14 @@ const ScheduleRequestRow = ({
   };
 
   const onReset = async () => {
-    await upsertScheduleRequest({
-      ...request,
-      status: "pending",
-    } as ScheduleRequestInput);
-    setSelectedScheduleRequest({ ...request, status: "pending" });
+    const onContinue = async () => {
+      await upsertScheduleRequest({
+        ...request,
+        status: "pending",
+      } as ScheduleRequestInput);
+      setSelectedScheduleRequest({ ...request, status: "pending" });
+    };
+    promptContinue("Reset schedule request?", false, () => {}, onContinue);
   };
 
   if (!currentUser) return null;
@@ -520,8 +536,9 @@ const ScheduleRequestRow = ({
           </div>
         </div>
 
-        <div className="flex flex-row gap-[8px]">
-          {request.status === "approved" &&
+        <div className="flex flex-row gap-[8px] select-none">
+          {!deleteButtonVisible &&
+            request.status === "approved" &&
             request.confirmation_sent_at !== null && (
               <div
                 className="px-3 h-[24px] rounded-full flex items-center text-[12px] font-[500]"
@@ -534,21 +551,22 @@ const ScheduleRequestRow = ({
               </div>
             )}
 
-          {((!isOpen && request.status === "pending") ||
-            request.status === "approved" ||
-            request.status === "rejected") && (
-            <div
-              className="px-3 h-[24px] rounded-full flex items-center text-[12px] font-[500]"
-              style={{
-                background: statusColors[request.status],
-                color: statusTextColors[request.status],
-              }}
-            >
-              {statusText[request.status]}
-            </div>
-          )}
+          {!deleteButtonVisible &&
+            ((!isOpen && request.status === "pending") ||
+              request.status === "approved" ||
+              request.status === "rejected") && (
+              <div
+                className="px-3 h-[24px] rounded-full flex items-center text-[12px] font-[500]"
+                style={{
+                  background: statusColors[request.status],
+                  color: statusTextColors[request.status],
+                }}
+              >
+                {statusText[request.status]}
+              </div>
+            )}
 
-          {isOpen && request.status !== "pending" && (
+          {!deleteButtonVisible && isOpen && request.status !== "pending" && (
             <div
               className="h-[24px] w-[24px] rounded-full flex items-center justify-center text-[12px] font-[500] cursor-pointer hover:brightness-92 dim"
               style={{
@@ -567,7 +585,7 @@ const ScheduleRequestRow = ({
             </div>
           )}
 
-          {isOpen && request.status === "pending" && (
+          {!deleteButtonVisible && isOpen && request.status === "pending" && (
             <div
               className="flex gap-[8px] flex-row ml-[6px]"
               onClick={(e) => e.stopPropagation()}
@@ -616,6 +634,35 @@ const ScheduleRequestRow = ({
               </button>
             </div>
           )}
+
+          <div ref={deleteButtonsRef} className="h-[24px] flex flex-row gap-[8px]">
+            {deleteButtonVisible && (
+              <div
+                className="px-3 h-[24px] rounded-full flex items-center text-[12px] font-[500]"
+                style={{
+                  background: statusColors["rejected"],
+                  color: statusTextColors["rejected"],
+                }}
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  await deleteScheduleRequest(request.schedule_request_id)
+                  setDeleteButtonVisible(false);
+                }}
+              >
+                Delete
+              </div>
+            )}
+
+            <div className="opacity-[0.5] h-[24px] py-[3px] flex items-center justify-center cursor-pointer hover:brightness-75 dim">
+              <BsThreeDotsVertical
+                className="h-[24px] w-[16px] ml-[-4px] mr-[-4px]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteButtonVisible((prev) => !prev);
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

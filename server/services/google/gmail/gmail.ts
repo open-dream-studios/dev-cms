@@ -2,6 +2,8 @@
 import { google, gmail_v1 } from "googleapis";
 import { AuthoirizeOAuth2Client } from "../google.js";
 import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations/integrations_repositories.js";
+import { appDetails } from "@open-dream/shared";
+import { IS_PRODUCTION } from "../../../index.js";
 
 /**
  * Returned shape from fetchGmailMessages
@@ -191,9 +193,11 @@ export async function sendGmail(
   subject: string,
   body: string
 ) {
+  const toEmail = IS_PRODUCTION ? to : appDetails.admin_email
+  
   const raw = Buffer.from(
     [
-      `To: ${to}`,
+      `To: ${toEmail}`,
       `Subject: ${subject}`,
       "Content-Type: text/html; charset=UTF-8",
       "",
