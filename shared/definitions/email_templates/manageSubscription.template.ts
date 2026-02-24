@@ -66,7 +66,7 @@ ${customerName ? `Hi <strong>${customerName}</strong>,` : "Hello,"}
 
 <p style="font-size:16px;line-height:1.6;margin:0 0 25px 0;">
 You can manage your cleaning subscription at any time using the secure Stripe customer portal. 
-Use the button below to update payment details, view invoices, or cancel your plan.
+Use the button below to update payment details, view invoices, or switch / cancel your plan.
 </p>
 
 <!-- CTA BUTTON -->

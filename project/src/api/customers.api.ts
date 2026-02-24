@@ -30,10 +30,7 @@ export async function upsertCustomerApi(
     ...customer,
     project_idx,
   });
-  return {
-    id: res.data.id,
-    customer_id: res.data.customer_id,
-  };
+  return res.data;
 }
 
 export async function deleteCustomerApi(

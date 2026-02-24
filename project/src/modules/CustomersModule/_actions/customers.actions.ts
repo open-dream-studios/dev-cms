@@ -7,7 +7,7 @@ import {
   ContextMenuDefinition,
   Customer,
   CustomerInput,
-} from "@open-dream/shared"; 
+} from "@open-dream/shared";
 import { deleteCustomerApi, upsertCustomerApi } from "@/api/customers.api";
 import { useUiStore } from "@/store/useUIStore";
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/util/schemas/customerSchema";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { queryClient } from "@/lib/queryClient";
+import { toast } from "react-toastify";
 
 export const createCustomerContextMenu =
   (): ContextMenuDefinition<Customer> => ({
@@ -54,9 +55,7 @@ export const handleCustomerClick = async (customer: Customer | null) => {
   const { setAddingCustomer } = useUiStore.getState();
   const customerForm = getForm("customer");
   if (customerForm?.formState.isDirty) {
-    await customerForm.handleSubmit((data) =>
-      onCustomerFormSubmit(data)
-    )();
+    await customerForm.handleSubmit((data) => onCustomerFormSubmit(data))();
   }
   setCurrentCustomerData(customer, false);
   setAddingCustomer(!customer);
@@ -92,13 +91,27 @@ export async function onCustomerFormSubmit(
       queryKey: ["customers", currentProjectId],
     });
     if (!res) return;
-    const { id, customer_id } = res;
+    const { success, message, code, id, customer_id } = res;
+    if (!success) {
+      if (code) {
+        if (
+          (code === "duplicate-phone" || code === "duplicate-email") &&
+          message
+        ) {
+          toast.warn(message);
+        }
+      }
+      return;
+    }
     if (customer_id && id) {
-      setCurrentCustomerData({
-        ...newCustomer,
-        id,
-        customer_id,
-      } as Customer, false);
+      setCurrentCustomerData(
+        {
+          ...newCustomer,
+          id,
+          customer_id,
+        } as Customer,
+        false
+      );
       setAddingCustomer(false);
     }
   } catch (err) {

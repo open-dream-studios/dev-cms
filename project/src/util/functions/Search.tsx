@@ -51,7 +51,7 @@ export function determineSearchContext(
 } {
   const parsed = parseSearchTerm(raw);
 
-  if (isAllDigitsOrDashesOrParentheses(raw)) {
+  if (isAllDigitsLike(raw)) {
     const digits = raw.replace(/[^0-9]/g, "");
     return {
       type: "phone",
@@ -159,8 +159,12 @@ export function getBestEmailMatch<T>(
 }
 
 // HELPER FUNCTIONS
-export function isAllDigitsOrDashesOrParentheses(str: string): boolean {
-  return /^[\d\-()]+$/.test(str);
+// export function isAllDigitsOrDashesOrParentheses(str: string): boolean {
+//   return /^[\d\-()]+$/.test(str);
+// }
+
+export function isAllDigitsLike(str: string): boolean {
+  return /^[\d()\-\s]+$/.test(str);
 }
 
 export function parseSearchTerm(raw: string | null | undefined): ParsedSearch {

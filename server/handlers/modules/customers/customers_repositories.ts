@@ -42,9 +42,92 @@ export const upsertCustomerFunction = async (
     notes,
   } = reqBody;
 
-  const finalCustomerId = customer_id?.trim() || `CUST-${ulid()}`;
+  const trimmedEmail = email?.trim() || null;
+  const trimmedPhone = phone?.trim() || null;
 
-  const query = `
+  // -------------------------
+  // 1️⃣ UPDATE EXISTING
+  // -------------------------
+  if (customer_id) {
+    const updateQuery = `
+      UPDATE customers
+      SET
+        first_name = ?,
+        last_name = ?,
+        email = ?,
+        phone = ?,
+        address_line1 = ?,
+        address_line2 = ?,
+        city = ?,
+        state = ?,
+        zip = ?,
+        notes = ?,
+        updated_at = NOW()
+      WHERE customer_id = ? AND project_idx = ?
+    `;
+
+    await connection.query(updateQuery, [
+      first_name.toLowerCase(),
+      last_name.toLowerCase(),
+      trimmedEmail,
+      trimmedPhone,
+      address_line1,
+      address_line2,
+      city,
+      state,
+      zip,
+      notes,
+      customer_id,
+      project_idx,
+    ]);
+
+    const [rows] = await connection.query<RowDataPacket[]>(
+      `SELECT id FROM customers WHERE customer_id = ? AND project_idx = ?`,
+      [customer_id, project_idx]
+    );
+
+    return { success: true, id: rows[0].id, customer_id };
+  }
+
+  // -------------------------
+  // 2️⃣ CHECK FOR DUPLICATES
+  // -------------------------
+  if (trimmedEmail) {
+    const [emailRows] = await connection.query<RowDataPacket[]>(
+      `SELECT id FROM customers WHERE project_idx = ? AND email = ?`,
+      [project_idx, trimmedEmail]
+    );
+
+    if (emailRows.length) {
+      return {
+        success: false,
+        code: "duplicate-email",
+        message: "This email is already used by another customer",
+      };
+    }
+  }
+
+  if (trimmedPhone) {
+    const [phoneRows] = await connection.query<RowDataPacket[]>(
+      `SELECT id FROM customers WHERE project_idx = ? AND phone = ?`,
+      [project_idx, trimmedPhone]
+    );
+
+    if (phoneRows.length) {
+      return {
+        success: false,
+        code: "duplicate-phone",
+        message: "This phone number is already used by another customer",
+      };
+    }
+  }
+
+  // -------------------------
+  // 3️⃣ INSERT NEW
+  // -------------------------
+  const newCustomerId = `CUST-${ulid()}`;
+
+  const insertQuery = `
     INSERT INTO customers (
       customer_id,
       project_idx,
@@ -60,70 +143,28 @@ export const upsertCustomerFunction = async (
       notes
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      first_name = VALUES(first_name),
-      last_name = VALUES(last_name),
-      email = VALUES(email),
-      phone = VALUES(phone),
-      address_line1 = VALUES(address_line1),
-      address_line2 = VALUES(address_line2),
-      city = VALUES(city),
-      state = VALUES(state),
-      zip = VALUES(zip),
-      notes = VALUES(notes),
-      updated_at = NOW()
   `;
 
-  const values = [
-    finalCustomerId,
+  const [result] = await connection.query<ResultSetHeader>(insertQuery, [
+    newCustomerId,
     project_idx,
     first_name.toLowerCase(),
     last_name.toLowerCase(),
-    email,
-    phone,
+    trimmedEmail,
+    trimmedPhone,
     address_line1,
     address_line2,
     city,
     state,
     zip,
     notes,
-  ];
+  ]);
 
-  const [result] = await connection.query<ResultSetHeader>(query, values);
-
-  // console.log(">>> incoming customer_id:", customer_id);
-  // console.log(">>> finalCustomerId:", finalCustomerId);
-
-  // console.log(">>> result from MySQL:", {
-  //   insertId: result.insertId,
-  //   affectedRows: result.affectedRows,
-  //   changedRows: (result as any).changedRows,
-  //   warningStatus: result.warningStatus,
-  // });
-
-  // let id = result.insertId;
-  // if (!id) throw new Error("No ID provided from result");
-
-  const inserted = result.insertId && result.insertId > 0;
-
-  // If no insertId, we fall back to the existing customer's internal DB ID
-  let internalId = inserted ? result.insertId : null;
-
-  if (!inserted) {
-    // Fetch the row to get its primary key ID
-    const [rows] = await connection.query<RowDataPacket[]>(
-      `SELECT id FROM customers WHERE customer_id = ? AND project_idx = ?`,
-      [finalCustomerId, project_idx]
-    );
-    if (rows.length) internalId = rows[0].id;
-  }
-
-  if (!internalId) {
-    console.error("ERROR READING INTERNAL ID:", result);
-    throw new Error("Could not determine internal ID after upsert");
-  }
-
-  return { success: true, id: internalId, customer_id: finalCustomerId };
+  return {
+    success: true,
+    id: result.insertId,
+    customer_id: newCustomerId,
+  };
 };
 
 export const deleteCustomerFunction = async (
