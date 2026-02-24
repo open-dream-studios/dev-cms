@@ -91,6 +91,7 @@ export const sendStripePortalLinkFunction = async (
       customerName: customer.name ?? null,
       logoUrl: config.logoUrl,
       manageSubscriptionUrl: portalSession.url,
+      getNewLinkPage: changeToHTTPSDomain(project.domain),
       primaryColor: config.primaryColor,
       phoneNumber: config.phoneNumber,
     });

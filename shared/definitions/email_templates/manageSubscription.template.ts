@@ -5,6 +5,7 @@ interface ManageSubscriptionEmailProps {
   customerName: string | null;
   logoUrl: string;
   manageSubscriptionUrl: string;
+  getNewLinkPage: string;
   primaryColor?: string;
   phoneNumber: string;
 }
@@ -14,6 +15,7 @@ export function manageSubscriptionEmail({
   customerName,
   logoUrl,
   manageSubscriptionUrl,
+  getNewLinkPage,
   primaryColor = "#5CADD8",
   phoneNumber,
 }: ManageSubscriptionEmailProps) {
@@ -91,6 +93,10 @@ Use the button below to update payment details, view invoices, or switch / cance
 </td>
 </tr>
 </table>
+
+<p style="font-size:16px;line-height:1.6;margin:5px 0 25px 0;">
+This link will expire after 24 hours. To receive a new link, visit our <a href="${getNewLinkPage}">website</a>.
+</p>
 
 <p style="font-size:14px;line-height:1.6;color:#666666;margin-top:10px;">
 If you have any questions, call us at <strong>${phoneNumber}</strong>.
