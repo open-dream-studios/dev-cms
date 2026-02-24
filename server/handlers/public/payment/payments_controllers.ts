@@ -2,24 +2,14 @@
 import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
-import {
-  stripeProducts,
-  StripeProductKey,
-  manageSubscriptionEmail,
-  appDetailsProjectByDomain,
-  normalizeDomain
-} from "@open-dream/shared";
+import { stripeProducts, StripeProductKey } from "@open-dream/shared";
 import {
   getProjectByIdFunction,
   getProjectIdByDomain,
 } from "../../projects/projects_repositories.js";
 import { changeToHTTPSDomain } from "../../../functions/data.js";
 import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
-import {
-  getGmailClient,
-  getGmailKeys,
-  sendGmail,
-} from "../../../services/google/gmail/gmail.js";
+import { sendStripePortalLinkFunction } from "./payments_repositories.js";
 
 export const getStripeCheckoutLink = async (
   req: Request,
@@ -175,12 +165,11 @@ export const getStripeCheckoutLink = async (
   };
 };
 
-export const getStripePortalLink = async (
+export const sendStripePortalLink = async (
   req: Request,
   res: Response,
   connection: PoolConnection
 ) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const projectDomain = getProjectDomainFromWixRequest(req);
   const project_idx = await getProjectIdByDomain(projectDomain);
   if (!project_idx) {
@@ -202,85 +191,6 @@ export const getStripePortalLink = async (
     console.log("⚠️ Portal Email Failed ", "Missing email");
     return { success: true };
   }
-  console.log(email);
 
-  // 1️⃣ Find Stripe customer by email
-  const customers = await stripe.customers.list({
-    email,
-    limit: 1,
-  });
-
-  if (!customers.data.length) {
-    console.log("⚠️ Portal Email Failed ", "Stripe customer not found");
-    return { success: true };
-  }
-  const customer = customers.data[0];
-
-  // 2️⃣ Optional: ensure they actually have active subscriptions
-  const subscriptions = await stripe.subscriptions.list({
-    customer: customer.id,
-    status: "active",
-    limit: 1,
-  });
-
-  if (!subscriptions.data.length) {
-    console.log(
-      "⚠️ Portal Email Failed ",
-      "Stripe customer has no active subscriptions"
-    );
-    return { success: true };
-  }
-
-  // 3️⃣ Create ONE portal session (customer-scoped)
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: customer.id,
-    return_url: changeToHTTPSDomain(currentProject.domain),
-  });
-  console.log(customer.name);
-
-  const decryptedKeys = await getGmailKeys(project_idx);
-
-  if (
-    decryptedKeys?.GOOGLE_CLIENT_SECRET_OBJECT &&
-    decryptedKeys?.GOOGLE_REFRESH_TOKEN_OBJECT
-  ) {
-    const gmailClient = await getGmailClient(
-      decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
-      decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT
-    );
-
-    const foundProject = appDetailsProjectByDomain(
-      normalizeDomain(currentProject.backend_domain)
-    );
-    if (!foundProject || !foundProject.email_config) {
-      console.log(
-        "⚠️ Portal Email Failed ",
-        "Project details not found"
-      );
-      return { success: true };
-    }
-
-    const config = foundProject.email_config;
-
-    const body = manageSubscriptionEmail({
-      businessName: config.businessName,
-      customerName: customer.name ?? null,
-      logoUrl: config.logoUrl,
-      manageSubscriptionUrl: portalSession.url,
-      primaryColor: config.primaryColor,
-      phoneNumber: config.phoneNumber,
-    });
-
-    console.log(body);
-
-    return await sendGmail(
-      gmailClient,
-      email,
-      "Manage Your Subscription",
-      body
-    );
-  } else {
-    console.log("⚠️ Portal Email Failed ", "Keys not found");
-    return { success: true };
-  }
+  return await sendStripePortalLinkFunction(email, currentProject);
 };

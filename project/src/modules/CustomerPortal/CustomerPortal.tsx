@@ -17,8 +17,7 @@ import {
 } from "lucide-react";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Message } from "@open-dream/shared";
-import { AuthContext } from "@/contexts/authContext";
-import { formatTimeDate } from "@/util/functions/Time";
+import { AuthContext } from "@/contexts/authContext"; 
 import { MiniChat } from "../MessagesModule/MiniChat";
 
 // -----------------------------------------------------------------------------

@@ -4,7 +4,7 @@ import { transactionHandler } from "../../../util/handlerWrappers.js";
 import { verifyWixRequest } from "../../../util/verifyWixRequest.js";
 import {
   getStripeCheckoutLink,
-  getStripePortalLink,
+  sendStripePortalLink,
 } from "./payments_controllers.js";
 
 const router = express.Router();
@@ -19,7 +19,7 @@ router.post(
 router.post(
   "/wix-stripe-portal",
   verifyWixRequest,
-  transactionHandler(getStripePortalLink)
+  transactionHandler(sendStripePortalLink)
 );
 
 export default router;

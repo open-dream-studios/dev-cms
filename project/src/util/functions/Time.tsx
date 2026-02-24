@@ -49,6 +49,28 @@ export function formatTimeDate(date: string | Date | null): string {
   return `${time} ${day}`;
 }
 
+export function timeFromTimeDate(date: string | Date | null): string {
+  if (!date) return "-";
+  const d = typeof date === "string" ? new Date(date) : date;
+  const time = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${time}`;
+}
+
+export function dateFromTimeDate(date: string | Date | null): string {
+  if (!date) return "-";
+  const d = typeof date === "string" ? new Date(date) : date;
+  const day = d.toLocaleDateString("en-US", {
+    month: "numeric",
+    day: "numeric",
+    year: "2-digit",
+  });
+  return `${day}`;
+}
+
 export function formatDateTime(date: string | Date | null): string {
   if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;

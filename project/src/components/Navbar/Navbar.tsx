@@ -251,7 +251,7 @@ const Navbar = () => {
             </div>
           )}
 
-          {currentUser.admin === 1 && (
+          {/* {currentUser.admin === 1 && (
             <div
               onClick={handleTokensClick}
               className="w-[75px] h-[42px] flex flex-row justify-center items-center gap-[8px] dim cursor-pointer hover:brightness-75 rounded-[4px]"
@@ -270,7 +270,7 @@ const Navbar = () => {
                 {currentUser.credits}
               </p>
             </div>
-          )}
+          )} */}
 
           {currentProject !== null &&
             (projectsData.length > 1 || currentUser.admin === 1) && (

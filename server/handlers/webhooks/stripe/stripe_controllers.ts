@@ -4,6 +4,8 @@ import Stripe from "stripe";
 import { db } from "../../../connection/connect.js";
 import { upsertCustomerFunction } from "../../modules/customers/customers_repositories.js";
 import { RowDataPacket } from "mysql2";
+import { sendStripePortalLinkFunction } from "../../public/payment/payments_repositories.js";
+import { getProjectByIdFunction } from "../../projects/projects_repositories.js";
 
 export const stripeWebhookListener = async (req: Request, res: Response) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -27,7 +29,7 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  res.status(200).json({ received: true }); 
+  res.status(200).json({ received: true });
 
   if (event.type !== "checkout.session.completed") return;
 
@@ -148,11 +150,16 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
         metadata.zip ?? null,
         day_instance,
         selected_day,
-        selected_slot
+        selected_slot,
       ]
     );
 
     connection.release();
+
+    const project = await getProjectByIdFunction(projectId);
+    if (project && email) {
+      await sendStripePortalLinkFunction(email, project);
+    }
   } catch (err) {
     console.error("Error handling subscription webhook:", err);
   }

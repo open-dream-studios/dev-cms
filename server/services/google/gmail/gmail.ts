@@ -193,8 +193,7 @@ export async function sendGmail(
   subject: string,
   body: string
 ) {
-  const toEmail = IS_PRODUCTION ? to : appDetails.admin_email
-  
+  const toEmail = IS_PRODUCTION ? to : appDetails.admin_email;
   const raw = Buffer.from(
     [
       `To: ${toEmail}`,

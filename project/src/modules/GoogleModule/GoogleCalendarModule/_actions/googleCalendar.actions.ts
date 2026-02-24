@@ -422,9 +422,9 @@ export const handleRescheduleStartChange = (date: Date | null, timeInput: boolea
   }
 
   // // 5️⃣ Only move end if invariant breaks
-  if (nextStart.getDate() > rescheduleEnd.getDate()) {
+  // if (nextStart.getDate() > rescheduleEnd.getDate()) {
     setRescheduleEnd(new Date(nextStart.getTime() + duration));
-  }
+  // }
 
   if (
     nextStart.getDate() === rescheduleEnd.getDate() &&

@@ -2,7 +2,7 @@
 import React, {
   JSX,
   useCallback,
-  useContext, 
+  useContext,
   useMemo,
   useRef,
   useState,
@@ -17,7 +17,6 @@ import {
   ScheduleRequestInput,
   bookingConfirmationEmail,
   rescheduleConfirmationEmail,
-  appDetails,
   appDetailsProjectByDomain,
 } from "@open-dream/shared";
 import { getInnerCardStyle } from "@/styles/themeStyles";
@@ -25,7 +24,12 @@ import { AuthContext } from "@/contexts/authContext";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { MdOutlineRefresh, MdSchedule } from "react-icons/md";
-import { dateToString, formatTimeDate } from "@/util/functions/Time";
+import {
+  dateFromTimeDate,
+  dateToString,
+  formatTimeDate,
+  timeFromTimeDate,
+} from "@/util/functions/Time";
 import { useGoogleCalendarUIStore } from "../_store/googleCalendar.store";
 import { parseUSAddress } from "@/util/functions/Customers";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
@@ -117,7 +121,7 @@ const ScheduleRequestRow = ({
     runModule,
     markConfirmationSent,
     upsertCustomer,
-    deleteScheduleRequest
+    deleteScheduleRequest,
   } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
   const { sendNewEmail } = useSendGmailEmail();
@@ -134,14 +138,20 @@ const ScheduleRequestRow = ({
     selectedScheduleRequest.schedule_request_id === request.schedule_request_id;
 
   const customerMatch = useMemo(() => {
-    if (request?.metadata?.customer?.email) {
-      const email = request?.metadata?.customer?.email;
-      const foundCustomer = customers.find(
+    const email = request?.metadata?.customer?.email;
+    const phone = request?.metadata?.customer?.phone;
+    let foundCustomer = null;
+    if (email) {
+      foundCustomer = customers.find(
         (customer: Customer) => customer.email === email,
       );
-      return foundCustomer;
     }
-    return null;
+    if (!foundCustomer && phone) {
+      foundCustomer = customers.find(
+        (customer: Customer) => customer.phone === phone,
+      );
+    }
+    return foundCustomer;
   }, [request, customers]);
 
   const handleCustomerTagClick = useCallback(async () => {
@@ -197,7 +207,7 @@ const ScheduleRequestRow = ({
       onConfirm,
     );
   };
-  const isProd = process.env.NEXT_PUBLIC_IS_PRODUCTION === "true";
+
   const sendRescheduleEmail = (
     date: string,
     time: string,
@@ -224,7 +234,7 @@ const ScheduleRequestRow = ({
       });
 
       const res = await sendNewEmail({
-        to: isProd ? [customerEmail] : [appDetails.admin_email],
+        to: [customerEmail],
         subject: "Service Booking Reschedule",
         body: html,
       });
@@ -269,7 +279,8 @@ const ScheduleRequestRow = ({
     const customer = request.metadata?.customer;
     if (!customer) return;
     const customerEmail = customer?.email;
-    const customerName = customer?.name ?? "Customer";
+    const customerFirstName = customer?.first_name ?? "Customer";
+    const customerLastName = customer?.last_name ?? "";
     if (!customerEmail) return;
     const address = customer?.address;
     const location = address;
@@ -293,7 +304,7 @@ const ScheduleRequestRow = ({
       await sendRescheduleEmail(
         date,
         time,
-        customerName,
+        `${customerFirstName} ${customerLastName}`,
         customerEmail,
         location,
       );
@@ -301,7 +312,7 @@ const ScheduleRequestRow = ({
       await sendConfirmationEmail(
         date,
         time,
-        customerName,
+        `${customerFirstName} ${customerLastName}`,
         customerEmail,
         location,
       );
@@ -329,20 +340,28 @@ const ScheduleRequestRow = ({
 
   if (!currentUser) return null;
 
+  const proposedDate = request.proposed_start
+    ? dateFromTimeDate(request.proposed_start)
+    : "No date";
+
   const proposedStart = request.proposed_start
-    ? formatTimeDate(request.proposed_start)
+    ? timeFromTimeDate(request.proposed_start)
     : "No start time";
 
   const proposedEnd = request.proposed_end
-    ? formatTimeDate(request.proposed_end)
+    ? timeFromTimeDate(request.proposed_end)
     : null;
 
+  const proposedRescheduleDate = request.proposed_reschedule_start
+    ? dateFromTimeDate(request.proposed_reschedule_start)
+    : "No date";
+
   const proposedRescheduleStart = request.proposed_reschedule_start
-    ? formatTimeDate(request.proposed_reschedule_start)
+    ? timeFromTimeDate(request.proposed_reschedule_start)
     : "No start time";
 
   const proposedRescheduleEnd = request.proposed_reschedule_end
-    ? formatTimeDate(request.proposed_reschedule_end)
+    ? timeFromTimeDate(request.proposed_reschedule_end)
     : null;
 
   const onRequestClick = () => {
@@ -406,20 +425,15 @@ const ScheduleRequestRow = ({
   };
 
   const handleCreateCustomerClick = async () => {
-    const customerName = request?.metadata?.customer.name;
+    const customerFirstName = request?.metadata?.customer.first_name;
+    const customerLastName = request?.metadata?.customer.last_name;
     const customerEmail = request?.metadata?.customer.email;
     const customerPhone = request?.metadata?.customer.phone;
     const customerAddress = request?.metadata?.customer.address;
     const parsedAddress = customerAddress
       ? parseUSAddress(customerAddress)
       : customerAddress;
-    const customerNameSplit = customerName.trim().split(/\s+/);
-    let customerFirstName = customerName;
-    let customerLastName = null;
-    if (customerNameSplit.length > 1) {
-      customerFirstName = customerNameSplit[0];
-      customerLastName = customerNameSplit.slice(1).join(" ");
-    }
+
     await upsertCustomer({
       customer_id: null,
       project_idx: currentProjectId,
@@ -470,20 +484,22 @@ const ScheduleRequestRow = ({
               {request.event_title || "Untitled Event"}
             </span>
 
-            {request?.metadata?.customer?.name && (
-              <div
-                onClick={handleCustomerTagClick}
-                style={{ backgroundColor: currentTheme.background_2_2 }}
-                className={`py-[1.1px] pl-[14px] pr-[14.5px] rounded-full ${
-                  customerMatch && "cursor-pointer hover:brightness-90 dim"
-                }`}
-                title={customerMatch ? "View customer" : undefined}
-              >
-                <span className="opacity-[0.5] text-[13px]">
-                  {request?.metadata?.customer?.name}
-                </span>
-              </div>
-            )}
+            {request?.metadata?.customer?.first_name &&
+              request?.metadata?.customer?.last_name && (
+                <div
+                  onClick={handleCustomerTagClick}
+                  style={{ backgroundColor: currentTheme.background_2_2 }}
+                  className={`py-[1.1px] pl-[14px] pr-[14.5px] rounded-full ${
+                    customerMatch && "cursor-pointer hover:brightness-90 dim"
+                  }`}
+                  title={customerMatch ? "View customer" : undefined}
+                >
+                  <span className="opacity-[0.5] text-[13px]">
+                    {request.metadata.customer.first_name}{" "}
+                    {request.metadata.customer.last_name}
+                  </span>
+                </div>
+              )}
 
             {!customerMatch && (
               <div className="flex flex-row gap-[8px] ml-[-6px]">
@@ -511,13 +527,13 @@ const ScheduleRequestRow = ({
           </div>
           <div className="flex flex-row gap-[10px]">
             <div
-              className={`mt-[1.3px] text-[12px] opacity-[0.55] truncate ${
+              className={`mt-[1.3px] text-[12px] opacity-[0.65] truncate ${
                 request.proposed_reschedule_start &&
                 request.proposed_reschedule_end &&
                 "line-through"
               }`}
             >
-              {proposedStart}
+              {proposedDate} {proposedStart}
               {proposedEnd && ` → ${proposedEnd}`}
             </div>
             {request &&
@@ -529,7 +545,7 @@ const ScheduleRequestRow = ({
                     color: statusTextColors["reschedule"],
                   }}
                 >
-                  {proposedRescheduleStart}
+                  {proposedRescheduleDate} {proposedRescheduleStart}
                   {proposedRescheduleEnd && ` → ${proposedRescheduleEnd}`}
                 </div>
               )}
@@ -635,7 +651,10 @@ const ScheduleRequestRow = ({
             </div>
           )}
 
-          <div ref={deleteButtonsRef} className="h-[24px] flex flex-row gap-[8px]">
+          <div
+            ref={deleteButtonsRef}
+            className="h-[24px] flex flex-row gap-[8px]"
+          >
             {deleteButtonVisible && (
               <div
                 className="px-3 h-[24px] rounded-full flex items-center text-[12px] font-[500]"
@@ -644,8 +663,8 @@ const ScheduleRequestRow = ({
                   color: statusTextColors["rejected"],
                 }}
                 onClick={async (e) => {
-                  e.stopPropagation()
-                  await deleteScheduleRequest(request.schedule_request_id)
+                  e.stopPropagation();
+                  await deleteScheduleRequest(request.schedule_request_id);
                   setDeleteButtonVisible(false);
                 }}
               >
