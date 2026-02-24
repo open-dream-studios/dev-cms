@@ -37,7 +37,7 @@ import CustomerPortal from "@/modules/CustomerPortal/CustomerPortal";
 import { useAppInitialization } from "@/hooks/useAppInitialization";
 import NoProjects from "@/screens/NoProjects";
 import { RouteScopeProvider } from "@/contexts/routeScopeContext";
-import { normalizeDomain } from "@/util/functions/Application";
+import { normalizeDomain } from "@open-dream/shared"
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   // const [queryClient] = useState(() => new QueryClient());

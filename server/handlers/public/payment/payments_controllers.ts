@@ -7,6 +7,7 @@ import {
   StripeProductKey,
   manageSubscriptionEmail,
   appDetailsProjectByDomain,
+  normalizeDomain
 } from "@open-dream/shared";
 import {
   getProjectByIdFunction,
@@ -18,7 +19,7 @@ import {
   getGmailClient,
   getGmailKeys,
   sendGmail,
-} from "../../../services/google/gmail/gmail.js"; 
+} from "../../../services/google/gmail/gmail.js";
 
 export const getStripeCheckoutLink = async (
   req: Request,
@@ -201,7 +202,7 @@ export const getStripePortalLink = async (
     console.log("⚠️ Portal Email Failed ", "Missing email");
     return { success: true };
   }
-  console.log(email)
+  console.log(email);
 
   // 1️⃣ Find Stripe customer by email
   const customers = await stripe.customers.list({
@@ -235,7 +236,7 @@ export const getStripePortalLink = async (
     customer: customer.id,
     return_url: changeToHTTPSDomain(currentProject.domain),
   });
-   console.log(customer.name)
+  console.log(customer.name);
 
   const decryptedKeys = await getGmailKeys(project_idx);
 
@@ -249,9 +250,15 @@ export const getStripePortalLink = async (
     );
 
     const foundProject = appDetailsProjectByDomain(
-      currentProject.backend_domain
+      normalizeDomain(currentProject.backend_domain)
     );
-    if (!foundProject || !foundProject.email_config) return;
+    if (!foundProject || !foundProject.email_config) {
+      console.log(
+        "⚠️ Portal Email Failed ",
+        "Project details not found"
+      );
+      return { success: true };
+    }
 
     const config = foundProject.email_config;
 
@@ -264,7 +271,7 @@ export const getStripePortalLink = async (
       phoneNumber: config.phoneNumber,
     });
 
-    console.log(body)
+    console.log(body);
 
     return await sendGmail(
       gmailClient,
