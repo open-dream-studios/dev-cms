@@ -6,6 +6,7 @@ import { upsertCustomerFunction } from "../../modules/customers/customers_reposi
 import { RowDataPacket } from "mysql2";
 import { sendStripePortalLinkFunction } from "../../public/payment/payments_repositories.js";
 import { getProjectByIdFunction } from "../../projects/projects_repositories.js";
+import { attachSubscriptionIdToAgreementFunction } from "../../public/payment/agreements/agreement_repositories.js";
 
 export const stripeWebhookListener = async (req: Request, res: Response) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -17,6 +18,8 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
   }
 
   let event: Stripe.Event;
+
+  const connection = await db.promise().getConnection();
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -40,6 +43,12 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
   if (!session.subscription) return;
 
   try {
+    await attachSubscriptionIdToAgreementFunction(
+      connection,
+      session.id,
+      session.subscription as string
+    );
+
     const subscription = await stripe.subscriptions.retrieve(
       session.subscription as string
     );
@@ -47,8 +56,6 @@ export const stripeWebhookListener = async (req: Request, res: Response) => {
     const metadata = subscription.metadata;
 
     if (!metadata?.email || !metadata?.project_id) return;
-
-    const connection = await db.promise().getConnection();
 
     const projectId = Number(metadata.project_id);
     const email = metadata.email ?? null;
