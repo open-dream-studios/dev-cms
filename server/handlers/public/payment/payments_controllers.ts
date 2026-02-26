@@ -90,8 +90,9 @@ export const getStripeCheckoutLink = async (
   const productKey = `L${product_level + 1}_${payment_timeline === 0 ? "1M" : payment_timeline === 1 ? "6M" : "1Y"}` as StripeProductKey;
   let product = stripeSubscriptionProducts[productKey];
   
-  console.log(product)
-  product = stripeSubscriptionProducts["L1_TEST"];
+  // TEST SUBSCRIPTION
+  // console.log(product)
+  // product = stripeSubscriptionProducts["L1_TEST"];
 
   // 1️⃣ Find or create Stripe customer
   const existingCustomers = await stripe.customers.list({
