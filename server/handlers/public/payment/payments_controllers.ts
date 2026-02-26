@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
 import {
-  stripeProducts,
+  stripeSubscriptionProducts,
   StripeProductKey,
   SubscriptionType,
 } from "@open-dream/shared";
@@ -33,27 +33,33 @@ export const getStripeCheckoutLink = async (
   }
 
   const {
+    return_page,
+    product_level,
+    payment_timeline,
     day_instance,
     selected_day,
     selected_slot,
     customer,
-    product_type,
-    return_page,
+    agreement_name,
   } = req.body as {
+    return_page: string;
+    product_level: number;
+    payment_timeline: number;
     day_instance: number;
     selected_day: number;
     selected_slot: number;
     customer: any;
-    product_type: StripeProductKey;
-    return_page?: string;
+    agreement_name: string;
   };
 
   if (
-    !day_instance ||
-    !selected_day ||
-    !selected_slot ||
-    !customer ||
-    !product_type
+    day_instance == null ||
+    selected_day == null ||
+    selected_slot == null ||
+    customer == null ||
+    product_level == null ||
+    payment_timeline == null ||
+    agreement_name == null
   ) {
     return { success: false, message: "Missing required fields" };
   }
@@ -72,11 +78,18 @@ export const getStripeCheckoutLink = async (
     return { success: false, message: "Missing required fields" };
   }
 
-  if (!Object.keys(stripeProducts).includes(product_type)) {
-    return { success: false, message: "Invalid product type" };
+  const validProductLevels = [0, 1, 2]
+  const validPaymentTimelines = [0, 1, 2];
+
+  if (!validProductLevels.includes(product_level)) {
+    return { success: false, message: "Invalid product level" };
+  }
+  if (!validPaymentTimelines.includes(payment_timeline)) {
+    return { success: false, message: "Invalid payment timeline" };
   }
 
-  const product = stripeProducts[product_type as StripeProductKey];
+  const productKey = `L${product_level + 1}_${payment_timeline === 0 ? "1M" : payment_timeline === 1 ? "6M" : "1Y"}` as StripeProductKey;
+  const product = stripeSubscriptionProducts[productKey];
 
   // 1️⃣ Find or create Stripe customer
   const existingCustomers = await stripe.customers.list({
@@ -173,23 +186,12 @@ export const getStripeCheckoutLink = async (
     });
 
   if (product.mode === "subscription") {
-    const expectedAgreementVersionMap: Record<SubscriptionType, string> = {
-      "6M_L1": "1.1",
-      "6M_L2": "1.2",
-      "6M_L3": "1.3",
-    };
-    if (
-      req.body.agreement.agreement_version !==
-      expectedAgreementVersionMap[product_type as SubscriptionType]
-    ) {
-      throw new Error("Agreement version mismatch");
-    }
-
+    const agreementVersion = `1.${product_level + 1}.${payment_timeline + 1}`
     await insertSubscriptionAgreementFunction(connection, project_idx, {
-      agreement_version: req.body.agreement.agreement_version,
-      plan_type: req.body.agreement.plan_type,
-      full_name_entered: req.body.agreement.full_name_entered,
-      email_entered: req.body.agreement.email_entered,
+      agreement_version: agreementVersion,
+      plan_type: productKey,
+      full_name_entered: agreement_name,
+      email_entered: email,
       stripe_checkout_session_id: session.id,
     });
   }

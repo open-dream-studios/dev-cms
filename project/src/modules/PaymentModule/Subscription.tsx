@@ -5,7 +5,7 @@ import StripeProvider from "./Stripe/StripeProvider";
 import { AuthContext } from "../../contexts/authContext";
 import Modal2Close from "../../modals/Modal2Close";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import Modal2Continue from "@/modals/Modal2Continue";
+// import Modal2Continue from "@/modals/Modal2Continue";
 import { useUiStore } from "@/store/useUIStore";
 import { makeRequest } from "@/util/axios";
 import {
@@ -20,100 +20,100 @@ const Subscription = () => {
   const { modal2, setModal2 } = useUiStore();
 
   const handleCheckout = async (product: CreditType | SubscriptionType) => {
-    if (!currentUser) return;
-    if (currentUserSubscription) {
-      setModal2({
-        ...modal2,
-        open: !modal2.open,
-        showClose: false,
-        offClickClose: true,
-        width: "w-[400px]",
-        maxWidth: "max-w-[400px]",
-        aspectRatio: "aspect-[5/2]",
-        borderRadius: "rounded-[12px] md:rounded-[15px]",
-        content: <Modal2Close text={"You are already subscribed!"} />,
-      });
-      return;
-    }
-    const res = await makeRequest.post(`/payment/checkout-session`, {
-      product_type: product,
-    });
-    const { url } = res.data;
-    if (url) {
-      window.location.href = url;
-    }
+    // if (!currentUser) return;
+    // if (currentUserSubscription) {
+    //   setModal2({
+    //     ...modal2,
+    //     open: !modal2.open,
+    //     showClose: false,
+    //     offClickClose: true,
+    //     width: "w-[400px]",
+    //     maxWidth: "max-w-[400px]",
+    //     aspectRatio: "aspect-[5/2]",
+    //     borderRadius: "rounded-[12px] md:rounded-[15px]",
+    //     content: <Modal2Close text={"You are already subscribed!"} />,
+    //   });
+    //   return;
+    // }
+    // const res = await makeRequest.post(`/payment/checkout-session`, {
+    //   product_type: product,
+    // });
+    // const { url } = res.data;
+    // if (url) {
+    //   window.location.href = url;
+    // }
   };
 
   const handleChangeSubscription = async (product: SubscriptionType) => {
-    if (!currentUser || !currentUserSubscription) return;
+    // if (!currentUser || !currentUserSubscription) return;
 
-    const current_timeline =
-      currentUserSubscription.subscription_item.split("_L")[0];
-    const current_level = parseInt(
-      currentUserSubscription.subscription_item.split("_L")[1],
-    );
-    const incoming_timeline = product.split("_L")[0];
-    const incoming_level = parseInt(product.split("_L")[1]);
+    // const current_timeline =
+    //   currentUserSubscription.subscription_item.split("_L")[0];
+    // const current_level = parseInt(
+    //   currentUserSubscription.subscription_item.split("_L")[1],
+    // );
+    // const incoming_timeline = product.split("_L")[0];
+    // const incoming_level = parseInt(product.split("_L")[1]);
 
-    let upgrade = false;
-    if (current_timeline === "1M" && incoming_timeline === "1Y") {
-      upgrade = true;
-    } else if (current_timeline === "1Y" && incoming_timeline === "1M") {
-      upgrade = false;
-    } else if (current_level < incoming_level) {
-      upgrade = true;
-    }
+    // let upgrade = false;
+    // if (current_timeline === "1M" && incoming_timeline === "1Y") {
+    //   upgrade = true;
+    // } else if (current_timeline === "1Y" && incoming_timeline === "1M") {
+    //   upgrade = false;
+    // } else if (current_level < incoming_level) {
+    //   upgrade = true;
+    // }
 
-    const handleUpgrade = async (product: string) => {
-      setModal2({
-        ...modal2,
-        open: false,
-      });
-      const res = await makeRequest.post(`/payment/stripe-update-sub`, {
-        product_type: product,
-      });
+    // const handleUpgrade = async (product: string) => {
+    //   setModal2({
+    //     ...modal2,
+    //     open: false,
+    //   });
+    //   const res = await makeRequest.post(`/payment/stripe-update-sub`, {
+    //     product_type: product,
+    //   });
 
-      const responseData = await res.data
-      if (responseData.message) {
-        setModal2({
-          ...modal2,
-          open: !modal2.open,
-          showClose: false,
-          offClickClose: true,
-          width: "w-[400px]",
-          maxWidth: "max-w-[400px]",
-          aspectRatio: "aspect-[5/2]",
-          borderRadius: "rounded-[12px] md:rounded-[15px]",
-          content: <Modal2Close text={responseData.message} />,
-        });
-      }
-    };
+    //   const responseData = await res.data
+    //   if (responseData.message) {
+    //     setModal2({
+    //       ...modal2,
+    //       open: !modal2.open,
+    //       showClose: false,
+    //       offClickClose: true,
+    //       width: "w-[400px]",
+    //       maxWidth: "max-w-[400px]",
+    //       aspectRatio: "aspect-[5/2]",
+    //       borderRadius: "rounded-[12px] md:rounded-[15px]",
+    //       content: <Modal2Close text={responseData.message} />,
+    //     });
+    //   }
+    // };
 
-    if (upgrade) {
-      setModal2({
-        ...modal2,
-        open: !modal2.open,
-        showClose: false,
-        offClickClose: true,
-        width: "w-[450px] px-[35px]",
-        maxWidth: "max-w-[500px]",
-        aspectRatio: "aspect-[5/2]",
-        borderRadius: "rounded-[12px] md:rounded-[15px]",
-        content: (
-          <Modal2Continue
-            text={
-              "Continue to upgrade your subscription and receive an invoice with credit applied from your current plan"
-            }
-            threeOptions={false}
-            onContinue={() => {
-              handleUpgrade(product);
-            }}
-          />
-        ),
-      });
-    } else {
-      await handleUpgrade(product);
-    }
+    // if (upgrade) {
+    //   setModal2({
+    //     ...modal2,
+    //     open: !modal2.open,
+    //     showClose: false,
+    //     offClickClose: true,
+    //     width: "w-[450px] px-[35px]",
+    //     maxWidth: "max-w-[500px]",
+    //     aspectRatio: "aspect-[5/2]",
+    //     borderRadius: "rounded-[12px] md:rounded-[15px]",
+    //     content: (
+    //       <Modal2Continue
+    //         text={
+    //           "Continue to upgrade your subscription and receive an invoice with credit applied from your current plan"
+    //         }
+    //         threeOptions={false}
+    //         onContinue={() => {
+    //           handleUpgrade(product);
+    //         }}
+    //       />
+    //     ),
+    //   });
+    // } else {
+    //   await handleUpgrade(product);
+    // }
   };
 
   const handlePortal = async () => {
