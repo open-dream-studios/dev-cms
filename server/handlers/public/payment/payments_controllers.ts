@@ -4,8 +4,7 @@ import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
 import {
   stripeSubscriptionProducts,
-  StripeProductKey,
-  SubscriptionType,
+  StripeProductKey, 
 } from "@open-dream/shared";
 import {
   getProjectByIdFunction,
@@ -89,7 +88,10 @@ export const getStripeCheckoutLink = async (
   }
 
   const productKey = `L${product_level + 1}_${payment_timeline === 0 ? "1M" : payment_timeline === 1 ? "6M" : "1Y"}` as StripeProductKey;
-  const product = stripeSubscriptionProducts[productKey];
+  let product = stripeSubscriptionProducts[productKey];
+  
+  console.log(product)
+  product = stripeSubscriptionProducts["L1_TEST"];
 
   // 1️⃣ Find or create Stripe customer
   const existingCustomers = await stripe.customers.list({

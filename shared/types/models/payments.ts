@@ -1,7 +1,7 @@
 // shared/definitions/payments.ts
 
 export type CreditType = "L1_1X" | "L2_1X";
-export type SubscriptionL1Type = "L1_1M" | "L1_6M" | "L1_1Y";
+export type SubscriptionL1Type = "L1_1M" | "L1_6M" | "L1_1Y" | "L1_TEST";
 export type SubscriptionL2Type = "L2_1M" | "L2_6M" | "L2_1Y";
 export type SubscriptionL3Type = "L3_1M" | "L3_6M" | "L3_1Y";
 
@@ -17,6 +17,13 @@ export type StripeProduct = {
 };
 
 export const stripeSubscriptionL1Products = {
+  "L1_TEST": {
+    price_id: "price_1T59ke7vzK6BGNZgIukWhSWN",
+    mode: "subscription",
+    amount: 0.50,
+    level: 1,
+    timeline: "1 Day"
+  },
   "L1_1M": {
     price_id: "price_1T4zk77vzK6BGNZgFlMUUKoi",
     mode: "subscription",
