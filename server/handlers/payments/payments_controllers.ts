@@ -5,7 +5,7 @@ import { FRONTEND_URL } from "../../config.js";
 import { Request, Response } from "express";
 import { PoolConnection, ResultSetHeader } from "mysql2/promise";
 import { getUserByUserIdFunction } from "../auth/auth_repositories.js";
-import { StripeProductKey, stripeProducts } from "@open-dream/shared";
+import { StripeProductKey, stripeSubscriptionProducts } from "@open-dream/shared";
 dotenv.config();
 
 export const checkoutSession = async (
@@ -25,10 +25,10 @@ export const checkoutSession = async (
   const email = user.email;
   if (!firstName || !lastName || !email) return { success: false };
 
-  if (!Object.keys(stripeProducts).includes(product_type)) {
+  if (!Object.keys(stripeSubscriptionProducts).includes(product_type)) {
     return { success: false, message: "Unable to determine payment type" };
   }
-  const payment_item = stripeProducts[product_type as StripeProductKey];
+  const payment_item = stripeSubscriptionProducts[product_type as StripeProductKey];
   let stripe_customer_id = user ? user.stripe_customer_id : null;
 
   // Set customer OR Create customer and enter ID into db
@@ -58,7 +58,7 @@ export const checkoutSession = async (
         user_first_name: firstName,
         user_last_name: lastName,
         payment_mode: payment_item.mode,
-        credits: payment_item.credits,
+        credits: payment_item.clean_credits,
       },
       payment_intent_data: {
         metadata: {
@@ -67,7 +67,7 @@ export const checkoutSession = async (
           user_first_name: firstName,
           user_last_name: lastName,
           payment_mode: payment_item.mode,
-          credits: payment_item.credits,
+          credits: payment_item.clean_credits,
         },
       },
     };
@@ -138,7 +138,7 @@ export const customerUpdateSubscription = async (
   const userId = req.user?.user_id;
   if (!userId) return { success: false };
 
-  if (!Object.keys(stripeProducts).includes(product_type)) {
+  if (!Object.keys(stripeSubscriptionProducts).includes(product_type)) {
     return {
       success: false,
       message: "Unable to determine payment type",
@@ -174,9 +174,9 @@ export const customerUpdateSubscription = async (
       // const current_price_id = subscription.plan?.id;
       const current_price_id = subscription.items.data[0]?.price?.id ?? null;
 
-      const current_product_type = Object.keys(stripeProducts).find(
+      const current_product_type = Object.keys(stripeSubscriptionProducts).find(
         (key) =>
-          stripeProducts[key as StripeProductKey].price_id === current_price_id
+          stripeSubscriptionProducts[key as StripeProductKey].price_id === current_price_id
       );
 
       const current_timeline = current_product_type
@@ -239,7 +239,7 @@ export const customerUpdateSubscription = async (
               deleted: true,
             },
             {
-              price: stripeProducts[product_type as StripeProductKey].price_id,
+              price: stripeSubscriptionProducts[product_type as StripeProductKey].price_id,
             },
           ],
           proration_behavior: "create_prorations",
@@ -316,7 +316,7 @@ export const customerUpdateSubscription = async (
           // If the user requested the same downgrade again
           if (
             schedule.phases[1].items[0].price ===
-            stripeProducts[product_type as StripeProductKey].price_id
+            stripeSubscriptionProducts[product_type as StripeProductKey].price_id
           ) {
             return {
               success: false,
@@ -326,7 +326,7 @@ export const customerUpdateSubscription = async (
           } else {
             updateSchedule(
               schedule,
-              stripeProducts[product_type as StripeProductKey].price_id
+              stripeSubscriptionProducts[product_type as StripeProductKey].price_id
             );
             return {
               success: true,
@@ -338,7 +338,7 @@ export const customerUpdateSubscription = async (
           // Create a downgrade schedule
           await createSchedule(
             currentUserSubId,
-            stripeProducts[product_type as StripeProductKey].price_id
+            stripeSubscriptionProducts[product_type as StripeProductKey].price_id
           );
           return {
             success: true,
