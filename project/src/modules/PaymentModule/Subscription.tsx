@@ -10,7 +10,7 @@ import { useUiStore } from "@/store/useUIStore";
 import { makeRequest } from "@/util/axios";
 import {
   CreditType,
-  stripeProducts,
+  stripeSubscriptionProducts,
   SubscriptionType,
 } from "@open-dream/shared"; 
 
@@ -149,10 +149,10 @@ const Subscription = () => {
             {currentUserSubscription ? "Change Plan" : "Explore Plans"}
           </p>
           <div className="w-[100%] aspect-[1.5/1] md:aspect-[2.5/1] flex justify-between flex-row gap-[10px] md:gap-[15px]">
-            {(Object.keys(stripeProducts) as SubscriptionType[])
-              .filter((item) => stripeProducts[item].mode === "subscription")
+            {(Object.keys(stripeSubscriptionProducts) as SubscriptionType[])
+              .filter((item) => stripeSubscriptionProducts[item].mode === "subscription")
               .map((subscription: SubscriptionType, index: number) => {
-                const product = stripeProducts[subscription];
+                const product = stripeSubscriptionProducts[subscription];
                 if (!product) return;
                 return (
                   <div
@@ -169,7 +169,7 @@ const Subscription = () => {
                       }
                     }}
                   >
-                    <div>{product.title}</div>
+                    <div>{`Level ${product.level} | ${product.timeline}`}</div>
                     <div>
                       {currentUserSubscription &&
                         currentUserSubscription.subscription_item ===
@@ -180,11 +180,11 @@ const Subscription = () => {
                 );
               })}
           </div>
-          <div className="w-[100%] aspect-[2/1] md:aspect-[3.5/1] mt-[15px] lg:mt-[20px] flex flex-row justify-center gap-[10px] md:gap-[15px]">
-            {(Object.keys(stripeProducts) as CreditType[])
-              .filter((item) => stripeProducts[item].mode === "payment")
+          {/* <div className="w-[100%] aspect-[2/1] md:aspect-[3.5/1] mt-[15px] lg:mt-[20px] flex flex-row justify-center gap-[10px] md:gap-[15px]">
+            {(Object.keys(stripeSubscriptionProducts) as CreditType[])
+              .filter((item) => stripeSubscriptionProducts[item].mode === "payment")
               .map((credit: CreditType, index: number) => {
-                const product = stripeProducts[credit];
+                const product = stripeSubscriptionProducts[credit];
                 if (!product) return;
                 return (
                   <div
@@ -201,7 +201,7 @@ const Subscription = () => {
                   </div>
                 );
               })}
-          </div>
+          </div> */}
         </div>
         {currentUserSubscription && (
           <button

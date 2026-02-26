@@ -7,7 +7,10 @@ import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { sendEmail } from "../../util/email.js";
 import { ulid } from "ulid";
 import Stripe from "stripe";
-import { StripeProductKey, stripeProducts } from "@open-dream/shared";
+import {
+  StripeProductKey,
+  stripeSubscriptionProducts,
+} from "@open-dream/shared";
 import { User } from "@open-dream/shared";
 
 export const getValidEmails = async (connection: PoolConnection) => {
@@ -504,7 +507,7 @@ export const acceptProjectInviteAfterAuth = async (
     [invite.id]
   );
 };
- 
+
 export const getCurrentUserSubscriptionFunction = async (
   connection: PoolConnection,
   user_id: string
@@ -539,10 +542,11 @@ export const getCurrentUserSubscriptionFunction = async (
   }
 
   const subscription_item = (
-    Object.keys(stripeProducts) as StripeProductKey[]
+    Object.keys(stripeSubscriptionProducts) as StripeProductKey[]
   ).find(
     (key) =>
-      stripeProducts[key].price_id === subscription.items.data[0].price.id
+      stripeSubscriptionProducts[key].price_id ===
+      subscription.items.data[0].price.id
   );
 
   // return {
@@ -576,7 +580,6 @@ export const getCurrentUserSubscriptionFunction = async (
 //   connection: PoolConnection,
 //   stripe_customer_id: string
 // ) => {
-
 
 //   const q1 =
 //     "SELECT payment_mode, stripe_latest_payment_status, stripe_amount, stripe_created_at FROM transactions WHERE user_id = ?";
@@ -623,7 +626,7 @@ export const getCurrentUserBillingFunction = async (
   const paymentIntents = await stripe.paymentIntents.list({
     customer: stripe_customer_id,
     limit: 100,
-  }); 
+  });
 
   const invoiceTransactions = invoices.data.map((invoice) => ({
     id: invoice.id,
@@ -644,8 +647,9 @@ export const getCurrentUserBillingFunction = async (
     created: new Date(pi.created * 1000),
   }));
 
-  const transactions = [...invoiceTransactions, ...paymentTransactions]
-    .sort((a, b) => b.created.getTime() - a.created.getTime());
+  const transactions = [...invoiceTransactions, ...paymentTransactions].sort(
+    (a, b) => b.created.getTime() - a.created.getTime()
+  );
 
   return {
     success: true,
