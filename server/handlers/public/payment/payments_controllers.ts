@@ -4,7 +4,9 @@ import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
 import {
   stripeSubscriptionProducts,
-  StripeProductKey, 
+  StripeProductKey,
+  stripeTestProducts,
+  StripeTestProductKey,
 } from "@open-dream/shared";
 import {
   getProjectByIdFunction,
@@ -20,7 +22,6 @@ export const getStripeCheckoutLink = async (
   res: Response,
   connection: PoolConnection
 ) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const projectDomain = getProjectDomainFromWixRequest(req);
   const project_idx = await getProjectIdByDomain(projectDomain);
   if (!project_idx) {
@@ -34,21 +35,25 @@ export const getStripeCheckoutLink = async (
   const {
     return_page,
     product_level,
+    product_type,
     payment_timeline,
     day_instance,
     selected_day,
     selected_slot,
     customer,
     agreement_name,
+    test_checkout,
   } = req.body as {
     return_page: string;
     product_level: number;
+    product_type: "subscription" | "1X";
     payment_timeline: number;
     day_instance: number;
     selected_day: number;
     selected_slot: number;
     customer: any;
     agreement_name: string;
+    test_checkout: boolean;
   };
 
   if (
@@ -57,11 +62,15 @@ export const getStripeCheckoutLink = async (
     selected_slot == null ||
     customer == null ||
     product_level == null ||
+    product_type == null || 
     payment_timeline == null ||
-    agreement_name == null
+    agreement_name == null ||
+    test_checkout == null
   ) {
     return { success: false, message: "Missing required fields" };
   }
+
+  const stripe = test_checkout ? new Stripe(process.env.STRIPE_TEST_SECRET_KEY!) : new Stripe(process.env.STRIPE_SECRET_KEY!);
   const {
     first_name,
     last_name,
@@ -77,7 +86,7 @@ export const getStripeCheckoutLink = async (
     return { success: false, message: "Missing required fields" };
   }
 
-  const validProductLevels = [0, 1, 2]
+  const validProductLevels = [0, 1, 2];
   const validPaymentTimelines = [0, 1, 2];
 
   if (!validProductLevels.includes(product_level)) {
@@ -87,9 +96,30 @@ export const getStripeCheckoutLink = async (
     return { success: false, message: "Invalid payment timeline" };
   }
 
-  const productKey = `L${product_level + 1}_${payment_timeline === 0 ? "1M" : payment_timeline === 1 ? "6M" : "1Y"}` as StripeProductKey;
-  let product = stripeSubscriptionProducts[productKey];
-  
+  let product = null;
+  let productKey = null;
+  if (test_checkout) {
+    // TEST
+    productKey = `L1_${
+      product_type === "subscription" ? "TEST" : "1X_TEST"
+    }` as StripeTestProductKey;
+    if (!Object.keys(stripeTestProducts).includes(productKey)) {
+      return { success: false, message: "Stripe test product not found" };
+    }
+    product = stripeTestProducts[productKey];
+  } else {
+    // LIVE
+    productKey = `L${product_level + 1}_${
+      payment_timeline === 0 ? "1M" : payment_timeline === 1 ? "6M" : "1Y"
+    }` as StripeProductKey;
+    if (!Object.keys(stripeSubscriptionProducts).includes(productKey)) {
+      return { success: false, message: "Stripe product not found" };
+    }
+    product = stripeSubscriptionProducts[productKey];
+  }
+
+  if (!product) return { success: false, message: "Product not found" };
+
   // TEST SUBSCRIPTION
   // console.log(product)
   // product = stripeSubscriptionProducts["L1_TEST"];
@@ -189,7 +219,7 @@ export const getStripeCheckoutLink = async (
     });
 
   if (product.mode === "subscription") {
-    const agreementVersion = `1.${product_level + 1}.${payment_timeline + 1}`
+    const agreementVersion = `1.${product_level + 1}.${payment_timeline + 1}`;
     await insertSubscriptionAgreementFunction(connection, project_idx, {
       agreement_version: agreementVersion,
       plan_type: productKey,

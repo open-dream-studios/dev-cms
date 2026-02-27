@@ -19,16 +19,19 @@ export * from "./types/models/calls.js";
 export * from "./types/models/ui.js";
 export * from "./types/models/leads.js";
 export * from "./types/models/actions.js";
-export * from "./types/models/public/messages.js";
-export * from "./types/models/public/customerData.js";
-export * from "./types/models/public/schedule.js";
 export * from "./types/models/users.js";
 export * from "./types/models/schedule.js";
 export * from "./types/models/googleCalendar.js";
 export * from "./types/models/estimations/estimations.js";
 export * from "./types/models/estimations/if_trees.js";
 export * from "./types/models/folders.js";
-export * from "./types/models/payments.js";
+
+export * from "./types/models/public/messages.js";
+export * from "./types/models/public/customerData.js";
+export * from "./types/models/public/schedule.js";
+export * from "./types/models/public/payments/stripe/stripe_live.js";
+export * from "./types/models/public/payments/stripe/stripe_test.js";
+export * from "./types/models/public/payments/credits.js";
 
 export * from "./functions/index.js";
 export * from "./definitions/index.js"; 

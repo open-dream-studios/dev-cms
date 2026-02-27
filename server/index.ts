@@ -59,7 +59,7 @@ import projectFolderRoutes from "./handlers/modules/folders/folders_routes.js"
 import paymentRoutes from "./handlers/payments/payments_routes.js";
 import { initializeWebSocket } from "./connection/websocket.js";
 import publicPaymentRoutes from "./handlers/public/payment/payments_routes.js"
-import { stripeWebhookListener } from "./handlers/webhooks/stripe/stripe_controllers.js"; 
+import stripeRoutes from "./handlers/webhooks/stripe/stripe_routes.js";
 import scheduleRoutes from "./handlers/webhooks/schedule/schedule_routes.js";
 dotenv.config();
 
@@ -104,11 +104,7 @@ const io = initializeWebSocket(server);
 // Terminal 1: ngrok http http://localhost:8080
 // Terminal 2: stripe listen --forward-to localhost:8080/webhook
 // Terminal 3: stripe trigger invoice.payment_succeeded
-app.post(
-  "/webhooks/stripe",
-  express.raw({ type: "application/json" }),
-  async (req, res) => stripeWebhookListener(req, res)
-);
+app.use("/webhooks/stripe", stripeRoutes);
 
 // App
 app.use((req, res, next) => {

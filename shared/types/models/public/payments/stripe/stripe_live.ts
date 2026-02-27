@@ -1,5 +1,4 @@
-// shared/definitions/payments.ts
-
+// shared/definitions/public/payments/stripe/stripe_live.ts
 export type CreditType = "L1_1X" | "L2_1X" | "L1_1X_TEST";
 export type SubscriptionL1Type = "L1_1M" | "L1_6M" | "L1_1Y" | "L1_TEST";
 export type SubscriptionL2Type = "L2_1M" | "L2_6M" | "L2_1Y";
