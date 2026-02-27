@@ -1,5 +1,4 @@
 // server/handlers/webhooks/stripe/handlers/stripe_checkout_handler.ts
-
 import Stripe from "stripe";
 import { upsertCustomerFunction } from "../../../modules/customers/customers_repositories.js";
 import { attachSubscriptionIdToAgreementFunction } from "../../../public/payment/agreements/agreement_repositories.js";
@@ -52,16 +51,23 @@ export const handleCheckoutCompleted = async (
 
     if (!product) return;
 
-    await insertCreditLedgerEntryFunction(connection, projectId, {
-      customer_id: customerId,
-      stripe_customer_id: session.customer as string,
-      stripe_session_id: session.id,
-      source_type: "checkout",
-      product_key: priceId,
-      credit1_delta: product.credit1_granted ?? 0,
-      credit2_delta: product.credit2_granted ?? 0,
-      credit3_delta: 0,
-    });
+    const creditsToApply = [
+      { credit_type: 1, amount_delta: Number(product.credit1_granted ?? 0) },
+      { credit_type: 2, amount_delta: Number(product.credit2_granted ?? 0) },
+      { credit_type: 3, amount_delta: Number(product.credit3_granted ?? 0) },
+    ].filter((entry) => entry.amount_delta !== 0);
+
+    for (const entry of creditsToApply) {
+      await insertCreditLedgerEntryFunction(connection, projectId, {
+        customer_id: customerId,
+        stripe_customer_id: session.customer as string,
+        stripe_session_id: session.id,
+        source_type: "checkout",
+        reference: priceId,
+        credit_type: entry.credit_type,
+        amount_delta: entry.amount_delta,
+      });
+    }
 
     return;
   }

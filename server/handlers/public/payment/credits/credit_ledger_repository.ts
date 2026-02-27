@@ -1,4 +1,4 @@
-// server/handlers/modules/credits/credit_ledger_repository.ts
+// server/handlers/public/payment/credits/credit_ledger_repository.ts
 import { CreditBalance, CreditLedgerInsert } from "@open-dream/shared";
 import { db } from "../../../../connection/connect.js";
 import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
@@ -65,22 +65,73 @@ export const getSubscriptionCreditBalanceFunction = async (
 
 // ---------- INSERT LEDGER ENTRY (APPEND ONLY) ----------
 
+type CreditLedgerAdjustmentInsert = {
+  customer_id: string;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  stripe_invoice_id?: string | null;
+  stripe_session_id?: string | null;
+  source_type: CreditLedgerInsert["source_type"];
+  reference?: string | null;
+  credit_type: number;
+  amount_delta: number;
+};
+
 export const insertCreditLedgerEntryFunction = async (
   connection: PoolConnection,
   project_idx: number,
-  payload: CreditLedgerInsert
+  payload: CreditLedgerAdjustmentInsert
 ): Promise<{ success: true; id: number }> => {
+  if (!payload.customer_id || typeof payload.customer_id !== "string") {
+    throw new Error("customer_id is required");
+  }
+
+  const creditType = Number(payload.credit_type);
+  if (!Number.isInteger(creditType) || ![1, 2, 3].includes(creditType)) {
+    throw new Error("credit_type must be 1, 2, or 3");
+  }
+
+  const amountDelta = Number(payload.amount_delta);
+  if (!Number.isInteger(amountDelta) || amountDelta === 0) {
+    throw new Error("amount_delta must be a non-zero integer");
+  }
+
+  if (
+    ![
+      "checkout",
+      "subscription_renewal",
+      "booking_deduction",
+      "manual_adjustment",
+      "refund",
+    ].includes(payload.source_type)
+  ) {
+    throw new Error("Invalid source_type");
+  }
+
+  const [customerRows] = await connection.query<RowDataPacket[]>(
+    `SELECT customer_id
+     FROM customers
+     WHERE project_idx = ? AND customer_id = ?
+     LIMIT 1`,
+    [project_idx, payload.customer_id]
+  );
+
+  if (!customerRows.length) {
+    throw new Error("Customer not found for this project");
+  }
+
+  const credit1_delta = creditType === 1 ? amountDelta : 0;
+  const credit2_delta = creditType === 2 ? amountDelta : 0;
+  const credit3_delta = creditType === 3 ? amountDelta : 0;
+
   const {
-    customer_id = null,
+    customer_id,
     stripe_customer_id = null,
     stripe_subscription_id = null,
     stripe_invoice_id = null,
     stripe_session_id = null,
     source_type,
-    product_key = null,
-    credit1_delta = 0,
-    credit2_delta = 0,
-    credit3_delta = 0,
+    reference = null,
   } = payload;
 
   const q = `
@@ -108,7 +159,7 @@ export const insertCreditLedgerEntryFunction = async (
     stripe_invoice_id,
     stripe_session_id,
     source_type,
-    product_key,
+    reference,
     credit1_delta,
     credit2_delta,
     credit3_delta,

@@ -16,6 +16,7 @@ export type StripeProduct = {
   timeline: string;
   credit1_granted?: number; 
   credit2_granted?: number;
+  credit3_granted?: number;
 };
 
 export const stripeSubscriptionL1Products = {

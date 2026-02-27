@@ -62,15 +62,22 @@ export const handleInvoicePaid = async (
 
   const { project_idx, customer_id } = checkoutRows[0];
 
-  await insertCreditLedgerEntryFunction(connection, project_idx, {
-    customer_id,
-    stripe_customer_id: customerId,
-    stripe_subscription_id: subscriptionId,
-    stripe_invoice_id: invoice.id,
-    source_type: "subscription_renewal",
-    product_key: priceId,
-    credit1_delta: product.credit1_granted ?? 0,
-    credit2_delta: product.credit2_granted ?? 0,
-    credit3_delta: 0,
-  });
+  const creditsToApply = [
+    { credit_type: 1, amount_delta: Number(product.credit1_granted ?? 0) },
+    { credit_type: 2, amount_delta: Number(product.credit2_granted ?? 0) },
+    { credit_type: 3, amount_delta: Number(product.credit3_granted ?? 0) },
+  ].filter((entry) => entry.amount_delta !== 0);
+
+  for (const entry of creditsToApply) {
+    await insertCreditLedgerEntryFunction(connection, project_idx, {
+      customer_id,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscriptionId,
+      stripe_invoice_id: invoice.id,
+      source_type: "subscription_renewal",
+      reference: priceId,
+      credit_type: entry.credit_type,
+      amount_delta: entry.amount_delta,
+    });
+  }
 };
