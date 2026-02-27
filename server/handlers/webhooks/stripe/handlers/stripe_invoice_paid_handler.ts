@@ -11,28 +11,29 @@ import { insertCreditLedgerEntryFunction } from "../../../public/payment/credits
 
 export const handleInvoicePaid = async (
   connection: PoolConnection,
+  stripe: Stripe,
   event: Stripe.Event,
   test_mode: boolean
 ) => {
   if (event.type !== "invoice.paid") return;
 
   const invoice = event.data.object as any;
-  console.log("INVOICE", JSON.stringify(invoice, null, 2));
+  // console.log("INVOICE", JSON.stringify(invoice, null, 2));
 
   const subscriptionId = invoice.parent?.subscription_details?.subscription;
-  console.log("SUB_ID", JSON.stringify(subscriptionId, null, 2));
+  // console.log("SUB_ID", JSON.stringify(subscriptionId, null, 2));
   if (!subscriptionId) return;
 
   const customerId = invoice.customer;
-  console.log("CUS_ID", JSON.stringify(customerId, null, 2));
+  // console.log("CUS_ID", JSON.stringify(customerId, null, 2));
   if (!customerId) return;
 
   const line = invoice.lines?.data?.[0];
-  console.log("LINE", JSON.stringify(line, null, 2));
+  // console.log("LINE", JSON.stringify(line, null, 2));
   if (!line) return;
 
   const priceId = line.pricing?.price_details?.price;
-  console.log("PRICE_ID", JSON.stringify(priceId, null, 2));
+  // console.log("PRICE_ID", JSON.stringify(priceId, null, 2));
   if (!priceId) return;
 
   const stripeProducts = test_mode
@@ -62,10 +63,24 @@ export const handleInvoicePaid = async (
     [subscriptionId]
   );
 
-  console.log(checkoutRows)
-  if (!checkoutRows.length) return;
+  let project_idx: number;
+  let customer_id: string;
 
-  const { project_idx, customer_id } = checkoutRows[0];
+  if (checkoutRows.length && checkoutRows[0].project_idx && checkoutRows[0].customer_id) {
+    project_idx = checkoutRows[0].project_idx;
+    customer_id = checkoutRows[0].customer_id;
+  } else {
+    // Fallback: fetch subscription from Stripe
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const projectIdFromMetadata = subscription.metadata?.project_id;
+    const customerIdFromMetadata = subscription.metadata?.customer_id;
+    if (!projectIdFromMetadata || !customerIdFromMetadata) {
+      return;
+    }
+    project_idx = Number(projectIdFromMetadata);
+    customer_id = customerIdFromMetadata;
+  }
+  console.log(project_idx, customer_id)
 
   const creditsToApply = [
     { credit_type: 1, amount_delta: Number(product.credit1_granted ?? 0) },
