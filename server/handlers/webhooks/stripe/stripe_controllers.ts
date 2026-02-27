@@ -44,7 +44,7 @@ export const stripeWebhookListener = async (
       break;
 
     case "invoice.paid":
-      await handleInvoicePaid(connection, event);
+      await handleInvoicePaid(connection, stripe, event);
       break;
 
     case "invoice.payment_failed":
