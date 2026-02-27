@@ -286,12 +286,12 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
     decryptedKeys?.GOOGLE_CALENDAR_ID
   ) {
     // console.log("📅 Syncing subscription events...");
-    await syncSubscriptionEvents(
-      decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
-      decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
-      decryptedKeys.GOOGLE_CALENDAR_ID,
-      validCleanings
-    );
+    // await syncSubscriptionEvents(
+    //   decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
+    //   decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
+    //   decryptedKeys.GOOGLE_CALENDAR_ID,
+    //   validCleanings
+    // );
   } else {
     console.warn("⚠️ Google integration keys not found.");
   }
