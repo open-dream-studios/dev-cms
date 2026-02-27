@@ -120,11 +120,13 @@ export const getStripeCheckoutLink = async (
     product = stripeSubscriptionProducts[productKey];
   }
 
-  if (!product) return { success: false, message: "Product not found" };
-
-  // TEST SUBSCRIPTION
+  // DUMMY LIVE SUBSCRIPTION
   // console.log(product)
-  // product = stripeSubscriptionProducts["L1_TEST"];
+  if (first_name === "L1_TEST") { 
+    product = stripeSubscriptionProducts["L1_TEST"];
+  }
+
+  if (!product) return { success: false, message: "Product not found" };
 
   // 1️⃣ Find or create Stripe customer
   const existingCustomers = await stripe.customers.list({

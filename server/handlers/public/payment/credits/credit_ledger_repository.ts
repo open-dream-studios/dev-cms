@@ -4,7 +4,6 @@ import { db } from "../../../../connection/connect.js";
 import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 
 // ---------- GET BALANCE BY CUSTOMER ----------
-
 export const getCustomerCreditBalanceFunction = async (
   project_idx: number,
   customer_id: string,
@@ -36,11 +35,10 @@ export const getCustomerCreditBalanceFunction = async (
   };
 };
 
-// ---------- GET BALANCE BY SUBSCRIPTION ----------
-
-export const getSubscriptionCreditBalanceFunction = async (
+// ---------- GET BALANCE BY STRIPE CUSTOMER ID ----------
+export const getStripeCustomerCreditBalanceFunction = async (
   project_idx: number,
-  stripe_subscription_id: string,
+  stripe_customer_id: string,
   test: boolean
 ): Promise<CreditBalance> => {
   const q = `
@@ -50,7 +48,7 @@ export const getSubscriptionCreditBalanceFunction = async (
       COALESCE(SUM(credit3_delta), 0) AS credit3_balance
     FROM customer_credit_ledger
     WHERE project_idx = ?
-      AND stripe_subscription_id = ?
+      AND stripe_customer_id = ?
       AND test = ?
   `;
 
@@ -58,7 +56,7 @@ export const getSubscriptionCreditBalanceFunction = async (
     .promise()
     .query<(CreditBalance & RowDataPacket)[]>(q, [
       project_idx,
-      stripe_subscription_id,
+      stripe_customer_id,
       test ? 1 : 0,
     ]);
 
@@ -70,7 +68,6 @@ export const getSubscriptionCreditBalanceFunction = async (
 };
 
 // ---------- INSERT LEDGER ENTRY (APPEND ONLY) ----------
-
 type CreditLedgerAdjustmentInsert = {
   customer_id: string;
   stripe_customer_id?: string | null;
