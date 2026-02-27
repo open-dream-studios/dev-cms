@@ -25,10 +25,11 @@ export const stripeWebhookListener = async (
   let event: Stripe.Event;
 
   try {
+    const WEBHOOK_SECRET = test_mode ? process.env.STRIPE_TEST_WEBHOOK_SECRET! : process.env.STRIPE_WEBHOOK_SECRET!;
     event = stripe.webhooks.constructEvent(
       req.body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      WEBHOOK_SECRET
     );
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
