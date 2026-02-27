@@ -5,7 +5,7 @@ import { upsertCustomerFunction } from "../../../modules/customers/customers_rep
 import { attachSubscriptionIdToAgreementFunction } from "../../../public/payment/agreements/agreement_repositories.js";
 import { sendStripePortalLinkFunction } from "../../../public/payment/payments_repositories.js";
 import { getProjectByIdFunction } from "../../../projects/projects_repositories.js";
-import { stripeSubscriptionProducts } from "@open-dream/shared";
+import { stripeSubscriptionProducts, stripeTestProducts } from "@open-dream/shared";
 import { RowDataPacket } from "mysql2";
 import { PoolConnection } from "mysql2/promise";
 import { insertCreditLedgerEntryFunction } from "../../../public/payment/credits/credit_ledger_repository.js";
@@ -13,7 +13,8 @@ import { insertCreditLedgerEntryFunction } from "../../../public/payment/credits
 export const handleCheckoutCompleted = async (
   connection: PoolConnection,
   stripe: Stripe,
-  event: Stripe.Event
+  event: Stripe.Event,
+  test_mode: boolean
 ) => {
   if (event.type !== "checkout.session.completed") return;
 
@@ -43,7 +44,9 @@ export const handleCheckoutCompleted = async (
     const priceId = lineItems.data[0]?.price?.id;
     if (!priceId) return;
 
-    const product = Object.values(stripeSubscriptionProducts).find(
+    const stripeProducts = test_mode ? stripeTestProducts : stripeSubscriptionProducts;
+
+    const product = Object.values(stripeProducts).find(
       (p) => p.price_id === priceId
     );
 

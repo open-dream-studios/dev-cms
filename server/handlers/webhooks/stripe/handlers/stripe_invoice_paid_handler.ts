@@ -1,14 +1,15 @@
 // server/handlers/webhooks/stripe/handlers/stripe_invoice_paid_handler.ts
 
 import Stripe from "stripe";
-import { stripeSubscriptionProducts } from "@open-dream/shared";
+import { stripeSubscriptionProducts, stripeTestProducts } from "@open-dream/shared";
 import { RowDataPacket } from "mysql2";
 import { PoolConnection } from "mysql2/promise";
 import { insertCreditLedgerEntryFunction } from "../../../public/payment/credits/credit_ledger_repository.js";
 
 export const handleInvoicePaid = async (
   connection: PoolConnection,
-  event: Stripe.Event
+  event: Stripe.Event,
+  test_mode: boolean
 ) => {
   if (event.type !== "invoice.paid") return;
   console.log("INVOICE PAID");
@@ -31,7 +32,9 @@ export const handleInvoicePaid = async (
   console.log("priceId:", JSON.stringify(priceId));
   if (!priceId) return;
 
-  const product = Object.values(stripeSubscriptionProducts).find(
+  const stripeProducts = test_mode ? stripeTestProducts : stripeSubscriptionProducts;
+
+  const product = Object.values(stripeProducts).find(
     (p) => p.price_id === priceId
   );
   console.log("product:", JSON.stringify(product, null, 2));
