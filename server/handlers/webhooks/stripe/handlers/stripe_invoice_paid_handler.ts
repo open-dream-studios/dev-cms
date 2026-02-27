@@ -1,7 +1,10 @@
 // server/handlers/webhooks/stripe/handlers/stripe_invoice_paid_handler.ts
 
 import Stripe from "stripe";
-import { stripeSubscriptionProducts, stripeTestProducts } from "@open-dream/shared";
+import {
+  stripeSubscriptionProducts,
+  stripeTestProducts,
+} from "@open-dream/shared";
 import { RowDataPacket } from "mysql2";
 import { PoolConnection } from "mysql2/promise";
 import { insertCreditLedgerEntryFunction } from "../../../public/payment/credits/credit_ledger_repository.js";
@@ -13,24 +16,32 @@ export const handleInvoicePaid = async (
 ) => {
   if (event.type !== "invoice.paid") return;
 
-  const invoice = event.data.object as any; 
-  const subscriptionId = invoice.parent?.subscription_details?.subscription; 
+  const invoice = event.data.object as any;
+  console.log("INVOICE", JSON.stringify(invoice, null, 2));
+
+  const subscriptionId = invoice.parent?.subscription_details?.subscription;
+  console.log("SUB_ID", JSON.stringify(subscriptionId, null, 2));
   if (!subscriptionId) return;
 
-  const customerId = invoice.customer; 
+  const customerId = invoice.customer;
+  console.log("CUS_ID", JSON.stringify(customerId, null, 2));
   if (!customerId) return;
 
-  const line = invoice.lines?.data?.[0]; 
+  const line = invoice.lines?.data?.[0];
+  console.log("LINE", JSON.stringify(line, null, 2));
   if (!line) return;
 
-  const priceId = line.pricing?.price_details?.price; 
+  const priceId = line.pricing?.price_details?.price;
+  console.log("PRICE_ID", JSON.stringify(priceId, null, 2));
   if (!priceId) return;
 
-  const stripeProducts = test_mode ? stripeTestProducts : stripeSubscriptionProducts;
+  const stripeProducts = test_mode
+    ? stripeTestProducts
+    : stripeSubscriptionProducts;
 
   const product = Object.values(stripeProducts).find(
     (p) => p.price_id === priceId
-  ); 
+  );
   if (!product) return;
 
   // idempotency check
@@ -51,6 +62,7 @@ export const handleInvoicePaid = async (
     [subscriptionId]
   );
 
+  console.log(checkoutRows)
   if (!checkoutRows.length) return;
 
   const { project_idx, customer_id } = checkoutRows[0];
@@ -71,7 +83,7 @@ export const handleInvoicePaid = async (
       reference: priceId,
       credit_type: entry.credit_type,
       amount_delta: entry.amount_delta,
-      test: test_mode
+      test: test_mode,
     });
   }
 };
