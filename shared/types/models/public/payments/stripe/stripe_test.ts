@@ -10,8 +10,8 @@ export const stripeTestSubscriptionProducts = {
     amount: 1.0,
     level: 1,
     timeline: "1 Month",
-    clean_credits: 1,
-    clean_and_drain_credits: 1,
+    credit1_granted: 1,
+    credit2_granted: 1,
   },
 } as const as Record<TestProductType, StripeProduct>;
 
@@ -22,8 +22,8 @@ export const stripeTest1XProducts = {
     amount: 2.0,
     level: 1,
     timeline: "1 Time",
-    clean_credits: 0,
-    clean_and_drain_credits: 1,
+    credit1_granted: 0,
+    credit2_granted: 1,
   },
 } as const as Record<TestProductType, StripeProduct>;
 

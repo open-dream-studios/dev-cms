@@ -62,7 +62,7 @@ export const getStripeCheckoutLink = async (
     selected_slot == null ||
     customer == null ||
     product_level == null ||
-    product_type == null || 
+    product_type == null ||
     payment_timeline == null ||
     agreement_name == null ||
     test_checkout == null
@@ -70,7 +70,9 @@ export const getStripeCheckoutLink = async (
     return { success: false, message: "Missing required fields" };
   }
 
-  const stripe = test_checkout ? new Stripe(process.env.STRIPE_TEST_SECRET_KEY!) : new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const stripe = test_checkout
+    ? new Stripe(process.env.STRIPE_TEST_SECRET_KEY!)
+    : new Stripe(process.env.STRIPE_SECRET_KEY!);
   const {
     first_name,
     last_name,
@@ -164,6 +166,25 @@ export const getStripeCheckoutLink = async (
     `${currentProject.domain}${return_page ?? ""}`
   );
 
+  const metadata = {
+    first_name,
+    last_name,
+    email,
+    phone: phone ?? "",
+    address_line1: address_line1 ?? "",
+    address_line2: address_line2 ?? "",
+    city: city ?? "",
+    state: state ?? "",
+    zip: zip ?? "",
+    day_instance: String(day_instance),
+    selected_day: String(selected_day),
+    selected_slot: String(selected_slot),
+    project_id: String(project_idx),
+    source: "wix_public",
+  };
+
+  console.log(metadata);
+
   const session: Stripe.Checkout.Session =
     await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -178,42 +199,12 @@ export const getStripeCheckoutLink = async (
       success_url: `${baseUrl}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}?checkout=cancel`,
 
-      metadata: {
-        first_name,
-        last_name,
-        email,
-        phone: phone ?? "",
-        address_line1: address_line1 ?? "",
-        address_line2: address_line2 ?? "",
-        city: city ?? "",
-        state: state ?? "",
-        zip: zip ?? "",
-        day_instance: String(day_instance),
-        selected_day: String(selected_day),
-        selected_slot: String(selected_slot),
-        project_id: String(project_idx),
-        source: "wix_public",
-      },
+      metadata: metadata,
 
       // 🔑 REQUIRED for subscriptions
       ...(product.mode === "subscription" && {
         subscription_data: {
-          metadata: {
-            first_name,
-            last_name,
-            email,
-            phone: phone ?? "",
-            address_line1: address_line1 ?? "",
-            address_line2: address_line2 ?? "",
-            city: city ?? "",
-            state: state ?? "",
-            zip: zip ?? "",
-            day_instance: String(day_instance),
-            selected_day: String(selected_day),
-            selected_slot: String(selected_slot),
-            project_id: String(project_idx),
-            source: "wix_public",
-          },
+          metadata: metadata,
         },
       }),
     });

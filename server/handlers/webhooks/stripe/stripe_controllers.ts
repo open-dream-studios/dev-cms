@@ -36,6 +36,8 @@ export const stripeWebhookListener = async (
     return { status: 400, message: `Webhook Error: ${err.message}` };
   }
 
+  console.log(event.type)
+
   switch (event.type) {
     case "checkout.session.completed":
       await handleCheckoutCompleted(connection, stripe, event);
@@ -59,3 +61,4 @@ export const stripeWebhookListener = async (
   }
   return { status: 200, received: true };
 };
+
