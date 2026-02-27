@@ -11,34 +11,24 @@ export const handleInvoicePaid = async (
   event: Stripe.Event
 ) => {
   if (event.type !== "invoice.paid") return;
-  console.log("INVOICE PAID");
+  console.log("INVOICE PAID",);
 
   const invoice = event.data.object as any;
-  console.log(JSON.stringify(invoice, null, 2));
-
-  const subscriptionId =
-    invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
+  const subscriptionId = invoice.parent?.subscription_details?.subscription;
+  if (!subscriptionId) return;
 
   const customerId = invoice.customer;
-
-  console.log("SUBSCRIPTION_ID: ", subscriptionId);
-  console.log("CUSTOMER_ID: ", customerId);
-
-  if (!subscriptionId) return;
   if (!customerId) return;
 
   const line = invoice.lines?.data?.[0];
-  console.log("LINE", line);
   if (!line) return;
 
-  const priceId = line.price?.id;
-  console.log("PRICE_ID: ", priceId);
+  const priceId = line.pricing?.price_details?.price;
   if (!priceId) return;
 
   const product = Object.values(stripeSubscriptionProducts).find(
     (p) => p.price_id === priceId
   );
-
   if (!product) return;
 
   // idempotency check
