@@ -8,33 +8,32 @@ import { insertCreditLedgerEntryFunction } from "../../../public/payment/credits
 
 export const handleInvoicePaid = async (
   connection: PoolConnection,
-  stripe: Stripe,
   event: Stripe.Event
 ) => {
   if (event.type !== "invoice.paid") return;
+  console.log("INVOICE PAID")
 
-  const rawInvoice = event.data.object as any;
+  const invoice = event.data.object as any;
 
-  console.log("RAW INVOICE:", JSON.stringify(rawInvoice, null, 2));
+  const subscriptionId = invoice.subscription;
+  const customerId = invoice.customer;
 
-  const invoice = await stripe.invoices.retrieve(rawInvoice.id, {
-    expand: ["lines.data.price"],
-  });
+  console.log("SUBSCRIPTION_ID: ", subscriptionId)
+  console.log("CUSTOMER_ID: ", subscriptionId)
 
-  console.log("EXPANDED LINES:", invoice.lines?.data);
+  if (!subscriptionId) return;
+  if (!customerId) return;
 
-  const line = invoice.lines?.data?.[0] as Stripe.InvoiceLineItem | undefined;
+  const line = invoice.lines?.data?.[0];
+  console.log("LINE", line)
   if (!line) return;
 
-  const price = (line as any).price as Stripe.Price | undefined;
-  const priceId = price?.id;
-
-  console.log("PRICE_ID:", priceId);
+  const priceId = line.price?.id;
+  console.log("PRICE_ID: ", priceId)
   if (!priceId) return;
 
-  const product = Object.values(stripeSubscriptionProducts).find(
-    (p) => p.price_id === priceId
-  );
+  const product = Object.values(stripeSubscriptionProducts)
+    .find(p => p.price_id === priceId);
 
   if (!product) return;
 
@@ -69,6 +68,6 @@ export const handleInvoicePaid = async (
     product_key: priceId,
     credit1_delta: product.credit1_granted ?? 0,
     credit2_delta: product.credit2_granted ?? 0,
-    credit3_delta: 0,
+    credit3_delta: 0
   });
 };
