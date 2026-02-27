@@ -45,6 +45,7 @@ export const consumeBookingCreditController = async (
       amount_delta: -1,
       source_type: "booking_deduction",
       reference: booking_reference ?? null,
+      test: false
     }
   );
 
@@ -100,6 +101,7 @@ export const adjustCreditLevelController = async (
       amount_delta,
       source_type: "manual_adjustment",
       reference: adjustment_reference ?? null,
+      test: false
     }
   );
 

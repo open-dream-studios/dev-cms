@@ -12,32 +12,25 @@ export const handleInvoicePaid = async (
   test_mode: boolean
 ) => {
   if (event.type !== "invoice.paid") return;
-  console.log("INVOICE PAID");
 
-  const invoice = event.data.object as any;
-  console.log("invoice:", JSON.stringify(invoice, null, 2));
-  const subscriptionId = invoice.parent?.subscription_details?.subscription;
-  console.log("subscriptionId:", JSON.stringify(subscriptionId));
+  const invoice = event.data.object as any; 
+  const subscriptionId = invoice.parent?.subscription_details?.subscription; 
   if (!subscriptionId) return;
 
-  const customerId = invoice.customer;
-  console.log("customerId:", JSON.stringify(customerId));
+  const customerId = invoice.customer; 
   if (!customerId) return;
 
-  const line = invoice.lines?.data?.[0];
-  console.log("line:", JSON.stringify(line, null, 2));
+  const line = invoice.lines?.data?.[0]; 
   if (!line) return;
 
-  const priceId = line.pricing?.price_details?.price;
-  console.log("priceId:", JSON.stringify(priceId));
+  const priceId = line.pricing?.price_details?.price; 
   if (!priceId) return;
 
   const stripeProducts = test_mode ? stripeTestProducts : stripeSubscriptionProducts;
 
   const product = Object.values(stripeProducts).find(
     (p) => p.price_id === priceId
-  );
-  console.log("product:", JSON.stringify(product, null, 2));
+  ); 
   if (!product) return;
 
   // idempotency check
@@ -78,6 +71,7 @@ export const handleInvoicePaid = async (
       reference: priceId,
       credit_type: entry.credit_type,
       amount_delta: entry.amount_delta,
+      test: test_mode
     });
   }
 };

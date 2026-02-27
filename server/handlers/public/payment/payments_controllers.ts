@@ -215,6 +215,7 @@ export const getStripeCheckoutLink = async (
       full_name_entered: agreement_name,
       email_entered: email,
       stripe_checkout_session_id: session.id,
+      test: test_checkout
     });
   }
 

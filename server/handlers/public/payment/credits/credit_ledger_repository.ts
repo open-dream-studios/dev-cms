@@ -7,7 +7,8 @@ import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 
 export const getCustomerCreditBalanceFunction = async (
   project_idx: number,
-  customer_id: string
+  customer_id: string,
+  test: boolean
 ): Promise<CreditBalance> => {
   const q = `
     SELECT
@@ -17,6 +18,7 @@ export const getCustomerCreditBalanceFunction = async (
     FROM customer_credit_ledger
     WHERE project_idx = ?
       AND customer_id = ?
+      AND test = ?
   `;
 
   const [rows] = await db
@@ -24,6 +26,7 @@ export const getCustomerCreditBalanceFunction = async (
     .query<(CreditBalance & RowDataPacket)[]>(q, [
       project_idx,
       customer_id,
+      test ? 1 : 0,
     ]);
 
   return rows[0] ?? {
@@ -37,7 +40,8 @@ export const getCustomerCreditBalanceFunction = async (
 
 export const getSubscriptionCreditBalanceFunction = async (
   project_idx: number,
-  stripe_subscription_id: string
+  stripe_subscription_id: string,
+  test: boolean
 ): Promise<CreditBalance> => {
   const q = `
     SELECT
@@ -47,6 +51,7 @@ export const getSubscriptionCreditBalanceFunction = async (
     FROM customer_credit_ledger
     WHERE project_idx = ?
       AND stripe_subscription_id = ?
+      AND test = ?
   `;
 
   const [rows] = await db
@@ -54,6 +59,7 @@ export const getSubscriptionCreditBalanceFunction = async (
     .query<(CreditBalance & RowDataPacket)[]>(q, [
       project_idx,
       stripe_subscription_id,
+      test ? 1 : 0,
     ]);
 
   return rows[0] ?? {
@@ -75,6 +81,7 @@ type CreditLedgerAdjustmentInsert = {
   reference?: string | null;
   credit_type: number;
   amount_delta: number;
+  test: boolean
 };
 
 export const insertCreditLedgerEntryFunction = async (
@@ -132,6 +139,7 @@ export const insertCreditLedgerEntryFunction = async (
     stripe_session_id = null,
     source_type,
     reference = null,
+    test,
   } = payload;
 
   const q = `
@@ -146,9 +154,10 @@ export const insertCreditLedgerEntryFunction = async (
       product_key,
       credit1_delta,
       credit2_delta,
-      credit3_delta
+      credit3_delta,
+      test
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const values = [
@@ -163,6 +172,7 @@ export const insertCreditLedgerEntryFunction = async (
     credit1_delta,
     credit2_delta,
     credit3_delta,
+    test,
   ];
 
   const [result] = await connection.query<ResultSetHeader>(q, values);

@@ -13,6 +13,7 @@ export const insertSubscriptionAgreementFunction = async (
     full_name_entered,
     email_entered,
     stripe_checkout_session_id,
+    test,
   } = reqBody;
 
   if (
@@ -37,9 +38,10 @@ export const insertSubscriptionAgreementFunction = async (
       email_entered,
       accepted_at,
       stripe_checkout_session_id,
-      stripe_subscription_id
+      stripe_subscription_id,
+      test
     )
-    VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, NULL)
+    VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, NULL, ?)
   `;
 
   const values = [
@@ -50,6 +52,7 @@ export const insertSubscriptionAgreementFunction = async (
     full_name_entered,
     email_entered,
     stripe_checkout_session_id,
+    test
   ];
 
   const [result] = await connection.query<ResultSetHeader>(

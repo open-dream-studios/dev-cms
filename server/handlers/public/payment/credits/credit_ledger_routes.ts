@@ -10,13 +10,13 @@ import {
 const router = express.Router();
 
 router.post(
-  "/booking-spend",
+  "/consume-booking-credit",
   verifyWixRequest,
   transactionHandler(consumeBookingCreditController)
 );
 
 router.post(
-  "/manual-adjustment",
+  "/adjust-credit-level",
   verifyWixRequest,
   transactionHandler(adjustCreditLevelController)
 );

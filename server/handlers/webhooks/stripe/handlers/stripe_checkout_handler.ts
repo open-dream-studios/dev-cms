@@ -66,6 +66,7 @@ export const handleCheckoutCompleted = async (
         reference: priceId,
         credit_type: entry.credit_type,
         amount_delta: entry.amount_delta,
+        test: test_mode
       });
     }
 
@@ -169,9 +170,10 @@ export const handleCheckoutCompleted = async (
         meta_zip,
         meta_day_instance,
         meta_selected_day,
-        meta_selected_slot
+        meta_selected_slot,
+        test
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         meta_day_instance = VALUES(meta_day_instance),
         meta_selected_day = VALUES(meta_selected_day),
@@ -194,6 +196,7 @@ export const handleCheckoutCompleted = async (
         day_instance,
         selected_day,
         selected_slot,
+        test_mode
       ]
     );
 
