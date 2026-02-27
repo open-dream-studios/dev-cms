@@ -11,29 +11,33 @@ export const handleInvoicePaid = async (
   event: Stripe.Event
 ) => {
   if (event.type !== "invoice.paid") return;
-  console.log("INVOICE PAID")
+  console.log("INVOICE PAID");
 
   const invoice = event.data.object as any;
+  console.log(JSON.stringify(invoice, null, 2));
 
-  const subscriptionId = invoice.subscription;
+  const subscriptionId =
+    invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
+
   const customerId = invoice.customer;
 
-  console.log("SUBSCRIPTION_ID: ", subscriptionId)
-  console.log("CUSTOMER_ID: ", subscriptionId)
+  console.log("SUBSCRIPTION_ID: ", subscriptionId);
+  console.log("CUSTOMER_ID: ", customerId);
 
   if (!subscriptionId) return;
   if (!customerId) return;
 
   const line = invoice.lines?.data?.[0];
-  console.log("LINE", line)
+  console.log("LINE", line);
   if (!line) return;
 
   const priceId = line.price?.id;
-  console.log("PRICE_ID: ", priceId)
+  console.log("PRICE_ID: ", priceId);
   if (!priceId) return;
 
-  const product = Object.values(stripeSubscriptionProducts)
-    .find(p => p.price_id === priceId);
+  const product = Object.values(stripeSubscriptionProducts).find(
+    (p) => p.price_id === priceId
+  );
 
   if (!product) return;
 
@@ -68,6 +72,6 @@ export const handleInvoicePaid = async (
     product_key: priceId,
     credit1_delta: product.credit1_granted ?? 0,
     credit2_delta: product.credit2_granted ?? 0,
-    credit3_delta: 0
+    credit3_delta: 0,
   });
 };

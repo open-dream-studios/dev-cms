@@ -182,9 +182,7 @@ export const getStripeCheckoutLink = async (
     project_id: String(project_idx),
     source: "wix_public",
   };
-
-  console.log("METADATA:", JSON.stringify(metadata, null, 2));
-
+ 
   const session: Stripe.Checkout.Session =
     await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
