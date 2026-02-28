@@ -1,6 +1,6 @@
-// server/handlers/public/payment/credits/credit_ledger_repository.ts
+// server/handlers/payments/credits/credit_ledger_repository.ts
 import { LedgerCreditBalance, LedgerCreditAdjustment } from "@open-dream/shared";
-import { db } from "../../../../connection/connect.js";
+import { db } from "../../../connection/connect.js";
 import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 
 // ---------- GET BALANCE BY CUSTOMER ----------

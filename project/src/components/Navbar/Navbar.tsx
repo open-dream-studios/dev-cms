@@ -22,7 +22,7 @@ import { Media, appDetails } from "@open-dream/shared";
 import { saveProducts } from "@/modules/CustomerProducts/_actions/products.actions";
 import { useModules } from "@/modules/_hooks/modules.hooks";
 import { BsSuitDiamondFill } from "react-icons/bs";
-import PaymentSettings from "@/modules/PaymentModule/PaymentSettings";
+import PaymentSettings from "@/modules/PaymentsInternalModule/PaymentSettings";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);

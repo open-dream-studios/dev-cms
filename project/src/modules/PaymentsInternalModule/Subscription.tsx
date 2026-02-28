@@ -1,4 +1,4 @@
-// project/src/modules/PaymentModule/Subscription.tsx
+// project/src/modules/PaymentsInternalModule/Subscription.tsx
 "use client";
 import { useContext } from "react";
 import StripeProvider from "./Stripe/StripeProvider";
@@ -35,7 +35,7 @@ const Subscription = () => {
     //   });
     //   return;
     // }
-    // const res = await makeRequest.post(`/payment/checkout-session`, {
+    // const res = await makeRequest.post(`/payments/checkout-session`, {
     //   product_type: product,
     // });
     // const { url } = res.data;
@@ -69,7 +69,7 @@ const Subscription = () => {
     //     ...modal2,
     //     open: false,
     //   });
-    //   const res = await makeRequest.post(`/payment/stripe-update-sub`, {
+    //   const res = await makeRequest.post(`/payments/stripe-update-sub`, {
     //     product_type: product,
     //   });
 
@@ -118,7 +118,7 @@ const Subscription = () => {
 
   const handlePortal = async () => {
     if (!currentUser) return;
-    const res = await makeRequest.post(`/payment/stripe-portal`, {});
+    const res = await makeRequest.post(`/payments/stripe-portal`, {});
 
     const responseData = await res.data
     if (!responseData.success) {

@@ -1,4 +1,4 @@
-// project/src/modules/PaymentModule/Script/StripeProvider.tsx
+// project/src/modules/PaymentsInternalModule/Script/StripeProvider.tsx
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { ReactNode } from "react";

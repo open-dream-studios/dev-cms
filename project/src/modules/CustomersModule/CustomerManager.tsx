@@ -15,6 +15,7 @@ import { useScheduleRequests } from "@/contexts/queryContext/queries/public/sche
 import GoogleCalendarDisplay from "../GoogleModule/GoogleCalendarModule/GoogleCalendarDisplay";
 import { CustomerDataManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerDataManager";
 import { useGoogleCalendar } from "../GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks";
+import PaymentsModule from "../PaymentsModule/PaymentsModule";
 
 export default function CustomerManager() {
   const { upsertLead, customerData, hasProjectModule } = useContextQueries();
@@ -129,21 +130,23 @@ export default function CustomerManager() {
     });
   }
 
-  return (
-    <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
-      {hasProjectModule("google-calendar-module") && (
-        <GoogleCalendarDisplay
-          events={events}
-          refreshCalendar={refresh}
-          fetchStart={rangeStart}
-          fetchEnd={rangeEnd}
-        />
-      )}
-      {(hasProjectModule("customer-schedule-requests-module") ||
-        hasProjectModule("customer-leads-module")) && (
-        <CustomerDataManager events={events} refreshCalendar={refresh} />
-      )}
-    </div>
-  );
+  return <PaymentsModule />
+
+  // return (
+  //   <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
+  //     {hasProjectModule("google-calendar-module") && (
+  //       <GoogleCalendarDisplay
+  //         events={events}
+  //         refreshCalendar={refresh}
+  //         fetchStart={rangeStart}
+  //         fetchEnd={rangeEnd}
+  //       />
+  //     )}
+  //     {(hasProjectModule("customer-schedule-requests-module") ||
+  //       hasProjectModule("customer-leads-module")) && (
+  //       <CustomerDataManager events={events} refreshCalendar={refresh} />
+  //     )}
+  //   </div>
+  // );
   // return <CustomerInteractionTimeline />;
 }

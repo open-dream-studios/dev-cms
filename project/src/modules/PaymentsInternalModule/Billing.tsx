@@ -1,4 +1,4 @@
-// project/src/modules/PaymentModule/Billing.tsx
+// project/src/modules/PaymentsInternalModule/Billing.tsx
 "use client";
 import { useContext } from "react";
 import { capitalizeFirstLetter, formatDate } from "../../util/functions/Data";

@@ -1,4 +1,4 @@
-// server/handlers/public/payment/payments/repositories.ts 
+// server/handlers/public/payments/payments/repositories.ts 
 import Stripe from "stripe";
 import { changeToHTTPSDomain } from "../../../functions/data.js";
 import {

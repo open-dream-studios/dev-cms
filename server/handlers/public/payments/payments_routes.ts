@@ -1,4 +1,4 @@
-// server/handlers/public/payment/payments_routes.ts
+// server/handlers/public/payments/payments_routes.ts
 import express from "express";
 import { transactionHandler } from "../../../util/handlerWrappers.js";
 import { verifyWixRequest } from "../../../util/verifyWixRequest.js";
@@ -6,7 +6,6 @@ import {
   getStripeCheckoutLink,
   sendStripePortalLink,
 } from "./payments_controllers.js";
-import creditLedgerRoutes from "./credits/credit_ledger_routes.js";
 
 const router = express.Router();
 
@@ -22,7 +21,5 @@ router.post(
   verifyWixRequest,
   transactionHandler(sendStripePortalLink)
 );
-
-router.use("/credits", creditLedgerRoutes);
 
 export default router;

@@ -1,7 +1,7 @@
 // server/handlers/webhooks/stripe/handlers/stripe_checkout_handler.ts
 import Stripe from "stripe";
-import { attachSubscriptionIdToAgreementFunction } from "../../../public/payment/agreements/agreement_repositories.js";
-import { sendStripePortalLinkFunction } from "../../../public/payment/payments_repositories.js";
+import { attachSubscriptionIdToAgreementFunction } from "../../../payments/agreements/agreements_repositories.js";
+import { sendStripePortalLinkFunction } from "../../../public/payments/payments_repositories.js";
 import { getProjectByIdFunction } from "../../../projects/projects_repositories.js";
 import {
   stripeSubscriptionProducts,

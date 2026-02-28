@@ -1,4 +1,4 @@
-// server/handlers/public/payment/agreements/agreement_repositories.ts
+// server/handlers/payments/agreements/agreements_repositories.ts
 import { PoolConnection, ResultSetHeader } from "mysql2/promise";
 import { ulid } from "ulid";
 

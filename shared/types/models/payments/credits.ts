@@ -1,4 +1,4 @@
-// shared/types/models/public/payments/credits.ts
+// shared/types/models/payments/credits.ts
 export type LedgerCreditAdjustment = {
   project_idx: number;
   customer_id: string;

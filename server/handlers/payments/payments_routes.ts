@@ -1,36 +1,73 @@
 // server/handlers/payments/payments_routes.ts
 import express from "express";
-import {
-  checkoutSession,
-  customerPortalSession,
-  customerUpdateSubscription,
-} from "./payments_controllers.js";
 import { verifyVercelProxy } from "../../util/verifyProxy.js";
 import { authenticateUser } from "../../connection/middlewares.js";
 import { transactionHandler } from "../../util/handlerWrappers.js";
+import { checkProjectPermission } from "../../util/permissions.js";
+import { clearActiveSubscriptions, getActiveSubscriptions, syncActiveSubscriptions } from "./subscriptions/subscriptions_controllers.js";
+import { verifyWixRequest } from "../../util/verifyWixRequest.js";
+import { adjustCreditLevelController, consumeBookingCreditController } from "./credits/credit_ledger_controllers.js";
 
 const router = express.Router();
 
-// ---- PAYMENTS ----
+// ---- STRIPE SUBSCRIPTIONS ----
 router.post(
-  "/checkout-session",
+  "/subscriptions/get",
   verifyVercelProxy,
   authenticateUser,
-  transactionHandler(checkoutSession)
+  checkProjectPermission(3), // viewer+
+  transactionHandler(getActiveSubscriptions)
 );
 
 router.post(
-  "/stripe-portal",
+  "/subscriptions/sync",
   verifyVercelProxy,
   authenticateUser,
-  transactionHandler(customerPortalSession)
+  checkProjectPermission(8), // owner+
+  transactionHandler(syncActiveSubscriptions)
 );
 
 router.post(
-  "/stripe-update-sub",
+  "/subscriptions/clear",
   verifyVercelProxy,
   authenticateUser,
-  transactionHandler(customerUpdateSubscription)
+  checkProjectPermission(8), // owner+
+  transactionHandler(clearActiveSubscriptions)
 );
+
+// ---- CREDITS ----
+router.post(
+  "/consume-booking-credit",
+  verifyWixRequest,
+  transactionHandler(consumeBookingCreditController)
+);
+
+router.post(
+  "/adjust-credit-level",
+  verifyWixRequest,
+  transactionHandler(adjustCreditLevelController)
+);
+
+// ---- IN APP PAYMENTS ----
+// router.post(
+//   "/checkout-session",
+//   verifyVercelProxy,
+//   authenticateUser,
+//   transactionHandler(checkoutSession)
+// );
+
+// router.post(
+//   "/stripe-portal",
+//   verifyVercelProxy,
+//   authenticateUser,
+//   transactionHandler(customerPortalSession)
+// );
+
+// router.post(
+//   "/stripe-update-sub",
+//   verifyVercelProxy,
+//   authenticateUser,
+//   transactionHandler(customerUpdateSubscription)
+// );
 
 export default router;

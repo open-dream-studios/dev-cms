@@ -58,7 +58,7 @@ import estimationProcessRoutes from "./handlers/modules/estimations/process/proc
 import projectFolderRoutes from "./handlers/modules/folders/folders_routes.js"
 import paymentRoutes from "./handlers/payments/payments_routes.js";
 import { initializeWebSocket } from "./connection/websocket.js";
-import publicPaymentRoutes from "./handlers/public/payment/payments_routes.js"
+import publicPaymentRoutes from "./handlers/public/payments/payments_routes.js"
 import stripeRoutes from "./handlers/webhooks/stripe/stripe_routes.js";
 import scheduleRoutes from "./handlers/webhooks/schedule/schedule_routes.js";
 dotenv.config();
@@ -175,7 +175,7 @@ app.use("/api/wix", wixRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/folders", projectFolderRoutes);
 app.use("/api/ai", AIRoutes)
-app.use("/api/payment", paymentRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // Estimations
 app.use("/api/estimations/fact-definitions", estimationFactDefinitionRoutes);
@@ -199,7 +199,7 @@ app.use("/api/estimations/process", estimationProcessRoutes);
 app.use("/api/public/messages", messagesRoutes);
 app.use("/api/public/customer-data", customerDataRoutes);
 app.use("/api/public/schedule-request", scheduleRequestRoutes);
-app.use("/api/public/payment", publicPaymentRoutes)
+app.use("/api/public/payments", publicPaymentRoutes)
 
 // Webhooks
 app.use("/api/webhooks/schedule", scheduleRoutes);

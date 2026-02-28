@@ -1,4 +1,4 @@
-// server/handlers/public/payment/payments_controllers.ts
+// server/handlers/public/payments/payments_controllers.ts
 import Stripe from "stripe";
 import type { PoolConnection } from "mysql2/promise";
 import type { Request, Response } from "express";
@@ -15,7 +15,7 @@ import {
 import { changeToHTTPSDomain } from "../../../functions/data.js";
 import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
 import { sendStripePortalLinkFunction } from "./payments_repositories.js";
-import { insertSubscriptionAgreementFunction } from "./agreements/agreement_repositories.js";
+import { insertSubscriptionAgreementFunction } from "../../payments/agreements/agreements_repositories.js";
 
 export const getStripeCheckoutLink = async (
   req: Request,

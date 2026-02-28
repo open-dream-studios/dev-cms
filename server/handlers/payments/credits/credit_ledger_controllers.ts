@@ -1,8 +1,8 @@
-// server/handlers/public/payment/credits/credit_ledger_controllers.ts
+// server/handlers/payments/credits/credit_ledger_controllers.ts
 import type { Request, Response } from "express";
 import type { PoolConnection } from "mysql2/promise";
-import { getProjectDomainFromWixRequest } from "../../../../util/verifyWixRequest.js";
-import { getProjectIdByDomain } from "../../../projects/projects_repositories.js";
+import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
+import { getProjectIdByDomain } from "../../projects/projects_repositories.js";
 import { insertCreditLedgerEntryFunction } from "./credit_ledger_repository.js";
 import {
   LedgerCreditAdjustment,

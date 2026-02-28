@@ -1,4 +1,4 @@
-// project/src/modules/PaymentModule/Settings.tsx
+// project/src/modules/PaymentsInternalModule/Settings.tsx
 "use client";
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../../contexts/authContext";

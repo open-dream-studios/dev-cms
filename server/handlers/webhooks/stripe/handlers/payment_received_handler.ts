@@ -1,7 +1,7 @@
 // server/handlers/webhooks/stripe/handlers/payment_received_handler.ts
 import { PoolConnection, RowDataPacket } from "mysql2/promise";
 import { LedgerCreditType, StripeProduct } from "@open-dream/shared";
-import { insertCreditLedgerEntryFunction } from "../../../public/payment/credits/credit_ledger_repository.js";
+import { insertCreditLedgerEntryFunction } from "../../../payments/credits/credit_ledger_repository.js";
 import { upsertCustomerFunction } from "../../../modules/customers/customers_repositories.js";
 
 export type TransactionType = "one_time" | "subscription";
