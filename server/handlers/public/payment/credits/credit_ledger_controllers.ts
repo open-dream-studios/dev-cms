@@ -24,8 +24,7 @@ export const consumeBookingCreditController = async (
   const {
     customer_id,
     stripe_customer_id,
-    stripe_subscription_id,
-    booking_reference,
+    stripe_subscription_id, 
     credit_type,
   } = req.body as {
     customer_id: string;
