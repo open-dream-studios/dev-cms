@@ -6,6 +6,7 @@ import { handleInvoicePaid } from "./handlers/stripe_invoice_paid_handler.js";
 import { handleInvoicePaymentFailed } from "./handlers/stripe_invoice_failed_handler.js";
 import { handleRefundEvent } from "./handlers/stripe_refund_handler.js";
 import { PoolConnection } from "mysql2/promise";
+import { handlePaymentReceived } from "./handlers/payment_received_handler.js";
 
 export const stripeWebhookListener = async (
   req: Request,
@@ -39,17 +40,21 @@ export const stripeWebhookListener = async (
   console.log(event.type)
 
   switch (event.type) {
-    case "checkout.session.completed":
-      await handleCheckoutCompleted(connection, stripe, event, test_mode);
+    case "payment_intent.succeeded":
+      await handlePaymentReceived(connection, stripe, event, test_mode);
       break;
 
-    case "invoice.paid":
-      await handleInvoicePaid(connection, stripe, event, test_mode);
-      break;
+    // case "checkout.session.completed":
+    //   await handleCheckoutCompleted(connection, stripe, event, test_mode);
+    //   break;
 
-    case "invoice.payment_failed":
-      await handleInvoicePaymentFailed(connection, event);
-      break;
+    // case "invoice.paid":
+    //   await handleInvoicePaid(connection, stripe, event, test_mode);
+    //   break;
+
+    // case "invoice.payment_failed":
+    //   await handleInvoicePaymentFailed(connection, event);
+    //   break;
 
     case "charge.refunded":
     case "credit_note.created":
