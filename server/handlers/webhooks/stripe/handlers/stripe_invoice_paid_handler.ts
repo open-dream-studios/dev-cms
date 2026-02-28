@@ -81,13 +81,13 @@ export const handleInvoicePaid = async (
     city: subscriptionMetadata.city ?? null,
     state: subscriptionMetadata.state ?? null,
     zip: subscriptionMetadata.zip ?? null,
-    day_instance: subscriptionMetadata.day_instance
+    day_instance: subscriptionMetadata.day_instance != null
       ? Number(subscriptionMetadata.day_instance)
       : null,
-    selected_day: subscriptionMetadata.selected_day
+    selected_day: subscriptionMetadata.selected_day != null
       ? Number(subscriptionMetadata.selected_day)
       : null,
-    selected_slot: subscriptionMetadata.selected_slot
+    selected_slot: subscriptionMetadata.selected_slot != null
       ? Number(subscriptionMetadata.selected_slot)
       : null,
   } as StripeMetadata;

@@ -52,13 +52,13 @@ export const handleCheckoutCompleted = async (
       city: sessionMetadata.city ?? null,
       state: sessionMetadata.state ?? null,
       zip: sessionMetadata.zip ?? null,
-      day_instance: sessionMetadata.day_instance
+      day_instance: sessionMetadata.day_instance != null
         ? Number(sessionMetadata.day_instance)
         : null,
-      selected_day: sessionMetadata.selected_day
+      selected_day: sessionMetadata.selected_day != null
         ? Number(sessionMetadata.selected_day)
         : null,
-      selected_slot: sessionMetadata.selected_slot
+      selected_slot: sessionMetadata.selected_slot != null
         ? Number(sessionMetadata.selected_slot)
         : null,
     } as StripeMetadata;

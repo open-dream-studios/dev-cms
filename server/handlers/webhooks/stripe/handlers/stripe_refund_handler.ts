@@ -1,5 +1,4 @@
 // server/handlers/webhooks/stripe/handlers/stripe_refund_handler.ts
-
 import Stripe from "stripe";
 import { RowDataPacket } from "mysql2";
 import { PoolConnection } from "mysql2/promise";

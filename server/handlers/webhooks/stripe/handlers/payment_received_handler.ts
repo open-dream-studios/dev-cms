@@ -174,9 +174,9 @@ export const handlePaymentReceived = async (
       metadata.city ?? null,
       metadata.state ?? null,
       metadata.zip ?? null,
-      metadata.day_instance ? Number(metadata.day_instance) : null,
-      metadata.selected_day ? Number(metadata.selected_day) : null,
-      metadata.selected_slot ? Number(metadata.selected_slot) : null,
+      metadata.day_instance != null ? Number(metadata.day_instance) : null,
+      metadata.selected_day != null ? Number(metadata.selected_day) : null,
+      metadata.selected_slot != null ? Number(metadata.selected_slot) : null,
       is_first_subscription_payment,
       test_mode,
     ]
