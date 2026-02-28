@@ -1,5 +1,5 @@
 // server/handlers/public/payment/credits/credit_ledger_repository.ts
-import { CreditBalance, CreditLedgerInsert } from "@open-dream/shared";
+import { LedgerCreditBalance, LedgerCreditAdjustment } from "@open-dream/shared";
 import { db } from "../../../../connection/connect.js";
 import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 
@@ -8,7 +8,7 @@ export const getCustomerCreditBalanceFunction = async (
   project_idx: number,
   customer_id: string,
   test: boolean
-): Promise<CreditBalance> => {
+): Promise<LedgerCreditBalance> => {
   const q = `
     SELECT
       COALESCE(SUM(credit1_delta), 0) AS credit1_balance,
@@ -22,7 +22,7 @@ export const getCustomerCreditBalanceFunction = async (
 
   const [rows] = await db
     .promise()
-    .query<(CreditBalance & RowDataPacket)[]>(q, [
+    .query<(LedgerCreditBalance & RowDataPacket)[]>(q, [
       project_idx,
       customer_id,
       test ? 1 : 0,
@@ -40,7 +40,7 @@ export const getStripeCustomerCreditBalanceFunction = async (
   project_idx: number,
   stripe_customer_id: string,
   test: boolean
-): Promise<CreditBalance> => {
+): Promise<LedgerCreditBalance> => {
   const q = `
     SELECT
       COALESCE(SUM(credit1_delta), 0) AS credit1_balance,
@@ -54,7 +54,7 @@ export const getStripeCustomerCreditBalanceFunction = async (
 
   const [rows] = await db
     .promise()
-    .query<(CreditBalance & RowDataPacket)[]>(q, [
+    .query<(LedgerCreditBalance & RowDataPacket)[]>(q, [
       project_idx,
       stripe_customer_id,
       test ? 1 : 0,
@@ -68,34 +68,23 @@ export const getStripeCustomerCreditBalanceFunction = async (
 };
 
 // ---------- INSERT LEDGER ENTRY (APPEND ONLY) ----------
-type CreditLedgerAdjustmentInsert = {
-  customer_id: string;
-  stripe_customer_id?: string | null;
-  stripe_subscription_id?: string | null;
-  stripe_invoice_id?: string | null;
-  stripe_session_id?: string | null;
-  source_type: CreditLedgerInsert["source_type"];
-  reference?: string | null;
-  credit_type: number;
-  amount_delta: number;
-  test: boolean
-};
-
 export const insertCreditLedgerEntryFunction = async (
   connection: PoolConnection,
-  project_idx: number,
-  payload: CreditLedgerAdjustmentInsert
+  ledgerItem: LedgerCreditAdjustment
 ): Promise<{ success: true; id: number }> => {
-  if (!payload.customer_id || typeof payload.customer_id !== "string") {
+  const project_idx = Number(ledgerItem.project_idx);
+  if (!project_idx) throw new Error("project_idx is required");
+
+  if (!ledgerItem.customer_id || typeof ledgerItem.customer_id !== "string") {
     throw new Error("customer_id is required");
   }
 
-  const creditType = Number(payload.credit_type);
+  const creditType = Number(ledgerItem.credit_adjustment_type);
   if (!Number.isInteger(creditType) || ![1, 2, 3].includes(creditType)) {
     throw new Error("credit_type must be 1, 2, or 3");
   }
 
-  const amountDelta = Number(payload.amount_delta);
+  const amountDelta = Number(ledgerItem.amount_delta);
   if (!Number.isInteger(amountDelta) || amountDelta === 0) {
     throw new Error("amount_delta must be a non-zero integer");
   }
@@ -107,7 +96,7 @@ export const insertCreditLedgerEntryFunction = async (
       "booking_deduction",
       "manual_adjustment",
       "refund",
-    ].includes(payload.source_type)
+    ].includes(ledgerItem.source_type)
   ) {
     throw new Error("Invalid source_type");
   }
@@ -117,7 +106,7 @@ export const insertCreditLedgerEntryFunction = async (
      FROM customers
      WHERE project_idx = ? AND customer_id = ?
      LIMIT 1`,
-    [project_idx, payload.customer_id]
+    [project_idx, ledgerItem.customer_id]
   );
 
   if (!customerRows.length) {
@@ -130,14 +119,14 @@ export const insertCreditLedgerEntryFunction = async (
 
   const {
     customer_id,
-    stripe_customer_id = null,
+    stripe_customer_id,
     stripe_subscription_id = null,
     stripe_invoice_id = null,
     stripe_session_id = null,
     source_type,
-    reference = null,
-    test,
-  } = payload;
+    price_id,
+    test_mode,
+  } = ledgerItem;
 
   const q = `
     INSERT INTO customer_credit_ledger (
@@ -148,7 +137,7 @@ export const insertCreditLedgerEntryFunction = async (
       stripe_invoice_id,
       stripe_session_id,
       source_type,
-      product_key,
+      price_id,
       credit1_delta,
       credit2_delta,
       credit3_delta,
@@ -165,11 +154,11 @@ export const insertCreditLedgerEntryFunction = async (
     stripe_invoice_id,
     stripe_session_id,
     source_type,
-    reference,
+    price_id,
     credit1_delta,
     credit2_delta,
     credit3_delta,
-    test,
+    test_mode,
   ];
 
   const [result] = await connection.query<ResultSetHeader>(q, values);

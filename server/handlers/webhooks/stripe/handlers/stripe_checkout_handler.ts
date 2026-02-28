@@ -1,13 +1,18 @@
 // server/handlers/webhooks/stripe/handlers/stripe_checkout_handler.ts
 import Stripe from "stripe";
-import { upsertCustomerFunction } from "../../../modules/customers/customers_repositories.js";
 import { attachSubscriptionIdToAgreementFunction } from "../../../public/payment/agreements/agreement_repositories.js";
 import { sendStripePortalLinkFunction } from "../../../public/payment/payments_repositories.js";
 import { getProjectByIdFunction } from "../../../projects/projects_repositories.js";
-import { stripeSubscriptionProducts, stripeTestProducts } from "@open-dream/shared";
-import { RowDataPacket } from "mysql2";
+import {
+  stripeSubscriptionProducts,
+  stripeTestProducts,
+} from "@open-dream/shared";
 import { PoolConnection } from "mysql2/promise";
-import { insertCreditLedgerEntryFunction } from "../../../public/payment/credits/credit_ledger_repository.js";
+import {
+  handlePaymentReceived,
+  StripeMetadata,
+  TransactionType,
+} from "./payment_received_handler.js";
 
 export const handleCheckoutCompleted = async (
   connection: PoolConnection,
@@ -15,90 +20,132 @@ export const handleCheckoutCompleted = async (
   event: Stripe.Event,
   test_mode: boolean
 ) => {
-//   if (event.type !== "checkout.session.completed") return;
+  if (event.type !== "checkout.session.completed")
+    return { event: event.type, error: "Invalid event type" };
+  const session = event.data.object as Stripe.Checkout.Session;
 
-//   const session = event.data.object as Stripe.Checkout.Session;
+  // -------------------------
+  // ONE TIME PAYMENT
+  // -------------------------
+  if (session.mode === "payment") {
+    if (
+      !session.customer ||
+      !session.metadata ||
+      !session.metadata.project_id ||
+      !session.metadata.email
+    )
+      return {
+        event: event.type,
+        mode: session.mode,
+        error: "Missing session details",
+      };
 
-//   // -------------------------
-//   // ONE TIME PAYMENT
-//   // -------------------------
-//   if (session.mode === "payment") {
-//     if (!session.customer) return;
-//     if (!session.metadata?.project_id || !session.metadata?.email) return;
+    const sessionMetadata = session.metadata;
+    const project_idx = Number(session.metadata.project_id);
+    const metadata = {
+      first_name: sessionMetadata.first_name ?? null,
+      last_name: sessionMetadata.last_name ?? null,
+      email: sessionMetadata.email ?? null,
+      phone: sessionMetadata.phone ?? null,
+      address_line1: sessionMetadata.address_line1 ?? null,
+      address_line2: sessionMetadata.address_line2 ?? null,
+      city: sessionMetadata.city ?? null,
+      state: sessionMetadata.state ?? null,
+      zip: sessionMetadata.zip ?? null,
+      day_instance: sessionMetadata.day_instance
+        ? Number(sessionMetadata.day_instance)
+        : null,
+      selected_day: sessionMetadata.selected_day
+        ? Number(sessionMetadata.selected_day)
+        : null,
+      selected_slot: sessionMetadata.selected_slot
+        ? Number(sessionMetadata.selected_slot)
+        : null,
+    } as StripeMetadata;
 
-//     const projectId = Number(session.metadata.project_id);
-//     const email = session.metadata.email;
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+    const priceId = lineItems.data[0]?.price?.id;
+    if (!priceId)
+      return {
+        event: event.type,
+        mode: session.mode,
+        error: "No priceId on line item",
+      };
 
-//     const [customerRows] = await connection.query<RowDataPacket[]>(
-//       `SELECT customer_id FROM customers
-//        WHERE project_idx = ? AND email = ?
-//        LIMIT 1`,
-//       [projectId, email]
-//     );
-//     if (!customerRows.length) return;
+    const stripeProducts = test_mode
+      ? stripeTestProducts
+      : stripeSubscriptionProducts;
+    const product = Object.values(stripeProducts).find(
+      (p) => p.price_id === priceId
+    );
+    if (!product)
+      return {
+        event: event.type,
+        mode: session.mode,
+        error: `No matching ${test_mode && "TEST "}product for price ID`,
+      };
 
-//     const customerId = customerRows[0].customer_id;
+    const stripe_customer_id = session.customer as string;
+    if (!session.amount_total) {
+      return {
+        event: event.type,
+        mode: session.mode,
+        error: "Amount total not provided",
+      };
+    }
 
-//     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-//     const priceId = lineItems.data[0]?.price?.id;
-//     if (!priceId) return;
+    return await handlePaymentReceived(connection, {
+      product,
+      project_idx,
+      stripe_customer_id,
+      stripe_subscription_id: null,
+      stripe_invoice_id: null,
+      stripe_session_id: session.id,
+      transaction_type: "one_time" as TransactionType,
+      amount_total: session.amount_total,
+      currency: session.currency ?? "usd",
+      metadata,
+      is_first_subscription_payment: false,
+      test_mode,
+    });
+  }
 
-//     const stripeProducts = test_mode ? stripeTestProducts : stripeSubscriptionProducts;
+  // -------------------------
+  // SUBSCRIPTION CHECKOUT
+  // -------------------------
+  if (session.mode === "subscription") {
+    if (!session.subscription)
+      return {
+        event: event.type,
+        mode: session.mode,
+        error: "No subscription in session object",
+      };
 
-//     const product = Object.values(stripeProducts).find(
-//       (p) => p.price_id === priceId
-//     );
+    await attachSubscriptionIdToAgreementFunction(
+      connection,
+      session.id,
+      session.subscription as string
+    );
 
-//     if (!product) return;
+    const subscription = await stripe.subscriptions.retrieve(
+      session.subscription as string
+    );
 
-//     const creditsToApply = [
-//       { credit_type: 1, amount_delta: Number(product.credit1_granted ?? 0) },
-//       { credit_type: 2, amount_delta: Number(product.credit2_granted ?? 0) },
-//       { credit_type: 3, amount_delta: Number(product.credit3_granted ?? 0) },
-//     ].filter((entry) => entry.amount_delta !== 0);
+    const metadata = subscription.metadata;
+    if (!metadata?.email || !metadata?.project_id)
+      return {
+        event: event.type,
+        mode: session.mode,
+        error: "No metadata on subscription found",
+      };
 
-//     for (const entry of creditsToApply) {
-//       await insertCreditLedgerEntryFunction(connection, projectId, {
-//         customer_id: customerId,
-//         stripe_customer_id: session.customer as string,
-//         stripe_session_id: session.id,
-//         source_type: "checkout",
-//         reference: priceId,
-//         credit_type: entry.credit_type,
-//         amount_delta: entry.amount_delta,
-//         test: test_mode
-//       });
-//     }
+    const projectId = Number(metadata.project_id);
+    const email = metadata.email ?? null;
 
-//     return;
-//   }
-
-//   // -------------------------
-//   // SUBSCRIPTION CHECKOUT
-//   // (NO CREDITS HERE)
-//   // -------------------------
-//   if (session.mode === "subscription") {
-//     if (!session.subscription) return;
-
-//     await attachSubscriptionIdToAgreementFunction(
-//       connection,
-//       session.id,
-//       session.subscription as string
-//     );
-
-//     const subscription = await stripe.subscriptions.retrieve(
-//       session.subscription as string
-//     );
-
-//     const metadata = subscription.metadata;
-//     if (!metadata?.email || !metadata?.project_id) return;
-
-//     const projectId = Number(metadata.project_id);
-//     const email = metadata.email ?? null;
-
-//     const project = await getProjectByIdFunction(projectId);
-//     if (project && email) {
-//       await sendStripePortalLinkFunction(email, project);
-//     }
-//   }
+    const project = await getProjectByIdFunction(projectId);
+    if (project && email) {
+      await sendStripePortalLinkFunction(email, project);
+    }
+    return { success: true };
+  }
 };
