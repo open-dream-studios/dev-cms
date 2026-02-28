@@ -2,6 +2,10 @@
 import Stripe from "stripe";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { ActiveSubscription } from "@open-dream/shared";
+import {
+  getCustomerByEmailFunction,
+  getCustomerByEmailOrPhoneFunction,
+} from "../../modules/customers/customers_repositories.js";
 
 export const getActiveSubscriptionsForProjectFunction = async (
   connection: PoolConnection,
@@ -14,9 +18,10 @@ export const getActiveSubscriptionsForProjectFunction = async (
     ORDER BY created_at DESC
   `;
 
-  const [rows] = await connection.query<(ActiveSubscription & RowDataPacket)[]>(q, [
-    project_idx,
-  ]);
+  const [rows] = await connection.query<(ActiveSubscription & RowDataPacket)[]>(
+    q,
+    [project_idx]
+  );
 
   return rows;
 };
@@ -141,19 +146,30 @@ export const syncActiveSubscriptionsFromStripeFunction = async (
         limit: 100,
         starting_after: startingAfter,
         expand: ["data.default_payment_method"],
-      }); 
+      });
 
     for (const sub of subs.data) {
       const metadata = sub.metadata ?? {};
-      const priceId = sub.items.data[0]?.price?.id; 
+      const priceId = sub.items.data[0]?.price?.id;
       if (!priceId) continue;
 
-      const item = sub.items.data[0]; 
+      const item = sub.items.data[0];
       if (!item) continue;
+
+      let customer_id = null;
+      if (metadata && metadata.email) {
+        const customer = await getCustomerByEmailFunction(
+          project_idx,
+          metadata.email
+        );
+        if (customer) {
+          customer_id = customer.customer_id;
+        }
+      }
 
       await addActiveSubscriptionFunction(connection, {
         project_idx,
-        customer_id: null,
+        customer_id,
         stripe_customer_id: sub.customer as string,
         stripe_subscription_id: sub.id,
         stripe_price_id: priceId,

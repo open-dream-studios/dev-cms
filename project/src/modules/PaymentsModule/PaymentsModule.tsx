@@ -135,7 +135,7 @@ const PaymentsModule = () => {
                 await refetch();
               }}
               disabled={isSyncing || isClearing}
-              className="h-9 px-3 rounded-lg border border-white/15 bg-white/8 hover:bg-white/14 disabled:opacity-50 disabled:cursor-not-allowed dim text-[13px] font-medium flex items-center gap-2"
+              className="cursor-pointer hover:brightness-82 dim h-9 px-3 rounded-lg border border-white/15 bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed dim text-[13px] font-medium flex items-center gap-2"
             >
               {isSyncing ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -150,7 +150,7 @@ const PaymentsModule = () => {
                 setSelectedSubscriptionId(null);
               }}
               disabled={isSyncing || isClearing}
-              className="h-9 px-3 rounded-lg border border-rose-300/30 bg-rose-500/10 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed dim text-[13px] font-medium flex items-center gap-2"
+              className="cursor-pointer hover:brightness-82 dim h-9 px-3 rounded-lg border border-rose-300/30 bg-rose-400/20 disabled:opacity-50 disabled:cursor-not-allowed dim text-[13px] font-medium flex items-center gap-2"
             >
               {isClearing ? (
                 <Loader2 size={14} className="animate-spin" />

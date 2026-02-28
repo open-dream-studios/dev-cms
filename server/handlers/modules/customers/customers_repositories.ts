@@ -23,6 +23,62 @@ export const getCustomersFunction = async (
   return rows;
 };
 
+export const getCustomerByEmailOrPhoneFunction = async (
+  project_idx: number,
+  email?: string | null,
+  phone?: string | null
+): Promise<Customer | null> => {
+  const trimmedEmail = email?.trim() || null;
+  const trimmedPhone = phone?.trim() || null;
+
+  if (!trimmedEmail && !trimmedPhone) return null;
+
+  let q = `
+    SELECT * FROM customers
+    WHERE project_idx = ?
+  `;
+  const params: Array<number | string> = [project_idx];
+
+  if (trimmedEmail && trimmedPhone) {
+    q += ` AND (email = ? OR phone = ?)`;
+    params.push(trimmedEmail, trimmedPhone);
+  } else if (trimmedEmail) {
+    q += ` AND email = ?`;
+    params.push(trimmedEmail);
+  } else {
+    q += ` AND phone = ?`;
+    params.push(trimmedPhone as string);
+  }
+
+  q += ` LIMIT 1`;
+
+  const [rows] = await db
+    .promise()
+    .query<(Customer & RowDataPacket)[]>(q, params);
+
+  return rows.length ? rows[0] : null;
+};
+
+export const getCustomerByEmailFunction = async (
+  project_idx: number,
+  email: string
+): Promise<Customer | null> => {
+  const trimmedEmail = email.trim();
+  if (!trimmedEmail) return null;
+
+  const q = `
+    SELECT * FROM customers
+    WHERE project_idx = ? AND email = ?
+    LIMIT 1
+  `;
+
+  const [rows] = await db
+    .promise()
+    .query<(Customer & RowDataPacket)[]>(q, [project_idx, trimmedEmail]);
+
+  return rows.length ? rows[0] : null;
+};
+
 export const upsertCustomerFunction = async (
   connection: PoolConnection,
   project_idx: number,
