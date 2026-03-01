@@ -84,7 +84,7 @@ const StripeSubscriptions = ({
     !!currentUser,
     currentProjectId,
     stripeCustomerIds,
-  );
+  ); 
 
   return (
     <div

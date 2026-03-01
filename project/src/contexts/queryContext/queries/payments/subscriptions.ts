@@ -26,14 +26,19 @@ export function useStripeSubscriptions(
   });
 
   const syncStripeSubscriptionsMutation = useMutation({
-    mutationFn: async () =>
-      syncStripeSubscriptionsApi(currentProjectId!),
+    mutationFn: async () => syncStripeSubscriptionsApi(currentProjectId!),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["stripeSubscriptions", currentProjectId],
       });
       queryClient.invalidateQueries({
         queryKey: ["projects"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["stripeCustomerCredits", currentProjectId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["allStripeCustomerCredits", currentProjectId],
       });
     },
   });

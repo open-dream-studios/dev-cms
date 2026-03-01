@@ -1,11 +1,15 @@
 // project/src/contexts/queryContext/queries/payments/credits.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LedgerCreditBalance, LedgerCreditBalanceList, LedgerCreditType } from "@open-dream/shared";
+import {
+  LedgerCreditBalance,
+  LedgerCreditBalanceList,
+  LedgerCreditType,
+} from "@open-dream/shared";
 import { useRouteScope } from "@/contexts/routeScopeContext";
 import {
   adjustCustomerCreditLevelApi,
   getStripeCustomerCreditsApi,
-  getAllStripeCustomerCreditsApi
+  getAllStripeCustomerCreditsApi,
 } from "@/api/payments/credits.api";
 
 export function useCreditBalanceAdjustments(
@@ -77,7 +81,7 @@ export function useCreditBalanceAdjustments(
 export function useAllCreditBalances(
   isLoggedIn: boolean,
   currentProjectId: number | null,
-  stripeCustomerIds: string[],
+  stripeCustomerIds: string[]
 ) {
   const routeScope = useRouteScope();
   const isPublic = routeScope === "public";
@@ -87,10 +91,18 @@ export function useAllCreditBalances(
     isLoading: isLoadingAllCreditBalances,
     refetch: refetchAllCreditBalances,
   } = useQuery<LedgerCreditBalanceList>({
-    queryKey: ["allStripeCustomerCredits", currentProjectId],
+    queryKey: ["allStripeCustomerCredits", currentProjectId, stripeCustomerIds],
     queryFn: async () =>
-      getAllStripeCustomerCreditsApi(currentProjectId!, stripeCustomerIds, false),
-    enabled: isLoggedIn && !!currentProjectId && !isPublic,
+      getAllStripeCustomerCreditsApi(
+        currentProjectId!,
+        stripeCustomerIds,
+        false
+      ),
+    enabled:
+      isLoggedIn &&
+      !!currentProjectId &&
+      !isPublic &&
+      stripeCustomerIds.length > 0,
   });
 
   return {
