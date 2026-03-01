@@ -33,6 +33,8 @@ type AddStripeSubscriptionInput = {
   status: string;
   current_period_start: number;
   current_period_end: number;
+  subscription_start: number;
+  subscription_end: number | null;
   cancel_at_period_end: boolean;
   metadata: any;
   test_mode: boolean;
@@ -51,6 +53,8 @@ export const addStripeSubscriptionFunction = async (
     status,
     current_period_start,
     current_period_end,
+    subscription_start,
+    subscription_end,
     cancel_at_period_end,
     metadata,
     test_mode,
@@ -66,6 +70,8 @@ export const addStripeSubscriptionFunction = async (
       status,
       current_period_start,
       current_period_end,
+      subscription_start,
+      subscription_end,
       cancel_at_period_end,
       meta_first_name,
       meta_last_name,
@@ -81,11 +87,13 @@ export const addStripeSubscriptionFunction = async (
       meta_selected_slot,
       test
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       status = VALUES(status),
       current_period_start = VALUES(current_period_start),
       current_period_end = VALUES(current_period_end),
+      subscription_start = VALUES(subscription_start),
+      subscription_end = VALUES(subscription_end),
       cancel_at_period_end = VALUES(cancel_at_period_end),
       test = VALUES(test)
   `;
@@ -99,6 +107,8 @@ export const addStripeSubscriptionFunction = async (
     status,
     current_period_start,
     current_period_end,
+    subscription_start,
+    subscription_end,
     cancel_at_period_end ? 1 : 0,
     metadata.first_name ?? null,
     metadata.last_name ?? null,
@@ -168,6 +178,31 @@ export const syncStripeSubscriptionsFromStripeFunction = async (
         }
       }
 
+      // Timeline as whole subscription lifecycle:
+      // start: first period start for the subscription (Stripe start_date)
+      // end:
+      // - active, no scheduled end => null
+      // - active, scheduled to end => current_period_end
+      // - inactive/canceled/ended => canceled_at/ended_at/cancel_at/current_period_end fallback
+      const subscriptionStart = sub.start_date ?? item.current_period_start;
+      const hasScheduledEnd =
+        !!sub.cancel_at_period_end || sub.cancel_at !== null;
+      const isActiveLike = ["active", "trialing", "past_due"].includes(
+        sub.status
+      );
+
+      let subscriptionEnd: number | null = null;
+      if (isActiveLike && hasScheduledEnd) {
+        subscriptionEnd = item.current_period_end;
+      } else if (!isActiveLike) {
+        subscriptionEnd =
+          sub.canceled_at ??
+          sub.ended_at ??
+          sub.cancel_at ??
+          item.current_period_end ??
+          null;
+      }
+
       await addStripeSubscriptionFunction(connection, {
         project_idx,
         customer_id,
@@ -177,6 +212,8 @@ export const syncStripeSubscriptionsFromStripeFunction = async (
         status: sub.status,
         current_period_start: item.current_period_start,
         current_period_end: item.current_period_end,
+        subscription_start: subscriptionStart,
+        subscription_end: subscriptionEnd,
         cancel_at_period_end: sub.cancel_at_period_end,
         metadata,
         test_mode,

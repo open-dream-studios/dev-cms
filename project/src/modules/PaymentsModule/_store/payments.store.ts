@@ -11,7 +11,7 @@ export const usePaymentsStore = createStore({
   mobileDetailOpen: false,
   customerQuery: "",
   // testMode: true,
-  subscriptionsFilter: "all" as StripeSubscriptionStatusFilter
+  subscriptionsFilter: "active" as StripeSubscriptionStatusFilter
 });
 
 export function getSelectedSubscription(

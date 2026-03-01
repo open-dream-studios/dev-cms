@@ -9,6 +9,8 @@ export type StripeSubscription = {
   status: StripeSubscriptionStatus;
   current_period_start: number;
   current_period_end: number;
+  subscription_start: number;
+  subscription_end: number | null;
   cancel_at_period_end: number;
   meta_first_name: string | null;
   meta_last_name: string | null;

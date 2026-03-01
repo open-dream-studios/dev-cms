@@ -52,6 +52,31 @@ const SubscriptionDetailPanel = ({
 }) => {
   const currentTheme = useCurrentTheme();
   const tone = getStatusTone(subscription.status);
+  const isActiveLike = ["active", "trialing", "past_due"].includes(
+    subscription.status,
+  );
+  const isPaused = subscription.status === "paused";
+  const isUnpaid = subscription.status === "unpaid";
+
+  let endLabel = "Ended";
+  let endValue = subscription.subscription_end
+    ? formatUnixDate(subscription.subscription_end)
+    : "-";
+
+  if (isActiveLike) {
+    endLabel = subscription.cancel_at_period_end ? "Ends" : "Next Cycle";
+    endValue = formatUnixDate(subscription.current_period_end);
+  } else if (isPaused) {
+    endLabel = "Paused";
+  } else if (isUnpaid) {
+    if (subscription.subscription_end) {
+      endLabel = "Ended";
+      endValue = formatUnixDate(subscription.subscription_end);
+    } else {
+      endLabel = "Past Due Cycle End";
+      endValue = formatUnixDate(subscription.current_period_end);
+    }
+  }
 
   return (
     <motion.div
@@ -102,7 +127,7 @@ const SubscriptionDetailPanel = ({
         </div>
       </div>
 
-      <div className="h-[calc(100%-70px)] overflow-auto p-4 md:p-5 space-y-4">
+      <div className="h-[calc(100%-70px)] overflow-auto p-3 md:p-4 space-y-3">
         <button
           onClick={onOpenCustomer}
           disabled={!customer}
@@ -134,6 +159,50 @@ const SubscriptionDetailPanel = ({
 
         <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-[10px]">
           <div className="space-y-1">
+            <div className="py-1.5">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-white/55 mb-3">
+                Subscription
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-[12px]">
+                <div className="flex items-center justify-between md:block">
+                  <div className="flex items-center gap-1.5 text-white/55 text-[10.4px] uppercase tracking-[0.12em]">
+                    <CalendarDays size={12} />
+                    Started
+                  </div>
+                  <div className="text-white/80 mt-[4px] md:mt-[5px]">
+                    {formatUnixDate(subscription.subscription_start)}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between md:block">
+                  <div className="flex items-center gap-1.5 text-white/55 text-[10.4px] uppercase tracking-[0.12em]">
+                    <CalendarDays size={12} />
+                    {endLabel}
+                  </div>
+                  <div className="text-white/80 mt-[4px] md:mt-[5px]">
+                    {endValue}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between md:block mt-[-1px]">
+                  <div className="flex items-center gap-1.5 text-white/55 text-[10.4px] uppercase tracking-[0.12em]">
+                    <Ban size={12} />
+                    Set to Cancel
+                  </div>
+                  <div className="text-white/80 mt-[4px] md:mt-[5px] opacity-[0.95]">
+                    {subscription.status === "canceled"
+                      ? "-"
+                      : subscription.cancel_at_period_end
+                        ? "Yes"
+                        : "No"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-[100%] h-[1px] rounded-full bg-white/8 mb-[8px] mt-[7px]"></div>
+
             <CompactRow
               label="Stripe Subscription"
               value={subscription.stripe_subscription_id}
@@ -147,72 +216,6 @@ const SubscriptionDetailPanel = ({
               label="Customer ID"
               value={subscription.customer_id || "-"}
             />
-          </div>
-        </div>
-
-        {/* <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-          <p className="text-[11px] uppercase tracking-[0.12em] text-white/45 mb-3">
-            Billing Window
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px]">
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-              <div className="text-white/55 mb-1 flex items-center gap-2">
-                <CalendarClock size={14} /> Current Start
-              </div>
-              <div>{formatUnixDate(subscription.current_period_start)}</div>
-            </div>
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-              <div className="text-white/55 mb-1 flex items-center gap-2">
-                <CalendarClock size={14} /> Current End
-              </div>
-              <div>{formatUnixDate(subscription.current_period_end)}</div>
-            </div>
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-              <div className="text-white/55 mb-1">Cancel At Period End</div>
-              <div>{subscription.cancel_at_period_end ? "Yes" : "No"}</div>
-            </div>
-          </div>
-        </div> */}
-
-        <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-[0.12em] text-white/55 mb-3">
-            Billing Window
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-[12px]">
-            <div className="flex items-center justify-between md:block">
-              <div className="flex items-center gap-1.5 text-white/55 text-[10.4px] uppercase tracking-[0.12em]">
-                <CalendarDays size={12} />
-                Start
-              </div>
-              <div className="text-white/85 mt-[4px] md:mt-[5px]">
-                {formatUnixDate(subscription.current_period_start)}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between md:block">
-              <div className="flex items-center gap-1.5 text-white/55 text-[10.4px] uppercase tracking-[0.12em]">
-                <CalendarDays size={12} />
-                End
-              </div>
-              <div className="text-white/85 mt-[4px] md:mt-[5px]">
-                {formatUnixDate(subscription.current_period_end)}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between md:block mt-[-1px]">
-              <div className="flex items-center gap-1.5 text-white/55 text-[10.4px] uppercase tracking-[0.12em]">
-                <Ban size={12} />
-                Set to Cancel
-              </div>
-              <div className="text-white/85 mt-[4px] md:mt-[5px] opacity-[0.95]">
-                {subscription.status === "canceled"
-                  ? "-"
-                  : subscription.cancel_at_period_end
-                    ? "Yes"
-                    : "No"}
-              </div>
-            </div>
           </div>
         </div>
 
