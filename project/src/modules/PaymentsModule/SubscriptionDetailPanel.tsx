@@ -128,7 +128,6 @@ const SubscriptionDetailPanel = ({
 
             // limit to 2 decimal places
             afterDot = afterDot.slice(0, 2);
-
             cleaned = beforeDot + "." + afterDot;
           }
 
@@ -179,7 +178,7 @@ const SubscriptionDetailPanel = ({
                 return;
               }
             }
-
+            
             const amount_delta = adjustment === "+" ? amount : -amount;
             await adjustCredit(creditType, amount_delta);
           }}
