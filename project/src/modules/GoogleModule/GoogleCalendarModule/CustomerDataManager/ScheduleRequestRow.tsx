@@ -39,10 +39,10 @@ import {
 } from "@/store/currentDataStore";
 import { useSendGmailEmail } from "../../GmailModule/_hooks/gmail.hooks";
 import {
-  approveAndCreateScheduleEvent,
   handleRescheduleEndChange,
   handleRescheduleStartChange,
-} from "../_actions/googleCalendar.actions";
+} from "../_actions/googleCalendarUI.actions";
+import { approveAndCreateScheduleEvent } from "../_actions/googleCalendar.actions";
 import { promptContinue } from "@/modals/_actions/modals.actions";
 import { showSuccessToast } from "@/util/functions/UI";
 import DatePicker from "react-datepicker";

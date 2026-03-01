@@ -26,7 +26,7 @@ import {
   timeToPct,
   weekIndexOffsetForDate,
 } from "./_helpers/googleCalendar.helpers";
-import { resetInputUI } from "@/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendar.actions";
+import { resetInputUI } from "@/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendarUI.actions";
 import { CalendarEvent, GoogleCalendarEventRaw } from "@open-dream/shared";
 import GoogleCalendarFooter from "./GoogleCalendarFooter";
 import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";

@@ -1,6 +1,6 @@
 // project/src/modules/GoogleModule/GoogleCalendarModule/CustomerDataManager/LeadRow.tsx
 import React, { useContext, useEffect, useMemo } from "react";
-import { Briefcase, ChevronDown, Package, Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import {
   Customer,
   JobDefinition,
@@ -114,7 +114,7 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
   const matchedProduct = useMemo(() => {
     if (lead_type === "product" && lead_product_id) {
       return productsData.find(
-        (product: Product) => product.product_id === lead_product_id
+        (product: Product) => product.product_id === lead_product_id,
       );
     }
     return null;
@@ -124,7 +124,7 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
     if (lead_type === "service" && lead_job_definition_id) {
       return jobDefinitions.find(
         (definition: JobDefinition) =>
-          definition.job_definition_id === lead_job_definition_id
+          definition.job_definition_id === lead_job_definition_id,
       );
     }
     return null;
@@ -137,7 +137,7 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
       if (lead_type === "product" && matchedProduct) {
         await screenClick(
           "customer-products",
-          `/products/${matchedProduct.serial_number}`
+          `/products/${matchedProduct.serial_number}`,
         );
       }
     }
@@ -283,12 +283,12 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
     if (isEditingOrAdding) {
       if (!lead_customer_id) return null;
       return customers.find(
-        (customer: Customer) => customer.customer_id === lead_customer_id
+        (customer: Customer) => customer.customer_id === lead_customer_id,
       );
     } else {
       if (!lead || !lead.customer_id) return null;
       return customers.find(
-        (customer: Customer) => customer.customer_id === lead.customer_id
+        (customer: Customer) => customer.customer_id === lead.customer_id,
       );
     }
   }, [customers, lead_customer_id, lead, isEditingOrAdding]);

@@ -6,6 +6,7 @@ import {
 } from "@open-dream/shared";
 import { db } from "../../../connection/connect.js";
 import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
+import { ulid } from "ulid";
 
 // ---------- GET BALANCE BY CUSTOMER ----------
 export const getCustomerCreditBalanceFunction = async (
@@ -185,6 +186,8 @@ export const insertCreditLedgerEntryFunction = async (
   const credit2_delta = creditType === 2 ? amountDelta : 0;
   const credit3_delta = creditType === 3 ? amountDelta : 0;
 
+  const ledger_adjustment_id = `LEDGER-${ulid()}`;
+
   const {
     customer_id,
     stripe_customer_id,
@@ -198,6 +201,7 @@ export const insertCreditLedgerEntryFunction = async (
 
   const q = `
     INSERT INTO customer_credit_ledger (
+      ledger_adjustment_id,
       project_idx,
       customer_id,
       stripe_customer_id,
@@ -211,10 +215,11 @@ export const insertCreditLedgerEntryFunction = async (
       credit3_delta,
       test
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const values = [
+    ledger_adjustment_id,
     project_idx,
     customer_id,
     stripe_customer_id,

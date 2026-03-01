@@ -13,16 +13,16 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus } from "react-icons/fa6";
 import { X, Pencil } from "lucide-react";
 import {
-  createCalendarEvent,
-  deleteCalendarEvent,
   handleEndChange,
   handleStartChange,
   resetInputUI,
+} from "./_actions/googleCalendarUI.actions";
+import {
+  createCalendarEvent,
+  deleteCalendarEvent,
   updateCalendarEvent,
 } from "./_actions/googleCalendar.actions";
-import {
-  dateToLocalDateTimeInput, 
-} from "./_helpers/googleCalendar.helpers";
+import { dateToLocalDateTimeInput } from "./_helpers/googleCalendar.helpers";
 import { IoTrashSharp } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { promptContinue } from "@/modals/_actions/modals.actions";
@@ -216,7 +216,7 @@ const SelectedCalendarEventCard = () => {
       // className="mb-[11px] w-full rounded-[10px] px-[12px] pt-[8px] pb-[9px] flex flex-col gap-[3px] cursor-pointer hover:brightness-84 dim"
       className={clsx(
         "mb-[11px] w-full rounded-[10px] px-[12px] pt-[8px] pb-[9px] flex flex-col gap-[3px] cursor-pointer hover:brightness-84 dim",
-        "brightness-90"
+        "brightness-90",
       )}
       style={{
         // background:
@@ -346,7 +346,7 @@ const GoogleCalendarFooter = ({
           setGoogleEvents,
         });
         resetInputUI(true);
-      }
+      },
     );
   };
 
