@@ -64,7 +64,7 @@ export const getStripeCustomerCreditBalanceFunction = async (
       project_idx,
       stripe_customer_id,
       test ? 1 : 0,
-    ]); 
+    ]);
   return (
     rows[0] ?? {
       credit1_balance: 0,
@@ -151,10 +151,11 @@ export const insertCreditLedgerEntryFunction = async (
     throw new Error("credit_type must be 1, 2, or 3");
   }
 
-  const amountDelta = Number(ledgerItem.amount_delta);
-  if (!Number.isInteger(amountDelta) || amountDelta === 0) {
-    throw new Error("amount_delta must be a non-zero integer");
+  const rawAmount = Number(ledgerItem.amount_delta);
+  if (Number.isNaN(rawAmount)) {
+    throw new Error("amount_delta must be a number");
   }
+  const amountDelta = Math.round(rawAmount * 100) / 100;
 
   if (
     ![
