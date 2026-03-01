@@ -115,7 +115,7 @@ const SubscriptionDetailPanel = ({
     const steps: StepConfig[] = [
       {
         name: "amount",
-        placeholder: "Adjustment amount",
+        placeholder: `(${adjustment}) Credits`,
         sanitize: (value: string) => {
           // remove everything except digits and dots
           let cleaned = value.replace(/[^\d.]/g, "");

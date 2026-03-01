@@ -114,7 +114,7 @@ const PaymentsModule = () => {
   return (
     <div
       style={{ backgroundColor: currentTheme.background_1 }}
-      className="relative w-full h-full min-h-[760px] rounded-[18px] p-3 md:p-4"
+      className="relative w-full h-full min-h-[760px] rounded-[18px] px-[14px] py-[12px]"
     >
       <div className="h-full flex flex-col gap-3">
         <div

@@ -44,6 +44,12 @@ export type Screen =
   | "estimations-pricing"
   | "estimations-calculation"
 
+  export type CustomersScreen = 
+    | "bookings"
+    | "subscriptions"
+    | "leads"
+    | "customer"
+
 export type Modal =
   | { type: "mediaUpload" }
   | { type: "confirmDelete"; payload: { id: string } }

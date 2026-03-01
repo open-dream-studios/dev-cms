@@ -13,13 +13,16 @@ import {
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useScheduleRequests } from "@/contexts/queryContext/queries/public/scheduleRequests";
 import GoogleCalendarDisplay from "../GoogleModule/GoogleCalendarModule/GoogleCalendarDisplay";
-import { CustomerDataManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerDataManager";
+import { CustomerScheduleManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerScheduleManager";
 import { useGoogleCalendar } from "../GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks";
 import PaymentsModule from "../PaymentsModule/PaymentsModule";
+import { useCustomerUiStore } from "./_store/customers.store";
+import { CustomerLeadsManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerLeadsManager";
 
 export default function CustomerManager() {
   const { upsertLead, customerData, hasProjectModule } = useContextQueries();
   const { currentProjectId } = useCurrentDataStore();
+  const { customersScreen } = useCustomerUiStore();
 
   const { setLayout, registerModules, updateSection, updateShape } =
     useDashboardStore();
@@ -89,7 +92,7 @@ export default function CustomerManager() {
     // } as ActionInput);
 
     // await deleteAction("TASK-01KE2MNN7TFQYP2X3J6ESKH1TV")
-    console.log(customerData);
+    // console.log(customerData);
   };
 
   const [rangeStart, setRangeStart] = useState(() => {
@@ -130,23 +133,34 @@ export default function CustomerManager() {
     });
   }
 
-  return <PaymentsModule />
+  if (customersScreen === "bookings") {
+    return (
+      <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
+        {hasProjectModule("google-calendar-module") && (
+          <GoogleCalendarDisplay
+            events={events}
+            refreshCalendar={refresh}
+            fetchStart={rangeStart}
+            fetchEnd={rangeEnd}
+          />
+        )}
+        {(hasProjectModule("customer-schedule-requests-module") ||
+          hasProjectModule("customer-leads-module")) && (
+          <CustomerScheduleManager events={events} refreshCalendar={refresh} />
+        )}
+      </div>
+    );
+  } else if (customersScreen === "subscriptions") {
+    return <PaymentsModule />;
+  } else if (customersScreen === "leads") {
+    return (
+      <div className="w-[100%] h-[100%] px-[14px] py-[12px]">
+        <CustomerLeadsManager />
+      </div>
+    );
+  } else {
+    return <></>;
+  }
 
-  // return (
-  //   <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
-  //     {hasProjectModule("google-calendar-module") && (
-  //       <GoogleCalendarDisplay
-  //         events={events}
-  //         refreshCalendar={refresh}
-  //         fetchStart={rangeStart}
-  //         fetchEnd={rangeEnd}
-  //       />
-  //     )}
-  //     {(hasProjectModule("customer-schedule-requests-module") ||
-  //       hasProjectModule("customer-leads-module")) && (
-  //       <CustomerDataManager events={events} refreshCalendar={refresh} />
-  //     )}
-  //   </div>
-  // );
   // return <CustomerInteractionTimeline />;
 }

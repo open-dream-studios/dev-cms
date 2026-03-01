@@ -1,4 +1,4 @@
-// project/src/modules/GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerDataManager.tsx
+// project/src/modules/GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerScheduleManager.tsx
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { getCardStyle } from "@/styles/themeStyles";
 import ScheduleRequestRow, {
@@ -8,18 +8,13 @@ import ScheduleRequestRow, {
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Bell, Plus } from "lucide-react";
-import {
-  GoogleCalendarEventRaw,
-  Lead,
-  ScheduleRequest,
-} from "@open-dream/shared";
+import { Bell } from "lucide-react";
+import { GoogleCalendarEventRaw, ScheduleRequest } from "@open-dream/shared";
 import { useGoogleCalendarUIStore } from "../_store/googleCalendar.store";
-import LeadRow from "./LeadRow";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCustomerDataUIStore } from "./_store/customerData.store";
 
-export const CustomerDataManager = ({
+export const CustomerScheduleManager = ({
   events,
   refreshCalendar,
 }: {
@@ -28,37 +23,26 @@ export const CustomerDataManager = ({
 }) => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { scheduleRequests, leads, hasProjectModule } = useContextQueries();
+  const { scheduleRequests, hasProjectModule } = useContextQueries();
   const { selectedScheduleRequest, setSelectedScheduleRequest } =
     useGoogleCalendarUIStore();
-  const {
-    activeTab,
-    setActiveTab,
-    isAddingLead,
-    setIsAddingLead,
-    setEditingLead,
-  } = useCustomerDataUIStore();
+  const { activeTab, setActiveTab } = useCustomerDataUIStore();
   const { currentProjectId } = useCurrentDataStore();
 
   const [viewAll, setViewAll] = useState<boolean>(false);
 
   const nonApprovedRequests = useMemo(() => {
     return scheduleRequests.filter(
-      (request: ScheduleRequest) => request.status === "pending"
+      (request: ScheduleRequest) => request.status === "pending",
     );
   }, [scheduleRequests]);
-
-  const handleCreateLeadClick = () => {
-    setEditingLead(null);
-    setIsAddingLead(true);
-  };
 
   useEffect(() => {
     if (selectedScheduleRequest) {
       const refreshedRequest = scheduleRequests.find(
         (request: ScheduleRequest) =>
           request.schedule_request_id ===
-          selectedScheduleRequest.schedule_request_id
+          selectedScheduleRequest.schedule_request_id,
       );
       if (
         refreshedRequest &&
@@ -74,9 +58,7 @@ export const CustomerDataManager = ({
     setSelectedScheduleRequest(null);
   }, []);
 
-  if (!currentProjectId) return null;
-
-  if (!currentUser) return null;
+  if (!currentUser || !currentProjectId) return null;
 
   return (
     <div
@@ -109,43 +91,11 @@ export const CustomerDataManager = ({
             </div>
           )}
 
-          <div
+          {/* <div
             className="h-[28px] w-[1px] mt-[2px]"
             style={{ background: currentTheme.background_3 }}
-          />
-
-          {hasProjectModule("customer-leads-module") && (
-            <div
-              onClick={() => setActiveTab("leads")}
-              className="cursor-pointer select-none flex flex-col"
-            >
-              <div
-                className={`text-[21px] font-[600] tracking-tight dim ${
-                  activeTab !== "leads"
-                    ? "brightness-60 hover:brightness-50"
-                    : "brightness-98"
-                } cursor-pointer`}
-              >
-                Leads
-              </div>
-            </div>
-          )}
+          /> */}
         </div>
-
-        {activeTab === "leads" && !isAddingLead && (
-          <button
-            onClick={handleCreateLeadClick}
-            className="dim hover:brightness-90 cursor-pointer pl-[11px] pr-[17px] h-[26px] rounded-full
-               flex items-center gap-[6px] text-[12.5px] font-[500]"
-            style={{
-              background: currentTheme.background_2,
-              color: currentTheme.text_1,
-            }}
-          >
-            <Plus size={14} />
-            Create Lead
-          </button>
-        )}
 
         {activeTab === "schedule" && (
           <div className="flex items-center gap-[8px]">
@@ -213,7 +163,7 @@ export const CustomerDataManager = ({
             <div className="mt-[8px] flex flex-col gap-[8px]">
               {scheduleRequests
                 .filter((request) =>
-                  viewAll ? true : request.status === "pending"
+                  viewAll ? true : request.status === "pending",
                 )
                 .map((req) => (
                   <ScheduleRequestRow
@@ -223,18 +173,6 @@ export const CustomerDataManager = ({
                     events={events}
                   />
                 ))}
-            </div>
-          )}
-
-          {activeTab === "leads" && (
-            <div className="mt-[8px] flex flex-col gap-[8px]">
-              {isAddingLead ? (
-                <LeadRow lead={null} />
-              ) : (
-                leads.map((lead: Lead) => (
-                  <LeadRow key={lead.lead_id} lead={lead} />
-                ))
-              )}
             </div>
           )}
         </div>
