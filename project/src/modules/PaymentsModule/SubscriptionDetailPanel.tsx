@@ -3,6 +3,8 @@ import {
   StripeSubscription,
   Customer,
   formatPhoneNumber,
+  appDetailsProjectByDomain,
+  LedgerCreditType,
 } from "@open-dream/shared";
 import { motion } from "framer-motion";
 import {
@@ -13,6 +15,8 @@ import {
   Phone,
   CalendarDays,
   Ban,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
@@ -23,6 +27,15 @@ import {
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { openWindow } from "@/util/functions/Handlers";
 import { statusToneStyles } from "./StripeSubscriptions";
+import { useUiStore } from "@/store/useUIStore";
+import Modal2MultiStepModalInput, {
+  StepConfig,
+} from "@/modals/Modal2MultiStepInput";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useCreditBalanceAdjustments } from "@/contexts/queryContext/queries/payments/credits";
+import { useContext } from "react";
+import { AuthContext } from "@/contexts/authContext";
+import { toast } from "react-toastify";
 
 const CompactRow = ({ label, value }: { label: string; value?: string }) => (
   <div className="flex items-start justify-between gap-4 py-1.5">
@@ -50,7 +63,20 @@ const SubscriptionDetailPanel = ({
   onOpenCustomer: () => Promise<void>;
   stripe_account: string | null;
 }) => {
+  const { currentUser } = useContext(AuthContext);
+  const { currentProjectId } = useCurrentDataStore();
+  const { domain, modal2, setModal2 } = useUiStore();
   const currentTheme = useCurrentTheme();
+  const foundProject = appDetailsProjectByDomain(domain);
+
+  const { creditBalances, adjustCredit } = useCreditBalanceAdjustments(
+    !!currentUser,
+    currentProjectId,
+    customer?.customer_id ?? null,
+    subscription.stripe_customer_id,
+    subscription.stripe_subscription_id,
+  );
+
   const tone = getStatusTone(subscription.status);
   const isActiveLike = ["active", "trialing", "past_due"].includes(
     subscription.status,
@@ -77,6 +103,90 @@ const SubscriptionDetailPanel = ({
       endValue = formatUnixDate(subscription.current_period_end);
     }
   }
+
+  // Verify credit deduction is not more than current balance
+  const onCreditAdjustment = (
+    adjustment: "+" | "-",
+    creditType: LedgerCreditType,
+  ) => {
+    if (!subscription.customer_id) return;
+    if (!creditBalances) return;
+
+    const steps: StepConfig[] = [
+      {
+        name: "amount",
+        placeholder: "Adjustment amount",
+        sanitize: (value: string) => {
+          // remove everything except digits and dots
+          let cleaned = value.replace(/[^\d.]/g, "");
+
+          // allow only one dot
+          const firstDotIndex = cleaned.indexOf(".");
+          if (firstDotIndex !== -1) {
+            const beforeDot = cleaned.slice(0, firstDotIndex);
+            let afterDot = cleaned.slice(firstDotIndex + 1).replace(/\./g, "");
+
+            // limit to 2 decimal places
+            afterDot = afterDot.slice(0, 2);
+
+            cleaned = beforeDot + "." + afterDot;
+          }
+
+          // prevent leading dot
+          if (cleaned.startsWith(".")) {
+            cleaned = "0" + cleaned;
+          }
+
+          return cleaned;
+        },
+      },
+    ];
+
+    setModal2({
+      ...modal2,
+      open: true,
+      showClose: false,
+      offClickClose: true,
+      width: "w-[300px]",
+      maxWidth: "max-w-[400px]",
+      aspectRatio: "aspect-[5/2]",
+      borderRadius: "rounded-[12px] md:rounded-[15px]",
+      content: (
+        <Modal2MultiStepModalInput
+          steps={steps}
+          key={`trigger-${Date.now()}`}
+          onComplete={async (values) => {
+            const amount = Number(values.amount);
+            if (isNaN(amount) || amount <= 0) {
+              toast.warn("Invalid amount");
+              return;
+            }
+
+            // determine current balance for this credit type
+            const currentBalance =
+              creditType === 1
+                ? creditBalances.credit1_balance
+                : creditBalances.credit2_balance;
+
+            // if subtracting, ensure balance is sufficient
+            if (adjustment === "-") {
+              if (currentBalance == null) {
+                toast.warn("Credit is not available");
+                return;
+              }
+              if (currentBalance < amount) {
+                toast.warn("Credit deduction is larger than current credit");
+                return;
+              }
+            }
+
+            const amount_delta = adjustment === "+" ? amount : -amount;
+            await adjustCredit(creditType, amount_delta);
+          }}
+        />
+      ),
+    });
+  };
 
   return (
     <motion.div
@@ -105,6 +215,7 @@ const SubscriptionDetailPanel = ({
             </h3>
           </div>
         </div>
+
         <div className="flex flex-row gap-[7px] items-center">
           <div
             className={`pl-[10px] pr-[11px] py-1 rounded-full border text-[11px] font-medium ${statusToneStyles[tone]}`}
@@ -127,7 +238,7 @@ const SubscriptionDetailPanel = ({
         </div>
       </div>
 
-      <div className="h-[calc(100%-70px)] overflow-auto p-3 md:p-4 space-y-3">
+      <div className="h-[calc(100%-70px)] overflow-auto px-3 pb-3 pt-[11px] md:px-4 md:pb-4 space-y-3">
         <button
           onClick={onOpenCustomer}
           disabled={!customer}
@@ -157,10 +268,62 @@ const SubscriptionDetailPanel = ({
           </div>
         </button>
 
-        <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-[10px]">
+        <div className="flex flex-col gap-[8px] rounded-xl border border-white/12 pl-3 pr-[13px] py-2 bg-white/5">
+          <div className="flex flex-row justify-between items-center">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-white/60">
+              {foundProject && foundProject.credit1_name
+                ? `${foundProject.credit1_name}s`
+                : "Credits 1"}
+            </div>
+            <div className="flex flex-row gap-[7px] items-center">
+              <div className="opacity-[0.75] mr-[2px] text-[14px] font-[630]">
+                {creditBalances?.credit1_balance ?? "N/A"}
+              </div>
+              <div
+                onClick={() => onCreditAdjustment("+", 1)}
+                className="hover:brightness-75 dim cursor-pointer opacity-[0.6] w-[15px] h-[15px] rounded-full border-[1px] border-white/70 flex items-center justify-center"
+              >
+                <Plus size={11} />
+              </div>
+              <div
+                onClick={() => onCreditAdjustment("-", 1)}
+                className="hover:brightness-75 dim cursor-pointer opacity-[0.6] w-[15px] h-[15px] rounded-full border-[1px] border-white/70 flex items-center justify-center"
+              >
+                <Minus size={11} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-row justify-between items-center">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-white/60">
+              {foundProject && foundProject.credit2_name
+                ? `${foundProject.credit2_name}s`
+                : "Credits 2"}
+            </div>
+            <div className="flex flex-row gap-[7px] items-center">
+              <div className="opacity-[0.75] mr-[2px] text-[14px] font-[630]">
+                {creditBalances?.credit2_balance ?? "N/A"}
+              </div>
+              <div
+                onClick={() => onCreditAdjustment("+", 2)}
+                className="hover:brightness-75 dim cursor-pointer opacity-[0.6] w-[15px] h-[15px] rounded-full border-[1px] border-white/70 flex items-center justify-center"
+              >
+                <Plus size={11} />
+              </div>
+              <div
+                onClick={() => onCreditAdjustment("-", 2)}
+                className="hover:brightness-75 dim cursor-pointer opacity-[0.6] w-[15px] h-[15px] rounded-full border-[1px] border-white/70 flex items-center justify-center"
+              >
+                <Minus size={11} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-[8px]">
           <div className="space-y-1">
             <div className="py-1.5">
-              <p className="text-[11px] uppercase tracking-[0.12em] text-white/55 mb-3">
+              <p className="text-[12px] uppercase tracking-[0.12em] text-white/55 mb-3">
                 Subscription
               </p>
 
@@ -219,8 +382,8 @@ const SubscriptionDetailPanel = ({
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-          <p className="text-[11px] uppercase tracking-[0.12em] text-white/55 mb-3">
+        <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3.5">
+          <p className="text-[12px] uppercase tracking-[0.12em] text-white/55 mb-[10px]">
             Submitted Info
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[13px]">

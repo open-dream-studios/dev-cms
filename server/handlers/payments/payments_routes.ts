@@ -4,9 +4,16 @@ import { verifyVercelProxy } from "../../util/verifyProxy.js";
 import { authenticateUser } from "../../connection/middlewares.js";
 import { transactionHandler } from "../../util/handlerWrappers.js";
 import { checkProjectPermission } from "../../util/permissions.js";
-import { getStripeSubscriptions, syncStripeSubscriptions } from "./subscriptions/subscriptions_controllers.js";
-import { verifyWixRequest } from "../../util/verifyWixRequest.js";
-import { adjustCreditLevelController, consumeBookingCreditController } from "./credits/credit_ledger_controllers.js";
+import {
+  getStripeSubscriptions,
+  syncStripeSubscriptions,
+} from "./subscriptions/subscriptions_controllers.js"; 
+import {
+  adjustCreditLevelController,
+  consumeBookingCreditController,
+  getStripeCustomerCreditBalance,
+  getAllStripeCustomerCreditBalances
+} from "./credits/credit_ledger_controllers.js";
 
 const router = express.Router();
 
@@ -29,14 +36,34 @@ router.post(
 
 // ---- CREDITS ----
 router.post(
+  "/get-stripe-user-credits",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(3), // owner+
+  transactionHandler(getStripeCustomerCreditBalance)
+);
+ 
+router.post(
+  "/get-all-stripe-user-credits",
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(3), // owner+
+  transactionHandler(getAllStripeCustomerCreditBalances)
+);
+
+router.post(
   "/consume-booking-credit",
-  verifyWixRequest,
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(5), // owner+
   transactionHandler(consumeBookingCreditController)
 );
 
 router.post(
   "/adjust-credit-level",
-  verifyWixRequest,
+  verifyVercelProxy,
+  authenticateUser,
+  checkProjectPermission(8), // owner+
   transactionHandler(adjustCreditLevelController)
 );
 

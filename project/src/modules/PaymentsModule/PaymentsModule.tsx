@@ -16,7 +16,7 @@ import { openWindow } from "@/util/functions/Handlers";
 import { appDetailsProjectByDomain } from "@open-dream/shared";
 import { useUiStore } from "@/store/useUIStore";
 import { formatTimeDate } from "@/util/functions/Time";
-import { useStripeSubscriptions } from "@/contexts/queryContext/queries/subscriptions";
+import { useStripeSubscriptions } from "@/contexts/queryContext/queries/payments/subscriptions";
 import StripeSubscriptions from "./StripeSubscriptions";
 
 const PaymentsModule = () => {

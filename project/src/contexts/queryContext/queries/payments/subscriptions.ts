@@ -1,10 +1,10 @@
-// project/src/contexts/queryContext/queries/subscriptions.ts
+// project/src/contexts/queryContext/queries/payments/subscriptions.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { StripeSubscription } from "@open-dream/shared";
 import {
   fetchStripeSubscriptionsApi,
   syncStripeSubscriptionsApi,
-} from "@/api/subscriptions.api";
+} from "@/api/payments/subscriptions.api";
 import { useRouteScope } from "@/contexts/routeScopeContext";
 
 export function useStripeSubscriptions(

@@ -1,5 +1,9 @@
 // server/handlers/payments/credits/credit_ledger_repository.ts
-import { LedgerCreditBalance, LedgerCreditAdjustment } from "@open-dream/shared";
+import {
+  LedgerCreditBalance,
+  LedgerCreditAdjustment,
+  LedgerCreditBalanceList,
+} from "@open-dream/shared";
 import { db } from "../../../connection/connect.js";
 import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 
@@ -28,11 +32,13 @@ export const getCustomerCreditBalanceFunction = async (
       test ? 1 : 0,
     ]);
 
-  return rows[0] ?? {
-    credit1_balance: 0,
-    credit2_balance: 0,
-    credit3_balance: 0,
-  };
+  return (
+    rows[0] ?? {
+      credit1_balance: 0,
+      credit2_balance: 0,
+      credit3_balance: 0,
+    }
+  );
 };
 
 // ---------- GET BALANCE BY STRIPE CUSTOMER ID ----------
@@ -58,13 +64,71 @@ export const getStripeCustomerCreditBalanceFunction = async (
       project_idx,
       stripe_customer_id,
       test ? 1 : 0,
-    ]);
+    ]); 
+  return (
+    rows[0] ?? {
+      credit1_balance: 0,
+      credit2_balance: 0,
+      credit3_balance: 0,
+    }
+  );
+};
 
-  return rows[0] ?? {
-    credit1_balance: 0,
-    credit2_balance: 0,
-    credit3_balance: 0,
-  };
+export const getAllStripeCustomerCreditBalanceFunction = async (
+  project_idx: number,
+  stripeCustomerIds: string[],
+  test: boolean
+): Promise<LedgerCreditBalanceList> => {
+  const uniqueIds = Array.from(
+    new Set((stripeCustomerIds || []).filter((id) => !!id))
+  );
+
+  const zeroBalances: LedgerCreditBalanceList = Object.fromEntries(
+    uniqueIds.map((id) => [
+      id,
+      {
+        credit1_balance: 0,
+        credit2_balance: 0,
+        credit3_balance: 0,
+      },
+    ])
+  );
+
+  if (!uniqueIds.length) return zeroBalances;
+
+  const placeholders = uniqueIds.map(() => "?").join(", ");
+  const q = `
+    SELECT
+      stripe_customer_id,
+      COALESCE(SUM(credit1_delta), 0) AS credit1_balance,
+      COALESCE(SUM(credit2_delta), 0) AS credit2_balance,
+      COALESCE(SUM(credit3_delta), 0) AS credit3_balance
+    FROM customer_credit_ledger
+    WHERE project_idx = ?
+      AND test = ?
+      AND stripe_customer_id IN (${placeholders})
+    GROUP BY stripe_customer_id
+  `;
+
+  const [rows] = await db.promise().query<
+    (RowDataPacket & {
+      stripe_customer_id: string;
+      credit1_balance: number | string;
+      credit2_balance: number | string;
+      credit3_balance: number | string;
+    })[]
+  >(q, [project_idx, test ? 1 : 0, ...uniqueIds]);
+
+  const balances = { ...zeroBalances };
+  for (const row of rows) {
+    balances[row.stripe_customer_id] = {
+      credit1_balance: Number(row.credit1_balance) || 0,
+      credit2_balance: Number(row.credit2_balance) || 0,
+      credit3_balance: Number(row.credit3_balance) || 0,
+    };
+  }
+
+  return balances;
 };
 
 // ---------- INSERT LEDGER ENTRY (APPEND ONLY) ----------
@@ -75,8 +139,11 @@ export const insertCreditLedgerEntryFunction = async (
   const project_idx = Number(ledgerItem.project_idx);
   if (!project_idx) throw new Error("project_idx is required");
 
-  if (!ledgerItem.customer_id || typeof ledgerItem.customer_id !== "string") {
-    throw new Error("customer_id is required");
+  if (
+    !ledgerItem.stripe_customer_id ||
+    typeof ledgerItem.stripe_customer_id !== "string"
+  ) {
+    throw new Error("stripe_customer_id is required");
   }
 
   const creditType = Number(ledgerItem.credit_adjustment_type);
@@ -101,17 +168,17 @@ export const insertCreditLedgerEntryFunction = async (
     throw new Error("Invalid source_type");
   }
 
-  const [customerRows] = await connection.query<RowDataPacket[]>(
-    `SELECT customer_id
-     FROM customers
-     WHERE project_idx = ? AND customer_id = ?
-     LIMIT 1`,
-    [project_idx, ledgerItem.customer_id]
-  );
+  // const [customerRows] = await connection.query<RowDataPacket[]>(
+  //   `SELECT customer_id
+  //    FROM customers
+  //    WHERE project_idx = ? AND customer_id = ?
+  //    LIMIT 1`,
+  //   [project_idx, ledgerItem.customer_id]
+  // );
 
-  if (!customerRows.length) {
-    throw new Error("Customer not found for this project");
-  }
+  // if (!customerRows.length) {
+  //   throw new Error("Customer not found for this project");
+  // }
 
   const credit1_delta = creditType === 1 ? amountDelta : 0;
   const credit2_delta = creditType === 2 ? amountDelta : 0;

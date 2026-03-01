@@ -1,7 +1,7 @@
 // shared/types/models/payments/credits.ts
 export type LedgerCreditAdjustment = {
   project_idx: number;
-  customer_id: string;
+  customer_id: string | null;
   stripe_customer_id: string;
   stripe_subscription_id: string | null;
   stripe_invoice_id: string | null;
@@ -27,3 +27,5 @@ export type LedgerCreditBalance = {
   credit2_balance: number;
   credit3_balance: number;
 };
+
+export type LedgerCreditBalanceList = Record<string, LedgerCreditBalance>;

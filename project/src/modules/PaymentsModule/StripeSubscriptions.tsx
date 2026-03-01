@@ -26,6 +26,10 @@ import {
   StripeSubscriptionStatusFilter,
   usePaymentsStore,
 } from "./_store/payments.store";
+import { useContext } from "react";
+import { AuthContext } from "@/contexts/authContext";
+import { useCurrentDataStore } from "@/store/currentDataStore";
+import { useAllCreditBalances } from "@/contexts/queryContext/queries/payments/credits";
 
 export const statusToneStyles: Record<string, string> = {
   active: "bg-[#2be06e]/65 text-white border-[#65ff9d]/50",
@@ -54,6 +58,8 @@ const StripeSubscriptions = ({
   onOpenCustomer: (customer: Customer | null) => Promise<void>;
   findCustomer: (customer_id: string | null) => Customer | null;
 }) => {
+  const { currentUser } = useContext(AuthContext);
+  const { currentProjectId } = useCurrentDataStore();
   const { domain } = useUiStore();
   const currentTheme = useCurrentTheme();
   const foundProject = appDetailsProjectByDomain(domain);
@@ -70,6 +76,15 @@ const StripeSubscriptions = ({
     "unpaid",
     "paused",
   ];
+
+  const stripeCustomerIds: string[] = subscriptions.map(
+    (sub) => sub.stripe_customer_id,
+  );
+  const { allCreditBalances } = useAllCreditBalances(
+    !!currentUser,
+    currentProjectId,
+    stripeCustomerIds,
+  );
 
   return (
     <div
@@ -149,7 +164,9 @@ const StripeSubscriptions = ({
             const isPaused = subscription.status === "paused";
             const isUnpaid = subscription.status === "unpaid";
 
-            let timelineIcon = <X size={13} className="opacity-85 mt-[-1px] mr-[-1px]" />;
+            let timelineIcon = (
+              <X size={13} className="opacity-85 mt-[-1px] mr-[-1px]" />
+            );
             let timelineDate = subscription.subscription_end
               ? formatUnixDate(subscription.subscription_end)
               : "-";
@@ -225,25 +242,47 @@ const StripeSubscriptions = ({
                   </div>
                 </div> */}
 
-                  <div className="flex flex-row justify-between items-center rounded-lg border border-white/12 bg-gradient-to-br from-cyan-400/20 to-sky-500/10 px-2.5 py-1">
+                  <div
+                    // bg-gradient-to-br from-cyan-400/20 to-sky-500/10
+                    className="flex flex-row justify-between items-center rounded-lg border border-white/12 px-2.5 py-1 bg-white/5"
+                  >
                     <div className="text-[10px] uppercase tracking-[0.12em] text-white/60">
                       {foundProject && foundProject.credit1_name
                         ? `${foundProject.credit1_name}s`
                         : "Credits 1"}
                     </div>
-                    <div className="opacity-[0.7] text-[14px] font-[630]">
-                      1.5
+                    <div className="opacity-[0.75] text-[14px] font-[630]">
+                      {Object.keys(allCreditBalances).includes(
+                        subscription.stripe_customer_id,
+                      ) &&
+                      allCreditBalances[subscription.stripe_customer_id] &&
+                      allCreditBalances[subscription.stripe_customer_id]
+                        .credit1_balance != null
+                        ? allCreditBalances[subscription.stripe_customer_id]
+                            .credit1_balance
+                        : "N/A"}
                     </div>
                   </div>
 
-                  <div className="flex flex-row justify-between items-center rounded-lg border border-white/12 bg-gradient-to-br from-indigo-400/20 to-purple-500/10 px-2.5 py-1">
+                  <div
+                    // bg-gradient-to-br from-indigo-400/20 to-purple-500/10
+                    className="flex flex-row justify-between items-center rounded-lg border border-white/12 px-2.5 py-1 bg-white/5"
+                  >
                     <div className="text-[10px] uppercase tracking-[0.12em] text-white/60">
                       {foundProject && foundProject.credit2_name
                         ? `${foundProject.credit2_name}s`
                         : "Credits 2"}
                     </div>
-                    <div className="opacity-[0.7] text-[14px] font-[630]">
-                      3
+                    <div className="opacity-[0.75] text-[14px] font-[630]">
+                      {Object.keys(allCreditBalances).includes(
+                        subscription.stripe_customer_id,
+                      ) &&
+                      allCreditBalances[subscription.stripe_customer_id] &&
+                      allCreditBalances[subscription.stripe_customer_id]
+                        .credit2_balance != null
+                        ? allCreditBalances[subscription.stripe_customer_id]
+                            .credit2_balance
+                        : "N/A"}
                     </div>
                   </div>
                 </div>
