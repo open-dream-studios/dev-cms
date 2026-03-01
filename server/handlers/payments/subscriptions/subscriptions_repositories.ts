@@ -1,24 +1,22 @@
 // server/handlers/payments/subscriptions/subscriptions_repositories.ts
 import Stripe from "stripe";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { ActiveSubscription } from "@open-dream/shared";
-import {
-  getCustomerByEmailFunction,
-  getCustomerByEmailOrPhoneFunction,
-} from "../../modules/customers/customers_repositories.js";
+import { StripeSubscription } from "@open-dream/shared";
+import { getCustomerByEmailFunction } from "../../modules/customers/customers_repositories.js";
+import { setProjectLastStripeUpdateNowFunction } from "../../projects/projects_repositories.js";
 
-export const getActiveSubscriptionsForProjectFunction = async (
+export const getStripeSubscriptionsForProjectFunction = async (
   connection: PoolConnection,
   project_idx: number
-): Promise<(ActiveSubscription & RowDataPacket)[]> => {
+): Promise<(StripeSubscription & RowDataPacket)[]> => {
   const q = `
     SELECT *
-    FROM stripe_active_subscriptions
+    FROM stripe_subscriptions
     WHERE project_idx = ?
     ORDER BY created_at DESC
   `;
 
-  const [rows] = await connection.query<(ActiveSubscription & RowDataPacket)[]>(
+  const [rows] = await connection.query<(StripeSubscription & RowDataPacket)[]>(
     q,
     [project_idx]
   );
@@ -26,7 +24,7 @@ export const getActiveSubscriptionsForProjectFunction = async (
   return rows;
 };
 
-type AddActiveSubscriptionInput = {
+type AddStripeSubscriptionInput = {
   project_idx: number;
   customer_id: string | null;
   stripe_customer_id: string;
@@ -40,9 +38,9 @@ type AddActiveSubscriptionInput = {
   test_mode: boolean;
 };
 
-export const addActiveSubscriptionFunction = async (
+export const addStripeSubscriptionFunction = async (
   connection: PoolConnection,
-  data: AddActiveSubscriptionInput
+  data: AddStripeSubscriptionInput
 ) => {
   const {
     project_idx,
@@ -59,7 +57,7 @@ export const addActiveSubscriptionFunction = async (
   } = data;
 
   const q = `
-    INSERT INTO stripe_active_subscriptions (
+    INSERT INTO stripe_subscriptions (
       project_idx,
       customer_id,
       stripe_customer_id,
@@ -118,23 +116,26 @@ export const addActiveSubscriptionFunction = async (
   ]);
 };
 
-export const clearActiveSubscriptionsForProjectFunction = async (
+export const clearStripeSubscriptionsForProjectFunction = async (
   connection: PoolConnection,
   project_idx: number
 ) => {
   await connection.query(
-    `DELETE FROM stripe_active_subscriptions WHERE project_idx = ?`,
+    `DELETE FROM stripe_subscriptions WHERE project_idx = ?`,
     [project_idx]
   );
 };
 
-export const syncActiveSubscriptionsFromStripeFunction = async (
+export const syncStripeSubscriptionsFromStripeFunction = async (
   connection: PoolConnection,
-  stripe: Stripe,
   project_idx: number,
   test_mode: boolean
 ) => {
-  await clearActiveSubscriptionsForProjectFunction(connection, project_idx);
+  const stripe = test_mode
+    ? new Stripe(process.env.STRIPE_TEST_SECRET_KEY!)
+    : new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+  await clearStripeSubscriptionsForProjectFunction(connection, project_idx);
 
   let hasMore = true;
   let startingAfter: string | undefined = undefined;
@@ -142,7 +143,7 @@ export const syncActiveSubscriptionsFromStripeFunction = async (
   while (hasMore) {
     const subs: Stripe.ApiList<Stripe.Subscription> =
       await stripe.subscriptions.list({
-        status: "active",
+        status: "all",
         limit: 100,
         starting_after: startingAfter,
         expand: ["data.default_payment_method"],
@@ -167,7 +168,7 @@ export const syncActiveSubscriptionsFromStripeFunction = async (
         }
       }
 
-      await addActiveSubscriptionFunction(connection, {
+      await addStripeSubscriptionFunction(connection, {
         project_idx,
         customer_id,
         stripe_customer_id: sub.customer as string,
@@ -187,4 +188,6 @@ export const syncActiveSubscriptionsFromStripeFunction = async (
       startingAfter = subs.data[subs.data.length - 1].id;
     }
   }
+
+  await setProjectLastStripeUpdateNowFunction(connection, project_idx);
 };

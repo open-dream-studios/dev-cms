@@ -160,6 +160,19 @@ export const deleteProjectFunction = async (
   return { success: true };
 };
 
+export const setProjectLastStripeUpdateNowFunction = async (
+  connection: PoolConnection,
+  project_idx: number
+): Promise<{ success: true }> => {
+  const q = `
+    UPDATE projects
+    SET last_stripe_update = NOW()
+    WHERE id = ?
+  `;
+  await connection.query(q, [project_idx]);
+  return { success: true };
+};
+
 // ---------- PROJECT USER FUNCTIONS ----------
 export const getAllUserRolesFunction = async (): Promise<any[]> => {
   const q = `

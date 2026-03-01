@@ -11,6 +11,8 @@ export type Project = {
   logo_dark_media_id?: string | null;
   logo_light_media_id?: string | null;
   numbers?: JSON | null;
+  last_stripe_update?: Date | null | string;
+  created_at?: Date | null | string;
 };
 
 export const accessLevels = {

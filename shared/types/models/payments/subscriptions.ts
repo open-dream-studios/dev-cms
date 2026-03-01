@@ -1,12 +1,12 @@
 // shared/types/models/payments/subscriptions.ts
-export type ActiveSubscription = {
+export type StripeSubscription = {
   id: number;
   project_idx: number;
   customer_id: string | null;
   stripe_customer_id: string;
   stripe_subscription_id: string;
   stripe_price_id: string;
-  status: string;
+  status: StripeSubscriptionStatus;
   current_period_start: number;
   current_period_end: number;
   cancel_at_period_end: number;
@@ -25,3 +25,13 @@ export type ActiveSubscription = {
   test: number;
   created_at: string;
 };
+
+export type StripeSubscriptionStatus =
+  | 'incomplete'
+  | 'incomplete_expired'
+  | 'trialing'
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'unpaid'
+  | 'paused';

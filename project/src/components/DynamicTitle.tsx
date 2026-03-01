@@ -29,8 +29,8 @@ export default function DynamicTitle() {
   }, [currentProject, media]);
 
   useEffect(() => {
-    let landing_logo = appDetails.default_logo;
-    let landing_title = appDetails.default_title;
+    let landing_logo: string = appDetails.default_logo;
+    let landing_title: string = appDetails.default_title;
     const foundProject = appDetailsProjectByDomain(domain)
     if (foundProject) {
       landing_logo = foundProject.landing_logo;

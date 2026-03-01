@@ -42,7 +42,10 @@ export const appDetails = {
         "manageBookingUrl": "https://tannyspaacquisitions.shop",
         "primaryColor": "#5CADD8",
         "phoneNumber": "(585) 666-8794"
-      }
+      },
+      "stripe_account": "acct_1T2zx87vzK6BGNZg",
+      "credit1_name": "Cleaning",
+      "credit2_name": "Clean & Drain",
     },
     {
       "key": "tcr",
@@ -69,7 +72,10 @@ export const appDetails = {
         "manageBookingUrl": "tricitiesremodeling.shop",
         "primaryColor": "#5CADD8",
         "phoneNumber": "(585) 666-8794"
-      }
+      },
+      "stripe_account": null,
+      "credit1_name": null,
+      "credit2_name": null,
     }
   ]
 } as const;

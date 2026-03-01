@@ -5,25 +5,27 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { Loader2, RefreshCcw, Trash2 } from "lucide-react";
-import ActiveSubscriptions from "./ActiveSubscriptions";
+import { Loader2, RefreshCcw } from "lucide-react";
 import SubscriptionDetailPanel from "./SubscriptionDetailPanel";
-import {
-  useProjectSubscriptions,
-  useSubscriptionSyncActions,
-} from "./_hooks/payments.hooks";
 import {
   getSelectedSubscription,
   usePaymentsStore,
 } from "./_store/payments.store";
 import { openCustomerFromPayments } from "./_actions/payments.actions";
+import { openWindow } from "@/util/functions/Handlers";
+import { appDetailsProjectByDomain } from "@open-dream/shared";
+import { useUiStore } from "@/store/useUIStore";
+import { formatTimeDate } from "@/util/functions/Time";
+import { useStripeSubscriptions } from "@/contexts/queryContext/queries/subscriptions";
+import StripeSubscriptions from "./StripeSubscriptions";
 
 const PaymentsModule = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProjectId, currentProject } = useCurrentDataStore();
   const { customers } = useContextQueries();
   const { screenClick } = useRouting();
+  const { domain } = useUiStore();
 
   const {
     selectedSubscriptionId,
@@ -44,13 +46,11 @@ const PaymentsModule = () => {
   }, []);
 
   const {
-    data: subscriptions = [],
-    isLoading,
-    refetch,
-  } = useProjectSubscriptions(currentProjectId, !!currentUser);
-
-  const { syncSubscriptions, clearSubscriptions, isSyncing, isClearing } =
-    useSubscriptionSyncActions(currentProjectId);
+    stripeSubscriptions: subscriptions,
+    isLoadingStripeSubscriptions,
+    syncStripeSubscriptions,
+    isSyncingStripeSubscriptions,
+  } = useStripeSubscriptions(!!currentUser, currentProjectId);
 
   useEffect(() => {
     if (!subscriptions.length) return;
@@ -102,7 +102,14 @@ const PaymentsModule = () => {
     if (isMobile) setMobileDetailOpen(true);
   };
 
-  if (!currentUser || !currentProjectId) return null;
+  const foundProject = appDetailsProjectByDomain(domain);
+  const stripe_account =
+    foundProject && foundProject.stripe_account
+      ? `https://dashboard.stripe.com/${foundProject.stripe_account}`
+      : null;
+  const stripe_url = stripe_account || "https://stripe.com";
+
+  if (!currentUser || !currentProjectId || !currentProject) return null;
 
   return (
     <div
@@ -111,40 +118,43 @@ const PaymentsModule = () => {
     >
       <div className="h-full flex flex-col gap-3">
         <div
-          style={{ backgroundColor: currentTheme.background_2 }}
+          style={{ backgroundColor: currentTheme.innerCard }}
           className="h-[62px] min-h-[62px] rounded-2xl border border-white/10 px-4 md:px-5 flex items-center justify-between gap-3"
         >
-          <a
-            href="https://stripe.com"
-            target="_blank"
-            rel="noreferrer"
-            className="group flex items-center gap-3"
+          <div
+            onClick={() => openWindow(stripe_url)}
+            className="group flex items-center gap-3 cursor-pointer hover:brightness-82 dim"
           >
             <img
               src="https://dev-cms-project-media.s3.us-east-1.amazonaws.com/global/stripe.svg.png"
               alt="Stripe"
-              className="h-[22px] w-auto object-contain group-hover:brightness-82 dim"
+              className="h-[22px] w-auto object-contain"
             />
-          </a>
+          </div>
 
           <div className="flex items-center gap-2">
+            {currentProject.last_stripe_update && (
+              <div className="text-[11.5px] flex items-center gap-1.5 text-white/43 mr-[5px]">
+                {`Last Synced ${formatTimeDate(currentProject.last_stripe_update)}`}
+              </div>
+            )}
             <button
               onClick={async () => {
                 // await syncSubscriptions(testMode);
-                await syncSubscriptions();
-                await refetch();
+                await syncStripeSubscriptions();
+                // await refetchStripeSubscriptions();
               }}
-              disabled={isSyncing || isClearing}
+              disabled={isSyncingStripeSubscriptions}
               className="cursor-pointer hover:brightness-82 dim h-9 px-3 rounded-lg border border-white/15 bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed dim text-[13px] font-medium flex items-center gap-2"
             >
-              {isSyncing ? (
+              {isSyncingStripeSubscriptions ? (
                 <Loader2 size={14} className="animate-spin" />
               ) : (
                 <RefreshCcw size={14} />
               )}
               Sync
             </button>
-            <button
+            {/* <button
               onClick={async () => {
                 await clearSubscriptions();
                 setSelectedSubscriptionId(null);
@@ -158,7 +168,7 @@ const PaymentsModule = () => {
                 <Trash2 size={14} />
               )}
               Clear
-            </button>
+            </button> */}
             {/* <label className="ml-1 text-[12px] text-white/70 flex items-center gap-2 px-2 py-1 rounded-lg border border-white/15 bg-white/5">
               <input
                 type="checkbox"
@@ -174,7 +184,7 @@ const PaymentsModule = () => {
         <div className="h-[100%] overflow-hidden grid grid-cols-1 lg:grid-cols-2 gap-3">
           {(!isMobile || !mobileDetailOpen) && (
             <div className="h-full overflow-auto">
-              <ActiveSubscriptions
+              <StripeSubscriptions
                 subscriptions={filteredSubscriptions}
                 selectedSubscriptionId={selectedSubscriptionId}
                 customerQuery={customerQuery}
@@ -197,6 +207,7 @@ const PaymentsModule = () => {
                   isMobile={false}
                   onBack={() => {}}
                   onOpenCustomer={openSelectedCustomer}
+                  stripe_account={stripe_account}
                 />
               ) : (
                 <div
@@ -217,12 +228,13 @@ const PaymentsModule = () => {
                 isMobile={true}
                 onBack={() => setMobileDetailOpen(false)}
                 onOpenCustomer={openSelectedCustomer}
+                stripe_account={stripe_account}
               />
             </div>
           )}
         </div>
 
-        {isLoading && (
+        {isLoadingStripeSubscriptions && (
           <div className="absolute inset-0 bg-black/15 pointer-events-none flex items-center justify-center">
             <div className="px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-[13px] flex items-center gap-2">
               <Loader2 size={14} className="animate-spin" />

@@ -91,6 +91,8 @@ const themeColors = {
   google_calendar_event: c("#2FA9DB", "#2FA9DB"),
   new_google_calendar_event: c("#1fbf6a", "#1fbf6a"),
   rescheduled_google_calendar_event: c("#7B5CFF", "#7B5CFF"),
+
+  // CARDS
   innerCard: c("#FFFFFF", "#1b1b1b"),
 } as const;
 

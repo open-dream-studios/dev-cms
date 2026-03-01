@@ -1,5 +1,5 @@
 // project/src/modules/PaymentsModule/_helpers/payments.helpers.ts
-import { ActiveSubscription } from "@open-dream/shared";
+import { StripeSubscription } from "@open-dream/shared";
 
 export function formatUnixDate(unixSeconds: number) {
   if (!unixSeconds) return "-";
@@ -10,7 +10,7 @@ export function formatUnixDate(unixSeconds: number) {
   });
 }
 
-export function formatCustomerName(subscription: ActiveSubscription) {
+export function formatCustomerName(subscription: StripeSubscription) {
   const first = subscription.meta_first_name?.trim() ?? "";
   const last = subscription.meta_last_name?.trim() ?? "";
   const full = `${first} ${last}`.trim();
@@ -25,7 +25,13 @@ export function getStatusTone(status: string) {
   return "neutral";
 }
 
-export function getSubscriptionSubtitle(subscription: ActiveSubscription) {
+export function getSubscriptionEmail(subscription: StripeSubscription) {
+  const email = subscription.meta_email?.trim().toLowerCase()
+  if (email) return email;
+  return subscription.stripe_customer_id;
+}
+
+export function getSubscriptionLocation(subscription: StripeSubscription) {
   const city = subscription.meta_city?.trim();
   const state = subscription.meta_state?.trim();
   if (city && state) return `${city}, ${state}`;

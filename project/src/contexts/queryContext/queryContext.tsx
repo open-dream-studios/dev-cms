@@ -306,7 +306,7 @@ export const QueryProvider: React.FC<{ children: React.ReactNode }> = ({
     refetchProjects,
     upsertProject,
     deleteProject,
-  } = useProjects(isLoggedIn, currentProjectId);
+  } = useProjects(isLoggedIn);
   const {
     productsData,
     isLoadingProductsData,

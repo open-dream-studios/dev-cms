@@ -1,10 +1,20 @@
 // project/src/api/projects.api.ts
 import { makeRequest } from "@/util/axios";
+import { utcToLocal } from "@/util/functions/Time";
 import { Project } from "@open-dream/shared";
 
 export async function fetchProjectsApi() {
   const res = await makeRequest.get("/projects");
-  return res.data.projects as Project[];
+
+  const projects: Project[] = (res.data.projects || []).map(
+    (project: Project) => ({
+      ...project,
+      last_stripe_update: project.last_stripe_update
+        ? new Date(utcToLocal(project.last_stripe_update as string)!)
+        : null,
+    })
+  );
+  return projects as Project[];
 }
 
 export async function upsertProjectApi(project: Project) {

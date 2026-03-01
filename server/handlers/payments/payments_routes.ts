@@ -4,7 +4,7 @@ import { verifyVercelProxy } from "../../util/verifyProxy.js";
 import { authenticateUser } from "../../connection/middlewares.js";
 import { transactionHandler } from "../../util/handlerWrappers.js";
 import { checkProjectPermission } from "../../util/permissions.js";
-import { clearActiveSubscriptions, getActiveSubscriptions, syncActiveSubscriptions } from "./subscriptions/subscriptions_controllers.js";
+import { getStripeSubscriptions, syncStripeSubscriptions } from "./subscriptions/subscriptions_controllers.js";
 import { verifyWixRequest } from "../../util/verifyWixRequest.js";
 import { adjustCreditLevelController, consumeBookingCreditController } from "./credits/credit_ledger_controllers.js";
 
@@ -16,7 +16,7 @@ router.post(
   verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(3), // viewer+
-  transactionHandler(getActiveSubscriptions)
+  transactionHandler(getStripeSubscriptions)
 );
 
 router.post(
@@ -24,15 +24,7 @@ router.post(
   verifyVercelProxy,
   authenticateUser,
   checkProjectPermission(8), // owner+
-  transactionHandler(syncActiveSubscriptions)
-);
-
-router.post(
-  "/subscriptions/clear",
-  verifyVercelProxy,
-  authenticateUser,
-  checkProjectPermission(8), // owner+
-  transactionHandler(clearActiveSubscriptions)
+  transactionHandler(syncStripeSubscriptions)
 );
 
 // ---- CREDITS ----

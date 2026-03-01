@@ -7,11 +7,13 @@ import {
   upsertProjectApi,
 } from "@/api/projects.api";
 import { useRouteScope } from "@/contexts/routeScopeContext";
+import { useEffect } from "react";
+import {
+  setCurrentProjectData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 
-export function useProjects(
-  isLoggedIn: boolean,
-  currentProjectId: number | null
-) {
+export function useProjects(isLoggedIn: boolean) {
   const queryClient = useQueryClient();
   const routeScope = useRouteScope();
   const isPublic = routeScope === "public";
@@ -23,7 +25,7 @@ export function useProjects(
   } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: async () => fetchProjectsApi(),
-    enabled: isLoggedIn && !isPublic
+    enabled: isLoggedIn && !isPublic,
   });
 
   const upsertProjectMutation = useMutation({
@@ -51,6 +53,15 @@ export function useProjects(
   const deleteProject = async (project_id: string) => {
     await deleteProjectMutation.mutateAsync(project_id);
   };
+
+  useEffect(() => {
+    if (!projectsData?.length) return;
+    const { currentProjectId } = useCurrentDataStore.getState();
+    if (!currentProjectId) return;
+    const updated = projectsData.find((p) => p.id === currentProjectId);
+    if (!updated) return;
+    setCurrentProjectData(updated);
+  }, [projectsData]);
 
   return {
     projectsData,
