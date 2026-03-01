@@ -5,7 +5,14 @@ import {
   appDetailsProjectByDomain,
   StripeSubscriptionStatus,
 } from "@open-dream/shared";
-import { ChevronDown, RotateCw, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronDown,
+  PauseCircle,
+  RotateCw,
+  Search,
+  X,
+} from "lucide-react";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
   formatCustomerName,
@@ -136,6 +143,30 @@ const StripeSubscriptions = ({
               selectedSubscriptionId === subscription.stripe_subscription_id;
             const tone = getStatusTone(subscription.status);
             const customer = findCustomer(subscription.customer_id);
+            const isActiveLike = ["active", "trialing", "past_due"].includes(
+              subscription.status,
+            );
+            const isPaused = subscription.status === "paused";
+            const isUnpaid = subscription.status === "unpaid";
+
+            let timelineIcon = <X size={13} className="opacity-85 mt-[-1px] mr-[-1px]" />;
+            let timelineDate = subscription.subscription_end
+              ? formatUnixDate(subscription.subscription_end)
+              : "-";
+
+            if (isActiveLike && !subscription.cancel_at_period_end) {
+              timelineIcon = <RotateCw size={12} className="opacity-85" />;
+              timelineDate = formatUnixDate(subscription.current_period_end);
+            } else if (isActiveLike && subscription.cancel_at_period_end) {
+              timelineDate = formatUnixDate(subscription.current_period_end);
+            } else if (isPaused) {
+              timelineIcon = <PauseCircle size={13} className="opacity-85" />;
+            } else if (isUnpaid) {
+              timelineIcon = <AlertTriangle size={13} className="opacity-85" />;
+              timelineDate = subscription.subscription_end
+                ? formatUnixDate(subscription.subscription_end)
+                : formatUnixDate(subscription.current_period_end);
+            }
 
             return (
               <div
@@ -178,9 +209,7 @@ const StripeSubscriptions = ({
                     </div>
 
                     <div className="mt-1 text-[11.5px] flex items-center gap-1.5 text-white/55">
-                      {/* <Clock8 size={13} /> */}
-                      <RotateCw size={13} className="opacity-85" />{" "}
-                      {formatUnixDate(subscription.current_period_end)}
+                      {timelineIcon} {timelineDate}
                     </div>
                   </div>
                 </div>

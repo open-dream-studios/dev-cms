@@ -64,7 +64,7 @@ const SubscriptionDetailPanel = ({
     : "-";
 
   if (isActiveLike) {
-    endLabel = subscription.cancel_at_period_end ? "Ends" : "Next Cycle";
+    endLabel = subscription.cancel_at_period_end ? "Ends" : "Renews";
     endValue = formatUnixDate(subscription.current_period_end);
   } else if (isPaused) {
     endLabel = "Paused";
@@ -73,7 +73,7 @@ const SubscriptionDetailPanel = ({
       endLabel = "Ended";
       endValue = formatUnixDate(subscription.subscription_end);
     } else {
-      endLabel = "Past Due Cycle End";
+      endLabel = "Unpaid Cycle End";
       endValue = formatUnixDate(subscription.current_period_end);
     }
   }
