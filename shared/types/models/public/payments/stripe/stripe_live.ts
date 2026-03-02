@@ -22,9 +22,9 @@ export type StripeProduct = {
 
 export const stripeSubscriptionL1Products = {
   "L1_TEST": {
-    price_id: "price_1T59xm7vzK6BGNZgj0r7uLII",
+    price_id: "price_1T6epG7vzK6BGNZgpsSumXtp",
     mode: "subscription",
-    amount: 0.05,
+    amount: 0.02,
     level: 1 as SubscriptionTier,
     timeline: "1 Day",
     credit1_granted: 1,

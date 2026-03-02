@@ -4,7 +4,9 @@ import {
   Customer,
   formatPhoneNumber,
   appDetailsProjectByDomain,
-  LedgerCreditType,
+  LedgerCreditType, 
+  stripeProductsByPriceId,
+  SubscriptionTier,
 } from "@open-dream/shared";
 import { motion } from "framer-motion";
 import {
@@ -35,7 +37,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCreditBalanceAdjustments } from "@/contexts/queryContext/queries/payments/credits";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { toast } from "react-toastify";
+import { toast } from "react-toastify"; 
 
 const CompactRow = ({ label, value }: { label: string; value?: string }) => (
   <div className="flex items-start justify-between gap-4 py-1.5">
@@ -67,7 +69,7 @@ const SubscriptionDetailPanel = ({
   const { currentProjectId } = useCurrentDataStore();
   const { domain, modal2, setModal2 } = useUiStore();
   const currentTheme = useCurrentTheme();
-  const foundProject = appDetailsProjectByDomain(domain);
+  const foundProject = appDetailsProjectByDomain("tannyspaacquisitions.shop");
 
   const { creditBalances, adjustCredit } = useCreditBalanceAdjustments(
     !!currentUser,
@@ -178,7 +180,7 @@ const SubscriptionDetailPanel = ({
                 return;
               }
             }
-            
+
             const amount_delta = adjustment === "+" ? amount : -amount;
             await adjustCredit(creditType, amount_delta);
           }}
@@ -186,6 +188,16 @@ const SubscriptionDetailPanel = ({
       ),
     });
   };
+
+  const foundProduct =
+    stripeProductsByPriceId[subscription.stripe_price_id] ?? null;
+  console.log(subscription.stripe_price_id)
+  let foundTier: string | null = null;
+  console.log(foundProduct)
+  if (foundProject && foundProduct) {
+    const level = foundProduct.level as SubscriptionTier;
+    foundTier = foundProject.subscription_tiers[level] ?? null;
+  }
 
   return (
     <motion.div
@@ -322,9 +334,16 @@ const SubscriptionDetailPanel = ({
         <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-[8px]">
           <div className="space-y-1">
             <div className="py-1.5">
-              <p className="text-[12px] uppercase tracking-[0.12em] text-white/55 mb-3">
-                Subscription
-              </p>
+              <div className="w-[100%] flex justify-between items-center">
+                <p className="text-[12px] uppercase tracking-[0.12em] text-white/55 mb-3">
+                  Subscription
+                </p>
+                {foundProduct && foundTier && (
+                  <p className="text-[12px] uppercase tracking-[0.12em] text-white/55 mb-3">
+                    {`${capitalizeFirstLetter(foundTier)} | ${foundProduct.timeline}`}
+                  </p>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-[12px]">
                 <div className="flex items-center justify-between md:block">

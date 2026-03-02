@@ -88,7 +88,7 @@ export const CustomerScheduleManager = ({
                     : "brightness-98"
                 } cursor-pointer`}
               >
-                Booking Requests
+                Service Requests
               </div>
             </div>
           )}

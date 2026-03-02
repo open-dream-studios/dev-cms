@@ -165,7 +165,7 @@ export default function EstimationsLeftBar() {
                   }}
                   onClick={() => {
                     setRunInputsOpen(true);
-                    resetVariableUI();
+                    // resetVariableUI();
                   }}
                 >
                   <LuPanelLeftClose

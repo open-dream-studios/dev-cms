@@ -43,8 +43,11 @@ export const upsertLeadFunction = async (
     source,
   } = reqBody;
 
-  if (!customer_id || !lead_type) {
-    throw new Error("Missing required lead fields");
+  if (!customer_id) {
+    return { success: false, error: "No customer attached"}
+  }
+  if (!lead_type) {
+    return { success: false, error: "No lead type selected"}
   }
 
   // ---- ENFORCE LEAD RULES ----
@@ -122,7 +125,6 @@ export const upsertLeadFunction = async (
 
   if (!internalId) {
     console.error("ERROR READING INTERNAL LEAD ID:", result);
-    throw new Error("Could not determine internal lead ID after upsert");
   }
 
   return { success: true, id: internalId, lead_id: finalLeadId };

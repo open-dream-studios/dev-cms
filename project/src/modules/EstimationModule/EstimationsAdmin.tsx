@@ -267,7 +267,7 @@ const EstimationAdmin = () => {
     >
       {showEstimationReport && (
         <div
-          className="z-600 absolute top-0 left-0 w-[100%] h-[100%] "
+          className="z-600 absolute top-0 left-[240px] w-[calc(100%-240px)] h-[100%] "
           style={{ backgroundColor: currentTheme.background_1 }}
         >
           <EstimationReport />

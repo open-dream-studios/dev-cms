@@ -35,6 +35,7 @@ import { useContextMenuStore } from "@/store/util/contextMenuStore";
 import { createLeadContextMenu } from "./_actions/customerData.actions";
 import JobDefinitionSelection from "@/modules/_util/Selection/JobDefinitionSelection";
 import ProductSelection from "@/modules/_util/Selection/ProductSelection";
+import { toast } from "react-toastify";
 
 export const leadStatusColors: Record<LeadStatus, string> = {
   // new: "rgba(59,130,246,0.18)",
@@ -245,12 +246,15 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
 
   const handleStatusChange = async (status: LeadStatus) => {
     if (!lead) return;
-    await upsertLead({
+    const res = await upsertLead({
       ...lead,
       lead_id: lead.lead_id,
       project_idx: currentProjectId,
       status,
     } as LeadInput);
+    if (res && !res.success && res.error) {
+      toast.warn(res.error);
+    }
   };
 
   const handleCancelForm = () => {
@@ -310,7 +314,10 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
   };
 
   const saveForm = async (formInput: LeadInput) => {
-    await upsertLead(formInput);
+    const res = await upsertLead(formInput);
+    if (res && !res.success && res.error) {
+      toast.warn(res.error);
+    }
     setEditingLead(null);
     setIsAddingLead(false);
   };

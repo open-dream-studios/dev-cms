@@ -69,8 +69,8 @@ export const statusTextColors = {
 
 export const statusText = {
   pending: "Pending",
-  approved: "Approved",
-  rejected: "Rejected",
+  approved: "Confirmed",
+  rejected: "Ignored",
 };
 
 const sourceIcons: Record<string, JSX.Element> = {
@@ -621,7 +621,7 @@ const ScheduleRequestRow = ({
                     }}
                   >
                     <Check size={15} />
-                    <div className="brightness-110">Approve</div>
+                    <div className="brightness-110">Confirm</div>
                   </button>
 
                   <button
@@ -633,7 +633,7 @@ const ScheduleRequestRow = ({
                     }}
                   >
                     <X className="brightness-130" size={15} />
-                    <div className="brightness-130">Reject</div>
+                    <div className="brightness-130">Ignore</div>
                   </button>
                 </div>
               )}

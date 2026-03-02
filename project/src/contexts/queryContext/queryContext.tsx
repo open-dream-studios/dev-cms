@@ -241,7 +241,7 @@ export type QueryContextType = {
   leads: Lead[];
   isLoadingLeads: boolean;
   refetchLeads: () => Promise<any>;
-  upsertLead: (lead: LeadInput) => Promise<void>;
+  upsertLead: (lead: LeadInput) => Promise<any>;
   deleteLead: (lead_id: string) => Promise<void>;
 
   actions: Action[];

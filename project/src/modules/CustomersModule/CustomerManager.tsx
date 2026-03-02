@@ -1,18 +1,9 @@
 // project/src/modules/CustomersModule/CustomerManager.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDashboardStore } from "@/store/useDashboardStore";
 import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import CustomerInteractionTimeline from "./CustomerInteractions";
-import MessagesApp from "../MessagesModule/MessagesApp";
-import {
-  ActionDefinitionInput,
-  ActionInput,
-  GoogleCalendarTarget,
-  LeadInput,
-} from "@open-dream/shared";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { useScheduleRequests } from "@/contexts/queryContext/queries/public/scheduleRequests";
+import { GoogleCalendarTarget } from "@open-dream/shared";
 import GoogleCalendarDisplay from "../GoogleModule/GoogleCalendarModule/GoogleCalendarDisplay";
 import { CustomerScheduleManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerScheduleManager";
 import { useGoogleCalendar } from "../GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks";
@@ -21,8 +12,7 @@ import { useCustomerUiStore } from "./_store/customers.store";
 import { CustomerLeadsManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerLeadsManager";
 
 export default function CustomerManager() {
-  const { upsertLead, customerData, hasProjectModule } = useContextQueries();
-  const { currentProjectId } = useCurrentDataStore();
+  const { hasProjectModule } = useContextQueries();
   const { customersScreen } = useCustomerUiStore();
 
   const { setLayout, registerModules, updateSection, updateShape } =
@@ -52,49 +42,7 @@ export default function CustomerManager() {
 
   // useEffect(() => {
   //   console.log(actionDefinitions);
-  // }, [actionDefinitions]);
-
-  const handleLeadClick = async () => {
-    await upsertLead({
-      lead_id: null,
-      project_idx: currentProjectId,
-      customer_id: "C-3460280222",
-      lead_type: "product",
-      product_id: "P-1586806747",
-      job_definition_id: null,
-      status: "new",
-      notes: null,
-      source: null,
-    } as LeadInput);
-    // await deleteLead("LEAD-01KE15V5VHN3RM4CZC0909SR5V");
-
-    // await upsertActionDefinition({
-    //   action_definition_id: "ACTDEF-01KE2MFNP4BDWPZKT9SQC7K29Y",
-    //   project_idx: currentProjectId,
-    //   tag: "text-action",
-    //   title: "Text",
-    //   description: "Text",
-    // } as ActionDefinitionInput);
-
-    // await deleteActionDefinition("ACTDEF-01KE2MFNP4BDWPZKT9SQC7K29Y")
-
-    // await upsertAction({
-    //   action_id: "TASK-01KE2MNN7TFQYP2X3J6ESKH1TV",
-    //   project_idx: currentProjectId,
-    //   job_id: null,
-    //   customer_id: "C-3460280222",
-    //   action_definition_id: "ACTDEF-01KE2MFNP4BDWPZKT9SQC7K29Y",
-    //   status: "open",
-    //   priority: "low",
-    //   scheduled_start_date: null,
-    //   completed_date: null,
-    //   title: "Jamie",
-    //   description: null,
-    // } as ActionInput);
-
-    // await deleteAction("TASK-01KE2MNN7TFQYP2X3J6ESKH1TV")
-    // console.log(customerData);
-  };
+  // }, [actionDefinitions]);;
 
   const [rangeStart, setRangeStart] = useState(() => {
     const d = new Date();

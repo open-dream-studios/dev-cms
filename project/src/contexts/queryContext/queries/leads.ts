@@ -43,7 +43,7 @@ export function useLeads(isLoggedIn: boolean, currentProjectId: number | null) {
   });
 
   const upsertLead = async (lead: LeadInput) => {
-    await upsertLeadMutation.mutateAsync(lead);
+    return await upsertLeadMutation.mutateAsync(lead);
   };
 
   const deleteLead = async (lead_id: string) => {

@@ -27,10 +27,7 @@ export async function upsertLeadApi(project_idx: number, lead: LeadInput) {
     ...lead,
     project_idx,
   });
-  return {
-    id: res.data.id,
-    lead_id: res.data.lead_id,
-  };
+  return res.data;
 }
 
 export async function deleteLeadApi(project_idx: number, lead_id: string) {
