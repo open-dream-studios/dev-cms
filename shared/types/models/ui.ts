@@ -45,7 +45,8 @@ export type Screen =
   | "estimations-calculation"
 
   export type CustomersScreen = 
-    | "bookings"
+    | "service"
+    | "cleanings"
     | "subscriptions"
     | "leads"
     | "customer"

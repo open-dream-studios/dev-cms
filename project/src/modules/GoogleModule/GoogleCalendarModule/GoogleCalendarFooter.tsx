@@ -13,6 +13,7 @@ import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { FaPlus } from "react-icons/fa6";
 import { X, Pencil } from "lucide-react";
 import {
+  handleEditEventClick,
   handleEndChange,
   handleStartChange,
   resetInputUI,
@@ -27,15 +28,14 @@ import { IoTrashSharp } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { promptContinue } from "@/modals/_actions/modals.actions";
 import clsx from "clsx";
+import { GoogleCalendarTarget } from "@open-dream/shared";
 
 const CalendarSelection = () => {
   const { currentUser } = useContext(AuthContext);
   const { leftBarOpen } = useUiStore();
   const {
-    newScheduleEventStart,
-    setNewScheduleEventStart,
-    newScheduleEventEnd,
-    setNewScheduleEventEnd,
+    newScheduleEventStart, 
+    newScheduleEventEnd, 
   } = useGoogleCalendarUIStore();
 
   const openAtEightAM = (() => {
@@ -179,35 +179,32 @@ const CalendarSelection = () => {
 };
 
 const SelectedCalendarEventCard = () => {
-  const {
-    selectedCalendarEvent,
-    editingCalendarEvent,
-    setIsCreatingEvent,
-    setEditingCalendarEvent,
-    setNewEventDetails,
-    setNewScheduleEventStart,
-    setNewScheduleEventEnd,
-  } = useGoogleCalendarUIStore();
+  const { selectedCalendarEvent } = useGoogleCalendarUIStore();
   const currentTheme = useCurrentTheme();
 
   if (!selectedCalendarEvent) return null;
 
   const { title, start, end, raw } = selectedCalendarEvent;
 
-  const formatTime = (d: Date) =>
-    d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-
-  const handleEditEventClick = () => {
-    if (!selectedCalendarEvent) return;
-    setIsCreatingEvent(false);
-    setEditingCalendarEvent(selectedCalendarEvent);
-    setNewEventDetails({
-      title: selectedCalendarEvent.title,
-      description: selectedCalendarEvent.raw?.description ?? "",
-      location: selectedCalendarEvent.raw?.location ?? "",
-    });
-    setNewScheduleEventStart(selectedCalendarEvent.start);
-    setNewScheduleEventEnd(selectedCalendarEvent.end);
+  const formatTime = (
+    dateTime?: string,
+    timeZone?: string,
+    fallback?: Date,
+  ) => {
+    if (dateTime) {
+      return new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: timeZone || undefined,
+      }).format(new Date(dateTime));
+    }
+    if (fallback) {
+      return fallback.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    }
+    return "-";
   };
 
   return (
@@ -223,9 +220,13 @@ const SelectedCalendarEventCard = () => {
         //   currentUser?.theme === "dark"
         //     ? "rgba(255,255,255,0.035)"
         //     : "rgba(0,0,0,0.045)",
-        backgroundColor: editingCalendarEvent
-          ? currentTheme.new_google_calendar_event
-          : currentTheme.google_calendar_event,
+        backgroundColor:
+          selectedCalendarEvent.raw?.colorHex ||
+          currentTheme.google_calendar_event,
+        // backgroundColor: editingCalendarEvent
+        //   ? currentTheme.new_google_calendar_event
+        //   : selectedCalendarEvent.raw?.colorHex ||
+        //     currentTheme.google_calendar_event,
         // border: `2px solid ${currentTheme.google_calendar_event}`,
       }}
       onClick={handleEditEventClick}
@@ -238,7 +239,8 @@ const SelectedCalendarEventCard = () => {
       {/* Time + location */}
       <div className="flex flex-wrap gap-x-[6px] text-[12px] opacity-90">
         <span>
-          {formatTime(start)} – {formatTime(end)}
+          {formatTime(raw?.start?.dateTime, raw?.start?.timeZone, start)} –{" "}
+          {formatTime(raw?.end?.dateTime, raw?.end?.timeZone, end)}
         </span>
 
         {raw?.location && (
@@ -260,9 +262,11 @@ const SelectedCalendarEventCard = () => {
 };
 
 const GoogleCalendarFooter = ({
+  calendarTarget,
   refreshCalendar,
   setGoogleEvents,
 }: {
+  calendarTarget: GoogleCalendarTarget;
   refreshCalendar: () => void;
   setGoogleEvents: React.Dispatch<React.SetStateAction<any[]>>;
 }) => {
@@ -313,6 +317,7 @@ const GoogleCalendarFooter = ({
     if (!newScheduleEventStart || !newScheduleEventEnd) return;
 
     const res = await createCalendarEvent({
+      calendarTarget,
       runModule,
       refresh: refreshCalendar,
       start: dateToLocalDateTimeInput(newScheduleEventStart),
@@ -340,6 +345,7 @@ const GoogleCalendarFooter = ({
       () => {},
       async () => {
         await deleteCalendarEvent({
+          calendarTarget,
           eventId: selectedCalendarEvent.id,
           runModule,
           refresh: refreshCalendar,
@@ -359,6 +365,7 @@ const GoogleCalendarFooter = ({
     )
       return;
     const res = await updateCalendarEvent({
+      calendarTarget,
       eventId: editingCalendarEvent.id,
       existingEvent: editingCalendarEvent,
       updates: {
@@ -380,20 +387,11 @@ const GoogleCalendarFooter = ({
     resetInputUI(true);
   };
 
-  const handleEditEventClick = () => {
-    if (!selectedCalendarEvent) return;
-    setIsCreatingEvent(false);
-    setEditingCalendarEvent(selectedCalendarEvent);
-    setNewEventDetails({
-      title: selectedCalendarEvent.title,
-      description: selectedCalendarEvent.raw?.description ?? "",
-      location: selectedCalendarEvent.raw?.location ?? "",
-    });
-    setNewScheduleEventStart(selectedCalendarEvent.start);
-    setNewScheduleEventEnd(selectedCalendarEvent.end);
-  };
-
   const showCalendarInputs = isCreatingEvent || editingCalendarEvent;
+
+  const eventColor =
+    selectedCalendarEvent?.raw?.colorHex ||
+    currentTheme.new_google_calendar_event;
 
   return (
     <div className="mt-[10px] flex flex-col">
@@ -496,7 +494,7 @@ const GoogleCalendarFooter = ({
               }
             `}
             style={{
-              background: `linear-gradient(90deg, ${currentTheme.new_google_calendar_event}, ${currentTheme.new_google_calendar_event})`,
+              background: `linear-gradient(90deg, ${eventColor}, ${eventColor})`,
             }}
           />
         </div>
@@ -532,7 +530,7 @@ const GoogleCalendarFooter = ({
                 onClick={handleSave}
                 className="px-[15px] py-[5px] w-[130px] rounded-md text-sm font-medium text-white hover:brightness-75 dim cursor-pointer"
                 style={{
-                  background: currentTheme.new_google_calendar_event,
+                  background: eventColor,
                   boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
                 }}
               >

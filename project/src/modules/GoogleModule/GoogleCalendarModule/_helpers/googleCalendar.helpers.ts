@@ -1,6 +1,7 @@
 // project/src/modules/GoogleModule/GoogleCalendarModule/_helpers/googleCalendar.helpers.tsx
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { CENTER_INDEX, DAY_START_HOUR, HOURS } from "../GoogleCalendarDisplay";
+import { DateTime } from "luxon";
 import type {
   CalendarEventUpdates,
   GoogleCalendarEventInput,
@@ -72,16 +73,18 @@ export function buildCalendarEvent({
   customerEmail: string;
 }): GoogleCalendarEventInput {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const startInZone = DateTime.fromJSDate(start).setZone(timeZone);
+  const endInZone = DateTime.fromJSDate(end).setZone(timeZone);
   return {
     summary: title,
     description,
     location,
     start: {
-      dateTime: start.toISOString(),
+      dateTime: startInZone.toISO({ suppressMilliseconds: true })!,
       timeZone,
     },
     end: {
-      dateTime: end.toISOString(),
+      dateTime: endInZone.toISO({ suppressMilliseconds: true })!,
       timeZone,
     },
     extendedProperties: {
@@ -108,13 +111,17 @@ export function buildUpdatedGoogleEvent({
     location: updates.location ?? existingEvent.location,
     start: updates.start
       ? {
-          dateTime: updates.start.toISOString(),
+          dateTime: DateTime.fromJSDate(updates.start)
+            .setZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+            .toISO({ suppressMilliseconds: true })!,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }
       : existingEvent.start,
     end: updates.end
       ? {
-          dateTime: updates.end.toISOString(),
+          dateTime: DateTime.fromJSDate(updates.end)
+            .setZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+            .toISO({ suppressMilliseconds: true })!,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }
       : existingEvent.end,
@@ -258,4 +265,24 @@ export const ensureDefaultTime = (
   // START time logic → always 8:00 AM
   d.setHours(8, 0, 0, 0);
   return d;
+};
+
+export const parseWallClockToLocalDate = (dateTime?: string, fallback?: Date) => {
+  if (!dateTime) return fallback ?? new Date();
+  // Keep wall-clock values from Google datetime string (ignore offset for editor defaults)
+  // Example: "2026-03-03T10:00:00-05:00" -> local Date(2026,2,3,10,0,0)
+  const match = dateTime.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/,
+  );
+  if (!match) return fallback ?? new Date(dateTime);
+  const [, y, m, d, hh, mm, ss] = match;
+  return new Date(
+    Number(y),
+    Number(m) - 1,
+    Number(d),
+    Number(hh),
+    Number(mm),
+    Number(ss ?? "0"),
+    0,
+  );
 };

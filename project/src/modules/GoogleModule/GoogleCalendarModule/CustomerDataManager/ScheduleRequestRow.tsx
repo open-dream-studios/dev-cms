@@ -18,6 +18,7 @@ import {
   bookingConfirmationEmail,
   rescheduleConfirmationEmail,
   appDetailsProjectByDomain,
+  GoogleCalendarTarget,
 } from "@open-dream/shared";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { AuthContext } from "@/contexts/authContext";
@@ -94,10 +95,12 @@ export const sourceBackgrounds: Record<string, string> = {
 };
 
 const ScheduleRequestRow = ({
+  calendarTarget,
   request,
   refreshCalendar,
   events,
 }: {
+  calendarTarget: GoogleCalendarTarget,
   request: ScheduleRequest;
   refreshCalendar: () => void;
   events: GoogleCalendarEventRaw[];
@@ -264,6 +267,7 @@ const ScheduleRequestRow = ({
       : request.proposed_start;
 
     const result = await approveAndCreateScheduleEvent(
+      calendarTarget,
       request,
       runModule,
       refreshCalendar,

@@ -9,15 +9,17 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { Bell } from "lucide-react";
-import { GoogleCalendarEventRaw, ScheduleRequest } from "@open-dream/shared";
+import { GoogleCalendarEventRaw, GoogleCalendarTarget, ScheduleRequest } from "@open-dream/shared";
 import { useGoogleCalendarUIStore } from "../_store/googleCalendar.store";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCustomerDataUIStore } from "./_store/customerData.store";
 
 export const CustomerScheduleManager = ({
+  calendarTarget,
   events,
   refreshCalendar,
 }: {
+  calendarTarget: GoogleCalendarTarget,
   events: GoogleCalendarEventRaw[];
   refreshCalendar: () => void;
 }) => {
@@ -168,6 +170,7 @@ export const CustomerScheduleManager = ({
                 .map((req) => (
                   <ScheduleRequestRow
                     key={req.schedule_request_id}
+                    calendarTarget={calendarTarget}
                     request={req}
                     refreshCalendar={refreshCalendar}
                     events={events}

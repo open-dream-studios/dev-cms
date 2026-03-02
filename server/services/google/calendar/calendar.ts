@@ -1,6 +1,7 @@
 // server/services/google/calendar/calendar.ts
 import { google, calendar_v3 } from "googleapis";
 import { AuthoirizeOAuth2Client } from "../google.js";
+import { GLOBAL_COLORS } from "@open-dream/shared";
 
 export type FetchedEvent = calendar_v3.Schema$Event;
 export type FetchResult = {
@@ -91,10 +92,39 @@ export async function fetchCalendarPage(
     privateExtendedProperty,
   });
 
+  const colorsRes = await calendar.colors.get();
+  const eventColorMap = colorsRes.data.event ?? {};
+  const calendarListEntry = await calendar.calendarList.get({ calendarId });
+  const calendarDefaultColor =
+    calendarListEntry.data.backgroundColor || undefined;
+
+  function googleColorTransform(hex: string): string {
+    const GOOGLE_COLOR_MAP: Record<string, string> = {
+      // "#d06b64": "#d88277",
+      "#d06b64": GLOBAL_COLORS.google_calendar_red,
+      "#7ae7bf": GLOBAL_COLORS.google_calendar_green,
+      "#cd74e6": GLOBAL_COLORS.google_calendar_purple,
+    };
+    return GOOGLE_COLOR_MAP[hex] ?? hex;
+  }
+
+  const enrichedEvents = (res.data.items || []).map((ev) => {
+    const colorId = ev.colorId || undefined;
+    const baseColorHex =
+      (colorId ? eventColorMap[colorId]?.background : undefined) ||
+      calendarDefaultColor;
+    const colorHex = baseColorHex ? googleColorTransform(baseColorHex) : undefined;
+    return {
+      ...ev,
+      colorId,
+      colorHex,
+    };
+  });
+
   return {
-    events: res.data.items || [],
+    events: enrichedEvents,
     nextPageToken: res.data.nextPageToken ?? null,
-    resultSizeEstimate: res.data.items ? res.data.items.length : 0,
+    resultSizeEstimate: enrichedEvents.length,
   };
 }
 
@@ -136,9 +166,38 @@ export async function createEvent(
     GOOGLE_REFRESH_TOKEN_OBJECT
   );
 
+  const calendarMeta = await calendar.calendars.get({ calendarId });
+  const calendarTimeZone = calendarMeta.data.timeZone || "UTC";
+
+  const normalizeDateTimeForCalendarZone = (dateTime?: string | null) => {
+    if (!dateTime) return dateTime ?? undefined;
+    // Keep wall-clock part and let Google apply calendar timezone.
+    // Example: "2026-03-03T11:00:00-08:00" -> "2026-03-03T11:00:00"
+    const match = dateTime.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+    return match?.[1] ?? dateTime;
+  };
+
+  const normalizedEvent: calendar_v3.Schema$Event = {
+    ...event,
+    start: event.start?.dateTime
+      ? {
+          ...event.start,
+          dateTime: normalizeDateTimeForCalendarZone(event.start.dateTime),
+          timeZone: calendarTimeZone,
+        }
+      : event.start,
+    end: event.end?.dateTime
+      ? {
+          ...event.end,
+          dateTime: normalizeDateTimeForCalendarZone(event.end.dateTime),
+          timeZone: calendarTimeZone,
+        }
+      : event.end,
+  };
+
   const res = await calendar.events.insert({
     calendarId,
-    requestBody: event,
+    requestBody: normalizedEvent,
     sendUpdates: "none",
   });
 
@@ -160,10 +219,37 @@ export async function updateEvent(
     GOOGLE_REFRESH_TOKEN_OBJECT
   );
 
+  const calendarMeta = await calendar.calendars.get({ calendarId });
+  const calendarTimeZone = calendarMeta.data.timeZone || "UTC";
+
+  const normalizeDateTimeForCalendarZone = (dateTime?: string | null) => {
+    if (!dateTime) return dateTime ?? undefined;
+    const match = dateTime.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+    return match?.[1] ?? dateTime;
+  };
+
+  const normalizedEvent: calendar_v3.Schema$Event = {
+    ...event,
+    start: event.start?.dateTime
+      ? {
+          ...event.start,
+          dateTime: normalizeDateTimeForCalendarZone(event.start.dateTime),
+          timeZone: calendarTimeZone,
+        }
+      : event.start,
+    end: event.end?.dateTime
+      ? {
+          ...event.end,
+          dateTime: normalizeDateTimeForCalendarZone(event.end.dateTime),
+          timeZone: calendarTimeZone,
+        }
+      : event.end,
+  };
+
   const res = await calendar.events.update({
     calendarId,
     eventId,
-    requestBody: event,
+    requestBody: normalizedEvent,
     sendUpdates: "none",
   });
 

@@ -9,6 +9,8 @@ export type GoogleCalendarRequestType =
   | "DELETE_EVENT"
   | "GET_EVENTS_BY_CUSTOMER";
 
+export type GoogleCalendarTarget = 1 | 2;
+
 export interface GoogleCalendarEventInput {
   summary: string;
   description?: string;
@@ -61,18 +63,21 @@ export interface LocalDateTimeInput {
 export interface GoogleCalendarCreateEventRequest {
   requestType: "CREATE_EVENT";
   event: GoogleCalendarEventInput;
+  calendarTarget: GoogleCalendarTarget;
 }
 
 export interface GoogleCalendarUpdateEventRequest {
   requestType: "UPDATE_EVENT";
   eventId: string;
   event: GoogleCalendarEventInput;
+  calendarTarget: GoogleCalendarTarget;
 }
 
 export interface GoogleCalendarDeleteEventRequest {
   requestType: "DELETE_EVENT";
   eventId: string;
   sendNotifications?: boolean;
+  calendarTarget: GoogleCalendarTarget;
 }
 
 export interface GoogleCalendarListEventsRequest {
@@ -83,11 +88,13 @@ export interface GoogleCalendarListEventsRequest {
   timeMax?: string;
   singleEvents?: boolean;
   orderBy?: string;
+  calendarTarget: GoogleCalendarTarget;
 }
 
 export interface GoogleCalendarGetEventRequest {
   requestType: "GET_EVENT";
   eventId: string;
+  calendarTarget: GoogleCalendarTarget;
 }
 
 export interface GoogleCalendarGetEventsByCustomerRequest {
@@ -96,10 +103,12 @@ export interface GoogleCalendarGetEventsByCustomerRequest {
   timeMin?: string;
   timeMax?: string;
   pageSize?: number;
+  calendarTarget: GoogleCalendarTarget;
 }
 
 export interface GoogleCalendarProfileRequest {
   requestType: "GET_PROFILE_WITH_PHOTO";
+  calendarTarget: GoogleCalendarTarget;
 }
 
 export type GoogleCalendarRequest =
@@ -125,6 +134,8 @@ export interface CalendarEvent {
 
 export interface GoogleCalendarEventRaw {
   id: string;
+  colorId?: string;
+  colorHex?: string;
   summary?: string;
   description?: string;
   location?: string;

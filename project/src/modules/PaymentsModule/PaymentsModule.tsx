@@ -55,7 +55,9 @@ const PaymentsModule = () => {
   useEffect(() => {
     if (!subscriptions.length) return;
     if (selectedSubscriptionId) return;
-    setSelectedSubscriptionId(subscriptions[0].stripe_subscription_id);
+    const activeSubs = subscriptions.filter((sub) => sub.status === "active")
+    if (!activeSubs.length) return
+    setSelectedSubscriptionId(activeSubs[0].stripe_subscription_id);
   }, [subscriptions, selectedSubscriptionId, setSelectedSubscriptionId]);
 
   const normalizedQuery = customerQuery.trim().toLowerCase();

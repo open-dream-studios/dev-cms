@@ -1,4 +1,5 @@
 // project/src/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendarUI.actions.ts
+import { parseWallClockToLocalDate } from "../_helpers/googleCalendar.helpers";
 import {
   defaultNewEvent,
   useGoogleCalendarUIStore,
@@ -287,3 +288,34 @@ export const handleRescheduleEndChange = (date: Date | null, timeInput: boolean)
     setRescheduleStart(new Date(nextEnd.getTime() - duration));
   }
 };
+
+export const handleEditEventClick = () => {
+    const {
+      selectedCalendarEvent,
+      setIsCreatingEvent,
+      setEditingCalendarEvent,
+      setNewEventDetails,
+      setNewScheduleEventStart,
+      setNewScheduleEventEnd,
+    } = useGoogleCalendarUIStore.getState();
+    if (!selectedCalendarEvent) return;
+    setIsCreatingEvent(false);
+    setEditingCalendarEvent(selectedCalendarEvent);
+    setNewEventDetails({
+      title: selectedCalendarEvent.title,
+      description: selectedCalendarEvent.raw?.description ?? "",
+      location: selectedCalendarEvent.raw?.location ?? "",
+    });
+    setNewScheduleEventStart(
+      parseWallClockToLocalDate(
+        selectedCalendarEvent.raw?.start?.dateTime,
+        selectedCalendarEvent.start,
+      ),
+    );
+    setNewScheduleEventEnd(
+      parseWallClockToLocalDate(
+        selectedCalendarEvent.raw?.end?.dateTime,
+        selectedCalendarEvent.end,
+      ),
+    );
+  };

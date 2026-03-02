@@ -30,7 +30,7 @@ async function getGoogleKeys(PROJECT_IDX: number) {
   const keys = [
     "GOOGLE_CLIENT_SECRET_OBJECT",
     "GOOGLE_REFRESH_TOKEN_OBJECT",
-    "GOOGLE_CALENDAR_ID",
+    "GOOGLE_CALENDAR_ID2",
   ];
   const decryptedKeys = await getDecryptedIntegrationsFunction(
     PROJECT_IDX,
@@ -283,13 +283,13 @@ export async function runSubscriptionSchedule(PROJECT_IDX: number) {
   if (
     decryptedKeys?.GOOGLE_CLIENT_SECRET_OBJECT &&
     decryptedKeys?.GOOGLE_REFRESH_TOKEN_OBJECT &&
-    decryptedKeys?.GOOGLE_CALENDAR_ID
+    decryptedKeys?.GOOGLE_CALENDAR_ID2
   ) {
     // console.log("📅 Syncing subscription events...");
     // await syncSubscriptionEvents(
     //   decryptedKeys.GOOGLE_CLIENT_SECRET_OBJECT,
     //   decryptedKeys.GOOGLE_REFRESH_TOKEN_OBJECT,
-    //   decryptedKeys.GOOGLE_CALENDAR_ID,
+    //   decryptedKeys.GOOGLE_CALENDAR_ID2,
     //   validCleanings
     // );
   } else {

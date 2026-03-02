@@ -11,7 +11,6 @@ import { getDecryptedIntegrationsFunction } from "../../../handlers/integrations
 import { fetchCalendarPage } from "../../../services/google/calendar/calendar.js";
 import { getProjectDomainFromWixRequest } from "../../../util/verifyWixRequest.js";
 import { getProjectIdByDomain } from "../../../handlers/projects/projects_repositories.js";
-import { ScheduleRequest } from "@open-dream/shared";
 
 // ---------- SCHEDULE REQUEST CONTROLLERS ----------
 
@@ -132,7 +131,7 @@ export const getScheduleAvailability = async (
   if (!project_idx) throw new Error("Missing required fields");
 
   const REQUIRED_KEYS = [
-    "GOOGLE_CALENDAR_ID",
+    "GOOGLE_CALENDAR_ID1",
     "GOOGLE_CLIENT_SECRET_OBJECT",
     "GOOGLE_REFRESH_TOKEN_OBJECT",
   ];
@@ -147,7 +146,7 @@ export const getScheduleAvailability = async (
   }
 
   const {
-    GOOGLE_CALENDAR_ID,
+    GOOGLE_CALENDAR_ID1,
     GOOGLE_CLIENT_SECRET_OBJECT,
     GOOGLE_REFRESH_TOKEN_OBJECT,
   } = decryptedKeys;
@@ -159,12 +158,12 @@ export const getScheduleAvailability = async (
   if (
     !GOOGLE_CLIENT_SECRET_OBJECT ||
     !GOOGLE_REFRESH_TOKEN_OBJECT ||
-    !GOOGLE_CALENDAR_ID
+    !GOOGLE_CALENDAR_ID1
   )
     return {
       busy: [],
     };
-  const calendarId = GOOGLE_CALENDAR_ID;
+  const calendarId = GOOGLE_CALENDAR_ID1;
 
   const page = await fetchCalendarPage(
     GOOGLE_CLIENT_SECRET_OBJECT,

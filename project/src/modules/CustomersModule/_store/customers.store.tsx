@@ -7,5 +7,5 @@ export const contactFilterOptions: ContactFilter[] = ["contacts", "customers"];
 
 export const useCustomerUiStore = createStore({
   contactsFilter: "contacts" as ContactFilter,
-  customersScreen: "bookings" as CustomersScreen
+  customersScreen: "service" as CustomersScreen
 });

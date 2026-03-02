@@ -8,6 +8,7 @@ import MessagesApp from "../MessagesModule/MessagesApp";
 import {
   ActionDefinitionInput,
   ActionInput,
+  GoogleCalendarTarget,
   LeadInput,
 } from "@open-dream/shared";
 import { useCurrentDataStore } from "@/store/currentDataStore";
@@ -111,11 +112,19 @@ export default function CustomerManager() {
     return d;
   });
 
-  const { events, isLoading, isFetching, refresh } = useGoogleCalendar(
-    "primary",
-    rangeStart.toISOString(),
-    rangeEnd.toISOString(),
-  );
+  const { events: calendar1Events, refresh: refreshCalendar1 } =
+    useGoogleCalendar(
+      rangeStart.toISOString(),
+      rangeEnd.toISOString(),
+      1 as GoogleCalendarTarget,
+    );
+
+  const { events: calendar2Events, refresh: refreshCalendar2 } =
+    useGoogleCalendar(
+      rangeStart.toISOString(),
+      rangeEnd.toISOString(),
+      2 as GoogleCalendarTarget,
+    );
 
   function loadMorePast() {
     setRangeStart((prev) => {
@@ -133,20 +142,39 @@ export default function CustomerManager() {
     });
   }
 
-  if (customersScreen === "bookings") {
+  if (customersScreen === "service") {
     return (
       <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
         {hasProjectModule("google-calendar-module") && (
           <GoogleCalendarDisplay
-            events={events}
-            refreshCalendar={refresh}
+            events={calendar1Events}
+            refreshCalendar={refreshCalendar1}
             fetchStart={rangeStart}
             fetchEnd={rangeEnd}
+            calendarTarget={1 as GoogleCalendarTarget}
           />
         )}
         {(hasProjectModule("customer-schedule-requests-module") ||
           hasProjectModule("customer-leads-module")) && (
-          <CustomerScheduleManager events={events} refreshCalendar={refresh} />
+          <CustomerScheduleManager
+            events={calendar1Events}
+            refreshCalendar={refreshCalendar1}
+            calendarTarget={1 as GoogleCalendarTarget}
+          />
+        )}
+      </div>
+    );
+  } else if (customersScreen === "cleanings") {
+    return (
+      <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
+        {hasProjectModule("google-calendar-module") && (
+          <GoogleCalendarDisplay
+            events={calendar2Events}
+            refreshCalendar={refreshCalendar2}
+            fetchStart={rangeStart}
+            fetchEnd={rangeEnd}
+            calendarTarget={2 as GoogleCalendarTarget}
+          />
         )}
       </div>
     );

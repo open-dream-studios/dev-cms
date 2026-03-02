@@ -139,7 +139,8 @@ const CustomersModuleLeftBar = () => {
           <Divider />
 
           <div className="mb-[9px] mt-[9px]">
-            <CustomersModuleLeftBarTab tab="bookings" />
+            <CustomersModuleLeftBarTab tab="service" />
+            <CustomersModuleLeftBarTab tab="cleanings" />
             <CustomersModuleLeftBarTab tab="subscriptions" />
             <CustomersModuleLeftBarTab tab="leads" />
           </div>

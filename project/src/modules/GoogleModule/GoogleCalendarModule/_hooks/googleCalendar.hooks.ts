@@ -1,18 +1,18 @@
 // project/src/GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks.ts
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContextQueries } from "../../../../contexts/queryContext/queryContext";
-import { GoogleCalendarEventRaw } from "@open-dream/shared";
+import { GoogleCalendarEventRaw, GoogleCalendarTarget } from "@open-dream/shared";
 
 export function useGoogleCalendar(
-  calendarId: string,
   timeMin: string,
-  timeMax: string
+  timeMax: string,
+  calendarTarget: GoogleCalendarTarget
 ) {
   const { runModule } = useContextQueries();
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["calendar-range", calendarId, timeMin, timeMax],
+    queryKey: ["calendar-range", calendarTarget, timeMin, timeMax],
     queryFn: async () => {
       // Fetch ALL events inside this time range.
       // We must loop Google pagination manually.
@@ -22,6 +22,7 @@ export function useGoogleCalendar(
       do {
         const res = await runModule("google-calendar-module", {
           requestType: "LIST_EVENTS",
+          calendarTarget,
           pageToken,
           timeMin,
           timeMax,
@@ -35,7 +36,7 @@ export function useGoogleCalendar(
 
         pageToken = res?.data?.nextPageToken ?? null;
       } while (pageToken);
-      // console.log(allEvents)
+      console.log(allEvents)
       return allEvents;
     },
     staleTime: 1000 * 60 * 3,
@@ -43,7 +44,7 @@ export function useGoogleCalendar(
 
   const refresh = () =>
     queryClient.invalidateQueries({
-      queryKey: ["calendar-range", calendarId],
+      queryKey: ["calendar-range", calendarTarget],
       exact: false,
     });
 
@@ -55,13 +56,14 @@ export function useGoogleCalendar(
   };
 }
 
-export function useCalendarProfile() {
+export function useCalendarProfile(calendarTarget: number) {
   const { runModule } = useContextQueries();
   return useQuery({
     queryKey: ["calendar-profile"],
     queryFn: async () => {
       const res = await runModule("google-calendar-module", {
         requestType: "GET_PROFILE_WITH_PHOTO",
+        calendarTarget,
       });
       return res?.data;
     },

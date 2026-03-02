@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Minimize2,
   Maximize2,
+  RefreshCw,
 } from "lucide-react";
 import { AuthContext } from "@/contexts/authContext";
 import { getInnerCardStyle } from "@/styles/themeStyles";
@@ -27,7 +28,11 @@ import {
   weekIndexOffsetForDate,
 } from "./_helpers/googleCalendar.helpers";
 import { resetInputUI } from "@/modules/GoogleModule/GoogleCalendarModule/_actions/googleCalendarUI.actions";
-import { CalendarEvent, GoogleCalendarEventRaw } from "@open-dream/shared";
+import {
+  CalendarEvent,
+  GoogleCalendarEventRaw,
+  GoogleCalendarTarget,
+} from "@open-dream/shared";
 import GoogleCalendarFooter from "./GoogleCalendarFooter";
 import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
 import clsx from "clsx";
@@ -54,11 +59,13 @@ export const GoogleCalendarDisplay = ({
   refreshCalendar,
   fetchStart,
   fetchEnd,
+  calendarTarget,
 }: {
   events: GoogleCalendarEventRaw[];
   refreshCalendar: () => void;
   fetchStart: Date;
   fetchEnd: Date;
+  calendarTarget: GoogleCalendarTarget;
 }) => {
   const { currentUser } = React.useContext(AuthContext);
   const currentTheme = useCurrentTheme();
@@ -98,13 +105,15 @@ export const GoogleCalendarDisplay = ({
     const normalized: CalendarEvent[] = (
       events as GoogleCalendarEventRaw[]
     ).map((ev) => {
-      const startDT = DateTime.fromISO(ev.start.dateTime || ev.start.date!, {
-        zone: ev.start.timeZone,
-      });
+      // Respect explicit offsets in Google dateTime first (ex: -05:00),
+      // then fallback to provided timeZone only when dateTime has no offset / all-day values.
+      const startDT = ev.start.dateTime
+        ? DateTime.fromISO(ev.start.dateTime, { setZone: true })
+        : DateTime.fromISO(ev.start.date!, { zone: ev.start.timeZone });
 
-      const endDT = DateTime.fromISO(ev.end.dateTime || ev.end.date!, {
-        zone: ev.end.timeZone,
-      });
+      const endDT = ev.end.dateTime
+        ? DateTime.fromISO(ev.end.dateTime, { setZone: true })
+        : DateTime.fromISO(ev.end.date!, { zone: ev.end.timeZone });
 
       return {
         id: ev.id,
@@ -714,6 +723,13 @@ export const GoogleCalendarDisplay = ({
         </div>
 
         <div className="flex flex-row gap-[5px]">
+          <button
+            onClick={refreshCalendar}
+            className="cursor-pointer hover:brightness-75 dim px-2 py-1 rounded-md bg-[#292929]"
+            title={"Resync"}
+          >
+            <RefreshCw size={13}/>
+          </button>
           {!calendarCollapsed && (
             <button
               onClick={() => {
@@ -851,7 +867,7 @@ export const GoogleCalendarDisplay = ({
                           position: "absolute",
                           left: `${idx * colW}px`,
                           backgroundColor: currentTheme.innerCard,
-                          opacity: isOutsideFetch ? 0.4 : 1
+                          opacity: isOutsideFetch ? 0.4 : 1,
                         }}
                       >
                         <div className="text-center font-semibold text-[11px] leading-[13px]">
@@ -1015,6 +1031,7 @@ export const GoogleCalendarDisplay = ({
                                   left: "0.5px",
                                   right: "0.5px",
                                   backgroundColor:
+                                    ev.raw?.colorHex ||
                                     currentTheme.google_calendar_event,
                                 }}
                               >
@@ -1063,6 +1080,7 @@ export const GoogleCalendarDisplay = ({
                                   left: "0.5px",
                                   right: "0.5px",
                                   backgroundColor:
+                                    editingCalendarEvent?.raw?.colorHex ||
                                     currentTheme.new_google_calendar_event,
                                 }}
                               >
@@ -1202,6 +1220,7 @@ export const GoogleCalendarDisplay = ({
 
       {!calendarCollapsed && (
         <GoogleCalendarFooter
+          calendarTarget={calendarTarget}
           refreshCalendar={refreshCalendar}
           setGoogleEvents={setGoogleEvents}
         />
