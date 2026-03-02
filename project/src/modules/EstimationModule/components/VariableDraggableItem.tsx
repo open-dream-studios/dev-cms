@@ -100,12 +100,13 @@ const VariableDraggableItem = ({
           displayOnly={false}
         />
       </div>
+
       {currentProcessRunId !== null && runInputsOpen && (
         <div
-          className="z-5001 absolute left-[238px] top-[6px] rounded-[4px]"
+          className="z-5001 absolute left-[234px] top-[6px] rounded-[4px]"
           style={{ backgroundColor: currentTheme.background_2_dim }}
         >
-          {/* NUMBER */}
+          
           {fact.fact_type === "number" && (
             <input
               type="text"
@@ -120,7 +121,6 @@ const VariableDraggableItem = ({
             />
           )}
 
-          {/* STRING */}
           {fact.fact_type === "string" && (
             <input
               type="text"
@@ -130,7 +130,6 @@ const VariableDraggableItem = ({
             />
           )}
 
-          {/* BOOLEAN */}
           {fact.fact_type === "boolean" && (
             <select
               className="w-[98px] h-[30px] px-[6px] text-[14px] outline-none border-none"
@@ -143,7 +142,6 @@ const VariableDraggableItem = ({
             </select>
           )}
 
-          {/* ENUM (✅ STORES option_id) */}
           {fact.fact_type === "enum" && (
             <select
               className="w-[98px] h-[30px] px-[6px] text-[14px] outline-none border-none"

@@ -28,7 +28,7 @@ import { IoTrashSharp } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { promptContinue } from "@/modals/_actions/modals.actions";
 import clsx from "clsx";
-import { GoogleCalendarTarget } from "@open-dream/shared";
+import { GoogleCalendarTarget, LedgerCreditType } from "@open-dream/shared";
 
 const CalendarSelection = () => {
   const { currentUser } = useContext(AuthContext);
@@ -277,16 +277,12 @@ const GoogleCalendarFooter = ({
     isCreatingEvent,
     setIsCreatingEvent,
     newScheduleEventStart,
-    newScheduleEventEnd,
-    setNewScheduleEventStart,
-    setNewScheduleEventEnd,
+    newScheduleEventEnd, 
     selectedCalendarEvent,
     newEventDetails,
     setNewEventDetails,
-    editingCalendarEvent,
-    setEditingCalendarEvent,
+    editingCalendarEvent, 
   } = useGoogleCalendarUIStore();
-
   const { runModule } = useContextQueries();
 
   const barRef = useRef<HTMLDivElement>(null);
@@ -325,8 +321,11 @@ const GoogleCalendarFooter = ({
       title: title.trim().length > 0 ? title : "New Event",
       description: description.trim().length > 0 ? description : "",
       location: location.trim().length > 0 ? location : "",
-      customerId: null as any,
-      customerEmail: null as any,
+      extProp: {
+        customer_id: null,
+        credit_type: 1 as LedgerCreditType,
+        completed: false,
+      }
     });
     if (res.ok) {
       toast.success("Calendar updated");

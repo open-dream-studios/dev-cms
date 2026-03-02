@@ -72,7 +72,7 @@ export default function EstimationsLeftBar() {
       );
     } else if (folderScope === "estimation_process") {
       scopedFacts = estimationProcesses;
-    } 
+    }
     return scopedFacts;
   }, [factDefinitions, variableView, folderScope, estimationProcesses]);
 
@@ -136,7 +136,7 @@ export default function EstimationsLeftBar() {
           </div>
         </div>
       ) : (
-        <div className="w-[100%] h-[100%] flex flex-col">
+        <div className="w-[100%] h-[100%] flex flex-col z-100">
           {currentProcessRunId !== null && (
             <div>
               {runInputsOpen ? (
@@ -146,14 +146,14 @@ export default function EstimationsLeftBar() {
                     borderRight: "0.5px solid " + currentTheme.background_2,
                     backgroundColor: currentTheme.background_1,
                   }}
-                  className="w-[120px] h-[100%] left-[100%] absolute top-0 z-500"
+                  className="w-[120px] h-[100%] left-[100%] absolute top-0 z-300"
                 >
                   <LuPanelLeftClose
                     style={{ color: currentTheme.text_4 }}
                     className="mt-[15px] ml-[85px] dim cursor-pointer brightness-75 hover:brightness-50 w-[22px] h-[22px]"
-                    onClick={() => { 
+                    onClick={() => {
                       setRunInputsOpen(false);
-                    }} 
+                    }}
                   />
                 </div>
               ) : (
@@ -277,10 +277,8 @@ export default function EstimationsLeftBar() {
           </div>
 
           {variableView === "fact" && (
-            <div className="w-[100%] h-[100%] overflow-y-auto flex flex-col gap-[4px]">
-              <div className={`px-[12px] flex-1 overflow-y-auto w-[100%]`}>
-                <FolderTree folderScope={"estimation_fact_definition"} />
-              </div>
+            <div className="px-[12px] w-[100%] h-[100%] flex-1 relative">
+              <FolderTree folderScope={"estimation_fact_definition"} />
             </div>
           )}
 

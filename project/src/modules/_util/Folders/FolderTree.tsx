@@ -48,7 +48,7 @@ const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
     ) {
       return;
     }
-    if (screen === "estimations-pricing") {
+    if (screen !== "media") {
       setSelectedFolderForScope(folderScope, null);
     }
   });
@@ -56,7 +56,7 @@ const FolderTree = ({ folderScope }: { folderScope: FolderScope }) => {
   return (
     <div
       ref={containerRef}
-      className="px-[4px] flex-1 overflow-y-auto w-full pt-[1px]"
+      className="px-[4px] flex-1 w-full pt-[1px]"
     >
       <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
         {flat.map((f, index) => {

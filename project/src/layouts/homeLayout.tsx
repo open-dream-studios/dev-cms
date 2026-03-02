@@ -16,7 +16,7 @@ export const HomeLayout = ({ left, top, children }: HomeLayoutProps) => {
     <div className="flex w-[100%] h-[100%] relative">
       {left && (
         <div
-          className="shrink-0 h-[100%] hidden min-[870px]:block"
+          className="shrink-0 h-[100%] hidden min-[870px]:block relative overflow-visible z-[40]"
           style={{ width: homeLayoutLeftBarWidth }}
         >
           {left}

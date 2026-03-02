@@ -5,6 +5,7 @@ import type {
   GoogleCalendarEventRaw,
   GoogleCalendarTarget,
   GoogleCalendarUpdateEventRequest,
+  LedgerCreditType,
   LocalDateTimeInput,
   ScheduleRequest,
   ScheduleRequestInput,
@@ -21,13 +22,6 @@ import { toast } from "react-toastify";
 import { queryClient } from "@/lib/queryClient";
 import { showSuccessToast } from "@/util/functions/UI";
 
-export type CalendarExtendedProperties = {
-  customer_id?: string;        // absent or undefined = unlinked
-  credit_type?: "1" | "2";     // required if customer_id exists
-  confirmed?: "true" | "false";       // present only after completion
-  ledger_adjustment_id?: string;       // ledger transaction id (after deduction)
-};
-
 export const createCalendarEvent = async ({
   calendarTarget,
   runModule,
@@ -37,10 +31,9 @@ export const createCalendarEvent = async ({
   title,
   description,
   location,
-  customerId,
-  customerEmail,
+  extProp,
 }: {
-  calendarTarget: GoogleCalendarTarget
+  calendarTarget: GoogleCalendarTarget;
   runModule: (identifier: string, body: any) => any;
   refresh: () => void;
   start: LocalDateTimeInput;
@@ -48,8 +41,11 @@ export const createCalendarEvent = async ({
   title: string;
   description?: string;
   location?: string;
-  customerId: string;
-  customerEmail: string;
+  extProp: {
+    customer_id: string | null;
+    credit_type: LedgerCreditType;
+    completed: boolean;
+  }
 }) => {
   const startDate = buildLocalDate(start);
   const endDate = buildLocalDate(end);
@@ -60,14 +56,17 @@ export const createCalendarEvent = async ({
     location,
     start: startDate,
     end: endDate,
-    customerId,
-    customerEmail,
+    extendedProperties: {
+      customer_id: extProp.customer_id ?? undefined,
+      credit_type: `${extProp.credit_type}`,
+      completed: `${extProp.completed}`
+    },
   });
 
   const request: GoogleCalendarCreateEventRequest = {
     requestType: "CREATE_EVENT",
     event,
-    calendarTarget
+    calendarTarget,
   };
 
   const res = await runModule("google-calendar-module", request);
@@ -83,7 +82,7 @@ export const updateCalendarEvent = async ({
   runModule,
   refresh,
 }: {
-  calendarTarget: GoogleCalendarTarget,
+  calendarTarget: GoogleCalendarTarget;
   eventId: string;
   existingEvent: any;
   updates: CalendarEventUpdates;
@@ -110,7 +109,7 @@ export const deleteCalendarEvent = async ({
   setGoogleEvents,
   refresh,
 }: {
-  calendarTarget: GoogleCalendarTarget,
+  calendarTarget: GoogleCalendarTarget;
   eventId: string;
   runModule: (identifier: string, body: any) => any;
   refresh: () => void;
@@ -121,7 +120,7 @@ export const deleteCalendarEvent = async ({
     requestType: "DELETE_EVENT",
     eventId,
     sendNotifications: false,
-    calendarTarget
+    calendarTarget,
   };
   await runModule("google-calendar-module", request);
   setGoogleEvents((prev) => prev.filter((e) => e.id !== eventId));

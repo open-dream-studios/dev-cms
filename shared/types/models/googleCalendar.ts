@@ -11,6 +11,13 @@ export type GoogleCalendarRequestType =
 
 export type GoogleCalendarTarget = 1 | 2;
 
+export type CalendarExtendedProperties = {
+  customer_id?: string; // absent or undefined = unlinked
+  credit_type?: "1" | "2" | "3"; // required if customer_id exists
+  completed?: "true" | "false"; // present only after completion
+  ledger_adjustment_id?: string; // ledger transaction id (after deduction)
+};
+
 export interface GoogleCalendarEventInput {
   summary: string;
   description?: string;
@@ -23,19 +30,22 @@ export interface GoogleCalendarEventInput {
     dateTime: string; // ISO
     timeZone: string;
   };
+  // extendedProperties?: {
+  //   private?: {
+  //     customerId?: string;
+  //     scheduleRequestId?: string;
+  //     customerEmail?: string;
+  //     customerName?: string;
+  //     customerPhone?: string;
+  //     customerAddress?: string;
+  //     customerProductMake?: string;
+  //     customerProductModel?: string;
+  //     customerProductYear?: string;
+  //     eventDescription?: string;
+  //   };
+  // };
   extendedProperties?: {
-    private?: {
-      customerId?: string;
-      scheduleRequestId?: string;
-      customerEmail?: string;
-      customerName?: string;
-      customerPhone?: string;
-      customerAddress?: string;
-      customerProductMake?: string;
-      customerProductModel?: string;
-      customerProductYear?: string;
-      eventDescription?: string;
-    };
+    private?: CalendarExtendedProperties;
   };
   reminders?: {
     useDefault?: boolean;
@@ -48,8 +58,9 @@ export type CalendarEventUpdates = {
   location?: string;
   start?: Date;
   end?: Date;
-  customerId?: string;
-  customerEmail?: string;
+  // customerId?: string;
+  // customerEmail?: string;
+  extendedProperties?: CalendarExtendedProperties;
 };
 
 export interface LocalDateTimeInput {

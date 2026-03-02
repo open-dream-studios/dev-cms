@@ -4,6 +4,7 @@ import { CENTER_INDEX, DAY_START_HOUR, HOURS } from "../GoogleCalendarDisplay";
 import { DateTime } from "luxon";
 import type {
   CalendarEventUpdates,
+  CalendarExtendedProperties,
   GoogleCalendarEventInput,
   LocalDateTimeInput,
   ScheduleRequest,
@@ -61,16 +62,14 @@ export function buildCalendarEvent({
   location,
   start,
   end,
-  customerId,
-  customerEmail,
+  extendedProperties,
 }: {
   title: string;
   description?: string;
   location?: string;
   start: Date;
   end: Date;
-  customerId: string;
-  customerEmail: string;
+  extendedProperties?: CalendarExtendedProperties;
 }): GoogleCalendarEventInput {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const startInZone = DateTime.fromJSDate(start).setZone(timeZone);
@@ -89,8 +88,18 @@ export function buildCalendarEvent({
     },
     extendedProperties: {
       private: {
-        ...(customerId ? { customerId } : {}),
-        ...(customerEmail ? { customerEmail } : {}),
+        ...(extendedProperties?.customer_id && {
+          customer_id: extendedProperties.customer_id,
+        }),
+        ...(extendedProperties?.credit_type && {
+          credit_type: extendedProperties.credit_type,
+        }),
+        ...(extendedProperties?.completed && {
+          completed: extendedProperties.completed,
+        }),
+        ...(extendedProperties?.ledger_adjustment_id && {
+          ledger_adjustment_id: extendedProperties.ledger_adjustment_id,
+        }),
       },
     },
     reminders: { useDefault: true },
@@ -128,8 +137,18 @@ export function buildUpdatedGoogleEvent({
     extendedProperties: {
       private: {
         ...(existingEvent.extendedProperties?.private ?? {}),
-        ...(updates.customerId && { customerId: updates.customerId }),
-        ...(updates.customerEmail && { customerEmail: updates.customerEmail }),
+        ...(updates.extendedProperties?.customer_id !== undefined && {
+          customer_id: updates.extendedProperties.customer_id,
+        }),
+        ...(updates.extendedProperties?.credit_type !== undefined && {
+          credit_type: updates.extendedProperties.credit_type,
+        }),
+        ...(updates.extendedProperties?.completed !== undefined && {
+          completed: updates.extendedProperties.completed,
+        }),
+        ...(updates.extendedProperties?.ledger_adjustment_id !== undefined && {
+          ledger_adjustment_id: updates.extendedProperties.ledger_adjustment_id,
+        }),
       },
     },
   };
@@ -200,16 +219,16 @@ export function scheduleRequestToCalendarEvent(
     },
     extendedProperties: {
       private: {
-        customerId: schedule.customer_id ?? undefined,
-        scheduleRequestId: schedule.schedule_request_id,
-        customerEmail: schedule.metadata?.customer.email ?? undefined,
-        customerName: schedule.metadata?.customer.name ?? undefined,
-        customerPhone: schedule.metadata?.customer.phone ?? undefined,
-        customerAddress: schedule.metadata?.customer.address ?? undefined,
-        customerProductMake: schedule.metadata?.product.make ?? undefined,
-        customerProductModel: schedule.metadata?.product.model ?? undefined,
-        customerProductYear: schedule.metadata?.product.year ?? undefined,
-        eventDescription: schedule.event_description ?? undefined,
+        customer_id: schedule.customer_id ?? undefined,
+        //   scheduleRequestId: schedule.schedule_request_id,
+        //   customerEmail: schedule.metadata?.customer.email ?? undefined,
+        //   customerName: schedule.metadata?.customer.name ?? undefined,
+        //   customerPhone: schedule.metadata?.customer.phone ?? undefined,
+        //   customerAddress: schedule.metadata?.customer.address ?? undefined,
+        //   customerProductMake: schedule.metadata?.product.make ?? undefined,
+        //   customerProductModel: schedule.metadata?.product.model ?? undefined,
+        //   customerProductYear: schedule.metadata?.product.year ?? undefined,
+        //   eventDescription: schedule.event_description ?? undefined,
       },
     },
     reminders: { useDefault: true },
@@ -267,12 +286,15 @@ export const ensureDefaultTime = (
   return d;
 };
 
-export const parseWallClockToLocalDate = (dateTime?: string, fallback?: Date) => {
+export const parseWallClockToLocalDate = (
+  dateTime?: string,
+  fallback?: Date
+) => {
   if (!dateTime) return fallback ?? new Date();
   // Keep wall-clock values from Google datetime string (ignore offset for editor defaults)
   // Example: "2026-03-03T10:00:00-05:00" -> local Date(2026,2,3,10,0,0)
   const match = dateTime.match(
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/,
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/
   );
   if (!match) return fallback ?? new Date(dateTime);
   const [, y, m, d, hh, mm, ss] = match;
@@ -283,6 +305,6 @@ export const parseWallClockToLocalDate = (dateTime?: string, fallback?: Date) =>
     Number(hh),
     Number(mm),
     Number(ss ?? "0"),
-    0,
+    0
   );
 };

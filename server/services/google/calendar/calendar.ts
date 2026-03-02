@@ -90,7 +90,7 @@ export async function fetchCalendarPage(
     showDeleted,
     q,
     privateExtendedProperty,
-  });
+  }); 
 
   const colorsRes = await calendar.colors.get();
   const eventColorMap = colorsRes.data.event ?? {};
