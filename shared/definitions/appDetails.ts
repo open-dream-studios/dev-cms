@@ -46,6 +46,11 @@ export const appDetails = {
       "stripe_account": "acct_1T2zx87vzK6BGNZg",
       "credit1_name": "Cleaning",
       "credit2_name": "Clean & Drain",
+      "subscription_tiers": {
+        1: "basic",
+        2: "standard",
+        3: "premium"
+      }
     },
     {
       "key": "tcr",
@@ -76,6 +81,11 @@ export const appDetails = {
       "stripe_account": null,
       "credit1_name": null,
       "credit2_name": null,
+      "subscription_tiers": {
+        1: "basic",
+        2: "standard",
+        3: "premium"
+      }
     }
   ]
 } as const;
