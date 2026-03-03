@@ -1,10 +1,10 @@
-// project/src/modules/_util/Search/_actions/search.actions.ts
-import { Customer, User } from "@open-dream/shared";
-import { useCurrentDataStore } from "@/store/currentDataStore";
+// project/src/modules/_util/Search/_actions/customerSearch.actions.ts
+import { Customer, User } from "@open-dream/shared"; 
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { formatPhone } from "@/util/functions/Customers";
-import { highlightText, runSearchMatch } from "@/util/functions/Search";
 import { AppTheme } from "@/util/appTheme";
+import { useSearchUIStore } from "../_store/search.store";
+import { highlightText, runSearchMatch } from "../_helpers/customerSearch.helpers";
 
 export type ContactCardDisplay = {
   first: React.ReactNode;
@@ -18,10 +18,10 @@ export function getContactCardSearchDisplay(
   currentUser: User | null,
   currentTheme: AppTheme
 ): ContactCardDisplay {
-  const { searchContext } = useCurrentDataStore.getState();
+  const { customerSearchContext } = useSearchUIStore.getState();
 
   // no search → plain display
-  if (!searchContext) {
+  if (!customerSearchContext) {
     return {
       first: capitalizeFirstLetter(customer.first_name),
       last: capitalizeFirstLetter(customer.last_name),
@@ -30,8 +30,8 @@ export function getContactCardSearchDisplay(
     };
   }
 
-  const schema = searchContext.schema(customer);
-  const result = runSearchMatch(searchContext.parsed, schema);
+  const schema = customerSearchContext.schema(customer);
+  const result = runSearchMatch(customerSearchContext.parsed, schema);
 
   const highlight = (text: string, key: string) =>
     highlightText(text, result.matched[key] ?? [], () => ({
@@ -49,16 +49,16 @@ export function getContactCardSearchDisplay(
 
   return {
     first:
-      searchContext.type === "name"
+      customerSearchContext.type === "name"
         ? first
         : capitalizeFirstLetter(customer.first_name),
     last:
-      searchContext.type === "name"
+      customerSearchContext.type === "name"
         ? last
         : capitalizeFirstLetter(customer.last_name),
-    email: searchContext.type === "email" ? email : customer.email ?? "",
+    email: customerSearchContext.type === "email" ? email : customer.email ?? "",
     phone:
-      searchContext.type === "phone"
+      customerSearchContext.type === "phone"
         ? phone
         : formatPhone(customer.phone ?? ""),
   };

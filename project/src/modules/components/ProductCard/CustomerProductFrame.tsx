@@ -33,6 +33,8 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "./RenderedImage";
 import NoProductImage from "./NoProductImage";
 import { useTimer } from "@/store/util/useTimer";
+import { useProductForm } from "@/hooks/forms/useProductForm";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 
 // ---------- TaskCard ----------
 const MiniTaskCard: React.FC<{
@@ -142,6 +144,15 @@ const CustomerProductFrame = ({
   } = useContextQueries();
   const { screenClick } = useRouting();
   const { screen } = useUiStore();
+
+  const formKey = `product-${product.serial_number}`;
+  const { registerForm, unregisterForm } = useFormInstanceStore();
+  const productForm = useProductForm();
+
+  useEffect(() => {
+    registerForm(formKey, productForm);
+    return () => unregisterForm(formKey);
+  }, [formKey, productForm, registerForm, unregisterForm]);
 
   const jobForm = useJobForm();
   const status = useWatch({ control: jobForm.control, name: "status" });
@@ -298,7 +309,11 @@ const CustomerProductFrame = ({
             />
           </div>
           <div
-            style={{ ...getInnerCardStyle(currentUser.theme, currentTheme), backgroundColor: currentTheme.header_1_1, opacity: matchedDefinition ? 1 : 0}}
+            style={{
+              ...getInnerCardStyle(currentUser.theme, currentTheme),
+              backgroundColor: currentTheme.header_1_1,
+              opacity: matchedDefinition ? 1 : 0,
+            }}
             // style={{border: "1px solid " + currentTheme.header_1_1}}
             className={`mb-[-3px] rounded-[9px] px-[6px] py-[4px] flex flex-col min-[750px]:flex-row min-[870px]:flex-col min-[990px]:flex-row ${
               leftBarOpen ? "min-[1024px]:flex-col min-[1220px]:flex-row" : ""

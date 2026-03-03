@@ -1,4 +1,4 @@
-// project/src/util/functions/Search.tsx
+// project/src/modules/_util/Search/_helpers/customerSearch.helpers.tsx
 export type ParsedSearch = {
   raw: string;
   parts: string[];
@@ -42,7 +42,7 @@ export function customerEmailSchema(customer: any) {
 // SEARCH CONTEXTS
 export function determineSearchContext(
   raw: string,
-  customers: any[]
+  customers: any[],
 ): {
   type: "name" | "email" | "phone" | null;
   schema: (c: any) => any;
@@ -77,7 +77,7 @@ export function determineSearchContext(
   let best = getBestNameMatchByFirstThenLast(
     raw,
     customers,
-    customerSearchSchema
+    customerSearchSchema,
   );
 
   // fallback to email search even without @
@@ -103,7 +103,7 @@ export function determineSearchContext(
 export function getBestNameMatchByFirstThenLast<T>(
   searchTerm: string,
   list: T[],
-  schemaBuilder: (item: T) => any
+  schemaBuilder: (item: T) => any,
 ): T | null {
   const parsed = parseSearchTerm(searchTerm);
 
@@ -127,7 +127,7 @@ export function getBestNameMatchByFirstThenLast<T>(
 export function getBestPhoneMatch<T>(
   searchTerm: string,
   list: T[],
-  schemaBuilder: (item: T) => any
+  schemaBuilder: (item: T) => any,
 ): T | null {
   const parsed = parseSearchTerm(searchTerm);
 
@@ -144,7 +144,7 @@ export function getBestPhoneMatch<T>(
 export function getBestEmailMatch<T>(
   searchTerm: string,
   list: T[],
-  schemaBuilder: (item: T) => any
+  schemaBuilder: (item: T) => any,
 ): T | null {
   const parsed = parseSearchTerm(searchTerm);
 
@@ -177,25 +177,79 @@ export function parseSearchTerm(raw: string | null | undefined): ParsedSearch {
   };
 }
 
+// export function runSearchMatch(
+//   parsed: ParsedSearch,
+//   schema: { fields: Record<string, string>; order: string[] }
+// ): MatchResult {
+//   const { parts } = parsed;
+//   if (!parts.length) return { isMatch: false, score: 0, matched: {} };
+//   const matched: Record<string, string[]> = {};
+//   let score = 0;
+
+//   if (parts.length === 1) {
+//     const token = parts[0];
+//     for (const field of Object.keys(schema.fields)) {
+//       const value = schema.fields[field];
+//       if (value.startsWith(token)) {
+//         score++;
+//         if (!matched[field]) matched[field] = [];
+//         matched[field].push(token);
+//       }
+//     }
+//     return {
+//       isMatch: score > 0,
+//       score,
+//       matched,
+//     };
+//   }
+
+//   let allMatched = true;
+//   parts.forEach((token, index) => {
+//     const field = schema.order[index] || schema.order[schema.order.length - 1];
+//     const value = schema.fields[field];
+//     if (value.startsWith(token)) {
+//       score++;
+//       if (!matched[field]) matched[field] = [];
+//       matched[field].push(token);
+//     } else {
+//       allMatched = false;
+//     }
+//   });
+
+//   return {
+//     isMatch: allMatched,
+//     score: allMatched ? score : 0,
+//     matched: allMatched ? matched : {},
+//   };
+// }
+
 export function runSearchMatch(
   parsed: ParsedSearch,
-  schema: { fields: Record<string, string>; order: string[] }
+  schema: { fields: Record<string, string>; order: string[] },
 ): MatchResult {
   const { parts } = parsed;
   if (!parts.length) return { isMatch: false, score: 0, matched: {} };
+
   const matched: Record<string, string[]> = {};
   let score = 0;
 
+  const wordStartsWith = (value: string, token: string) => {
+    return value.split(/\s+/).some((word) => word.startsWith(token));
+  };
+
   if (parts.length === 1) {
     const token = parts[0];
+
     for (const field of Object.keys(schema.fields)) {
       const value = schema.fields[field];
-      if (value.startsWith(token)) {
+
+      if (wordStartsWith(value, token)) {
         score++;
         if (!matched[field]) matched[field] = [];
         matched[field].push(token);
       }
     }
+
     return {
       isMatch: score > 0,
       score,
@@ -204,10 +258,13 @@ export function runSearchMatch(
   }
 
   let allMatched = true;
+
   parts.forEach((token, index) => {
     const field = schema.order[index] || schema.order[schema.order.length - 1];
+
     const value = schema.fields[field];
-    if (value.startsWith(token)) {
+
+    if (wordStartsWith(value, token)) {
       score++;
       if (!matched[field]) matched[field] = [];
       matched[field].push(token);
@@ -227,7 +284,7 @@ export function scrollToItem(
   id: string,
   itemRefs: React.RefObject<Record<string, HTMLDivElement | null>>,
   scrollRef: React.RefObject<HTMLDivElement | null>,
-  offset: number = 0
+  offset: number = 0,
 ): void {
   const el = itemRefs.current[id];
   const container = scrollRef.current;
@@ -240,7 +297,7 @@ export function scrollToItem(
 export function highlightText(
   text: string,
   matches: string[],
-  getStyle: () => React.CSSProperties
+  getStyle: () => React.CSSProperties,
 ) {
   if (!matches.length) return text;
 
@@ -251,15 +308,15 @@ export function highlightText(
     : highlightNormal(text, matches, getStyle);
 }
 
-
 function highlightNormal(
   text: string,
   matches: string[],
-  getStyle: () => React.CSSProperties
+  getStyle: () => React.CSSProperties,
 ) {
   const result: any[] = [];
   let remaining = text;
   let keyCounter = 0;
+  const prefix = Math.random().toString(36).slice(2);
 
   matches.forEach((match) => {
     const lower = remaining.toLowerCase();
@@ -271,20 +328,20 @@ function highlightNormal(
     const after = remaining.slice(idx + match.length);
 
     if (before) {
-      result.push(<span key={`n-${keyCounter++}`}>{before}</span>);
+      result.push(<span key={`${prefix}-n-${keyCounter++}`}>{before}</span>);
     }
 
     result.push(
-      <span key={`h-${keyCounter++}`} style={getStyle()}>
+      <span key={`${prefix}-h-${keyCounter++}`} style={getStyle()}>
         {hit}
-      </span>
+      </span>,
     );
 
     remaining = after;
   });
 
   if (remaining) {
-    result.push(<span key={`n-${keyCounter++}`}>{remaining}</span>);
+    result.push(<span key={`${prefix}-n-${keyCounter++}`}>{remaining}</span>);
   }
 
   return <>{result}</>;
@@ -293,10 +350,11 @@ function highlightNormal(
 function highlightPhone(
   text: string,
   matches: string[],
-  getStyle: () => React.CSSProperties
+  getStyle: () => React.CSSProperties,
 ) {
   const formatted = text;
   const raw = text.replace(/\D/g, "");
+  const prefix = Math.random().toString(36).slice(2);
 
   const rawToFmtIndex: number[] = [];
   let rawIndex = 0;
@@ -332,12 +390,12 @@ function highlightPhone(
     const span = spans[spanIndex];
 
     if (!span) {
-      result.push(<span key={`p-${i}`}>{formatted.slice(i)}</span>);
+      result.push(<span key={`p-${prefix}-${i}`}>{formatted.slice(i)}</span>);
       break;
     }
 
     if (i < span.startFmt) {
-      result.push(<span key={`p-${i}`}>{formatted[i]}</span>);
+      result.push(<span key={`p-${prefix}-${i}`}>{formatted[i]}</span>);
       i++;
       continue;
     }
@@ -352,9 +410,9 @@ function highlightPhone(
       }
 
       result.push(
-        <span key={`h-${i}`} style={style}>
+        <span key={`h-${prefix}-${i}`} style={style}>
           {chunk}
-        </span>
+        </span>,
       );
 
       spanIndex++;

@@ -9,7 +9,7 @@ import {
   createCustomerContextMenu,
   handleCustomerClick,
 } from "./_actions/customers.actions";
-import { getContactCardSearchDisplay } from "../_util/Search/_actions/search.actions";
+import { getContactCardSearchDisplay } from "../_util/Search/_actions/customerSearch.actions";
 
 const CustomerMiniCard = ({
   customer,

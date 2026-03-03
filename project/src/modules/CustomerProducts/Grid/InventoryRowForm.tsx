@@ -14,7 +14,7 @@ import { useFormInstanceStore } from "@/store/util/formInstanceStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useTimer } from "@/store/util/useTimer";
-import { setCurrentProductData, useCurrentDataStore } from "@/store/currentDataStore";
+import { setCurrentProductData } from "@/store/currentDataStore";
 
 type InventoryRowFormProps = {
   product: Product;
@@ -28,7 +28,6 @@ const InventoryRowForm = ({
   const { screenClick } = useRouting();
   const { productsData, mediaLinks, media } = useContextQueries();
   const currentTheme = useCurrentTheme();
-  const { currentProjectId } = useCurrentDataStore();
 
   const formKey = `product-${product.serial_number}`;
   const { registerForm, unregisterForm } = useFormInstanceStore();

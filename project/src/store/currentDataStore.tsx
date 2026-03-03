@@ -8,8 +8,7 @@ import {
   Product,
   DataFilters,
   MediaLink,
-  Media, 
-  SearchContext,
+  Media,  
 } from "@open-dream/shared";
 import { createStore } from "@/store/createStore";
 import { createRef } from "react";
@@ -50,9 +49,6 @@ export const currentDataInitialState = {
   currentSectionId: null as number | null,
 
   productFilters: { products: ["Active"], jobType: [] } as DataFilters,
-
-  currentCustomerSearchTerm: "",
-  searchContext: null as SearchContext,
 
   currentProcessId: null as number | null,
   currentProcessRunId: null as number | null,

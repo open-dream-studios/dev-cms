@@ -11,13 +11,13 @@ import {
 } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useQueryClient } from "@tanstack/react-query";
-import SearchBar from "../components/SearchBar";
+import SearchBar from "../_util/Search/SearchBar";
 import { handleCustomerClick } from "../CustomersModule/_actions/customers.actions";
 import CustomerCatalog from "./CustomerCatalog";
 import { homeLayoutLeftBarTopHeight } from "@/layouts/homeLayout";
 import { ContactFilter, useCustomerUiStore } from "./_store/customers.store";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { CustomersScreen } from "@open-dream/shared";
+import { CustomersScreen, ValidSearchModule } from "@open-dream/shared";
 
 const CustomersModuleLeftBarTab = ({ tab }: { tab: CustomersScreen }) => {
   const currentTheme = useCurrentTheme();
@@ -194,7 +194,7 @@ const CustomersModuleLeftBar = () => {
           </div>
 
           <div className="mt-[6px] h-[28px]">
-            <SearchBar />
+            <SearchBar module={"customers-module" as ValidSearchModule}/>
           </div>
         </div>
       </div>

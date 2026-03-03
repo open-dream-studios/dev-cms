@@ -2,7 +2,7 @@
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import Divider from "@/lib/blocks/Divider";
-import { Product } from "@open-dream/shared";
+import { Product, ValidSearchModule } from "@open-dream/shared";
 import React, { useContext } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useUiStore } from "@/store/useUIStore";
@@ -23,6 +23,10 @@ import {
 } from "./_actions/products.actions";
 import { ProductFilterSelection } from "../_util/Filters/ProductFilterSelection";
 import { useDataFilters } from "@/hooks/useDataFilters";
+import SearchBar from "../_util/Search/SearchBar";
+import { useSearchableScrollList } from "../_util/Search/_hooks/search.hooks";
+import { useSearchUIStore } from "../_util/Search/_store/search.store";
+import { determineProductSearchContext } from "../_util/Search/_helpers/productSearch.helpers";
 
 const CustomerProductsModuleLeftBar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -33,6 +37,22 @@ const CustomerProductsModuleLeftBar = () => {
   const { setAddingProduct } = useUiStore();
   const currentTheme = useCurrentTheme();
   const { filteredProducts } = useDataFilters();
+  const baseProducts = filteredProducts(localProductsData);
+  const {
+    currentProductSearchTerm,
+    productSearchContext,
+    setProductSearchContext,
+  } = useSearchUIStore();
+
+  const { containerRef, itemRefs, filteredItems } =
+    useSearchableScrollList<Product>({
+      items: baseProducts,
+      searchTerm: currentProductSearchTerm,
+      searchContext: productSearchContext,
+      setSearchContext: setProductSearchContext,
+      determineContext: determineProductSearchContext,
+      getItemId: (p) => p.product_id!,
+    });
 
   const productForm = getForm("product");
 
@@ -47,7 +67,7 @@ const CustomerProductsModuleLeftBar = () => {
     if (product) {
       await screenClick(
         "customer-products",
-        `/products/${product.serial_number}`
+        `/products/${product.serial_number}`,
       );
     } else {
       await screenClick("customer-products", `/products`);
@@ -98,13 +118,20 @@ const CustomerProductsModuleLeftBar = () => {
         </div>
         <Divider />
 
+        <div className="w-[100%] h-[30px] mt-[8px]">
+          <SearchBar module={"customer-products-module" as ValidSearchModule} />
+        </div>
+
         <div className="w-[100%] h-[auto] mt-[8px]">
           <ProductFilterSelection popup={true} jobTypeDropdown={true} />
         </div>
       </div>
 
       <div className="flex-1 min-h-0 h-[100%]">
-        <div className="w-[100%] h-[100%] pb-[20px] flex flex-col overflow-y-auto gap-[9px]">
+        <div
+          ref={containerRef}
+          className="w-[100%] h-[100%] pb-[20px] flex flex-col overflow-y-auto gap-[9px]"
+        >
           {isLoadingProductsData ? (
             <div className="px-[15px] flex flex-col gap-[9px]">
               {Array.from({ length: 4 }, (_, index) => {
@@ -112,18 +139,22 @@ const CustomerProductsModuleLeftBar = () => {
               })}
             </div>
           ) : (
-            filteredProducts(localProductsData).map(
-              (product: Product, index: number) => {
-                return (
+            filteredItems.map((product: Product, index: number) => {
+              return (
+                <div
+                  key={product.product_id}
+                  ref={(el) => {
+                    itemRefs.current[product.product_id!] = el;
+                  }}
+                >
                   <ProductMiniCard
-                    key={index}
                     product={product}
                     index={index}
                     handleProductClick={handleProductClick}
                   />
-                );
-              }
-            )
+                </div>
+              );
+            })
           )}
         </div>
       </div>

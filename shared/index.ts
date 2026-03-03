@@ -11,7 +11,7 @@ export * from "./types/models/requests.js";
 export * from "./types/models/sectionConfigSchema.js";
 export * from "./types/models/theme.js";
 export * from "./types/models/modules.js";
-export * from "./types/models/search.js";
+export * from "./types/models/utils/search.js";
 export * from "./types/models/services.js";
 export * from "./types/models/google.js";
 export * from "./types/models/updates.js";

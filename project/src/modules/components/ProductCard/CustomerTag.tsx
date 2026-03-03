@@ -14,8 +14,7 @@ import {
   onClearProductCustomer,
   onSelectProductCustomer,
 } from "@/modules/CustomerProducts/_actions/products.actions";
-import { useFormInstanceStore } from "@/store/util/formInstanceStore";
-import { useWatch } from "react-hook-form";
+import { useFormInstanceStore } from "@/store/util/formInstanceStore"; 
 
 const CustomerTag = ({
   product,
@@ -32,11 +31,12 @@ const CustomerTag = ({
   const currentTheme = useCurrentTheme();
   const { getForm } = useFormInstanceStore();
 
-  const productForm = getForm("product");
+  // const productForm = getForm("product");
 
   const handleAddCustomerClick = () => {
-    if (!productForm) return;
     if (!product) return;
+    const productForm = getForm(`product-${product.serial_number}`);
+    if (!productForm) return;
     setModal1({
       ...modal1,
       open: !modal1.open,

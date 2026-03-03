@@ -2,17 +2,15 @@
 "use client";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { Customer } from "@open-dream/shared";
-import { useContext, useEffect, useMemo } from "react";
+import { Customer, ValidSearchModule } from "@open-dream/shared";
+import { useContext } from "react";
 import { IoTrashSharp } from "react-icons/io5";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import SearchBar from "../../components/SearchBar";
-import {
-  determineSearchContext,
-  runSearchMatch,
-} from "@/util/functions/Search";
-import { useCurrentDataStore } from "@/store/currentDataStore";
-import { getContactCardSearchDisplay } from "@/modules/_util/Search/_actions/search.actions";
+import SearchBar from "../Search/SearchBar";
+import { getContactCardSearchDisplay } from "@/modules/_util/Search/_actions/customerSearch.actions";
+import { useSearchUIStore } from "../Search/_store/search.store";
+import { useSearchableScrollList } from "../Search/_hooks/search.hooks";
+import { determineSearchContext } from "../Search/_helpers/customerSearch.helpers";
 
 const CustomerSelectCard = ({
   customer,
@@ -29,7 +27,7 @@ const CustomerSelectCard = ({
   const display = getContactCardSearchDisplay(
     customer,
     currentUser,
-    currentTheme
+    currentTheme,
   );
 
   return (
@@ -67,13 +65,7 @@ const CustomerSelectCard = ({
             )}
           </div>
 
-          <div className="flex flex-row justify-between w-[100%]">
-            {customer.city && customer.state && (
-              <div
-                style={{ color: currentTheme.text_4 }}
-                className="font-[500] text-[14px]"
-              >{`${customer.city}, ${customer.state}`}</div>
-            )}
+          <div className="flex flex-row-reverse justify-between w-[100%]">
             {customer.phone && (
               <div
                 style={{ color: currentTheme.text_4 }}
@@ -82,12 +74,19 @@ const CustomerSelectCard = ({
                 {display.phone}
               </div>
             )}
+            {customer.city && customer.state && (
+              <div
+                style={{ color: currentTheme.text_4 }}
+                className="font-[500] text-[14px]"
+              >{`${customer.city}, ${customer.state}`}</div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 };
+
 const CustomerSelection = ({
   onSelect,
   onClear,
@@ -100,34 +99,21 @@ const CustomerSelection = ({
   const { currentUser } = useContext(AuthContext);
   const { customers } = useContextQueries();
   const currentTheme = useCurrentTheme();
-  const { searchContext, setSearchContext, currentCustomerSearchTerm } =
-    useCurrentDataStore();
+  const {
+    customerSearchContext,
+    setCustomerSearchContext,
+    currentCustomerSearchTerm,
+  } = useSearchUIStore();
 
-  useEffect(() => {
-    if (!currentCustomerSearchTerm.trim()) {
-      setSearchContext(null);
-      return;
-    }
-    if (!customers.length) return;
-    const ctx = determineSearchContext(
-      currentCustomerSearchTerm.trim(),
-      customers
-    );
-
-    setSearchContext(ctx);
-  }, [currentCustomerSearchTerm, customers, setSearchContext]);
-
-  const filteredCustomers = useMemo(() => {
-    if (!currentCustomerSearchTerm.trim() || !searchContext) return customers;
-    const ctx = searchContext;
-    const parsed = ctx.parsed;
-    const filtered = customers.filter((customer) => {
-      const schema = ctx.schema(customer);
-      const result = runSearchMatch(parsed, schema);
-      return result.isMatch;
+  const { containerRef, itemRefs, filteredItems } =
+    useSearchableScrollList<Customer>({
+      items: customers,
+      searchTerm: currentCustomerSearchTerm,
+      searchContext: customerSearchContext,
+      setSearchContext: setCustomerSearchContext,
+      determineContext: determineSearchContext,
+      getItemId: (c) => c.customer_id,
     });
-    return filtered;
-  }, [customers, searchContext, currentCustomerSearchTerm]);
 
   if (!currentUser) return null;
 
@@ -139,7 +125,7 @@ const CustomerSelection = ({
             Customer Catalog
           </div>
           <div className="mt-[10px] w-[280px] h-[33px]">
-            <SearchBar />
+            <SearchBar module={"customers-module" as ValidSearchModule} />
           </div>
         </div>
         {clearable && (
@@ -162,17 +148,21 @@ const CustomerSelection = ({
           </div>
         )}
       </div>
-      <div className="flex flex-col gap-[10px] pr-[25px] flex-1 overflow-auto pb-[30px]">
-        {filteredCustomers.length ? (
-          filteredCustomers.map((customer: Customer, index: number) => {
-            return (
-              <CustomerSelectCard
-                key={index}
-                customer={customer}
-                onSelect={onSelect}
-              />
-            );
-          })
+      <div
+        ref={containerRef}
+        className="flex flex-col gap-[10px] pr-[25px] flex-1 overflow-auto pb-[30px]"
+      >
+        {filteredItems.length ? (
+          filteredItems.map((customer: Customer) => (
+            <div
+              key={customer.customer_id}
+              ref={(el) => {
+                itemRefs.current[customer.customer_id] = el;
+              }}
+            >
+              <CustomerSelectCard customer={customer} onSelect={onSelect} />
+            </div>
+          ))
         ) : (
           <div className="mt-[3px] ml-[7px] opacity-[0.4] font-[300] text-[16px]">
             No Matching Customers

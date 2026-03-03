@@ -4,7 +4,7 @@ import {
   Customer,
   formatPhoneNumber,
   appDetailsProjectByDomain,
-  LedgerCreditType, 
+  LedgerCreditType,
   stripeProductsByPriceId,
   SubscriptionTier,
 } from "@open-dream/shared";
@@ -37,7 +37,7 @@ import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCreditBalanceAdjustments } from "@/contexts/queryContext/queries/payments/credits";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/authContext";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 
 const CompactRow = ({ label, value }: { label: string; value?: string }) => (
   <div className="flex items-start justify-between gap-4 py-1.5">
@@ -191,9 +191,7 @@ const SubscriptionDetailPanel = ({
 
   const foundProduct =
     stripeProductsByPriceId[subscription.stripe_price_id] ?? null;
-  console.log(subscription.stripe_price_id)
   let foundTier: string | null = null;
-  console.log(foundProduct)
   if (foundProject && foundProduct) {
     const level = foundProduct.level as SubscriptionTier;
     foundTier = foundProject.subscription_tiers[level] ?? null;
@@ -334,18 +332,20 @@ const SubscriptionDetailPanel = ({
         <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-[8px]">
           <div className="space-y-1">
             <div className="py-1.5">
-              <div className="w-[100%] flex justify-between items-center">
-                <p className="text-[12px] uppercase tracking-[0.12em] text-white/55 mb-3">
+              <div className="w-[100%] flex justify-between items-center mb-[8px]">
+                <p className="text-[12px] uppercase tracking-[0.12em] text-white/55">
                   Subscription
                 </p>
                 {foundProduct && foundTier && (
-                  <p className="text-[12px] uppercase tracking-[0.12em] text-white/55 mb-3">
+                  <p className="text-[12px] uppercase tracking-[0.12em] text-white/55">
                     {`${capitalizeFirstLetter(foundTier)} | ${foundProduct.timeline}`}
                   </p>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-[12px]">
+              <div className="w-[100%] h-[1px] rounded-full bg-white/8 mb-[12px]"></div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-[13px]">
                 <div className="flex items-center justify-between md:block">
                   <div className="flex items-center gap-1.5 text-white/55 text-[10.4px] uppercase tracking-[0.12em]">
                     <CalendarDays size={12} />

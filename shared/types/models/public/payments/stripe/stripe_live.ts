@@ -26,7 +26,7 @@ export const stripeSubscriptionL1Products = {
     mode: "subscription",
     amount: 0.02,
     level: 1 as SubscriptionTier,
-    timeline: "1 Day",
+    timeline: "1 Month",
     credit1_granted: 1,
     credit2_granted: 1,
   },

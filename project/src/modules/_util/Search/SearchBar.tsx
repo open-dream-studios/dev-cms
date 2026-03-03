@@ -1,23 +1,43 @@
-// project/src/modules/components/SearchBar.tsx
+// project/src/modules/_utils/Search/SearchBar.tsx
 import { AuthContext } from "@/contexts/authContext";
 import React, { useContext, useEffect } from "react";
-import { useCurrentDataStore } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { Search } from "lucide-react";
+import { useSearchUIStore } from "./_store/search.store";
+import { ValidSearchModule } from "@open-dream/shared";
 
-const SearchBar = () => {
+const SearchBar = ({ module }: { module: ValidSearchModule }) => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { currentCustomerSearchTerm, setCurrentCustomerSearchTerm } =
-    useCurrentDataStore();
+  const {
+    currentCustomerSearchTerm,
+    setCurrentCustomerSearchTerm,
+    currentProductSearchTerm,
+    setCurrentProductSearchTerm,
+  } = useSearchUIStore();
 
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.value = currentCustomerSearchTerm || "";
+      if (module === "customers-module") {
+        inputRef.current.value = currentCustomerSearchTerm || "";
+      }
+      if (module === "customer-products-module") {
+        inputRef.current.value = currentProductSearchTerm || "";
+      }
     }
-  }, [currentCustomerSearchTerm]);
+  }, [currentCustomerSearchTerm, currentProductSearchTerm, module]);
+
+  const handleInputChange = (value: string) => {
+    if (module === "customers-module") {
+      setCurrentCustomerSearchTerm(value);
+    }
+
+    if (module === "customer-products-module") {
+      setCurrentProductSearchTerm(value);
+    }
+  };
 
   if (!currentUser) return null;
 
@@ -37,7 +57,7 @@ const SearchBar = () => {
         type="text"
         className="w-[100%] truncate border-none outline-none font-[400] text-[13px] opacity-[0.72]"
         onChange={(e) => {
-          setCurrentCustomerSearchTerm(e.target.value);
+          handleInputChange(e.target.value);
         }}
       />
     </div>
