@@ -38,6 +38,8 @@ import {
 } from "@/store/currentDataStore";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { saveProducts } from "./_actions/products.actions";
+import { useSearchUIStore } from "../_util/Search/_store/search.store";
+import { runSearchMatch } from "../_util/Search/_helpers/customerSearch.helpers";
 
 function SortableItem({
   id,
@@ -134,33 +136,45 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor),
-    useSensor(PointerSensor)
+    useSensor(PointerSensor),
   );
   const { localProductsData } = useCurrentDataStore();
   const { filteredProducts } = useDataFilters();
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const { productSearchContext } = useSearchUIStore();
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     const oldIndex = localProductsData.findIndex(
-      (item) => item.serial_number === active.id
+      (item) => item.serial_number === active.id,
     );
     const newIndex = localProductsData.findIndex(
-      (item) => item.serial_number === over.id
+      (item) => item.serial_number === over.id,
     );
 
     const reordered = arrayMove(localProductsData, oldIndex, newIndex).map(
       (product, i, arr) => ({
         ...product,
         ordinal: arr.length - 1 - i,
-      })
+      }),
     );
 
     setLocalProductsData(reordered);
     await saveProducts();
   };
+
+  const baseProducts = filteredProducts(localProductsData);
+
+  const searchedProducts =
+    productSearchContext && productSearchContext.parsed.parts.length
+      ? baseProducts.filter((product) => {
+          const schema = productSearchContext.schema(product);
+          const match = runSearchMatch(productSearchContext.parsed, schema);
+          return match.isMatch;
+        })
+      : baseProducts;
 
   if (!currentUser) return null;
 
@@ -173,14 +187,14 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
         modifiers={[restrictToParentElement]}
       >
         <SortableContext
-          items={localProductsData.map((p) => p.serial_number ?? "")}
+          items={searchedProducts.map((p) => p.serial_number ?? "")}
           strategy={rectSortingStrategy}
         >
           <div
             ref={containerRef}
-            className="relative pt-[8px] grid grid-cols-1 min-[640px]:grid-cols-2 min-[1500px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
+            className="relative grid grid-cols-1 min-[640px]:grid-cols-2 min-[1500px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
           >
-            {filteredProducts(localProductsData).map((product, index) => (
+            {searchedProducts.map((product, index) => (
               <SortableItem
                 key={product.serial_number}
                 id={product.serial_number ?? ""}
@@ -206,7 +220,7 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
         items={localProductsData.map((p) => p.serial_number ?? "")}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col max-h-full pb-[46px] mb-[46px]">
+        <div className="flex flex-col ">
           {filteredProducts(localProductsData).map((product, index) => (
             <SortableItem
               key={product.serial_number}
@@ -217,7 +231,7 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
             />
           ))}
         </div>
-        <div className="h-[61px] w-[100%]" />
+        {/* <div className="h-[61px] w-[100%]" /> */}
       </SortableContext>
     </DndContext>
   );

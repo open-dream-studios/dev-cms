@@ -86,9 +86,11 @@ export const GoogleCalendarDisplay = ({
     showReschedule,
     rescheduleStart,
     rescheduleEnd,
+    isUpdatingEvent,
   } = useGoogleCalendarUIStore();
 
   const handleCalendarItemClick = (event: CalendarEvent) => {
+    if (isUpdatingEvent) return
     setSelectedCalendarEvent(event);
     setIsCreatingEvent(false);
     resetInputUI(false);
@@ -143,9 +145,12 @@ export const GoogleCalendarDisplay = ({
       if (
         !selectedCalendarEvent ||
         editingCalendarEvent ||
+        isUpdatingEvent || 
         target.closest("[data-calendar-event]") ||
         target.closest("[data-calendar-event-card]") ||
         target.closest("[data-modal-2-continue]") ||
+        target.closest("[data-modal-2]") ||
+        target.closest("[data-modal]") ||
         target.closest("[ data-edit-event-button]") ||
         target.closest("[data-delete-event-button]") ||
         target.closest("[data-calendar-create-button]")
@@ -728,7 +733,7 @@ export const GoogleCalendarDisplay = ({
             className="cursor-pointer hover:brightness-75 dim px-2 py-1 rounded-md bg-[#292929]"
             title={"Resync"}
           >
-            <RefreshCw size={13}/>
+            <RefreshCw size={13} />
           </button>
           {!calendarCollapsed && (
             <button

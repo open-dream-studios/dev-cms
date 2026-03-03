@@ -3,7 +3,7 @@ import { parseWallClockToLocalDate } from "../_helpers/googleCalendar.helpers";
 import {
   defaultNewEvent,
   useGoogleCalendarUIStore,
-} from "../_store/googleCalendar.store"; 
+} from "../_store/googleCalendar.store";
 
 export const resetInputUI = (unselect: boolean) => {
   const {
@@ -98,13 +98,15 @@ export const handleStartChange = (date: Date | null, timeInput: boolean) => {
   }
 
   // // 5️⃣ Only move end if invariant breaks
-  if (nextStart.getDate() > newScheduleEventEnd.getDate()) {
+  // if (nextStart.getDate() > newScheduleEventEnd.getDate()) {
     setNewScheduleEventEnd(new Date(nextStart.getTime() + duration));
-  }
+  // }
 
+  // 6️⃣ If day did not change, and new start is after previous end, maintain event duration.
   if (
-    nextStart.getDate() === newScheduleEventEnd.getDate() &&
-    nextStart.getTime() > newScheduleEventEnd.getTime()
+    newScheduleEventStart && 
+    nextStart.getDate() === newScheduleEventStart.getDate() &&
+    nextStart.getTime() >= newScheduleEventEnd.getTime()
   ) {
     setNewScheduleEventEnd(new Date(nextStart.getTime() + duration));
   }
@@ -171,7 +173,10 @@ export const handleEndChange = (date: Date | null, timeInput: boolean) => {
   }
 };
 
-export const handleRescheduleStartChange = (date: Date | null, timeInput: boolean) => {
+export const handleRescheduleStartChange = (
+  date: Date | null,
+  timeInput: boolean
+) => {
   const {
     rescheduleStart,
     setRescheduleStart,
@@ -217,7 +222,7 @@ export const handleRescheduleStartChange = (date: Date | null, timeInput: boolea
 
   // // 5️⃣ Only move end if invariant breaks
   // if (nextStart.getDate() > rescheduleEnd.getDate()) {
-    setRescheduleEnd(new Date(nextStart.getTime() + duration));
+  setRescheduleEnd(new Date(nextStart.getTime() + duration));
   // }
 
   if (
@@ -228,7 +233,10 @@ export const handleRescheduleStartChange = (date: Date | null, timeInput: boolea
   }
 };
 
-export const handleRescheduleEndChange = (date: Date | null, timeInput: boolean) => {
+export const handleRescheduleEndChange = (
+  date: Date | null,
+  timeInput: boolean
+) => {
   const {
     rescheduleStart,
     setRescheduleStart,
@@ -289,33 +297,52 @@ export const handleRescheduleEndChange = (date: Date | null, timeInput: boolean)
   }
 };
 
-export const handleEditEventClick = () => {
-    const {
-      selectedCalendarEvent,
-      setIsCreatingEvent,
-      setEditingCalendarEvent,
-      setNewEventDetails,
-      setNewScheduleEventStart,
-      setNewScheduleEventEnd,
-    } = useGoogleCalendarUIStore.getState();
-    if (!selectedCalendarEvent) return;
-    setIsCreatingEvent(false);
-    setEditingCalendarEvent(selectedCalendarEvent);
-    setNewEventDetails({
-      title: selectedCalendarEvent.title,
-      description: selectedCalendarEvent.raw?.description ?? "",
-      location: selectedCalendarEvent.raw?.location ?? "",
-    });
-    setNewScheduleEventStart(
-      parseWallClockToLocalDate(
-        selectedCalendarEvent.raw?.start?.dateTime,
-        selectedCalendarEvent.start,
-      ),
-    );
-    setNewScheduleEventEnd(
-      parseWallClockToLocalDate(
-        selectedCalendarEvent.raw?.end?.dateTime,
-        selectedCalendarEvent.end,
-      ),
-    );
-  };
+export const handleEditEventClick = (calendarTarget: 1 | 2) => {
+  const {
+    selectedCalendarEvent,
+    calendar1Events,
+    calendar2Events,
+    setIsCreatingEvent,
+    setEditingCalendarEvent,
+    setNewEventDetails,
+    setNewScheduleEventStart,
+    setNewScheduleEventEnd,
+  } = useGoogleCalendarUIStore.getState();
+
+  if (!selectedCalendarEvent) return;
+
+  const liveEvent =
+    calendarTarget === 1
+      ? calendar1Events.find(
+          (ev) => ev.id === selectedCalendarEvent.id
+        )
+      : calendar2Events.find(
+          (ev) => ev.id === selectedCalendarEvent.id
+        );
+
+  if (!liveEvent) return;
+
+  setIsCreatingEvent(false);
+  setEditingCalendarEvent(selectedCalendarEvent);
+
+  // 🔥 hydrate from LIVE Google event (authoritative source)
+  setNewEventDetails({
+    title: liveEvent.summary ?? "",
+    description: liveEvent.description ?? "",
+    location: liveEvent.location ?? "",
+  });
+
+  setNewScheduleEventStart(
+    parseWallClockToLocalDate(
+      liveEvent.start?.dateTime,
+      selectedCalendarEvent.start
+    )
+  );
+
+  setNewScheduleEventEnd(
+    parseWallClockToLocalDate(
+      liveEvent.end?.dateTime,
+      selectedCalendarEvent.end
+    )
+  );
+};

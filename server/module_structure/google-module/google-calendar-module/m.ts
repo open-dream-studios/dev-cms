@@ -1,5 +1,10 @@
 // server/module_structure/google-module/google-calendar-module/m.ts
-import type { ModuleFunctionInputs } from "@open-dream/shared";
+import type {
+  CalendarExtendedProperties,
+  GoogleEventColorName,
+  ModuleFunctionInputs,
+} from "@open-dream/shared";
+import { GOOGLE_EVENT_COLOR_NAME_TO_ID } from "@open-dream/shared";
 import {
   fetchCalendarPage,
   getEvent,
@@ -134,14 +139,34 @@ export const run = async ({
         eventId
       );
 
+      const mergedPrivate = {
+        ...(existing.extendedProperties?.private ?? {}),
+        ...(event.extendedProperties?.private ?? {}),
+      } as Record<string, unknown>;
+      Object.keys(mergedPrivate).forEach((key) => {
+        if (mergedPrivate[key] === null || mergedPrivate[key] === undefined) {
+          delete mergedPrivate[key];
+        }
+      });
+
+      const privateProps = mergedPrivate as CalendarExtendedProperties;
+
+      let updatedColor: GoogleEventColorName;
+
+      if (!privateProps.customer_id || !privateProps.credit_type) {
+        updatedColor = "Flamingo";
+      } else if (privateProps.completed === "true") {
+        updatedColor = "Graphite";
+      } else {
+        updatedColor = "Sage";
+      }
+
       const mergedEvent = {
         ...existing,
         ...event,
+        colorId: GOOGLE_EVENT_COLOR_NAME_TO_ID[updatedColor],
         extendedProperties: {
-          private: {
-            ...(existing.extendedProperties?.private ?? {}),
-            ...(event.extendedProperties?.private ?? {}),
-          },
+          private: mergedPrivate,
         },
       };
 

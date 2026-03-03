@@ -1,7 +1,11 @@
 // project/src/GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks.ts
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContextQueries } from "../../../../contexts/queryContext/queryContext";
-import { GoogleCalendarEventRaw, GoogleCalendarTarget } from "@open-dream/shared";
+import {
+  GoogleCalendarEventRaw,
+  GoogleCalendarTarget,
+} from "@open-dream/shared";
+import { useGoogleCalendarUIStore } from "../_store/googleCalendar.store";
 
 export function useGoogleCalendar(
   timeMin: string,
@@ -10,6 +14,7 @@ export function useGoogleCalendar(
 ) {
   const { runModule } = useContextQueries();
   const queryClient = useQueryClient();
+  const { setCalendar1Events, setCalendar2Events } = useGoogleCalendarUIStore()
 
   const query = useQuery({
     queryKey: ["calendar-range", calendarTarget, timeMin, timeMax],
@@ -36,7 +41,14 @@ export function useGoogleCalendar(
 
         pageToken = res?.data?.nextPageToken ?? null;
       } while (pageToken);
-      console.log(allEvents)
+      console.log(allEvents);
+
+      if (calendarTarget === 1) {
+        setCalendar1Events(allEvents);
+      }
+      if (calendarTarget === 2) {
+        setCalendar2Events(allEvents);
+      }
       return allEvents;
     },
     staleTime: 1000 * 60 * 3,

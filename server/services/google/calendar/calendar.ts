@@ -104,6 +104,7 @@ export async function fetchCalendarPage(
       "#d06b64": GLOBAL_COLORS.google_calendar_red,
       "#7ae7bf": GLOBAL_COLORS.google_calendar_green,
       "#cd74e6": GLOBAL_COLORS.google_calendar_purple,
+      "#e1e1e1": GLOBAL_COLORS.google_calendar_gray
     };
     return GOOGLE_COLOR_MAP[hex] ?? hex;
   }

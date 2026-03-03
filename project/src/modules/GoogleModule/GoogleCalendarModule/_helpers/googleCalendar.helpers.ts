@@ -113,6 +113,11 @@ export function buildUpdatedGoogleEvent({
   existingEvent: any;
   updates: CalendarEventUpdates;
 }): GoogleCalendarEventInput {
+  const hasCustomerIdUpdate = Object.prototype.hasOwnProperty.call(
+    updates.extendedProperties ?? {},
+    "customer_id"
+  );
+
   return {
     ...existingEvent,
     summary: updates.title ?? existingEvent.summary,
@@ -137,8 +142,8 @@ export function buildUpdatedGoogleEvent({
     extendedProperties: {
       private: {
         ...(existingEvent.extendedProperties?.private ?? {}),
-        ...(updates.extendedProperties?.customer_id !== undefined && {
-          customer_id: updates.extendedProperties.customer_id,
+        ...(hasCustomerIdUpdate && {
+          customer_id: updates.extendedProperties?.customer_id ?? null,
         }),
         ...(updates.extendedProperties?.credit_type !== undefined && {
           credit_type: updates.extendedProperties.credit_type,
@@ -308,3 +313,10 @@ export const parseWallClockToLocalDate = (
     0
   );
 };
+
+export function isEventPast(endDateTime?: string) {
+  if (!endDateTime) return false;
+  const eventEnd = new Date(endDateTime).getTime();
+  const now = Date.now();
+  return eventEnd < now;
+}

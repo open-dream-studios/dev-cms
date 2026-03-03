@@ -45,7 +45,7 @@ import {
 } from "../_actions/googleCalendarUI.actions";
 import { approveAndCreateScheduleEvent } from "../_actions/googleCalendar.actions";
 import { promptContinue } from "@/modals/_actions/modals.actions";
-import { showSuccessToast } from "@/util/functions/UI";
+import { showSingleToast } from "@/util/functions/UI";
 import DatePicker from "react-datepicker";
 import "../../../components/Calendar/Calendar.css";
 import { toast } from "react-toastify";
@@ -100,7 +100,7 @@ const ScheduleRequestRow = ({
   refreshCalendar,
   events,
 }: {
-  calendarTarget: GoogleCalendarTarget,
+  calendarTarget: GoogleCalendarTarget;
   request: ScheduleRequest;
   refreshCalendar: () => void;
   events: GoogleCalendarEventRaw[];
@@ -195,7 +195,8 @@ const ScheduleRequestRow = ({
       });
 
       if (res.ok && res.data.success === true) {
-        showSuccessToast(
+        showSingleToast(
+          true,
           "schedule-request-approved",
           "Confirmation email sent",
         );
@@ -243,7 +244,8 @@ const ScheduleRequestRow = ({
       });
 
       if (res.ok && res.data.success === true) {
-        showSuccessToast(
+        showSingleToast(
+          true,
           "schedule-request-approved",
           "Reschedule request sent",
         );

@@ -18,23 +18,43 @@ import { homeLayoutLeftBarTopHeight } from "@/layouts/homeLayout";
 import { ContactFilter, useCustomerUiStore } from "./_store/customers.store";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import { CustomersScreen, ValidSearchModule } from "@open-dream/shared";
+import {
+  defaultNewEvent,
+  useGoogleCalendarUIStore,
+} from "../GoogleModule/GoogleCalendarModule/_store/googleCalendar.store";
 
 const CustomersModuleLeftBarTab = ({ tab }: { tab: CustomersScreen }) => {
   const currentTheme = useCurrentTheme();
   const { setAddingCustomer } = useUiStore();
   const { customersScreen, setCustomersScreen } = useCustomerUiStore();
+  const {
+    setIsCreatingEvent,
+    setEditingCalendarEvent,
+    setNewEventDetails,
+    setNewScheduleEventStart,
+    setNewScheduleEventEnd,
+    setSelectedCalendarEvent
+  } = useGoogleCalendarUIStore();
 
   const isActive = customersScreen === tab;
+
+  const handleTabClick = () => {
+    setAddingCustomer(false);
+    setCurrentCustomerData(null, false);
+    setCustomersScreen(tab);
+    setIsCreatingEvent(false);
+    setEditingCalendarEvent(null);
+    setNewEventDetails(defaultNewEvent);
+    setNewScheduleEventStart(null);
+    setNewScheduleEventEnd(null);
+    setSelectedCalendarEvent(null)
+  };
 
   return (
     <div
       className="select-none group w-full h-[40px] rounded-[10px] cursor-pointer flex items-center justify-between px-[14px] mb-[6px] transition-all duration-200"
       style={{ backgroundColor: "rgba(255,255,255,0.028)" }}
-      onClick={() => {
-        setAddingCustomer(false);
-        setCurrentCustomerData(null, false);
-        setCustomersScreen(tab);
-      }}
+      onClick={handleTabClick}
     >
       <div
         style={{ backgroundColor: currentTheme.app_color_1 }}
@@ -194,7 +214,7 @@ const CustomersModuleLeftBar = () => {
           </div>
 
           <div className="mt-[6px] h-[28px]">
-            <SearchBar module={"customers-module" as ValidSearchModule}/>
+            <SearchBar module={"customers-module" as ValidSearchModule} />
           </div>
         </div>
       </div>

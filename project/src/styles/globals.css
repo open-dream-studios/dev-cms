@@ -150,6 +150,11 @@ input[type="range"]::-moz-range-thumb {
   will-change: filter;
 }
 
+.dim-opacity {
+  transition: opacity 0.2s ease-in-out;
+  will-change: opacity;
+}
+
 /* Sephir */
 @font-face {
   font-family: "Sephir";

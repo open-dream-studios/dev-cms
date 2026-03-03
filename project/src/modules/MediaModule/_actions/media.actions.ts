@@ -11,7 +11,7 @@ import { setUploadContext, useUiStore } from "@/store/useUIStore";
 import { getCurrentTimestamp } from "@/util/functions/Data";
 import { deleteMediaLinksApi, upsertMediaLinksApi } from "@/api/mediaLinks.api";
 import { deleteProjectMediaApi, rotateProjectMediaApi } from "@/api/media.api";
-import { showSuccessToast } from "@/util/functions/UI";
+import { showSingleToast } from "@/util/functions/UI";
 import {
   PopupDisplayItem,
   promptContinue,
@@ -293,7 +293,7 @@ export const handleRotateMedia = async (
   try {
     setUpdatingLock(true);
     await rotateProjectMediaApi(currentProjectId, media_id, url, rotations);
-    showSuccessToast("rotate-success", "Image rotated");
+    showSingleToast(true, "rotate-success", "Image rotated");
     queryClient.invalidateQueries({
       queryKey: ["media", currentProjectId],
     });

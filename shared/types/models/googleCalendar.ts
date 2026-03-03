@@ -12,11 +12,30 @@ export type GoogleCalendarRequestType =
 export type GoogleCalendarTarget = 1 | 2;
 
 export type CalendarExtendedProperties = {
-  customer_id?: string; // absent or undefined = unlinked
+  customer_id?: string | null; // customer_id
   credit_type?: "1" | "2" | "3"; // required if customer_id exists
   completed?: "true" | "false"; // present only after completion
   ledger_adjustment_id?: string; // ledger transaction id (after deduction)
+  scheduleRequestId?: string;
 };
+
+export const GOOGLE_EVENT_COLOR_NAME_TO_ID = {
+  Lavender: "1",
+  Sage: "2",
+  Grape: "3",
+  Flamingo: "4",
+  Banana: "5",
+  Tangerine: "6",
+  Peacock: "7",
+  Graphite: "8",
+  Blueberry: "9",
+  Basil: "10",
+  Tomato: "11",
+} as const;
+
+export type GoogleEventColorName = keyof typeof GOOGLE_EVENT_COLOR_NAME_TO_ID;
+export type GoogleEventColorId =
+  typeof GOOGLE_EVENT_COLOR_NAME_TO_ID[GoogleEventColorName];
 
 export interface GoogleCalendarEventInput {
   summary: string;
@@ -171,6 +190,9 @@ export interface GoogleCalendarEventRaw {
   };
   creator?: {
     email?: string;
+  };
+  extendedProperties?: {
+    private?: CalendarExtendedProperties;
   };
   [key: string]: any;
 }

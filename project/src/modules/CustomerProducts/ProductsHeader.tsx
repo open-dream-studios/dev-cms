@@ -21,6 +21,7 @@ import { promptContinue } from "@/modals/_actions/modals.actions";
 import { onProductFormSubmit, saveProducts } from "./_actions/products.actions";
 import { handleViewClick } from "../_util/Filters/_actions/filters.actions";
 import { ProductFilterSelection } from "../_util/Filters/ProductFilterSelection";
+import SearchBar from "../_util/Search/SearchBar";
 
 const ProductsHeader = ({ title }: { title: string }) => {
   const { currentUser } = useContext(AuthContext);
@@ -100,7 +101,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
       `Export data to google sheets?`,
       false,
       () => {},
-      googleExport
+      googleExport,
     );
   };
 
@@ -124,7 +125,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
       } from inventory?`,
       false,
       () => {},
-      handleDeleteSelected
+      handleDeleteSelected,
     );
   };
 
@@ -139,7 +140,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
       await deleteProducts(selectedProducts);
     } catch (e) {
       toast.error(
-        `Failed to delete product${selectedProducts.length > 1 && "s"}`
+        `Failed to delete product${selectedProducts.length > 1 && "s"}`,
       );
     } finally {
       setUpdatingLock(false);
@@ -167,7 +168,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
             onContinue={(
               newSerial: string,
               newMake: string,
-              newModel: string
+              newModel: string,
             ) => addRow(newSerial, newMake, newModel)}
           />
         ),
@@ -178,7 +179,7 @@ const ProductsHeader = ({ title }: { title: string }) => {
   const addRow = async (
     newSerial: string,
     newMake: string,
-    newModel: string
+    newModel: string,
   ) => {
     if (!currentProjectId) return null;
     const allOrdinals = localProductsData.map((p) => p.ordinal);
@@ -210,160 +211,173 @@ const ProductsHeader = ({ title }: { title: string }) => {
   if (!currentUser) return null;
 
   return (
-    <div className="relative">
+    <div className="relative h-[100%] px-[20px]">
       {hasProjectModule("customer-products-module") && (
-        <div className="flex flex-row items-center min-[400px]:justify-between justify-end h-[100%] mb-[17px] pt-[20px] px-[20px]">
-          <div className="hidden min-[400px]:flex flex-row gap-[13px] items-center">
-            <div
-              style={{
-                backgroundColor: currentTheme.header_1_1,
-              }}
-              className="flex w-[160px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
-            >
+        <div className="w-[100%] h-[100%] flex flex-col gap-[5px]">
+          <div className="flex flex-row items-center min-[400px]:justify-between justify-end pt-[15px]">
+            <div className="hidden min-[400px]:flex flex-row gap-[13px] items-center">
               <div
-                onClick={() => handleViewClick(false)}
-                style={{
-                  backgroundColor: !inventoryView
-                    ? currentTheme.header_1_2
-                    : "transparent",
-                }}
-                className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-              >
-                List
-              </div>
-              <div
-                onClick={() => handleViewClick(true)}
-                style={{
-                  backgroundColor: inventoryView
-                    ? currentTheme.header_1_2
-                    : "transparent",
-                }}
-                className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
-              >
-                Table
-              </div>
-            </div>
-
-            <div className="hidden min-[1380px]:flex">
-              <ProductFilterSelection popup={false} jobTypeDropdown={false} />
-            </div>
-
-            <div className="relative">
-              <div
-                onClick={handleFilterButtonClick}
                 style={{
                   backgroundColor: currentTheme.header_1_1,
-                  border:
-                    productFilters.products.length ||
-                    productFilters.jobType.length
-                      ? `1px solid ${currentTheme.text_1}`
-                      : "none",
                 }}
-                className="flex min-[1380px]:hidden w-[30px] h-[30px] rounded-full justify-center items-center pt-[1px] cursor-pointer hover:brightness-90 dim ml-[-3px] min-[1380px]:ml-0"
+                className="flex w-[160px] pl-[4px] h-[32px] rounded-[18px] flex-row items-center"
               >
-                <BsFilter size={18} />
-              </div>
-              {showFilterPopup && (
                 <div
-                  ref={filterPopupRef}
-                  style={getCardStyle(currentUser.theme, currentTheme)}
-                  className="absolute bottom-[-92px] left-[-140px] min-[600px]:left-[-25px] h-[86px] justify-center items-start rounded-[10px] px-[6px] flex flex-col"
+                  onClick={() => handleViewClick(false)}
+                  style={{
+                    backgroundColor: !inventoryView
+                      ? currentTheme.header_1_2
+                      : "transparent",
+                  }}
+                  className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
                 >
-                  <ProductFilterSelection popup={true} jobTypeDropdown={false}/>
+                  List
+                </div>
+                <div
+                  onClick={() => handleViewClick(true)}
+                  style={{
+                    backgroundColor: inventoryView
+                      ? currentTheme.header_1_2
+                      : "transparent",
+                  }}
+                  className="select-none cursor-pointer w-[76px] h-[26px] flex items-center justify-center text-[13px] font-[500] rounded-[18px]"
+                >
+                  Table
+                </div>
+              </div>
+
+              <div className="hidden min-[1380px]:flex">
+                <ProductFilterSelection popup={false} jobTypeDropdown={false} />
+              </div>
+
+              <div className="relative">
+                <div
+                  onClick={handleFilterButtonClick}
+                  style={{
+                    backgroundColor: currentTheme.header_1_1,
+                    border:
+                      productFilters.products.length ||
+                      productFilters.jobType.length
+                        ? `1px solid ${currentTheme.text_1}`
+                        : "none",
+                  }}
+                  className="flex min-[1380px]:hidden w-[30px] h-[30px] rounded-full justify-center items-center pt-[1px] cursor-pointer hover:brightness-90 dim ml-[-3px] min-[1380px]:ml-0"
+                >
+                  <BsFilter size={18} />
+                </div>
+                {showFilterPopup && (
+                  <div
+                    ref={filterPopupRef}
+                    style={getCardStyle(currentUser.theme, currentTheme)}
+                    className="absolute bottom-[-92px] left-[-140px] min-[600px]:left-[-25px] h-[86px] justify-center items-start rounded-[10px] px-[6px] flex flex-col"
+                  >
+                    <ProductFilterSelection
+                      popup={true}
+                      jobTypeDropdown={false}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-row gap-[12px] min-[700px]:gap-[10px]">
+              {hasProjectModule("customer-products-module") && (
+                <div
+                  style={{
+                    backgroundColor: currentTheme.background_2,
+                  }}
+                  className="dim hover:brightness-75 rounded-[25px] w-[33px] min-[700px]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[6px] text-[13px] font-[600] cursor-pointer"
+                  onClick={handleGoogleExport}
+                >
+                  <p
+                    style={{
+                      color: currentTheme.text_1,
+                    }}
+                    className="hidden min-[700px]:flex"
+                  >
+                    Export Sheet
+                  </p>
+
+                  <PiExport color={currentTheme.text_1} size={18} />
                 </div>
               )}
-            </div>
-          </div>
 
-          <div className="flex flex-row gap-[12px] min-[700px]:gap-[10px]">
-            {hasProjectModule("customer-products-module") && (
+              {hasProjectModule("customer-products-module") && (
+                <div
+                  style={{
+                    backgroundColor: currentTheme.background_2,
+                  }}
+                  className="dim hover:brightness-75 rounded-[25px] w-[33px] min-[700px]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[13px] font-[600] cursor-pointer"
+                  onClick={handleWixSync}
+                >
+                  <p
+                    style={{
+                      color: currentTheme.text_1,
+                    }}
+                    className="hidden min-[700px]:flex"
+                  >
+                    Sync Wix
+                  </p>
+
+                  <BsWindow color={currentTheme.text_1} size={17} />
+                </div>
+              )}
+
               <div
                 style={{
                   backgroundColor: currentTheme.background_2,
+                  border: editingProducts
+                    ? `1px solid ${currentTheme.text_1}`
+                    : "none",
                 }}
-                className="dim hover:brightness-75 rounded-[25px] w-[33px] min-[700px]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[6px] text-[13px] font-[600] cursor-pointer"
-                onClick={handleGoogleExport}
+                className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
+                onClick={handleEditClick}
               >
-                <p
-                  style={{
-                    color: currentTheme.text_1,
-                  }}
-                  className="hidden min-[700px]:flex"
-                >
-                  Export Sheet
-                </p>
-
-                <PiExport color={currentTheme.text_1} size={18} />
+                <FiEdit
+                  size={17}
+                  color={currentTheme.text_1}
+                  className="flex items-center justify-center"
+                />
               </div>
-            )}
 
-            {hasProjectModule("customer-products-module") && (
-              <div
-                style={{
-                  backgroundColor: currentTheme.background_2,
-                }}
-                className="dim hover:brightness-75 rounded-[25px] w-[33px] min-[700px]:w-[140px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[13px] font-[600] cursor-pointer"
-                onClick={handleWixSync}
-              >
-                <p
-                  style={{
-                    color: currentTheme.text_1,
-                  }}
-                  className="hidden min-[700px]:flex"
-                >
-                  Sync Wix
-                </p>
-
-                <BsWindow color={currentTheme.text_1} size={17} />
-              </div>
-            )}
-
-            <div
-              style={{
-                backgroundColor: currentTheme.background_2,
-                border: editingProducts
-                  ? `1px solid ${currentTheme.text_1}`
-                  : "none",
-              }}
-              className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
-              onClick={handleEditClick}
-            >
-              <FiEdit
-                size={17}
-                color={currentTheme.text_1}
-                className="flex items-center justify-center"
-              />
-            </div>
-
-            <div
-              style={{
-                backgroundColor: currentTheme.background_2,
-              }}
-              className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
-              onClick={handleAddRow}
-            >
-              <FaPlus
-                size={17}
-                color={currentTheme.text_1}
-                className="flex items-center justify-center"
-              />
-            </div>
-
-            {selectedProducts.length > 0 && inventoryView && (
               <div
                 style={{
                   backgroundColor: currentTheme.background_2,
                 }}
                 className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
-                onClick={handleConfirmDelete}
+                onClick={handleAddRow}
               >
-                <IoTrashSharp
-                  size={18}
+                <FaPlus
+                  size={17}
                   color={currentTheme.text_1}
                   className="flex items-center justify-center"
                 />
               </div>
-            )}
+
+              {selectedProducts.length > 0 && inventoryView && (
+                <div
+                  style={{
+                    backgroundColor: currentTheme.background_2,
+                  }}
+                  className="mr-[2px] dim hover:brightness-75 rounded-[25px] w-[33px] h-[33px] flex flex-row justify-center items-center gap-[10px] text-[15px] cursor-pointer"
+                  onClick={handleConfirmDelete}
+                >
+                  <IoTrashSharp
+                    size={18}
+                    color={currentTheme.text_1}
+                    className="flex items-center justify-center"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="w-[100%] h-[100%] ">
+            <div
+              className="w-[300px] h-[25px] rounded-[20px]"
+              style={{ backgroundColor: currentTheme.header_1_1 }}
+            >
+              <SearchBar module={"customer-products-module"}/>
+            </div>
           </div>
         </div>
       )}

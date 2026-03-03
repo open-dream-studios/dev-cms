@@ -69,7 +69,7 @@ const SubscriptionDetailPanel = ({
   const { currentProjectId } = useCurrentDataStore();
   const { domain, modal2, setModal2 } = useUiStore();
   const currentTheme = useCurrentTheme();
-  const foundProject = appDetailsProjectByDomain("tannyspaacquisitions.shop");
+  const foundProject = appDetailsProjectByDomain(domain);
 
   const { creditBalances, adjustCredit } = useCreditBalanceAdjustments(
     !!currentUser,

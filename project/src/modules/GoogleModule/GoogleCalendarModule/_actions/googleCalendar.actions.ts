@@ -20,7 +20,7 @@ import {
 import { upsertScheduleRequestApi } from "@/api/public/scheduleRequests.api";
 import { toast } from "react-toastify";
 import { queryClient } from "@/lib/queryClient";
-import { showSuccessToast } from "@/util/functions/UI";
+import { showSingleToast } from "@/util/functions/UI";
 
 export const createCalendarEvent = async ({
   calendarTarget,
@@ -200,7 +200,7 @@ export const approveAndCreateScheduleEvent = async (
       success: false,
     };
   const calendarEventId = success.data.event.id;
-  showSuccessToast("schedule-request-approved", "Calendar updated");
+  showSingleToast(true, "schedule-request-approved", "Calendar updated");
   await upsertScheduleRequestApi({
     ...scheduleRequestItem,
     status: "approved",

@@ -144,14 +144,6 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
     }
   };
 
-  const onSelectCustomer = (customer: Customer) => {
-    leadForm.setValue("customer_id", customer.customer_id, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-    setModal1({ ...modal1, open: false });
-  };
-
   const handleLeadClick = async () => {
     if (isAddingLead) return;
     if (editingLead) {
@@ -261,6 +253,14 @@ const LeadRow = ({ lead }: { lead: Lead | null }) => {
     setIsAddingLead(false);
     setEditingLead(null);
     leadForm.reset(leadToForm(lead));
+  };
+
+  const onSelectCustomer = (customer: Customer) => {
+    leadForm.setValue("customer_id", customer.customer_id, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+    setModal1({ ...modal1, open: false });
   };
 
   const handleEditCustomerClick = () => {

@@ -11,6 +11,8 @@ import { useDataFilters } from "@/hooks/useDataFilters";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { saveProducts } from "../_actions/products.actions";
 import { useTimer } from "@/store/util/useTimer";
+import { useSearchUIStore } from "../../_util/Search/_store/search.store";
+import { runSearchMatch } from "../../_util/Search/_helpers/customerSearch.helpers";
 
 export type InventoryDataItem = {
   title: string;
@@ -108,8 +110,9 @@ const InventoryGrid = () => {
   const { localProductsData, selectedProducts, setSelectedProducts } =
     useCurrentDataStore();
   const { filteredProducts } = useDataFilters();
+  const { productSearchContext } = useSearchUIStore();
 
-  useEffect(() => { 
+  useEffect(() => {
     const manager = useTimer.getState();
     manager.createTimer(`customer-products-table`, {
       onSave: async () => {
@@ -128,7 +131,7 @@ const InventoryGrid = () => {
   const selectAllProducts = () => {
     if (productsData && filteredProducts(productsData).length > 0) {
       const allSerialNumbers = filteredProducts(productsData).map(
-        (product: Product) => product.serial_number ?? ""
+        (product: Product) => product.serial_number ?? "",
       );
       const allSelected =
         selectedProducts.length === filteredProducts(productsData).length &&
@@ -141,63 +144,67 @@ const InventoryGrid = () => {
     }
   };
 
+  const baseProducts = filteredProducts(localProductsData);
+
+  const searchedProducts =
+    productSearchContext && productSearchContext.parsed.parts.length
+      ? baseProducts.filter((product) => {
+          const schema = productSearchContext.schema(product);
+          const match = runSearchMatch(productSearchContext.parsed, schema);
+          return match.isMatch;
+        })
+      : baseProducts;
+
   if (!currentUser || !currentProjectId) return null;
 
   return (
-    <div className="relative w-[100%] h-[100%] overflow-hidden">
-      <div className="z-[800] absolute top-0 left-0 h-[60px] w-[100%]">
+    <div className="relative w-[100%] h-[100%] flex flex-col gap-[8px]">
+      <div className="h-[80px] w-[100%]">
         <ProductsHeader title={"Products"} />
       </div>
 
       {hasProjectModule("customer-products-module") && (
-        <div className="absolute w-[100%] h-[100%] left-0 top-0 px-[20px]">
-          <div className="mt-[75px] h-[calc(100%-75px)] w-[100%] min-h-[101px] relative rounded-t-[13px]">
-            <div
-              style={{
-                backgroundColor: currentTheme.background_2,
-              }}
-              className="absolute top-0 left-0 h-[40px] w-[100%] flex flex-row items-center rounded-t-[13px]"
-            >
-              <div className="w-[48px] h-[100%] items-center justify-center flex">
+        <div className="px-[20px] flex-1 w-[100%] pt-[40px] min-h-0 relative rounded-t-[13px] flex flex-col">
+          <div
+            style={{
+              backgroundColor: currentTheme.background_2,
+            }}
+            className="absolute top-0 left-[20px] h-[40px] w-[calc(100%-40px)] flex flex-row items-center rounded-t-[13px]"
+          >
+            <div className="w-[48px] h-[100%] items-center justify-center flex">
+              <div
+                style={{
+                  border: `1px solid ${currentTheme.background_4}`,
+                }}
+                onClick={selectAllProducts}
+                className="cursor-pointer dim w-[17px] h-[17px] rounded-[4px] flex items-center justify-center"
+              >
                 <div
                   style={{
-                    border: `1px solid ${currentTheme.background_4}`,
+                    backgroundColor: currentTheme.background_4,
                   }}
-                  onClick={selectAllProducts}
-                  className="cursor-pointer dim w-[17px] h-[17px] rounded-[4px] flex items-center justify-center"
+                  className="w-[8px] h-[1px]"
+                ></div>
+              </div>
+            </div>
+            {inventoryDataLayout.map((item: any, index: number) => {
+              return (
+                <div
+                  key={index}
+                  style={{
+                    paddingLeft: item.titlePaddingLeft,
+                  }}
+                  className={`font-[500] text-[14px] ${item.className}`}
                 >
-                  <div
-                    style={{
-                      backgroundColor: currentTheme.background_4,
-                    }}
-                    className="w-[8px] h-[1px]"
-                  ></div>
+                  {item.title}
                 </div>
-              </div>
-              {inventoryDataLayout.map((item: any, index: number) => {
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      paddingLeft: item.titlePaddingLeft,
-                    }}
-                    className={`font-[500] text-[14px] ${item.className}`}
-                  >
-                    {item.title}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="absolute top-0 left-0 w-[100%] h-[calc(100%-40px)] mt-[40px]">
-              <div className="w-[100%] h-[100%] overflow-y-scroll">
-                {localProductsData &&
-                  filteredProducts(localProductsData).length > 0 && (
-                    <DraggableItems sheet={true} />
-                  )}
-                <div className="h-[60px] w-[100%]" />
-              </div>
-            </div>
+              );
+            })}
+          </div>
+          <div className="flex-1 overflow-y-auto pb-[60px]">
+            {localProductsData && searchedProducts.length > 0 && (
+              <DraggableItems sheet={true} />
+            )}
           </div>
         </div>
       )}

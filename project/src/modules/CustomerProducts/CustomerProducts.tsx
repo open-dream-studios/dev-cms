@@ -1,4 +1,4 @@
-// project/src/modules/CustomerProducts/Products.tsx
+// project/src/modules/CustomerProducts/CustomerProducts.tsx
 "use client";
 import React from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -12,12 +12,29 @@ import ProductView from "./ProductView/ProductView";
 import InventoryGrid from "./Grid/InventoryGrid";
 import { useUiStore } from "@/store/useUIStore";
 import { useDataFilters } from "@/hooks/useDataFilters";
+import { useCurrentTheme } from "@/hooks/util/useTheme";
+import { useSearchUIStore } from "../_util/Search/_store/search.store";
+import { runSearchMatch } from "../_util/Search/_helpers/customerSearch.helpers";
 
 const CustomerProducts = () => {
   const { currentUser } = useContext(AuthContext);
+  const currentTheme = useCurrentTheme();
   const { productsData, isLoadingProductsData } = useContextQueries();
   const { filteredProducts } = useDataFilters();
   const { inventoryView, addingProduct } = useUiStore();
+  const { productSearchContext } = useSearchUIStore();
+
+  const baseProducts = productsData ? filteredProducts(productsData) : [];
+
+  const searchedProducts =
+    productSearchContext && productSearchContext.parsed.parts.length
+      ? baseProducts.filter((product) => {
+          const schema = productSearchContext.schema(product);
+          const match = runSearchMatch(productSearchContext.parsed, schema);
+          return match.isMatch;
+        })
+      : baseProducts;
+
   if (!currentUser) return null;
 
   return (
@@ -30,14 +47,17 @@ const CustomerProducts = () => {
             <InventoryGrid />
           ) : (
             <div className="w-[100%] h-[100%] relative">
-              <div className="z-[800] absolute top-0 left-0 h-[60px] w-[100%]">
+              <div
+                style={{ backgroundColor: currentTheme.background_1 }}
+                className="z-[800] absolute top-0 left-0 h-[88px] w-[100%] "
+              >
                 <ProductsHeader title={"Inventory"} />
               </div>
-              <div className="absolute h-[calc(100%-65px)] mt-[65px]  left-0 w-[100%]">
-                {productsData && filteredProducts(productsData).length > 0 ? (
+              <div className="absolute h-[calc(100%-88px)] mt-[88px]  left-0 w-[100%]">
+                {productsData && searchedProducts.length > 0 ? (
                   <div className="w-[100%] h-[100%] overflow-y-scroll overflow-x-hidden px-[30px]">
                     {productsData &&
-                      filteredProducts(productsData).length > 0 && (
+                      searchedProducts.length > 0 && (
                         <DraggableItems sheet={false} />
                       )}
                     <div className="h-[60px] w-[100%]" />

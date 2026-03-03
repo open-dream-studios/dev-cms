@@ -1,6 +1,6 @@
 // src/modules/GoogleModule/GoogleCalendarModule/_store/googleCalendar.store.ts
 import { createStore } from "@/store/createStore";
-import { CalendarEvent, ScheduleRequest } from "@open-dream/shared";
+import { CalendarEvent, GoogleCalendarEventRaw, ScheduleRequest } from "@open-dream/shared";
 
 export type NewEvent = {
   title: string;
@@ -27,4 +27,9 @@ export const useGoogleCalendarUIStore = createStore({
   showReschedule: false,
   rescheduleStart: null as Date | null,
   rescheduleEnd: null as Date | null,
+
+  calendar1Events: [] as GoogleCalendarEventRaw[],
+  calendar2Events: [] as GoogleCalendarEventRaw[],
+
+  isUpdatingEvent: false,
 });
