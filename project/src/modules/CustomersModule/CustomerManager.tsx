@@ -28,6 +28,7 @@ export type UpdateEventProps = {
     creditType?: LedgerCreditType;
     completed?: boolean;
   };
+  creditAdjustment: boolean;
 };
 
 export default function CustomerManager() {
@@ -121,6 +122,7 @@ export default function CustomerManager() {
     eventId,
     calendarTarget,
     updates,
+    creditAdjustment
   }: UpdateEventProps) => {
     if (!eventId) return;
     const existingEvent =
@@ -172,6 +174,7 @@ export default function CustomerManager() {
         },
         runModule,
         refresh: calendarTarget === 1 ? refreshCalendar1 : refreshCalendar2,
+        creditAdjustment
       });
       if (res.ok && res.data && res.data.success) {
         showSingleToast(true, "update-calendar-event", "Calendar updated");

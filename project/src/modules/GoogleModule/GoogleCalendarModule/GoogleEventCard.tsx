@@ -80,6 +80,7 @@ const GoogleEventCard = ({
       updates: {
         customerId: customer.customer_id,
       },
+      creditAdjustment: false
     });
   };
 
@@ -89,6 +90,7 @@ const GoogleEventCard = ({
       eventId: googleEvent.id,
       calendarTarget,
       updates: { customerId: null },
+      creditAdjustment: false
     });
   };
 
@@ -152,6 +154,7 @@ const GoogleEventCard = ({
       eventId: googleEvent.id,
       calendarTarget,
       updates: { creditType: nextCreditType },
+      creditAdjustment: false
     });
   };
 
@@ -187,6 +190,7 @@ const GoogleEventCard = ({
       eventId: googleEvent.id,
       calendarTarget,
       updates: { completed: !isComplete },
+      creditAdjustment: true
     });
 
     queryClient.invalidateQueries({

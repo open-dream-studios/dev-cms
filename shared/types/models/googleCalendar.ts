@@ -101,6 +101,7 @@ export interface GoogleCalendarUpdateEventRequest {
   eventId: string;
   event: GoogleCalendarEventInput;
   calendarTarget: GoogleCalendarTarget;
+  creditAdjustment: boolean;
 }
 
 export interface GoogleCalendarDeleteEventRequest {

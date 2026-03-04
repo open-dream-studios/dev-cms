@@ -227,7 +227,7 @@ const GoogleCalendarFooter = ({
 
   const handleSave = async () => {
     if (editingCalendarEvent) {
-      await handleUpdateEvent({eventId: editingCalendarEvent.id, calendarTarget});
+      await handleUpdateEvent({eventId: editingCalendarEvent.id, calendarTarget, creditAdjustment: false});
     } else {
       await handleCreate();
     }

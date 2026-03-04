@@ -82,6 +82,7 @@ export const updateCalendarEvent = async ({
   updates,
   runModule,
   refresh,
+  creditAdjustment
 }: {
   calendarTarget: GoogleCalendarTarget;
   eventId: string;
@@ -89,6 +90,7 @@ export const updateCalendarEvent = async ({
   updates: CalendarEventUpdates;
   runModule: (identifier: string, body: any) => any;
   refresh: () => void;
+  creditAdjustment: boolean;
 }) => {
   const event = buildUpdatedGoogleEvent({ existingEvent, updates });
 
@@ -97,6 +99,7 @@ export const updateCalendarEvent = async ({
     eventId,
     event,
     calendarTarget,
+    creditAdjustment
   };
   const res = await runModule("google-calendar-module", request);
   refresh();
