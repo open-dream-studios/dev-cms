@@ -7,7 +7,7 @@ import {
   folderScopes,
 } from "@open-dream/shared";
 import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
-import { useEstimationsUIStore } from "@/modules/EstimationModule/_store/estimations.store";
+import { useEstimationsUIStore } from "@/modules/OLD_EstimationModule/_store/estimations.store";
 
 export type SelectedFolder = {
   id: number | null;

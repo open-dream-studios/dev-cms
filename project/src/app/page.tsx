@@ -9,11 +9,12 @@ import { useUiStore } from "@/store/useUIStore";
 import GoogleAdsDashboard from "@/modules/GoogleModule/GoogleAdsModule/GoogleAdsDashboard";
 import GmailModule from "@/modules/GoogleModule/GmailModule/GmailModule";
 import UpdatesCatalog from "@/modules/UpdatesModule/UpdatesCatalog";
-import DecisionGraphBuilder from "@/modules/EstimationModule/EstimationBuilder/DecisionGraphBuilder";
-import EstimationLauncher from "@/modules/EstimationModule/EstimationRuntime/EstimationLaunch";
+// import DecisionGraphBuilder from "@/modules/OLD_EstimationModule/EstimationBuilder/DecisionGraphBuilder";
+// import EstimationLauncher from "@/modules/OLD_EstimationModule/EstimationRuntime/EstimationLaunch";
 // import PricingAdminPage from "@/modules/EstimationModule/PricingAdmin/PricingAdminPage"; 
-import PricingAdminPage from "@/modules/EstimationModule/PricingAdmin/PricingAdminPage";
-import EstimationsAdmin from "@/modules/EstimationModule/EstimationsAdmin";
+// import PricingAdminPage from "@/modules/OLD_EstimationModule/PricingAdmin/PricingAdminPage";
+// import EstimationsAdmin from "@/modules/OLD_EstimationModule/EstimationsAdmin";
+import EstimationFormsModule from "@/modules/EstimationFormsModule/EstimationFormsModule";
 
 const HomePage = () => {
   const { screen } = useUiStore();
@@ -26,10 +27,11 @@ const HomePage = () => {
       {screen === "employees" && <EmployeesModule />}
       {screen === "gmail" && <GmailModule />}
       {screen === "updates" && <UpdatesCatalog />}
-      {screen === "estimations-builder" && <DecisionGraphBuilder />}
-      {screen === "estimations" && <EstimationLauncher />}
-      {screen === "estimations-pricing" && <EstimationsAdmin />}
-      {screen === "estimations-calculation" && <EstimationsAdmin />}
+      {/* {screen === "estimations-builder" && <DecisionGraphBuilder />} */}
+      {/* {screen === "estimations" && <EstimationLauncher />} */}
+      {/* {screen === "estimations-pricing" && <EstimationsAdmin />}
+      {screen === "estimations-calculation" && <EstimationsAdmin />} */}
+      {screen === "estimation-forms" && <EstimationFormsModule />}
     </div>
   );
 };

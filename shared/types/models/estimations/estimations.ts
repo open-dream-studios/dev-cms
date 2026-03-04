@@ -102,7 +102,7 @@ export type EstimationGraphEdge = {
   updated_at: string;
 };
 
-export type EstimationRunStatus = "in_progress" | "completed" | "abandoned";
+// export type EstimationRunStatus = "in_progress" | "completed" | "abandoned";
 
 export type EstimationRun = {
   id: number;
@@ -110,7 +110,8 @@ export type EstimationRun = {
   project_idx: number;
   decision_graph_idx: number;
   pricing_graph_idx: number;
-  status: EstimationRunStatus;
+  // status: EstimationRunStatus;
+  status: string;
   created_at: string | Date | null;
   updated_at: string | Date | null;
 };

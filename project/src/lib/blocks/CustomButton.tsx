@@ -25,9 +25,15 @@ const CustomButton = ({
     border: "1.5px solid" + currentTheme.background_2,
   };
   const fillStyle = {
-    bg: currentUser.theme === "light" ? "#10172A" : "#FFFFFF",
+    bg:
+      currentUser.theme === "light"
+        ? currentTheme.text_3
+        : currentTheme.text_1,
     color: currentTheme.background_1,
-    border: "1px solid" + currentUser.theme === "light" ? "#10172A" : "#FFFFFF",
+    border:
+      "1px solid" + currentUser.theme === "light"
+        ? currentTheme.text_3
+        : currentTheme.text_1,
   };
 
   const variantStyles: Record<

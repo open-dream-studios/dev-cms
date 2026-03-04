@@ -9,6 +9,7 @@ import { BsFillPersonVcardFill } from "react-icons/bs";
 import { IoMdMail } from "react-icons/io";
 import { ReactNode } from "react";
 import { Screen, User } from "@open-dream/shared";
+import { ChartNoAxesColumnDecreasing } from "lucide-react";
 
 export type AccessibleModule = {
   key: Screen;
@@ -34,6 +35,7 @@ export const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
   "estimations-calculation": (
     <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
   ),
+  "estimation-forms": <ChartNoAxesColumnDecreasing size={21} />,
 };
 
 export const buildAccessibleModules = (
@@ -43,6 +45,14 @@ export const buildAccessibleModules = (
   if (!currentUser) return [];
 
   const modules: AccessibleModule[] = [];
+
+  if (hasProjectModule("estimation-forms-module")) {
+    modules.push({
+      key: "estimation-forms",
+      title: "Estimations",
+      pages: ["estimation-forms"],
+    });
+  }
 
   if (hasProjectModule("estimations-module")) {
     modules.push({

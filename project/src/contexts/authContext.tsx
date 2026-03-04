@@ -61,7 +61,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     queryKey: ["currentUserSubscription"],
     queryFn: async () => {
       const res = await makeRequest.post("/auth/current-subscription");
-      console.log(res.data.subscription)
+      // console.log(res.data.subscription)
       return res.data.subscription
     },
     staleTime: 1000 * 60 * 5,

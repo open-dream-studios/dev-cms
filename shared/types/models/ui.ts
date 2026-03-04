@@ -43,6 +43,7 @@ export type Screen =
   | "estimations-builder"
   | "estimations-pricing"
   | "estimations-calculation"
+  | "estimation-forms"
 
   export type CustomersScreen = 
     | "service"

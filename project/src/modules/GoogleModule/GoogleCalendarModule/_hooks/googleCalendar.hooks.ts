@@ -41,7 +41,7 @@ export function useGoogleCalendar(
 
         pageToken = res?.data?.nextPageToken ?? null;
       } while (pageToken);
-      console.log(allEvents);
+      // console.log(allEvents);
 
       if (calendarTarget === 1) {
         setCalendar1Events(allEvents);

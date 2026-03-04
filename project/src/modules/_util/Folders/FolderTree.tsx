@@ -9,8 +9,8 @@ import {
   useFoldersCurrentDataStore,
 } from "./_store/folders.store";
 import DraggableFolderItem from "@/modules/_util/Folders/DraggableFolderItem";
-import VariableDraggableItem from "@/modules/EstimationModule/components/VariableDraggableItem";
-import ProcessDraggableItem from "@/modules/EstimationModule/components/ProcessDraggableItem";
+import VariableDraggableItem from "@/modules/OLD_EstimationModule/components/VariableDraggableItem";
+import ProcessDraggableItem from "@/modules/OLD_EstimationModule/components/ProcessDraggableItem";
 import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
 import { EstimationFactDefinition, FolderScope } from "@open-dream/shared";
 import {

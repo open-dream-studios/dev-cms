@@ -37,6 +37,7 @@ const Navbar = () => {
     pageLayoutRef,
     modal1,
     setModal1,
+    domain
   } = useUiStore();
   const currentTheme = useCurrentTheme();
 
@@ -115,14 +116,17 @@ const Navbar = () => {
   };
 
   const currentLogo = useMemo(() => {
-    if (currentProject && currentProject.logo_media_id) {
+    if (!currentProject || !currentUser) return null
+    const appLogoId = domain === "tannyspaacquisitions.shop" ? currentProject.logo_media_id : currentUser.theme === "dark" ? currentProject.logo_dark_media_id : currentProject.logo_light_media_id
+    
+    if (currentProject && appLogoId) {
       const foundMedia = media.find(
-        (m: Media) => m.media_id === currentProject.logo_media_id,
+        (m: Media) => m.media_id === appLogoId,
       );
       return foundMedia && foundMedia.url ? foundMedia.url : null;
     }
     if (currentUser && currentUser.type === "external") {
-      return "https://tsa-cms-data.s3.us-east-2.amazonaws.com/prod/PROJ-90959de1e1d/media/4afc238c-254f-41b1-879e-fb9aa756599f.webp?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA4YT55LARAP7DXTFI%2F20260101%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20260101T043910Z&X-Amz-Expires=3600&X-Amz-Signature=c05e002cc81625cbac57992ce105835ba11f3661efb21bbd0f7ce8dd3c0c6d78&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject";
+      return "https://tsa-cms-data.s3.us-east-2.amazonaws.com/prod/PROJ-90959de1e1d/media/4afc238c-254f-41b1-879e-fb9aa756599f.webp";
     }
     return null;
   }, [currentProject, media, currentUser]);
@@ -192,7 +196,7 @@ const Navbar = () => {
             />
 
             <div
-              className="hidden [@media(min-width:450px)]:block select-none text-[23px] font-[700] ml-[10px]"
+              className="hidden [@media(min-width:450px)]:block select-none text-[23px] font-[700] ml-[6px] mt-[-2px]"
               style={{
                 color: currentTheme.text_1,
               }}
