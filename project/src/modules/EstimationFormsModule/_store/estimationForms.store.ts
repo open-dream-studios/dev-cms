@@ -1,90 +1,235 @@
 // project/src/modules/EstimationFormsModule/_store/estimationForms.store.ts
 import { createStore } from "@/store/createStore";
-// import { EstimationFactDefinition, VariableScope } from "@open-dream/shared";
-// import { EditorMode, Value } from "../EstimationVariables/types";
-// import { EstimationProcess } from "@/api/estimations/process/estimationProcess.api";
-// import { useCurrentDataStore } from "@/store/currentDataStore";
-// import { useFoldersCurrentDataStore } from "@/modules/_util/Folders/_store/folders.store";
+import {
+  addCaseToChoice,
+  addNodeToForm,
+  createChoiceNode,
+  createConstNode,
+  createFormNode,
+  createId,
+  createStarterFormDocument,
+  EstimationBuilderFormDocument,
+  EstimationBuilderFormGraph,
+  EstimationBuilderNode,
+  findNodeById,
+  moveNodeBetweenForms,
+  nowIso,
+  removeCaseFromChoice,
+  removeNodeById,
+  updateNodeById,
+} from "../_helpers/estimationForms.helpers";
 
-export const useEstimationFormstUIStore = createStore({
-  variable1: null as string | null,
+export type NodePaletteKind = "form" | "choice" | "const";
+
+export const useEstimationFormsUIStore = createStore({
+  formBuilds: [
+    createStarterFormDocument("Bathroom Remodel - Standard"),
+    createStarterFormDocument("Bathroom Remodel - Premium"),
+  ] as EstimationBuilderFormDocument[],
+  selectedFormId: "" as string,
+  selectedNodeId: null as string | null,
+  collapsedNodeIds: [] as string[],
+  search: "",
 });
 
-// export type VariableKey = {
-//   var_key: string;
-//   var_id: string | null;
-//   var_type: VariableScope;
-// };
+const touchDocument = (
+  formBuilds: EstimationBuilderFormDocument[],
+  docId: string,
+  updater: (doc: EstimationBuilderFormDocument) => EstimationBuilderFormDocument,
+) =>
+  formBuilds.map((doc) =>
+    doc.id === docId ? { ...updater(doc), updated_at: nowIso() } : doc,
+  );
 
-// export type PendingVariableTarget =
-//   | {
-//       kind: "condition-left";
-//       set: (v: Value) => void;
-//     }
-//   | {
-//       kind: "condition-right";
-//       set: (v: Value) => void;
-//     }
-//   | {
-//       kind: "return";
-//       set: (v: Value) => void;
-//     };
+export const ensureSelectedForm = () => {
+  const state = useEstimationFormsUIStore.getState();
+  if (state.selectedFormId) return;
+  if (!state.formBuilds.length) return;
+  state.setSelectedFormId(state.formBuilds[0].id);
+};
 
-// export const resetVariableUI = () => {
-//   const { setCurrentProcessRunId } = useCurrentDataStore.getState();
-//   setCurrentProcessRunId(null);
-//   return useEstimationsUIStore.getState().set({
-//     editingVariable: null,
-//     editingFact: null,
-//     selectingVariableReturn: null,
-//     editingConditional: null,
-//     editingIfTreeType: null,
-//     editingAdjustment: null,
+export const getSelectedForm = (state: {
+  formBuilds: EstimationBuilderFormDocument[];
+  selectedFormId: string;
+}) => state.formBuilds.find((doc) => doc.id === state.selectedFormId) ?? null;
 
-//     runInputsOpen: false,
-//     factInputs: {},
-//     showEstimationReport: false,
-//     latestReport: null,
-//   });
-// };
+export const createFormBuild = (name = "Untitled Estimation Form") => {
+  const state = useEstimationFormsUIStore.getState();
+  const next = createStarterFormDocument(name);
+  state.set((s) => ({
+    formBuilds: [next, ...s.formBuilds],
+    selectedFormId: next.id,
+    selectedNodeId: next.root.id,
+  }));
+};
 
-// export const openVariableIfTree = (variable: VariableKey) =>
-//   useEstimationsUIStore.getState().set({
-//     editingVariable: variable,
-//     editingConditional: null,
-//     editingAdjustment: null,
-//     editingIfTreeType: "variable",
-//     selectingVariableReturn: null,
-//     editingFact: null,
-//   });
+export const deleteFormBuild = (formId: string) => {
+  const state = useEstimationFormsUIStore.getState();
+  state.set((s) => {
+    const filtered = s.formBuilds.filter((doc) => doc.id !== formId);
+    const nextSelected =
+      s.selectedFormId === formId ? (filtered[0]?.id ?? "") : s.selectedFormId;
 
-// export const openConditionalIfTree = (nodeId: string | number) =>
-//   useEstimationsUIStore.getState().set({
-//     editingVariable: null,
-//     editingConditional: String(nodeId),
-//     editingAdjustment: null,
-//     editingIfTreeType: "conditional",
-//     selectingVariableReturn: null,
-//     editingFact: null,
-//   });
+    return {
+      formBuilds: filtered,
+      selectedFormId: nextSelected,
+      selectedNodeId: nextSelected ? s.selectedNodeId : null,
+    };
+  });
+};
 
-// export const openAdjustmentIfTree = (nodeId: string | number) =>
-//   useEstimationsUIStore.getState().set({
-//     editingVariable: null,
-//     editingConditional: null,
-//     editingAdjustment: String(nodeId),
-//     editingIfTreeType: "adjustment",
-//     selectingVariableReturn: null,
-//     editingFact: null,
-//   });
+export const duplicateFormBuild = (formId: string) => {
+  const state = useEstimationFormsUIStore.getState();
+  const existing = state.formBuilds.find((doc) => doc.id === formId);
+  if (!existing) return;
 
-// export const setFactInputValue = (fact_key: string, value: string) =>
-//   useEstimationsUIStore.getState().set((s) => ({
-//     factInputs: {
-//       ...s.factInputs,
-//       [fact_key]: value,
-//     },
-//   }));
+  const cloned: EstimationBuilderFormDocument = {
+    ...structuredClone(existing),
+    id: createId("doc"),
+    name: `${existing.name} Copy`,
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  };
 
-// export const getFactInputValue = (fact_key: string) =>
-//   useEstimationsUIStore.getState().factInputs[fact_key] ?? "";
+  state.set((s) => ({
+    formBuilds: [cloned, ...s.formBuilds],
+    selectedFormId: cloned.id,
+    selectedNodeId: cloned.root.id,
+  }));
+};
+
+const updateRoot = (
+  doc: EstimationBuilderFormDocument,
+  root: EstimationBuilderFormGraph,
+) => ({
+  ...doc,
+  root,
+});
+
+export const addPaletteNodeToForm = (
+  formId: string,
+  targetFormId: string,
+  kind: NodePaletteKind,
+  index?: number,
+) => {
+  const state = useEstimationFormsUIStore.getState();
+
+  const nodeToAdd: EstimationBuilderNode =
+    kind === "form"
+      ? createFormNode("Sub Form")
+      : kind === "choice"
+        ? createChoiceNode("Multiple Choice")
+        : createConstNode("Cost", 0);
+
+  state.set((s) => ({
+    formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
+      updateRoot(doc, addNodeToForm(doc.root, targetFormId, nodeToAdd, index)),
+    ),
+    selectedNodeId: nodeToAdd.id,
+  }));
+};
+
+export const moveNode = (
+  formId: string,
+  nodeId: string,
+  fromFormId: string,
+  toFormId: string,
+  toIndex?: number,
+) => {
+  const state = useEstimationFormsUIStore.getState();
+  state.set((s) => ({
+    formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
+      updateRoot(doc, moveNodeBetweenForms(doc.root, nodeId, fromFormId, toFormId, toIndex)),
+    ),
+    selectedNodeId: nodeId,
+  }));
+};
+
+export const addChoiceCase = (formId: string, choiceId: string) => {
+  const state = useEstimationFormsUIStore.getState();
+  state.set((s) => ({
+    formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
+      updateRoot(doc, addCaseToChoice(doc.root, choiceId)),
+    ),
+  }));
+};
+
+export const removeChoiceCase = (
+  formId: string,
+  choiceId: string,
+  caseFormId: string,
+) => {
+  const state = useEstimationFormsUIStore.getState();
+  state.set((s) => ({
+    formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
+      updateRoot(doc, removeCaseFromChoice(doc.root, choiceId, caseFormId)),
+    ),
+    collapsedNodeIds: s.collapsedNodeIds.filter((id) => id !== caseFormId),
+    selectedNodeId: s.selectedNodeId === caseFormId ? choiceId : s.selectedNodeId,
+  }));
+};
+
+export const toggleCollapsedNode = (nodeId: string) => {
+  const state = useEstimationFormsUIStore.getState();
+  const set = new Set(state.collapsedNodeIds);
+  if (set.has(nodeId)) set.delete(nodeId);
+  else set.add(nodeId);
+  state.setCollapsedNodeIds(Array.from(set));
+};
+
+export const removeNode = (formId: string, nodeId: string) => {
+  const state = useEstimationFormsUIStore.getState();
+  state.set((s) => ({
+    formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
+      updateRoot(
+        doc,
+        removeNodeById(doc.root, nodeId) as EstimationBuilderFormGraph,
+      ),
+    ),
+    selectedNodeId: s.selectedNodeId === nodeId ? null : s.selectedNodeId,
+    collapsedNodeIds: s.collapsedNodeIds.filter((id) => id !== nodeId),
+  }));
+};
+
+export const updateNode = (
+  formId: string,
+  nodeId: string,
+  patch: {
+    name?: string;
+    question?: string;
+    value?: number;
+  },
+) => {
+  const state = useEstimationFormsUIStore.getState();
+
+  state.set((s) => ({
+    formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
+      updateRoot(
+        doc,
+        updateNodeById(doc.root, nodeId, (node) => {
+          if (node.kind === "const") {
+            return {
+              ...node,
+              name: patch.name ?? node.name,
+              question: patch.question ?? node.question,
+              value: patch.value ?? node.value,
+            };
+          }
+
+          return {
+            ...node,
+            name: patch.name ?? node.name,
+            question: patch.question ?? node.question,
+          };
+        }) as EstimationBuilderFormGraph,
+      ),
+    ),
+  }));
+};
+
+export const getSelectedNode = () => {
+  const state = useEstimationFormsUIStore.getState();
+  const doc = getSelectedForm(state);
+  if (!doc || !state.selectedNodeId) return null;
+  return findNodeById(doc.root, state.selectedNodeId);
+};
