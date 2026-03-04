@@ -50,6 +50,16 @@ const CompactRow = ({ label, value }: { label: string; value?: string }) => (
   </div>
 );
 
+const formatCreditBalance = (
+  value: number | string | null | undefined,
+): string => {
+  if (value == null) return "-";
+  const numericValue =
+    typeof value === "number" ? value : Number.parseFloat(value);
+  if (!Number.isFinite(numericValue)) return "-";
+  return numericValue.toFixed(2);
+};
+
 const SubscriptionDetailPanel = ({
   subscription,
   customer,
@@ -286,7 +296,7 @@ const SubscriptionDetailPanel = ({
             </div>
             <div className="flex flex-row gap-[7px] items-center">
               <div className="opacity-[0.75] mr-[2px] text-[14px] font-[630]">
-                {creditBalances?.credit1_balance ?? "N/A"}
+                {formatCreditBalance(creditBalances?.credit1_balance)}
               </div>
               <div
                 onClick={() => onCreditAdjustment("+", 1)}
@@ -311,7 +321,7 @@ const SubscriptionDetailPanel = ({
             </div>
             <div className="flex flex-row gap-[7px] items-center">
               <div className="opacity-[0.75] mr-[2px] text-[14px] font-[630]">
-                {creditBalances?.credit2_balance ?? "N/A"}
+                {formatCreditBalance(creditBalances?.credit2_balance)}
               </div>
               <div
                 onClick={() => onCreditAdjustment("+", 2)}
@@ -418,7 +428,7 @@ const SubscriptionDetailPanel = ({
               <div>
                 {subscription.meta_phone
                   ? formatPhoneNumber(subscription.meta_phone)
-                  : "N/A"}
+                  : "-"}
               </div>
             </div>
             <div className="rounded-xl bg-white/5 border border-white/10 p-3 md:col-span-2">

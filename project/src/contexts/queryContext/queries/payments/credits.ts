@@ -17,21 +17,42 @@ export function useCreditBalanceAdjustments(
   currentProjectId: number | null,
   customer_id: string | null,
   stripe_customer_id: string,
-  stripe_subscription_id: string
+  stripe_subscription_id: string,
 ) {
   const queryClient = useQueryClient();
   const routeScope = useRouteScope();
   const isPublic = routeScope === "public";
+  const getCachedBalanceFromAllCredits = (): LedgerCreditBalance | null => {
+    const cachedAllCreditsEntries =
+      queryClient.getQueriesData<LedgerCreditBalanceList>({
+        queryKey: ["allStripeCustomerCredits", currentProjectId],
+      });
+
+    for (const [, cachedAllCredits] of cachedAllCreditsEntries) {
+      if (
+        cachedAllCredits &&
+        Object.prototype.hasOwnProperty.call(
+          cachedAllCredits,
+          stripe_customer_id,
+        )
+      ) {
+        return cachedAllCredits[stripe_customer_id] ?? null;
+      }
+    }
+
+    return null;
+  };
 
   const {
     data: creditBalances = null,
     isLoading: isLoadingCreditBalances,
     refetch: refetchCreditBalances,
   } = useQuery<LedgerCreditBalance | null>({
-    queryKey: ["stripeCustomerCredits", currentProjectId],
+    queryKey: ["stripeCustomerCredits", currentProjectId, stripe_customer_id],
     queryFn: async () =>
       getStripeCustomerCreditsApi(currentProjectId!, stripe_customer_id, false),
-    enabled: isLoggedIn && !!currentProjectId && !isPublic,
+    placeholderData: () => getCachedBalanceFromAllCredits(),
+    enabled: isLoggedIn && !!currentProjectId && !!stripe_customer_id && !isPublic,
   });
 
   const adjustCreditMutation = useMutation({
@@ -52,7 +73,7 @@ export function useCreditBalanceAdjustments(
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["stripeCustomerCredits", currentProjectId],
+        queryKey: ["stripeCustomerCredits", currentProjectId, stripe_customer_id],
       });
       queryClient.invalidateQueries({
         queryKey: ["allStripeCustomerCredits", currentProjectId],
@@ -81,7 +102,7 @@ export function useCreditBalanceAdjustments(
 export function useAllCreditBalances(
   isLoggedIn: boolean,
   currentProjectId: number | null,
-  stripeCustomerIds: string[]
+  stripeCustomerIds: string[],
 ) {
   const routeScope = useRouteScope();
   const isPublic = routeScope === "public";
@@ -96,7 +117,7 @@ export function useAllCreditBalances(
       getAllStripeCustomerCreditsApi(
         currentProjectId!,
         stripeCustomerIds,
-        false
+        false,
       ),
     enabled:
       isLoggedIn &&
