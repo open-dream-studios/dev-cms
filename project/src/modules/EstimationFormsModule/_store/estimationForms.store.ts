@@ -30,6 +30,7 @@ export const useEstimationFormsUIStore = createStore({
   selectedNodeId: null as string | null,
   collapsedNodeIds: [] as string[],
   search: "",
+  estimationFormsLeftBarOpen: true,
 });
 
 const touchDocument = (
@@ -53,7 +54,7 @@ export const getSelectedForm = (state: {
   selectedFormId: string;
 }) => state.formBuilds.find((doc) => doc.id === state.selectedFormId) ?? null;
 
-export const createFormBuild = (name = "Untitled Estimation Form") => {
+export const createFormBuild = (name = "New Form") => {
   const state = useEstimationFormsUIStore.getState();
   const next = createStarterFormDocument(name);
   state.set((s) => ({
@@ -95,6 +96,19 @@ export const duplicateFormBuild = (formId: string) => {
     formBuilds: [cloned, ...s.formBuilds],
     selectedFormId: cloned.id,
     selectedNodeId: cloned.root.id,
+  }));
+};
+
+export const renameFormBuild = (formId: string, name: string) => {
+  const nextName = name.trim();
+  if (!nextName) return;
+
+  const state = useEstimationFormsUIStore.getState();
+  state.set((s) => ({
+    formBuilds: touchDocument(s.formBuilds, formId, (doc) => ({
+      ...doc,
+      name: nextName,
+    })),
   }));
 };
 

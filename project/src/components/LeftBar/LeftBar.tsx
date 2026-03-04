@@ -21,6 +21,7 @@ import { useRouting } from "@/hooks/useRouting";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { useUiStore } from "@/store/useUIStore";
 import { useModules } from "@/modules/_hooks/modules.hooks";
+import { PanelLeftClose } from "lucide-react";
 
 export type BoxItem = {
   title: string;
@@ -185,11 +186,16 @@ const LeftBar = () => {
     return (
       <div className="w-[100%] flex flex-row-reverse justify-end items-center mb-[11px]">
         {withClose && (
-          <LuPanelLeftClose
-            style={{ color: currentTheme.text_4 }}
-            className="hidden lg:block dim cursor-pointer brightness-75 hover:brightness-50 w-[24px] h-[24px] mr-[-8px] ml-[10px]"
+          <button
             onClick={closeLeftBar}
-          />
+            style={{
+              backgroundColor: currentTheme.background_2,
+              color: currentTheme.text_3,
+            }}
+            className={`ml-[7px] h-[37px] w-[35px] pr-[1px] pb-[1px] flex justify-center items-center rounded-lg cursor-pointer hover:brightness-75 dim`}
+          >
+            <PanelLeftClose size={17} className="opacity-83" />
+          </button>
         )}
         <div className="flex-1 flex flex-col">
           <HoverBox onClick={item.onClick} pages={item.pages}>

@@ -1,11 +1,12 @@
 // project/src/modules/EstimationFormsModule/components/EstimationFormsBuilder.tsx
 "use client";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   closestCorners,
   DndContext,
   DragEndEvent,
   DragOverlay,
+  DragOverEvent,
   DragStartEvent,
   PointerSensor,
   useDraggable,
@@ -28,6 +29,7 @@ import {
   CircleDollarSign,
   GitBranchPlus,
   GripVertical,
+  Pencil,
   Plus,
   Trash2,
   X,
@@ -75,7 +77,10 @@ const PaletteItem = ({ kind }: { kind: NodePaletteKind }) => {
       {...attributes}
       {...listeners}
       className={`h-11 px-3 rounded-xl border border-black/10 bg-white text-[12px] font-[700] ${clickClass}`}
-      style={{ transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.7 : 1 }}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        opacity: isDragging ? 0.7 : 1,
+      }}
     >
       <div className="flex items-center gap-2.5">
         <div
@@ -133,7 +138,9 @@ const FlowNodeCard = ({
       <div
         className="rounded-2xl border bg-white px-3 py-2.5 mb-2"
         style={{
-          borderColor: selected ? "rgba(14, 116, 144, 0.45)" : "rgba(15,23,42,0.1)",
+          borderColor: selected
+            ? "rgba(14, 116, 144, 0.45)"
+            : "rgba(15,23,42,0.1)",
           boxShadow: selected
             ? "0 10px 20px rgba(14,116,144,0.1)"
             : "0 4px 12px rgba(15,23,42,0.04)",
@@ -152,20 +159,35 @@ const FlowNodeCard = ({
               <p className="text-[10px] uppercase tracking-wide font-[700] opacity-55 leading-none">
                 {node.kind}
               </p>
-              <p className="text-[12px] font-[700] truncate mt-1 leading-none">{node.name}</p>
+              <p className="text-[12px] font-[700] truncate mt-1 leading-none">
+                {node.name}
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1">
-            <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center">
-              <GripVertical size={13} className="opacity-60" />
-            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation()
+              }}
+              style={{
+                border: false
+                  ? "1px solid rgba(14, 165, 233, 0.52)"
+                  : "1px solid transparent",
+              }}
+              className={`h-[30px] w-[32px] rounded-lg text-black/90 bg-slate-100 flex items-center justify-center ${clickClass}`}
+              title="Rename Form"
+            >
+              <Pencil size={10.5} />
+            </button>
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
               }}
-              className={`h-8 w-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
+              className={`h-[30px] w-[32px] rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
             >
               <Trash2 size={13} />
             </button>
@@ -173,18 +195,28 @@ const FlowNodeCard = ({
         </div>
 
         {node.question && (
-          <p className="mt-2 text-[11px] opacity-60 truncate">{node.question}</p>
+          <p className="mt-2 text-[11px] opacity-60 truncate">
+            {node.question}
+          </p>
         )}
 
         {node.kind === "const" && (
-          <p className="mt-2 text-[12px] font-[700] text-amber-700">${node.value}</p>
+          <p className="mt-2 text-[12px] font-[700] text-amber-700">
+            ${node.value}
+          </p>
         )}
       </div>
     </div>
   );
 };
 
-const LaneDrop = ({ formId, children }: { formId: string; children: ReactNode }) => {
+const LaneDrop = ({
+  formId,
+  children,
+}: {
+  formId: string;
+  children: ReactNode;
+}) => {
   const { setNodeRef, isOver } = useDroppable({ id: `drop-form-${formId}` });
 
   return (
@@ -192,7 +224,9 @@ const LaneDrop = ({ formId, children }: { formId: string; children: ReactNode })
       ref={setNodeRef}
       className="rounded-2xl p-2 min-h-[140px]"
       style={{
-        backgroundColor: isOver ? "rgba(219, 234, 254, 0.6)" : "rgba(255,255,255,0.6)",
+        backgroundColor: isOver
+          ? "rgba(219, 234, 254, 0.6)"
+          : "rgba(255,255,255,0.6)",
         boxShadow: isOver ? "0 0 0 1.5px rgba(37,99,235,0.45) inset" : "none",
       }}
     >
@@ -214,7 +248,13 @@ const StructureTree = ({
   onToggle: (id: string) => void;
   onSelect: (id: string) => void;
 }) => {
-  const TreeRow = ({ node, depth }: { node: EstimationBuilderNode; depth: number }) => {
+  const TreeRow = ({
+    node,
+    depth,
+  }: {
+    node: EstimationBuilderNode;
+    depth: number;
+  }) => {
     const isCollapsed = collapsed.includes(node.id);
     const hasChildren = node.kind === "form" || node.kind === "choice";
     const selected = selectedNodeId === node.id;
@@ -237,7 +277,11 @@ const StructureTree = ({
             className="h-6 w-6 rounded-md flex items-center justify-center"
           >
             {hasChildren ? (
-              isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />
+              isCollapsed ? (
+                <ChevronRight size={12} />
+              ) : (
+                <ChevronDown size={12} />
+              )
             ) : (
               <span className="w-[12px]" />
             )}
@@ -245,14 +289,24 @@ const StructureTree = ({
           <p className="text-[11px] font-[600] truncate">{node.name}</p>
         </div>
 
-        {!isCollapsed && node.kind === "form" &&
+        {!isCollapsed &&
+          node.kind === "form" &&
           node.children.map((child) => (
-            <TreeRow key={child.id} node={child as EstimationBuilderNode} depth={depth + 1} />
+            <TreeRow
+              key={child.id}
+              node={child as EstimationBuilderNode}
+              depth={depth + 1}
+            />
           ))}
 
-        {!isCollapsed && node.kind === "choice" &&
+        {!isCollapsed &&
+          node.kind === "choice" &&
           node.cases.map((child) => (
-            <TreeRow key={child.id} node={child as EstimationBuilderNode} depth={depth + 1} />
+            <TreeRow
+              key={child.id}
+              node={child as EstimationBuilderNode}
+              depth={depth + 1}
+            />
           ))}
       </>
     );
@@ -270,7 +324,8 @@ const getDestination = (overId: string, root: EstimationBuilderFormGraph) => {
   if (!parentFormId) return null;
   const siblings = getFormChildren(root, parentFormId);
   const index = siblings.findIndex((s) => s.id === overId);
-  return { targetFormId: parentFormId, index: index >= 0 ? index : undefined };
+  if (index < 0) return { targetFormId: parentFormId };
+  return { targetFormId: parentFormId, index };
 };
 
 export default function EstimationFormsBuilder() {
@@ -292,18 +347,36 @@ export default function EstimationFormsBuilder() {
   } = useEstimationFormsModule();
 
   const [activePath, setActivePath] = useState<string[]>([]);
-  const [activeDragNode, setActiveDragNode] = useState<EstimationBuilderNode | null>(null);
-  const [choiceFocusById, setChoiceFocusById] = useState<Record<string, string>>({});
+  const [activeDragNode, setActiveDragNode] =
+    useState<EstimationBuilderNode | null>(null);
+  const [choiceFocusById, setChoiceFocusById] = useState<
+    Record<string, string>
+  >({});
+  const [palettePreview, setPalettePreview] = useState<{
+    targetFormId: string;
+    index?: number;
+  } | null>(null);
+  const latestDropDestinationRef = useRef<{
+    targetFormId: string;
+    index?: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!selectedForm) return;
     setActivePath([selectedForm.root.id]);
   }, [selectedForm?.id]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+  );
 
   const lanes = useMemo(() => {
-    if (!selectedForm) return [] as { formId: string; title: string; nodes: EstimationBuilderNode[] }[];
+    if (!selectedForm)
+      return [] as {
+        formId: string;
+        title: string;
+        nodes: EstimationBuilderNode[];
+      }[];
 
     return activePath
       .map((formId, idx) => {
@@ -315,21 +388,37 @@ export default function EstimationFormsBuilder() {
           nodes: form.children as EstimationBuilderNode[],
         };
       })
-      .filter(Boolean) as { formId: string; title: string; nodes: EstimationBuilderNode[] }[];
+      .filter(Boolean) as {
+      formId: string;
+      title: string;
+      nodes: EstimationBuilderNode[];
+    }[];
   }, [activePath, selectedForm]);
 
   const onDragStart = (event: DragStartEvent) => {
+    latestDropDestinationRef.current = null;
+    setPalettePreview(null);
     if (!selectedForm) return;
     const data = event.active.data.current;
 
     if (data?.dragType === "node") {
-      setActiveDragNode(findNodeById(selectedForm.root, String(data.nodeId)) as EstimationBuilderNode | null);
+      setActiveDragNode(
+        findNodeById(
+          selectedForm.root,
+          String(data.nodeId),
+        ) as EstimationBuilderNode | null,
+      );
     } else if (data?.dragType === "palette") {
       const nodeKind = data.nodeKind as NodePaletteKind;
       setActiveDragNode({
         id: "ghost",
         kind: nodeKind,
-        name: nodeKind === "form" ? "Form" : nodeKind === "choice" ? "Multiple Choice" : "Const",
+        name:
+          nodeKind === "form"
+            ? "Form"
+            : nodeKind === "choice"
+              ? "Multiple Choice"
+              : "Const",
         question: "",
         value: 0,
         children: [],
@@ -340,11 +429,15 @@ export default function EstimationFormsBuilder() {
 
   const onDragEnd = (event: DragEndEvent) => {
     setActiveDragNode(null);
-    if (!selectedForm || !event.over) return;
+    setPalettePreview(null);
+    if (!selectedForm) return;
 
     const activeData = event.active.data.current;
-    const overId = String(event.over.id);
-    const destination = getDestination(overId, selectedForm.root);
+    const destination =
+      latestDropDestinationRef.current ??
+      (event.over
+        ? getDestination(String(event.over.id), selectedForm.root)
+        : null);
     if (!destination) return;
 
     if (activeData?.dragType === "palette") {
@@ -366,10 +459,62 @@ export default function EstimationFormsBuilder() {
         destination.index,
       );
     }
+
+    latestDropDestinationRef.current = null;
+  };
+
+  const onDragOver = (event: DragOverEvent) => {
+    if (!selectedForm) return;
+    const activeData = event.active.data.current;
+
+    if (!event.over) {
+      setPalettePreview(null);
+      latestDropDestinationRef.current = null;
+      return;
+    }
+
+    const overId = String(event.over.id);
+    let destination = getDestination(overId, selectedForm.root);
+
+    // If hovering the last node and cursor is in its lower area,
+    // preview/drop should target the true bottom slot of the list.
+    if (
+      activeData?.dragType === "palette" &&
+      destination &&
+      destination.index !== undefined &&
+      !overId.startsWith("drop-form-") &&
+      event.active.rect.current.translated
+    ) {
+      const siblings = getFormChildren(selectedForm.root, destination.targetFormId);
+      const isLast = destination.index === siblings.length - 1;
+      const activeMidY =
+        event.active.rect.current.translated.top +
+        event.active.rect.current.translated.height / 2;
+      const overLowerThreshold =
+        event.over.rect.top + event.over.rect.height * 0.72;
+
+      if (isLast && activeMidY > overLowerThreshold) {
+        destination = {
+          targetFormId: destination.targetFormId,
+          index: siblings.length,
+        };
+      }
+    }
+
+    latestDropDestinationRef.current = destination;
+    if (activeData?.dragType === "palette") {
+      setPalettePreview(destination);
+    } else {
+      setPalettePreview(null);
+    }
   };
 
   if (!selectedForm) {
-    return <div className="h-full flex items-center justify-center text-[14px] opacity-70">Create a form build to get started.</div>;
+    return (
+      <div className="h-full flex items-center justify-center text-[14px] opacity-70">
+        Create a form build to get started.
+      </div>
+    );
   }
 
   return (
@@ -377,11 +522,16 @@ export default function EstimationFormsBuilder() {
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={onDragStart}
+      onDragOver={onDragOver}
       onDragEnd={onDragEnd}
-      onDragCancel={() => setActiveDragNode(null)}
+      onDragCancel={() => {
+        setActiveDragNode(null);
+        setPalettePreview(null);
+        latestDropDestinationRef.current = null;
+      }}
     >
       <div className="h-full p-3 pb-[88px] flex gap-3">
-        <div className="w-[250px] rounded-2xl border border-black/8 bg-white/80 backdrop-blur-sm p-2.5 overflow-y-auto">
+        {/* <div className="w-[250px] rounded-2xl border border-black/8 bg-white/80 backdrop-blur-sm p-2.5 overflow-y-auto">
           <p className="text-[11px] font-[700] uppercase tracking-wide opacity-60 px-1 pb-2">Structure</p>
           <StructureTree
             root={selectedForm.root}
@@ -400,13 +550,14 @@ export default function EstimationFormsBuilder() {
               }
             }}
           />
-        </div>
+        </div> */}
 
         <div
           className="flex-1 rounded-2xl overflow-hidden border border-black/8"
           style={{
             backgroundColor: currentTheme.background_1,
-            backgroundImage: "radial-gradient(circle at 1px 1px, rgba(15,23,42,0.08) 1px, transparent 0)",
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(15,23,42,0.08) 1px, transparent 0)",
             backgroundSize: "18px 18px",
           }}
         >
@@ -417,7 +568,12 @@ export default function EstimationFormsBuilder() {
                   key={lane.formId}
                   onClick={() => setActivePath((p) => p.slice(0, idx + 1))}
                   className={`h-8 px-2.5 rounded-lg text-[11px] font-[700] whitespace-nowrap ${clickClass}`}
-                  style={{ backgroundColor: idx === lanes.length - 1 ? "rgba(37,99,235,0.12)" : "rgba(148,163,184,0.12)" }}
+                  style={{
+                    backgroundColor:
+                      idx === lanes.length - 1
+                        ? "rgba(37,99,235,0.12)"
+                        : "rgba(148,163,184,0.12)",
+                  }}
                 >
                   {lane.title}
                 </button>
@@ -425,55 +581,105 @@ export default function EstimationFormsBuilder() {
             </div>
 
             <div className="h-8 px-3 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-[700] flex items-center gap-1">
-              {validation.valid ? "Valid Graph" : <><AlertTriangle size={12} /> {validation.errors.length} issues</>}
+              {validation.valid ? (
+                "Valid Graph"
+              ) : (
+                <>
+                  <AlertTriangle size={12} /> {validation.errors.length} issues
+                </>
+              )}
             </div>
           </div>
 
           <div className="h-[calc(100%-58px)] overflow-x-auto overflow-y-hidden p-3">
             <div className="h-full flex gap-3 min-w-max">
               {lanes.map((lane) => (
-                <div key={lane.formId} className="w-[360px] h-full rounded-2xl border border-black/8 bg-white/78 backdrop-blur-sm p-2.5">
+                <div
+                  key={lane.formId}
+                  className="w-[360px] h-full rounded-2xl border border-black/8 bg-white/78 backdrop-blur-sm p-2.5"
+                >
                   <div className="h-9 px-2 rounded-lg bg-slate-100/80 flex items-center justify-between mb-2">
-                    <p className="text-[12px] font-[700] truncate">{lane.title}</p>
+                    <p className="text-[12px] font-[700] truncate">
+                      {lane.title}
+                    </p>
                     <button
                       onClick={() => toggleCollapsedNode(lane.formId)}
                       className={`h-7 w-7 rounded-md bg-white flex items-center justify-center ${clickClass}`}
                     >
-                      {collapsedNodeIds.includes(lane.formId) ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+                      {collapsedNodeIds.includes(lane.formId) ? (
+                        <ChevronRight size={12} />
+                      ) : (
+                        <ChevronDown size={12} />
+                      )}
                     </button>
                   </div>
 
                   {!collapsedNodeIds.includes(lane.formId) && (
                     <LaneDrop formId={lane.formId}>
-                      <SortableContext items={lane.nodes.map((n) => n.id)} strategy={verticalListSortingStrategy}>
-                        {lane.nodes.map((node) => (
-                          <FlowNodeCard
-                            key={node.id}
-                            node={node}
-                            parentFormId={lane.formId}
-                            selected={selectedNodeId === node.id}
-                            onSelect={() => {
-                              setSelectedNodeId(node.id);
+                      <SortableContext
+                        items={lane.nodes.map((n) => n.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {lane.nodes.map((node, index) => (
+                          <div key={node.id}>
+                            {palettePreview?.targetFormId === lane.formId &&
+                              palettePreview.index === index && (
+                                <div className="rounded-2xl border border-sky-300 bg-sky-100/65 px-3 py-2.5 mb-2 opacity-75">
+                                  <p className="text-[11px] font-[700] text-sky-700">
+                                    Drop Here
+                                  </p>
+                                </div>
+                              )}
 
-                              if (node.kind === "form") {
-                                setActivePath((prev) => {
-                                  const laneIndex = prev.indexOf(lane.formId);
-                                  return [...prev.slice(0, laneIndex + 1), node.id];
-                                });
-                              }
+                            <FlowNodeCard
+                              node={node}
+                              parentFormId={lane.formId}
+                              selected={selectedNodeId === node.id}
+                              onSelect={() => {
+                                setSelectedNodeId(node.id);
 
-                              if (node.kind === "choice" && node.cases.length) {
-                                const focused = choiceFocusById[node.id] ?? node.cases[0].id;
-                                setChoiceFocusById((s) => ({ ...s, [node.id]: focused }));
-                                setActivePath((prev) => {
-                                  const laneIndex = prev.indexOf(lane.formId);
-                                  return [...prev.slice(0, laneIndex + 1), focused];
-                                });
+                                if (node.kind === "form") {
+                                  setActivePath((prev) => {
+                                    const laneIndex = prev.indexOf(lane.formId);
+                                    return [
+                                      ...prev.slice(0, laneIndex + 1),
+                                      node.id,
+                                    ];
+                                  });
+                                }
+
+                                if (node.kind === "choice" && node.cases.length) {
+                                  const focused =
+                                    choiceFocusById[node.id] ?? node.cases[0].id;
+                                  setChoiceFocusById((s) => ({
+                                    ...s,
+                                    [node.id]: focused,
+                                  }));
+                                  setActivePath((prev) => {
+                                    const laneIndex = prev.indexOf(lane.formId);
+                                    return [
+                                      ...prev.slice(0, laneIndex + 1),
+                                      focused,
+                                    ];
+                                  });
+                                }
+                              }}
+                              onDelete={() =>
+                                removeNode(selectedForm.id, node.id)
                               }
-                            }}
-                            onDelete={() => removeNode(selectedForm.id, node.id)}
-                          />
+                            />
+                          </div>
                         ))}
+
+                        {palettePreview?.targetFormId === lane.formId &&
+                          (palettePreview.index === undefined ||
+                            palettePreview.index >= lane.nodes.length) && (
+                            <div className="rounded-2xl border border-sky-300 bg-sky-100/65 px-3 py-2.5 mb-2 opacity-75">
+                              <p className="text-[11px] font-[700] text-sky-700">
+                                Drop Here
+                              </p>
+                            </div>
+                          )}
                       </SortableContext>
 
                       {lane.nodes.length === 0 && (
@@ -490,37 +696,57 @@ export default function EstimationFormsBuilder() {
         </div>
 
         <div className="w-[320px] rounded-2xl border border-black/8 bg-white/85 p-3 overflow-y-auto">
-          <p className="text-[11px] font-[700] uppercase tracking-wide opacity-60 mb-2">Inspector</p>
+          <p className="text-[11px] font-[700] uppercase tracking-wide opacity-60 mb-2">
+            Inspector
+          </p>
 
           {!selectedNode ? (
             <p className="text-[12px] opacity-70">Select a node</p>
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] opacity-60 font-[700]">NAME</label>
+                <label className="text-[10px] opacity-60 font-[700]">
+                  NAME
+                </label>
                 <input
                   value={selectedNode.name || ""}
-                  onChange={(e) => updateNode(selectedForm.id, selectedNode.id, { name: e.target.value })}
+                  onChange={(e) =>
+                    updateNode(selectedForm.id, selectedNode.id, {
+                      name: e.target.value,
+                    })
+                  }
                   className="mt-1 w-full h-10 rounded-xl border border-black/10 bg-slate-50 px-3 text-[12px] outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] opacity-60 font-[700]">QUESTION (OPTIONAL)</label>
+                <label className="text-[10px] opacity-60 font-[700]">
+                  QUESTION (OPTIONAL)
+                </label>
                 <textarea
                   value={selectedNode.question || ""}
-                  onChange={(e) => updateNode(selectedForm.id, selectedNode.id, { question: e.target.value })}
+                  onChange={(e) =>
+                    updateNode(selectedForm.id, selectedNode.id, {
+                      question: e.target.value,
+                    })
+                  }
                   className="mt-1 w-full min-h-[78px] rounded-xl border border-black/10 bg-slate-50 p-3 text-[12px] outline-none"
                 />
               </div>
 
               {selectedNode.kind === "const" && (
                 <div>
-                  <label className="text-[10px] opacity-60 font-[700]">CONST VALUE</label>
+                  <label className="text-[10px] opacity-60 font-[700]">
+                    CONST VALUE
+                  </label>
                   <input
                     type="number"
                     value={selectedNode.value}
-                    onChange={(e) => updateNode(selectedForm.id, selectedNode.id, { value: Number(e.target.value || 0) })}
+                    onChange={(e) =>
+                      updateNode(selectedForm.id, selectedNode.id, {
+                        value: Number(e.target.value || 0),
+                      })
+                    }
                     className="mt-1 w-full h-10 rounded-xl border border-black/10 bg-amber-50 px-3 text-[12px] outline-none"
                   />
                 </div>
@@ -529,9 +755,13 @@ export default function EstimationFormsBuilder() {
               {selectedNode.kind === "choice" && (
                 <div className="rounded-xl border border-teal-200 bg-teal-50/70 p-2.5">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] font-[700] text-teal-800">Options</p>
+                    <p className="text-[11px] font-[700] text-teal-800">
+                      Options
+                    </p>
                     <button
-                      onClick={() => addChoiceCase(selectedForm.id, selectedNode.id)}
+                      onClick={() =>
+                        addChoiceCase(selectedForm.id, selectedNode.id)
+                      }
                       className={`h-7 px-2 rounded-lg bg-white text-teal-700 text-[11px] font-[700] flex items-center gap-1 ${clickClass}`}
                     >
                       <Plus size={12} /> Add
@@ -539,36 +769,61 @@ export default function EstimationFormsBuilder() {
                   </div>
 
                   <div className="space-y-1.5">
-                    {(selectedNode as EstimationBuilderChoiceNode).cases.map((formCase) => (
-                      <div key={formCase.id} className="h-8 rounded-lg bg-white/85 border border-teal-100 px-2 flex items-center gap-1.5">
-                        <input
-                          value={formCase.name}
-                          onChange={(e) => updateNode(selectedForm.id, formCase.id, { name: e.target.value })}
-                          className="w-full bg-transparent outline-none text-[11px]"
-                        />
-                        <button
-                          onClick={() => {
-                            setChoiceFocusById((s) => ({ ...s, [selectedNode.id]: formCase.id }));
-                            const parentLane = findParentFormIdForChild(selectedForm.root, selectedNode.id);
-                            if (!parentLane) return;
-                            const laneIndex = activePath.indexOf(parentLane);
-                            if (laneIndex < 0) return;
-                            setActivePath([...activePath.slice(0, laneIndex + 1), formCase.id]);
-                          }}
-                          className={`h-6 px-2 rounded-md bg-teal-100 text-teal-800 text-[10px] font-[700] ${clickClass}`}
+                    {(selectedNode as EstimationBuilderChoiceNode).cases.map(
+                      (formCase) => (
+                        <div
+                          key={formCase.id}
+                          className="h-8 rounded-lg bg-white/85 border border-teal-100 px-2 flex items-center gap-1.5"
                         >
-                          Open
-                        </button>
-                        {(selectedNode as EstimationBuilderChoiceNode).cases.length > 1 && (
+                          <input
+                            value={formCase.name}
+                            onChange={(e) =>
+                              updateNode(selectedForm.id, formCase.id, {
+                                name: e.target.value,
+                              })
+                            }
+                            className="w-full bg-transparent outline-none text-[11px]"
+                          />
                           <button
-                            onClick={() => removeChoiceCase(selectedForm.id, selectedNode.id, formCase.id)}
-                            className={`h-6 w-6 rounded-md bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
+                            onClick={() => {
+                              setChoiceFocusById((s) => ({
+                                ...s,
+                                [selectedNode.id]: formCase.id,
+                              }));
+                              const parentLane = findParentFormIdForChild(
+                                selectedForm.root,
+                                selectedNode.id,
+                              );
+                              if (!parentLane) return;
+                              const laneIndex = activePath.indexOf(parentLane);
+                              if (laneIndex < 0) return;
+                              setActivePath([
+                                ...activePath.slice(0, laneIndex + 1),
+                                formCase.id,
+                              ]);
+                            }}
+                            className={`h-6 px-2 rounded-md bg-teal-100 text-teal-800 text-[10px] font-[700] ${clickClass}`}
                           >
-                            <X size={11} />
+                            Open
                           </button>
-                        )}
-                      </div>
-                    ))}
+                          {(selectedNode as EstimationBuilderChoiceNode).cases
+                            .length > 1 && (
+                            <button
+                              onClick={() =>
+                                removeChoiceCase(
+                                  selectedForm.id,
+                                  selectedNode.id,
+                                  formCase.id,
+                                )
+                              }
+                              className={`h-6 w-6 rounded-md bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
+                            >
+                              <X size={11} />
+                            </button>
+                          )}
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               )}
@@ -593,8 +848,12 @@ export default function EstimationFormsBuilder() {
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center">
                 {activeDragNode.kind === "form" && <Braces size={15} />}
-                {activeDragNode.kind === "choice" && <GitBranchPlus size={15} />}
-                {activeDragNode.kind === "const" && <CircleDollarSign size={15} />}
+                {activeDragNode.kind === "choice" && (
+                  <GitBranchPlus size={15} />
+                )}
+                {activeDragNode.kind === "const" && (
+                  <CircleDollarSign size={15} />
+                )}
               </div>
               <p className="text-[12px] font-[700]">{activeDragNode.name}</p>
             </div>

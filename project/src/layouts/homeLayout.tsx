@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 
 type HomeLayoutProps = {
   left?: ReactNode;
+  fixedLeft?: boolean;
   top?: ReactNode;
   children: ReactNode;
 };
@@ -11,13 +12,13 @@ export const homeLayoutLeftBarTopHeight = 59;
 export const homeLayoutLeftBarWidth = 240;
 export const homeLayoutTopBarHeight = 60;
 
-export const HomeLayout = ({ left, top, children }: HomeLayoutProps) => {
+export const HomeLayout = ({ left, fixedLeft = true, top, children }: HomeLayoutProps) => {
   return (
     <div className="flex w-[100%] h-[100%] relative">
       {left && (
         <div
           className="shrink-0 h-[100%] hidden min-[870px]:block relative overflow-visible z-[40]"
-          style={{ width: homeLayoutLeftBarWidth }}
+          style={{ width: fixedLeft ? homeLayoutLeftBarWidth : "auto" }}
         >
           {left}
         </div>

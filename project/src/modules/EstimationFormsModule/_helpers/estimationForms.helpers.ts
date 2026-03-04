@@ -328,13 +328,7 @@ export const moveNodeBetweenForms = (
     };
   }) as EstimationBuilderFormGraph;
 
-  let adjustedIndex = toIndex;
-  if (fromFormId === toFormId && toIndex !== undefined) {
-    const fromIndex = sourceChildren.findIndex((child) => child.id === nodeId);
-    adjustedIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
-  }
-
-  next = addNodeToForm(next, toFormId, node as EstimationBuilderNode, adjustedIndex);
+  next = addNodeToForm(next, toFormId, node as EstimationBuilderNode, toIndex);
 
   return next;
 };
