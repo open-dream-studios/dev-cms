@@ -15,6 +15,7 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import RenderedImage from "@/modules/components/ProductCard/RenderedImage";
 import { useTimer } from "@/store/util/useTimer";
 import { setCurrentProductData } from "@/store/currentDataStore";
+import { getProductCardSearchDisplay } from "@/modules/_util/Search/_actions/productSearch.actions";
 
 type InventoryRowFormProps = {
   product: Product;
@@ -28,6 +29,8 @@ const InventoryRowForm = ({
   const { screenClick } = useRouting();
   const { productsData, mediaLinks, media } = useContextQueries();
   const currentTheme = useCurrentTheme();
+
+  const display = getProductCardSearchDisplay(product);
 
   const formKey = `product-${product.serial_number}`;
   const { registerForm, unregisterForm } = useFormInstanceStore();
@@ -127,7 +130,7 @@ const InventoryRowForm = ({
           borderRight: `0.5px solid ${currentTheme.background_3}`,
         }}
       >
-        <div className="w-[100%] overflow-hidden">{product.serial_number}</div>
+        <div className="w-[100%] overflow-hidden">{display.serial}</div>
       </div>
 
       <ProductInputCell

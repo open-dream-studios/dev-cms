@@ -120,6 +120,7 @@ export const getScheduleAvailability = async (
   connection: PoolConnection
 ) => {
   const { date } = req.query;
+  const calendarTarget = 1
 
   if (!date || typeof date !== "string") {
     throw new Error("date query param required (YYYY-MM-DD)");
@@ -168,6 +169,7 @@ export const getScheduleAvailability = async (
   const page = await fetchCalendarPage(
     GOOGLE_CLIENT_SECRET_OBJECT,
     GOOGLE_REFRESH_TOKEN_OBJECT,
+    calendarTarget,
     {
       calendarId,
       timeMin,

@@ -3,10 +3,14 @@ import {
   LedgerCreditBalance,
   LedgerCreditAdjustment,
   LedgerCreditBalanceList,
+  LedgerCreditType,
+  LedgerCreditAdjustmentSource,
 } from "@open-dream/shared";
 import { db } from "../../../connection/connect.js";
 import { RowDataPacket, PoolConnection, ResultSetHeader } from "mysql2/promise";
 import { ulid } from "ulid";
+import { getCustomerByIDFunction } from "../../modules/customers/customers_repositories.js";
+import { getSubscriptionByEmail } from "../subscriptions/subscriptions_repositories.js";
 
 // ---------- GET BALANCE BY CUSTOMER ----------
 export const getCustomerCreditBalanceFunction = async (
@@ -130,6 +134,64 @@ export const getAllStripeCustomerCreditBalanceFunction = async (
   }
 
   return balances;
+};
+
+// ---------- BOOKINGS -----------
+export const adjustCreditByBooking = async (
+  connection: PoolConnection,
+  adjustment: 1 | -1,
+  project_idx: number,
+  customer_id: string,
+  credit_type: LedgerCreditType
+) => {
+  if (!project_idx || !customer_id || credit_type === undefined) {
+    return {
+      success: false,
+      error: "Cannot adjust credits by booking, missing fields",
+    };
+  }
+
+  const customer = await getCustomerByIDFunction(project_idx, customer_id);
+  if (!customer || !customer.email) {
+    return { success: false, error: "No customer email found" };
+  }
+
+  const stripeSubscription = await getSubscriptionByEmail(
+    connection,
+    project_idx,
+    customer.email
+  );
+
+  if (
+    !stripeSubscription ||
+    !stripeSubscription.stripe_customer_id ||
+    !stripeSubscription.stripe_subscription_id
+  ) {
+    return {
+      success: false,
+      error: "No stripe subscription found for this email",
+      email: customer.email,
+    };
+  }
+
+  const result = await insertCreditLedgerEntryFunction(connection, {
+    project_idx,
+    customer_id,
+    stripe_customer_id: stripeSubscription.stripe_customer_id,
+    stripe_subscription_id: stripeSubscription.stripe_subscription_id,
+    stripe_invoice_id: null,
+    stripe_session_id: null,
+    source_type: "booking_deduction" as LedgerCreditAdjustmentSource,
+    price_id: null,
+    amount_delta: adjustment,
+    credit_adjustment_type: credit_type,
+    test_mode: false,
+  } as LedgerCreditAdjustment);
+
+  return {
+    success: true,
+    ledger_id: result.id,
+  };
 };
 
 // ---------- INSERT LEDGER ENTRY (APPEND ONLY) ----------

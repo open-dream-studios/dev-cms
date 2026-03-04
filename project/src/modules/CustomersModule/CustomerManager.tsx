@@ -131,14 +131,12 @@ export default function CustomerManager() {
         : calendar2Events.find(
             (event: GoogleCalendarEventRaw) => event.id === eventId,
           );
-
-    console.log(eventId, existingEvent);
     if (!eventId || !existingEvent) return;
 
     const isEditingFormEvent = !!editingCalendarEvent;
-    console.log(isEditingFormEvent);
     if (isEditingFormEvent && (!newScheduleEventStart || !newScheduleEventEnd))
       return;
+      
     const hasCustomerUpdate =
       !!updates && Object.prototype.hasOwnProperty.call(updates, "customerId");
 

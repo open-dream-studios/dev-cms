@@ -24,9 +24,28 @@ export const getStripeSubscriptionsForProjectFunction = async (
   return rows;
 };
 
+export const getSubscriptionByEmail = async (
+  connection: PoolConnection,
+  project_idx: number,
+  customer_email: string
+): Promise<StripeSubscription | null> => {
+  const q = `
+    SELECT *
+    FROM stripe_subscriptions
+    WHERE project_idx = ? AND stripe_email = ?
+    LIMIT 1
+  `;
+  const [rows] = await connection.query<(StripeSubscription & RowDataPacket)[]>(
+    q,
+    [project_idx, customer_email]
+  );
+  return rows.length > 0 ? rows[0] : null;
+};
+
 type AddStripeSubscriptionInput = {
   project_idx: number;
   customer_id: string | null;
+  stripeEmail: string;
   stripe_customer_id: string;
   stripe_subscription_id: string;
   stripe_price_id: string;
@@ -47,6 +66,7 @@ export const addStripeSubscriptionFunction = async (
   const {
     project_idx,
     customer_id,
+    stripeEmail,
     stripe_customer_id,
     stripe_subscription_id,
     stripe_price_id,
@@ -64,6 +84,7 @@ export const addStripeSubscriptionFunction = async (
     INSERT INTO stripe_subscriptions (
       project_idx,
       customer_id,
+      stripe_email,
       stripe_customer_id,
       stripe_subscription_id,
       stripe_price_id,
@@ -87,7 +108,7 @@ export const addStripeSubscriptionFunction = async (
       meta_selected_slot,
       test
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       status = VALUES(status),
       current_period_start = VALUES(current_period_start),
@@ -101,6 +122,7 @@ export const addStripeSubscriptionFunction = async (
   await connection.query<ResultSetHeader>(q, [
     project_idx,
     customer_id,
+    stripeEmail,
     stripe_customer_id,
     stripe_subscription_id,
     stripe_price_id,
@@ -156,10 +178,14 @@ export const syncStripeSubscriptionsFromStripeFunction = async (
         status: "all",
         limit: 100,
         starting_after: startingAfter,
-        expand: ["data.default_payment_method"],
+        expand: ["data.default_payment_method", "data.customer"],
       });
 
     for (const sub of subs.data) {
+      const stripeCustomer = sub.customer as Stripe.Customer;
+      const stripeEmail = stripeCustomer.email;
+      if (!stripeEmail) continue
+
       const metadata = sub.metadata ?? {};
       const priceId = sub.items.data[0]?.price?.id;
       if (!priceId) continue;
@@ -206,7 +232,8 @@ export const syncStripeSubscriptionsFromStripeFunction = async (
       await addStripeSubscriptionFunction(connection, {
         project_idx,
         customer_id,
-        stripe_customer_id: sub.customer as string,
+        stripeEmail,
+        stripe_customer_id: stripeCustomer.id,
         stripe_subscription_id: sub.id,
         stripe_price_id: priceId,
         status: sub.status,

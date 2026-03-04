@@ -129,13 +129,16 @@ const InventoryGrid = () => {
   }, []);
 
   const selectAllProducts = () => {
-    if (productsData && filteredProducts(productsData).length > 0) {
-      const allSerialNumbers = filteredProducts(productsData).map(
+    // if (productsData && filteredProducts(productsData).length > 0) {
+    if (searchedProducts.length > 0) {
+      // const allSerialNumbers = filteredProducts(productsData).map(
+      const allSerialNumbers = searchedProducts.map(
         (product: Product) => product.serial_number ?? "",
       );
       const allSelected =
-        selectedProducts.length === filteredProducts(productsData).length &&
-        selectedProducts.every((sn) => allSerialNumbers.includes(sn));
+        // selectedProducts.length === filteredProducts(productsData).length &&
+        selectedProducts.length === searchedProducts.length;
+      selectedProducts.every((sn) => allSerialNumbers.includes(sn));
       if (allSelected) {
         setSelectedProducts([]);
       } else {
@@ -202,9 +205,7 @@ const InventoryGrid = () => {
             })}
           </div>
           <div className="flex-1 overflow-y-auto pb-[60px]">
-            {localProductsData && searchedProducts.length > 0 && (
-              <DraggableItems sheet={true} />
-            )}
+            {localProductsData && <DraggableItems sheet={true} />}
           </div>
         </div>
       )}

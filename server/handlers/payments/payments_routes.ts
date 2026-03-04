@@ -9,8 +9,7 @@ import {
   syncStripeSubscriptions,
 } from "./subscriptions/subscriptions_controllers.js"; 
 import {
-  adjustCreditLevelController,
-  consumeBookingCreditController,
+  adjustCreditLevelController, 
   getStripeCustomerCreditBalance,
   getAllStripeCustomerCreditBalances
 } from "./credits/credit_ledger_controllers.js";
@@ -49,14 +48,6 @@ router.post(
   authenticateUser,
   checkProjectPermission(3), // owner+
   transactionHandler(getAllStripeCustomerCreditBalances)
-);
-
-router.post(
-  "/consume-booking-credit",
-  verifyVercelProxy,
-  authenticateUser,
-  checkProjectPermission(5), // owner+
-  transactionHandler(consumeBookingCreditController)
 );
 
 router.post(

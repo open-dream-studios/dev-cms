@@ -2,6 +2,7 @@
 import type {
   CalendarExtendedProperties,
   GoogleEventColorName,
+  LedgerCreditType,
   ModuleFunctionInputs,
 } from "@open-dream/shared";
 import { GOOGLE_EVENT_COLOR_NAME_TO_ID } from "@open-dream/shared";
@@ -14,6 +15,7 @@ import {
   listCalendars,
 } from "../../../services/google/calendar/calendar.js";
 import { getGoogleProfile } from "../../../services/google/google.js";
+import { adjustCreditByBooking } from "../../../handlers/payments/credits/credit_ledger_repository.js";
 
 export const keys = {
   GOOGLE_CLIENT_SECRET_OBJECT: true,
@@ -84,6 +86,7 @@ export const run = async ({
       const res = await fetchCalendarPage(
         GOOGLE_CLIENT_SECRET_OBJECT,
         GOOGLE_REFRESH_TOKEN_OBJECT,
+        calendarTarget,
         {
           calendarId,
           pageToken,
@@ -161,13 +164,34 @@ export const run = async ({
 
       if (calendarTarget === 2) {
         let updatedColor: GoogleEventColorName;
-
+        let res = null;
         if (!privateProps.customer_id || !privateProps.credit_type) {
           updatedColor = "Flamingo";
         } else if (privateProps.completed === "true") {
           updatedColor = "Graphite";
+          res = await adjustCreditByBooking(
+            connection,
+            -1,
+            project_idx,
+            privateProps.customer_id,
+            Number(privateProps.credit_type) as LedgerCreditType
+          );
         } else {
-          updatedColor = "Sage";
+          updatedColor = "Peacock";
+          res = await adjustCreditByBooking(
+            connection,
+            1,
+            project_idx,
+            privateProps.customer_id,
+            Number(privateProps.credit_type) as LedgerCreditType
+          );
+        }
+
+        if (!res || !res.success) {
+          return {
+            success: false,
+            error: res?.error || "Could not adjust credit by booking",
+          };
         }
 
         mergedEvent = {
@@ -210,6 +234,7 @@ export const run = async ({
       const res = await fetchCalendarPage(
         GOOGLE_CLIENT_SECRET_OBJECT,
         GOOGLE_REFRESH_TOKEN_OBJECT,
+        calendarTarget,
         {
           calendarId,
           timeMin,

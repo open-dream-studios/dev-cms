@@ -23,9 +23,13 @@ import { BiPencil } from "react-icons/bi";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
 import CustomerSelection from "@/modules/_util/Selection/CustomerSelection";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { setCurrentCustomerData } from "@/store/currentDataStore";
+import {
+  setCurrentCustomerData,
+  useCurrentDataStore,
+} from "@/store/currentDataStore";
 import { showSingleToast } from "@/util/functions/UI";
 import { UpdateEventProps } from "@/modules/CustomersModule/CustomerManager";
+import { queryClient } from "@/lib/queryClient";
 
 const GoogleEventCard = ({
   calendarTarget,
@@ -51,6 +55,7 @@ const GoogleEventCard = ({
   const { customers } = useContextQueries();
   const currentTheme = useCurrentTheme();
   const { domain, modal1, setModal1 } = useUiStore();
+  const { currentProjectId } = useCurrentDataStore();
 
   const selectedEvent = editableEvent ? selectedCalendarEvent : eventPassed;
   if (!selectedEvent) return null;
@@ -182,6 +187,13 @@ const GoogleEventCard = ({
       eventId: googleEvent.id,
       calendarTarget,
       updates: { completed: !isComplete },
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["stripeCustomerCredits", currentProjectId],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["allStripeCustomerCredits", currentProjectId],
     });
   };
 

@@ -35,6 +35,7 @@ import NoProductImage from "./NoProductImage";
 import { useTimer } from "@/store/util/useTimer";
 import { useProductForm } from "@/hooks/forms/useProductForm";
 import { useFormInstanceStore } from "@/store/util/formInstanceStore";
+import { getProductCardSearchDisplay } from "@/modules/_util/Search/_actions/productSearch.actions";
 
 // ---------- TaskCard ----------
 const MiniTaskCard: React.FC<{
@@ -144,6 +145,8 @@ const CustomerProductFrame = ({
   } = useContextQueries();
   const { screenClick } = useRouting();
   const { screen } = useUiStore();
+
+  const display = getProductCardSearchDisplay(product);
 
   const formKey = `product-${product.serial_number}`;
   const { registerForm, unregisterForm } = useFormInstanceStore();
@@ -294,11 +297,17 @@ const CustomerProductFrame = ({
           </div> */}
           <div className="w-[100%] flex flex-col gap-[8px] min-[800px]:gap-[calc(3px+0.2vw)]">
             <div className="min-w-0">
-              <div className="font-[600] text-[calc(12px+0.3vw)] leading-[calc(15px+0.3vw)] truncate">
+              {/* <div className="font-[600] text-[calc(12px+0.3vw)] leading-[calc(15px+0.3vw)] truncate">
                 {product.name}
               </div>
               <div className="opacity-[0.38] mt-[4px] font-[600] text-[calc(10px+0.25vw)] leading-[calc(12px+0.25vw)] truncate">
                 {product.serial_number}
+              </div> */}
+              <div className="font-[600] text-[calc(12px+0.3vw)] leading-[calc(15px+0.3vw)] truncate">
+                {display.name}
+              </div>
+              <div className="opacity-[0.38] mt-[4px] font-[600] text-[calc(10px+0.25vw)] leading-[calc(12px+0.25vw)] truncate">
+                {display.serial}
               </div>
             </div>
 

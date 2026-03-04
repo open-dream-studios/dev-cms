@@ -17,7 +17,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { AuthContext } from "@/contexts/authContext";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -40,6 +40,7 @@ import { useCurrentTheme } from "@/hooks/util/useTheme";
 import { saveProducts } from "./_actions/products.actions";
 import { useSearchUIStore } from "../_util/Search/_store/search.store";
 import { runSearchMatch } from "../_util/Search/_helpers/customerSearch.helpers";
+import { determineProductSearchContext } from "../_util/Search/_helpers/productSearch.helpers";
 
 function SortableItem({
   id,
@@ -54,9 +55,8 @@ function SortableItem({
 }) {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
-  const { editingProducts } = useUiStore();
+  const { editingProducts, inventoryView } = useUiStore();
   const { deleteProducts } = useContextQueries();
-  const { inventoryView } = useUiStore();
 
   const {
     attributes,
@@ -141,7 +141,11 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
   const { localProductsData } = useCurrentDataStore();
   const { filteredProducts } = useDataFilters();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const { productSearchContext } = useSearchUIStore();
+  const {
+    productSearchContext,
+    currentProductSearchTerm,
+    setProductSearchContext,
+  } = useSearchUIStore();
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -165,6 +169,77 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
     await saveProducts();
   };
 
+  // const baseProducts = filteredProducts(localProductsData);
+
+  // const searchedProducts =
+  //   productSearchContext && productSearchContext.parsed.parts.length
+  //     ? baseProducts.filter((product) => {
+  //         const schema = productSearchContext.schema(product);
+  //         const match = runSearchMatch(productSearchContext.parsed, schema);
+  //         return match.isMatch;
+  //       })
+  //     : baseProducts;
+
+  // if (!currentUser) return null;
+
+  // if (!sheet) {
+  //   return (
+  //     <DndContext
+  //       sensors={sensors}
+  //       collisionDetection={closestCenter}
+  //       onDragEnd={handleDragEnd}
+  //       modifiers={[restrictToParentElement]}
+  //     >
+  //       <SortableContext
+  //         items={searchedProducts.map((p) => p.serial_number ?? "")}
+  //         strategy={rectSortingStrategy}
+  //       >
+  //         <div
+  //           ref={containerRef}
+  //           className="relative grid grid-cols-1 min-[640px]:grid-cols-2 min-[1500px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
+  //         >
+  //           {searchedProducts.map((product, index) => (
+  //             <SortableItem
+  //               key={product.serial_number}
+  //               id={product.serial_number ?? ""}
+  //               product={product}
+  //               index={index}
+  //               sheet={sheet}
+  //             />
+  //           ))}
+  //         </div>
+  //       </SortableContext>
+  //     </DndContext>
+  //   );
+  // }
+
+  // return (
+  //   <DndContext
+  //     sensors={sensors}
+  //     collisionDetection={closestCenter}
+  //     onDragEnd={handleDragEnd}
+  //     modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+  //   >
+  //     <SortableContext
+  //       items={localProductsData.map((p) => p.serial_number ?? "")}
+  //       strategy={verticalListSortingStrategy}
+  //     >
+  //       <div className="flex flex-col ">
+  //         {filteredProducts(localProductsData).map((product, index) => (
+  //           <SortableItem
+  //             key={product.serial_number}
+  //             id={product.serial_number ?? ""}
+  //             product={product}
+  //             index={index}
+  //             sheet={sheet}
+  //           />
+  //         ))}
+  //       </div>
+  //       {/* <div className="h-[61px] w-[100%]" /> */}
+  //     </SortableContext>
+  //   </DndContext>
+  // );
+
   const baseProducts = filteredProducts(localProductsData);
 
   const searchedProducts =
@@ -176,52 +251,49 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
         })
       : baseProducts;
 
+  useEffect(() => {
+    const baseContextProducts = filteredProducts(localProductsData);
+    if (!currentProductSearchTerm?.trim()) {
+      setProductSearchContext(null);
+      return;
+    }
+
+    const context = determineProductSearchContext(
+      currentProductSearchTerm,
+      baseContextProducts,
+    );
+
+    setProductSearchContext(context);
+  }, [currentProductSearchTerm]);
+
   if (!currentUser) return null;
 
-  if (!sheet) {
-    return (
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        modifiers={[restrictToParentElement]}
-      >
-        <SortableContext
-          items={searchedProducts.map((p) => p.serial_number ?? "")}
-          strategy={rectSortingStrategy}
-        >
-          <div
-            ref={containerRef}
-            className="relative grid grid-cols-1 min-[640px]:grid-cols-2 min-[1500px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
-          >
-            {searchedProducts.map((product, index) => (
-              <SortableItem
-                key={product.serial_number}
-                id={product.serial_number ?? ""}
-                product={product}
-                index={index}
-                sheet={sheet}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-    );
-  }
+  const items = searchedProducts.map((p) => p.serial_number ?? "");
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
-      modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+      modifiers={
+        sheet
+          ? [restrictToVerticalAxis, restrictToParentElement]
+          : [restrictToParentElement]
+      }
     >
       <SortableContext
-        items={localProductsData.map((p) => p.serial_number ?? "")}
-        strategy={verticalListSortingStrategy}
+        items={items}
+        strategy={sheet ? verticalListSortingStrategy : rectSortingStrategy}
       >
-        <div className="flex flex-col ">
-          {filteredProducts(localProductsData).map((product, index) => (
+        <div
+          ref={containerRef}
+          className={
+            sheet
+              ? "flex flex-col"
+              : "relative grid grid-cols-1 min-[640px]:grid-cols-2 min-[1500px]:grid-cols-3 gap-[17px] md:gap-[20px] lg:gap-[22px] h-auto"
+          }
+        >
+          {searchedProducts.map((product, index) => (
             <SortableItem
               key={product.serial_number}
               id={product.serial_number ?? ""}
@@ -231,7 +303,6 @@ const DraggableItems = ({ sheet }: { sheet: boolean }) => {
             />
           ))}
         </div>
-        {/* <div className="h-[61px] w-[100%]" /> */}
       </SortableContext>
     </DndContext>
   );

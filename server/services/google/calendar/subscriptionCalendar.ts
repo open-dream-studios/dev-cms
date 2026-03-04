@@ -7,6 +7,7 @@ import {
   deleteEvent,
 } from "./calendar.js";
 import { CleaningItem } from "../../../handlers/modules/jobs/scheduling/setSubscriptionService.js";
+import { GoogleCalendarTarget } from "@open-dream/shared";
 
 const TIMEZONE = "America/New_York";
 const TAG_KEY = "subscriptionCleaning";
@@ -18,6 +19,7 @@ export async function syncSubscriptionEvents(
   calendarId: string,
   cleanings: CleaningItem[]
 ) {
+  const calendarTarget = 2 as GoogleCalendarTarget
   const now = moment().tz(TIMEZONE);
   const future = now.clone().add(60, "days");
 
@@ -25,6 +27,7 @@ export async function syncSubscriptionEvents(
   const page = await fetchCalendarPage(
     GOOGLE_CLIENT_SECRET_OBJECT,
     GOOGLE_REFRESH_TOKEN_OBJECT,
+    calendarTarget,
     {
       calendarId,
       timeMin: now.toISOString(),

@@ -79,6 +79,22 @@ export const getCustomerByEmailFunction = async (
   return rows.length ? rows[0] : null;
 };
 
+export const getCustomerByIDFunction = async (
+  project_idx: number,
+  customer_id: string
+): Promise<Customer | null> => {
+  if (!customer_id) return null;
+  const q = `
+    SELECT * FROM customers
+    WHERE project_idx = ? AND customer_id = ?
+    LIMIT 1
+  `;
+  const [rows] = await db
+    .promise()
+    .query<(Customer & RowDataPacket)[]>(q, [project_idx, customer_id]);
+  return rows.length ? rows[0] : null;
+};
+
 export const upsertCustomerFunction = async (
   connection: PoolConnection,
   project_idx: number,

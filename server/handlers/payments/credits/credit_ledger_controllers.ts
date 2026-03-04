@@ -7,7 +7,6 @@ import {
   insertCreditLedgerEntryFunction,
 } from "./credit_ledger_repository.js";
 import {
-  LedgerCreditAdjustment,
   LedgerCreditAdjustmentSource,
   LedgerCreditType,
 } from "@open-dream/shared";
@@ -43,49 +42,6 @@ export const getAllStripeCustomerCreditBalances = async (
     stripeCustomerIds,
     test
   );
-};
-
-export const consumeBookingCreditController = async (
-  req: Request,
-  res: Response,
-  connection: PoolConnection
-) => {
-  const project_idx = req.user?.project_idx;
-  const {
-    customer_id,
-    stripe_customer_id,
-    stripe_subscription_id,
-    credit_type,
-  } = req.body as {
-    customer_id: string;
-    stripe_customer_id?: string;
-    stripe_subscription_id?: string;
-    booking_reference?: string;
-    credit_type: number;
-  };
-
-  if (!project_idx || !customer_id || credit_type === undefined) {
-    throw new Error("Missing required fields");
-  }
-
-  const result = await insertCreditLedgerEntryFunction(connection, {
-    project_idx,
-    customer_id,
-    stripe_customer_id,
-    stripe_subscription_id,
-    stripe_invoice_id: null,
-    stripe_session_id: null,
-    source_type: "booking_deduction" as LedgerCreditAdjustmentSource,
-    price_id: null,
-    amount_delta: -1,
-    credit_adjustment_type: credit_type,
-    test_mode: false,
-  } as LedgerCreditAdjustment);
-
-  return {
-    success: true,
-    ledger_id: result.id,
-  };
 };
 
 export const adjustCreditLevelController = async (

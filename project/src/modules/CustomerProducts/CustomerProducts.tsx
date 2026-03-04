@@ -54,12 +54,10 @@ const CustomerProducts = () => {
                 <ProductsHeader title={"Inventory"} />
               </div>
               <div className="absolute h-[calc(100%-88px)] mt-[88px]  left-0 w-[100%]">
-                {productsData && searchedProducts.length > 0 ? (
+                {productsData ? (
                   <div className="w-[100%] h-[100%] overflow-y-scroll overflow-x-hidden px-[30px]">
-                    {productsData &&
-                      searchedProducts.length > 0 && (
-                        <DraggableItems sheet={false} />
-                      )}
+                    <DraggableItems sheet={false} />
+
                     <div className="h-[60px] w-[100%]" />
                   </div>
                 ) : (

@@ -1,7 +1,7 @@
 // server/services/google/calendar/calendar.ts
 import { google, calendar_v3 } from "googleapis";
 import { AuthoirizeOAuth2Client } from "../google.js";
-import { GLOBAL_COLORS } from "@open-dream/shared";
+import { GLOBAL_COLORS, GoogleCalendarTarget } from "@open-dream/shared";
 
 export type FetchedEvent = calendar_v3.Schema$Event;
 export type FetchResult = {
@@ -59,6 +59,7 @@ export interface CalendarPageOptions {
 export async function fetchCalendarPage(
   GOOGLE_CLIENT_SECRET_OBJECT: string,
   GOOGLE_REFRESH_TOKEN_OBJECT: string,
+  calendarTarget: GoogleCalendarTarget,
   options: CalendarPageOptions
 ): Promise<FetchResult> {
   const {
@@ -90,7 +91,7 @@ export async function fetchCalendarPage(
     showDeleted,
     q,
     privateExtendedProperty,
-  }); 
+  });
 
   const colorsRes = await calendar.colors.get();
   const eventColorMap = colorsRes.data.event ?? {};
@@ -98,27 +99,60 @@ export async function fetchCalendarPage(
   const calendarDefaultColor =
     calendarListEntry.data.backgroundColor || undefined;
 
-  function googleColorTransform(hex: string): string {
-    const GOOGLE_COLOR_MAP: Record<string, string> = {
-      // "#d06b64": "#d88277",
-      "#d06b64": GLOBAL_COLORS.google_calendar_red,
-      "#7ae7bf": GLOBAL_COLORS.google_calendar_green,
-      "#cd74e6": GLOBAL_COLORS.google_calendar_purple,
-      "#e1e1e1": GLOBAL_COLORS.google_calendar_gray
-    };
-    return GOOGLE_COLOR_MAP[hex] ?? hex;
-  }
+  // function googleColorTransform(hex: string): string {
+  //   // const GOOGLE_COLOR_MAP: Record<string, string> = {
+  //   //   // "#d06b64": "#d88277",
+  //   //   "#d06b64": GLOBAL_COLORS.google_calendar_red,
+  //   //   "#7ae7bf": GLOBAL_COLORS.google_calendar_green,
+  //   //   "#cd74e6": GLOBAL_COLORS.google_calendar_purple,
+  //   //   "#e1e1e1": GLOBAL_COLORS.google_calendar_gray,
+  //   // };
+  //   return GOOGLE_COLOR_MAP[hex] ?? hex;
+  // }
+
+  type GoogleEventStatus = "no_customer_or_credit" | "incompleted" | "completed";
+  const GOOGLE_EVENT_STATUS_MAP: Record<GoogleEventStatus, string> = {
+    no_customer_or_credit: GLOBAL_COLORS.google_calendar_red,
+    incompleted: GLOBAL_COLORS.google_calendar_blue,
+    completed: GLOBAL_COLORS.google_calendar_gray,
+  };
+
+  const DEFAULT_EVENT_MAP: Record<GoogleCalendarTarget, string> = {
+    1: GLOBAL_COLORS.google_calendar_purple,
+    2: GLOBAL_COLORS.google_calendar_red,
+  };
 
   const enrichedEvents = (res.data.items || []).map((ev) => {
+    const extendedProperties = ev.extendedProperties?.private;
+    if (!extendedProperties) {
+      return {
+        ...ev,
+        colorHex: DEFAULT_EVENT_MAP[calendarTarget],
+      };
+    }
+
+    let eventStatus = "no_customer_or_credit" as GoogleEventStatus
+    if (extendedProperties.customer_id != null && extendedProperties.credit_type != null) {
+      if (extendedProperties.completed === "true") {
+        eventStatus = "completed" as GoogleEventStatus
+      } else {
+        eventStatus = "incompleted" as GoogleEventStatus
+      }
+    }
+
     const colorId = ev.colorId || undefined;
     const baseColorHex =
       (colorId ? eventColorMap[colorId]?.background : undefined) ||
       calendarDefaultColor;
-    const colorHex = baseColorHex ? googleColorTransform(baseColorHex) : undefined;
+    const colorHex = baseColorHex
+      ? GOOGLE_EVENT_STATUS_MAP[eventStatus]
+      : DEFAULT_EVENT_MAP[calendarTarget];
+
     return {
       ...ev,
       colorId,
-      colorHex,
+      colorHex:
+        calendarTarget === 1 ? DEFAULT_EVENT_MAP[calendarTarget] : colorHex,
     };
   });
 
@@ -292,6 +326,7 @@ export async function deleteEvent(
 export async function eventsByAttendee(
   GOOGLE_CLIENT_SECRET_OBJECT: string,
   GOOGLE_REFRESH_TOKEN_OBJECT: string,
+  calendarTarget: GoogleCalendarTarget,
   options: { attendeeEmail: string; calendarId?: string; pageSize?: number }
 ) {
   const { attendeeEmail, calendarId = "primary", pageSize = 50 } = options;
@@ -305,6 +340,7 @@ export async function eventsByAttendee(
     const page = await fetchCalendarPage(
       GOOGLE_CLIENT_SECRET_OBJECT,
       GOOGLE_REFRESH_TOKEN_OBJECT,
+      calendarTarget,
       {
         calendarId,
         pageToken: pageToken ?? null,
