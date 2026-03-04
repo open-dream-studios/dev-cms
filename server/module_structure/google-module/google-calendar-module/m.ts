@@ -131,7 +131,7 @@ export const run = async ({
 
     // update event
     if (requestType === "UPDATE_EVENT") {
-      const { eventId, event } = body;
+      const { eventId, event, credit_adjustment } = body;
       if (!eventId || !event)
         return { success: false, error: "eventId and event required" };
 
@@ -169,22 +169,26 @@ export const run = async ({
           updatedColor = "Flamingo";
         } else if (privateProps.completed === "true") {
           updatedColor = "Graphite";
-          res = await adjustCreditByBooking(
-            connection,
-            -1,
-            project_idx,
-            privateProps.customer_id,
-            Number(privateProps.credit_type) as LedgerCreditType
-          );
+          if (credit_adjustment) {
+            res = await adjustCreditByBooking(
+              connection,
+              -1,
+              project_idx,
+              privateProps.customer_id,
+              Number(privateProps.credit_type) as LedgerCreditType
+            );
+          }
         } else {
           updatedColor = "Peacock";
-          res = await adjustCreditByBooking(
-            connection,
-            1,
-            project_idx,
-            privateProps.customer_id,
-            Number(privateProps.credit_type) as LedgerCreditType
-          );
+          if (credit_adjustment) {
+            res = await adjustCreditByBooking(
+              connection,
+              1,
+              project_idx,
+              privateProps.customer_id,
+              Number(privateProps.credit_type) as LedgerCreditType
+            );
+          }
         }
 
         if (!res || !res.success) {
