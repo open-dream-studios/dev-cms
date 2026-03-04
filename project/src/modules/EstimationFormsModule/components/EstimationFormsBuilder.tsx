@@ -9,17 +9,14 @@ import {
   DragOverEvent,
   DragStartEvent,
   PointerSensor,
-  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
   AlertTriangle,
@@ -28,13 +25,9 @@ import {
   ChevronRight,
   CircleDollarSign,
   GitBranchPlus,
-  GripVertical,
-  Pencil,
   Plus,
-  Trash2,
   X,
 } from "lucide-react";
-import { estimationNodePalette } from "../_actions/estimationForms.actions";
 import { useEstimationFormsModule } from "../_hooks/estimationForms.hooks";
 import {
   EstimationBuilderChoiceNode,
@@ -46,169 +39,11 @@ import {
   getFormChildren,
 } from "../_helpers/estimationForms.helpers";
 import { NodePaletteKind } from "../_store/estimationForms.store";
+import PaletteItem from "./PaletteItem";
+import EstimationFlowNodeCard from "./EstimationFlowNodeCard";
 
-const clickClass =
+export const clickClass =
   "cursor-pointer dim hover:brightness-[80%] transition-all duration-200";
-
-const iconByKind = {
-  form: Braces,
-  choice: GitBranchPlus,
-  const: CircleDollarSign,
-};
-
-const toneByKind = {
-  form: "#2563EB",
-  choice: "#0D9488",
-  const: "#D97706",
-};
-
-const PaletteItem = ({ kind }: { kind: NodePaletteKind }) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: `palette-${kind}`,
-      data: { dragType: "palette", nodeKind: kind },
-    });
-
-  const item = estimationNodePalette.find((p) => p.kind === kind)!;
-
-  return (
-    <button
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      className={`h-11 px-3 rounded-xl border border-black/10 bg-white text-[12px] font-[700] ${clickClass}`}
-      style={{
-        transform: CSS.Translate.toString(transform),
-        opacity: isDragging ? 0.7 : 1,
-      }}
-    >
-      <div className="flex items-center gap-2.5">
-        <div
-          className="h-7 w-7 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: `${item.accent}1A`, color: item.accent }}
-        >
-          <item.Icon size={14} />
-        </div>
-        <span>{item.label}</span>
-      </div>
-    </button>
-  );
-};
-
-const FlowNodeCard = ({
-  node,
-  parentFormId,
-  selected,
-  onSelect,
-  onDelete,
-}: {
-  node: EstimationBuilderNode;
-  parentFormId: string;
-  selected: boolean;
-  onSelect: () => void;
-  onDelete: () => void;
-}) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: node.id,
-    data: { dragType: "node", nodeId: node.id, parentFormId },
-  });
-
-  const Icon = iconByKind[node.kind];
-  const tone = toneByKind[node.kind];
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.35 : 1,
-      }}
-      className="cursor-grab active:cursor-grabbing"
-    >
-      <div
-        className="rounded-2xl border bg-white px-3 py-2.5 mb-2"
-        style={{
-          borderColor: selected
-            ? "rgba(14, 116, 144, 0.45)"
-            : "rgba(15,23,42,0.1)",
-          boxShadow: selected
-            ? "0 10px 20px rgba(14,116,144,0.1)"
-            : "0 4px 12px rgba(15,23,42,0.04)",
-        }}
-        onClick={onSelect}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="h-8 w-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${tone}18`, color: tone }}
-            >
-              <Icon size={15} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wide font-[700] opacity-55 leading-none">
-                {node.kind}
-              </p>
-              <p className="text-[12px] font-[700] truncate mt-1 leading-none">
-                {node.name}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation()
-              }}
-              style={{
-                border: false
-                  ? "1px solid rgba(14, 165, 233, 0.52)"
-                  : "1px solid transparent",
-              }}
-              className={`h-[30px] w-[32px] rounded-lg text-black/90 bg-slate-100 flex items-center justify-center ${clickClass}`}
-              title="Rename Form"
-            >
-              <Pencil size={10.5} />
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className={`h-[30px] w-[32px] rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
-            >
-              <Trash2 size={13} />
-            </button>
-          </div>
-        </div>
-
-        {node.question && (
-          <p className="mt-2 text-[11px] opacity-60 truncate">
-            {node.question}
-          </p>
-        )}
-
-        {node.kind === "const" && (
-          <p className="mt-2 text-[12px] font-[700] text-amber-700">
-            ${node.value}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-};
 
 const LaneDrop = ({
   formId,
@@ -233,86 +68,6 @@ const LaneDrop = ({
       {children}
     </div>
   );
-};
-
-const StructureTree = ({
-  root,
-  collapsed,
-  selectedNodeId,
-  onToggle,
-  onSelect,
-}: {
-  root: EstimationBuilderFormGraph;
-  collapsed: string[];
-  selectedNodeId: string | null;
-  onToggle: (id: string) => void;
-  onSelect: (id: string) => void;
-}) => {
-  const TreeRow = ({
-    node,
-    depth,
-  }: {
-    node: EstimationBuilderNode;
-    depth: number;
-  }) => {
-    const isCollapsed = collapsed.includes(node.id);
-    const hasChildren = node.kind === "form" || node.kind === "choice";
-    const selected = selectedNodeId === node.id;
-
-    return (
-      <>
-        <div
-          className={`h-8 rounded-lg px-2 flex items-center gap-1 ${clickClass}`}
-          style={{
-            marginLeft: depth * 12,
-            backgroundColor: selected ? "rgba(14,165,233,0.15)" : "transparent",
-          }}
-          onClick={() => onSelect(node.id)}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (hasChildren) onToggle(node.id);
-            }}
-            className="h-6 w-6 rounded-md flex items-center justify-center"
-          >
-            {hasChildren ? (
-              isCollapsed ? (
-                <ChevronRight size={12} />
-              ) : (
-                <ChevronDown size={12} />
-              )
-            ) : (
-              <span className="w-[12px]" />
-            )}
-          </button>
-          <p className="text-[11px] font-[600] truncate">{node.name}</p>
-        </div>
-
-        {!isCollapsed &&
-          node.kind === "form" &&
-          node.children.map((child) => (
-            <TreeRow
-              key={child.id}
-              node={child as EstimationBuilderNode}
-              depth={depth + 1}
-            />
-          ))}
-
-        {!isCollapsed &&
-          node.kind === "choice" &&
-          node.cases.map((child) => (
-            <TreeRow
-              key={child.id}
-              node={child as EstimationBuilderNode}
-              depth={depth + 1}
-            />
-          ))}
-      </>
-    );
-  };
-
-  return <TreeRow node={root} depth={0} />;
 };
 
 const getDestination = (overId: string, root: EstimationBuilderFormGraph) => {
@@ -485,7 +240,10 @@ export default function EstimationFormsBuilder() {
       !overId.startsWith("drop-form-") &&
       event.active.rect.current.translated
     ) {
-      const siblings = getFormChildren(selectedForm.root, destination.targetFormId);
+      const siblings = getFormChildren(
+        selectedForm.root,
+        destination.targetFormId,
+      );
       const isLast = destination.index === siblings.length - 1;
       const activeMidY =
         event.active.rect.current.translated.top +
@@ -531,27 +289,6 @@ export default function EstimationFormsBuilder() {
       }}
     >
       <div className="h-full p-3 pb-[88px] flex gap-3">
-        {/* <div className="w-[250px] rounded-2xl border border-black/8 bg-white/80 backdrop-blur-sm p-2.5 overflow-y-auto">
-          <p className="text-[11px] font-[700] uppercase tracking-wide opacity-60 px-1 pb-2">Structure</p>
-          <StructureTree
-            root={selectedForm.root}
-            collapsed={collapsedNodeIds}
-            selectedNodeId={selectedNodeId}
-            onToggle={toggleCollapsedNode}
-            onSelect={(nodeId) => {
-              setSelectedNodeId(nodeId);
-              const node = findNodeById(selectedForm.root, nodeId);
-              if (node?.kind === "form") {
-                setActivePath((prev) => {
-                  const exists = prev.indexOf(node.id);
-                  if (exists >= 0) return prev.slice(0, exists + 1);
-                  return [...prev, node.id];
-                });
-              }
-            }}
-          />
-        </div> */}
-
         <div
           className="flex-1 rounded-2xl overflow-hidden border border-black/8"
           style={{
@@ -631,7 +368,7 @@ export default function EstimationFormsBuilder() {
                                 </div>
                               )}
 
-                            <FlowNodeCard
+                            <EstimationFlowNodeCard
                               node={node}
                               parentFormId={lane.formId}
                               selected={selectedNodeId === node.id}
@@ -648,9 +385,13 @@ export default function EstimationFormsBuilder() {
                                   });
                                 }
 
-                                if (node.kind === "choice" && node.cases.length) {
+                                if (
+                                  node.kind === "choice" &&
+                                  node.cases.length
+                                ) {
                                   const focused =
-                                    choiceFocusById[node.id] ?? node.cases[0].id;
+                                    choiceFocusById[node.id] ??
+                                    node.cases[0].id;
                                   setChoiceFocusById((s) => ({
                                     ...s,
                                     [node.id]: focused,
