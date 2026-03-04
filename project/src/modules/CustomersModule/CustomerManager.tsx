@@ -180,6 +180,7 @@ export default function CustomerManager() {
         showSingleToast(true, "update-calendar-event", "Calendar updated");
       } else {
         showSingleToast(false, "update-calendar-event", "There was an issue");
+        console.log(res)
       }
       if (isEditingFormEvent) {
         resetInputUI(false);

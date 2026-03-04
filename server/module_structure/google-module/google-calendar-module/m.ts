@@ -191,7 +191,7 @@ export const run = async ({
           }
         }
 
-        if (!res || !res.success) {
+        if (creditAdjustment && (!res || !res.success)) {
           return {
             success: false,
             error: res?.error || "Could not adjust credit by booking",
