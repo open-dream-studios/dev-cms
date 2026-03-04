@@ -106,7 +106,7 @@ const InventoryGrid = () => {
   const { currentUser } = useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const { currentProjectId } = useCurrentDataStore();
-  const { productsData, hasProjectModule } = useContextQueries();
+  const { hasProjectModule } = useContextQueries();
   const { localProductsData, selectedProducts, setSelectedProducts } =
     useCurrentDataStore();
   const { filteredProducts } = useDataFilters();
@@ -162,12 +162,12 @@ const InventoryGrid = () => {
 
   return (
     <div className="relative w-[100%] h-[100%] flex flex-col gap-[8px]">
-      <div className="h-[80px] w-[100%]">
+      <div className="z-[800] h-[80px] w-[100%]">
         <ProductsHeader title={"Products"} />
       </div>
 
       {hasProjectModule("customer-products-module") && (
-        <div className="px-[20px] flex-1 w-[100%] pt-[40px] min-h-0 relative rounded-t-[13px] flex flex-col">
+        <div className="z-[500] px-[20px] flex-1 w-[100%] pt-[40px] min-h-0 relative rounded-t-[13px] flex flex-col">
           <div
             style={{
               backgroundColor: currentTheme.background_2,

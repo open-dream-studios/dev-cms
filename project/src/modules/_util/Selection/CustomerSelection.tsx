@@ -21,6 +21,7 @@ const CustomerSelectCard = ({
 }) => {
   const currentTheme = useCurrentTheme();
   const { currentUser } = useContext(AuthContext);
+  const { setCurrentCustomerSearchTerm } = useSearchUIStore()
 
   if (!currentUser) return null;
 
@@ -35,7 +36,10 @@ const CustomerSelectCard = ({
       style={{
         backgroundColor: currentTheme.background_3,
       }}
-      onClick={() => onSelect(customer)}
+      onClick={() => {
+        onSelect(customer)
+        setCurrentCustomerSearchTerm("")
+        }}
       className="cursor-pointer hover:brightness-[86%] dim px-[18px] py-[5px] w-[100%] min-h-[60px] rounded-[12px] flex flex-row items-center"
     >
       <div className="w-[100%] h-[100%] items-center flex flex-row gap-[10px]">
