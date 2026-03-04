@@ -3,20 +3,47 @@ import { useEffect, useState } from "react";
 import { useDashboardStore } from "@/store/useDashboardStore";
 import { DashboardLayout2 } from "@/components/Dashboard/presets/DashboardPreset2";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
-import { GoogleCalendarTarget } from "@open-dream/shared";
+import { 
+  GoogleCalendarEventRaw,
+  GoogleCalendarTarget,
+  LedgerCreditType,
+} from "@open-dream/shared";
 import GoogleCalendarDisplay from "../GoogleModule/GoogleCalendarModule/GoogleCalendarDisplay";
 import { CustomerScheduleManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerScheduleManager";
 import { useGoogleCalendar } from "../GoogleModule/GoogleCalendarModule/_hooks/googleCalendar.hooks";
 import PaymentsModule from "../PaymentsModule/PaymentsModule";
 import { useCustomerUiStore } from "./_store/customers.store";
 import { CustomerLeadsManager } from "../GoogleModule/GoogleCalendarModule/CustomerDataManager/CustomerLeadsManager";
+import EventsManager from "../GoogleModule/GoogleCalendarModule/EventsManager/EventsManager";
+import { resetInputUI } from "../GoogleModule/GoogleCalendarModule/_actions/googleCalendarUI.actions";
+import { showSingleToast } from "@/util/functions/UI";
+import { useGoogleCalendarUIStore } from "../GoogleModule/GoogleCalendarModule/_store/googleCalendar.store";
+import { updateCalendarEvent } from "../GoogleModule/GoogleCalendarModule/_actions/googleCalendar.actions";
+
+export type UpdateEventProps = {
+  eventId: string | null;
+  calendarTarget: GoogleCalendarTarget;
+  updates?: {
+    customerId?: string | null;
+    creditType?: LedgerCreditType;
+    completed?: boolean;
+  };
+};
 
 export default function CustomerManager() {
-  const { hasProjectModule } = useContextQueries();
+  const { hasProjectModule, runModule } = useContextQueries();
   const { customersScreen } = useCustomerUiStore();
 
   const { setLayout, registerModules, updateSection, updateShape } =
     useDashboardStore();
+
+  const {
+    newScheduleEventStart,
+    newScheduleEventEnd,
+    newEventDetails,
+    editingCalendarEvent,
+    setUpdatingEventId
+  } = useGoogleCalendarUIStore();
 
   useEffect(() => {
     registerModules({
@@ -90,6 +117,77 @@ export default function CustomerManager() {
     });
   }
 
+  const handleUpdateEvent = async ({
+    eventId,
+    calendarTarget,
+    updates,
+  }: UpdateEventProps) => {
+    if (!eventId) return;
+    const existingEvent =
+      calendarTarget === 1
+        ? calendar1Events.find(
+            (event: GoogleCalendarEventRaw) => event.id === eventId,
+          )
+        : calendar2Events.find(
+            (event: GoogleCalendarEventRaw) => event.id === eventId,
+          );
+
+    console.log(eventId, existingEvent);
+    if (!eventId || !existingEvent) return;
+
+    const isEditingFormEvent = !!editingCalendarEvent;
+    console.log(isEditingFormEvent);
+    if (isEditingFormEvent && (!newScheduleEventStart || !newScheduleEventEnd))
+      return;
+    const hasCustomerUpdate =
+      !!updates && Object.prototype.hasOwnProperty.call(updates, "customerId");
+
+    setUpdatingEventId(eventId);
+    try {
+      const res = await updateCalendarEvent({
+        calendarTarget,
+        eventId,
+        existingEvent,
+        updates: {
+          ...(isEditingFormEvent && {
+            title: newEventDetails.title ?? "",
+            description: newEventDetails.description ?? "",
+            location: newEventDetails.location ?? "",
+            start: newScheduleEventStart!,
+            end: newScheduleEventEnd!,
+          }),
+          ...((hasCustomerUpdate ||
+            updates?.creditType !== undefined ||
+            updates?.completed !== undefined) && {
+            extendedProperties: {
+              ...(hasCustomerUpdate && {
+                customer_id: updates?.customerId ?? null,
+              }),
+              ...(updates?.creditType !== undefined && {
+                credit_type: `${updates.creditType}` as "1" | "2" | "3",
+              }),
+              ...(updates?.completed !== undefined && {
+                completed: `${updates.completed}`,
+              }),
+            },
+          }),
+        },
+        runModule,
+        refresh: calendarTarget === 1 ? refreshCalendar1 : refreshCalendar2,
+      });
+      if (res.ok && res.data && res.data.success) {
+        showSingleToast(true, "update-calendar-event", "Calendar updated");
+      } else {
+        showSingleToast(false, "update-calendar-event", "There was an issue");
+      }
+      if (isEditingFormEvent) {
+        resetInputUI(false);
+      }
+    } finally {
+      setUpdatingEventId(null);
+    }
+  };
+
   if (customersScreen === "service") {
     return (
       <div className="w-[100%] h-[100%] min-h-[800px] flex flex-col gap-[13px] px-[14px] py-[12px]">
@@ -100,6 +198,7 @@ export default function CustomerManager() {
             fetchStart={rangeStart}
             fetchEnd={rangeEnd}
             calendarTarget={1 as GoogleCalendarTarget}
+            handleUpdateEvent={handleUpdateEvent}
           />
         )}
         {(hasProjectModule("customer-schedule-requests-module") ||
@@ -122,6 +221,13 @@ export default function CustomerManager() {
             fetchStart={rangeStart}
             fetchEnd={rangeEnd}
             calendarTarget={2 as GoogleCalendarTarget}
+            handleUpdateEvent={handleUpdateEvent}
+          />
+        )}
+        {hasProjectModule("google-calendar-module") && (
+          <EventsManager
+            calendarTarget={2 as GoogleCalendarTarget}
+            handleUpdateEvent={handleUpdateEvent}
           />
         )}
       </div>

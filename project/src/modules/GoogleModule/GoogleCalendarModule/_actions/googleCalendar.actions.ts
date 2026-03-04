@@ -21,6 +21,7 @@ import { upsertScheduleRequestApi } from "@/api/public/scheduleRequests.api";
 import { toast } from "react-toastify";
 import { queryClient } from "@/lib/queryClient";
 import { showSingleToast } from "@/util/functions/UI";
+import { useGoogleCalendarUIStore } from "../_store/googleCalendar.store";
 
 export const createCalendarEvent = async ({
   calendarTarget,
@@ -45,7 +46,7 @@ export const createCalendarEvent = async ({
     customer_id: string | null;
     credit_type: LedgerCreditType;
     completed: boolean;
-  }
+  };
 }) => {
   const startDate = buildLocalDate(start);
   const endDate = buildLocalDate(end);
@@ -59,7 +60,7 @@ export const createCalendarEvent = async ({
     extendedProperties: {
       customer_id: extProp.customer_id ?? undefined,
       credit_type: `${extProp.credit_type}`,
-      completed: `${extProp.completed}`
+      completed: `${extProp.completed}`,
     },
   });
 
@@ -106,16 +107,16 @@ export const deleteCalendarEvent = async ({
   calendarTarget,
   eventId,
   runModule,
-  setGoogleEvents,
   refresh,
 }: {
   calendarTarget: GoogleCalendarTarget;
   eventId: string;
   runModule: (identifier: string, body: any) => any;
   refresh: () => void;
-  setGoogleEvents: React.Dispatch<React.SetStateAction<any[]>>;
 }) => {
   if (!eventId) throw new Error("Event ID is required");
+  const { googleDisplayEvents, setGoogleDisplayEvents } =
+    useGoogleCalendarUIStore.getState();
   const request: GoogleCalendarDeleteEventRequest = {
     requestType: "DELETE_EVENT",
     eventId,
@@ -123,7 +124,7 @@ export const deleteCalendarEvent = async ({
     calendarTarget,
   };
   await runModule("google-calendar-module", request);
-  setGoogleEvents((prev) => prev.filter((e) => e.id !== eventId));
+  setGoogleDisplayEvents(googleDisplayEvents.filter((e) => e.id !== eventId));
   refresh();
 };
 

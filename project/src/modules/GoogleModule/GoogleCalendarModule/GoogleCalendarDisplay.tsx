@@ -32,6 +32,7 @@ import {
   CalendarEvent,
   GoogleCalendarEventRaw,
   GoogleCalendarTarget,
+  LedgerCreditType,
 } from "@open-dream/shared";
 import GoogleCalendarFooter from "./GoogleCalendarFooter";
 import { useGoogleCalendarUIStore } from "./_store/googleCalendar.store";
@@ -39,6 +40,7 @@ import clsx from "clsx";
 import { openWindow } from "@/util/functions/Handlers";
 import { nanoid } from "nanoid";
 import { DateTime } from "luxon";
+import { UpdateEventProps } from "@/modules/CustomersModule/CustomerManager";
 
 export const DAY_START_HOUR = 6;
 export const DAY_END_HOUR = 22;
@@ -60,17 +62,18 @@ export const GoogleCalendarDisplay = ({
   fetchStart,
   fetchEnd,
   calendarTarget,
+  handleUpdateEvent,
 }: {
   events: GoogleCalendarEventRaw[];
   refreshCalendar: () => void;
   fetchStart: Date;
   fetchEnd: Date;
   calendarTarget: GoogleCalendarTarget;
+  handleUpdateEvent: (props: UpdateEventProps) => Promise<void>;
 }) => {
   const { currentUser } = React.useContext(AuthContext);
   const currentTheme = useCurrentTheme();
   const [isMini, setIsMini] = useState<boolean>(true);
-  const [googleEvents, setGoogleEvents] = useState<CalendarEvent[]>([]);
 
   const {
     newScheduleEventStart,
@@ -86,11 +89,18 @@ export const GoogleCalendarDisplay = ({
     showReschedule,
     rescheduleStart,
     rescheduleEnd,
-    isUpdatingEvent,
+    updatingEventId,
+    googleDisplayEvents,
+    setGoogleDisplayEvents
   } = useGoogleCalendarUIStore();
 
+  const defaultCalendarColor =
+    calendarTarget === 1
+      ? currentTheme.default_google_calendar1_event
+      : currentTheme.default_google_calendar2_event;
+
   const handleCalendarItemClick = (event: CalendarEvent) => {
-    if (isUpdatingEvent) return
+    if (updatingEventId !== null) return;
     setSelectedCalendarEvent(event);
     setIsCreatingEvent(false);
     resetInputUI(false);
@@ -136,7 +146,7 @@ export const GoogleCalendarDisplay = ({
       };
     });
 
-    setGoogleEvents(normalized);
+    setGoogleDisplayEvents(normalized);
   }, [events]);
 
   useEffect(() => {
@@ -145,7 +155,7 @@ export const GoogleCalendarDisplay = ({
       if (
         !selectedCalendarEvent ||
         editingCalendarEvent ||
-        isUpdatingEvent || 
+        updatingEventId !== null ||
         target.closest("[data-calendar-event]") ||
         target.closest("[data-calendar-event-card]") ||
         target.closest("[data-modal-2-continue]") ||
@@ -998,7 +1008,7 @@ export const GoogleCalendarDisplay = ({
                           </div>
                         )} */}
 
-                        {googleEvents
+                        {googleDisplayEvents
                           .filter(
                             (ev) => idx >= ev.startIndex && idx <= ev.endIndex,
                           )
@@ -1086,7 +1096,7 @@ export const GoogleCalendarDisplay = ({
                                   right: "0.5px",
                                   backgroundColor:
                                     editingCalendarEvent?.raw?.colorHex ||
-                                    currentTheme.new_google_calendar_event,
+                                    defaultCalendarColor,
                                 }}
                               >
                                 {/* Only show label on first day */}
@@ -1195,7 +1205,9 @@ export const GoogleCalendarDisplay = ({
                                   right: "0.5px",
                                   backgroundColor: isReschedule
                                     ? currentTheme.rescheduled_google_calendar_event
-                                    : currentTheme.new_google_calendar_event,
+                                    : selectedScheduleRequest.customer_id
+                                      ? currentTheme.new_google_calendar_event
+                                      : defaultCalendarColor,
                                 }}
                               >
                                 {idx ===
@@ -1227,7 +1239,7 @@ export const GoogleCalendarDisplay = ({
         <GoogleCalendarFooter
           calendarTarget={calendarTarget}
           refreshCalendar={refreshCalendar}
-          setGoogleEvents={setGoogleEvents}
+          handleUpdateEvent={handleUpdateEvent}
         />
       )}
     </motion.div>

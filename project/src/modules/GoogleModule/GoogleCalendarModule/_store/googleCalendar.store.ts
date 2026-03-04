@@ -31,5 +31,6 @@ export const useGoogleCalendarUIStore = createStore({
   calendar1Events: [] as GoogleCalendarEventRaw[],
   calendar2Events: [] as GoogleCalendarEventRaw[],
 
-  isUpdatingEvent: false,
+  updatingEventId: null as string | null,
+  googleDisplayEvents: [] as CalendarEvent[]
 });

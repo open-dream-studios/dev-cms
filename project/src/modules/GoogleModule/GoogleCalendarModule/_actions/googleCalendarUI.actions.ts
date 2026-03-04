@@ -152,8 +152,6 @@ export const handleEndChange = (date: Date | null, timeInput: boolean) => {
     nextEnd = new Date(date);
   }
 
-  setNewScheduleEventEnd(nextEnd);
-
   // 4️⃣ Start doesn't exist → default to 8 AM same date
   if (!newScheduleEventStart) {
     setNewScheduleEventStart(withDefaultStartAdjustment(nextEnd));
@@ -165,11 +163,16 @@ export const handleEndChange = (date: Date | null, timeInput: boolean) => {
     setNewScheduleEventStart(new Date(nextEnd.getTime() - duration));
   }
 
+  console.log(nextEnd.getDate() === newScheduleEventStart.getDate() ,
+    nextEnd.getTime() < newScheduleEventStart.getTime())
+
   if (
     nextEnd.getDate() === newScheduleEventStart.getDate() &&
     nextEnd.getTime() < newScheduleEventStart.getTime()
   ) {
-    setNewScheduleEventStart(new Date(nextEnd.getTime() - duration));
+    setNewScheduleEventEnd(new Date(newScheduleEventStart.getTime() + DEFAULT_DURATION_MS));
+  } else {
+      setNewScheduleEventEnd(nextEnd);
   }
 };
 

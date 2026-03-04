@@ -151,24 +151,30 @@ export const run = async ({
 
       const privateProps = mergedPrivate as CalendarExtendedProperties;
 
-      let updatedColor: GoogleEventColorName;
-
-      if (!privateProps.customer_id || !privateProps.credit_type) {
-        updatedColor = "Flamingo";
-      } else if (privateProps.completed === "true") {
-        updatedColor = "Graphite";
-      } else {
-        updatedColor = "Sage";
-      }
-
-      const mergedEvent = {
+      let mergedEvent = {
         ...existing,
         ...event,
-        colorId: GOOGLE_EVENT_COLOR_NAME_TO_ID[updatedColor],
         extendedProperties: {
           private: mergedPrivate,
         },
       };
+
+      if (calendarTarget === 2) {
+        let updatedColor: GoogleEventColorName;
+
+        if (!privateProps.customer_id || !privateProps.credit_type) {
+          updatedColor = "Flamingo";
+        } else if (privateProps.completed === "true") {
+          updatedColor = "Graphite";
+        } else {
+          updatedColor = "Sage";
+        }
+
+        mergedEvent = {
+          ...mergedEvent,
+          colorId: GOOGLE_EVENT_COLOR_NAME_TO_ID[updatedColor],
+        };
+      }
 
       const updated = await updateEvent(
         GOOGLE_CLIENT_SECRET_OBJECT,

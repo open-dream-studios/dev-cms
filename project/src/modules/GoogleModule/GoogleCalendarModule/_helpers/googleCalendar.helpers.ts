@@ -314,9 +314,9 @@ export const parseWallClockToLocalDate = (
   );
 };
 
-export function isEventPast(endDateTime?: string) {
+export function isEventPassed(endDateTime?: string) {
   if (!endDateTime) return false;
   const eventEnd = new Date(endDateTime).getTime();
   const now = Date.now();
-  return eventEnd < now;
+  return now > eventEnd;
 }
