@@ -58,6 +58,7 @@ const EstimationFlowNodeCard = ({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
+      data-flow-node-id={node.id}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,

@@ -53,11 +53,15 @@ const LaneDrop = ({
   children: ReactNode;
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id: `drop-form-${formId}` });
+  const { setNodeRef: setTopRef } = useDroppable({ id: `drop-top-${formId}` });
+  const { setNodeRef: setBottomRef } = useDroppable({
+    id: `drop-bottom-${formId}`,
+  });
 
   return (
     <div
       ref={setNodeRef}
-      className="rounded-2xl p-2 min-h-[140px]"
+      className="rounded-2xl p-2 min-h-[140px] relative"
       style={{
         backgroundColor: isOver
           ? "rgba(219, 234, 254, 0.6)"
@@ -65,12 +69,30 @@ const LaneDrop = ({
         boxShadow: isOver ? "0 0 0 1.5px rgba(37,99,235,0.45) inset" : "none",
       }}
     >
+      <div
+        ref={setTopRef}
+        className="absolute top-0 left-0 right-0 h-[18px]"
+      />
+      <div
+        ref={setBottomRef}
+        className="absolute bottom-0 left-0 right-0 h-[18px]"
+      />
       {children}
     </div>
   );
 };
 
 const getDestination = (overId: string, root: EstimationBuilderFormGraph) => {
+  if (overId.startsWith("drop-top-")) {
+    return { targetFormId: overId.replace("drop-top-", ""), index: 0 };
+  }
+
+  if (overId.startsWith("drop-bottom-")) {
+    const targetFormId = overId.replace("drop-bottom-", "");
+    const siblings = getFormChildren(root, targetFormId);
+    return { targetFormId, index: siblings.length };
+  }
+
   if (overId.startsWith("drop-form-")) {
     return { targetFormId: overId.replace("drop-form-", "") };
   }
@@ -155,7 +177,6 @@ export default function EstimationFormsBuilder() {
     setPalettePreview(null);
     if (!selectedForm) return;
     const data = event.active.data.current;
-
     if (data?.dragType === "node") {
       setActiveDragNode(
         findNodeById(
@@ -229,35 +250,7 @@ export default function EstimationFormsBuilder() {
     }
 
     const overId = String(event.over.id);
-    let destination = getDestination(overId, selectedForm.root);
-
-    // If hovering the last node and cursor is in its lower area,
-    // preview/drop should target the true bottom slot of the list.
-    if (
-      activeData?.dragType === "palette" &&
-      destination &&
-      destination.index !== undefined &&
-      !overId.startsWith("drop-form-") &&
-      event.active.rect.current.translated
-    ) {
-      const siblings = getFormChildren(
-        selectedForm.root,
-        destination.targetFormId,
-      );
-      const isLast = destination.index === siblings.length - 1;
-      const activeMidY =
-        event.active.rect.current.translated.top +
-        event.active.rect.current.translated.height / 2;
-      const overLowerThreshold =
-        event.over.rect.top + event.over.rect.height * 0.72;
-
-      if (isLast && activeMidY > overLowerThreshold) {
-        destination = {
-          targetFormId: destination.targetFormId,
-          index: siblings.length,
-        };
-      }
-    }
+    const destination = getDestination(overId, selectedForm.root);
 
     latestDropDestinationRef.current = destination;
     if (activeData?.dragType === "palette") {
@@ -333,6 +326,7 @@ export default function EstimationFormsBuilder() {
               {lanes.map((lane) => (
                 <div
                   key={lane.formId}
+                  data-lane-form-id={lane.formId}
                   className="w-[360px] h-full rounded-2xl border border-black/8 bg-white/78 backdrop-blur-sm p-2.5"
                 >
                   <div className="h-9 px-2 rounded-lg bg-slate-100/80 flex items-center justify-between mb-2">
