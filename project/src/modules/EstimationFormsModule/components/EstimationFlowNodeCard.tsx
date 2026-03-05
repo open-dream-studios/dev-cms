@@ -47,7 +47,11 @@ const EstimationFlowNodeCard = ({
   selected: boolean;
   onSelect: () => void;
   onDelete: () => void;
-  onUpdate: (patch: { name?: string; question?: string; value?: number }) => void;
+  onUpdate: (patch: {
+    name?: string;
+    question?: string;
+    value?: number;
+  }) => void;
   onOpenChoiceCase: (caseId: string) => void;
   onAddChoiceCase: () => void;
   onRemoveChoiceCase: (caseId: string) => void;
@@ -56,7 +60,9 @@ const EstimationFlowNodeCard = ({
   const [editing, setEditing] = useState(false);
   const [editingName, setEditingName] = useState(node.name || "");
   const [editingQuestion, setEditingQuestion] = useState(node.question || "");
-  const [editingValue, setEditingValue] = useState(String(node.kind === "const" ? node.value : ""));
+  const [editingValue, setEditingValue] = useState(
+    String(node.kind === "const" ? node.value : ""),
+  );
   const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -91,7 +97,13 @@ const EstimationFlowNodeCard = ({
     if (node.kind === "const") {
       setEditingValue(String(node.value));
     }
-  }, [node.name, node.question, node.kind, node.kind === "const" ? node.value : null, editing]);
+  }, [
+    node.name,
+    node.question,
+    node.kind,
+    node.kind === "const" ? node.value : null,
+    editing,
+  ]);
 
   const saveEdits = () => {
     onUpdate({
@@ -161,8 +173,10 @@ const EstimationFlowNodeCard = ({
                     value={editingName}
                     onChange={(e) => {
                       const v = e.target.value
-                        .replace(/^ /, "")
-                        .replace(/\. $/, " ");
+                        .replace(/^ /, "") // no leading space
+                        .replace(/\. $/, " ") // fix mac double-space -> ". "
+                        .replace(/\s{2,}/g, " "); // block multiple spaces anywhere
+
                       setEditingName(v);
                     }}
                     onClick={(e) => e.stopPropagation()}
@@ -236,7 +250,9 @@ const EstimationFlowNodeCard = ({
           />
         ) : (
           node.question && (
-            <p className="mt-2 text-[11px] opacity-60 truncate">{node.question}</p>
+            <p className="mt-2 text-[11px] opacity-60 truncate">
+              {node.question}
+            </p>
           )
         )}
 
@@ -246,14 +262,42 @@ const EstimationFlowNodeCard = ({
               <span className="text-[12px] font-[700] text-amber-700">$</span>
               <input
                 value={editingValue}
-                onChange={(e) => setEditingValue(e.target.value)}
+                onChange={(e) => {
+                  let v = e.target.value;
+
+                  // allow only digits, one '.', and optional leading '-'
+                  v = v.replace(/[^0-9.-]/g, "");
+
+                  // only one leading '-'
+                  if (v.includes("-")) {
+                    v = (v.startsWith("-") ? "-" : "") + v.replace(/-/g, "");
+                  }
+
+                  // only one decimal
+                  const parts = v.split(".");
+                  if (parts.length > 2) {
+                    v = parts[0] + "." + parts.slice(1).join("");
+                  }
+
+                  // max two decimals
+                  if (v.includes(".")) {
+                    const [int, dec] = v.split(".");
+                    v = int + "." + dec.slice(0, 2);
+                  }
+
+                  setEditingValue(v);
+                }}
                 onClick={(e) => e.stopPropagation()}
                 className="h-8 w-full rounded-lg border border-amber-200 bg-amber-50/70 px-2 text-[12px] font-[700] text-amber-800 outline-none"
               />
             </div>
           ) : (
             <p className="mt-2 text-[12px] font-[700] text-amber-700">
-              ${node.value}
+              {(() => {
+                const v = Number(node.value);
+                const formatted = Math.abs(v).toLocaleString();
+                return v < 0 ? `-$${formatted}` : `$${formatted}`;
+              })()}
             </p>
           ))}
 
@@ -298,9 +342,14 @@ const EstimationFlowNodeCard = ({
                     {editing ? (
                       <input
                         value={formCase.name}
-                        onChange={(e) =>
-                          onUpdateChoiceCaseName(formCase.id, e.target.value)
-                        }
+                        onChange={(e) => {
+                          const v = e.target.value
+                            .replace(/^ /, "") // no leading space
+                            .replace(/\. $/, " ") // fix mac double-space -> ". "
+                            .replace(/\s{2,}/g, " "); // block multiple spaces anywhere
+
+                          onUpdateChoiceCaseName(formCase.id, v);
+                        }}
                         onClick={(e) => e.stopPropagation()}
                         className="w-full bg-transparent outline-none text-[11px] font-[600]"
                       />

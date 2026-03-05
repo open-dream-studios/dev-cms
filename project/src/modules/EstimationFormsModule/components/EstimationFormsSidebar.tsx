@@ -187,7 +187,8 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                     onChange={(e) => {
                       const v = e.target.value
                         .replace(/^ /, "") // no leading space
-                        .replace(/\. $/, " "); // fix mac double-space -> ". "
+                        .replace(/\. $/, " ") // fix mac double-space -> ". "
+                        .replace(/\s{2,}/g, " "); // block multiple spaces anywhere
 
                       setEditingName(v);
                     }}
