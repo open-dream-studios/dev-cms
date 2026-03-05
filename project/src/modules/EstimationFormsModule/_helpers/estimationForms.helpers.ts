@@ -324,6 +324,11 @@ export const moveNodeBetweenForms = (
     return root;
   }
 
+  // Prevent a choice from being moved into any of its own case-descendant forms.
+  if (node.kind === "choice" && isNodeWithinSubtree(root, node.id, toFormId)) {
+    return root;
+  }
+
   const sourceChildren = getFormChildren(root, fromFormId);
   if (!sourceChildren.some((child) => child.id === nodeId)) return root;
 
