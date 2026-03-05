@@ -194,7 +194,7 @@ const LeftBar = () => {
             }}
             className={`ml-[7px] h-[37px] w-[35px] pr-[1px] pb-[1px] flex justify-center items-center rounded-lg cursor-pointer hover:brightness-75 dim`}
           >
-            <PanelLeftClose size={17} className="opacity-83" />
+            <PanelLeftClose size={17} className="opacity-88" />
           </button>
         )}
         <div className="flex-1 flex flex-col">

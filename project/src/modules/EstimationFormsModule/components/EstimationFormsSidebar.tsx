@@ -113,31 +113,38 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
     >
       <div className="px-3.5 pt-3 pb-2.5 border-b border-black/5">
         <div className="flex items-center justify-between">
-          <div className="flex flex-row items-center gap-2">
+          <div className="pl-[1px]">
+            <p className="text-[15px] font-[700]">Form Builds</p>
+            <p className="pl-[0.4px] text-[10px] opacity-60 mt-[-0.8px]">
+              Estimation Forms
+            </p>
+          </div>
+
+          <div className="flex flex-row gap-[4px]">
             <button
               onClick={() => createFormBuild()}
-              className={`h-[30px] w-[30px] pr-[1px] pb-[1px] flex justify-center items-center rounded-lg bg-sky-600 opacity-70 text-white ${clickClass}`}
+              className={`h-[33px] w-[33px] pr-[1px] pb-[1px] flex justify-center items-center rounded-lg ${clickClass}`}
+              style={{
+                backgroundColor: currentTheme.background_1_3,
+                color: currentTheme.text_3,
+              }}
             >
               <FilePlus2 size={14} />
             </button>
-            <div className="pl-[1px]">
-              <p className="text-[15px] font-[700]">Form Builds</p>
-              <p className="pl-[0.4px] text-[10px] opacity-60 mt-[-0.8px]">Estimation Forms</p>
-            </div>
-          </div>
 
-          <button
-            onClick={() =>
-              setEstimationFormsLeftBarOpen(!estimationFormsLeftBarOpen)
-            }
-            style={{
-              backgroundColor: currentTheme.background_1_3,
-              color: currentTheme.text_3,
-            }}
-            className={`h-[33px] w-[33px] pr-[1px] pb-[1px] flex justify-center items-center rounded-lg ${clickClass}`}
-          >
-            <PanelLeftClose size={17} className="opacity-83" />
-          </button>
+            <button
+              onClick={() =>
+                setEstimationFormsLeftBarOpen(!estimationFormsLeftBarOpen)
+              }
+              style={{
+                backgroundColor: currentTheme.background_1_3,
+                color: currentTheme.text_3,
+              }}
+              className={`h-[33px] w-[33px] pr-[1px] pb-[1px] flex justify-center items-center rounded-lg ${clickClass}`}
+            >
+              <PanelLeftClose size={17} className="opacity-88" />
+            </button>
+          </div>
         </div>
 
         <div

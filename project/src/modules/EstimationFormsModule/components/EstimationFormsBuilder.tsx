@@ -366,6 +366,34 @@ export default function EstimationFormsBuilder() {
                               node={node}
                               parentFormId={lane.formId}
                               selected={selectedNodeId === node.id}
+                              onUpdate={(patch) =>
+                                updateNode(selectedForm.id, node.id, patch)
+                              }
+                              onAddChoiceCase={() =>
+                                addChoiceCase(selectedForm.id, node.id)
+                              }
+                              onRemoveChoiceCase={(caseId) =>
+                                removeChoiceCase(
+                                  selectedForm.id,
+                                  node.id,
+                                  caseId,
+                                )
+                              }
+                              onUpdateChoiceCaseName={(caseId, name) =>
+                                updateNode(selectedForm.id, caseId, { name })
+                              }
+                              onOpenChoiceCase={(caseId) => {
+                                setChoiceFocusById((s) => ({
+                                  ...s,
+                                  [node.id]: caseId,
+                                }));
+                                const laneIndex = activePath.indexOf(lane.formId);
+                                if (laneIndex < 0) return;
+                                setActivePath([
+                                  ...activePath.slice(0, laneIndex + 1),
+                                  caseId,
+                                ]);
+                              }}
                               onSelect={() => {
                                 setSelectedNodeId(node.id);
 
@@ -375,26 +403,6 @@ export default function EstimationFormsBuilder() {
                                     return [
                                       ...prev.slice(0, laneIndex + 1),
                                       node.id,
-                                    ];
-                                  });
-                                }
-
-                                if (
-                                  node.kind === "choice" &&
-                                  node.cases.length
-                                ) {
-                                  const focused =
-                                    choiceFocusById[node.id] ??
-                                    node.cases[0].id;
-                                  setChoiceFocusById((s) => ({
-                                    ...s,
-                                    [node.id]: focused,
-                                  }));
-                                  setActivePath((prev) => {
-                                    const laneIndex = prev.indexOf(lane.formId);
-                                    return [
-                                      ...prev.slice(0, laneIndex + 1),
-                                      focused,
                                     ];
                                   });
                                 }
@@ -430,7 +438,7 @@ export default function EstimationFormsBuilder() {
           </div>
         </div>
 
-        <div className="w-[320px] rounded-2xl border border-black/8 bg-white/85 p-3 overflow-y-auto">
+        {/* <div className="w-[320px] rounded-2xl border border-black/8 bg-white/85 p-3 overflow-y-auto">
           <p className="text-[11px] font-[700] uppercase tracking-wide opacity-60 mb-2">
             Inspector
           </p>
@@ -564,7 +572,7 @@ export default function EstimationFormsBuilder() {
               )}
             </div>
           )}
-        </div>
+        </div> */}
       </div>
 
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[40]">
