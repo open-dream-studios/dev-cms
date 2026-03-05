@@ -34,6 +34,7 @@ const EstimationFlowNodeCard = ({
   node,
   parentFormId,
   selected,
+  selectedChoiceCaseId,
   onSelect,
   onDelete,
   onUpdate,
@@ -45,6 +46,7 @@ const EstimationFlowNodeCard = ({
   node: EstimationBuilderNode;
   parentFormId: string;
   selected: boolean;
+  selectedChoiceCaseId?: string;
   onSelect: () => void;
   onDelete: () => void;
   onUpdate: (patch: {
@@ -334,7 +336,18 @@ const EstimationFlowNodeCard = ({
                     className={`h-7 rounded-md border border-slate-200 bg-white/90 pl-2 pr-[6.5px] flex items-center gap-1.5 ${
                       editing ? "" : clickClass
                     }`}
-                    onClick={() => {
+                    style={{
+                      backgroundColor:
+                        selectedChoiceCaseId === formCase.id
+                          ? "rgba(14,165,233,0.16)"
+                          : undefined,
+                      borderColor:
+                        selectedChoiceCaseId === formCase.id
+                          ? "rgba(14,165,233,0.34)"
+                          : undefined,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (editing) return;
                       onOpenChoiceCase(formCase.id);
                     }}

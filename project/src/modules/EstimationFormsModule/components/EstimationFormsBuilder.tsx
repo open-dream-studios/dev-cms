@@ -365,7 +365,40 @@ export default function EstimationFormsBuilder() {
                             <EstimationFlowNodeCard
                               node={node}
                               parentFormId={lane.formId}
-                              selected={selectedNodeId === node.id}
+                              selected={
+                                selectedNodeId === node.id ||
+                                (() => {
+                                  const laneIndex = activePath.indexOf(
+                                    lane.formId,
+                                  );
+                                  if (laneIndex < 0) return false;
+                                  const nextFormId = activePath[laneIndex + 1];
+                                  if (!nextFormId) return false;
+                                  if (node.id === nextFormId) return true;
+                                  if (
+                                    node.kind === "choice" &&
+                                    node.cases.some((c) => c.id === nextFormId)
+                                  ) {
+                                    return true;
+                                  }
+                                  return false;
+                                })()
+                              }
+                              selectedChoiceCaseId={(() => {
+                                const laneIndex = activePath.indexOf(
+                                  lane.formId,
+                                );
+                                if (laneIndex < 0) return undefined;
+                                const nextFormId = activePath[laneIndex + 1];
+                                if (!nextFormId) return undefined;
+                                if (
+                                  node.kind === "choice" &&
+                                  node.cases.some((c) => c.id === nextFormId)
+                                ) {
+                                  return nextFormId;
+                                }
+                                return undefined;
+                              })()}
                               onUpdate={(patch) =>
                                 updateNode(selectedForm.id, node.id, patch)
                               }
@@ -396,16 +429,19 @@ export default function EstimationFormsBuilder() {
                               }}
                               onSelect={() => {
                                 setSelectedNodeId(node.id);
+                                const laneIndex = activePath.indexOf(lane.formId);
+                                if (laneIndex < 0) return;
 
                                 if (node.kind === "form") {
-                                  setActivePath((prev) => {
-                                    const laneIndex = prev.indexOf(lane.formId);
-                                    return [
-                                      ...prev.slice(0, laneIndex + 1),
-                                      node.id,
-                                    ];
-                                  });
+                                  setActivePath([
+                                    ...activePath.slice(0, laneIndex + 1),
+                                    node.id,
+                                  ]);
+                                  return;
                                 }
+
+                                // Clicking const/choice card itself should clear right-side lanes.
+                                setActivePath(activePath.slice(0, laneIndex + 1));
                               }}
                               onDelete={() =>
                                 removeNode(selectedForm.id, node.id)
