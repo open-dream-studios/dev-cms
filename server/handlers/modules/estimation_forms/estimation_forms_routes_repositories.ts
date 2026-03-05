@@ -146,6 +146,26 @@ export const upsertFormDefinitionFunction = async (
   if (!root || root.kind !== "form") throw new Error("Invalid root graph");
 
   const finalFormId = form_id?.trim() || `EST-FORM-${ulid()}`;
+  await connection.query<ResultSetHeader>(
+    `
+      INSERT INTO form_definitions (
+        project_idx,
+        form_id,
+        name,
+        description,
+        status,
+        current_version
+      )
+      VALUES (?, ?, ?, ?, ?, 1)
+      ON DUPLICATE KEY UPDATE
+        name = VALUES(name),
+        description = VALUES(description),
+        status = VALUES(status),
+        updated_at = NOW()
+    `,
+    [project_idx, finalFormId, name.trim(), description, status]
+  );
+
   const [existingRows] = await connection.query<
     (RowDataPacket & { id: number; current_version: number })[]
   >(
@@ -154,54 +174,15 @@ export const upsertFormDefinitionFunction = async (
       FROM form_definitions
       WHERE project_idx = ? AND form_id = ?
       LIMIT 1
-      FOR UPDATE
     `,
     [project_idx, finalFormId]
   );
-
-  if (!existingRows.length) {
-    const [insertDef] = await connection.query<ResultSetHeader>(
-      `
-        INSERT INTO form_definitions (
-          project_idx,
-          form_id,
-          name,
-          description,
-          status,
-          current_version
-        )
-        VALUES (?, ?, ?, ?, ?, 1)
-      `,
-      [project_idx, finalFormId, name.trim(), description, status]
-    );
-
-    const form_idx = insertDef.insertId;
-    if (!form_idx) throw new Error("Failed to create form definition");
-
-    await connection.query<ResultSetHeader>(
-      `
-        INSERT INTO form_versions (
-          form_idx,
-          version,
-          root_json,
-          validation_json
-        )
-        VALUES (?, 1, ?, ?)
-      `,
-      [form_idx, JSON.stringify(root), JSON.stringify(validation)]
-    );
-
-    return {
-      success: true,
-      form_id: finalFormId,
-      version: 1,
-      created: true,
-    };
-  }
+  if (!existingRows.length) throw new Error("Failed to resolve form definition");
 
   const form_idx = existingRows[0].id;
-  const currentVersion = Number(existingRows[0].current_version);
+  const currentVersion = Number(existingRows[0].current_version || 1);
   const nextVersion = bump_version ? currentVersion + 1 : currentVersion;
+  const isNew = currentVersion === 1;
 
   if (bump_version) {
     await connection.query<ResultSetHeader>(
@@ -267,7 +248,7 @@ export const upsertFormDefinitionFunction = async (
     success: true,
     form_id: finalFormId,
     version: nextVersion,
-    created: false,
+    created: isNew,
   };
 };
 

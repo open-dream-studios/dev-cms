@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
   AlertTriangle,
+  CircleOff,
   Check,
   ChevronRight,
   Copy,
@@ -12,6 +13,7 @@ import {
   PanelLeftClose,
   Search,
   Trash2,
+  Ban,
 } from "lucide-react";
 import { useEstimationFormsModule } from "../_hooks/estimationForms.hooks";
 import { validateEstimationFormGraph } from "../_helpers/estimationForms.helpers";
@@ -284,6 +286,15 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                                 ? "Valid"
                                 : `${validation.errorCount} Error${validation.errorCount > 1 ? "s" : ""}`}
                             </p>
+                          </div>
+                        )}
+                        {!hasRootChildren && (
+                          <div
+                            className="opacity-[0.7] h-[20px] py-[1px] flex flex-row items-center mt-[1px] gap-[4px] text-[9.5px] font-[600] leading-none"
+                            style={{ color: "rgb(148,163,184)" }}
+                          >
+                            <Ban size={10} strokeWidth={2.5} />
+                            <p className="mt-[-0.6px]">Empty</p>
                           </div>
                         )}
                       </div>

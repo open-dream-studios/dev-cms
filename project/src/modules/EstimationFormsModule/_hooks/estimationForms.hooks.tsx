@@ -61,6 +61,25 @@ export function useEstimationFormsModule() {
   const docHashesRef = useRef<Record<string, string>>({});
   const saveTimerRef = useRef<number | null>(null);
   const inflightSaveRef = useRef(false);
+  const pendingSaveIdsRef = useRef<Set<string>>(new Set());
+  const upsertRef = useRef(upsertEstimationForm);
+
+  useEffect(() => {
+    upsertRef.current = upsertEstimationForm;
+  }, [upsertEstimationForm]);
+
+  const getDocSnapshotSignature = (doc: {
+    name: string;
+    description: string;
+    status: string;
+    root: unknown;
+  }) =>
+    JSON.stringify({
+      name: doc.name,
+      description: doc.description || "",
+      status: doc.status,
+      root: doc.root,
+    });
 
   const selectedForm = useMemo(
     () => getSelectedForm({ formBuilds, selectedFormId }),
@@ -104,7 +123,7 @@ export function useEstimationFormsModule() {
     }));
     hydrateFormBuilds(mapped);
     docHashesRef.current = Object.fromEntries(
-      mapped.map((doc) => [doc.id, JSON.stringify(doc.root)])
+      mapped.map((doc) => [doc.id, getDocSnapshotSignature(doc)])
     );
   }, [estimationFormsData]);
 
@@ -125,7 +144,7 @@ export function useEstimationFormsModule() {
         root: remote.root as any,
       };
       upsertFormBuildInState(mapped);
-      docHashesRef.current[mapped.id] = JSON.stringify(mapped.root);
+      docHashesRef.current[mapped.id] = getDocSnapshotSignature(mapped);
     });
   }, [selectedFormId, hasHydratedFromBackend, currentProjectId, isLoggedIn]);
 
@@ -138,15 +157,18 @@ export function useEstimationFormsModule() {
     saveTimerRef.current = window.setTimeout(async () => {
       if (inflightSaveRef.current) return;
       const changed = formBuilds.filter(
-        (doc) => docHashesRef.current[doc.id] !== JSON.stringify(doc.root)
+        (doc) =>
+          !pendingSaveIdsRef.current.has(doc.id) &&
+          docHashesRef.current[doc.id] !== getDocSnapshotSignature(doc)
       );
       if (!changed.length) return;
 
       inflightSaveRef.current = true;
+      pendingSaveIdsRef.current = new Set(changed.map((d) => d.id));
       markSavingState({ isSaving: true, saveError: null });
       try {
         for (const doc of changed) {
-          await upsertEstimationForm({
+          await upsertRef.current({
             form_id: doc.id,
             name: doc.name,
             description: doc.description,
@@ -155,7 +177,7 @@ export function useEstimationFormsModule() {
             validation: validateEstimationFormGraph(doc.root as any),
             bump_version: false,
           });
-          docHashesRef.current[doc.id] = JSON.stringify(doc.root);
+          docHashesRef.current[doc.id] = getDocSnapshotSignature(doc);
         }
         markSavingState({
           isSaving: false,
@@ -168,6 +190,7 @@ export function useEstimationFormsModule() {
           saveError: e?.message || "Failed to save",
         });
       } finally {
+        pendingSaveIdsRef.current.clear();
         inflightSaveRef.current = false;
       }
     }, 700);
@@ -180,7 +203,6 @@ export function useEstimationFormsModule() {
     hasHydratedFromBackend,
     currentProjectId,
     isLoggedIn,
-    upsertEstimationForm,
   ]);
 
   const createFormBuildSynced = async (name = "New Form") => {

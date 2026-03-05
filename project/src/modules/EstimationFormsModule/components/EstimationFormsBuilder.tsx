@@ -59,7 +59,7 @@ const LaneDrop = ({
   return (
     <div
       ref={setNodeRef}
-      className="rounded-2xl p-2 min-h-[140px] relative"
+      className="rounded-2xl p-2 min-h-[140px] h-full relative overflow-y-auto"
       style={{
         backgroundColor: isOver
           ? "rgba(219, 234, 254, 0.6)"
@@ -72,8 +72,18 @@ const LaneDrop = ({
         ref={setBottomRef}
         className="absolute bottom-0 left-0 right-0 h-[18px]"
       />
-      {children}
+      <div className="pb-3">{children}</div>
     </div>
+  );
+};
+
+const BottomNoDropZone = () => {
+  const { setNodeRef } = useDroppable({ id: "drop-ignore-bottom" });
+  return (
+    <div
+      ref={setNodeRef}
+      className="absolute bottom-0 left-0 right-0 h-[96px] z-[30]"
+    />
   );
 };
 
@@ -254,11 +264,20 @@ export default function EstimationFormsBuilder() {
     if (!selectedForm) return;
 
     const activeData = event.active.data.current;
+    const overId = event.over ? String(event.over.id) : null;
+
+    // Explicitly ignore drops on palette / bottom empty area.
+    if (
+      !overId ||
+      overId.startsWith("palette-") ||
+      overId === "drop-ignore-bottom"
+    ) {
+      latestDropDestinationRef.current = null;
+      return;
+    }
+
     const destination =
-      latestDropDestinationRef.current ??
-      (event.over
-        ? getDestination(String(event.over.id), selectedForm.root)
-        : null);
+      getDestination(overId, selectedForm.root) ?? latestDropDestinationRef.current;
     if (!destination) return;
 
     if (activeData?.dragType === "palette") {
@@ -295,6 +314,13 @@ export default function EstimationFormsBuilder() {
     }
 
     const overId = String(event.over.id);
+
+    if (overId.startsWith("palette-") || overId === "drop-ignore-bottom") {
+      latestDropDestinationRef.current = null;
+      setPalettePreview(null);
+      return;
+    }
+
     const destination = getDestination(overId, selectedForm.root);
 
     latestDropDestinationRef.current = destination;
@@ -326,6 +352,7 @@ export default function EstimationFormsBuilder() {
         latestDropDestinationRef.current = null;
       }}
     >
+      <BottomNoDropZone />
       <div className="h-full p-3 pb-[88px] flex gap-3">
         <div
           className="flex-1 rounded-2xl overflow-hidden border border-black/8"
@@ -368,8 +395,10 @@ export default function EstimationFormsBuilder() {
                     : "1px solid rgba(148,163,184,0.25)",
                 }}
               >
-                {isSaving && <Loader2 size={12} className="animate-spin" />}
-                {isSaving ? "Saving..." : saveError ? "Save failed" : "Saved"}
+                <p className="opacity-[0.55] flex flex-row gap-1">
+                  {isSaving && <Loader2 size={12} className="animate-spin" />}
+                  {isSaving ? "Saving..." : saveError ? "Save failed" : "Saved"}
+                </p>
               </div>
 
               {hasRootChildren && (
@@ -386,7 +415,9 @@ export default function EstimationFormsBuilder() {
                     backgroundColor: validation.valid
                       ? "rgba(236,253,245,1)"
                       : "rgba(254,242,242,1)",
-                    color: validation.valid ? "rgb(4,120,87)" : "rgb(185,28,28)",
+                    color: validation.valid
+                      ? "rgb(4,120,87)"
+                      : "rgb(185,28,28)",
                     border: validation.valid
                       ? "1px solid rgba(16,185,129,0.24)"
                       : "1px solid rgba(239,68,68,0.35)",
@@ -408,7 +439,8 @@ export default function EstimationFormsBuilder() {
                     "Valid Graph"
                   ) : (
                     <>
-                      <AlertTriangle size={12} /> {validation.errors.length} Issue
+                      <AlertTriangle size={12} /> {validation.errors.length}{" "}
+                      Issue
                       {validation.errors.length > 1 ? "s" : ""}
                     </>
                   )}
@@ -468,7 +500,7 @@ export default function EstimationFormsBuilder() {
                 <div
                   key={lane.formId}
                   data-lane-form-id={lane.formId}
-                  className="w-[360px] h-full rounded-2xl border border-black/8 bg-white/78 backdrop-blur-sm p-2.5"
+                  className="w-[360px] h-full rounded-2xl border border-black/8 bg-white/78 backdrop-blur-sm p-2.5 flex flex-col min-h-0"
                 >
                   <div className="h-9 pl-[11px] pr-[8px] rounded-lg bg-slate-100/80 flex items-center justify-between mb-2">
                     <p className="text-[12px] font-[700] truncate">
@@ -487,7 +519,8 @@ export default function EstimationFormsBuilder() {
                   </div>
 
                   {!collapsedNodeIds.includes(lane.formId) && (
-                    <LaneDrop formId={lane.formId}>
+                    <div className="flex-1 min-h-0">
+                      <LaneDrop formId={lane.formId}>
                       <SortableContext
                         items={lane.nodes.map((n) => n.id)}
                         strategy={verticalListSortingStrategy}
@@ -643,7 +676,9 @@ export default function EstimationFormsBuilder() {
                             )}
                           </>
                         )}
-                    </LaneDrop>
+                      <div className="h-[16px]" />
+                      </LaneDrop>
+                    </div>
                   )}
                 </div>
               ))}
