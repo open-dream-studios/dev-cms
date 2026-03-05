@@ -102,7 +102,7 @@ const getDestination = (overId: string, root: EstimationBuilderFormGraph) => {
 export default function EstimationFormsBuilder() {
   const currentTheme = useCurrentTheme();
   const {
-    selectedForm, 
+    selectedForm,
     selectedNodeId,
     collapsedNodeIds,
     validation,
@@ -386,7 +386,8 @@ export default function EstimationFormsBuilder() {
                 "Valid Graph"
               ) : (
                 <>
-                  <AlertTriangle size={12} /> {validation.errors.length} Issue{validation.errors.length > 1 ? "s" : ""}
+                  <AlertTriangle size={12} /> {validation.errors.length} Issue
+                  {validation.errors.length > 1 ? "s" : ""}
                 </>
               )}
             </button>
@@ -618,7 +619,6 @@ export default function EstimationFormsBuilder() {
                             )}
                           </>
                         )}
-                        
                     </LaneDrop>
                   )}
                 </div>
