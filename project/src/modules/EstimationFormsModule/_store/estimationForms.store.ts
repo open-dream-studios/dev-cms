@@ -36,10 +36,10 @@ export const useEstimationFormsUIStore = createStore({
 const touchDocument = (
   formBuilds: EstimationBuilderFormDocument[],
   docId: string,
-  updater: (doc: EstimationBuilderFormDocument) => EstimationBuilderFormDocument,
+  updater: (doc: EstimationBuilderFormDocument) => EstimationBuilderFormDocument
 ) =>
   formBuilds.map((doc) =>
-    doc.id === docId ? { ...updater(doc), updated_at: nowIso() } : doc,
+    doc.id === docId ? { ...updater(doc), updated_at: nowIso() } : doc
   );
 
 export const ensureSelectedForm = () => {
@@ -69,7 +69,7 @@ export const deleteFormBuild = (formId: string) => {
   state.set((s) => {
     const filtered = s.formBuilds.filter((doc) => doc.id !== formId);
     const nextSelected =
-      s.selectedFormId === formId ? (filtered[0]?.id ?? "") : s.selectedFormId;
+      s.selectedFormId === formId ? filtered[0]?.id ?? "" : s.selectedFormId;
 
     return {
       formBuilds: filtered,
@@ -114,7 +114,7 @@ export const renameFormBuild = (formId: string, name: string) => {
 
 const updateRoot = (
   doc: EstimationBuilderFormDocument,
-  root: EstimationBuilderFormGraph,
+  root: EstimationBuilderFormGraph
 ) => ({
   ...doc,
   root,
@@ -124,20 +124,20 @@ export const addPaletteNodeToForm = (
   formId: string,
   targetFormId: string,
   kind: NodePaletteKind,
-  index?: number,
+  index?: number
 ) => {
   const state = useEstimationFormsUIStore.getState();
 
   const nodeToAdd: EstimationBuilderNode =
     kind === "form"
-      ? createFormNode("Sub Form")
+      ? createFormNode(`Sub List`)
       : kind === "choice"
-        ? createChoiceNode("Multiple Choice")
-        : createConstNode("Cost", 0);
+      ? createChoiceNode("Multiple Choice")
+      : createConstNode(`Total`, 0);
 
   state.set((s) => ({
     formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
-      updateRoot(doc, addNodeToForm(doc.root, targetFormId, nodeToAdd, index)),
+      updateRoot(doc, addNodeToForm(doc.root, targetFormId, nodeToAdd, index))
     ),
     selectedNodeId: nodeToAdd.id,
   }));
@@ -148,12 +148,15 @@ export const moveNode = (
   nodeId: string,
   fromFormId: string,
   toFormId: string,
-  toIndex?: number,
+  toIndex?: number
 ) => {
   const state = useEstimationFormsUIStore.getState();
   state.set((s) => ({
     formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
-      updateRoot(doc, moveNodeBetweenForms(doc.root, nodeId, fromFormId, toFormId, toIndex)),
+      updateRoot(
+        doc,
+        moveNodeBetweenForms(doc.root, nodeId, fromFormId, toFormId, toIndex)
+      )
     ),
     selectedNodeId: nodeId,
   }));
@@ -163,7 +166,7 @@ export const addChoiceCase = (formId: string, choiceId: string) => {
   const state = useEstimationFormsUIStore.getState();
   state.set((s) => ({
     formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
-      updateRoot(doc, addCaseToChoice(doc.root, choiceId)),
+      updateRoot(doc, addCaseToChoice(doc.root, choiceId))
     ),
   }));
 };
@@ -171,15 +174,16 @@ export const addChoiceCase = (formId: string, choiceId: string) => {
 export const removeChoiceCase = (
   formId: string,
   choiceId: string,
-  caseFormId: string,
+  caseFormId: string
 ) => {
   const state = useEstimationFormsUIStore.getState();
   state.set((s) => ({
     formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
-      updateRoot(doc, removeCaseFromChoice(doc.root, choiceId, caseFormId)),
+      updateRoot(doc, removeCaseFromChoice(doc.root, choiceId, caseFormId))
     ),
     collapsedNodeIds: s.collapsedNodeIds.filter((id) => id !== caseFormId),
-    selectedNodeId: s.selectedNodeId === caseFormId ? choiceId : s.selectedNodeId,
+    selectedNodeId:
+      s.selectedNodeId === caseFormId ? choiceId : s.selectedNodeId,
   }));
 };
 
@@ -197,8 +201,8 @@ export const removeNode = (formId: string, nodeId: string) => {
     formBuilds: touchDocument(s.formBuilds, formId, (doc) =>
       updateRoot(
         doc,
-        removeNodeById(doc.root, nodeId) as EstimationBuilderFormGraph,
-      ),
+        removeNodeById(doc.root, nodeId) as EstimationBuilderFormGraph
+      )
     ),
     selectedNodeId: s.selectedNodeId === nodeId ? null : s.selectedNodeId,
     collapsedNodeIds: s.collapsedNodeIds.filter((id) => id !== nodeId),
@@ -212,7 +216,7 @@ export const updateNode = (
     name?: string;
     question?: string;
     value?: number;
-  },
+  }
 ) => {
   const state = useEstimationFormsUIStore.getState();
 
@@ -235,8 +239,8 @@ export const updateNode = (
             name: patch.name ?? node.name,
             question: patch.question ?? node.question,
           };
-        }) as EstimationBuilderFormGraph,
-      ),
+        }) as EstimationBuilderFormGraph
+      )
     ),
   }));
 };

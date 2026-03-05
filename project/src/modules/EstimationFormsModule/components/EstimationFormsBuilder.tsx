@@ -25,12 +25,9 @@ import {
   ChevronRight,
   CircleDollarSign,
   GitBranchPlus,
-  Plus,
-  X,
 } from "lucide-react";
 import { useEstimationFormsModule } from "../_hooks/estimationForms.hooks";
 import {
-  EstimationBuilderChoiceNode,
   EstimationBuilderFormGraph,
   EstimationBuilderNode,
   findNodeById,
@@ -69,10 +66,7 @@ const LaneDrop = ({
         boxShadow: isOver ? "0 0 0 1.5px rgba(37,99,235,0.45) inset" : "none",
       }}
     >
-      <div
-        ref={setTopRef}
-        className="absolute top-0 left-0 right-0 h-[18px]"
-      />
+      <div ref={setTopRef} className="absolute top-0 left-0 right-0 h-[18px]" />
       <div
         ref={setBottomRef}
         className="absolute bottom-0 left-0 right-0 h-[18px]"
@@ -108,8 +102,7 @@ const getDestination = (overId: string, root: EstimationBuilderFormGraph) => {
 export default function EstimationFormsBuilder() {
   const currentTheme = useCurrentTheme();
   const {
-    selectedForm,
-    selectedNode,
+    selectedForm, 
     selectedNodeId,
     collapsedNodeIds,
     validation,
@@ -379,7 +372,10 @@ export default function EstimationFormsBuilder() {
                 setRetainedCanvasWidth(nextWidth);
 
                 requestAnimationFrame(() => {
-                  const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+                  const maxScroll = Math.max(
+                    0,
+                    el.scrollWidth - el.clientWidth,
+                  );
                   el.scrollLeft = Math.min(beforeLeft, maxScroll);
                   lastScrollLeftRef.current = el.scrollLeft;
                 });
@@ -398,11 +394,11 @@ export default function EstimationFormsBuilder() {
                   data-lane-form-id={lane.formId}
                   className="w-[360px] h-full rounded-2xl border border-black/8 bg-white/78 backdrop-blur-sm p-2.5"
                 >
-                  <div className="h-9 px-2 rounded-lg bg-slate-100/80 flex items-center justify-between mb-2">
+                  <div className="h-9 pl-[11px] pr-[8px] rounded-lg bg-slate-100/80 flex items-center justify-between mb-2">
                     <p className="text-[12px] font-[700] truncate">
                       {lane.idx === 0 ? "Form" : lane.title}
                     </p>
-                    <button
+                    {/* <button
                       onClick={() => toggleCollapsedNode(lane.formId)}
                       className={`h-7 w-7 rounded-md bg-white flex items-center justify-center ${clickClass}`}
                     >
@@ -411,7 +407,7 @@ export default function EstimationFormsBuilder() {
                       ) : (
                         <ChevronDown size={12} />
                       )}
-                    </button>
+                    </button> */}
                   </div>
 
                   {!collapsedNodeIds.includes(lane.formId) && (
@@ -489,7 +485,9 @@ export default function EstimationFormsBuilder() {
                                   ...s,
                                   [node.id]: caseId,
                                 }));
-                                const laneIndex = activePath.indexOf(lane.formId);
+                                const laneIndex = activePath.indexOf(
+                                  lane.formId,
+                                );
                                 if (laneIndex < 0) return;
                                 setActivePath([
                                   ...activePath.slice(0, laneIndex + 1),
@@ -498,7 +496,9 @@ export default function EstimationFormsBuilder() {
                               }}
                               onSelect={() => {
                                 setSelectedNodeId(node.id);
-                                const laneIndex = activePath.indexOf(lane.formId);
+                                const laneIndex = activePath.indexOf(
+                                  lane.formId,
+                                );
                                 if (laneIndex < 0) return;
 
                                 if (node.kind === "form") {
@@ -510,7 +510,9 @@ export default function EstimationFormsBuilder() {
                                 }
 
                                 // Clicking const/choice card itself should clear right-side lanes.
-                                setActivePath(activePath.slice(0, laneIndex + 1));
+                                setActivePath(
+                                  activePath.slice(0, laneIndex + 1),
+                                );
                               }}
                               onDelete={() =>
                                 removeNode(selectedForm.id, node.id)
@@ -532,9 +534,9 @@ export default function EstimationFormsBuilder() {
 
                       {lane.nodes.length === 0 &&
                         !(palettePreview?.targetFormId === lane.formId) && (
-                        <div className="h-[110px] rounded-xl border border-dashed border-sky-300 bg-sky-50/70 flex items-center justify-center text-[12px] text-sky-700 font-[600]">
-                          Drop FORM / CHOICE / CONST Here
-                        </div>
+                          <div className="h-[110px] rounded-xl border border-dashed border-sky-300 bg-sky-50/70 flex items-center justify-center text-[12px] text-sky-700 font-[600]">
+                            Drop FORM / CHOICE / CONST Here
+                          </div>
                         )}
                     </LaneDrop>
                   )}

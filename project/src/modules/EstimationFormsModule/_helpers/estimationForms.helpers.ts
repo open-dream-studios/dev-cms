@@ -4,6 +4,7 @@ import {
   EstimationConstNode,
   EstimationFormGraph,
   EstimationFormNode,
+  EstimationNodeKind,
   EstimationNodeId,
   EstimationValidationResult,
 } from "@open-dream/shared";
@@ -30,6 +31,12 @@ export type EstimationBuilderFormDocument = {
   created_at: string;
   updated_at: string;
   root: EstimationBuilderFormGraph;
+};
+
+export const estimationNodeKindTitleMap: Record<EstimationNodeKind, string> = {
+  form: "list",
+  choice: "choice",
+  const: "cost",
 };
 
 export const createId = (prefix: string) =>

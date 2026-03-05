@@ -15,6 +15,7 @@ import {
 import {
   EstimationBuilderChoiceNode,
   EstimationBuilderNode,
+  estimationNodeKindTitleMap,
 } from "../_helpers/estimationForms.helpers";
 import { clickClass } from "./EstimationFormsBuilder";
 
@@ -197,7 +198,7 @@ const EstimationFlowNodeCard = ({
             </div>
             <div className="min-w-0">
               <p className="select-none text-[10px] uppercase tracking-wide font-[700] opacity-55 leading-none">
-                {node.kind}
+                {estimationNodeKindTitleMap[node.kind].toUpperCase()}
               </p>
               <div className="mt-1 h-[15px] leading-[15px] flex items-center">
                 {editing ? (
