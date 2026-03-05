@@ -31,6 +31,7 @@ export const useEstimationFormsUIStore = createStore({
   collapsedNodeIds: [] as string[],
   search: "",
   estimationFormsLeftBarOpen: true,
+  showErrors: false,
 });
 
 const touchDocument = (

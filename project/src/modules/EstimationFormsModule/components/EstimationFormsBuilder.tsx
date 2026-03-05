@@ -106,7 +106,9 @@ export default function EstimationFormsBuilder() {
     selectedNodeId,
     collapsedNodeIds,
     validation,
+    showErrors,
     setSelectedNodeId,
+    setShowErrors,
     addPaletteNodeToForm,
     moveNode,
     addChoiceCase,
@@ -183,6 +185,25 @@ export default function EstimationFormsBuilder() {
   useEffect(() => {
     setRetainedCanvasWidth((prev) => Math.max(prev, naturalCanvasWidth));
   }, [naturalCanvasWidth]);
+
+  useEffect(() => {
+    if (validation.valid && showErrors) {
+      setShowErrors(false);
+    }
+  }, [validation.valid, showErrors, setShowErrors]);
+
+  const errorPathNodeIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const error of validation.errors) {
+      for (const id of error.path ?? []) {
+        ids.add(id);
+      }
+      if (error.node_id) {
+        ids.add(error.node_id);
+      }
+    }
+    return ids;
+  }, [validation.errors]);
 
   useEffect(() => {
     return () => {
@@ -330,7 +351,37 @@ export default function EstimationFormsBuilder() {
               ))}
             </div>
 
-            <div className="h-8 px-3 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-[700] flex items-center gap-1">
+            <button
+              disabled={validation.valid}
+              onClick={() => {
+                if (validation.valid) return;
+                setShowErrors(!showErrors);
+              }}
+              className={`h-8 px-3 rounded-lg text-[11px] font-[700] flex items-center gap-1 ${
+                validation.valid ? "" : clickClass
+              }`}
+              style={{
+                backgroundColor: validation.valid
+                  ? "rgba(236,253,245,1)"
+                  : "rgba(254,242,242,1)",
+                color: validation.valid ? "rgb(4,120,87)" : "rgb(185,28,28)",
+                border: validation.valid
+                  ? "1px solid rgba(16,185,129,0.24)"
+                  : "1px solid rgba(239,68,68,0.35)",
+                boxShadow:
+                  !validation.valid && showErrors
+                    ? "0 0 0 2px rgba(239,68,68,0.16)"
+                    : "none",
+                cursor: validation.valid ? "default" : "pointer",
+              }}
+              title={
+                validation.valid
+                  ? "Graph is valid"
+                  : showErrors
+                    ? "Hide error highlights"
+                    : "Show error highlights"
+              }
+            >
               {validation.valid ? (
                 "Valid Graph"
               ) : (
@@ -338,7 +389,7 @@ export default function EstimationFormsBuilder() {
                   <AlertTriangle size={12} /> {validation.errors.length} issues
                 </>
               )}
-            </div>
+            </button>
           </div>
 
           <div
@@ -448,6 +499,20 @@ export default function EstimationFormsBuilder() {
                                   }
                                   return false;
                                 })()
+                              }
+                              hasError={
+                                !validation.valid &&
+                                showErrors &&
+                                errorPathNodeIds.has(node.id)
+                              }
+                              errorChoiceCaseIds={
+                                node.kind === "choice" &&
+                                !validation.valid &&
+                                showErrors
+                                  ? node.cases
+                                      .filter((c) => errorPathNodeIds.has(c.id))
+                                      .map((c) => c.id)
+                                  : []
                               }
                               selectedChoiceCaseId={(() => {
                                 const laneIndex = activePath.indexOf(

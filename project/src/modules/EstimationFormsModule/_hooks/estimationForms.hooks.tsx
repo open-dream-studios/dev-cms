@@ -27,9 +27,11 @@ export function useEstimationFormsModule() {
     selectedNodeId,
     collapsedNodeIds,
     search,
+    showErrors,
     setSelectedFormId,
     setSelectedNodeId,
     setSearch,
+    setShowErrors,
   } = useEstimationFormsUIStore();
 
   ensureSelectedForm();
@@ -71,8 +73,10 @@ export function useEstimationFormsModule() {
     collapsedNodeIds,
     validation,
     search,
+    showErrors,
 
     setSearch,
+    setShowErrors,
     setSelectedFormId,
     setSelectedNodeId,
 

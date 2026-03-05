@@ -35,6 +35,8 @@ const EstimationFlowNodeCard = ({
   node,
   parentFormId,
   selected,
+  hasError,
+  errorChoiceCaseIds,
   selectedChoiceCaseId,
   onSelect,
   onDelete,
@@ -47,6 +49,8 @@ const EstimationFlowNodeCard = ({
   node: EstimationBuilderNode;
   parentFormId: string;
   selected: boolean;
+  hasError?: boolean;
+  errorChoiceCaseIds?: string[];
   selectedChoiceCaseId?: string;
   onSelect: () => void;
   onDelete: () => void;
@@ -179,10 +183,17 @@ const EstimationFlowNodeCard = ({
       <div
         className="rounded-2xl border bg-white px-3 py-2.5 mb-2"
         style={{
-          borderColor: selected
+          backgroundColor: hasError
+            ? "rgba(254, 226, 226, 0.7)"
+            : "rgba(255,255,255,1)",
+          borderColor: hasError
+            ? "rgba(239, 68, 68, 0.42)"
+            : selected
             ? "rgba(14, 116, 144, 0.45)"
             : "rgba(15,23,42,0.1)",
-          boxShadow: selected
+          boxShadow: hasError
+            ? "0 10px 20px rgba(239,68,68,0.12)"
+            : selected
             ? "0 10px 20px rgba(14,116,144,0.1)"
             : "0 4px 12px rgba(15,23,42,0.04)",
         }}
@@ -254,7 +265,9 @@ const EstimationFlowNodeCard = ({
               style={{
                 border: editing
                   ? "1px solid rgba(14, 165, 233, 0.52)"
-                  : "1px solid transparent",
+                  : hasError
+                    ? "1px solid rgba(239,68,68,0.34)"
+                    : "1px solid transparent",
               }}
               className={`h-[30px] w-[32px] rounded-lg text-black/90 bg-slate-100 flex items-center justify-center ${clickClass}`}
               title="Rename Form"
@@ -267,6 +280,11 @@ const EstimationFlowNodeCard = ({
                 if (editing) return;
                 e.stopPropagation();
                 onDelete();
+              }}
+              style={{
+                border: hasError
+                  ? "1px solid rgba(239,68,68,0.34)"
+                  : "1px solid transparent",
               }}
               className={`h-[30px] w-[32px] rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
             >
@@ -365,7 +383,11 @@ const EstimationFlowNodeCard = ({
               </div>
 
               <div className="space-y-1.5">
-                {(node as EstimationBuilderChoiceNode).cases.map((formCase) => (
+                {(node as EstimationBuilderChoiceNode).cases.map((formCase) => {
+                  const optionHasError = errorChoiceCaseIds?.includes(
+                    formCase.id,
+                  );
+                  return (
                   <div
                     key={formCase.id}
                     className={`h-7 rounded-md border border-slate-200 bg-white/90 pl-2 pr-[6.5px] flex items-center gap-1.5 ${
@@ -373,13 +395,20 @@ const EstimationFlowNodeCard = ({
                     }`}
                     style={{
                       backgroundColor:
-                        selectedChoiceCaseId === formCase.id
+                        optionHasError
+                          ? "rgba(254, 226, 226, 0.78)"
+                          : selectedChoiceCaseId === formCase.id
                           ? "rgba(14,165,233,0.16)"
                           : undefined,
                       borderColor:
-                        selectedChoiceCaseId === formCase.id
+                        optionHasError
+                          ? "rgba(239,68,68,0.42)"
+                          : selectedChoiceCaseId === formCase.id
                           ? "rgba(14,165,233,0.34)"
                           : undefined,
+                      boxShadow: optionHasError
+                        ? "0 6px 12px rgba(239,68,68,0.12)"
+                        : undefined,
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -414,13 +443,19 @@ const EstimationFlowNodeCard = ({
                           e.stopPropagation();
                           onRemoveChoiceCase(formCase.id);
                         }}
+                        style={{
+                          border: optionHasError
+                            ? "1px solid rgba(239,68,68,0.34)"
+                            : "1px solid transparent",
+                        }}
                         className={`h-[18px] w-[18px] rounded-sm bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
                       >
                         <X size={10} />
                       </button>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
