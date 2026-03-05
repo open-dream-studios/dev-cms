@@ -447,11 +447,21 @@ export default function EstimationFormsBuilder() {
       return;
     }
 
-    // Prevent flicker/resets: don't overwrite destination when hovering the active node itself.
+    // When hovering the dragged node itself (common after reversing direction),
+    // reset destination to its current slot instead of keeping a stale index.
     if (
       activeData?.dragType === "node" &&
       String(activeData.nodeId) === overId
     ) {
+      const sourceFormId = String(activeData.parentFormId);
+      const siblings = getFormChildren(selectedForm.root, sourceFormId);
+      const sourceIndex = siblings.findIndex(
+        (s) => s.id === String(activeData.nodeId),
+      );
+      latestDropDestinationRef.current =
+        sourceIndex >= 0
+          ? { targetFormId: sourceFormId, index: sourceIndex }
+          : null;
       return;
     }
 
