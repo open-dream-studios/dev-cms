@@ -67,10 +67,10 @@ const LaneDrop = ({
         boxShadow: isOver ? "0 0 0 1.5px rgba(37,99,235,0.45) inset" : "none",
       }}
     >
-      <div ref={setTopRef} className="absolute top-0 left-0 right-0 h-[18px]" />
+      <div ref={setTopRef} className="absolute top-0 left-0 right-0 h-[22px]" />
       <div
         ref={setBottomRef}
-        className="absolute bottom-0 left-0 right-0 h-[18px]"
+        className="absolute bottom-0 left-0 right-0 h-[34px]"
       />
       <div className="pb-3">{children}</div>
     </div>
@@ -82,7 +82,7 @@ const BottomNoDropZone = () => {
   return (
     <div
       ref={setNodeRef}
-      className="absolute bottom-0 left-0 right-0 h-[96px] z-[30]"
+      className="absolute bottom-0 left-0 right-0 h-[140px] z-[35]"
     />
   );
 };
@@ -276,8 +276,7 @@ export default function EstimationFormsBuilder() {
       return;
     }
 
-    const destination =
-      getDestination(overId, selectedForm.root) ?? latestDropDestinationRef.current;
+    const destination = getDestination(overId, selectedForm.root);
     if (!destination) return;
 
     if (activeData?.dragType === "palette") {
@@ -342,6 +341,7 @@ export default function EstimationFormsBuilder() {
   return (
     <DndContext
       sensors={sensors}
+      autoScroll={false}
       collisionDetection={closestCorners}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -352,8 +352,8 @@ export default function EstimationFormsBuilder() {
         latestDropDestinationRef.current = null;
       }}
     >
-      <BottomNoDropZone />
-      <div className="h-full p-3 pb-[88px] flex gap-3">
+      <div className="relative h-full p-3 pb-[88px] flex gap-3 overflow-hidden">
+        <BottomNoDropZone />
         <div
           className="flex-1 rounded-2xl overflow-hidden border border-black/8"
           style={{
