@@ -35,7 +35,7 @@ export const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
   "estimations-calculation": (
     <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
   ),
-  "estimation-forms": <ChartNoAxesColumnDecreasing size={21} />,
+  "estimation-forms": <ChartNoAxesColumnDecreasing size={19} />,
 };
 
 export const buildAccessibleModules = (

@@ -142,7 +142,7 @@ const EstimationFlowNodeCard = ({
         transition,
         opacity: isDragging ? 0.35 : 1,
       }}
-      className="cursor-grab active:cursor-grabbing"
+      className="cursor-grab active:cursor-grabbing outline-none"
     >
       <div
         className="rounded-2xl border bg-white px-3 py-2.5 mb-2"
@@ -247,7 +247,7 @@ const EstimationFlowNodeCard = ({
             value={editingQuestion}
             onChange={(e) => setEditingQuestion(e.target.value)}
             onClick={(e) => e.stopPropagation()}
-            className="block mt-2 w-full min-h-[68px] rounded-lg border border-black/12 bg-white/90 px-2.5 py-2 text-[11px] outline-none"
+            className="block mt-2 w-full min-h-[68px] max-h-[250px] rounded-lg border border-black/12 bg-white/90 px-2.5 py-2 text-[11px] outline-none"
             placeholder="Question (optional)"
           />
         ) : (

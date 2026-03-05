@@ -166,13 +166,15 @@ export default function EstimationFormsBuilder() {
         if (!form) return null;
         return {
           formId,
-          title: idx === 0 ? "Root Form" : form.name,
+          title: form.name,
+          idx,
           nodes: form.children as EstimationBuilderNode[],
         };
       })
       .filter(Boolean) as {
       formId: string;
       title: string;
+      idx: number;
       nodes: EstimationBuilderNode[];
     }[];
   }, [activePath, selectedForm]);
@@ -329,7 +331,7 @@ export default function EstimationFormsBuilder() {
                         : "rgba(148,163,184,0.12)",
                   }}
                 >
-                  {lane.title}
+                  {idx === 0 ? "Form" : lane.title}
                 </button>
               ))}
             </div>
@@ -527,11 +529,12 @@ export default function EstimationFormsBuilder() {
                           )}
                       </SortableContext>
 
-                      {lane.nodes.length === 0 && (
+                      {lane.nodes.length === 0 &&
+                        !(palettePreview?.targetFormId === lane.formId) && (
                         <div className="h-[110px] rounded-xl border border-dashed border-sky-300 bg-sky-50/70 flex items-center justify-center text-[12px] text-sky-700 font-[600]">
                           Drop FORM / CHOICE / CONST Here
                         </div>
-                      )}
+                        )}
                     </LaneDrop>
                   )}
                 </div>
