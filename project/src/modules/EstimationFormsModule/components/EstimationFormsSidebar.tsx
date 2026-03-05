@@ -1,8 +1,10 @@
 // project/src/modules/EstimationFormsModule/components/EstimationFormsSidebar.tsx
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
+  AlertTriangle,
+  Check,
   ChevronRight,
   Copy,
   FilePlus2,
@@ -12,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEstimationFormsModule } from "../_hooks/estimationForms.hooks";
+import { validateEstimationFormGraph } from "../_helpers/estimationForms.helpers";
 import { useEstimationFormsUIStore } from "../_store/estimationForms.store";
 
 const clickClass =
@@ -34,6 +37,17 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
     useEstimationFormsUIStore();
   const [editingFormId, setEditingFormId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const validationByFormId = useMemo(() => {
+    const map = new Map<string, { valid: boolean; errorCount: number }>();
+    for (const doc of filteredFormBuilds) {
+      const result = validateEstimationFormGraph(doc.root);
+      map.set(doc.id, {
+        valid: result.valid,
+        errorCount: result.errors.length,
+      });
+    }
+    return map;
+  }, [filteredFormBuilds]);
 
   if (mini) {
     return (
@@ -165,6 +179,10 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
         {filteredFormBuilds.map((doc) => {
           const selected = selectedForm?.id === doc.id;
           const editing = editingFormId === doc.id;
+          const validation = validationByFormId.get(doc.id) ?? {
+            valid: true,
+            errorCount: 0,
+          };
           return (
             <div
               key={doc.id}
@@ -242,9 +260,36 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
 
                   <div className="mt-[7px] w-[100%] flex justify-end">
                     <div className="w-full flex items-start justify-between">
-                      <p className="text-[9px] uppercase tracking-[0.08em] font-[700] opacity-55 leading-none">
-                        {selected ? "Active Form" : "Form Build"}
-                      </p>
+                      <div className="flex flex-col w-[100%] mt-[-3px]">
+                        <p className="text-[9px] uppercase tracking-[0.08em] font-[700] opacity-55 leading-none">
+                          {selected ? "Active Form" : "Form Build"}
+                        </p>
+                        <div
+                          className="opacity-[0.75] h-[20px] py-[1px] flex flex-row items-center mt-[1px] gap-[4px] text-[9.5px] font-[600] leading-none"
+                          style={{
+                            // backgroundColor: validation.valid
+                            //   ? "rgba(16,185,129,0.14)"
+                            //   : "rgba(239,68,68,0.14)",
+                            color: validation.valid
+                              ? "rgb(6, 155, 90)"
+                              : "rgb(185,28,28)",
+                            // border: validation.valid
+                            //   ? "1px solid rgba(16,185,129,0.22)"
+                            //   : "1px solid rgba(239,68,68,0.26)",
+                          }}
+                        >
+                          {validation.valid ? (
+                            <Check size={10} strokeWidth={2.8} />
+                          ) : (
+                            <AlertTriangle size={10} strokeWidth={2.5} />
+                          )}
+                          <p className="mt-[-0.4px]">
+                            {validation.valid
+                              ? "Valid"
+                              : `${validation.errorCount} Error${validation.errorCount > 1 ? "s" : ""}`}
+                          </p>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-1">
                         <button
                           className={`h-[26px] px-2 rounded-md bg-white/85 ${clickClass}`}

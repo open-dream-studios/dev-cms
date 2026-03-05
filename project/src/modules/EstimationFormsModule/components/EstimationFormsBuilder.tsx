@@ -386,7 +386,7 @@ export default function EstimationFormsBuilder() {
                 "Valid Graph"
               ) : (
                 <>
-                  <AlertTriangle size={12} /> {validation.errors.length} issues
+                  <AlertTriangle size={12} /> {validation.errors.length} Issue{validation.errors.length > 1 ? "s" : ""}
                 </>
               )}
             </button>
