@@ -21,9 +21,7 @@ import {
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
   AlertTriangle,
-  Braces,
-  ChevronDown,
-  ChevronRight,
+  Braces, 
   CircleDollarSign,
   GitBranchPlus,
   Loader2,
@@ -376,7 +374,7 @@ export default function EstimationFormsBuilder() {
     const overId = event.over ? String(event.over.id) : null;
 
     // Explicitly ignore drops on palette / bottom empty area.
-    if (!overId || isIgnoreDropId(overId)) {
+    if (overId && isIgnoreDropId(overId)) {
       latestDropDestinationRef.current = null;
       return;
     }
@@ -384,18 +382,26 @@ export default function EstimationFormsBuilder() {
     const destination =
       activeData?.dragType === "node"
         ? latestDropDestinationRef.current ??
-          getNodeSortableDestination({
-            overId,
-            root: selectedForm.root,
-            nodeId: String(activeData.nodeId),
-            fromFormId: String(activeData.parentFormId),
-          })
-        : latestDropDestinationRef.current ??
-          getPointerAwareDestination({
-            overId,
-            root: selectedForm.root,
-            activeRect: event.active.rect.current,
-          });
+          (overId
+            ? getNodeSortableDestination({
+                overId,
+                root: selectedForm.root,
+                nodeId: String(activeData.nodeId),
+                fromFormId: String(activeData.parentFormId),
+              })
+            : null)
+        : overId
+          ? latestDropDestinationRef.current ??
+            getPointerAwareDestination({
+              overId,
+              root: selectedForm.root,
+              activeRect: event.active.rect.current,
+            })
+          : null;
+    if (!overId && !destination) {
+      latestDropDestinationRef.current = null;
+      return;
+    }
     if (!destination) return;
 
     if (activeData?.dragType === "palette") {
@@ -427,7 +433,9 @@ export default function EstimationFormsBuilder() {
 
     if (!event.over) {
       setPalettePreview(null);
-      latestDropDestinationRef.current = null;
+      if (activeData?.dragType !== "node") {
+        latestDropDestinationRef.current = null;
+      }
       return;
     }
 
@@ -494,7 +502,23 @@ export default function EstimationFormsBuilder() {
       autoScroll={false}
       collisionDetection={(args) => {
         const pointerCollisions = pointerWithin(args);
-        if (pointerCollisions.length > 0) return pointerCollisions;
+        if (pointerCollisions.length > 0) {
+          const pointerWithoutLaneContainers = pointerCollisions.filter(
+            (collision) => !String(collision.id).startsWith("drop-form-"),
+          );
+          if (pointerWithoutLaneContainers.length > 0) {
+            return pointerWithoutLaneContainers;
+          }
+
+          const corners = closestCorners(args);
+          const sortableCorners = corners.filter(
+            (collision) => !String(collision.id).startsWith("drop-form-"),
+          );
+          if (sortableCorners.length > 0) {
+            return sortableCorners;
+          }
+          return pointerCollisions;
+        }
         return closestCorners(args);
       }}
       onDragStart={onDragStart}
