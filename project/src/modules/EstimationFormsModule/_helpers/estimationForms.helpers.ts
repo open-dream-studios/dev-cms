@@ -27,7 +27,8 @@ export type EstimationBuilderFormDocument = {
   id: string;
   name: string;
   description: string;
-  status: "draft" | "published";
+  status: "draft" | "published" | "archived";
+  version?: number;
   created_at: string;
   updated_at: string;
   root: EstimationBuilderFormGraph;
@@ -84,22 +85,7 @@ export const createStarterFormDocument = (
   updated_at: nowIso(),
   root: {
     ...createFormNode(name),
-    children: [
-      createConstNode("Base Permit", 250),
-      {
-        ...createChoiceNode("Flooring Type"),
-        cases: [
-          {
-            ...createFormNode("Tile"),
-            children: [createConstNode("Tile Material", 50)],
-          },
-          {
-            ...createFormNode("Vinyl"),
-            children: [createConstNode("Vinyl Material", 30)],
-          },
-        ],
-      },
-    ],
+    children: [],
   },
 });
 

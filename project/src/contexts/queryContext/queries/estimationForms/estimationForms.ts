@@ -52,11 +52,9 @@ export function useEstimationForms(
   const upsertEstimationFormMutation = useMutation({
     mutationFn: async (payload: UpsertEstimationFormMutationInput) =>
       upsertEstimationFormDefinitionApi(currentProjectId!, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["estimationForms", currentProjectId],
-      });
-    },
+    // Intentionally no invalidation here.
+    // EstimationFormsModule uses local state as source of truth and autosaves snapshots;
+    // invalidating on each save causes UI rollback during rapid edits.
     onError: (error) => {
       console.error("❌ Upsert estimation form failed:", error);
     },

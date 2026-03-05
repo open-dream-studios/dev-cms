@@ -22,16 +22,17 @@ import {
 export type NodePaletteKind = "form" | "choice" | "const";
 
 export const useEstimationFormsUIStore = createStore({
-  formBuilds: [
-    createStarterFormDocument("Bathroom Remodel - Standard"),
-    createStarterFormDocument("Bathroom Remodel - Premium"),
-  ] as EstimationBuilderFormDocument[],
+  formBuilds: [] as EstimationBuilderFormDocument[],
+  hasHydratedFromBackend: false,
   selectedFormId: "" as string,
   selectedNodeId: null as string | null,
   collapsedNodeIds: [] as string[],
   search: "",
   estimationFormsLeftBarOpen: true,
   showErrors: false,
+  isSaving: false,
+  saveError: null as string | null,
+  lastSavedAt: null as string | null,
 });
 
 const touchDocument = (
@@ -48,6 +49,52 @@ export const ensureSelectedForm = () => {
   if (state.selectedFormId) return;
   if (!state.formBuilds.length) return;
   state.setSelectedFormId(state.formBuilds[0].id);
+};
+
+export const hydrateFormBuilds = (formBuilds: EstimationBuilderFormDocument[]) => {
+  const state = useEstimationFormsUIStore.getState();
+  const selectedStillExists = formBuilds.some(
+    (doc) => doc.id === state.selectedFormId
+  );
+  const nextSelectedId = selectedStillExists
+    ? state.selectedFormId
+    : (formBuilds[0]?.id ?? "");
+
+  state.set({
+    formBuilds,
+    hasHydratedFromBackend: true,
+    selectedFormId: nextSelectedId,
+    selectedNodeId: nextSelectedId
+      ? state.selectedNodeId || formBuilds.find((d) => d.id === nextSelectedId)?.root.id || null
+      : null,
+  });
+};
+
+export const upsertFormBuildInState = (doc: EstimationBuilderFormDocument) => {
+  const state = useEstimationFormsUIStore.getState();
+  const existing = state.formBuilds.find((d) => d.id === doc.id);
+  if (existing) {
+    state.setFormBuilds(
+      state.formBuilds.map((d) => (d.id === doc.id ? { ...d, ...doc } : d))
+    );
+    return;
+  }
+  state.set((s) => ({ formBuilds: [doc, ...s.formBuilds] }));
+};
+
+export const markSavingState = (patch: {
+  isSaving?: boolean;
+  saveError?: string | null;
+  lastSavedAt?: string | null;
+}) => {
+  const state = useEstimationFormsUIStore.getState();
+  state.set({
+    isSaving: patch.isSaving ?? state.isSaving,
+    saveError:
+      patch.saveError === undefined ? state.saveError : patch.saveError,
+    lastSavedAt:
+      patch.lastSavedAt === undefined ? state.lastSavedAt : patch.lastSavedAt,
+  });
 };
 
 export const getSelectedForm = (state: {

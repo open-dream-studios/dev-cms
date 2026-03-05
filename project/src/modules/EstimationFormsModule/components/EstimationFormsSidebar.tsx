@@ -179,6 +179,7 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
         {filteredFormBuilds.map((doc) => {
           const selected = selectedForm?.id === doc.id;
           const editing = editingFormId === doc.id;
+          const hasRootChildren = (doc.root?.children?.length ?? 0) > 0;
           const validation = validationByFormId.get(doc.id) ?? {
             valid: true,
             errorCount: 0,
@@ -264,31 +265,27 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                         <p className="text-[9px] uppercase tracking-[0.08em] font-[700] opacity-55 leading-none">
                           {selected ? "Active Form" : "Form Build"}
                         </p>
-                        <div
-                          className="opacity-[0.75] h-[20px] py-[1px] flex flex-row items-center mt-[1px] gap-[4px] text-[9.5px] font-[600] leading-none"
-                          style={{
-                            // backgroundColor: validation.valid
-                            //   ? "rgba(16,185,129,0.14)"
-                            //   : "rgba(239,68,68,0.14)",
-                            color: validation.valid
-                              ? "rgb(6, 155, 90)"
-                              : "rgb(185,28,28)",
-                            // border: validation.valid
-                            //   ? "1px solid rgba(16,185,129,0.22)"
-                            //   : "1px solid rgba(239,68,68,0.26)",
-                          }}
-                        >
-                          {validation.valid ? (
-                            <Check size={10} strokeWidth={2.8} />
-                          ) : (
-                            <AlertTriangle size={10} strokeWidth={2.5} />
-                          )}
-                          <p className="mt-[-0.4px]">
-                            {validation.valid
-                              ? "Valid"
-                              : `${validation.errorCount} Error${validation.errorCount > 1 ? "s" : ""}`}
-                          </p>
-                        </div>
+                        {hasRootChildren && (
+                          <div
+                            className="opacity-[0.75] h-[20px] py-[1px] flex flex-row items-center mt-[1px] gap-[4px] text-[9.5px] font-[600] leading-none"
+                            style={{
+                              color: validation.valid
+                                ? "rgb(6, 155, 90)"
+                                : "rgb(185,28,28)",
+                            }}
+                          >
+                            {validation.valid ? (
+                              <Check size={10} strokeWidth={2.8} />
+                            ) : (
+                              <AlertTriangle size={10} strokeWidth={2.5} />
+                            )}
+                            <p className="mt-[-0.4px]">
+                              {validation.valid
+                                ? "Valid"
+                                : `${validation.errorCount} Error${validation.errorCount > 1 ? "s" : ""}`}
+                            </p>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1">
                         <button

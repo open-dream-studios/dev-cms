@@ -25,6 +25,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   GitBranchPlus,
+  Loader2,
 } from "lucide-react";
 import { useEstimationFormsModule } from "../_hooks/estimationForms.hooks";
 import {
@@ -107,6 +108,8 @@ export default function EstimationFormsBuilder() {
     collapsedNodeIds,
     validation,
     showErrors,
+    isSaving,
+    saveError,
     setSelectedNodeId,
     setShowErrors,
     addPaletteNodeToForm,
@@ -174,6 +177,7 @@ export default function EstimationFormsBuilder() {
       nodes: EstimationBuilderNode[];
     }[];
   }, [activePath, selectedForm]);
+  const hasRootChildren = (selectedForm?.root.children?.length ?? 0) > 0;
 
   const naturalCanvasWidth = useMemo(() => {
     const laneWidth = 360;
@@ -351,46 +355,66 @@ export default function EstimationFormsBuilder() {
               ))}
             </div>
 
-            <button
-              disabled={validation.valid}
-              onClick={() => {
-                if (validation.valid) return;
-                setShowErrors(!showErrors);
-              }}
-              className={`h-8 px-3 rounded-lg text-[11px] font-[700] flex items-center gap-1 ${
-                validation.valid ? "" : clickClass
-              }`}
-              style={{
-                backgroundColor: validation.valid
-                  ? "rgba(236,253,245,1)"
-                  : "rgba(254,242,242,1)",
-                color: validation.valid ? "rgb(4,120,87)" : "rgb(185,28,28)",
-                border: validation.valid
-                  ? "1px solid rgba(16,185,129,0.24)"
-                  : "1px solid rgba(239,68,68,0.35)",
-                boxShadow:
-                  !validation.valid && showErrors
-                    ? "0 0 0 2px rgba(239,68,68,0.16)"
-                    : "none",
-                cursor: validation.valid ? "default" : "pointer",
-              }}
-              title={
-                validation.valid
-                  ? "Graph is valid"
-                  : showErrors
-                    ? "Hide error highlights"
-                    : "Show error highlights"
-              }
-            >
-              {validation.valid ? (
-                "Valid Graph"
-              ) : (
-                <>
-                  <AlertTriangle size={12} /> {validation.errors.length} Issue
-                  {validation.errors.length > 1 ? "s" : ""}
-                </>
+            <div className="flex items-center gap-2">
+              <div
+                className="h-8 px-3 rounded-lg text-[11px] font-[700] flex items-center gap-1"
+                style={{
+                  backgroundColor: saveError
+                    ? "rgba(254,242,242,1)"
+                    : "rgba(248,250,252,1)",
+                  color: saveError ? "rgb(185,28,28)" : "rgb(51,65,85)",
+                  border: saveError
+                    ? "1px solid rgba(239,68,68,0.35)"
+                    : "1px solid rgba(148,163,184,0.25)",
+                }}
+              >
+                {isSaving && <Loader2 size={12} className="animate-spin" />}
+                {isSaving ? "Saving..." : saveError ? "Save failed" : "Saved"}
+              </div>
+
+              {hasRootChildren && (
+                <button
+                  disabled={validation.valid}
+                  onClick={() => {
+                    if (validation.valid) return;
+                    setShowErrors(!showErrors);
+                  }}
+                  className={`h-8 px-3 rounded-lg text-[11px] font-[700] flex items-center gap-1 ${
+                    validation.valid ? "" : clickClass
+                  }`}
+                  style={{
+                    backgroundColor: validation.valid
+                      ? "rgba(236,253,245,1)"
+                      : "rgba(254,242,242,1)",
+                    color: validation.valid ? "rgb(4,120,87)" : "rgb(185,28,28)",
+                    border: validation.valid
+                      ? "1px solid rgba(16,185,129,0.24)"
+                      : "1px solid rgba(239,68,68,0.35)",
+                    boxShadow:
+                      !validation.valid && showErrors
+                        ? "0 0 0 2px rgba(239,68,68,0.16)"
+                        : "none",
+                    cursor: validation.valid ? "default" : "pointer",
+                  }}
+                  title={
+                    validation.valid
+                      ? "Graph is valid"
+                      : showErrors
+                        ? "Hide error highlights"
+                        : "Show error highlights"
+                  }
+                >
+                  {validation.valid ? (
+                    "Valid Graph"
+                  ) : (
+                    <>
+                      <AlertTriangle size={12} /> {validation.errors.length} Issue
+                      {validation.errors.length > 1 ? "s" : ""}
+                    </>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
           </div>
 
           <div
