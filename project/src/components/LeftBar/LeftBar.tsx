@@ -192,7 +192,7 @@ const LeftBar = () => {
               backgroundColor: currentTheme.background_2,
               color: currentTheme.text_3,
             }}
-            className={`ml-[7px] h-[37px] w-[35px] pr-[1px] pb-[1px] flex justify-center items-center rounded-lg cursor-pointer hover:brightness-75 dim`}
+            className={`brightness-[95.5%] ml-[6px] h-[37px] w-[35px] pr-[1px] pb-[1px] flex justify-center items-center rounded-lg cursor-pointer hover:brightness-75 dim`}
           >
             <PanelLeftClose size={17} className="opacity-88" />
           </button>

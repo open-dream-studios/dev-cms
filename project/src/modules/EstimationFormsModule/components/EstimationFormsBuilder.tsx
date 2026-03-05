@@ -157,6 +157,7 @@ export default function EstimationFormsBuilder() {
       return [] as {
         formId: string;
         title: string;
+        idx: number;
         nodes: EstimationBuilderNode[];
       }[];
 
@@ -323,7 +324,7 @@ export default function EstimationFormsBuilder() {
                 <button
                   key={lane.formId}
                   onClick={() => setActivePath((p) => p.slice(0, idx + 1))}
-                  className={`h-8 px-2.5 rounded-lg text-[11px] font-[700] whitespace-nowrap ${clickClass}`}
+                  className={`h-8 pl-[10px] pr-[11px] rounded-lg text-[11px] font-[700] whitespace-nowrap truncate max-w-[192px] ${clickClass}`}
                   style={{
                     backgroundColor:
                       idx === lanes.length - 1
@@ -331,7 +332,7 @@ export default function EstimationFormsBuilder() {
                         : "rgba(148,163,184,0.12)",
                   }}
                 >
-                  {idx === 0 ? "Form" : lane.title}
+                  {lane.title}
                 </button>
               ))}
             </div>
@@ -399,7 +400,7 @@ export default function EstimationFormsBuilder() {
                 >
                   <div className="h-9 px-2 rounded-lg bg-slate-100/80 flex items-center justify-between mb-2">
                     <p className="text-[12px] font-[700] truncate">
-                      {lane.title}
+                      {lane.idx === 0 ? "Form" : lane.title}
                     </p>
                     <button
                       onClick={() => toggleCollapsedNode(lane.formId)}

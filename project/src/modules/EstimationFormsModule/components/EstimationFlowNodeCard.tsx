@@ -66,6 +66,10 @@ const EstimationFlowNodeCard = ({
     String(node.kind === "const" ? node.value : ""),
   );
   const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const editingRef = useRef(editing);
+  const editingNameRef = useRef(editingName);
+  const editingQuestionRef = useRef(editingQuestion);
+  const editingValueRef = useRef(editingValue);
 
   const {
     attributes,
@@ -107,18 +111,45 @@ const EstimationFlowNodeCard = ({
     editing,
   ]);
 
-  const saveEdits = () => {
+  useEffect(() => {
+    editingRef.current = editing;
+  }, [editing]);
+
+  useEffect(() => {
+    editingNameRef.current = editingName;
+  }, [editingName]);
+
+  useEffect(() => {
+    editingQuestionRef.current = editingQuestion;
+  }, [editingQuestion]);
+
+  useEffect(() => {
+    editingValueRef.current = editingValue;
+  }, [editingValue]);
+
+  const persistDraft = () => {
     onUpdate({
-      name: editingName.trim(),
-      question: editingQuestion,
+      name: editingNameRef.current.trim(),
+      question: editingQuestionRef.current,
       ...(node.kind === "const"
         ? {
-            value: Number.isFinite(Number(editingValue))
-              ? Number(editingValue)
+            value: Number.isFinite(Number(editingValueRef.current))
+              ? Number(editingValueRef.current)
               : 0,
           }
         : {}),
     });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (!editingRef.current) return;
+      persistDraft();
+    };
+  }, []);
+
+  const saveEdits = () => {
+    persistDraft();
     setEditing(false);
   };
 
@@ -182,7 +213,7 @@ const EstimationFlowNodeCard = ({
                       setEditingName(v);
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => {
+                  onKeyDown={(e) => {
                       if (e.key === " " && editingName.endsWith(" ")) {
                         e.preventDefault();
                         return;
@@ -191,13 +222,14 @@ const EstimationFlowNodeCard = ({
                         e.preventDefault();
                         saveEdits();
                       }
-                      if (e.key === "Escape") {
-                        e.preventDefault();
-                        cancelEdits();
-                      }
-                    }}
-                    className="text-[12px] leading-[15px] bg-transparent font-[700] truncate border-none outline-none w-full p-0 m-0 appearance-none align-middle"
-                  />
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      cancelEdits();
+                    }
+                  }}
+                  onBlur={persistDraft}
+                  className="text-[12px] leading-[15px] bg-transparent font-[700] truncate border-none outline-none w-full p-0 m-0 appearance-none align-middle"
+                />
                 ) : (
                   <p className="text-[12px] leading-[15px] font-[700] truncate m-0 p-0">
                     {node.name}
@@ -247,6 +279,7 @@ const EstimationFlowNodeCard = ({
             value={editingQuestion}
             onChange={(e) => setEditingQuestion(e.target.value)}
             onClick={(e) => e.stopPropagation()}
+            onBlur={persistDraft}
             className="block mt-2 w-full min-h-[68px] max-h-[250px] rounded-lg border border-black/12 bg-white/90 px-2.5 py-2 text-[11px] outline-none"
             placeholder="Question (optional)"
           />
@@ -290,6 +323,7 @@ const EstimationFlowNodeCard = ({
                   setEditingValue(v);
                 }}
                 onClick={(e) => e.stopPropagation()}
+                onBlur={persistDraft}
                 className="h-8 w-full rounded-lg border border-amber-200 bg-amber-50/70 px-2 text-[12px] font-[700] text-amber-800 outline-none"
               />
             </div>

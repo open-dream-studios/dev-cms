@@ -9,7 +9,7 @@ import { BsFillPersonVcardFill } from "react-icons/bs";
 import { IoMdMail } from "react-icons/io";
 import { ReactNode } from "react";
 import { Screen, User } from "@open-dream/shared";
-import { ChartNoAxesColumnDecreasing } from "lucide-react";
+import { ChartNoAxesColumnDecreasing, Images } from "lucide-react";
 
 export type AccessibleModule = {
   key: Screen;
@@ -26,7 +26,8 @@ export const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
   "products-table": <ProductsDataIcon size={22} />,
   gmail: <IoMdMail />,
   pages: <FaPollH />,
-  media: <FaImages />,
+  // media: <FaImages />,
+  media: <Images size={17}/>,
   employees: <BsFillPersonVcardFill />,
   tasks: <ProductsDataIcon size={22} />,
   estimations: <ProductsDataIcon size={22} />,

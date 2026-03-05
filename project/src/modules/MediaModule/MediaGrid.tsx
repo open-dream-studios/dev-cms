@@ -168,7 +168,7 @@ function SortableMediaItem({
       }`}
     >
       {!(activeMedia && media.media_id === activeMedia.media_id) && (
-        <div>
+        <div style={{backgroundColor: currentTheme.background_1_2}}>
           {editMode && (
             <div>
               {currentMediaItemsSelected.some(
