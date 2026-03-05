@@ -2,8 +2,6 @@
 import crypto from "crypto";
 import { DateTime } from "luxon";
 
-export const clean = (v: any) => v ?? null;
-
 export const generateId = (length: number) => {
   return crypto.randomBytes(length).toString("hex");
 };

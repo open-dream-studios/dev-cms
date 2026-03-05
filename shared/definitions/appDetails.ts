@@ -1,6 +1,9 @@
+import { IconStyle } from "../types/models/ui";
+
 // shared/definitions/appDetails.ts
 export const appDetails = {
   "default_theme": "dark",
+  "default_icon_style": "filled" as IconStyle,
   "left_bar_full": false,
   "left_bar_width": "150px + 6vw",
   "nav_height": 70,
@@ -20,6 +23,7 @@ export const appDetails = {
     {
       "key": "tsa",
       "brand": "TSA",
+      "icon_style": "filled" as IconStyle,
       "darken_landing": true,
       "landing_color": "#000000",
       "domain": "tannyspaacquisitions.shop",
@@ -55,6 +59,7 @@ export const appDetails = {
     {
       "key": "tcr",
       "brand": "Tri Cities",
+      "icon_style": "thin" as IconStyle,
       "darken_landing": false,
       "landing_color": "#181717",
       "domain": "tricitiesremodeling.shop",

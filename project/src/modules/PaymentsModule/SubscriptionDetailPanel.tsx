@@ -7,6 +7,7 @@ import {
   LedgerCreditType,
   stripeProductsByPriceId,
   SubscriptionTier,
+  normalizeDomain,
 } from "@open-dream/shared";
 import { motion } from "framer-motion";
 import {
@@ -76,10 +77,16 @@ const SubscriptionDetailPanel = ({
   stripe_account: string | null;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useCurrentDataStore();
-  const { domain, modal2, setModal2 } = useUiStore();
+  const { currentProject, currentProjectId } = useCurrentDataStore();
+  const { modal2, setModal2 } = useUiStore();
   const currentTheme = useCurrentTheme();
-  const foundProject = appDetailsProjectByDomain(domain);
+
+  const foundProject =
+    currentProject && currentProject.backend_domain
+      ? appDetailsProjectByDomain(
+          normalizeDomain(currentProject.backend_domain),
+        )
+      : null;
 
   const { creditBalances, adjustCredit } = useCreditBalanceAdjustments(
     !!currentUser,

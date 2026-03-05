@@ -599,10 +599,26 @@ export default function EstimationFormsBuilder() {
 
                       {lane.nodes.length === 0 &&
                         !(palettePreview?.targetFormId === lane.formId) && (
-                          <div className="h-[110px] rounded-xl border border-dashed border-sky-300 bg-sky-50/70 flex items-center justify-center text-[12px] text-sky-700 font-[600]">
-                            Drop FORM / CHOICE / CONST Here
-                          </div>
+                          <>
+                            <div className="h-[110px] rounded-xl border border-dashed border-sky-300 bg-sky-50/70 flex items-center justify-center text-[12px] text-sky-700 font-[600]">
+                              Drop LIST / CHOICE / COST Here
+                            </div>
+                            {showErrors && (
+                              <div
+                                className="mt-2 h-[30px] rounded-xl border flex items-center justify-center text-[11px] font-[700]"
+                                style={{
+                                  backgroundColor: "rgba(254, 226, 226, 0.7)",
+                                  borderColor: "rgba(239,68,68,0.42)",
+                                  boxShadow: "0 10px 20px rgba(239,68,68,0.12)",
+                                  color: "rgb(185,28,28)",
+                                }}
+                              >
+                                Must Include COSTS
+                              </div>
+                            )}
+                          </>
                         )}
+                        
                     </LaneDrop>
                   )}
                 </div>

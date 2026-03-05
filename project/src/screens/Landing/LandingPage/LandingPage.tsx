@@ -11,21 +11,29 @@ const LandingPage = () => {
   const { domain, setLandingImageLoaded } = useUiStore();
   const { breakpoint } = useUI();
 
-  let landing_hero_sm = appDetails.default_hero;
-  let landing_hero_md = appDetails.default_hero;
-  let landing_hero_lg = appDetails.default_hero;
-  let landing_hero_style = appDetails.default_landing_hero_style;
+  let landing_hero_sm: string = appDetails.default_hero;
+  let landing_hero_md: string = appDetails.default_hero;
+  let landing_hero_lg: string = appDetails.default_hero;
+  let landing_hero_style: string = appDetails.default_landing_hero_style;
+
   const foundProject = appDetailsProjectByDomain(domain);
+
   if (foundProject) {
-    landing_hero_sm = foundProject.landing_hero_sm;
-    landing_hero_md = foundProject.landing_hero_md;
-    landing_hero_lg = foundProject.landing_hero_lg;
-    landing_hero_style = foundProject.landing_hero_style;
+    if (foundProject.landing_hero_sm)
+      landing_hero_sm = foundProject.landing_hero_sm;
+    if (foundProject.landing_hero_md)
+      landing_hero_md = foundProject.landing_hero_md;
+    if (foundProject.landing_hero_lg)
+      landing_hero_lg = foundProject.landing_hero_lg;
+    if (foundProject.landing_hero_style)
+      landing_hero_style = foundProject.landing_hero_style;
   }
 
   useEffect(() => {
     const foundProject = appDetailsProjectByDomain(domain);
-    const slides = foundProject?.landing_slides ?? appDetails.default_slides;
+    const slides = [
+      ...(foundProject?.landing_slides ?? appDetails.default_slides),
+    ];
     preloadImages(slides);
 
     if (foundProject) {

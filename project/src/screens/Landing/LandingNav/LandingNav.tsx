@@ -8,41 +8,21 @@ import { appDetails, appDetailsProjectByDomain } from "@open-dream/shared";
 
 const LandingNav = () => {
   const currentTheme = useCurrentTheme();
-  const {
-    domain,
-    leftBarOpen,
-    setLeftBarOpen,
-    leftBarRef,
-    modal1,
-    setModal1,
-    landingImageLoaded,
-  } = useUiStore();
+  const { domain, modal1, setModal1, landingImageLoaded } = useUiStore();
 
-  let landing_title = appDetails.default_title;
-  let landing_logo = appDetails.default_logo;
-  let app_color = appDetails.default_color;
-  let nav_color = appDetails.default_landing_color;
+  let landing_title: string = appDetails.default_title;
+  let landing_logo: string = appDetails.default_logo;
+  let app_color: string = appDetails.default_color;
+  let nav_color: string = appDetails.default_landing_color;
 
   const foundProject = appDetailsProjectByDomain(domain);
 
   if (foundProject) {
-    landing_title = foundProject.landing_title;
-    landing_logo = foundProject.landing_logo;
-    app_color = foundProject.app_color;
-    nav_color = foundProject.landing_color;
+    if (foundProject.landing_title) landing_title = foundProject.landing_title;
+    if (foundProject.landing_logo) landing_logo = foundProject.landing_logo;
+    if (foundProject.app_color) app_color = foundProject.app_color;
+    if (foundProject.landing_color) nav_color = foundProject.landing_color;
   }
-
-  const toggleLeftBar = () => {
-    if (leftBarRef && leftBarRef.current) {
-      leftBarRef.current.style.transition = "right 0.3s ease-in-out";
-    }
-    setLeftBarOpen(!leftBarOpen);
-    setTimeout(() => {
-      if (leftBarRef && leftBarRef.current) {
-        leftBarRef.current.style.transition = "none";
-      }
-    }, 300);
-  };
 
   const handleSignInClick = () => {
     setModal1({

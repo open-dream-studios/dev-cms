@@ -13,8 +13,7 @@ import {
 } from "./_store/payments.store";
 import { openCustomerFromPayments } from "./_actions/payments.actions";
 import { openWindow } from "@/util/functions/Handlers";
-import { appDetailsProjectByDomain } from "@open-dream/shared";
-import { useUiStore } from "@/store/useUIStore";
+import { appDetailsProjectByDomain, normalizeDomain } from "@open-dream/shared";
 import { formatTimeDate } from "@/util/functions/Time";
 import { useStripeSubscriptions } from "@/contexts/queryContext/queries/payments/subscriptions";
 import StripeSubscriptions from "./StripeSubscriptions";
@@ -25,7 +24,6 @@ const PaymentsModule = () => {
   const { currentProjectId, currentProject } = useCurrentDataStore();
   const { customers } = useContextQueries();
   const { screenClick } = useRouting();
-  const { domain } = useUiStore();
 
   const {
     selectedSubscriptionId,
@@ -55,8 +53,8 @@ const PaymentsModule = () => {
   useEffect(() => {
     if (!subscriptions.length) return;
     if (selectedSubscriptionId) return;
-    const activeSubs = subscriptions.filter((sub) => sub.status === "active")
-    if (!activeSubs.length) return
+    const activeSubs = subscriptions.filter((sub) => sub.status === "active");
+    if (!activeSubs.length) return;
     setSelectedSubscriptionId(activeSubs[0].stripe_subscription_id);
   }, [subscriptions, selectedSubscriptionId, setSelectedSubscriptionId]);
 
@@ -104,7 +102,13 @@ const PaymentsModule = () => {
     if (isMobile) setMobileDetailOpen(true);
   };
 
-  const foundProject = appDetailsProjectByDomain(domain);
+  const foundProject =
+    currentProject && currentProject.backend_domain
+      ? appDetailsProjectByDomain(
+          normalizeDomain(currentProject.backend_domain),
+        )
+      : null;
+
   const stripe_account =
     foundProject && foundProject.stripe_account
       ? `https://dashboard.stripe.com/${foundProject.stripe_account}`

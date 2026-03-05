@@ -8,8 +8,16 @@ import { IoPersonSharp } from "react-icons/io5";
 import { BsFillPersonVcardFill } from "react-icons/bs";
 import { IoMdMail } from "react-icons/io";
 import { ReactNode } from "react";
-import { Screen, User } from "@open-dream/shared";
+import {
+  appDetails,
+  appDetailsProjectByDomain,
+  IconStyle,
+  normalizeDomain,
+  Screen,
+  User,
+} from "@open-dream/shared";
 import { ChartNoAxesColumnDecreasing, Images } from "lucide-react";
+import { useCurrentDataStore } from "@/store/currentDataStore";
 
 export type AccessibleModule = {
   key: Screen;
@@ -17,26 +25,39 @@ export type AccessibleModule = {
   pages: Screen[];
 };
 
-export const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
-  "google-ads": <HiServer />,
-  customers: <IoPersonSharp />,
-  "customer-products": (
-    <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
-  ),
-  "products-table": <ProductsDataIcon size={22} />,
-  gmail: <IoMdMail />,
-  pages: <FaPollH />,
-  // media: <FaImages />,
-  media: <Images size={17}/>,
-  employees: <BsFillPersonVcardFill />,
-  tasks: <ProductsDataIcon size={22} />,
-  estimations: <ProductsDataIcon size={22} />,
-  "estimations-builder": <ProductsDataIcon size={22} />,
-  "estimations-pricing": <ProductsDataIcon size={22} />,
-  "estimations-calculation": (
-    <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
-  ),
-  "estimation-forms": <ChartNoAxesColumnDecreasing size={19} />,
+export const getIconMap = () => {
+  const { currentProject } = useCurrentDataStore.getState();
+  const foundProject =
+    currentProject && currentProject.backend_domain
+      ? appDetailsProjectByDomain(
+          normalizeDomain(currentProject.backend_domain),
+        )
+      : null;
+
+  const iconStyle: IconStyle =
+    foundProject?.icon_style ?? appDetails.default_icon_style;
+
+  const ICON_MAP: Partial<Record<Screen, ReactNode>> = {
+    "google-ads": <HiServer />,
+    customers: <IoPersonSharp />,
+    "customer-products": (
+      <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
+    ),
+    "products-table": <ProductsDataIcon size={22} />,
+    gmail: <IoMdMail />,
+    pages: <FaPollH />,
+    media: iconStyle === "filled" ? <FaImages /> : <Images size={17} />,
+    employees: <BsFillPersonVcardFill />,
+    tasks: <ProductsDataIcon size={22} />,
+    estimations: <ProductsDataIcon size={22} />,
+    "estimations-builder": <ProductsDataIcon size={22} />,
+    "estimations-pricing": <ProductsDataIcon size={22} />,
+    "estimations-calculation": (
+      <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
+    ),
+    "estimation-forms": <ChartNoAxesColumnDecreasing size={19} />,
+  };
+  return ICON_MAP;
 };
 
 export const buildAccessibleModules = (

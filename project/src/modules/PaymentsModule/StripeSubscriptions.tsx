@@ -4,6 +4,7 @@ import {
   Customer,
   appDetailsProjectByDomain,
   StripeSubscriptionStatus,
+  normalizeDomain,
 } from "@open-dream/shared";
 import {
   AlertTriangle,
@@ -21,7 +22,6 @@ import {
   getSubscriptionEmail,
 } from "./_helpers/payments.helpers";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
-import { useUiStore } from "@/store/useUIStore";
 import {
   StripeSubscriptionStatusFilter,
   usePaymentsStore,
@@ -59,11 +59,16 @@ const StripeSubscriptions = ({
   findCustomer: (customer_id: string | null) => Customer | null;
 }) => {
   const { currentUser } = useContext(AuthContext);
-  const { currentProjectId } = useCurrentDataStore();
-  const { domain } = useUiStore();
+  const { currentProject, currentProjectId } = useCurrentDataStore();
   const currentTheme = useCurrentTheme();
-  const foundProject = appDetailsProjectByDomain(domain);
   const { subscriptionsFilter, setSubscriptionsFilter } = usePaymentsStore();
+
+  const foundProject =
+    currentProject && currentProject.backend_domain
+      ? appDetailsProjectByDomain(
+          normalizeDomain(currentProject.backend_domain),
+        )
+      : null;
 
   const subscriptionStatusOptions: (StripeSubscriptionStatus | "all")[] = [
     "all",
@@ -84,7 +89,7 @@ const StripeSubscriptions = ({
     !!currentUser,
     currentProjectId,
     stripeCustomerIds,
-  ); 
+  );
 
   return (
     <div

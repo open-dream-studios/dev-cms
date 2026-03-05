@@ -189,13 +189,13 @@ const EstimationFlowNodeCard = ({
           borderColor: hasError
             ? "rgba(239, 68, 68, 0.42)"
             : selected
-            ? "rgba(14, 116, 144, 0.45)"
-            : "rgba(15,23,42,0.1)",
+              ? "rgba(14, 116, 144, 0.45)"
+              : "rgba(15,23,42,0.1)",
           boxShadow: hasError
             ? "0 10px 20px rgba(239,68,68,0.12)"
             : selected
-            ? "0 10px 20px rgba(14,116,144,0.1)"
-            : "0 4px 12px rgba(15,23,42,0.04)",
+              ? "0 10px 20px rgba(14,116,144,0.1)"
+              : "0 4px 12px rgba(15,23,42,0.04)",
         }}
         onClick={onSelect}
       >
@@ -208,9 +208,10 @@ const EstimationFlowNodeCard = ({
               <Icon size={15} />
             </div>
             <div className="min-w-0">
-              <p className="select-none text-[10px] uppercase tracking-wide font-[700] opacity-55 leading-none">
-                {estimationNodeKindTitleMap[node.kind].toUpperCase()}
-              </p>
+              <div className="select-none text-[10px] uppercase tracking-wide font-[700] opacity-55 leading-none flex flex-row gap-[2px]">
+                {/* <p className="mt-[-0.8px]">+</p> */}
+                <p>{estimationNodeKindTitleMap[node.kind].toUpperCase()}</p>
+              </div>
               <div className="mt-1 h-[15px] leading-[15px] flex items-center">
                 {editing ? (
                   <input
@@ -225,7 +226,7 @@ const EstimationFlowNodeCard = ({
                       setEditingName(v);
                     }}
                     onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === " " && editingName.endsWith(" ")) {
                         e.preventDefault();
                         return;
@@ -234,14 +235,14 @@ const EstimationFlowNodeCard = ({
                         e.preventDefault();
                         saveEdits();
                       }
-                    if (e.key === "Escape") {
-                      e.preventDefault();
-                      cancelEdits();
-                    }
-                  }}
-                  onBlur={persistDraft}
-                  className="text-[12px] leading-[15px] bg-transparent font-[700] truncate border-none outline-none w-full p-0 m-0 appearance-none align-middle"
-                />
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        cancelEdits();
+                      }
+                    }}
+                    onBlur={persistDraft}
+                    className="text-[12px] leading-[15px] bg-transparent font-[700] truncate border-none outline-none w-full p-0 m-0 appearance-none align-middle"
+                  />
                 ) : (
                   <p className="text-[12px] leading-[15px] font-[700] truncate m-0 p-0">
                     {node.name}
@@ -388,72 +389,71 @@ const EstimationFlowNodeCard = ({
                     formCase.id,
                   );
                   return (
-                  <div
-                    key={formCase.id}
-                    className={`h-7 rounded-md border border-slate-200 bg-white/90 pl-2 pr-[6.5px] flex items-center gap-1.5 ${
-                      editing ? "" : clickClass
-                    }`}
-                    style={{
-                      backgroundColor:
-                        optionHasError
+                    <div
+                      key={formCase.id}
+                      className={`h-7 rounded-md border border-slate-200 bg-white/90 pl-2 pr-[6.5px] flex items-center gap-1.5 ${
+                        editing ? "" : clickClass
+                      }`}
+                      style={{
+                        backgroundColor: optionHasError
                           ? "rgba(254, 226, 226, 0.78)"
                           : selectedChoiceCaseId === formCase.id
-                          ? "rgba(14,165,233,0.16)"
-                          : undefined,
-                      borderColor:
-                        optionHasError
+                            ? "rgba(14,165,233,0.16)"
+                            : undefined,
+                        borderColor: optionHasError
                           ? "rgba(239,68,68,0.42)"
                           : selectedChoiceCaseId === formCase.id
-                          ? "rgba(14,165,233,0.34)"
+                            ? "rgba(14,165,233,0.34)"
+                            : undefined,
+                        boxShadow: optionHasError
+                          ? "0 6px 12px rgba(239,68,68,0.12)"
                           : undefined,
-                      boxShadow: optionHasError
-                        ? "0 6px 12px rgba(239,68,68,0.12)"
-                        : undefined,
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (editing) return;
-                      onOpenChoiceCase(formCase.id);
-                    }}
-                  >
-                    {editing ? (
-                      <input
-                        value={formCase.name}
-                        onChange={(e) => {
-                          const v = e.target.value
-                            .replace(/^ /, "") // no leading space
-                            .replace(/\. $/, " ") // fix mac double-space -> ". "
-                            .replace(/\s{2,}/g, " "); // block multiple spaces anywhere
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (editing) return;
+                        onOpenChoiceCase(formCase.id);
+                      }}
+                    >
+                      {editing ? (
+                        <input
+                          value={formCase.name}
+                          onChange={(e) => {
+                            const v = e.target.value
+                              .replace(/^ /, "") // no leading space
+                              .replace(/\. $/, " ") // fix mac double-space -> ". "
+                              .replace(/\s{2,}/g, " "); // block multiple spaces anywhere
 
-                          onUpdateChoiceCaseName(formCase.id, v);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full bg-transparent outline-none text-[11px] font-[600]"
-                      />
-                    ) : (
-                      <p className="w-full text-[11px] font-[600] truncate">
-                        {formCase.name}
-                      </p>
-                    )}
+                            onUpdateChoiceCaseName(formCase.id, v);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full bg-transparent outline-none text-[11px] font-[600]"
+                        />
+                      ) : (
+                        <p className="w-full text-[11px] font-[600] truncate">
+                          {formCase.name}
+                        </p>
+                      )}
 
-                    {(node as EstimationBuilderChoiceNode).cases.length > 1 && (
-                      <button
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onRemoveChoiceCase(formCase.id);
-                        }}
-                        style={{
-                          border: optionHasError
-                            ? "1px solid rgba(239,68,68,0.34)"
-                            : "1px solid transparent",
-                        }}
-                        className={`h-[18px] w-[18px] rounded-sm bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
-                      >
-                        <X size={10} />
-                      </button>
-                    )}
-                  </div>
+                      {(node as EstimationBuilderChoiceNode).cases.length >
+                        1 && (
+                        <button
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onRemoveChoiceCase(formCase.id);
+                          }}
+                          style={{
+                            border: optionHasError
+                              ? "1px solid rgba(239,68,68,0.34)"
+                              : "1px solid transparent",
+                          }}
+                          className={`h-[18px] w-[18px] rounded-sm bg-rose-50 text-rose-600 flex items-center justify-center ${clickClass}`}
+                        >
+                          <X size={10} />
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>

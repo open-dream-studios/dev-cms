@@ -168,110 +168,134 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
           return (
             <div
               key={doc.id}
-              className={`mb-2 rounded-xl p-2.5 cursor-pointer group`}
+              className={`mb-2 rounded-xl p-0 cursor-pointer group overflow-hidden w-full`}
               style={{
                 backgroundColor: selected
                   ? "rgba(14, 165, 233, 0.11)"
-                  : currentTheme.background_1_3,
+                  : "rgba(255,255,255,0.86)",
                 border: selected
                   ? "1px solid rgba(14, 165, 233, 0.32)"
-                  : "1px solid rgba(0,0,0,0.04)",
+                  : "1px solid rgba(15,23,42,0.09)",
+                boxShadow: selected
+                  ? "0 8px 18px rgba(14,165,233,0.12)"
+                  : "0 4px 14px rgba(15,23,42,0.045)",
               }}
               onClick={() => setSelectedFormId(doc.id)}
             >
-              <div className="flex items-center justify-between gap-1.5">
-                {editing ? (
-                  <input
-                    autoFocus
-                    value={editingName}
-                    onChange={(e) => {
-                      const v = e.target.value
-                        .replace(/^ /, "") // no leading space
-                        .replace(/\. $/, " ") // fix mac double-space -> ". "
-                        .replace(/\s{2,}/g, " "); // block multiple spaces anywhere
+              <div className="flex min-h-[65px] w-full">
+                <div
+                  className="w-[4px] shrink-0"
+                  style={{
+                    background: selected
+                      ? "linear-gradient(180deg, rgba(14,165,233,0.42) 0%, rgba(37,99,235,0.42) 100%)"
+                      : "linear-gradient(180deg, rgba(148,163,184,0.32) 0%, rgba(148,163,184,0.18) 100%)",
+                  }}
+                />
 
-                      setEditingName(v);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onBlur={() => {
-                      renameFormBuild(doc.id, editingName.trim());
-                      setEditingFormId(null);
-                      setEditingName("");
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === " " && editingName.endsWith(" ")) {
-                        e.preventDefault(); // block second trailing space
-                        return;
-                      }
+                <div className="flex-1 px-2.5 pt-2">
+                  <div className="min-w-0 w-full">
+                    <div className="h-[17px] leading-[17px] flex items-center w-full">
+                      {editing ? (
+                        <input
+                          autoFocus
+                          value={editingName}
+                          onChange={(e) => {
+                            const v = e.target.value
+                              .replace(/^ /, "") // no leading space
+                              .replace(/\. $/, " ") // fix mac double-space -> ". "
+                              .replace(/\s{2,}/g, " "); // block multiple spaces anywhere
 
-                      if (e.key === "Enter") {
-                        renameFormBuild(doc.id, editingName.trim());
-                        setEditingFormId(null);
-                        setEditingName("");
-                      }
+                            setEditingName(v);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onBlur={() => {
+                            renameFormBuild(doc.id, editingName.trim());
+                            setEditingFormId(null);
+                            setEditingName("");
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === " " && editingName.endsWith(" ")) {
+                              e.preventDefault(); // block second trailing space
+                              return;
+                            }
 
-                      if (e.key === "Escape") {
-                        setEditingFormId(null);
-                        setEditingName("");
-                      }
-                    }}
-                    className="text-[12px] font-[700] w-full border-none outline-none"
-                  />
-                ) : (
-                  <p className="text-[12px] font-[700] truncate">{doc.name}</p>
-                )}
-              </div>
+                            if (e.key === "Enter") {
+                              renameFormBuild(doc.id, editingName.trim());
+                              setEditingFormId(null);
+                              setEditingName("");
+                            }
 
-              {/* <p className="text-[10px] opacity-65 mt-0.5 truncate">
-                {doc.description || "No description"}
-              </p> */}
-              <div className="w-[100%] flex justify-end pr-[1px]">
-                <div className="mt-1 flex items-center gap-1.5">
-                  <button
-                    className={`h-7 px-2 rounded-md bg-white/85 ${clickClass}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      duplicateFormBuild(doc.id);
-                    }}
-                  >
-                    <Copy size={11} />
-                  </button>
+                            if (e.key === "Escape") {
+                              setEditingFormId(null);
+                              setEditingName("");
+                            }
+                          }}
+                          className="text-[12px] leading-[17px] font-[700] w-full border-none outline-none bg-transparent p-0 m-0"
+                        />
+                      ) : (
+                        <p className="text-[12px] leading-[17px] font-[700] truncate w-full">
+                          {doc.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-                  <button
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
+                  <div className="mt-[7px] w-[100%] flex justify-end">
+                    <div className="w-full flex items-start justify-between">
+                      <p className="text-[9px] uppercase tracking-[0.08em] font-[700] opacity-55 leading-none">
+                        {selected ? "Active Form" : "Form Build"}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <button
+                          className={`h-[26px] px-2 rounded-md bg-white/85 ${clickClass}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            duplicateFormBuild(doc.id);
+                          }}
+                        >
+                          <Copy size={11} />
+                        </button>
 
-                      if (editingFormId === doc.id) {
-                        renameFormBuild(doc.id, editingName.trim()); // save
-                        setEditingFormId(null);
-                        setEditingName("");
-                        return;
-                      }
+                        <button
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
 
-                      setEditingFormId(doc.id);
-                      setEditingName(doc.name);
-                    }}
-                    style={{
-                      border: editing
-                        ? "1px solid rgba(14, 165, 233, 0.52)"
-                        : "1px solid transparent",
-                    }}
-                    className={`h-[27px] px-[7px] rounded-md bg-white/85 ${clickClass}`}
-                    title="Rename Form"
-                  >
-                    <Pencil size={10} />
-                  </button>
+                            if (editingFormId === doc.id) {
+                              renameFormBuild(doc.id, editingName.trim()); // save
+                              setEditingFormId(null);
+                              setEditingName("");
+                              return;
+                            }
 
-                  <button
-                    className={`h-7 px-2 rounded-md bg-white/85 text-rose-600 ${clickClass}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteFormBuild(doc.id);
-                    }}
-                  >
-                    <Trash2 size={11} />
-                  </button>
+                            setEditingFormId(doc.id);
+                            setEditingName(doc.name);
+                          }}
+                          style={{
+                            border: editing
+                              ? "1px solid rgba(14, 165, 233, 0.52)"
+                              : "1px solid transparent",
+                          }}
+                          // className={`h-6 w-6 rounded-md ${clickClass}`}
+                          className={`h-[26px] px-2 rounded-md bg-white/85 ${clickClass}`}
+                          title="Rename Form"
+                        >
+                          <Pencil size={10} />
+                        </button>
+
+                        <button
+                          className={`h-[26px] px-2 rounded-md bg-white/85 text-rose-600 ${clickClass}`}
+                          // className={`h-6 w-6 rounded-md text-rose-600 ${clickClass}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteFormBuild(doc.id);
+                          }}
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -18,6 +18,7 @@ import {
   GoogleCalendarEventRaw,
   GoogleCalendarTarget,
   LedgerCreditType,
+  normalizeDomain,
 } from "@open-dream/shared";
 import { BiPencil } from "react-icons/bi";
 import { capitalizeFirstLetter } from "@/util/functions/Data";
@@ -54,8 +55,8 @@ const GoogleEventCard = ({
   } = useGoogleCalendarUIStore();
   const { customers } = useContextQueries();
   const currentTheme = useCurrentTheme();
-  const { domain, modal1, setModal1 } = useUiStore();
-  const { currentProjectId } = useCurrentDataStore();
+  const { modal1, setModal1 } = useUiStore();
+  const { currentProject, currentProjectId } = useCurrentDataStore();
 
   const selectedEvent = editableEvent ? selectedCalendarEvent : eventPassed;
   if (!selectedEvent) return null;
@@ -80,7 +81,7 @@ const GoogleEventCard = ({
       updates: {
         customerId: customer.customer_id,
       },
-      creditAdjustment: false
+      creditAdjustment: false,
     });
   };
 
@@ -90,7 +91,7 @@ const GoogleEventCard = ({
       eventId: googleEvent.id,
       calendarTarget,
       updates: { customerId: null },
-      creditAdjustment: false
+      creditAdjustment: false,
     });
   };
 
@@ -154,7 +155,7 @@ const GoogleEventCard = ({
       eventId: googleEvent.id,
       calendarTarget,
       updates: { creditType: nextCreditType },
-      creditAdjustment: false
+      creditAdjustment: false,
     });
   };
 
@@ -190,7 +191,7 @@ const GoogleEventCard = ({
       eventId: googleEvent.id,
       calendarTarget,
       updates: { completed: !isComplete },
-      creditAdjustment: true
+      creditAdjustment: true,
     });
 
     queryClient.invalidateQueries({
@@ -223,7 +224,13 @@ const GoogleEventCard = ({
   const endDateTime = googleEvent.end?.dateTime;
   const endTimeZone = googleEvent.end?.timeZone;
 
-  const foundProject = appDetailsProjectByDomain(domain);
+  const foundProject =
+    currentProject && currentProject.backend_domain
+      ? appDetailsProjectByDomain(
+          normalizeDomain(currentProject.backend_domain),
+        )
+      : null;
+
   const eventCreditType = googleEvent.extendedProperties?.private?.credit_type;
   const eventCompleted = googleEvent.extendedProperties?.private?.completed;
   const selectedCreditType = (Number(eventCreditType) || 1) as LedgerCreditType;

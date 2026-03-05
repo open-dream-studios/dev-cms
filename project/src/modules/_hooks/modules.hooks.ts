@@ -4,7 +4,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import {
   AccessibleModule,
   buildAccessibleModules,
-  ICON_MAP,
+  getIconMap,
 } from "../_actions/modules.actions";
 import { useContextQueries } from "@/contexts/queryContext/queryContext";
 import { useUiStore } from "@/store/useUIStore";
@@ -80,6 +80,7 @@ export function useModules() {
       hasProjectModule,
       currentUser
     );
+    const ICON_MAP = getIconMap()
     return accessibleModules.map((m: AccessibleModule) => ({
       ...m,
       icon: ICON_MAP[m.key],

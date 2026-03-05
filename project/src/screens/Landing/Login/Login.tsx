@@ -8,7 +8,7 @@ import { FaDiscord } from "react-icons/fa";
 import { FaFacebook } from "react-icons/fa";
 import { BsQuestion } from "react-icons/bs";
 import { IoEyeOff } from "react-icons/io5";
-import { IoEye } from "react-icons/io5"; 
+import { IoEye } from "react-icons/io5";
 import animationData from "../../../util/animations/loading-animation-black.json";
 import TermsDocument from "../../../util/forms/TermsDocument";
 import PrivacyDocument from "../../../util/forms/PrivacyDocument";
@@ -22,14 +22,15 @@ import { googleSignIn, login, register } from "@/util/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "@/util/axios";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
-import { useUiStore } from "@/store/useUIStore"; 
-import { appDetails, appDetailsProjectByDomain } from "@open-dream/shared"
+import { useUiStore } from "@/store/useUIStore";
+import { appDetails, appDetailsProjectByDomain } from "@open-dream/shared";
 
 const LoginSlider = () => {
   const { domain } = useUiStore();
-  let default_slides = appDetails.default_slides;
-  const foundProject = appDetailsProjectByDomain(domain)
-  if (foundProject) {
+  const foundProject = appDetailsProjectByDomain(domain);
+
+  let default_slides: readonly string[] = appDetails.default_slides;
+  if (foundProject && foundProject.landing_slides) {
     default_slides = foundProject.landing_slides;
   }
 
@@ -138,8 +139,8 @@ const Login = () => {
   const passwordVisibleRef = useRef<HTMLDivElement>(null);
   const registerTitleRef = useRef<HTMLParagraphElement>(null);
 
-  let brand = appDetails.default_title;
-  const foundProject = appDetailsProjectByDomain(domain)
+  const foundProject = appDetailsProjectByDomain(domain);
+  let brand: string = appDetails.default_title;
   if (foundProject) {
     brand = foundProject.brand;
   }
@@ -160,7 +161,7 @@ const Login = () => {
       const [forgotPasswordEmail, setForgotPasswordEmail] =
         useState<string>("");
       const [errorText, setErrorText] = useState<string>(
-        "Please close out and try again"
+        "Please close out and try again",
       );
       const [codeInput, setCodeInput] = useState<string[]>([
         "",
@@ -202,7 +203,7 @@ const Login = () => {
               setErrorText(
                 "This email is connected to an existing " +
                   responseData.message +
-                  " account"
+                  " account",
               );
             }
           }
@@ -235,7 +236,7 @@ const Login = () => {
               setErrorText(
                 "This email is connected to an existing " +
                   responseData.message +
-                  " account"
+                  " account",
               );
             }
           }
@@ -267,7 +268,7 @@ const Login = () => {
               setErrorText(
                 "This email is connected to an existing " +
                   responseData.message +
-                  " account"
+                  " account",
               );
             }
           }

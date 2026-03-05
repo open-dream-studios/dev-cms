@@ -1,4 +1,6 @@
 // shared/types/models/ui.ts
+export type IconStyle = "filled" | "thin"
+
 export type ContextMenuPosition = {
   x: number;
   y: number;

@@ -19,6 +19,7 @@ import {
   rescheduleConfirmationEmail,
   appDetailsProjectByDomain,
   GoogleCalendarTarget,
+  normalizeDomain,
 } from "@open-dream/shared";
 import { getInnerCardStyle } from "@/styles/themeStyles";
 import { AuthContext } from "@/contexts/authContext";
@@ -126,7 +127,7 @@ const ScheduleRequestRow = ({
     upsertCustomer,
     deleteScheduleRequest,
   } = useContextQueries();
-  const { currentProjectId } = useCurrentDataStore();
+  const { currentProject, currentProjectId } = useCurrentDataStore();
   const { sendNewEmail } = useSendGmailEmail();
   const { domain } = useUiStore();
 
@@ -163,6 +164,13 @@ const ScheduleRequestRow = ({
     }
   }, [customerMatch]);
 
+  const foundProject =
+    currentProject && currentProject.backend_domain
+      ? appDetailsProjectByDomain(
+          normalizeDomain(currentProject.backend_domain),
+        )
+      : null;
+
   const sendConfirmationEmail = (
     date: string,
     time: string,
@@ -171,7 +179,6 @@ const ScheduleRequestRow = ({
     location: string,
   ) => {
     const onConfirm = async () => {
-      const foundProject = appDetailsProjectByDomain(domain);
       if (!foundProject || !foundProject.email_config) return;
       const config = foundProject.email_config;
 
