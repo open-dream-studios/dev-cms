@@ -314,6 +314,15 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                             e.preventDefault();
                             e.stopPropagation();
 
+                            // If another card is currently being edited, save it first.
+                            if (
+                              editingFormId &&
+                              editingFormId !== doc.id &&
+                              editingName.trim()
+                            ) {
+                              renameFormBuild(editingFormId, editingName.trim());
+                            }
+
                             if (editingFormId === doc.id) {
                               renameFormBuild(doc.id, editingName.trim()); // save
                               setEditingFormId(null);
