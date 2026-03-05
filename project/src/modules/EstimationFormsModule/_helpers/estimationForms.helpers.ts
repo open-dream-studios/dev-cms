@@ -316,7 +316,18 @@ export const moveNodeBetweenForms = (
   }
 
   const sourceChildren = getFormChildren(root, fromFormId);
-  if (!sourceChildren.some((child) => child.id === nodeId)) return root;
+  const sourceIndex = sourceChildren.findIndex((child) => child.id === nodeId);
+  if (sourceIndex < 0) return root;
+
+  let normalizedToIndex = toIndex;
+  // When moving within the same form, removing the source item shifts indexes.
+  if (
+    fromFormId === toFormId &&
+    normalizedToIndex !== undefined &&
+    normalizedToIndex > sourceIndex
+  ) {
+    normalizedToIndex -= 1;
+  }
 
   let next = updateNodeById(root, fromFormId, (target) => {
     if (target.kind !== "form") return target;
@@ -326,7 +337,12 @@ export const moveNodeBetweenForms = (
     };
   }) as EstimationBuilderFormGraph;
 
-  next = addNodeToForm(next, toFormId, node as EstimationBuilderNode, toIndex);
+  next = addNodeToForm(
+    next,
+    toFormId,
+    node as EstimationBuilderNode,
+    normalizedToIndex,
+  );
 
   return next;
 };

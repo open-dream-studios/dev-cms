@@ -48,10 +48,12 @@ const LaneDrop = ({
   formId,
   children,
   paletteTargeted,
+  allowContainerHighlight,
 }: {
   formId: string;
   children: ReactNode;
   paletteTargeted?: boolean;
+  allowContainerHighlight?: boolean;
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id: `drop-form-${formId}` });
   const { setNodeRef: setTopRef } = useDroppable({ id: `drop-top-${formId}` });
@@ -59,7 +61,7 @@ const LaneDrop = ({
     id: `drop-bottom-${formId}`,
   });
 
-  const highlighted = isOver || !!paletteTargeted;
+  const highlighted = !!paletteTargeted || (!!allowContainerHighlight && isOver);
 
   return (
     <div
@@ -131,6 +133,81 @@ const getDestination = (overId: string, root: EstimationBuilderFormGraph) => {
   const index = siblings.findIndex((s) => s.id === overId);
   if (index < 0) return { targetFormId: parentFormId };
   return { targetFormId: parentFormId, index };
+};
+
+const getPointerAwareDestination = ({
+  overId,
+  root,
+  activeRect,
+}: {
+  overId: string;
+  root: EstimationBuilderFormGraph;
+  activeRect: DragOverEvent["active"]["rect"]["current"];
+}) => {
+  if (
+    overId.startsWith("drop-top-") ||
+    overId.startsWith("drop-bottom-") ||
+    overId.startsWith("drop-form-")
+  ) {
+    return getDestination(overId, root);
+  }
+
+  const parentFormId = findParentFormIdForChild(root, overId);
+  if (!parentFormId) return getDestination(overId, root);
+  const siblings = getFormChildren(root, parentFormId);
+  const overIndex = siblings.findIndex((s) => s.id === overId);
+  if (overIndex < 0) return getDestination(overId, root);
+
+  const overEl = document.querySelector(
+    `[data-flow-node-id="${overId}"]`,
+  ) as HTMLElement | null;
+  if (!overEl) return { targetFormId: parentFormId, index: overIndex };
+
+  const overRect = overEl.getBoundingClientRect();
+  const translated = activeRect.translated || activeRect.initial;
+  if (!translated) return { targetFormId: parentFormId, index: overIndex };
+  const draggedCenterY = translated.top + translated.height / 2;
+  const overMidY = overRect.top + overRect.height / 2;
+
+  return {
+    targetFormId: parentFormId,
+    index: draggedCenterY >= overMidY ? overIndex + 1 : overIndex,
+  };
+};
+
+const getNodeSortableDestination = ({
+  overId,
+  root,
+  nodeId,
+  fromFormId,
+}: {
+  overId: string;
+  root: EstimationBuilderFormGraph;
+  nodeId: string;
+  fromFormId: string;
+}) => {
+  if (
+    overId.startsWith("drop-top-") ||
+    overId.startsWith("drop-bottom-") ||
+    overId.startsWith("drop-form-")
+  ) {
+    return getDestination(overId, root);
+  }
+
+  const targetFormId = findParentFormIdForChild(root, overId);
+  if (!targetFormId) return getDestination(overId, root);
+  const siblings = getFormChildren(root, targetFormId);
+  const overIndex = siblings.findIndex((s) => s.id === overId);
+  if (overIndex < 0) return { targetFormId };
+
+  if (targetFormId === fromFormId) {
+    const sourceIndex = siblings.findIndex((s) => s.id === nodeId);
+    if (sourceIndex < 0 || overId === nodeId) return null;
+    const index = sourceIndex < overIndex ? overIndex + 1 : overIndex;
+    return { targetFormId, index };
+  }
+
+  return { targetFormId, index: overIndex };
 };
 
 const isBottomNoDropId = (id: string | null) =>
@@ -304,7 +381,21 @@ export default function EstimationFormsBuilder() {
       return;
     }
 
-    const destination = getDestination(overId, selectedForm.root);
+    const destination =
+      activeData?.dragType === "node"
+        ? latestDropDestinationRef.current ??
+          getNodeSortableDestination({
+            overId,
+            root: selectedForm.root,
+            nodeId: String(activeData.nodeId),
+            fromFormId: String(activeData.parentFormId),
+          })
+        : latestDropDestinationRef.current ??
+          getPointerAwareDestination({
+            overId,
+            root: selectedForm.root,
+            activeRect: event.active.rect.current,
+          });
     if (!destination) return;
 
     if (activeData?.dragType === "palette") {
@@ -348,7 +439,38 @@ export default function EstimationFormsBuilder() {
       return;
     }
 
-    const destination = getDestination(overId, selectedForm.root);
+    // Prevent flicker/resets: don't overwrite destination when hovering the active node itself.
+    if (
+      activeData?.dragType === "node" &&
+      String(activeData.nodeId) === overId
+    ) {
+      return;
+    }
+
+    let destination =
+      activeData?.dragType === "node"
+        ? getNodeSortableDestination({
+            overId,
+            root: selectedForm.root,
+            nodeId: String(activeData.nodeId),
+            fromFormId: String(activeData.parentFormId),
+          })
+        : getPointerAwareDestination({
+            overId,
+            root: selectedForm.root,
+            activeRect: event.active.rect.current,
+          });
+
+    // Keep last concrete index if current over is only container-level (no index).
+    if (
+      activeData?.dragType === "node" &&
+      destination &&
+      destination.index === undefined &&
+      latestDropDestinationRef.current?.targetFormId === destination.targetFormId &&
+      latestDropDestinationRef.current.index !== undefined
+    ) {
+      destination = latestDropDestinationRef.current;
+    }
 
     latestDropDestinationRef.current = destination;
     if (activeData?.dragType === "palette") {
@@ -556,6 +678,9 @@ export default function EstimationFormsBuilder() {
                         formId={lane.formId}
                         paletteTargeted={
                           palettePreview?.targetFormId === lane.formId
+                        }
+                        allowContainerHighlight={
+                          (activeDragNode?.id ?? "") === "ghost"
                         }
                       >
                       <SortableContext
