@@ -61,6 +61,7 @@ import { initializeWebSocket } from "./connection/websocket.js";
 import publicPaymentRoutes from "./handlers/public/payments/payments_routes.js"
 import stripeRoutes from "./handlers/webhooks/stripe/stripe_routes.js";
 import scheduleRoutes from "./handlers/webhooks/schedule/schedule_routes.js";
+import estimationFormRoutes from "./handlers/modules/estimation_forms/estimation_forms_routes.js";
 dotenv.config();
 
 // RUN FILE COMMAND
@@ -203,6 +204,8 @@ app.use("/api/public/payments", publicPaymentRoutes)
 
 // Webhooks
 app.use("/api/webhooks/schedule", scheduleRoutes);
+
+app.use("/api/estimation-forms", estimationFormRoutes);
 
 // WebSocket
 const wss = new WebSocketServer({ server });
