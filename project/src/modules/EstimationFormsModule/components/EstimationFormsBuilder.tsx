@@ -137,6 +137,11 @@ export default function EstimationFormsBuilder() {
     targetFormId: string;
     index?: number;
   } | null>(null);
+  const lanesScrollRef = useRef<HTMLDivElement | null>(null);
+  const [retainedCanvasWidth, setRetainedCanvasWidth] = useState(0);
+  const scrollEndTimerRef = useRef<number | null>(null);
+  const lastScrollLeftRef = useRef(0);
+  const movedLeftRef = useRef(false);
 
   useEffect(() => {
     if (!selectedForm) return;
@@ -171,6 +176,25 @@ export default function EstimationFormsBuilder() {
       nodes: EstimationBuilderNode[];
     }[];
   }, [activePath, selectedForm]);
+
+  const naturalCanvasWidth = useMemo(() => {
+    const laneWidth = 360;
+    const laneGap = 12;
+    if (!lanes.length) return 0;
+    return lanes.length * laneWidth + (lanes.length - 1) * laneGap;
+  }, [lanes.length]);
+
+  useEffect(() => {
+    setRetainedCanvasWidth((prev) => Math.max(prev, naturalCanvasWidth));
+  }, [naturalCanvasWidth]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollEndTimerRef.current) {
+        window.clearTimeout(scrollEndTimerRef.current);
+      }
+    };
+  }, []);
 
   const onDragStart = (event: DragStartEvent) => {
     latestDropDestinationRef.current = null;
@@ -321,8 +345,50 @@ export default function EstimationFormsBuilder() {
             </div>
           </div>
 
-          <div className="h-[calc(100%-58px)] overflow-x-auto overflow-y-hidden p-3">
-            <div className="h-full flex gap-3 min-w-max">
+          <div
+            ref={lanesScrollRef}
+            className="h-[calc(100%-58px)] overflow-x-auto overflow-y-hidden p-3"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const current = el.scrollLeft;
+              movedLeftRef.current = current < lastScrollLeftRef.current;
+              lastScrollLeftRef.current = current;
+
+              if (scrollEndTimerRef.current) {
+                window.clearTimeout(scrollEndTimerRef.current);
+              }
+
+              scrollEndTimerRef.current = window.setTimeout(() => {
+                if (!movedLeftRef.current) return;
+                if (retainedCanvasWidth <= naturalCanvasWidth + 1) return;
+
+                const beforeLeft = el.scrollLeft;
+                // Only trim whitespace that is off-screen to the right.
+                // Keep enough width to preserve the current viewport anchor.
+                const minWidthToPreserveView =
+                  beforeLeft <= 0.5
+                    ? naturalCanvasWidth
+                    : beforeLeft + el.clientWidth;
+                const nextWidth = Math.max(
+                  naturalCanvasWidth,
+                  minWidthToPreserveView,
+                );
+                setRetainedCanvasWidth(nextWidth);
+
+                requestAnimationFrame(() => {
+                  const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+                  el.scrollLeft = Math.min(beforeLeft, maxScroll);
+                  lastScrollLeftRef.current = el.scrollLeft;
+                });
+              }, 140);
+            }}
+          >
+            <div
+              className="h-full flex gap-3"
+              style={{
+                width: Math.max(naturalCanvasWidth, retainedCanvasWidth),
+              }}
+            >
               {lanes.map((lane) => (
                 <div
                   key={lane.formId}
