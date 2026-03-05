@@ -245,7 +245,7 @@ const EstimationFlowNodeCard = ({
             value={editingQuestion}
             onChange={(e) => setEditingQuestion(e.target.value)}
             onClick={(e) => e.stopPropagation()}
-            className="mt-2 w-full min-h-[68px] rounded-lg border border-black/12 bg-white/90 px-2.5 py-2 text-[11px] outline-none"
+            className="block mt-2 w-full min-h-[68px] rounded-lg border border-black/12 bg-white/90 px-2.5 py-2 text-[11px] outline-none"
             placeholder="Question (optional)"
           />
         ) : (
@@ -258,7 +258,7 @@ const EstimationFlowNodeCard = ({
 
         {node.kind === "const" &&
           (editing ? (
-            <div className="mt-2 flex items-center gap-1.5">
+            <div className="mt-[7px] flex items-center gap-1.5">
               <span className="text-[12px] font-[700] text-amber-700">$</span>
               <input
                 value={editingValue}
@@ -305,7 +305,7 @@ const EstimationFlowNodeCard = ({
           <div
             className={`overflow-hidden transition-all duration-200 ease-in-out ${
               selected || editing
-                ? "max-h-[230px] opacity-100 mt-[2px]"
+                ? "max-h-[230px] opacity-100 mt-[7px]"
                 : "max-h-0 opacity-0"
             }`}
           >
