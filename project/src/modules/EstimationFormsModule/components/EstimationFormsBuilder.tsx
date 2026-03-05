@@ -2,6 +2,7 @@
 "use client";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
+  pointerWithin,
   closestCorners,
   DndContext,
   DragEndEvent,
@@ -46,9 +47,11 @@ export const clickClass =
 const LaneDrop = ({
   formId,
   children,
+  paletteTargeted,
 }: {
   formId: string;
   children: ReactNode;
+  paletteTargeted?: boolean;
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id: `drop-form-${formId}` });
   const { setNodeRef: setTopRef } = useDroppable({ id: `drop-top-${formId}` });
@@ -56,15 +59,19 @@ const LaneDrop = ({
     id: `drop-bottom-${formId}`,
   });
 
+  const highlighted = isOver || !!paletteTargeted;
+
   return (
     <div
       ref={setNodeRef}
       className="rounded-2xl p-2 min-h-[140px] h-full relative overflow-y-auto"
       style={{
-        backgroundColor: isOver
+        backgroundColor: highlighted
           ? "rgba(219, 234, 254, 0.6)"
           : "rgba(255,255,255,0.6)",
-        boxShadow: isOver ? "0 0 0 1.5px rgba(37,99,235,0.45) inset" : "none",
+        boxShadow: highlighted
+          ? "0 0 0 1.5px rgba(37,99,235,0.45) inset"
+          : "none",
       }}
     >
       <div ref={setTopRef} className="absolute top-0 left-0 right-0 h-[22px]" />
@@ -78,13 +85,29 @@ const LaneDrop = ({
 };
 
 const BottomNoDropZone = () => {
-  const { setNodeRef } = useDroppable({ id: "drop-ignore-bottom" });
+  const { setNodeRef: setLeftRef } = useDroppable({
+    id: "drop-ignore-bottom-left",
+  });
+  const { setNodeRef: setRightRef } = useDroppable({
+    id: "drop-ignore-bottom-right",
+  });
   return (
-    <div
-      ref={setNodeRef}
-      className="absolute bottom-0 left-0 right-0 h-[140px] z-[35]"
-    />
+    <>
+      <div
+        ref={setLeftRef}
+        className="absolute bottom-0 left-0 h-[132px] w-[calc(50%-220px)] z-[35]"
+      />
+      <div
+        ref={setRightRef}
+        className="absolute bottom-0 right-0 h-[132px] w-[calc(50%-220px)] z-[35]"
+      />
+    </>
   );
+};
+
+const PaletteNoDropZone = ({ children }: { children: ReactNode }) => {
+  const { setNodeRef } = useDroppable({ id: "drop-ignore-palette" });
+  return <div ref={setNodeRef}>{children}</div>;
 };
 
 const getDestination = (overId: string, root: EstimationBuilderFormGraph) => {
@@ -109,6 +132,15 @@ const getDestination = (overId: string, root: EstimationBuilderFormGraph) => {
   if (index < 0) return { targetFormId: parentFormId };
   return { targetFormId: parentFormId, index };
 };
+
+const isBottomNoDropId = (id: string | null) =>
+  id === "drop-ignore-bottom-left" || id === "drop-ignore-bottom-right";
+
+const isIgnoreDropId = (id: string | null) =>
+  !!id &&
+  (id.startsWith("palette-") ||
+    id === "drop-ignore-palette" ||
+    isBottomNoDropId(id));
 
 export default function EstimationFormsBuilder() {
   const currentTheme = useCurrentTheme();
@@ -267,11 +299,7 @@ export default function EstimationFormsBuilder() {
     const overId = event.over ? String(event.over.id) : null;
 
     // Explicitly ignore drops on palette / bottom empty area.
-    if (
-      !overId ||
-      overId.startsWith("palette-") ||
-      overId === "drop-ignore-bottom"
-    ) {
+    if (!overId || isIgnoreDropId(overId)) {
       latestDropDestinationRef.current = null;
       return;
     }
@@ -314,7 +342,7 @@ export default function EstimationFormsBuilder() {
 
     const overId = String(event.over.id);
 
-    if (overId.startsWith("palette-") || overId === "drop-ignore-bottom") {
+    if (isIgnoreDropId(overId)) {
       latestDropDestinationRef.current = null;
       setPalettePreview(null);
       return;
@@ -342,7 +370,11 @@ export default function EstimationFormsBuilder() {
     <DndContext
       sensors={sensors}
       autoScroll={false}
-      collisionDetection={closestCorners}
+      collisionDetection={(args) => {
+        const pointerCollisions = pointerWithin(args);
+        if (pointerCollisions.length > 0) return pointerCollisions;
+        return closestCorners(args);
+      }}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
@@ -520,7 +552,12 @@ export default function EstimationFormsBuilder() {
 
                   {!collapsedNodeIds.includes(lane.formId) && (
                     <div className="flex-1 min-h-0">
-                      <LaneDrop formId={lane.formId}>
+                      <LaneDrop
+                        formId={lane.formId}
+                        paletteTargeted={
+                          palettePreview?.targetFormId === lane.formId
+                        }
+                      >
                       <SortableContext
                         items={lane.nodes.map((n) => n.id)}
                         strategy={verticalListSortingStrategy}
@@ -824,13 +861,15 @@ export default function EstimationFormsBuilder() {
       </div>
 
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[40]">
-        <div className="rounded-2xl border border-black/10 bg-white/94 backdrop-blur-md px-2 py-2 shadow-[0_18px_36px_rgba(15,23,42,0.14)]">
-          <div className="flex items-center gap-2">
-            <PaletteItem kind="form" />
-            <PaletteItem kind="choice" />
-            <PaletteItem kind="const" />
+        <PaletteNoDropZone>
+          <div className="rounded-2xl border border-black/10 bg-white/94 backdrop-blur-md px-2 py-2 shadow-[0_18px_36px_rgba(15,23,42,0.14)]">
+            <div className="flex items-center gap-2">
+              <PaletteItem kind="form" />
+              <PaletteItem kind="choice" />
+              <PaletteItem kind="const" />
+            </div>
           </div>
-        </div>
+        </PaletteNoDropZone>
       </div>
 
       <DragOverlay>
