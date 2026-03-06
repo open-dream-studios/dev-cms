@@ -111,6 +111,21 @@ export default function EstimationFormRunsRunner() {
     }
   }, [showResults]);
 
+  useEffect(() => {
+    if (!showResults || !selectedForm) return;
+    const next = new Set<string>();
+    const walk = (node: any) => {
+      if (node.id !== selectedForm.root.id) next.add(node.id);
+      if (node.kind === "form") {
+        node.children.forEach((child: any) => walk(child));
+      } else if (node.kind === "choice") {
+        node.cases.forEach((child: any) => walk(child));
+      }
+    };
+    walk(selectedForm.root);
+    setCollapsedNodeIds(next);
+  }, [showResults, selectedForm]);
+
   if (!selectedForm) {
     return (
       <div className="w-full h-full p-4">
@@ -275,6 +290,7 @@ export default function EstimationFormRunsRunner() {
     null,
     0,
   );
+  reportTreeRoot.label = "Total";
 
   const reportNodeById = (() => {
     const map = new Map<string, ReportTreeNode>();
@@ -357,13 +373,7 @@ export default function EstimationFormRunsRunner() {
       !allowedFocusNodeIds || allowedFocusNodeIds.has(node.id) ? 1 : 0.24;
 
     return (
-      <motion.div
-        key={node.id}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: activeOpacity, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.16 }}
-      >
+      <div key={node.id}>
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -372,6 +382,7 @@ export default function EstimationFormRunsRunner() {
           className={`relative rounded-xl border mb-1.5 px-3 py-2.5 ${clickClass}`}
           style={{
             marginLeft: node.depth * 13,
+            opacity: activeOpacity,
             background: focused
               ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(37,99,235,0.12))"
               : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.88))",
@@ -398,7 +409,7 @@ export default function EstimationFormRunsRunner() {
                   <ChevronDown size={12} />
                 )
               ) : (
-                <span className="w-[6px] h-[6px] rounded-full bg-black/30" />
+                <span className="w-[10px] h-[2px] rounded-full bg-black/35" />
               )}
             </button>
 
@@ -471,7 +482,7 @@ export default function EstimationFormRunsRunner() {
         {!collapsed && hasChildren && (
           <div>{node.children.map((child) => treeRow(child))}</div>
         )}
-      </motion.div>
+      </div>
     );
   };
 
@@ -748,20 +759,21 @@ export default function EstimationFormRunsRunner() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setCollapsedNodeIds(new Set());
+                          if (collapsedNodeIds.size > 0) {
+                            setCollapsedNodeIds(new Set());
+                            return;
+                          }
+                          const next = new Set<string>();
+                          const walk = (node: ReportTreeNode) => {
+                            if (node.id !== reportTreeRoot.id) next.add(node.id);
+                            node.children.forEach(walk);
+                          };
+                          walk(reportTreeRoot);
+                          setCollapsedNodeIds(next);
                         }}
                         className={`h-[30px] px-2.5 rounded-md bg-white border border-black/10 text-[11px] font-[700] ${clickClass}`}
                       >
-                        Expand All
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFocusedReportNodeId(null);
-                        }}
-                        className={`h-[30px] px-2.5 rounded-md bg-white border border-black/10 text-[11px] font-[700] ${clickClass}`}
-                      >
-                        Reset Focus
+                        {collapsedNodeIds.size > 0 ? "Expand All" : "Close All"}
                       </button>
                     </div>
                   </div>
