@@ -54,10 +54,52 @@ export default function EstimationFormRunsRunner() {
     );
   }
 
-  const currentSectionName =
-    activeFormNode?.id === selectedForm.root.id
-      ? selectedForm.name
-      : activeFormNode?.name || selectedForm.name;
+  const getParentChoiceNameForCaseForm = (
+    root: typeof selectedForm.root,
+    caseFormId: string
+  ): string | null => {
+    let found: string | null = null;
+
+    const walk = (node: typeof root) => {
+      if (found) return;
+      for (const child of node.children) {
+        if (child.kind === "choice") {
+          if (child.cases.some((c) => c.id === caseFormId)) {
+            found = child.name || null;
+            return;
+          }
+          for (const option of child.cases) {
+            walk(option);
+            if (found) return;
+          }
+        }
+        if (child.kind === "form") {
+          walk(child);
+          if (found) return;
+        }
+      }
+    };
+
+    walk(root);
+    return found;
+  };
+
+  const currentSectionName = (() => {
+    if (!activeFormNode) return selectedForm.name;
+    if (activeFormNode.id === selectedForm.root.id) return selectedForm.name;
+
+    const rawName = (activeFormNode.name || "").trim();
+    const lower = rawName.toLowerCase();
+    if (lower === "yes" || lower === "no") {
+      const parentChoiceName = getParentChoiceNameForCaseForm(
+        selectedForm.root,
+        activeFormNode.id
+      );
+      if (parentChoiceName) return `${parentChoiceName} - ${rawName}`;
+    }
+
+    return rawName || selectedForm.name;
+  })();
   const canGoBack =
     !!activeFormNode && activeFormNode.id !== selectedForm.root.id;
 
