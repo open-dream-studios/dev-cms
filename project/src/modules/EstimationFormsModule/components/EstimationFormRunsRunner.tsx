@@ -7,12 +7,10 @@ import {
   CheckCircle2,
   ChevronRight,
   Circle,
-  CircleDashed,
   CircleDollarSign,
   Eye,
   FolderTree,
   GitBranchPlus,
-  Layers3,
   Play,
   Route,
   XCircle,
@@ -77,6 +75,18 @@ export default function EstimationFormRunsRunner() {
     };
     return walk(formNode);
   };
+
+  const hasNonConstChildren = (
+    formNode:
+      | ((typeof selectedForm.root)["children"][number] & { kind: "form" })
+      | typeof selectedForm.root
+  ) => formNode.children.some((child) => child.kind !== "const");
+
+  const isConstOnlyForm = (
+    formNode:
+      | ((typeof selectedForm.root)["children"][number] & { kind: "form" })
+      | typeof selectedForm.root
+  ) => formNode.children.length > 0 && formNode.children.every((child) => child.kind === "const");
 
   const getRouteCompletion = (formNode: (typeof selectedForm.root)["children"][number] & { kind: "form" } | typeof selectedForm.root) => {
     let total = 0;
@@ -324,7 +334,7 @@ export default function EstimationFormRunsRunner() {
                           <XCircle size={13} />
                         )}
                         {completionForActiveForm.answeredChoices}/
-                        {completionForActiveForm.totalChoices || 0} routed
+                        {completionForActiveForm.totalChoices || 0} Complete
                       </div>
                     </div>
                   </div>
@@ -334,11 +344,14 @@ export default function EstimationFormRunsRunner() {
                   <AnimatePresence initial={false} mode="popLayout">
                     {(activeFormNode?.children || []).map((child) => {
                     if (child.kind === "form") {
+                      const constOnly = isConstOnlyForm(child);
+                      const clickable = hasNonConstChildren(child);
                       const route = getRouteCompletion(child);
                       return (
                         <motion.button
                           key={child.id}
-                          onClick={() => onNavigateToFormNode(child.id)}
+                          onClick={() => clickable && onNavigateToFormNode(child.id)}
+                          disabled={!clickable}
                           className={`w-full rounded-xl border border-black/8 bg-white/92 px-3 py-2.5 text-left flex items-center justify-between ${clickClass}`}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -351,6 +364,8 @@ export default function EstimationFormRunsRunner() {
                             boxShadow: route.complete
                               ? "0 8px 18px rgba(34,197,94,0.13)"
                               : "0 8px 18px rgba(239,68,68,0.09)",
+                            opacity: constOnly ? 0.62 : 1,
+                            cursor: clickable ? "pointer" : "default",
                           }}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -370,11 +385,13 @@ export default function EstimationFormRunsRunner() {
                             <div className="min-w-0">
                             <p className="text-[12.5px] font-[700] leading-tight">{child.name}</p>
                               <p className="text-[10px] opacity-58 mt-[3px]">
-                                {route.answered}/{route.total} choices completed
+                                {constOnly
+                                  ? "CONSTANT"
+                                  : `${route.answered}/${route.total} choices completed`}
                               </p>
                             </div>
                           </div>
-                          <ChevronRight size={14} className="opacity-55" />
+                          {!constOnly && <ChevronRight size={14} className="opacity-55" />}
                         </motion.button>
                       );
                     }
@@ -432,10 +449,11 @@ export default function EstimationFormRunsRunner() {
                             {selectedOption && canNavigateIntoSelected && (
                               <button
                                 onClick={() => onNavigateToFormNode(selectedOption.id)}
-                                className={`h-[29px] w-[29px] rounded-md border bg-white/95 flex items-center justify-center ${clickClass}`}
+                                className={`h-[30px] px-2.5 rounded-md border bg-white/95 flex items-center justify-center gap-1 text-[10.5px] font-[700] ${clickClass}`}
                                 style={{ borderColor: "rgba(15,23,42,0.12)" }}
                                 title="Open selected option details"
                               >
+                                Continue
                                 <ChevronRight size={13} />
                               </button>
                             )}
@@ -468,30 +486,15 @@ export default function EstimationFormRunsRunner() {
                       );
                     }
 
-                    return (
-                      <motion.div
-                        key={child.id}
-                        className="rounded-xl border border-black/8 bg-white/70 px-3 py-2.5 opacity-[0.62] flex items-center justify-between"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 0.62, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Layers3 size={13} />
-                          <div>
-                            <p className="text-[12px] font-[700]">{child.name || "Line Item"}</p>
-                            <p className="text-[10px] mt-[3px]">Leaf Item</p>
-                          </div>
-                        </div>
-                        <CircleDashed size={13} />
-                      </motion.div>
-                    );
+                    return null;
                   })}
                   </AnimatePresence>
 
-                  {!activeFormNode?.children?.length && (
+                  {!activeFormNode?.children?.some((child) => child.kind !== "const") && (
                     <div className="rounded-xl border border-black/8 bg-white/86 px-3 py-3 text-[11px] opacity-70">
-                      This section has no children.
+                      {activeFormNode?.children?.length
+                        ? "This section is CONSTANT."
+                        : "This section has no children."}
                     </div>
                   )}
                 </div>

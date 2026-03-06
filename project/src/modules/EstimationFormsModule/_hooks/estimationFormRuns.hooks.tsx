@@ -140,7 +140,15 @@ export function useEstimationFormRunsModule() {
     });
 
     setSelectedCasesForForm(selectedForm.id, next);
-    setActiveFormNodeId(caseFormId);
+
+    const selectedOption = findFormNodeById(selectedForm.root, caseFormId);
+    const hasNonConstChildren = !!selectedOption?.children?.some(
+      (child) => child.kind !== "const"
+    );
+    if (hasNonConstChildren) {
+      setActiveFormNodeId(caseFormId);
+    }
+
     setShowResults(false);
   };
 
