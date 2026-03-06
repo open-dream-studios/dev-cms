@@ -166,6 +166,12 @@ const EstimationFlowNodeCard = ({
       setEditingValue(String(node.value));
     }
   };
+  const choiceNode = node.kind === "choice" ? (node as EstimationBuilderChoiceNode) : null;
+  const showYesNoQuickSet =
+    !!choiceNode &&
+    choiceNode.cases.length === 2 &&
+    choiceNode.cases[0]?.name?.trim() === "Option 1" &&
+    choiceNode.cases[1]?.name?.trim() === "Option 2";
 
   return (
     <div
@@ -370,17 +376,33 @@ const EstimationFlowNodeCard = ({
                 <p className="text-[10px] font-[700] uppercase tracking-wide opacity-65">
                   Options
                 </p>
-                <button
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onAddChoiceCase();
-                  }}
-                  className={`h-6 px-2 rounded-md bg-white/90 border border-slate-200  text-slate-700 text-[10px] font-[700] flex items-center gap-1 ${clickClass}`}
-                >
-                  <Plus size={11} />
-                  Add
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {showYesNoQuickSet && (
+                    <button
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!choiceNode) return;
+                        onUpdateChoiceCaseName(choiceNode.cases[0].id, "Yes");
+                        onUpdateChoiceCaseName(choiceNode.cases[1].id, "No");
+                      }}
+                      className={`h-6 px-2 rounded-md bg-white/90 border border-slate-200  text-slate-700 text-[10px] font-[700] flex items-center gap-1 ${clickClass}`}
+                    >
+                      Yes / No
+                    </button>
+                  )}
+                  <button
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onAddChoiceCase();
+                    }}
+                    className={`h-6 px-2 rounded-md bg-white/90 border border-slate-200  text-slate-700 text-[10px] font-[700] flex items-center gap-1 ${clickClass}`}
+                  >
+                    <Plus size={11} />
+                    Add
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-1.5">

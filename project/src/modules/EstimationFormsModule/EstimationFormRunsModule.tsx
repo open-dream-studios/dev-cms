@@ -24,7 +24,7 @@ const EstimationFormRunsModule = () => {
       fixedLeft={false}
     >
       <div
-        className="w-full h-full pl-[5px] pr-[3px] overflow-hidden"
+        className="w-full h-full overflow-hidden"
         style={{
           background: `linear-gradient(180deg, ${currentTheme.background_1} 0%, ${currentTheme.background_1_2} 100%)`,
         }}

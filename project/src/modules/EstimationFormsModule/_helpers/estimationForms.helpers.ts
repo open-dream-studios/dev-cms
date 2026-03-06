@@ -60,7 +60,7 @@ export const createChoiceNode = (
   kind: "choice",
   name,
   question: "",
-  cases: [createFormNode("Option A"), createFormNode("Option B")],
+  cases: [createFormNode("Option 1"), createFormNode("Option 2")],
 });
 
 export const createConstNode = (

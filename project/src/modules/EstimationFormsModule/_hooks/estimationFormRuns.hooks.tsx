@@ -157,6 +157,12 @@ export function useEstimationFormRunsModule() {
     setShowResults(true);
   };
 
+  const onResetCurrentRun = () => {
+    if (!selectedForm) return;
+    setSelectedCasesForForm(selectedForm.id, {});
+    resetRunViewForForm(selectedForm.id, selectedForm.root.id);
+  };
+
   const completionForActiveForm = useMemo(() => {
     if (!activeFormNode) return { complete: false, totalChoices: 0, answeredChoices: 0 };
     return getFormSubtreeCompletion(activeFormNode, selectedCaseByChoiceId);
@@ -190,6 +196,7 @@ export function useEstimationFormRunsModule() {
     onNavigateUp,
     onChooseCase,
     onRunEstimation,
+    onResetCurrentRun,
 
     formatMoney,
   };

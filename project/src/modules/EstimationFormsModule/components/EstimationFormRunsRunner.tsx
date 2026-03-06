@@ -12,6 +12,7 @@ import {
   FolderTree,
   GitBranchPlus,
   Play,
+  RotateCcw,
   Route,
   XCircle,
 } from "lucide-react";
@@ -39,6 +40,7 @@ export default function EstimationFormRunsRunner() {
     onNavigateUp,
     onChooseCase,
     onRunEstimation,
+    onResetCurrentRun,
     formatMoney,
   } = useEstimationFormRunsModule();
 
@@ -56,9 +58,14 @@ export default function EstimationFormRunsRunner() {
     activeFormNode?.id === selectedForm.root.id
       ? selectedForm.name
       : activeFormNode?.name || selectedForm.name;
-  const canGoBack = !!activeFormNode && activeFormNode.id !== selectedForm.root.id;
+  const canGoBack =
+    !!activeFormNode && activeFormNode.id !== selectedForm.root.id;
 
-  const hasInteractiveRoute = (formNode: (typeof selectedForm.root)["children"][number] & { kind: "form" } | typeof selectedForm.root) => {
+  const hasInteractiveRoute = (
+    formNode:
+      | ((typeof selectedForm.root)["children"][number] & { kind: "form" })
+      | typeof selectedForm.root,
+  ) => {
     const walk = (node: typeof formNode): boolean => {
       for (const child of node.children) {
         if (child.kind === "choice" || child.kind === "form") return true;
@@ -79,16 +86,22 @@ export default function EstimationFormRunsRunner() {
   const hasNonConstChildren = (
     formNode:
       | ((typeof selectedForm.root)["children"][number] & { kind: "form" })
-      | typeof selectedForm.root
+      | typeof selectedForm.root,
   ) => formNode.children.some((child) => child.kind !== "const");
 
   const isConstOnlyForm = (
     formNode:
       | ((typeof selectedForm.root)["children"][number] & { kind: "form" })
-      | typeof selectedForm.root
-  ) => formNode.children.length > 0 && formNode.children.every((child) => child.kind === "const");
+      | typeof selectedForm.root,
+  ) =>
+    formNode.children.length > 0 &&
+    formNode.children.every((child) => child.kind === "const");
 
-  const getRouteCompletion = (formNode: (typeof selectedForm.root)["children"][number] & { kind: "form" } | typeof selectedForm.root) => {
+  const getRouteCompletion = (
+    formNode:
+      | ((typeof selectedForm.root)["children"][number] & { kind: "form" })
+      | typeof selectedForm.root,
+  ) => {
     let total = 0;
     let answered = 0;
     const walk = (node: typeof formNode) => {
@@ -108,11 +121,15 @@ export default function EstimationFormRunsRunner() {
       }
     };
     walk(formNode);
-    return { total, answered, complete: total === 0 ? true : total === answered };
+    return {
+      total,
+      answered,
+      complete: total === 0 ? true : total === answered,
+    };
   };
 
   return (
-    <div className="w-full h-full px-2.5 py-2.5 overflow-hidden">
+    <div className="w-full h-full pl-[12px] pr-[10px] py-2.5 overflow-hidden ">
       <div
         className="w-full h-full rounded-[20px] border border-black/5 overflow-hidden"
         style={{
@@ -145,12 +162,27 @@ export default function EstimationFormRunsRunner() {
               {runComplete ? "Complete" : "Incomplete"}
             </div>
 
+            <button
+              onClick={onResetCurrentRun}
+              className={`h-[36px] px-3.5 rounded-lg text-[12px] font-[700] flex items-center gap-1.5 ${clickClass}`}
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(241,245,249,0.96) 0%, rgba(226,232,240,0.96) 100%)",
+                color: "#334155",
+                border: "1px solid rgba(148,163,184,0.38)",
+              }}
+            >
+              <RotateCcw size={13} />
+              Reset
+            </button>
+
             {runComplete && (
               <button
                 onClick={onRunEstimation}
                 className={`h-[36px] px-3.5 rounded-lg text-[12px] font-[700] flex items-center gap-1.5 ${clickClass}`}
                 style={{
-                  background: "linear-gradient(135deg, #0284C7 0%, #2563EB 100%)",
+                  background:
+                    "linear-gradient(135deg, #0284C7 0%, #2563EB 100%)",
                   color: "white",
                 }}
               >
@@ -162,131 +194,147 @@ export default function EstimationFormRunsRunner() {
         </div>
 
         <div className="h-[calc(100%-62px)] p-3 overflow-y-auto">
-            {showResults && runResult ? (
-              <div className="space-y-3">
-                <div className="rounded-2xl border border-black/7 bg-white/80 p-4">
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <div className="text-[11px] uppercase tracking-[0.08em] opacity-55 font-[700]">
-                        Estimation Result
-                      </div>
-                      <div className="text-[29px] font-[700] leading-[31px] mt-[2px]">
-                        {formatMoney(runResult.final_total)}
-                      </div>
-                      <div className="text-[12px] opacity-60 mt-[2px]">
-                        Base {formatMoney(runResult.base_total)}
-                      </div>
+          {showResults && runResult ? (
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-black/7 bg-white/80 p-4">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.08em] opacity-55 font-[700]">
+                      Estimation Result
                     </div>
-
-                    <button
-                      onClick={() => setShowResults(false)}
-                      className={`h-[34px] px-3 rounded-lg text-[12px] font-[700] bg-white/90 border border-black/8 flex items-center gap-1.5 ${clickClass}`}
-                    >
-                      <Eye size={12} />
-                      Back To Form
-                    </button>
+                    <div className="text-[29px] font-[700] leading-[31px] mt-[2px]">
+                      {formatMoney(runResult.final_total)}
+                    </div>
+                    <div className="text-[12px] opacity-60 mt-[2px]">
+                      Base {formatMoney(runResult.base_total)}
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mt-3">
-                    <label className="rounded-xl border border-black/8 bg-white/90 p-2.5">
-                      <p className="text-[10px] opacity-60 uppercase tracking-wide">Flat Adjustment</p>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <CircleDollarSign size={14} className="opacity-60" />
-                        <input
-                          value={flatAdjustment}
-                          onChange={(e) => setFlatAdjustment(Number(e.target.value) || 0)}
-                          type="number"
-                          className="bg-transparent outline-none text-[13px] font-[700] w-full"
-                        />
-                      </div>
-                    </label>
-
-                    <label className="rounded-xl border border-black/8 bg-white/90 p-2.5">
-                      <p className="text-[10px] opacity-60 uppercase tracking-wide">Percent Adjustment</p>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <GitBranchPlus size={14} className="opacity-60" />
-                        <input
-                          value={percentAdjustment}
-                          onChange={(e) => setPercentAdjustment(Number(e.target.value) || 0)}
-                          type="number"
-                          className="bg-transparent outline-none text-[13px] font-[700] w-full"
-                        />
-                        <span className="text-[11px] opacity-65">%</span>
-                      </div>
-                    </label>
-                  </div>
+                  <button
+                    onClick={() => setShowResults(false)}
+                    className={`h-[34px] px-3 rounded-lg text-[12px] font-[700] bg-white/90 border border-black/8 flex items-center gap-1.5 ${clickClass}`}
+                  >
+                    <Eye size={12} />
+                    Back To Form
+                  </button>
                 </div>
 
-                <div className="rounded-2xl border border-black/7 bg-white/80 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.08em] opacity-55 font-[700] mb-3">
-                    Section Totals
-                  </div>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <label className="rounded-xl border border-black/8 bg-white/90 p-2.5">
+                    <p className="text-[10px] opacity-60 uppercase tracking-wide">
+                      Flat Adjustment
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <CircleDollarSign size={14} className="opacity-60" />
+                      <input
+                        value={flatAdjustment}
+                        onChange={(e) =>
+                          setFlatAdjustment(Number(e.target.value) || 0)
+                        }
+                        type="number"
+                        className="bg-transparent outline-none text-[13px] font-[700] w-full"
+                      />
+                    </div>
+                  </label>
 
-                  <div className="space-y-2.5">
-                    {runResult.sections
-                      .slice()
-                      .sort((a, b) => a.depth - b.depth)
-                      .map((section) => {
-                        const pct =
-                          runResult.base_total > 0
-                            ? Math.min(100, (section.subtotal / runResult.base_total) * 100)
-                            : 0;
-                        return (
-                          <div
-                            key={section.form_id}
-                            className="rounded-xl border border-black/8 bg-white/90 p-3"
-                            style={{ marginLeft: section.depth * 10 }}
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-[13px] font-[700] truncate">{section.label}</p>
-                              <p className="text-[12px] font-[700]">{formatMoney(section.subtotal)}</p>
-                            </div>
-                            <div className="mt-2 h-[6px] rounded-full bg-black/8 overflow-hidden">
-                              <div
-                                className="h-full rounded-full"
-                                style={{
-                                  width: `${pct}%`,
-                                  background:
-                                    "linear-gradient(90deg, rgba(14,165,233,0.9), rgba(37,99,235,0.85))",
-                                }}
-                              />
-                            </div>
-                            {!!section.line_items.length && (
-                              <div className="mt-2.5 space-y-1">
-                                {section.line_items.map((line) => (
-                                  <div
-                                    key={line.id}
-                                    className="flex items-center justify-between text-[11px] opacity-75"
-                                  >
-                                    <span>{line.label}</span>
-                                    <span>{formatMoney(line.value)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
+                  <label className="rounded-xl border border-black/8 bg-white/90 p-2.5">
+                    <p className="text-[10px] opacity-60 uppercase tracking-wide">
+                      Percent Adjustment
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <GitBranchPlus size={14} className="opacity-60" />
+                      <input
+                        value={percentAdjustment}
+                        onChange={(e) =>
+                          setPercentAdjustment(Number(e.target.value) || 0)
+                        }
+                        type="number"
+                        className="bg-transparent outline-none text-[13px] font-[700] w-full"
+                      />
+                      <span className="text-[11px] opacity-65">%</span>
+                    </div>
+                  </label>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-3 pb-4">
-                <div
-                  className="rounded-2xl border p-3.5"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(255,255,255,0.92), rgba(240,249,255,0.88))",
-                    borderColor: runComplete
-                      ? "rgba(34,197,94,0.32)"
-                      : "rgba(239,68,68,0.26)",
-                    boxShadow: runComplete
-                      ? "0 10px 24px rgba(34,197,94,0.14)"
-                      : "0 10px 24px rgba(239,68,68,0.10)",
-                  }}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex items-center gap-2.5">
+
+              <div className="rounded-2xl border border-black/7 bg-white/80 p-4">
+                <div className="text-[11px] uppercase tracking-[0.08em] opacity-55 font-[700] mb-3">
+                  Section Totals
+                </div>
+
+                <div className="space-y-2.5">
+                  {runResult.sections
+                    .slice()
+                    .sort((a, b) => a.depth - b.depth)
+                    .map((section) => {
+                      const pct =
+                        runResult.base_total > 0
+                          ? Math.min(
+                              100,
+                              (section.subtotal / runResult.base_total) * 100,
+                            )
+                          : 0;
+                      return (
+                        <div
+                          key={section.form_id}
+                          className="rounded-xl border border-black/8 bg-white/90 p-3"
+                          style={{ marginLeft: section.depth * 10 }}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[13px] font-[700] truncate">
+                              {section.label}
+                            </p>
+                            <p className="text-[12px] font-[700]">
+                              {formatMoney(section.subtotal)}
+                            </p>
+                          </div>
+                          <div className="mt-2 h-[6px] rounded-full bg-black/8 overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${pct}%`,
+                                background:
+                                  "linear-gradient(90deg, rgba(14,165,233,0.9), rgba(37,99,235,0.85))",
+                              }}
+                            />
+                          </div>
+                          {!!section.line_items.length && (
+                            <div className="mt-2.5 space-y-1">
+                              {section.line_items.map((line) => (
+                                <div
+                                  key={line.id}
+                                  className="flex items-center justify-between text-[11px] opacity-75"
+                                >
+                                  <span>{line.label}</span>
+                                  <span>{formatMoney(line.value)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 pb-4">
+              <div
+                className="rounded-2xl border p-3.5 bg-white"
+                style={{
+                  // background:
+                  //   "linear-gradient(135deg, rgba(255,255,255,0.92), rgba(240,249,255,0.88))",
+                  // borderColor: runComplete
+                  //   ? "rgba(34,197,94,0.32)"
+                  //   : "rgba(239,68,68,0.26)",
+                  // boxShadow: runComplete
+                  //   ? "0 10px 24px rgba(34,197,94,0.14)"
+                  //   : "0 10px 24px rgba(239,68,68,0.10)",
+                }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex items-center gap-2.5">
+                    {canGoBack && (
                       <button
                         onClick={onNavigateUp}
                         disabled={!canGoBack}
@@ -298,51 +346,54 @@ export default function EstimationFormRunsRunner() {
                           borderColor: canGoBack
                             ? "rgba(14,165,233,0.28)"
                             : "rgba(148,163,184,0.28)",
-                          color: canGoBack ? "#0369A1" : "rgba(100,116,139,0.7)",
+                          color: canGoBack
+                            ? "#0369A1"
+                            : "rgba(100,116,139,0.7)",
                           cursor: canGoBack ? "pointer" : "not-allowed",
                         }}
                       >
                         <ArrowLeft size={15} />
                         Back
                       </button>
+                    )}
 
-                      <div className="min-w-0">
-                        <p className="text-[11px] uppercase tracking-[0.08em] font-[700] opacity-55">
-                          Current Section
-                        </p>
-                        <p className="text-[20px] font-[800] leading-[22px] truncate">
-                          {currentSectionName}
-                        </p>
-                      </div>
+                    <div className={`min-w-0 ${canGoBack ? "ml-[2px]" : "ml-[5px]"}`}>
+                      <p className="text-[11px] uppercase tracking-[0.08em] font-[700] opacity-55">
+                        Current Section
+                      </p>
+                      <p className="text-[20px] font-[800] leading-[22px] truncate">
+                        {currentSectionName}
+                      </p>
                     </div>
+                  </div>
 
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-[34px] px-3 rounded-lg text-[11px] font-[700] flex items-center gap-1.5"
-                        style={{
-                          backgroundColor: completionForActiveForm.complete
-                            ? "rgba(6,155,90,0.14)"
-                            : "rgba(239,68,68,0.13)",
-                          color: completionForActiveForm.complete
-                            ? "rgb(6,155,90)"
-                            : "rgb(185,28,28)",
-                        }}
-                      >
-                        {completionForActiveForm.complete ? (
-                          <CheckCircle2 size={13} />
-                        ) : (
-                          <XCircle size={13} />
-                        )}
-                        {completionForActiveForm.answeredChoices}/
-                        {completionForActiveForm.totalChoices || 0} Complete
-                      </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-[34px] px-3 rounded-lg text-[11px] font-[700] flex items-center gap-1.5"
+                      style={{
+                        backgroundColor: completionForActiveForm.complete
+                          ? "rgba(6,155,90,0.14)"
+                          : "rgba(239,68,68,0.13)",
+                        color: completionForActiveForm.complete
+                          ? "rgb(6,155,90)"
+                          : "rgb(185,28,28)",
+                      }}
+                    >
+                      {completionForActiveForm.complete ? (
+                        <CheckCircle2 size={13} />
+                      ) : (
+                        <XCircle size={13} />
+                      )}
+                      {completionForActiveForm.answeredChoices}/
+                      {completionForActiveForm.totalChoices || 0} Complete
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-2.5">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {(activeFormNode?.children || []).map((child) => {
+              <div className="space-y-2.5">
+                <AnimatePresence initial={false} mode="popLayout">
+                  {(activeFormNode?.children || []).map((child) => {
                     if (child.kind === "form") {
                       const constOnly = isConstOnlyForm(child);
                       const clickable = hasNonConstChildren(child);
@@ -350,7 +401,9 @@ export default function EstimationFormRunsRunner() {
                       return (
                         <motion.button
                           key={child.id}
-                          onClick={() => clickable && onNavigateToFormNode(child.id)}
+                          onClick={() =>
+                            clickable && onNavigateToFormNode(child.id)
+                          }
                           disabled={!clickable}
                           className={`w-full rounded-xl border border-black/8 bg-white/92 px-3 py-2.5 text-left flex items-center justify-between ${clickClass}`}
                           initial={{ opacity: 0, y: 10 }}
@@ -383,7 +436,9 @@ export default function EstimationFormRunsRunner() {
                               <FolderTree size={14} />
                             </div>
                             <div className="min-w-0">
-                            <p className="text-[12.5px] font-[700] leading-tight">{child.name}</p>
+                              <p className="text-[12.5px] font-[700] leading-tight">
+                                {child.name}
+                              </p>
                               <p className="text-[10px] opacity-58 mt-[3px]">
                                 {constOnly
                                   ? "CONSTANT"
@@ -391,19 +446,24 @@ export default function EstimationFormRunsRunner() {
                               </p>
                             </div>
                           </div>
-                          {!constOnly && <ChevronRight size={14} className="opacity-55" />}
+                          {!constOnly && (
+                            <ChevronRight size={14} className="opacity-55" />
+                          )}
                         </motion.button>
                       );
                     }
 
                     if (child.kind === "choice") {
                       const selectedCaseId = selectedCaseByChoiceId[child.id];
-                      const selectedOption = child.cases.find((c) => c.id === selectedCaseId);
+                      const selectedOption = child.cases.find(
+                        (c) => c.id === selectedCaseId,
+                      );
                       const selectedCompletion = selectedOption
                         ? getRouteCompletion(selectedOption)
                         : null;
                       const needsAttention =
-                        !selectedOption || (selectedCompletion && !selectedCompletion.complete);
+                        !selectedOption ||
+                        (selectedCompletion && !selectedCompletion.complete);
                       const canNavigateIntoSelected =
                         !!selectedOption && hasInteractiveRoute(selectedOption);
                       return (
@@ -442,13 +502,19 @@ export default function EstimationFormRunsRunner() {
                                 <Route size={14} />
                               </div>
                               <div className="min-w-0">
-                              <p className="text-[12.5px] font-[700] leading-tight">{child.name}</p>
-                              <p className="text-[10px] opacity-58 mt-[3px]">Choose one option</p>
+                                <p className="text-[12.5px] font-[700] leading-tight">
+                                  {child.name}
+                                </p>
+                                <p className="text-[10px] opacity-58 mt-[3px]">
+                                  Choose one option
+                                </p>
                               </div>
                             </div>
                             {selectedOption && canNavigateIntoSelected && (
                               <button
-                                onClick={() => onNavigateToFormNode(selectedOption.id)}
+                                onClick={() =>
+                                  onNavigateToFormNode(selectedOption.id)
+                                }
                                 className={`h-[30px] px-2.5 rounded-md border bg-white/95 flex items-center justify-center gap-1 text-[10.5px] font-[700] ${clickClass}`}
                                 style={{ borderColor: "rgba(15,23,42,0.12)" }}
                                 title="Open selected option details"
@@ -465,7 +531,9 @@ export default function EstimationFormRunsRunner() {
                               return (
                                 <button
                                   key={option.id}
-                                  onClick={() => onChooseCase(child.id, option.id)}
+                                  onClick={() =>
+                                    onChooseCase(child.id, option.id)
+                                  }
                                   className={`h-[29px] px-2.5 rounded-md border text-[11px] font-[700] ${clickClass}`}
                                   style={{
                                     backgroundColor: selected
@@ -488,18 +556,20 @@ export default function EstimationFormRunsRunner() {
 
                     return null;
                   })}
-                  </AnimatePresence>
+                </AnimatePresence>
 
-                  {!activeFormNode?.children?.some((child) => child.kind !== "const") && (
-                    <div className="rounded-xl border border-black/8 bg-white/86 px-3 py-3 text-[11px] opacity-70">
-                      {activeFormNode?.children?.length
-                        ? "This section is CONSTANT."
-                        : "This section has no children."}
-                    </div>
-                  )}
-                </div>
+                {!activeFormNode?.children?.some(
+                  (child) => child.kind !== "const",
+                ) && (
+                  <div className="rounded-xl border border-black/8 bg-white/86 px-3 py-3 text-[11px] opacity-70">
+                    {activeFormNode?.children?.length
+                      ? "This section is CONSTANT."
+                      : "This section has no children."}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
     </div>
