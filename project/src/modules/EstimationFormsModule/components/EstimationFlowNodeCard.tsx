@@ -365,10 +365,13 @@ const EstimationFlowNodeCard = ({
                 />
               </div>
               <div
-                className="cursor-pointer hover:opacity-80 dim-opacity mb-[3.8px] relative h-[24px] rounded-full pl-[8px] pr-[20px] flex items-center"
+                className="hover:opacity-80 dim-opacity relative h-[24px] rounded-full pl-[8px] pr-[20px] flex items-center mb-[2.85px]"
                 style={{
                   backgroundColor: BUCKET_BG_COLORS[constBucket],
                   color: BUCKET_COLORS[constBucket],
+                  opacity: node.value === 0 ? 0.4 : 1,
+                  pointerEvents: node.value === 0 ? "none" : "all",
+                  cursor: node.value === 0 ? "auto" : "pointer",
                 }}
               >
                 <select
@@ -405,10 +408,13 @@ const EstimationFlowNodeCard = ({
                 })()}
               </p>
               <div
-                className="cursor-pointer hover:opacity-80 dim-opacity relative h-[24px] rounded-full pl-[8px] pr-[20px] flex items-center"
+                className="hover:opacity-80 dim-opacity relative h-[24px] rounded-full pl-[8px] pr-[20px] flex items-center"
                 style={{
                   backgroundColor: BUCKET_BG_COLORS[constBucket],
                   color: BUCKET_COLORS[constBucket],
+                  opacity: node.value === 0 ? 0.4 : 1,
+                  pointerEvents: node.value === 0 ? "none" : "all",
+                  cursor: node.value === 0 ? "auto" : "pointer",
                 }}
               >
                 <select
