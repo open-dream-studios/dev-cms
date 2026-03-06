@@ -17,7 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -71,7 +71,8 @@ const bucketLabel: Record<EstimationCostBucket, string> = {
   misc: "Misc",
 };
 
-const money = (value: number) => `$${Math.round(value).toLocaleString("en-US")}`;
+const money = (value: number) =>
+  `$${Math.round(value).toLocaleString("en-US")}`;
 
 export default function EstimationFormRunsRunner() {
   const {
@@ -94,8 +95,21 @@ export default function EstimationFormRunsRunner() {
   } = useEstimationFormRunsModule();
 
   const [variancePct, setVariancePct] = useState(15);
-  const [focusedReportNodeId, setFocusedReportNodeId] = useState<string | null>(null);
-  const [collapsedNodeIds, setCollapsedNodeIds] = useState<Set<string>>(new Set());
+  const [focusedReportNodeId, setFocusedReportNodeId] = useState<string | null>(
+    null,
+  );
+  const [collapsedNodeIds, setCollapsedNodeIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [flatAdjustmentInput, setFlatAdjustmentInput] = useState("0");
+  const [percentAdjustmentInput, setPercentAdjustmentInput] = useState("0");
+
+  useEffect(() => {
+    if (showResults) {
+      setFlatAdjustmentInput(String(flatAdjustment));
+      setPercentAdjustmentInput(String(percentAdjustment));
+    }
+  }, [showResults]);
 
   if (!selectedForm) {
     return (
@@ -135,7 +149,8 @@ export default function EstimationFormRunsRunner() {
     return rawName || selectedForm.name;
   })();
 
-  const canGoBack = !!activeFormNode && activeFormNode.id !== selectedForm.root.id;
+  const canGoBack =
+    !!activeFormNode && activeFormNode.id !== selectedForm.root.id;
 
   const hasInteractiveRoute = (formNode: any) => {
     const walk = (node: any): boolean => {
@@ -182,58 +197,41 @@ export default function EstimationFormRunsRunner() {
       }
     };
     walk(formNode);
-    return { total, answered, complete: total === 0 ? true : total === answered };
+    return {
+      total,
+      answered,
+      complete: total === 0 ? true : total === answered,
+    };
   };
 
   const buildNode = (
     node: EstimationBuilderNode,
     parentId: string | null,
-    depth: number
+    depth: number,
   ): ReportTreeNode => {
-      if (node.kind === "const") {
-        const bucket = (node.bucket || "misc") as EstimationCostBucket;
-        const totals = emptyTotals();
-        totals[bucket] = node.value;
-        totals.total = node.value;
-        return {
-          id: node.id,
-          label: node.name?.trim() || "Line Item",
-          type: "const",
-          bucketTotals: totals,
-          children: [],
-          parentId,
-          depth,
-          meta: bucketLabel[bucket],
-        };
-      }
+    if (node.kind === "const") {
+      const bucket = (node.bucket || "misc") as EstimationCostBucket;
+      const totals = emptyTotals();
+      totals[bucket] = node.value;
+      totals.total = node.value;
+      return {
+        id: node.id,
+        label: node.name?.trim() || "Line Item",
+        type: "const",
+        bucketTotals: totals,
+        children: [],
+        parentId,
+        depth,
+        meta: bucketLabel[bucket],
+      };
+    }
 
-      if (node.kind === "choice") {
-        const selectedCaseId = selectedCaseByChoiceId[node.id];
-        const selectedCase = node.cases.find((c) => c.id === selectedCaseId);
-        const childNodes = selectedCase
-          ? [buildNode(selectedCase as EstimationBuilderNode, node.id, depth + 1)]
-          : [];
-
-        let totals = emptyTotals();
-        childNodes.forEach((child) => {
-          totals = addTotals(totals, child.bucketTotals);
-        });
-
-        return {
-          id: node.id,
-          label: node.name || "Choice",
-          type: "choice",
-          bucketTotals: totals,
-          children: childNodes,
-          parentId,
-          depth,
-          meta: selectedCase ? `Selected: ${selectedCase.name}` : "No selection",
-        };
-      }
-
-      const childNodes = node.children.map((child) =>
-        buildNode(child as EstimationBuilderNode, node.id, depth + 1)
-      );
+    if (node.kind === "choice") {
+      const selectedCaseId = selectedCaseByChoiceId[node.id];
+      const selectedCase = node.cases.find((c) => c.id === selectedCaseId);
+      const childNodes = selectedCase
+        ? [buildNode(selectedCase as EstimationBuilderNode, node.id, depth + 1)]
+        : [];
 
       let totals = emptyTotals();
       childNodes.forEach((child) => {
@@ -242,19 +240,40 @@ export default function EstimationFormRunsRunner() {
 
       return {
         id: node.id,
-        label: node.name || "Section",
-        type: "form",
+        label: node.name || "Choice",
+        type: "choice",
         bucketTotals: totals,
         children: childNodes,
         parentId,
         depth,
+        meta: selectedCase ? `Selected: ${selectedCase.name}` : "No selection",
       };
+    }
+
+    const childNodes = node.children.map((child) =>
+      buildNode(child as EstimationBuilderNode, node.id, depth + 1),
+    );
+
+    let totals = emptyTotals();
+    childNodes.forEach((child) => {
+      totals = addTotals(totals, child.bucketTotals);
+    });
+
+    return {
+      id: node.id,
+      label: node.name || "Section",
+      type: "form",
+      bucketTotals: totals,
+      children: childNodes,
+      parentId,
+      depth,
+    };
   };
 
   const reportTreeRoot = buildNode(
     selectedForm.root as EstimationBuilderNode,
     null,
-    0
+    0,
   );
 
   const reportNodeById = (() => {
@@ -273,24 +292,27 @@ export default function EstimationFormRunsRunner() {
 
   const graphSourceTotals = focusedReportNode.bucketTotals;
   const finalBase = graphSourceTotals.total;
-  const adjustmentTotal = flatAdjustment + (finalBase * percentAdjustment) / 100;
+  const adjustmentTotal =
+    flatAdjustment + (finalBase * percentAdjustment) / 100;
   const finalWithAdjustment = Math.max(0, finalBase + adjustmentTotal);
 
   const chartData = (() => {
-    const rows = (Object.keys(BUCKET_COLORS) as EstimationCostBucket[]).map((bucket) => {
-      const base = graphSourceTotals[bucket];
-      const weight = finalBase > 0 ? base / finalBase : 0;
-      const adjusted = base + adjustmentTotal * weight;
-      const min = Math.max(0, adjusted * (1 - variancePct / 100));
-      const max = Math.max(0, adjusted * (1 + variancePct / 100));
-      return {
-        bucket,
-        name: bucketLabel[bucket],
-        min,
-        max,
-        value: Math.max(0, adjusted),
-      };
-    });
+    const rows = (Object.keys(BUCKET_COLORS) as EstimationCostBucket[]).map(
+      (bucket) => {
+        const base = graphSourceTotals[bucket];
+        const weight = finalBase > 0 ? base / finalBase : 0;
+        const adjusted = base + adjustmentTotal * weight;
+        const min = Math.max(0, adjusted * (1 - variancePct / 100));
+        const max = Math.max(0, adjusted * (1 + variancePct / 100));
+        return {
+          bucket,
+          name: bucketLabel[bucket],
+          min,
+          max,
+          value: Math.max(0, adjusted),
+        };
+      },
+    );
     return rows;
   })();
 
@@ -370,7 +392,11 @@ export default function EstimationFormRunsRunner() {
               }}
             >
               {hasChildren ? (
-                collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />
+                collapsed ? (
+                  <ChevronRight size={12} />
+                ) : (
+                  <ChevronDown size={12} />
+                )
               ) : (
                 <span className="w-[6px] h-[6px] rounded-full bg-black/30" />
               )}
@@ -388,7 +414,12 @@ export default function EstimationFormRunsRunner() {
                   <span
                     className="text-[9px] uppercase tracking-wide px-1.5 py-[1px] rounded-full font-[700]"
                     style={{
-                      color: BUCKET_COLORS[(node.meta.toLowerCase() === "misc" ? "misc" : node.meta.toLowerCase()) as EstimationCostBucket] || BUCKET_COLORS.misc,
+                      color:
+                        BUCKET_COLORS[
+                          (node.meta.toLowerCase() === "misc"
+                            ? "misc"
+                            : node.meta.toLowerCase()) as EstimationCostBucket
+                        ] || BUCKET_COLORS.misc,
                       backgroundColor:
                         BUCKET_BG_COLORS[
                           (node.meta.toLowerCase() === "misc"
@@ -402,28 +433,36 @@ export default function EstimationFormRunsRunner() {
                 )}
               </div>
               {node.meta && node.type !== "const" && (
-                <p className="text-[10px] opacity-58 mt-[2px] truncate">{node.meta}</p>
+                <p className="text-[10px] opacity-58 mt-[2px] truncate">
+                  {node.meta}
+                </p>
               )}
             </div>
 
             <div className="text-right shrink-0">
-              <p className="text-[12px] font-[800]">{money(node.bucketTotals.total)}</p>
+              <p className="text-[12px] font-[800]">
+                {money(node.bucketTotals.total)}
+              </p>
               <div className="flex items-center gap-1 mt-[4px]">
-                {(Object.keys(BUCKET_COLORS) as EstimationCostBucket[]).map((bucket) => (
-                  <span
-                    key={bucket}
-                    className="h-[4px] rounded-full"
-                    style={{
-                      width: `${Math.max(
-                        6,
-                        node.bucketTotals.total > 0
-                          ? (node.bucketTotals[bucket] / node.bucketTotals.total) * 26
-                          : 6
-                      )}px`,
-                      backgroundColor: BUCKET_COLORS[bucket],
-                    }}
-                  />
-                ))}
+                {(Object.keys(BUCKET_COLORS) as EstimationCostBucket[]).map(
+                  (bucket) => (
+                    <span
+                      key={bucket}
+                      className="h-[4px] rounded-full"
+                      style={{
+                        width: `${Math.max(
+                          6,
+                          node.bucketTotals.total > 0
+                            ? (node.bucketTotals[bucket] /
+                                node.bucketTotals.total) *
+                                26
+                            : 6,
+                        )}px`,
+                        backgroundColor: BUCKET_COLORS[bucket],
+                      }}
+                    />
+                  ),
+                )}
               </div>
             </div>
           </div>
@@ -448,7 +487,10 @@ export default function EstimationFormRunsRunner() {
       >
         <div className="h-[calc(100%-0px)] p-3 overflow-y-auto">
           {showResults ? (
-            <div className="space-y-3" onClick={() => setFocusedReportNodeId(null)}>
+            <div
+              className="space-y-3"
+              onClick={() => setFocusedReportNodeId(null)}
+            >
               <div className="rounded-2xl border border-black/8 bg-white/86 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -484,7 +526,9 @@ export default function EstimationFormRunsRunner() {
                         <p className="text-[11px] uppercase tracking-[0.08em] font-[700] opacity-55">
                           Bucket Distribution
                         </p>
-                        <p className="text-[14px] font-[700] mt-[2px]">{focusedReportNode.label}</p>
+                        <p className="text-[14px] font-[700] mt-[2px]">
+                          {focusedReportNode.label}
+                        </p>
                       </div>
                       <BarChart3 size={16} className="opacity-55" />
                     </div>
@@ -492,8 +536,17 @@ export default function EstimationFormRunsRunner() {
                     <div className="h-[248px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={chartData} barCategoryGap={18}>
-                          <CartesianGrid strokeDasharray="3 4" opacity={0.2} vertical={false} />
-                          <XAxis dataKey="name" tick={{ fontSize: 11, opacity: 0.74 }} axisLine={false} tickLine={false} />
+                          <CartesianGrid
+                            strokeDasharray="3 4"
+                            opacity={0.2}
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fontSize: 11, opacity: 0.74 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
                           <YAxis
                             tickFormatter={(v) => `$${Math.round(v / 1000)}k`}
                             tick={{ fontSize: 11, opacity: 0.65 }}
@@ -504,30 +557,52 @@ export default function EstimationFormRunsRunner() {
                           <Tooltip
                             cursor={{ fill: "rgba(15,23,42,0.03)" }}
                             formatter={(value: any, name: any, ctx: any) => {
-                              if (name === "max") return [money(ctx.payload.max), "Max"];
-                              if (name === "min") return [money(ctx.payload.min), "Min"];
+                              if (name === "max")
+                                return [money(ctx.payload.max), "Max"];
+                              if (name === "min")
+                                return [money(ctx.payload.min), "Min"];
                               return [money(ctx.payload.value), "Value"];
                             }}
                           />
-                          <Bar dataKey="max" fill="rgba(30,41,59,0.15)" radius={[10, 10, 0, 0]} />
-                          <Bar dataKey="min" fill="#94A3B8" radius={[10, 10, 0, 0]} />
+                          <Bar
+                            dataKey="max"
+                            fill="#94A3B8"
+                            radius={[10, 10, 0, 0]}
+                          />
+                          <Bar
+                            dataKey="min"
+                            // fill="rgba(30,41,59,0.15)"
+                            fill="#c8d0dbd7"
+                            radius={[10, 10, 0, 0]}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
 
                     <div className="mt-3 grid grid-cols-3 gap-2">
-                      {(Object.keys(BUCKET_COLORS) as EstimationCostBucket[]).map((bucket) => {
-                        const val = chartData.find((d) => d.bucket === bucket)?.value || 0;
+                      {(
+                        Object.keys(BUCKET_COLORS) as EstimationCostBucket[]
+                      ).map((bucket) => {
+                        const val =
+                          chartData.find((d) => d.bucket === bucket)?.value ||
+                          0;
                         return (
                           <div
                             key={bucket}
                             className="rounded-xl px-2.5 py-2"
-                            style={{ backgroundColor: BUCKET_BG_COLORS[bucket] }}
+                            style={{
+                              backgroundColor: BUCKET_BG_COLORS[bucket],
+                            }}
                           >
-                            <p style={{ color: BUCKET_COLORS[bucket] }} className="text-[10px] font-[700] uppercase tracking-wide">
+                            <p
+                              style={{ color: BUCKET_COLORS[bucket] }}
+                              className="text-[10px] font-[700] uppercase tracking-wide"
+                            >
                               {bucketLabel[bucket]}
                             </p>
-                            <p className="text-[12px] font-[800] mt-[2px]">{money(val)}</p>
+                            <p className="text-[12px] font-[800] mt-[2px]">
+                              {money(val)}
+                            </p>
                           </div>
                         );
                       })}
@@ -544,26 +619,54 @@ export default function EstimationFormRunsRunner() {
 
                     <div className="space-y-2.5">
                       <label className="block rounded-xl border border-black/8 bg-white/90 p-2.5">
-                        <p className="text-[10px] opacity-60 uppercase tracking-wide">Variability (+/- %)</p>
+                        <p className="text-[10px] opacity-60 uppercase tracking-wide">
+                          Variability (+/- %)
+                        </p>
                         <input
                           type="range"
                           min={0}
                           max={40}
                           value={variancePct}
-                          onChange={(e) => setVariancePct(Number(e.target.value))}
+                          onChange={(e) =>
+                            setVariancePct(Number(e.target.value))
+                          }
                           className="w-full mt-1.5"
                         />
-                        <p className="text-[11px] font-[700] mt-[3.5px]">{variancePct}%</p>
+                        <p className="text-[11px] font-[700] mt-[3.5px]">
+                          {variancePct}%
+                        </p>
                       </label>
 
                       <label className="block rounded-xl border border-black/8 bg-white/90 p-2.5">
-                        <p className="text-[10px] opacity-60 uppercase tracking-wide">Markup / Discount (%)</p>
+                        <p className="text-[10px] opacity-60 uppercase tracking-wide">
+                          Markup / Discount (%)
+                        </p>
                         <div className="mt-1.5 flex items-center gap-2">
                           <GitBranchPlus size={13} className="opacity-55" />
                           <input
-                            value={percentAdjustment}
-                            onChange={(e) => setPercentAdjustment(Number(e.target.value) || 0)}
-                            type="number"
+                            value={percentAdjustmentInput}
+                            onChange={(e) => {
+                              let v = e.target.value;
+                              v = v.replace(/[^\d.]/g, "");
+                              v = v.replace(/(\..*)\./g, "$1");
+                              if (v.startsWith(".")) v = `0${v}`;
+
+                              if (v.includes(".")) {
+                                const [i, d] = v.split(".");
+                                const intPart =
+                                  (i || "0").replace(/^0+(?=\d)/, "") || "0";
+                                v = `${intPart}.${(d || "").slice(0, 2)}`;
+                              } else {
+                                v = v.replace(/^0+(?=\d)/, "");
+                              }
+
+                              if (v === "") v = "0";
+
+                              setPercentAdjustmentInput(v);
+                              setPercentAdjustment(Number(v) || 0);
+                            }}
+                            type="text"
+                            inputMode="decimal"
                             className="bg-transparent outline-none text-[13px] font-[700] w-full"
                           />
                           <span className="text-[11px] opacity-65">%</span>
@@ -571,13 +674,35 @@ export default function EstimationFormRunsRunner() {
                       </label>
 
                       <label className="block rounded-xl border border-black/8 bg-white/90 p-2.5">
-                        <p className="text-[10px] opacity-60 uppercase tracking-wide">Fees / Constant ($)</p>
+                        <p className="text-[10px] opacity-60 uppercase tracking-wide">
+                          Fees / Constant ($)
+                        </p>
                         <div className="mt-1.5 flex items-center gap-2">
                           <CircleDollarSign size={13} className="opacity-55" />
                           <input
-                            value={flatAdjustment}
-                            onChange={(e) => setFlatAdjustment(Number(e.target.value) || 0)}
-                            type="number"
+                            value={flatAdjustmentInput}
+                            onChange={(e) => {
+                              let v = e.target.value;
+                              v = v.replace(/[^\d.]/g, "");
+                              v = v.replace(/(\..*)\./g, "$1");
+                              if (v.startsWith(".")) v = `0${v}`;
+
+                              if (v.includes(".")) {
+                                const [i, d] = v.split(".");
+                                const intPart =
+                                  (i || "0").replace(/^0+(?=\d)/, "") || "0";
+                                v = `${intPart}.${(d || "").slice(0, 2)}`;
+                              } else {
+                                v = v.replace(/^0+(?=\d)/, "");
+                              }
+
+                              if (v === "") v = "0";
+
+                              setFlatAdjustmentInput(v);
+                              setFlatAdjustment(Number(v) || 0);
+                            }}
+                            type="text"
+                            inputMode="decimal"
                             className="bg-transparent outline-none text-[13px] font-[700] w-full"
                           />
                         </div>
@@ -590,12 +715,16 @@ export default function EstimationFormRunsRunner() {
                         </div>
                         <div className="flex items-center justify-between text-[11px] mt-1">
                           <span className="opacity-65">Adjustments</span>
-                          <span className="font-[700]">{money(adjustmentTotal)}</span>
+                          <span className="font-[700]">
+                            {money(adjustmentTotal)}
+                          </span>
                         </div>
                         <div className="h-px bg-black/10 my-2" />
                         <div className="flex items-center justify-between text-[12px]">
                           <span className="font-[700]">Final</span>
-                          <span className="font-[800]">{money(finalWithAdjustment)}</span>
+                          <span className="font-[800]">
+                            {money(finalWithAdjustment)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -605,12 +734,15 @@ export default function EstimationFormRunsRunner() {
                 <div className="rounded-2xl border border-black/8 bg-white/86 p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.08em] font-[700] opacity-55">
-                        Routed Cost Tree
+                      <p className="text-[15px] uppercase tracking-[0.5px] font-[700]">
+                        {selectedForm.name}
                       </p>
-                      <p className="text-[13px] font-[700] mt-[2px]">
+                      <p className="text-[10px] uppercase tracking-[0.08em] font-[700] opacity-55">
+                        Estimation Cost Tree
+                      </p>
+                      {/* <p className="text-[13px] font-[700] mt-[2px]">
                         Click a row to focus chart + dim unrelated branches
-                      </p>
+                      </p> */}
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -635,7 +767,9 @@ export default function EstimationFormRunsRunner() {
                   </div>
 
                   <div className="max-h-[760px] overflow-y-auto pr-1">
-                    <AnimatePresence initial={false}>{[treeRow(reportTreeRoot)]}</AnimatePresence>
+                    <AnimatePresence initial={false}>
+                      {[treeRow(reportTreeRoot)]}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
@@ -749,7 +883,9 @@ export default function EstimationFormRunsRunner() {
                       return (
                         <motion.button
                           key={child.id}
-                          onClick={() => clickable && onNavigateToFormNode(child.id)}
+                          onClick={() =>
+                            clickable && onNavigateToFormNode(child.id)
+                          }
                           disabled={!clickable}
                           className={`w-full rounded-xl border border-black/8 bg-white/92 px-3 py-2.5 text-left flex items-center justify-between ${clickClass}`}
                           initial={{ opacity: 0, y: 10 }}
@@ -782,7 +918,9 @@ export default function EstimationFormRunsRunner() {
                               <FolderTree size={14} />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[12.5px] font-[700] leading-tight">{child.name}</p>
+                              <p className="text-[12.5px] font-[700] leading-tight">
+                                {child.name}
+                              </p>
                               <p className="text-[10px] opacity-58 mt-[3px]">
                                 {constOnly
                                   ? "CONSTANT"
@@ -790,19 +928,24 @@ export default function EstimationFormRunsRunner() {
                               </p>
                             </div>
                           </div>
-                          {!constOnly && <ChevronRight size={14} className="opacity-55" />}
+                          {!constOnly && (
+                            <ChevronRight size={14} className="opacity-55" />
+                          )}
                         </motion.button>
                       );
                     }
 
                     if (child.kind === "choice") {
                       const selectedCaseId = selectedCaseByChoiceId[child.id];
-                      const selectedOption = child.cases.find((c) => c.id === selectedCaseId);
+                      const selectedOption = child.cases.find(
+                        (c) => c.id === selectedCaseId,
+                      );
                       const selectedCompletion = selectedOption
                         ? getRouteCompletion(selectedOption)
                         : null;
                       const needsAttention =
-                        !selectedOption || (selectedCompletion && !selectedCompletion.complete);
+                        !selectedOption ||
+                        (selectedCompletion && !selectedCompletion.complete);
                       const canNavigateIntoSelected =
                         !!selectedOption && hasInteractiveRoute(selectedOption);
                       return (
@@ -841,13 +984,19 @@ export default function EstimationFormRunsRunner() {
                                 <Route size={14} />
                               </div>
                               <div className="min-w-0">
-                                <p className="text-[12.5px] font-[700] leading-tight">{child.name}</p>
-                                <p className="text-[10px] opacity-58 mt-[3px]">Choose one option</p>
+                                <p className="text-[12.5px] font-[700] leading-tight">
+                                  {child.name}
+                                </p>
+                                <p className="text-[10px] opacity-58 mt-[3px]">
+                                  Choose one option
+                                </p>
                               </div>
                             </div>
                             {selectedOption && canNavigateIntoSelected && (
                               <button
-                                onClick={() => onNavigateToFormNode(selectedOption.id)}
+                                onClick={() =>
+                                  onNavigateToFormNode(selectedOption.id)
+                                }
                                 className={`h-[30px] px-2.5 rounded-md border bg-white/95 flex items-center justify-center gap-1 text-[10.5px] font-[700] ${clickClass}`}
                                 style={{ borderColor: "rgba(15,23,42,0.12)" }}
                                 title="Open selected option details"
@@ -864,7 +1013,9 @@ export default function EstimationFormRunsRunner() {
                               return (
                                 <button
                                   key={option.id}
-                                  onClick={() => onChooseCase(child.id, option.id)}
+                                  onClick={() =>
+                                    onChooseCase(child.id, option.id)
+                                  }
                                   className={`h-[29px] px-2.5 rounded-md border text-[11px] font-[700] ${clickClass}`}
                                   style={{
                                     backgroundColor: selected
@@ -889,7 +1040,9 @@ export default function EstimationFormRunsRunner() {
                   })}
                 </AnimatePresence>
 
-                {!activeFormNode?.children?.some((child) => child.kind !== "const") && (
+                {!activeFormNode?.children?.some(
+                  (child) => child.kind !== "const",
+                ) && (
                   <div className="rounded-xl border border-black/8 bg-white/86 px-3 py-3 text-[11px] opacity-70">
                     {activeFormNode?.children?.length
                       ? "This section is CONSTANT."
