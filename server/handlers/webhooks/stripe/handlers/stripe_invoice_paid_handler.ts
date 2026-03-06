@@ -63,8 +63,8 @@ export const handleInvoicePaid = async (
   let is_first_subscription_payment = true;
   const [existing] = await connection.query<RowDataPacket[]>(
     `SELECT id FROM stripe_transactions
-    WHERE stripe_subscription_id = ?
-    LIMIT 1`,
+      WHERE stripe_subscription_id = ?
+      LIMIT 1`,
     [stripe_subscription_id]
   );
   if (existing.length) {

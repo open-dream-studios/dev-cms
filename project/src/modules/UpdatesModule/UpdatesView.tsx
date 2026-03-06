@@ -25,23 +25,23 @@ const UpdatesView: React.FC = () => {
   const isLoggedIn = !!currentUser;
   const { updatesData = [], isLoadingUpdates } = useUpdates(
     isLoggedIn,
-    currentProjectId
+    currentProjectId,
   );
 
   const upcoming = useMemo(
     () =>
       updatesData.filter(
-        (u) => u.status === "upcoming" || u.status === "in_progress"
+        (u) => u.status === "upcoming" || u.status === "in_progress",
       ),
-    [updatesData]
+    [updatesData],
   );
   const requests = useMemo(
     () => updatesData.filter((u) => u.status === "requested"),
-    [updatesData]
+    [updatesData],
   );
   const completed = useMemo(
     () => updatesData.filter((u) => u.status === "completed"),
-    [updatesData]
+    [updatesData],
   );
 
   return (
@@ -57,10 +57,9 @@ const UpdatesView: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setAddingUpdate(!addingUpdate)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium hover:brightness-90 transition"
+            className="text-white inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium hover:brightness-90 dim cursor-pointer"
             style={{
               backgroundColor: currentTheme.app_color_1,
-              color: currentTheme.text_1,
             }}
           >
             <Plus size={16} />
@@ -146,8 +145,12 @@ const UpdatesView: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-3 overflow-y-auto max-h-[64vh] pr-2">
-            {addingUpdate && <UpdateCard showAsNew />}
+          <div className="space-y-3 overflow-y-auto max-h-[64vh] ml-[-10px] w-[calc(100%+20px)] px-[10px]">
+            {addingUpdate && (
+              <div className="mt-[4px]">
+                <UpdateCard showAsNew />
+              </div>
+            )}
             {requests.map((u) => (
               <UpdateCard key={u.id ?? Math.random()} update={u} />
             ))}
