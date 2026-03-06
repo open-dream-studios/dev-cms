@@ -247,7 +247,9 @@ export default function EstimationFormRunsRunner() {
       const selectedCaseId = selectedCaseByChoiceId[node.id];
       const selectedCase = node.cases.find((c) => c.id === selectedCaseId);
       const childNodes = selectedCase
-        ? [buildNode(selectedCase as EstimationBuilderNode, node.id, depth + 1)]
+        ? selectedCase.children.map((child) =>
+            buildNode(child as EstimationBuilderNode, node.id, depth + 1),
+          )
         : [];
 
       let totals = emptyTotals();
@@ -430,7 +432,7 @@ export default function EstimationFormRunsRunner() {
                 )}
                 {node.type === "const" && node.meta && (
                   <span
-                    className="text-[9px] uppercase tracking-wide px-2 py-[1px] rounded-full font-[700]"
+                    className="ml-[2px] text-[9px] uppercase tracking-wide px-2 py-[1px] rounded-full font-[700]"
                     style={{
                       color:
                         BUCKET_COLORS[
@@ -451,7 +453,7 @@ export default function EstimationFormRunsRunner() {
                 )}
               </div>
               {node.meta && node.type !== "const" && (
-                <p className="ml-[6px] text-[10px] opacity-58 mt-[2px] truncate">
+                <p className="ml-[0.5px] text-[10px] opacity-58 mt-[2px] truncate">
                   {node.meta}
                 </p>
               )}
@@ -472,7 +474,9 @@ export default function EstimationFormRunsRunner() {
                         style={{
                           width: `${Math.max(
                             2,
-                            (node.bucketTotals[bucket] / node.bucketTotals.total) * 66,
+                            (node.bucketTotals[bucket] /
+                              node.bucketTotals.total) *
+                              66,
                           )}px`,
                           backgroundColor: BUCKET_COLORS[bucket],
                         }}
@@ -522,7 +526,6 @@ export default function EstimationFormRunsRunner() {
                       Focus: {focusedReportNode.label}
                     </p>
                   </div>
-
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
