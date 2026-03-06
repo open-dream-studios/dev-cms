@@ -49,6 +49,7 @@ type ReportTreeNode = {
   parentId: string | null;
   depth: number;
   meta?: string;
+  bucket?: EstimationCostBucket;
 };
 
 const emptyTotals = (): BucketTotals => ({
@@ -238,6 +239,7 @@ export default function EstimationFormRunsRunner() {
         parentId,
         depth,
         meta: bucketLabel[bucket],
+        bucket,
       };
     }
 
@@ -290,7 +292,7 @@ export default function EstimationFormRunsRunner() {
     null,
     0,
   );
-  reportTreeRoot.label = "Total";
+  reportTreeRoot.label = "Estimation Total";
 
   const reportNodeById = (() => {
     const map = new Map<string, ReportTreeNode>();
@@ -378,11 +380,12 @@ export default function EstimationFormRunsRunner() {
           onClick={(e) => {
             e.stopPropagation();
             setFocusedReportNodeId(node.id);
+            if (hasChildren) toggleCollapsed(node.id);
           }}
-          className={`relative rounded-xl border mb-1.5 px-3 py-2.5 ${clickClass}`}
+          className={`select-none relative rounded-xl border mb-1.5 px-3 py-2.5 cursor-pointer dim hover:brightness-95`}
           style={{
             marginLeft: node.depth * 13,
-            opacity: activeOpacity,
+            // opacity: activeOpacity,
             background: focused
               ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(37,99,235,0.12))"
               : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.88))",
@@ -395,26 +398,29 @@ export default function EstimationFormRunsRunner() {
           }}
         >
           <div className="flex items-center gap-2.5">
-            <button
-              className="h-6 w-6 rounded-md bg-white/85 border border-black/8 flex items-center justify-center"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (hasChildren) toggleCollapsed(node.id);
-              }}
-            >
-              {hasChildren ? (
-                collapsed ? (
+            {hasChildren && (
+              <div className="h-6 w-6 rounded-md bg-white/85 border border-black/8 flex items-center justify-center">
+                {collapsed ? (
                   <ChevronRight size={12} />
                 ) : (
                   <ChevronDown size={12} />
-                )
-              ) : (
-                <span className="w-[10px] h-[2px] rounded-full bg-black/35" />
-              )}
-            </button>
+                )}
+              </div>
+            )}
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
+                {node.type === "const" && node.bucket && (
+                  <span
+                    className="h-[23px] w-[23px] rounded-md inline-flex items-center justify-center mr-[3px]"
+                    style={{
+                      color: BUCKET_COLORS[node.bucket],
+                      backgroundColor: BUCKET_BG_COLORS[node.bucket],
+                    }}
+                  >
+                    <CircleDollarSign size={11} />
+                  </span>
+                )}
                 <p className="text-[12px] font-[800] truncate">{node.label}</p>
                 {node.type === "choice" && (
                   <span className="text-[9px] uppercase tracking-wide px-1.5 py-[1px] rounded-full bg-sky-100 text-sky-700 font-[700]">
@@ -423,7 +429,7 @@ export default function EstimationFormRunsRunner() {
                 )}
                 {node.type === "const" && node.meta && (
                   <span
-                    className="text-[9px] uppercase tracking-wide px-1.5 py-[1px] rounded-full font-[700]"
+                    className="text-[9px] uppercase tracking-wide px-2 py-[1px] rounded-full font-[700]"
                     style={{
                       color:
                         BUCKET_COLORS[
@@ -444,7 +450,7 @@ export default function EstimationFormRunsRunner() {
                 )}
               </div>
               {node.meta && node.type !== "const" && (
-                <p className="text-[10px] opacity-58 mt-[2px] truncate">
+                <p className="ml-[6px] text-[10px] opacity-58 mt-[2px] truncate">
                   {node.meta}
                 </p>
               )}
@@ -759,13 +765,19 @@ export default function EstimationFormRunsRunner() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (collapsedNodeIds.size > 0) {
-                            setCollapsedNodeIds(new Set());
-                            return;
-                          }
+                          setCollapsedNodeIds(new Set());
+                        }}
+                        className={`h-[30px] px-2.5 rounded-md bg-white border border-black/10 text-[11px] font-[700] ${clickClass}`}
+                      >
+                        Expand All
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
                           const next = new Set<string>();
                           const walk = (node: ReportTreeNode) => {
-                            if (node.id !== reportTreeRoot.id) next.add(node.id);
+                            if (node.id !== reportTreeRoot.id)
+                              next.add(node.id);
                             node.children.forEach(walk);
                           };
                           walk(reportTreeRoot);
@@ -773,7 +785,7 @@ export default function EstimationFormRunsRunner() {
                         }}
                         className={`h-[30px] px-2.5 rounded-md bg-white border border-black/10 text-[11px] font-[700] ${clickClass}`}
                       >
-                        {collapsedNodeIds.size > 0 ? "Expand All" : "Close All"}
+                        Close All
                       </button>
                     </div>
                   </div>
