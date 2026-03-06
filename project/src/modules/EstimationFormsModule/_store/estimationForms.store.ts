@@ -11,6 +11,7 @@ import {
   EstimationBuilderFormDocument,
   EstimationBuilderFormGraph,
   EstimationBuilderNode,
+  EstimationCostBucket,
   findNodeById,
   moveNodeBetweenForms,
   nowIso,
@@ -264,6 +265,7 @@ export const updateNode = (
     name?: string;
     question?: string;
     value?: number;
+    bucket?: EstimationCostBucket;
   }
 ) => {
   const state = useEstimationFormsUIStore.getState();
@@ -279,6 +281,7 @@ export const updateNode = (
               name: patch.name ?? node.name,
               question: patch.question ?? node.question,
               value: patch.value ?? node.value,
+              bucket: patch.bucket ?? node.bucket ?? "misc",
             };
           }
 

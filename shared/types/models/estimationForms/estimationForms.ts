@@ -30,6 +30,7 @@ export type EstimationConstNode = EstimationBaseNode & {
   kind: "const";
   value: number;
   name?: string;
+  bucket?: "labor" | "materials" | "misc";
 };
 
 export type EstimationNode =

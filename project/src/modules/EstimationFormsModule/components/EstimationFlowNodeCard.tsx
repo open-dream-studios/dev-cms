@@ -5,6 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
   Braces,
+  ChevronDown,
   CircleDollarSign,
   GitBranchPlus,
   Pencil,
@@ -13,9 +14,12 @@ import {
   X,
 } from "lucide-react";
 import {
+  BUCKET_COLORS,
   EstimationBuilderChoiceNode,
+  EstimationCostBucket,
   EstimationBuilderNode,
   estimationNodeKindTitleMap,
+  BUCKET_BG_COLORS,
 } from "../_helpers/estimationForms.helpers";
 import { clickClass } from "./EstimationFormsBuilder";
 
@@ -58,6 +62,7 @@ const EstimationFlowNodeCard = ({
     name?: string;
     question?: string;
     value?: number;
+    bucket?: EstimationCostBucket;
   }) => void;
   onOpenChoiceCase: (caseId: string) => void;
   onAddChoiceCase: () => void;
@@ -166,7 +171,12 @@ const EstimationFlowNodeCard = ({
       setEditingValue(String(node.value));
     }
   };
-  const choiceNode = node.kind === "choice" ? (node as EstimationBuilderChoiceNode) : null;
+  const choiceNode =
+    node.kind === "choice" ? (node as EstimationBuilderChoiceNode) : null;
+  const constBucket =
+    node.kind === "const"
+      ? (node.bucket as EstimationCostBucket) || "misc"
+      : "misc";
   const showYesNoQuickSet =
     !!choiceNode &&
     choiceNode.cases.length === 2 &&
@@ -319,48 +329,112 @@ const EstimationFlowNodeCard = ({
 
         {node.kind === "const" &&
           (editing ? (
-            <div className="mt-[7px] flex items-center gap-1.5">
-              <span className="text-[12px] font-[700] text-amber-700">$</span>
-              <input
-                value={editingValue}
-                onChange={(e) => {
-                  let v = e.target.value;
+            <div className="mt-[7px] flex items-end justify-between gap-2">
+              <div className="flex items-center gap-1.5 flex-1">
+                <span className="text-[12px] font-[700] text-amber-700">$</span>
+                <input
+                  value={editingValue}
+                  onChange={(e) => {
+                    let v = e.target.value;
 
-                  // allow only digits, one '.', and optional leading '-'
-                  v = v.replace(/[^0-9.-]/g, "");
+                    // allow only digits, one '.', and optional leading '-'
+                    v = v.replace(/[^0-9.-]/g, "");
 
-                  // only one leading '-'
-                  if (v.includes("-")) {
-                    v = (v.startsWith("-") ? "-" : "") + v.replace(/-/g, "");
-                  }
+                    // only one leading '-'
+                    if (v.includes("-")) {
+                      v = (v.startsWith("-") ? "-" : "") + v.replace(/-/g, "");
+                    }
 
-                  // only one decimal
-                  const parts = v.split(".");
-                  if (parts.length > 2) {
-                    v = parts[0] + "." + parts.slice(1).join("");
-                  }
+                    // only one decimal
+                    const parts = v.split(".");
+                    if (parts.length > 2) {
+                      v = parts[0] + "." + parts.slice(1).join("");
+                    }
 
-                  // max two decimals
-                  if (v.includes(".")) {
-                    const [int, dec] = v.split(".");
-                    v = int + "." + dec.slice(0, 2);
-                  }
+                    // max two decimals
+                    if (v.includes(".")) {
+                      const [int, dec] = v.split(".");
+                      v = int + "." + dec.slice(0, 2);
+                    }
 
-                  setEditingValue(v);
+                    setEditingValue(v);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onBlur={persistDraft}
+                  className="h-8 w-full rounded-lg border border-amber-200 bg-amber-50/70 px-2 text-[12px] font-[700] text-amber-800 outline-none"
+                />
+              </div>
+              <div
+                className="cursor-pointer hover:opacity-80 dim-opacity mb-[3.8px] relative h-[24px] rounded-full pl-[8px] pr-[20px] flex items-center"
+                style={{
+                  backgroundColor: BUCKET_BG_COLORS[constBucket],
+                  color: BUCKET_COLORS[constBucket],
                 }}
-                onClick={(e) => e.stopPropagation()}
-                onBlur={persistDraft}
-                className="h-8 w-full rounded-lg border border-amber-200 bg-amber-50/70 px-2 text-[12px] font-[700] text-amber-800 outline-none"
-              />
+              >
+                <select
+                  value={constBucket}
+                  onChange={(e) =>
+                    onUpdate({ bucket: e.target.value as EstimationCostBucket })
+                  }
+                  onClick={(e) => e.stopPropagation()}
+                  className="appearance-none bg-transparent outline-none text-[12px] font-[700] scale-[0.85] w-full cursor-pointer opacity-85 mt-[-1px]"
+                >
+                  <option className="mt-[0.5px]" value="labor">
+                    Labor
+                  </option>
+                  <option className="mt-[0.5px]" value="materials">
+                    Materials
+                  </option>
+                  <option className="mt-[0.5px]" value="misc">
+                    Miscellaneous
+                  </option>
+                </select>
+                <ChevronDown
+                  size={11}
+                  className="absolute right-[9px] mt-[0.2px] top-1/2 -translate-y-1/2 pointer-events-none"
+                />
+              </div>
             </div>
           ) : (
-            <p className="mt-2 text-[12px] font-[700] text-amber-700">
-              {(() => {
-                const v = Number(node.value);
-                const formatted = Math.abs(v).toLocaleString();
-                return v < 0 ? `-$${formatted}` : `$${formatted}`;
-              })()}
-            </p>
+            <div className="mt-2 flex items-end justify-between gap-2">
+              <p className="text-[12px] font-[700] text-amber-700">
+                {(() => {
+                  const v = Number(node.value);
+                  const formatted = Math.abs(v).toLocaleString();
+                  return v < 0 ? `-$${formatted}` : `$${formatted}`;
+                })()}
+              </p>
+              <div
+                className="cursor-pointer hover:opacity-80 dim-opacity relative h-[24px] rounded-full pl-[8px] pr-[20px] flex items-center"
+                style={{
+                  backgroundColor: BUCKET_BG_COLORS[constBucket],
+                  color: BUCKET_COLORS[constBucket],
+                }}
+              >
+                <select
+                  value={constBucket}
+                  onChange={(e) =>
+                    onUpdate({ bucket: e.target.value as EstimationCostBucket })
+                  }
+                  onClick={(e) => e.stopPropagation()}
+                  className="appearance-none bg-transparent outline-none text-[12px] font-[700] scale-[0.85] w-full cursor-pointer opacity-85 mt-[-1px]"
+                >
+                  <option className="mt-[0.5px]" value="labor">
+                    Labor
+                  </option>
+                  <option className="mt-[0.5px]" value="materials">
+                    Materials
+                  </option>
+                  <option className="mt-[0.5px]" value="misc">
+                    Miscellaneous
+                  </option>
+                </select>
+                <ChevronDown
+                  size={11}
+                  className="absolute right-[9px] mt-[0.2px] top-1/2 -translate-y-1/2 pointer-events-none"
+                />
+              </div>
+            </div>
           ))}
 
         {node.kind === "choice" && (

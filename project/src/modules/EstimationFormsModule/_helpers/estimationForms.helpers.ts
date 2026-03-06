@@ -14,14 +14,39 @@ export type EstimationBuilderNode =
   | (EstimationChoiceNode & { question?: string })
   | (EstimationConstNode & { question?: string });
 
-export type EstimationBuilderFormGraph = Omit<EstimationFormGraph, "children"> & {
+export type EstimationBuilderFormGraph = Omit<
+  EstimationFormGraph,
+  "children"
+> & {
   question?: string;
   children: EstimationBuilderNode[];
 };
 
-export type EstimationBuilderFormNode = Extract<EstimationBuilderNode, { kind: "form" }>;
-export type EstimationBuilderChoiceNode = Extract<EstimationBuilderNode, { kind: "choice" }>;
-export type EstimationBuilderConstNode = Extract<EstimationBuilderNode, { kind: "const" }>;
+export type EstimationBuilderFormNode = Extract<
+  EstimationBuilderNode,
+  { kind: "form" }
+>;
+export type EstimationBuilderChoiceNode = Extract<
+  EstimationBuilderNode,
+  { kind: "choice" }
+>;
+export type EstimationBuilderConstNode = Extract<
+  EstimationBuilderNode,
+  { kind: "const" }
+>;
+export type EstimationCostBucket = "labor" | "materials" | "misc";
+
+export const BUCKET_COLORS: Record<EstimationCostBucket, string> = {
+  labor: "#da7807",
+  materials: "#097c87",
+  misc: "#7C3AED",
+};
+
+export const BUCKET_BG_COLORS: Record<EstimationCostBucket, string> = {
+  labor: "rgba(255,137,2,0.14)",
+  materials: "rgba(0, 118, 116, 0.15)",
+  misc: "rgba(124,58,237,0.14)",
+};
 
 export type EstimationBuilderFormDocument = {
   id: string;
@@ -45,7 +70,9 @@ export const createId = (prefix: string) =>
 
 export const nowIso = () => new Date().toISOString();
 
-export const createFormNode = (name = "New Form"): EstimationBuilderFormNode => ({
+export const createFormNode = (
+  name = "New Form"
+): EstimationBuilderFormNode => ({
   id: createId("form"),
   kind: "form",
   name,
@@ -54,7 +81,7 @@ export const createFormNode = (name = "New Form"): EstimationBuilderFormNode => 
 });
 
 export const createChoiceNode = (
-  name = "Choose an Option",
+  name = "Choose an Option"
 ): EstimationBuilderChoiceNode => ({
   id: createId("choice"),
   kind: "choice",
@@ -65,17 +92,53 @@ export const createChoiceNode = (
 
 export const createConstNode = (
   name = "Line Item",
-  value = 0,
+  value = 0
 ): EstimationBuilderConstNode => ({
   id: createId("const"),
   kind: "const",
   name,
   question: "",
   value,
+  bucket: "misc",
 });
 
+const normalizeConstBucket = (
+  node: EstimationBuilderNode
+): EstimationBuilderNode => {
+  if (node.kind === "const") {
+    return {
+      ...node,
+      bucket: node.bucket || "misc",
+    };
+  }
+
+  if (node.kind === "form") {
+    return {
+      ...node,
+      children: node.children.map((child) =>
+        normalizeConstBucket(child as EstimationBuilderNode)
+      ),
+    };
+  }
+
+  return {
+    ...node,
+    cases: node.cases.map(
+      (formCase) =>
+        normalizeConstBucket(
+          formCase as EstimationBuilderNode
+        ) as EstimationBuilderFormNode
+    ),
+  };
+};
+
+export const normalizeConstBucketsInGraph = (
+  root: EstimationBuilderFormGraph
+): EstimationBuilderFormGraph =>
+  normalizeConstBucket(root) as EstimationBuilderFormGraph;
+
 export const createStarterFormDocument = (
-  name = "Bathroom Remodel - Base",
+  name = "Bathroom Remodel - Base"
 ): EstimationBuilderFormDocument => ({
   id: createId("doc"),
   name,
@@ -91,7 +154,7 @@ export const createStarterFormDocument = (
 
 export const findNodeById = (
   node: EstimationBuilderNode,
-  nodeId: EstimationNodeId,
+  nodeId: EstimationNodeId
 ): EstimationBuilderNode | null => {
   if (node.id === nodeId) return node;
 
@@ -115,7 +178,7 @@ export const findNodeById = (
 export const updateNodeById = (
   node: EstimationBuilderNode,
   nodeId: EstimationNodeId,
-  updater: (target: EstimationBuilderNode) => EstimationBuilderNode,
+  updater: (target: EstimationBuilderNode) => EstimationBuilderNode
 ): EstimationBuilderNode => {
   if (node.id === nodeId) return updater(node);
 
@@ -123,7 +186,7 @@ export const updateNodeById = (
     return {
       ...node,
       children: node.children.map((child) =>
-        updateNodeById(child as EstimationBuilderNode, nodeId, updater),
+        updateNodeById(child as EstimationBuilderNode, nodeId, updater)
       ),
     };
   }
@@ -136,8 +199,8 @@ export const updateNodeById = (
           updateNodeById(
             formCase as EstimationBuilderNode,
             nodeId,
-            updater,
-          ) as EstimationBuilderFormNode,
+            updater
+          ) as EstimationBuilderFormNode
       ),
     };
   }
@@ -147,7 +210,7 @@ export const updateNodeById = (
 
 export const removeNodeById = (
   node: EstimationBuilderNode,
-  nodeId: EstimationNodeId,
+  nodeId: EstimationNodeId
 ): EstimationBuilderNode => {
   if (node.kind === "form") {
     return {
@@ -167,8 +230,8 @@ export const removeNodeById = (
           (formCase) =>
             removeNodeById(
               formCase as EstimationBuilderNode,
-              nodeId,
-            ) as EstimationBuilderFormNode,
+              nodeId
+            ) as EstimationBuilderFormNode
         ),
     };
   }
@@ -180,7 +243,7 @@ export const addNodeToForm = (
   root: EstimationBuilderFormGraph,
   formId: EstimationNodeId,
   nodeToAdd: EstimationBuilderNode,
-  index?: number,
+  index?: number
 ): EstimationBuilderFormGraph =>
   updateNodeById(root, formId, (target) => {
     if (target.kind !== "form") return target;
@@ -202,7 +265,7 @@ export const addNodeToForm = (
 
 export const addCaseToChoice = (
   root: EstimationBuilderFormGraph,
-  choiceId: EstimationNodeId,
+  choiceId: EstimationNodeId
 ): EstimationBuilderFormGraph =>
   updateNodeById(root, choiceId, (target) => {
     if (target.kind !== "choice") return target;
@@ -216,7 +279,7 @@ export const addCaseToChoice = (
 export const removeCaseFromChoice = (
   root: EstimationBuilderFormGraph,
   choiceId: EstimationNodeId,
-  caseFormId: EstimationNodeId,
+  caseFormId: EstimationNodeId
 ): EstimationBuilderFormGraph =>
   updateNodeById(root, choiceId, (target) => {
     if (target.kind !== "choice") return target;
@@ -228,7 +291,7 @@ export const removeCaseFromChoice = (
 
 export const findParentFormIdForChild = (
   root: EstimationBuilderFormGraph,
-  childId: string,
+  childId: string
 ): string | null => {
   let found: string | null = null;
 
@@ -255,7 +318,7 @@ export const findParentFormIdForChild = (
 
 export const getFormById = (
   root: EstimationBuilderFormGraph,
-  formId: string,
+  formId: string
 ): EstimationBuilderFormNode | null => {
   const found = findNodeById(root, formId);
   return found && found.kind === "form" ? found : null;
@@ -263,13 +326,13 @@ export const getFormById = (
 
 export const getFormChildren = (
   root: EstimationBuilderFormGraph,
-  formId: string,
+  formId: string
 ): EstimationBuilderNode[] => getFormById(root, formId)?.children ?? [];
 
 export const isNodeWithinSubtree = (
   root: EstimationBuilderFormGraph,
   ancestorNodeId: string,
-  targetNodeId: string,
+  targetNodeId: string
 ): boolean => {
   const ancestor = findNodeById(root, ancestorNodeId);
   if (!ancestor) return false;
@@ -301,7 +364,7 @@ export const moveNodeBetweenForms = (
   nodeId: string,
   fromFormId: string,
   toFormId: string,
-  toIndex?: number,
+  toIndex?: number
 ): EstimationBuilderFormGraph => {
   const node = findNodeById(root, nodeId);
   if (!node || node.id === root.id) return root;
@@ -341,14 +404,14 @@ export const moveNodeBetweenForms = (
     next,
     toFormId,
     node as EstimationBuilderNode,
-    normalizedToIndex,
+    normalizedToIndex
   );
 
   return next;
 };
 
 export const validateEstimationFormGraph = (
-  root: EstimationBuilderFormGraph,
+  root: EstimationBuilderFormGraph
 ): EstimationValidationResult => {
   const errors: EstimationValidationResult["errors"] = [];
   const seen = new Set<string>();
@@ -376,7 +439,7 @@ export const validateEstimationFormGraph = (
         });
       }
       node.children.forEach((child) =>
-        walk(child as EstimationBuilderNode, [...path, child.id]),
+        walk(child as EstimationBuilderNode, [...path, child.id])
       );
       return;
     }
@@ -391,7 +454,7 @@ export const validateEstimationFormGraph = (
         });
       }
       node.cases.forEach((formCase) =>
-        walk(formCase as EstimationBuilderNode, [...path, formCase.id]),
+        walk(formCase as EstimationBuilderNode, [...path, formCase.id])
       );
       return;
     }

@@ -584,7 +584,7 @@ export default function EstimationFormsBuilder() {
                 }}
               >
                 <p className="opacity-[0.55] flex flex-row gap-1">
-                  {isSaving && <Loader2 size={12} className="animate-spin" />}
+                  {isSaving && <Loader2 size={12} className="animate-spin mt-[2px]" />}
                   {isSaving ? "Saving..." : saveError ? "Save failed" : "Saved"}
                 </p>
               </div>

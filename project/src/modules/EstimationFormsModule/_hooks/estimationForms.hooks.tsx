@@ -24,7 +24,10 @@ import {
   updateNode,
   useEstimationFormsUIStore,
 } from "../_store/estimationForms.store";
-import { validateEstimationFormGraph } from "../_helpers/estimationForms.helpers";
+import {
+  normalizeConstBucketsInGraph,
+  validateEstimationFormGraph,
+} from "../_helpers/estimationForms.helpers";
 
 export function useEstimationFormsModule() {
   const {
@@ -119,7 +122,7 @@ export function useEstimationFormsModule() {
       version: doc.version,
       created_at: doc.created_at,
       updated_at: doc.updated_at,
-      root: doc.root as any,
+      root: normalizeConstBucketsInGraph(doc.root as any),
     }));
     hydrateFormBuilds(mapped);
     docHashesRef.current = Object.fromEntries(
@@ -141,7 +144,7 @@ export function useEstimationFormsModule() {
         version: remote.version,
         created_at: remote.created_at,
         updated_at: remote.updated_at,
-        root: remote.root as any,
+        root: normalizeConstBucketsInGraph(remote.root as any),
       };
       upsertFormBuildInState(mapped);
       docHashesRef.current[mapped.id] = getDocSnapshotSignature(mapped);
