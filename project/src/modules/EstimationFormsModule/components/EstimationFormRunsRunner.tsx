@@ -11,6 +11,7 @@ import {
   FolderTree,
   GitBranchPlus,
   Play,
+  PlusCircle,
   RotateCcw,
   Route,
   SlidersHorizontal,
@@ -315,6 +316,14 @@ export default function EstimationFormRunsRunner() {
   const adjustmentTotal =
     flatAdjustment + (finalBase * percentAdjustment) / 100;
   const finalWithAdjustment = Math.max(0, finalBase + adjustmentTotal);
+  const finalRangeMin = Math.max(
+    0,
+    finalWithAdjustment * (1 - variancePct / 100),
+  );
+  const finalRangeMax = Math.max(
+    0,
+    finalWithAdjustment * (1 + variancePct / 100),
+  );
 
   const chartData = (() => {
     const rows = (Object.keys(BUCKET_COLORS) as EstimationCostBucket[]).map(
@@ -522,6 +531,12 @@ export default function EstimationFormRunsRunner() {
                     <p className="text-[27px] font-[800] leading-[28px] mt-[2px]">
                       {money(finalWithAdjustment)}
                     </p>
+                    {variancePct > 0 && (
+                      <p className="mt-[5px] inline-flex items-center rounded-full px-2 py-[3px] text-[10.5px] font-[700] bg-slate-100 text-slate-700">
+                        Range in Effect: {money(finalRangeMin)} -{" "}
+                        {money(finalRangeMax)}
+                      </p>
+                    )}
                     <p className="text-[12px] opacity-60 mt-[2px]">
                       Focus: {focusedReportNode.label}
                     </p>
@@ -641,25 +656,6 @@ export default function EstimationFormRunsRunner() {
                     <div className="space-y-2.5">
                       <label className="block rounded-xl border border-black/8 bg-white/90 p-2.5">
                         <p className="text-[10px] opacity-60 uppercase tracking-wide">
-                          Variability (+/- %)
-                        </p>
-                        <input
-                          type="range"
-                          min={0}
-                          max={40}
-                          value={variancePct}
-                          onChange={(e) =>
-                            setVariancePct(Number(e.target.value))
-                          }
-                          className="w-full mt-1.5"
-                        />
-                        <p className="text-[11px] font-[700] mt-[3.5px]">
-                          {variancePct}%
-                        </p>
-                      </label>
-
-                      <label className="block rounded-xl border border-black/8 bg-white/90 p-2.5">
-                        <p className="text-[10px] opacity-60 uppercase tracking-wide">
                           Markup / Discount (%)
                         </p>
                         <div className="mt-1.5 flex items-center gap-2">
@@ -688,9 +684,15 @@ export default function EstimationFormRunsRunner() {
                             }}
                             type="text"
                             inputMode="decimal"
-                            className="bg-transparent outline-none text-[13px] font-[700] w-full"
+                            className="bg-transparent outline-none text-[13px] font-[700]"
+                            style={{
+                              width: `${Math.max(
+                                1.4,
+                                percentAdjustmentInput.length + 0.6,
+                              )}ch`,
+                            }}
                           />
-                          <span className="text-[11px] opacity-65">%</span>
+                          <span className="text-[11px] opacity-55 ml-[-8px]">%</span>
                         </div>
                       </label>
 
@@ -699,7 +701,8 @@ export default function EstimationFormRunsRunner() {
                           Fees / Constant ($)
                         </p>
                         <div className="mt-1.5 flex items-center gap-2">
-                          <CircleDollarSign size={13} className="opacity-55" />
+                          <PlusCircle size={13} className="opacity-55" />
+                          <p className="text-[13px]">$</p>
                           <input
                             value={flatAdjustmentInput}
                             onChange={(e) => {
@@ -724,29 +727,56 @@ export default function EstimationFormRunsRunner() {
                             }}
                             type="text"
                             inputMode="decimal"
-                            className="bg-transparent outline-none text-[13px] font-[700] w-full"
+                            className="ml-[-5px] bg-transparent outline-none text-[13px] font-[700] w-full"
                           />
                         </div>
                       </label>
 
+                      <label className="block rounded-xl border border-black/8 bg-white/90 p-2.5">
+                        <p className="text-[10px] opacity-60 uppercase tracking-wide">
+                          Variability (+/- %)
+                        </p>
+                        <input
+                          type="range"
+                          min={0}
+                          max={40}
+                          value={variancePct}
+                          onChange={(e) =>
+                            setVariancePct(Number(e.target.value))
+                          }
+                          className="w-full mt-1.5"
+                        />
+                        <p className="text-[11px] font-[700] mt-[3.5px]">
+                          {variancePct}%
+                        </p>
+                      </label>
+
                       <div className="rounded-xl border border-black/8 bg-slate-50/80 p-2.5">
-                        <div className="flex items-center justify-between text-[11px]">
+                        <div className="flex items-center justify-between text-[12px]">
                           <span className="opacity-65">Base</span>
                           <span className="font-[700]">{money(finalBase)}</span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px] mt-1">
+                        <div className="flex items-center justify-between text-[12px] mt-1">
                           <span className="opacity-65">Adjustments</span>
                           <span className="font-[700]">
                             {money(adjustmentTotal)}
                           </span>
                         </div>
                         <div className="h-px bg-black/10 my-2" />
-                        <div className="flex items-center justify-between text-[12px]">
+                        <div className="flex items-center justify-between text-[13px]">
                           <span className="font-[700]">Final</span>
                           <span className="font-[800]">
                             {money(finalWithAdjustment)}
                           </span>
                         </div>
+                        {variancePct > 0 && (
+                          <div className="flex items-center justify-between text-[12px] mt-1.5">
+                            <span className="opacity-65">Range in Effect</span>
+                            <span className="font-[700]">
+                              {money(finalRangeMin)} - {money(finalRangeMax)}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
