@@ -1,4 +1,4 @@
-// server/handlers/modules/estimation_forms/estimation_forms_routes_controllers.ts
+// server/handlers/modules/estimation_forms/estimation_forms_controllers.ts
 import type { Request, Response } from "express";
 import type { PoolConnection } from "mysql2/promise";
 import type {
@@ -12,7 +12,7 @@ import {
   getFormDefinitionsFunction,
   upsertFormDefinitionFunction,
   updateFormDefinitionStatusFunction,
-} from "./estimation_forms_routes_repositories.js";
+} from "./estimation_forms_repositories.js";
 
 export const getFormDefinitions = async (req: Request, res: Response) => {
   const project_idx = req.user?.project_idx;

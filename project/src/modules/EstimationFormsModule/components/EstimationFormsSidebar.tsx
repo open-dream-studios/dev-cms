@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { useCurrentTheme } from "@/hooks/util/useTheme";
 import {
   AlertTriangle,
-  CircleOff,
+  Eye,
+  EyeOff,
   Check,
   ChevronRight,
   Copy,
@@ -18,6 +19,7 @@ import {
 import { useEstimationFormsModule } from "../_hooks/estimationForms.hooks";
 import { validateEstimationFormGraph } from "../_helpers/estimationForms.helpers";
 import { useEstimationFormsUIStore } from "../_store/estimationForms.store";
+import { toast } from "react-toastify";
 
 const clickClass =
   "cursor-pointer dim hover:brightness-[80%] transition-all duration-200";
@@ -34,11 +36,13 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
     duplicateFormBuild,
     renameFormBuild,
     deleteFormBuild,
+    setFormStatus,
   } = useEstimationFormsModule();
   const { setEstimationFormsLeftBarOpen, estimationFormsLeftBarOpen } =
     useEstimationFormsUIStore();
   const [editingFormId, setEditingFormId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [publishingFormId, setPublishingFormId] = useState<string | null>(null);
   const validationByFormId = useMemo(() => {
     const map = new Map<string, { valid: boolean; errorCount: number }>();
     for (const doc of filteredFormBuilds) {
@@ -186,6 +190,8 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
             valid: true,
             errorCount: 0,
           };
+          const isPublished = doc.status === "published";
+          const isPublishing = publishingFormId === doc.id;
           return (
             <div
               key={doc.id}
@@ -265,7 +271,7 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                     <div className="w-full flex items-start justify-between">
                       <div className="flex flex-col w-[100%] mt-[-3px]">
                         <p className="text-[9px] uppercase tracking-[0.08em] font-[700] opacity-55 leading-none">
-                          {selected ? "Active Form" : "Form Build"}
+                          {isPublished ? "Published" : "Form Draft"}
                         </p>
                         {hasRootChildren && (
                           <div
@@ -301,10 +307,50 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                       <div className="flex items-center gap-1">
                         <button
                           className={`h-[26px] px-2 rounded-md bg-white/85 ${clickClass}`}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (isPublishing) return;
+                            if (!isPublished && !validation.valid) {
+                              toast.error(
+                                `Fix error${validation.errorCount > 1 ? "s" : ""} before publishing`,
+                              );
+                              return;
+                            }
+
+                            setPublishingFormId(doc.id);
+                            try {
+                              await setFormStatus(
+                                doc.id,
+                                isPublished ? "draft" : "published",
+                              );
+                            } finally {
+                              setPublishingFormId(null);
+                            }
+                          }}
+                          title={isPublished ? "Unpublish" : "Publish"}
+                          disabled={isPublishing}
+                          style={{
+                            // color: isPublished ? "rgb(6, 155, 90)" : undefined,
+                            color: isPublished
+                              ? currentTheme.text_1
+                              : undefined,
+                            opacity: isPublishing ? 0.65 : 1,
+                          }}
+                        >
+                          {isPublished ? (
+                            <Check size={11} strokeWidth={2.3} />
+                          ) : (
+                            <EyeOff size={12} />
+                          )}
+                        </button>
+
+                        <button
+                          className={`h-[26px] px-2 rounded-md bg-white/85 ${clickClass}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             duplicateFormBuild(doc.id);
                           }}
+                          title={"Duplicate"}
                         >
                           <Copy size={11} />
                         </button>
@@ -320,7 +366,10 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                               editingFormId !== doc.id &&
                               editingName.trim()
                             ) {
-                              renameFormBuild(editingFormId, editingName.trim());
+                              renameFormBuild(
+                                editingFormId,
+                                editingName.trim(),
+                              );
                             }
 
                             if (editingFormId === doc.id) {
@@ -340,7 +389,7 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                           }}
                           // className={`h-6 w-6 rounded-md ${clickClass}`}
                           className={`h-[26px] px-2 rounded-md bg-white/85 ${clickClass}`}
-                          title="Rename Form"
+                          title="Rename"
                         >
                           <Pencil size={10} />
                         </button>
@@ -352,6 +401,7 @@ export default function EstimationFormsSidebar({ mini }: { mini: boolean }) {
                             e.stopPropagation();
                             deleteFormBuild(doc.id);
                           }}
+                          title={"Delete"}
                         >
                           <Trash2 size={11} />
                         </button>

@@ -6,7 +6,7 @@ import {
   getFormDefinitions,
   updateFormDefinitionStatus,
   upsertFormDefinition,
-} from "./estimation_forms_routes_controllers.js";
+} from "./estimation_forms_controllers.js";
 import { authenticateUser } from "../../../util/auth.js";
 import { checkProjectPermission } from "../../../util/permissions.js";
 import {
