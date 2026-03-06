@@ -553,7 +553,7 @@ export default function EstimationFormRunsRunner() {
                           onChange={(e) => setVariancePct(Number(e.target.value))}
                           className="w-full mt-1.5"
                         />
-                        <p className="text-[11px] font-[700] mt-[2px]">{variancePct}%</p>
+                        <p className="text-[11px] font-[700] mt-[3.5px]">{variancePct}%</p>
                       </label>
 
                       <label className="block rounded-xl border border-black/8 bg-white/90 p-2.5">

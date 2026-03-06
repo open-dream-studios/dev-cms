@@ -524,3 +524,32 @@ input[type="range"]::-moz-range-thumb {
   background-size: 200% 100%;
   animation: shimmer 1.6s cubic-bezier(.4, 0, .2, 1) infinite;
 }
+
+/* BLUE DOT IN SLIDER */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2.5px;
+  background: #e5e7eb;
+  border-radius: 2px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #2563eb;
+  border-radius: 50%;
+  margin-top: -6px; /* centers thumb on track */
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #2563eb;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
