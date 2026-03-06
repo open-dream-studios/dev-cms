@@ -539,7 +539,8 @@ input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   width: 14px;
   height: 14px;
-  background: #2563eb;
+  /* background: #2563eb; */
+  background: #6286b9;
   border-radius: 50%;
   margin-top: -6px; /* centers thumb on track */
   cursor: pointer;
@@ -548,7 +549,8 @@ input[type="range"]::-webkit-slider-thumb {
 input[type="range"]::-moz-range-thumb {
   width: 14px;
   height: 14px;
-  background: #2563eb;
+  /* background: #2563eb; */
+  background: #6286b9;
   border: none;
   border-radius: 50%;
   cursor: pointer;

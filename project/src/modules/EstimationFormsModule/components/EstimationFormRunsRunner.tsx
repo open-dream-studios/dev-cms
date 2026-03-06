@@ -380,11 +380,12 @@ export default function EstimationFormRunsRunner() {
           onClick={(e) => {
             e.stopPropagation();
             setFocusedReportNodeId(node.id);
-            if (hasChildren) toggleCollapsed(node.id);
+            if (hasChildren && node.depth !== 0) toggleCollapsed(node.id);
           }}
-          className={`select-none relative rounded-xl border mb-1.5 px-3 py-2.5 cursor-pointer dim hover:brightness-95`}
+          className={`select-none relative rounded-xl border mb-1.5 pr-[12px] py-2.5 cursor-pointer dim hover:brightness-95`}
           style={{
             marginLeft: node.depth * 13,
+            paddingLeft: node.depth === 0 ? "14px" : "12px",
             // opacity: activeOpacity,
             background: focused
               ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(37,99,235,0.12))"
@@ -398,7 +399,7 @@ export default function EstimationFormRunsRunner() {
           }}
         >
           <div className="flex items-center gap-2.5">
-            {hasChildren && (
+            {hasChildren && node.depth !== 0 && (
               <div className="h-6 w-6 rounded-md bg-white/85 border border-black/8 flex items-center justify-center">
                 {collapsed ? (
                   <ChevronRight size={12} />
@@ -460,25 +461,25 @@ export default function EstimationFormRunsRunner() {
               <p className="text-[12px] font-[800]">
                 {money(node.bucketTotals.total)}
               </p>
-              <div className="flex items-center gap-1 mt-[4px]">
-                {(Object.keys(BUCKET_COLORS) as EstimationCostBucket[]).map(
-                  (bucket) => (
-                    <span
-                      key={bucket}
-                      className="h-[4px] rounded-full"
-                      style={{
-                        width: `${Math.max(
-                          6,
-                          node.bucketTotals.total > 0
-                            ? (node.bucketTotals[bucket] /
-                                node.bucketTotals.total) *
-                                26
-                            : 6,
-                        )}px`,
-                        backgroundColor: BUCKET_COLORS[bucket],
-                      }}
-                    />
-                  ),
+              <div className="mt-[4px] w-[66px] ml-auto flex items-center justify-end gap-[3px]">
+                {node.bucketTotals.total > 0 ? (
+                  (Object.keys(BUCKET_COLORS) as EstimationCostBucket[])
+                    .filter((bucket) => node.bucketTotals[bucket] > 0)
+                    .map((bucket) => (
+                      <span
+                        key={bucket}
+                        className="h-[5px] rounded-full"
+                        style={{
+                          width: `${Math.max(
+                            2,
+                            (node.bucketTotals[bucket] / node.bucketTotals.total) * 66,
+                          )}px`,
+                          backgroundColor: BUCKET_COLORS[bucket],
+                        }}
+                      />
+                    ))
+                ) : (
+                  <span className="h-[5px] w-[24px] rounded-full bg-slate-300/70" />
                 )}
               </div>
             </div>
