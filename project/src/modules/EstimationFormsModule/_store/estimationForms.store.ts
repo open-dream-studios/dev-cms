@@ -102,7 +102,7 @@ export const getSelectedForm = (state: {
   selectedFormId: string;
 }) => state.formBuilds.find((doc) => doc.id === state.selectedFormId) ?? null;
 
-export const createFormBuild = (name = "New Form") => {
+export const createFormBuild = (name = "New Form44") => {
   const state = useEstimationFormsUIStore.getState();
   const next = createStarterFormDocument(name);
   state.set((s) => ({

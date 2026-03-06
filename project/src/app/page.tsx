@@ -15,6 +15,7 @@ import UpdatesCatalog from "@/modules/UpdatesModule/UpdatesCatalog";
 // import PricingAdminPage from "@/modules/OLD_EstimationModule/PricingAdmin/PricingAdminPage";
 // import EstimationsAdmin from "@/modules/OLD_EstimationModule/EstimationsAdmin";
 import EstimationFormsModule from "@/modules/EstimationFormsModule/EstimationFormsModule";
+import EstimationFormRunsModule from "@/modules/EstimationFormsModule/EstimationFormRunsModule";
 
 const HomePage = () => {
   const { screen } = useUiStore();
@@ -31,6 +32,7 @@ const HomePage = () => {
       {/* {screen === "estimations" && <EstimationLauncher />} */}
       {/* {screen === "estimations-pricing" && <EstimationsAdmin />}
       {screen === "estimations-calculation" && <EstimationsAdmin />} */}
+      {screen === "estimation-form-runs" && <EstimationFormRunsModule />}
       {screen === "estimation-forms" && <EstimationFormsModule />}
     </div>
   );

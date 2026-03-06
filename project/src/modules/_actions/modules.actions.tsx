@@ -16,7 +16,7 @@ import {
   Screen,
   User,
 } from "@open-dream/shared";
-import { ChartNoAxesColumnDecreasing, Images } from "lucide-react";
+import { ChartNoAxesColumnDecreasing, FileInput, Images } from "lucide-react";
 import { useCurrentDataStore } from "@/store/currentDataStore";
 
 export type AccessibleModule = {
@@ -55,7 +55,8 @@ export const getIconMap = () => {
     "estimations-calculation": (
       <HiViewBoards className="w-[17px] h-[17px] brightness-75" />
     ),
-    "estimation-forms": <ChartNoAxesColumnDecreasing size={19} />,
+    "estimation-forms": <FileInput size={17.5} />,
+    "estimation-form-runs": <ChartNoAxesColumnDecreasing size={19} />,
   };
   return ICON_MAP;
 };
@@ -70,8 +71,16 @@ export const buildAccessibleModules = (
 
   if (hasProjectModule("estimation-forms-module")) {
     modules.push({
-      key: "estimation-forms",
+      key: "estimation-form-runs",
       title: "Estimations",
+      pages: ["estimation-form-runs"],
+    });
+  }
+
+  if (hasProjectModule("estimation-forms-module")) {
+    modules.push({
+      key: "estimation-forms",
+      title: "Forms",
       pages: ["estimation-forms"],
     });
   }
